@@ -1,7 +1,10 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,8 +14,30 @@ namespace Barotrauma.Items.Components
         private GUIScrollBar pumpSpeedSlider;
         private GUITickBox powerIndicator;
 
-        partial void InitProjSpecific()
+        private List<Pair<Vector2, ParticleEmitter>> pumpOutEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
+        private List<Pair<Vector2, ParticleEmitter>> pumpInEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
+
+        partial void InitProjSpecific(XElement element)
         {
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "pumpoutemitter":
+                        pumpOutEmitters.Add(new Pair<Vector2, ParticleEmitter>(
+                            subElement.GetAttributeVector2("position", Vector2.Zero), 
+                            new ParticleEmitter(subElement)));
+                        break;
+                    case "pumpinemitter":
+                        pumpInEmitters.Add(new Pair<Vector2, ParticleEmitter>(
+                            subElement.GetAttributeVector2("position", Vector2.Zero),
+                            new ParticleEmitter(subElement)));
+                        break;
+                }
+            }
+
+            if (GuiFrame == null) { return; }
+
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
             isActiveSlider = new GUIScrollBar(new RectTransform(new Point(50, 100), paddedFrame.RectTransform, Anchor.CenterLeft),
@@ -34,12 +59,7 @@ namespace Barotrauma.Items.Components
                 IsActive = active;
                 if (!IsActive) currPowerConsumption = 0.0f;
 
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled.LogName + (IsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
-                }
-                else if (GameMain.Client != null)
+                if (GameMain.Client != null)
                 {
                     correctionTimer = CorrectionDelay;
                     item.CreateClientEvent(this);
@@ -77,12 +97,8 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newValue - FlowPercentage) < 0.1f) return false;
 
                     FlowPercentage = newValue;
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
-                    }
-                    else if (GameMain.Client != null)
+
+                    if (GameMain.Client != null)
                     {
                         correctionTimer = CorrectionDelay;
                         item.CreateClientEvent(this);
@@ -95,7 +111,40 @@ namespace Barotrauma.Items.Components
                 TextManager.Get("PumpIn"), textAlignment: Alignment.Center);            
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void OnItemLoaded()
+        {
+            if (pumpSpeedSlider != null)
+            {
+                pumpSpeedSlider.BarScroll = (flowPercentage + 100.0f) / 200.0f;
+
+            }
+        }
+        
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            if (FlowPercentage < 0.0f)
+            {
+                foreach (Pair<Vector2, ParticleEmitter> pumpOutEmitter in pumpOutEmitters)
+                {
+                    //only emit "pump out" particles when underwater
+                    Vector2 particlePos = item.Rect.Location.ToVector2() + pumpOutEmitter.First;
+                    if (item.CurrentHull != null && item.CurrentHull.Surface < particlePos.Y) continue;
+
+                    pumpOutEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpOutEmitter.First, item.CurrentHull,
+                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, -FlowPercentage / 100.0f));
+                }
+            }
+            else if (FlowPercentage > 0.0f)
+            {
+                foreach (Pair<Vector2, ParticleEmitter> pumpInEmitter in pumpInEmitters)
+                {
+                    pumpInEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpInEmitter.First, item.CurrentHull,
+                        velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, FlowPercentage / 100.0f));
+                }
+            }
+        }
+
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             powerIndicator.Selected = hasPower && IsActive;
 
@@ -109,11 +158,6 @@ namespace Barotrauma.Items.Components
                     pumpSpeedSlider.BarScroll = pumpSpeedScroll;
                 }
             }
-        }
-        
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
         }
         
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)

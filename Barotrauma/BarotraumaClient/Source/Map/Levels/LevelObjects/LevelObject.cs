@@ -24,6 +24,12 @@ namespace Barotrauma
 
         private List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
 
+        public Vector2 CurrentScale
+        {
+            get;
+            private set;
+        } = Vector2.One;
+
         public LightSource[] LightSources
         {
             get;
@@ -46,7 +52,7 @@ namespace Barotrauma
             private set;
         }
 
-        public Sound[] Sounds
+        public RoundSound[] Sounds
         {
             get;
             private set;
@@ -70,7 +76,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            CurrentSwingAmount = Prefab.SwingAmount;
+            CurrentSwingAmount = Prefab.SwingAmountRad;
             CurrentScaleOscillation = Prefab.ScaleOscillation;
 
             SwingTimer = Rand.Range(0.0f, MathHelper.TwoPi);
@@ -88,13 +94,13 @@ namespace Barotrauma
                 }
             }
 
-            if (Prefab.LightSourceConfigs != null)
+            if (Prefab.LightSourceParams != null)
             {
-                LightSources = new LightSource[Prefab.LightSourceConfigs.Count];
-                LightSourceTriggers = new LevelTrigger[Prefab.LightSourceConfigs.Count];
-                for (int i = 0; i < Prefab.LightSourceConfigs.Count; i++)
+                LightSources = new LightSource[Prefab.LightSourceParams.Count];
+                LightSourceTriggers = new LevelTrigger[Prefab.LightSourceParams.Count];
+                for (int i = 0; i < Prefab.LightSourceParams.Count; i++)
                 {
-                    LightSources[i] = new LightSource(Prefab.LightSourceConfigs[i])
+                    LightSources[i] = new LightSource(Prefab.LightSourceParams[i])
                     {
                         Position = new Vector2(Position.X, Position.Y),
                         IsBackground = true
@@ -103,8 +109,8 @@ namespace Barotrauma
                         Triggers[Prefab.LightSourceTriggerIndex[i]] : null;
                 }
             }
-            
-            Sounds = new Sound[Prefab.Sounds.Count];
+
+            Sounds = new RoundSound[Prefab.Sounds.Count];
             SoundChannels = new SoundChannel[Prefab.Sounds.Count];
             SoundTriggers = new LevelTrigger[Prefab.Sounds.Count];
             for (int i = 0; i < Prefab.Sounds.Count; i++)
@@ -113,16 +119,20 @@ namespace Barotrauma
                 SoundTriggers[i] = Prefab.Sounds[i].TriggerIndex > -1 ? Triggers[Prefab.Sounds[i].TriggerIndex] : null;
             }
 
+            int j = 0;
             foreach (XElement subElement in Prefab.Config.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "deformablesprite")
+                if (subElement.Name.ToString().ToLowerInvariant() != "deformablesprite") continue;                
+                foreach (XElement animationElement in subElement.Elements())
                 {
-                    foreach (XElement animationElement in subElement.Elements())
+                    var newDeformation = SpriteDeformation.Load(animationElement, Prefab.Name);
+                    if (newDeformation != null)
                     {
-                        var newDeformation = SpriteDeformation.Load(animationElement);
-                        if (newDeformation != null) spriteDeformations.Add(newDeformation);
+                        newDeformation.DeformationParams = Prefab.SpriteDeformations[j].DeformationParams;
+                        spriteDeformations.Add(newDeformation);
+                        j++;
                     }
-                }
+                }                
             }
         }
 
@@ -146,19 +156,25 @@ namespace Barotrauma
                 SwingTimer = SwingTimer % MathHelper.TwoPi;
                 //lerp the swing amount to the correct value to prevent it from abruptly changing to a different value
                 //when a trigger changes the swing amoung
-                CurrentSwingAmount = MathHelper.Lerp(CurrentSwingAmount, ActivePrefab.SwingAmount, deltaTime * 10.0f);
-                
-                if (ActivePrefab.SwingAmount > 0.0f)
+                CurrentSwingAmount = MathHelper.Lerp(CurrentSwingAmount, ActivePrefab.SwingAmountRad, deltaTime * 10.0f);
+
+                if (ActivePrefab.SwingAmountRad > 0.0f)
                 {
-                    CurrentRotation +=(float)Math.Sin(SwingTimer) * CurrentSwingAmount;
+                    CurrentRotation += (float)Math.Sin(SwingTimer) * CurrentSwingAmount;
                 }
             }
 
+            CurrentScale = Vector2.One * Scale;
             if (ActivePrefab.ScaleOscillationFrequency > 0.0f)
             {
                 ScaleOscillateTimer += deltaTime * ActivePrefab.ScaleOscillationFrequency;
                 ScaleOscillateTimer = ScaleOscillateTimer % MathHelper.TwoPi;
                 CurrentScaleOscillation = Vector2.Lerp(CurrentScaleOscillation, ActivePrefab.ScaleOscillation, deltaTime * 10.0f);
+                
+                float sin = (float)Math.Sin(ScaleOscillateTimer);
+                CurrentScale *= new Vector2(
+                    1.0f + sin * CurrentScaleOscillation.X,
+                    1.0f + sin * CurrentScaleOscillation.Y);                
             }
 
             if (LightSources != null)
@@ -166,7 +182,8 @@ namespace Barotrauma
                 for (int i = 0; i < LightSources.Length; i++)
                 {
                     if (LightSourceTriggers[i] != null) LightSources[i].Enabled = LightSourceTriggers[i].IsTriggered;
-                    LightSources[i].Rotation = CurrentRotation;
+                    LightSources[i].Rotation = -CurrentRotation;
+                    LightSources[i].SpriteScale = CurrentScale;
                 }
             }
 
@@ -179,14 +196,14 @@ namespace Barotrauma
             {
                 if (SoundTriggers[i] == null || SoundTriggers[i].IsTriggered)
                 {
-                    Sound sound = Sounds[i];
+                    RoundSound roundSound = Sounds[i];
                     Vector2 soundPos = LocalToWorld(new Vector2(Prefab.Sounds[i].Position.X, Prefab.Sounds[i].Position.Y));
                     if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), soundPos) <
-                        sound.BaseFar * sound.BaseFar)
+                        roundSound.Range * roundSound.Range)
                     {
                         if (SoundChannels[i] == null || !SoundChannels[i].IsPlaying)
                         {
-                            SoundChannels[i] = sound.Play(1.0f, sound.BaseFar, soundPos);
+                            SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, soundPos);
                         }
                         SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
                     }
@@ -210,6 +227,13 @@ namespace Barotrauma
                 deformation.Update(deltaTime);
             }
             CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
+            foreach (LightSource lightSource in LightSources)
+            {
+                if (lightSource?.DeformableLightSprite != null)
+                {
+                    lightSource.DeformableLightSprite.Deform(CurrentSpriteDeformation);
+                }
+            }
         }
 
         private void UpdatePositionalDeformation(PositionalDeformation positionalDeformation, float deltaTime)
@@ -232,7 +256,7 @@ namespace Barotrauma
                     moveAmount /= (ActivePrefab.DeformableSprite.Size * Scale);
                     moveAmount.Y = -moveAmount.Y;
 
-                    positionalDeformation.Deform(triggerer.WorldPosition, moveAmount, deltaTime, Matrix.Invert(matrix) *
+                    positionalDeformation.Deform(trigger.WorldPosition, moveAmount, deltaTime, Matrix.Invert(matrix) *
                         Matrix.CreateScale(1.0f / ActivePrefab.DeformableSprite.Size.X, 1.0f / ActivePrefab.DeformableSprite.Size.Y, 1));
                 }
             }
@@ -253,8 +277,14 @@ namespace Barotrauma
             {
                 SoundChannels[i]?.Dispose();
                 SoundChannels[i] = null;
-                Sounds[i]?.Dispose();
-                Sounds[i] = null;
+            }
+            if (LightSources != null)
+            {
+                for (int i = 0; i < LightSources.Length; i++)
+                {
+                    LightSources[i].Remove();
+                }
+                LightSources = null;
             }
         }
     }

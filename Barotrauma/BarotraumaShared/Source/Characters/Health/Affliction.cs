@@ -10,6 +10,10 @@ namespace Barotrauma
         
         public float Strength;
 
+        public float DamagePerSecond;
+        public float DamagePerSecondTimer;
+        public float PreviousVitalityDecrease;
+
         public Affliction(AfflictionPrefab prefab, float strength)
         {
             Prefab = prefab;
@@ -93,6 +97,17 @@ namespace Barotrauma
                 currentEffect.MinScreenBlurStrength,
                 currentEffect.MaxScreenBlurStrength,
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public void CalculateDamagePerSecond(float currentVitalityDecrease)
+        {
+            DamagePerSecond = Math.Max(DamagePerSecond, currentVitalityDecrease - PreviousVitalityDecrease);
+            if (DamagePerSecondTimer >= 1.0f)
+            {
+                DamagePerSecond = currentVitalityDecrease - PreviousVitalityDecrease;
+                PreviousVitalityDecrease = currentVitalityDecrease;
+                DamagePerSecondTimer = 0.0f;
+            }
         }
 
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)

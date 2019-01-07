@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name="crawler" humanoid="false">
+<Character name="crawler" humanoid="false" blooddecal="blood">
   
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+
   <health
     vitality="70"
     doesbleed="true"/>
@@ -12,8 +20,7 @@
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
-    <Item name="Crawler Shell"/>
-    <Item name="Swim Bladder"/>
+    <Item identifier="swimbladder"/>
   </Inventory>
 
   <ai
@@ -29,7 +36,11 @@
       attachtosub="true"
       mindeattachspeed="3.0"
       maxdeattachspeed="10.0"
-      attachlimb="Head"/>
+      damageondetach="1000"
+      detachstun="5.0"
+      attachlimb="Head"
+      localattachpos="10,32"
+      attachlimbrotation="40"/>
 
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>
@@ -55,92 +66,6 @@
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
   </ai>
-
-  <ragdoll 
-    colliderheightfromfloor="35" colliderstandangle="90" headposition="50" torsoposition="30" headangle="-70" torsoangle="-90"
-    minscale="0.8" maxscale="1.2"
-    waveamplitude="4.0" wavelength="3000"
-    swimspeed="3.0" walkspeed="2.0"
-    runspeedmultiplier="2" swimspeedmultiplier="3.0"
-    stepsize="15.0,20.0"
-    steertorque="20"
-    legtorque="10"
-    impacttolerance="6"
-    flip="true"
-    draggable="true">
-
-    <collider height="60" radius="22"/>
-
-    <!-- head -->
-    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="15.0" mouthpos="17,35">
-      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
-    </limb>
-
-    <!-- middle part -->
-    <limb id = "1" radius="22" height="40" type="Torso" flip="true" steerforce="0.1">
-      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="57,7,59,57" depth="0.021" origin="0.3,0.65"/>
-    </limb>
-
-    <!-- tail -->
-    <limb id = "2" radius="22" height="45" type="Tail" flip="true">
-      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="6,141,60,95" depth="0.022" origin="0.37,0.43"/>
-    </limb>
-      
-    <limb id = "3" width="13" height="45" ignorecollisions="true" flip="true">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
-      <attack range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10"
-              structuresoundtype="StructureSlash" targetforce="-30" severlimbsprobability="0.5"
-              force="15" applyforceonlimbs="0,1" torque="-20">
-        <affliction name="Bleeding" strength="30"/>
-        <affliction name="Internal Damage" strength="10"/>
-      </attack>
-    </limb>
-
-    <limb id = "4" width="11" height="34" type="RightLeg" flip="true">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "5" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3" stepoffset="20.0,0.0">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
-      <sound tag="footstep_metal"/>
-    </limb>
-
-    <limb id = "6" width="13" height="35" type="LeftLeg" flip="true">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "7" width="5" height="40" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5" stepoffset="20.0,0.0">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
-      <sound tag="footstep_metal"/>
-    </limb>
-
-    <limb id = "8" width="13" height="35" type="RightLeg" flip="true">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "9" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7" stepoffset="20.0,0.0">
-      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
-      <sound tag="footstep_metal"/>
-    </limb>
-
-    <joint limb1="0" limb1anchor="-5,-38" limb2="1" limb2anchor="-2,25" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
-
-    <joint limb1="1" limb1anchor="0,-15" limb2="2" limb2anchor="-10,31" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
-
-    <joint limb1="0" limb1anchor="7,30" limb2="3" limb2anchor="-2,-17" lowerlimit="-180" upperlimit="-90" canbesevered="true"/>
-
-
-    <joint limb1="0" limb1anchor="13,6" limb2="4" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180" canbesevered="true"/>
-    <joint limb1="4" limb1anchor="0,-17" limb2="5" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190" canbesevered="true"/>
-
-    <joint limb1="0" limb1anchor="13,-15" limb2="6" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180" canbesevered="true"/>
-    <joint limb1="6" limb1anchor="0,-17" limb2="7" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190" canbesevered="true"/>
-
-    <joint limb1="0" limb1anchor="13,-35" limb2="8" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180" canbesevered="true"/>
-    <joint limb1="8" limb1anchor="0,-17" limb2="9" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190" canbesevered="true"/>
-  </ragdoll>
+  
 </Character>
 

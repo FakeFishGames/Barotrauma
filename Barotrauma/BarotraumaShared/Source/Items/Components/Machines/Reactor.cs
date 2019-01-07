@@ -54,6 +54,9 @@ namespace Barotrauma.Items.Components
 
         private bool shutDown;
 
+        const float AIUpdateInterval = 1.0f;
+        private float aiUpdateTimer;
+
         private Character lastUser;
         private Character LastUser
         {
@@ -171,6 +174,7 @@ namespace Barotrauma.Items.Components
                 
         public override void Update(float deltaTime, Camera cam)
         {
+#if SERVER
             if (GameMain.Server != null && nextServerLogWriteTime != null)
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
@@ -186,6 +190,7 @@ namespace Barotrauma.Items.Components
                     lastServerLogWriteTime = (float)Timing.TotalTime;
                 }
             }
+#endif
 
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -275,6 +280,14 @@ namespace Barotrauma.Items.Components
                     if (!item.HasTag("reactorfuel")) continue;
                     item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                 }
+
+                if (item.CurrentHull != null)
+                {
+                    //the sound can be heard from 20 000 display units away when running at full power
+                    item.CurrentHull.SoundRange = Math.Max(
+                        (-currPowerConsumption / MaxPowerOutput) * 20000.0f, 
+                        item.CurrentHull.AiTarget.SoundRange);
+                }
             }
 
             item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
@@ -289,12 +302,14 @@ namespace Barotrauma.Items.Components
 
             if (unsentChanges && sendUpdateTimer <= 0.0f)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
                 }
+#endif
 #if CLIENT
-                else if (GameMain.Client != null)
+                if (GameMain.Client != null)
                 {
                     item.CreateClientEvent(this);
                 }
@@ -309,7 +324,8 @@ namespace Barotrauma.Items.Components
             if (temperature > allowedTemperature.Y)
             {
                 item.SendSignal(0, "1", "meltdown_warning", null);
-                meltDownTimer += item.IsOptimized("mechanical") ? deltaTime * 0.5f : deltaTime;
+                //faster meltdown if the item is in a bad condition
+                meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
 
                 if (meltDownTimer > MeltdownDelay)
                 {
@@ -326,7 +342,7 @@ namespace Barotrauma.Items.Components
             if (temperature > optimalTemperature.Y)
             {
                 float prevFireTimer = fireTimer;
-                fireTimer += item.IsOptimized("mechanical") ? deltaTime * 0.5f : deltaTime;
+                fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
 
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
@@ -374,9 +390,14 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f || GameMain.Client != null) return;
+            if (item.Condition <= 0.0f) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
+#if SERVER
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
+#endif
 
             item.Condition = 0.0f;
             fireTimer = 0.0f;
@@ -391,11 +412,13 @@ namespace Barotrauma.Items.Components
                     containedItem.Condition = 0.0f;
                 }
             }
-            
+
+#if SERVER
             if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
             {
                 BlameOnBroken.Karma = 0.0f;
-            }            
+            }
+#endif
         }
 
         public override bool Pick(Character picker)
@@ -405,7 +428,9 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
             float degreeOfSuccess = DegreeOfSuccess(character);
 
@@ -425,16 +450,18 @@ namespace Barotrauma.Items.Components
                 //we need more fuel
                 if (-currPowerConsumption < load * 0.5f && prevAvailableFuel <= 0.0f)
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
-                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;
-                    containFuelObjective.GetItemPriority = (Item fuelItem) =>
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>())
                     {
-                        if (fuelItem.ParentInventory?.Owner is Item)
+                        MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
+                        GetItemPriority = (Item fuelItem) =>
                         {
-                            //don't take fuel from other reactors
-                            if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                            if (fuelItem.ParentInventory?.Owner is Item)
+                            {
+                                //don't take fuel from other reactors
+                                if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                            }
+                            return 1.0f;
                         }
-                        return 1.0f;
                     };
                     objective.AddSubObjective(containFuelObjective);
 
@@ -443,13 +470,23 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
+
+            if (aiUpdateTimer > 0.0f)
+            {
+                aiUpdateTimer -= deltaTime;
+                return false;
+            }
+
+            if (lastUser != character && lastUser != null && lastUser.SelectedConstruction == item)
+            {
+                character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
+            }
+
+            LastUser = character;
             
             switch (objective.Option.ToLowerInvariant())
             {
-                case "power up":
-#if CLIENT
-                    onOffSwitch.BarScroll = 0.0f;
-#endif
+                case "powerup":
                     shutDown = false;
                     //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
                     if (degreeOfSuccess < 0.5f)
@@ -461,8 +498,14 @@ namespace Barotrauma.Items.Components
                     {
                         AutoTemp = false;
                         unsentChanges = true;
-                        UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, deltaTime);
-                    }                    
+                        UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, 1.0f);
+
+                    }
+#if CLIENT
+                    onOffSwitch.BarScroll = 0.0f;
+                    fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
+                    turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
+#endif
                     break;
                 case "shutdown":
 #if CLIENT
@@ -474,6 +517,8 @@ namespace Barotrauma.Items.Components
                     targetTurbineOutput = 0.0f;
                     break;
             }
+
+            aiUpdateTimer = AIUpdateInterval;
 
             return false;
         }

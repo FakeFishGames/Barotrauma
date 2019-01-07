@@ -100,7 +100,7 @@ namespace Barotrauma
             
             GUI.DrawBackgroundSprite(spriteBatch, GameMain.GameSession.Map.CurrentLocation.Type.Background);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
 
@@ -138,7 +138,10 @@ namespace Barotrauma
 
         private IEnumerable<object> LoadRound()
         {
-            GameMain.GameSession.StartRound(campaignUI.SelectedLevel, true);
+            GameMain.GameSession.StartRound(campaignUI.SelectedLevel, 
+                reloadSub: true, 
+                loadSecondSub: false,
+                mirrorLevel: GameMain.GameSession.Map.CurrentLocation != GameMain.GameSession.Map.SelectedConnection.Locations[0]);
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;

@@ -98,8 +98,8 @@ namespace Lidgren.Network
 			NetAddress ipAddress = null;
 			if (NetAddress.TryParse(ipOrHost, out ipAddress))
 			{
-				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-				{
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+                {
 					callback(ipAddress);
 					return;
 				}
@@ -139,7 +139,7 @@ namespace Lidgren.Network
 					// check each entry for a valid IP address
 					foreach (var ipCurrent in entry.AddressList)
 					{
-						if (ipCurrent.AddressFamily == AddressFamily.InterNetwork)
+						if (ipCurrent.AddressFamily == AddressFamily.InterNetwork || ipCurrent.AddressFamily == AddressFamily.InterNetworkV6)
 						{
 							callback(ipCurrent);
 							return;
@@ -176,22 +176,22 @@ namespace Lidgren.Network
 			NetAddress ipAddress = null;
 			if (NetAddress.TryParse(ipOrHost, out ipAddress))
 			{
-				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-					return ipAddress;
-				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
-			}
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+                    return ipAddress;
+                throw new ArgumentException("This method will not currently resolve other than IPv4 or IPv6 addresses");
+            }
 
-			// ok must be a host name
-			try
+            // ok must be a host name
+            try
 			{
 				var addresses = Dns.GetHostAddresses(ipOrHost);
 				if (addresses == null)
 					return null;
 				foreach (var address in addresses)
 				{
-					if (address.AddressFamily == AddressFamily.InterNetwork)
-						return address;
-				}
+                    if (address.AddressFamily == AddressFamily.InterNetwork || address.AddressFamily == AddressFamily.InterNetworkV6)
+                        return address;
+                }
 				return null;
 			}
 			catch (SocketException ex)
@@ -453,5 +453,17 @@ namespace Lidgren.Network
 			// this is defined in the platform specific files
 			return ComputeSHAHash(bytes, 0, bytes.Length);
 		}
-	}
+
+        /// <summary>
+        /// Maps the IPEndPoint object to an IPv6 address, if it is currently mapped to an IPv4 address.
+        /// </summary>
+        internal static IPEndPoint MapToIPv6(IPEndPoint endPoint)
+        {
+            if (endPoint.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return new IPEndPoint(endPoint.Address.MapToIPv6(), endPoint.Port);
+            }
+            return endPoint;
+        }
+    }
 }

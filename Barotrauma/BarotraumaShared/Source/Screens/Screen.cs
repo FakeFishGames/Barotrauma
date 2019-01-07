@@ -24,8 +24,12 @@
             {
                 selected.Deselect();
 #if CLIENT
-                GUI.KeyboardDispatcher.Subscriber = null;
-                GUI.ScreenChanged = true;
+                //make sure any textbox in the previously selected screen doesn't stay selected
+                if (GUI.KeyboardDispatcher.Subscriber != DebugConsole.TextBox)
+                {
+                    GUI.KeyboardDispatcher.Subscriber = null;
+                    GUI.ScreenChanged = true;
+                }
 #endif
             }
             selected = this;

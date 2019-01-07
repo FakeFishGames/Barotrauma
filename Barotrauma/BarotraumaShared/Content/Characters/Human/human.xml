@@ -1,142 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true">
+<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true" blooddecal="blood">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+  
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
   <health
     usehealthwindow="true"
     vitality="100"
+    crushdepth="-30000.0"
     doesbleed="true">
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorHead.png" sourcerect="69,0,118,256" highlightarea="112,0,30,36"/>
+    <Sprite texture="Content/UI/Health/MedUI_Silhouette.png" columns="7" rows="3" sourcerect="0,0,980,1056"/>
+    <Limb name="Head">
+      <Sprite texture="Content/UI/Health/MedUI_Head.png" sourcerect="0,0,140,352" highlightarea="44,0,52,58"/>
       <VitalityMultiplier type="damage" multiplier="2.0"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorTorso.png" sourcerect="69,0,118,256" highlightarea="107,36,40,108"/>
+    <Limb name="Torso">
+      <Sprite texture="Content/UI/Health/MedUI_Torso.png" sourcerect="0,0,140,352" highlightarea="39,59,62,109"/>
       <VitalityMultiplier type="bleeding" multiplier="2.0"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorLeftArm.png" sourcerect="69,0,118,256" highlightarea="71,42,38,110"/>
+    <Limb name="LeftArm">
+      <Sprite texture="Content/UI/Health/MedUI_LeftArm.png" sourcerect="0,0,140,352" highlightarea="104,70,36,145"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorRightArm.png" sourcerect="69,0,118,256" highlightarea="146,42,38,110"/>
+    <Limb name="RightArm">
+      <Sprite texture="Content/UI/Health/MedUI_RightArm.png" sourcerect="0,0,140,352" highlightarea="0,70,36,145"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorLeftLeg.png" sourcerect="69,0,118,256" highlightarea="103,135,22,121"/>
+    <Limb name="LeftLeg">
+      <Sprite texture="Content/UI/Health/MedUI_LeftLeg.png" sourcerect="0,0,140,352" highlightarea="74,187,34,165"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
-    <Limb>
-      <Sprite texture="Content/UI/Health/HealthIndicatorRightLeg.png" sourcerect="69,0,118,256" highlightarea="130,135,22,121"/>
+    <Limb name="RightLeg">
+      <Sprite texture="Content/UI/Health/MedUI_RightLeg.png" sourcerect="0,0,140,352" highlightarea="31,187,34,165"/>
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
   </health>
 
-  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
-  
-  <ragdoll headposition="154" torsoposition="115" 
-           stepsize="42.0, 12.0"
-           walkanimspeed="4.58"
-           movementlerp="0.4"
-           legtorque="15.0"
-           thightorque="-5.0"
-           walkspeed="1.5" swimspeed="2.0"
-           runspeedmultiplier="3.0" swimspeedmultiplier="1.2"
-           colliderheightfromfloor="55"
-           impacttolerance="7.5"
-           draggable="true">
+  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, LeftHand, RightHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
 
-    <collider height="55" radius="15"/>
-    <collider height="40" radius="15"/>
-    
-    <!-- head -->
-    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" healthindex="0">
-      <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,37,38" depth="0.04" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedhead.png" sourcerect="1,1,37,38" origin="0.5,0.5"/>
-    </limb>
-    <!-- body -->
-    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" healthindex="1">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,29,58" depth="0.05" origin="0.5,0.6"/>
-      <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6"/>
-    </limb>
-    <limb id = "12" radius="13" mass = "20" type="Waist" healthindex="1">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,0,32,29" depth="0.045" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5"/>
-    </limb>
-    
-  
-    <!-- left arm -->
-    <limb id = "2" radius="8" height="20" mass="3" type="LeftArm" healthindex="2">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.15" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="30,2,17,39" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0.0,-18.0" healthindex="2">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" depth="0.16" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
-    </limb>
-
-    <!-- right arm -->
-    <limb id = "4" radius="8" height="20" mass="3" type="RightArm" healthindex="3">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.01" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="30,2,17,39" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "5" radius="6" height="26" mass ="3" type="RightHand" pullpos="0.0,-18.0" healthindex="3">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
-    </limb>
-
-    <!-- left leg -->
-    <limb id = "6" radius="10" height="30" mass = "8" type="LeftThigh" healthindex="4">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" depth="0.15" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,32,26,48" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "7" radius="6" height="39" mass = "5" type="LeftLeg" healthindex="4">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" depth="0.16" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "8" radius="5" height="13" mass = "2" type ="LeftFoot" flip="true" pullpos="-5.0,0.0" healthindex="4">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="35,53,16,25" depth="0.14" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
-      <sound tag="footstep_metal"/>
-    </limb>
-  
-    <!-- right leg -->
-    <limb id = "9" radius="10" height="30" mass = "8" type="RightThigh" healthindex="5">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" depth="0.11" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "10" radius="6" height="39" mass = "5" type="RightLeg" healthindex="5">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" depth="0.12" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "11" radius="5" height="13" mass = "2" type ="RightFoot" flip="true" pullpos="-5.0,0.0" healthindex="5">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
-      <sound tag="footstep_metal"/>
-    </limb>
-
-    <!-- head to body -->
-    <joint limb1="0" limb1anchor="0,-7" limb2="1" limb2anchor="-1,26" lowerlimit="-90" upperlimit="45" canbesevered="true"/>
-    <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,7" lowerlimit="-10" upperlimit="10" canbesevered="false"/>
-    
-    <!-- body to left arm -->
-    <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12"/>
-    <joint limb1="2" limb1anchor="0,-16" limb2="3" limb2anchor="-2,19" lowerlimit="5" upperlimit="170" canbesevered="true"/>
-    <!-- body to right arm -->
-    <joint limb1="1" limb1anchor="-3,14" limb2="4" limb2anchor="0,12"/>
-    <joint limb1="4" limb1anchor="0,-16" limb2="5" limb2anchor="-2,19" lowerlimit="5" upperlimit="170" canbesevered="true"/>
-
-    <!-- body to left leg -->
-    <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="120" canbesevered="true"/>
-    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-120" upperlimit="0" canbesevered="true"/>
-    <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="20" upperlimit="90" canbesevered="true"/>
-  
-    <!-- body to right leg -->
-    <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="120" canbesevered="true"/>
-    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-120" upperlimit="0" canbesevered="true"/>
-    <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90" canbesevered="true"/>
-  
-  </ragdoll>
 </Character>
 

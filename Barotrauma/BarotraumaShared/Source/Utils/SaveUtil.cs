@@ -125,7 +125,24 @@ namespace Barotrauma
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + " failed.", e);
+                DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + "\" failed.", e);
+            }
+
+            //deleting a multiplayer save file -> also delete character data
+            if (Path.GetFullPath(Path.GetDirectoryName(filePath)).Equals(Path.GetFullPath(MultiplayerSaveFolder)))
+            {
+                string characterDataSavePath = MultiPlayerCampaign.GetCharacterDataSavePath(filePath);
+                if (File.Exists(characterDataSavePath))
+                {
+                    try
+                    {
+                        File.Delete(characterDataSavePath);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("ERROR: deleting character data file \"" + characterDataSavePath + "\" failed.", e);
+                    }
+                }
             }
         }
 
@@ -142,7 +159,7 @@ namespace Barotrauma
 
             if (!Directory.Exists(folder))
             {
-                DebugConsole.ThrowError("Save folder \"" + folder + " not found! Attempting to create a new folder");
+                DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder");
                 try
                 {
                     Directory.CreateDirectory(folder);
@@ -167,7 +184,7 @@ namespace Barotrauma
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
 
-            if (!Directory.Exists(SaveFolder))
+            if (!Directory.Exists(folder))
             {
                 DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);
@@ -275,6 +292,11 @@ namespace Barotrauma
                 return false;
 
             int iNameLen = BitConverter.ToInt32(bytes, 0);
+            if (iNameLen > 255)
+            {
+                throw new Exception("Failed to decompress \""+sDir+"\" (file name length > 255). The file may be corrupted.");
+            }
+
             bytes = new byte[sizeof(char)];
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < iNameLen; i++)

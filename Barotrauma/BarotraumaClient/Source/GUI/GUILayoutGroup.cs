@@ -102,8 +102,8 @@ namespace Barotrauma
                 child.SetPosition(childAnchor);
                 if (isHorizontal)
                 {
-                    child.RelativeOffset = new Vector2(relPos, 0);
-                    child.AbsoluteOffset = new Point(absPos, 0);
+                    child.RelativeOffset = new Vector2(relPos, child.RelativeOffset.Y);
+                    child.AbsoluteOffset = new Point(absPos, child.AbsoluteOffset.Y);
                     absPos += (int)((child.Rect.Width + absoluteSpacing) * stretchFactor);
                     if (stretch)
                     {
@@ -112,8 +112,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    child.RelativeOffset = new Vector2(0, relPos);
-                    child.AbsoluteOffset = new Point(0, absPos);
+                    child.RelativeOffset = new Vector2(child.RelativeOffset.X, relPos);
+                    child.AbsoluteOffset = new Point(child.AbsoluteOffset.X, absPos);
                     absPos += (int)((child.Rect.Height + absoluteSpacing) * stretchFactor);
                     if (stretch)
                     {

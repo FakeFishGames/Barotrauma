@@ -1,0 +1,17 @@
+﻿<MantisSwimSlow
+  movementspeed="3.5"
+  waveamplitude="0.3"
+  wavelength="25"
+  steertorque="25"
+  flip="True"
+  mirror="True"
+  rotatetowardsmovement="True"
+  headangle="-327.5781"
+  torsotorque="25"
+  headtorque="50"
+  foottorque="25"
+  tailtorque="50"
+  footangles="8: 0,10: 0"
+  cyclespeed="1"
+  torsoangle="NaN"
+  animationtype="SwimSlow" />

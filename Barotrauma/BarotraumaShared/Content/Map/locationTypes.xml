@@ -1,14 +1,13 @@
-﻿<locationtypes>
+<locationtypes>
   <None
     name="Natural Formation"
     namefile="Content/Map/locationNames.txt"
-    commonness="5"
     background="Content/Map/LocationPortraits/BeaconBackground.jpg"
-    allowedzones="1,2,3,4,5,6,7,8,9">
+    commonnessperzone="1: 5.0, 2: 5.0, 3: 5.0, 4: 5.0, 5: 5.0, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
     
     <nameformats f0="[name]"/>
 
-    <Symbol texture="Content/Map/beaconSymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,768,256,256" color="236,200,159,255"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
 
@@ -34,19 +33,18 @@
   <City
     name="Colony"
     namefile="Content/Map/cityNames.txt"
-    commonness="5"
     background="Content/Map/LocationPortraits/WorkCamp_Mining1.jpg"
-    allowedzones="1,2"
+    commonnessperzone="1: 5.0"
     halo="0,1,0,0.3">
 
-    <Symbol texture="Content/Map/citySymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,512,256,256" color="198,252,222,255"/>
 
-    <Hireable name="Assistant" commonness="10"/>
-    <Hireable name="Engineer" commonness="3"/>
-    <Hireable name="Mechanic" commonness="3"/>
-    <Hireable name="Medical Doctor" commonness="1"/>
-    <Hireable name="Security Officer" commonness="1"/>
-    <Hireable name="Captain" commonness="1"/>
+    <Hireable identifier="assistant" commonness="10"/>
+    <Hireable identifier="engineer" commonness="3"/>
+    <Hireable identifier="mechanic" commonness="3"/>
+    <Hireable identifier="medicaldoctor" commonness="1"/>
+    <Hireable identifier="securityofficer" commonness="1"/>
+    <Hireable identifier="captain" commonness="1"/>
 
     <nameformats
       f0="[name]"
@@ -58,19 +56,18 @@
   <Outpost
     name="Habitation Outpost"
     namefile="Content/Map/cityNames.txt"
-    commonness="5"
     background="Content/Map/LocationPortraits/HabitationOutpost.jpg"
-    allowedzones="1,2,3"
+    commonnessperzone="2: 5.0, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/citySymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,256,256,256" color="198,252,222,255"/>
     
-    <Hireable name="Assistant" commonness="10"/>
-    <Hireable name="Engineer" commonness="3"/>
-    <Hireable name="Mechanic" commonness="3"/>
-    <Hireable name="Medical Doctor" commonness="1"/>
-    <Hireable name="Security Officer" commonness="1"/>
-    <Hireable name="Captain" commonness="1"/>
+    <Hireable identifier="assistant" commonness="10"/>
+    <Hireable identifier="engineer" commonness="3"/>
+    <Hireable identifier="mechanic" commonness="3"/>
+    <Hireable identifier="medicaldoctor" commonness="1"/>
+    <Hireable identifier="securityofficer" commonness="1"/>
+    <Hireable identifier="captain" commonness="1"/>
 
     <!-- can become a city if there are no adjacent lairs -->
     <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair">
@@ -86,19 +83,18 @@
   <Military
     name="Military Outpost"
     namefile="Content/Map/locationNames.txt"
-    commonness="3"
     background="Content/Map/LocationPortraits/WorkCampMilitary.jpg"
-    allowedzones="1,2,3,4"
+    commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
     halo="0,1,0,0.4">
 
-    <Symbol texture="Content/Map/militarySymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,512,256,256" color="198,252,222,255"/>
     
-    <Hireable name="Security Officer" commonness="10"/>
-    <Hireable name="Captain" commonness="3"/>
-    <Hireable name="Assistant" commonness="2"/>
-    <Hireable name="Engineer" commonness="2"/>
-    <Hireable name="Mechanic" commonness="2"/>
-    <Hireable name="Medical Doctor" commonness="2"/>
+    <Hireable identifier="securityofficer" commonness="10"/>
+    <Hireable identifier="captain" commonness="3"/>
+    <Hireable identifier="assistant" commonness="2"/>
+    <Hireable identifier="engineer" commonness="2"/>
+    <Hireable identifier="mechanic" commonness="2"/>
+    <Hireable identifier="medicaldoctor" commonness="2"/>
 
     <nameformats
       f0="[name] Outpost"
@@ -112,17 +108,17 @@
     namefile="Content/Map/locationNames.txt"
     commonness="3"
     background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
-    allowedzones="1,2,3"
+    commonnessperzone="2: 1.25, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/researchSymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,256,256,256" color="198,252,222,255"/>
     
-    <Hireable name="Engineer" commonness="5"/>
-    <Hireable name="Mechanic" commonness="5"/>
-    <Hireable name="Medical Doctor" commonness="3"/>
-    <Hireable name="Assistant" commonness="3"/>
-    <Hireable name="Security Officer" commonness="1"/>
-    <Hireable name="Captain" commonness="1"/>
+    <Hireable identifier="engineer" commonness="5"/>
+    <Hireable identifier="mechanic" commonness="5"/>
+    <Hireable identifier="medicaldoctor" commonness="3"/>
+    <Hireable identifier="assistant" commonness="3"/>
+    <Hireable identifier="securityofficer" commonness="1"/>
+    <Hireable identifier="captain" commonness="1"/>
 
     <nameformats
       f0="[name] Research Facility"
@@ -130,16 +126,36 @@
       f2="[name] Institute of Astrobiology"
       f3="[name] Biomedical Research Center"/>
   </Research>
+  
+  <Mine
+    name="Mining Outpost"
+    namefile="Content/Map/locationNames.txt"
+    commonness="3"
+    background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
+    commonnessperzone="2: 1.25, 3: 2.5"
+    halo="0,1,0,0.2">
+
+    <Symbol texture="Content/Map/mine.png" color="198,252,222,255"/>
+    
+    <Hireable identifier="engineer" commonness="5"/>
+    <Hireable identifier="mechanic" commonness="5"/>
+    <Hireable identifier="assistant" commonness="3"/>
+
+    <nameformats
+      f0="[name] Mining Facility"
+      f1="[name] Mining Claim"
+      f2="[name] Prospecting Outpost"
+      f3="[name] Mine"/>
+  </Mine>
 
   <Lair
     name="Breeding Grounds"
     namefile="Content/Map/alienNames.txt"
-    commonness="2"
     background="Content/Map/LocationPortraits/BeaconBackground.jpg"
-    allowedzones="1,2,3,4,5,6,7,8,9"
+    commonnessperzone="1: 0.5, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.4">
 
-    <Symbol texture="Content/Map/beaconSymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,0,256,256" color="216,91,80,255"/>
 
     <nameformats
       f0="[name] Breeding Grounds"
@@ -154,12 +170,11 @@
   <Ruins
     name="Alien Ruins"
     namefile="Content/Map/alienNames.txt"
-    commonness="3"
     background="Content/Map/LocationPortraits/BeaconBackground.jpg"
-    allowedzones="3,4,5,6,7,8,9"
+    commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.2">
 
-    <Symbol texture="Content/Map/beaconSymbol.png"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,768,256,256" color="216,91,80,255"/>
     
     <nameformats
       f0="[name] Ruins"/>

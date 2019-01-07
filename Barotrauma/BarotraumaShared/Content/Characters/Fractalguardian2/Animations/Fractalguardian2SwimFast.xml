@@ -1,0 +1,17 @@
+﻿<Fractalguardian2SwimFast
+  movementspeed="1.5"
+  waveamplitude="0"
+  rotatetowardsmovement="False"
+  flip="False"
+  mirror="False"
+  wavelength="1"
+  torsotorque="25"
+  headtorque="10"
+  foottorque="25"
+  tailtorque="50"
+  footangles=""
+  steertorque="25"
+  cyclespeed="1"
+  headangle="0"
+  torsoangle="NaN"
+  animationtype="SwimFast" />

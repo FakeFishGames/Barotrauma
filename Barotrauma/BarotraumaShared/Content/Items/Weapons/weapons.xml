@@ -1,196 +1,195 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item
-    name="Spear"
-    identifier="spear"
-    category="Equipment"
-    interactthroughwalls="true"
-    cargocontainername="Metal Crate">
-
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="50"/>
-
+  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem">
+    <Price locationtype="Military" buyprice="55" />
+    <Price locationtype="City" buyprice="60" />
+    <Price locationtype="Outpost" buyprice="60" />
     <Deconstruct time="5">
-      <Item name="Steel Bar"/>
+      <Item identifier="steel" />
     </Deconstruct>
-
-    <Sprite texture="weapons.png" sourcerect="0,50,65,7" depth="0.55"/>
-
-    <Body width="64" height="5" density="20"/>
-
-    <Pickable slots="Any"/>
+    <Sprite texture="weapons.png" sourcerect="0,49,65,6" depth="0.55" />
+    <Body width="64" height="5" density="20" />
+    <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="50" stun="0.2" targetforce="50">
-        <affliction name="Bleeding" strength="30"/>
-        <affliction name="Internal Damage" strength="30"/>
+      <Attack structuredamage="50" stun="0.2" targetforce="20">
+        <Affliction identifier="bleeding" strength="30" />
+        <Affliction identifier="internaldamage" strength="30" />
       </Attack>
     </Projectile>
   </Item>
-  
-  <Item
-    name="Harpoon Gun"
-    identifier="harpoongun"
-    category="Equipment"
-    cargocontainername="Metal Crate"
-    tags="weapon">
-
-    <Price locationtype="Military" buyprice="400"/>
-    <Price locationtype="City" buyprice="500"/>
-    
-    <Deconstruct time="10">      
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>      
-      <Item name="Polycarbonate Bar"/>
+  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem">
+    <Price locationtype="Military" buyprice="55" />
+    <Price locationtype="City" buyprice="60" />
+    <Price locationtype="Outpost" buyprice="60" />
+    <Deconstruct time="5">
+      <Item identifier="steel" />
     </Deconstruct>
-  
-    <Sprite texture="weapons.png" sourcerect="0,25,98,25" depth="0.55"/>
-
-    <Body width="90" height="30" density="50"/>
-
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true"
-              holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
-    
+    <Sprite texture="weapons.png" sourcerect="0,49,65,6" depth="0.55" />
+    <Body width="64" height="5" density="20" />
+    <Pickable slots="Any" />
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
+      <Attack structuredamage="50" stun="0.2">
+        <Affliction identifier="bleeding" strength="30" />        
+      </Attack>
+      <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All"/>
+      <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
+      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
+        <Explosion range="200.0" structuredamage="50" stun="2" force="15.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="internaldamage" strength="40"/>
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnBroken">
+        <Remove/>
+      </StatusEffect>
+    </Projectile>    
+  </Item>
+  <Item name="Harpoon Gun"
+        identifier="harpoongun"
+        category="Equipment"
+        cargocontaineridentifier="metalcrate"
+        tags="mediumitem,weapon"
+        Scale="0.32">
+    <Price locationtype="Military" buyprice="170" />
+    <Price locationtype="City" buyprice="200" />
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+      <Item identifier="plastic" />
+    </Deconstruct>
+    <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" />
+    <Body width="90" height="30" density="50" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" />
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10">
-      <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
-      <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse" />
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="5.0"/>
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
-      <RequiredItems name="Spear" type="Contained" msg="Spear required to shoot"/>
-      <RequiredSkill name="Weapons" level="30"/>
+      <RequiredItems identifiers="spear,alienspear,explosivespear" type="Contained" msg="ItemMsgSpearRequired" />
+      <RequiredSkill identifier="weapons" level="30" />
     </RangedWeapon>
-
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
-      <Containable name="Spear"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
+      <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Syringe Gun"
-    identifier="syringegun"
-    category="Equipment"
-    cargocontainername="Metal Crate"
-    tags="weapon">
-
-    <Price locationtype="Research" buyprice="700"/>
-    <Price locationtype="Military" buyprice="800"/>
-    <Price locationtype="City" buyprice="1000"/>
-    
-    <Deconstruct time="10">      
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>      
-      <Item name="Polycarbonate Bar"/>
+  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem">
+    <Price locationtype="Research" buyprice="300" />
+    <Price locationtype="Military" buyprice="350" />
+    <Price locationtype="City" buyprice="500" />
+    <Deconstruct time="10">
+      <Item identifier="aluminium" />
+      <Item identifier="plastic" />
     </Deconstruct>
-  
-    <Sprite texture="weapons.png" sourcerect="62,97,44,24" depth="0.55"/>
-
-    <Body width="40" height="25" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
-              aimpos="90,10" handle1="-10,-7"/>
-    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64" />
+    <Sprite texture="weapons.png" sourcerect="56,98,44,27" depth="0.55" />
+    <Body width="40" height="25" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-10,-7" />
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
-      <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse"/>
-      <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
-      <RequiredSkill name="Weapons" level="15"/>
-      <RequiredSkill name="Medical" level="30"/>
+      <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse" />
+      <RequiredItems identifier="medicalsyringe" type="Contained" msg="ItemMsgSyringeRequired" />
+      <RequiredSkill identifier="weapons" level="15" />
+      <RequiredSkill identifier="medical" level="30" />
     </RangedWeapon>
-
     <ItemContainer capacity="1" itempos="0,10" hideitems="false">
-      <Containable name="Medical Syringe"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
+      <Containable identifiers="medicalsyringe" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Revolver Round"
-    identifier="revolverround"
-    category="Equipment"
-    interactthroughwalls="true"
-    cargocontainername="Metal Crate"
-    tags="smallitem">
-
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="80"/>
-    
-    <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
-
-    <Body width="8" height="3" density="40"/>
-
-    <Pickable slots="Any"/>
-    <Projectile characterusable="false" hitscan="true" removeonhit="true" >
-      <Attack structuredamage="100" stun="0.5" targetforce="50">
-        <affliction name="Gunshot wound" strength="40"/>
-        <affliction name="Internal Damage" strength="30"/>
+  <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem">
+    <Price locationtype="Military" buyprice="15" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
+    <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
+    <Body width="8" height="3" density="40" />
+    <Pickable slots="Any" />
+    <Projectile characterusable="false" hitscan="true" removeonhit="true">
+      <Attack structuredamage="100" stun="0.5" targetforce="10">
+        <Affliction identifier="gunshotwound" strength="40" />
+        <Affliction identifier="internaldamage" strength="30" />
       </Attack>
     </Projectile>
   </Item>
-  
-  <Item
-    name="Revolver"
-    identifier="revolver"
-    category="Equipment"
-    cargocontainername="Metal Crate"
-    tags="smallitem,weapon">
-
-    <Price locationtype="Military" buyprice="800"/>
-    <Price locationtype="City" buyprice="1000"/>
-    
+  <Item name="Revolver"
+        identifier="revolver"
+        category="Equipment"
+        cargocontaineridentifier="metalcrate"
+        tags="smallitem,weapon"
+        Scale="0.32">
+    <Price locationtype="Military" buyprice="300" />
+    <Price locationtype="City" buyprice="500" />
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="steel" />
+      <Item identifier="plastic" />
     </Deconstruct>
-    
-    <Sprite texture="weapons.png" sourcerect="26,97,25,19" depth="0.55"/>
-
-    <Body width="25" height="15" density="50"/>
- 
-    <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
-      aimpos="90,10" handle1="-11,-7"/> 
-    
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" />
+    <Sprite texture="weapons_new.png" sourcerect="0,0,117,64" depth="0.55" />
+    <Body width="28" height="20" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" />
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
-      <Sound file="Content/Items/Weapons/revolver.ogg" type="OnUse" range="3000"/>
+      <Sound file="Content/Items/Weapons/revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
+      <Sound file="Content/Items/Weapons/revolver2.ogg" type="OnUse" range="3000" />
+      <Sound file="Content/Items/Weapons/revolver3.ogg" type="OnUse" range="3000" />
+      <Sound file="Content/Items/Weapons/revolver4.ogg" type="OnUse" range="3000" />
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
-      <RequiredItems name="Revolver Round" type="Contained" msg="Out of ammo"/>
-      <RequiredSkill name="Weapons" level="40"/>
+      <RequiredItems identifier="revolverround" type="Contained" msg="ItemMsgAmmoRequired" />
+      <RequiredSkill identifier="weapons" level="40" />
     </RangedWeapon>
-
     <ItemContainer capacity="6" hideitems="true">
-      <Containable name="Revolver Round"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <Containable identifiers="revolverround" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Stun Grenade"
-    identifier="stungrenade"
-    category="Equipment"
-    cargocontainername="Explosive Crate"
-    tags="smallitem,weapon,explosive">
-
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="250"/>
-    <Price locationtype="Outpost" buyprice="300"/>
-    
+  <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
+    <Price locationtype="Military" buyprice="175" />
+    <Price locationtype="City" buyprice="200" />
+    <Price locationtype="Outpost" buyprice="250" />
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Flash Powder" mincondition="0.9"/>
-      <Item name="Chloral Hydrate" mincondition="0.9"/>
+      <Item identifier="iron" />
+      <Item identifier="phosphorus" mincondition="0.9" />
+      <Item identifier="flashpowder" mincondition="0.9" />
     </Deconstruct>
-
-    <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" />
+    <Sprite texture="weapons.png" sourcerect="114,1,14,27" depth="0.55" />
+    <Body width="11" height="24" density="30" />
+    <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
+    <ItemComponent characterusable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <Explosion range="500" stun="25" force="0.1" smoke="false">
+          <Affliction identifier="internaldamage" strength="5" />
+        </Explosion>
+      </StatusEffect>
+    </ItemComponent>
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <Explosion range="500" stun="25" force="0.1" smoke="false">
+          <Affliction identifier="internaldamage" strength="5" />
+        </Explosion>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  
+  <Item
+    name="EMP Grenade" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
+    <Deconstruct time="10">
+      <Item identifier="iron" />
+      <Item identifier="copper" mincondition="0.9" />
+      <Item identifier="uex" mincondition="0.9" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" />
+    <Sprite texture="weapons.png" sourcerect="114,1,14,27" depth="0.55" />
     <Body width="11" height="24" density="30"/>
-    
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
-        <Explosion range="500" stun="25" force="0.1" smoke="false">
-          <affliction name="Internal Damage" strength="5"/>
+        <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
+          <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
       </StatusEffect>
     </ItemComponent>
@@ -198,113 +197,141 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
-        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false">
-          <affliction name="Internal Damage" strength="5"/>
+        <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
+          <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
       </StatusEffect>
     </Throwable>
   </Item>
 
   <Item
-    name="Incendium Grenade"
-    identifier="incendiumgrenade"
-    category="Equipment"    
-    cargocontainername="Explosive Crate"
-    tags="smallitem,weapon,explosive">
-
+    name="Frag Grenade" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Flash Powder" mincondition="0.9"/>
-      <Item name="Incendium Bar" mincondition="0.9"/>
+      <Item identifier="iron" />
+      <Item identifier="uex" mincondition="0.9" />
     </Deconstruct>
-
-    <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
-
+    <!-- TODO: sprite and inventory icon-->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" />
+    <Sprite texture="weapons.png" sourcerect="114,1,14,27" depth="0.55" />
     <Body width="11" height="24" density="30"/>
-
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
-        <Explosion range="500" stun="25" force="0.1" smoke="false">
-          <affliction name="Internal Damage" strength="5"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
+        <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+          <Affliction identifier="burn" strength="100"/>
+          <Affliction identifier="internaldamage" strength="100"/>
         </Explosion>
       </StatusEffect>
     </ItemComponent>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
+        <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+          <Affliction identifier="burn" strength="50"/>
+          <Affliction identifier="internaldamage" strength="20"/>
+        </Explosion>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  
+  <Item name="Incendium Grenade" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
+    <Deconstruct time="10">
+      <Item identifier="iron" />
+      <Item identifier="incendium" mincondition="0.9" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,320,64,64" />
+    <Sprite texture="weapons.png" sourcerect="100,0,12,27" depth="0.55" />
+    <Body width="12" height="27" density="30" />
+    <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
+    <ItemComponent characterusable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <Explosion range="500" stun="25" force="0.1" smoke="false">
+          <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="burn" strength="100"/>
+        </Explosion>
+        <Fire size="300.0" />
+      </StatusEffect>
+    </ItemComponent>
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
-          <affliction name="Internal Damage" strength="5"/>
+          <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="burn" strength="100"/>
         </Explosion>
-        <Fire size="300.0"/>
+        <Fire size="300.0" />
       </StatusEffect>
     </Throwable>
   </Item>
-
-  <Item
-    name="Stun Baton"
-    identifier="stunbaton"
-    category="Equipment"
-    Tags="smallitem,weapon"
-    cargocontainername="Metal Crate"
-    description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
-
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="500"/>
-    <Price locationtype="Outpost" buyprice="500"/>
-    
+  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="200" />
+    <Price locationtype="Outpost" buyprice="500" />
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="steel" />
+      <Item identifier="button" />
     </Deconstruct>
-
-    <Sprite texture="weapons.png" sourcerect="21,0,77,22" depth="0.55"/>
-    
-    <Body width="90" height="30" density="30"/>
-
-    <MeleeWeapon slots="Any,RightHand,LeftHand"
-              aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <Attack stun="0.2" sound="Content/Items/Weapons/smack.ogg">
-        <affliction name="Internal Damage" strength="2"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,0,64,64" />
+    <Sprite texture="weapons.png" sourcerect="19,0,76,24" depth="0.55" />
+    <Body width="90" height="30" density="30" />
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <Attack stun="0.2">
+        <Sound file="Content/Items/Weapons/smack.ogg" range="800"/>
+        <Affliction identifier="internaldamage" strength="2" />
       </Attack>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/stunbaton.ogg"/>
-        <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
-        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" camerashake="5.0"/>
+        <sound file="Content/Items/Weapons/stunbaton1.ogg" selectionmode="random" range="500" />
+        <sound file="Content/Items/Weapons/stunbaton2.ogg" range="500" />
+        <sound file="Content/Items/Weapons/stunbaton3.ogg" range="500" />
+        <sound file="Content/Items/Weapons/stunbaton4.ogg" range="500" />
+        <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/stunbaton.ogg"/>
-        <RequiredItem name="Fulgurium Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
-        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" camerashake="5.0"/>
-      </StatusEffect>      
+        <sound file="Content/Items/Weapons/stunbaton1.ogg" selectionmode="random" range="500" />
+        <sound file="Content/Items/Weapons/stunbaton2.ogg" range="500" />
+        <sound file="Content/Items/Weapons/stunbaton3.ogg" range="500" />
+        <sound file="Content/Items/Weapons/stunbaton4.ogg" range="500" />
+        <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
+      </StatusEffect>
     </MeleeWeapon>
-
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell"/>
-      <Containable name="Fulgurium Battery Cell"/>      
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
+      <Containable identifiers="batterycell,fulguriumcatterycell" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Bike Horn"
-    identifier="bikehorn"
-    category="Equipment"
-    tags="weapon,smallitem"
-    cargocontainername="Metal Crate"
-    description="HONK">
-
-    <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55"/>
-
-    <Body width="30" height="10" density="10"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0"/>
-
+  <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <Deconstruct time="10">
+      <Item identifier="iron" />
+    </Deconstruct>
+    <!-- TODO: inventory icon and sprite -->
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,0,64,64" />
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="0,47,32,10" depth="0.55" />
+    <Body width="30" height="7" density="50" />
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="2.0">
+      <Attack stun="0.2">
+        <Affliction identifier="bleeding" strength="10"/>
+        <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500"/>
+      </Attack>
+    </MeleeWeapon>
+  </Item>
+  <Item name="Bike Horn" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
+    <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55" />
+    <Body width="30" height="10" density="15" />
+    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0" />
     <RangedWeapon reload="2">
-      <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse" />
     </RangedWeapon>
   </Item>
 </Items>
-
-

@@ -43,6 +43,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+
+        [Serialize(false, false)]
+        public bool AutoInteractWithContained
+        {
+            get;
+            set;
+        }
+
         //the position of the first item in the container
         private Vector2 itemPos;
         [Serialize("0.0,0.0", false)]
@@ -114,8 +122,12 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "containable":
-                        RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable == null) continue;                        
+                        RelatedItem containable = RelatedItem.Load(subElement, item.Name);
+                        if (containable == null)
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
+                            continue;
+                        }
                         containableItems.Add(containable);
                         break;
                 }
@@ -182,8 +194,36 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool Select(Character character)
+        {
+            if (AutoInteractWithContained)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    if (contained.TryInteract(character))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return base.Select(character);
+        }
+
         public override bool Pick(Character picker)
         {
+            if (AutoInteractWithContained)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    if (contained.TryInteract(picker))
+                    {
+                        return true;
+                    }
+                }
+            }
+
             return (picker != null);
         }
 
@@ -210,10 +250,19 @@ namespace Barotrauma.Items.Components
             foreach (Item contained in Inventory.Items)
             {
                 if (contained == null) continue;
-
                 if (contained.body != null)
                 {
-                    contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    try
+                    {
+                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions ("+e.Message+")\n"+e.StackTrace);
+                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:"+contained.Name,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                    }
                 }
 
                 contained.Rect =
@@ -260,6 +309,7 @@ namespace Barotrauma.Items.Components
             inventoryTopSprite?.Remove();
             inventoryBackSprite?.Remove();
             inventoryBottomSprite?.Remove();
+            ContainedStateIndicator?.Remove();
 #endif
         }
 

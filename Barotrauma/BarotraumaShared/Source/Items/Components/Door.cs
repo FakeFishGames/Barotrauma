@@ -66,6 +66,7 @@ namespace Barotrauma.Items.Components
         }
 
         private float stuck;
+        [Serialize(0.0f, false)]
         public float Stuck
         {
             get { return stuck; }
@@ -73,9 +74,14 @@ namespace Barotrauma.Items.Components
             {
                 if (isOpen || isBroken) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (stuck == 0.0f) isStuck = false;
-                if (stuck == 100.0f) isStuck = true;
+                if (stuck <= 0.0f) isStuck = false;
+                if (stuck >= 100.0f) isStuck = true;
             }
+        }
+
+        public bool? PredictedState
+        {
+            get { return predictedState; }
         }
 
         public Gap LinkedGap
@@ -113,6 +119,11 @@ namespace Barotrauma.Items.Components
                 createdNewGap = true;
                 return linkedGap;
             }
+        }
+
+        public bool IsHorizontal
+        {
+            get { return isHorizontal; }
         }
         
         [Serialize("0.0,0.0,0.0,0.0", false)]
@@ -468,48 +479,52 @@ namespace Barotrauma.Items.Components
                 SetState(signal != "0", false, true);
             }
 
+#if SERVER
             bool newState = predictedState == null ? isOpen : predictedState.Value;
             if (sender != null && wasOpen != newState)
             {
                 GameServer.Log(sender.LogName + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+#endif
         }
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (isStuck || (predictedState == null && isOpen == open) || (predictedState != null && isOpen == predictedState.Value)) return;
+#if CLIENT
+            if (isStuck || 
+                (predictedState == null && isOpen == open) || 
+                (predictedState != null && isOpen == predictedState.Value && isOpen == open)) return;
 
             if (GameMain.Client != null && !isNetworkMessage)
             {
-                //clients can "predict" that the door opens/closes when a signal is received
+                bool stateChanged = open != predictedState;
 
+                //clients can "predict" that the door opens/closes when a signal is received
                 //the prediction will be reset after 1 second, setting the door to a state
                 //sent by the server, or reverting it back to its old state if no msg from server was received
-
-#if CLIENT
-                if (open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
-#endif
-
                 predictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-                
+                if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
             }
             else
             {
+#endif
+                isOpen = open;
 #if CLIENT
                 if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
+            }
 #endif
 
-                isOpen = open;
-            }
 
             //opening a partially stuck door makes it less stuck
             if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
 
+#if SERVER
             if (sendNetworkMessage)
             {
                 item.CreateServerEvent(this);
             }
+#endif
         }
 
         public override void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)

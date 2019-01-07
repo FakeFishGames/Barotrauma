@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="AlienHatchAssembly" description="" hideinmenus="true">
+  <Item name="Alien Hatch" identifier="alienhatch" ID="5" rect="-128,48,260,95" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="alien" spritedepth="0.8" scale="1">
+    <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="True" msg="Force open [Crowbar]">
+      <requireditem identifiers="crowbar" type="Equipped" msg="" />
+    </Door>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
+      <input name="toggle">
+        <link w="10" />
+        <link w="11" />
+      </input>
+      <input name="set_state" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="9" rect="-1,-80,24,27" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="smallitem" spritedepth="0.8" scale="1">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="Press E">
+      <requireditem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <output name="signal_out">
+        <link w="11" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Alien Button" identifier="alienbutton" ID="6" rect="-1,112,24,27" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="smallitem" spritedepth="0.8" scale="1">
+    <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="Press E">
+      <requireditem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <output name="signal_out">
+        <link w="10" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="11" rect="14,32,48,20" displaysidebysidewhenlinked="False" description="" spritecolor="0.1960784,0.1960784,0.1960784,1" inventoryiconcolor="0.1960784,0.1960784,0.1960784,1" containercolor="1,1,1,1" tags="smallitem,wire" spritedepth="0.55" scale="1">
+    <Holdable swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="11;-93.5;2;0.5" />
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="10" rect="12,26,48,20" displaysidebysidewhenlinked="False" description="" spritecolor="0.1960784,0.1960784,0.1960784,1" inventoryiconcolor="0.1960784,0.1960784,0.1960784,1" containercolor="1,1,1,1" tags="smallitem,wire" spritedepth="0.55" scale="1">
+    <Holdable swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="11;98.5;2;0.5" />
+  </Item>
+</ItemAssembly>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -22,7 +23,7 @@ namespace Barotrauma
 
         private bool isMultiplayer;
 
-        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer)
+        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<string> saveFiles=null)
         {
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
@@ -74,8 +75,8 @@ namespace Barotrauma
                     
                     if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
                     {
-                        ((GUITextBlock)subList.Selected).TextColor = Color.DarkRed * 0.8f;
-                        subList.Selected.CanBeFocused = false;
+                        ((GUITextBlock)subList.SelectedComponent).TextColor = Color.DarkRed * 0.8f;
+                        subList.SelectedComponent.CanBeFocused = false;
                         subList.Deselect();
                         return false;
                     }
@@ -124,7 +125,7 @@ namespace Barotrauma
                 }
             };
 
-            UpdateLoadMenu();
+            UpdateLoadMenu(saveFiles);
         }
 
         public void CreateDefaultSaveName()
@@ -135,7 +136,11 @@ namespace Barotrauma
 
         public void UpdateSubList()
         {
+#if DEBUG
             var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
+#else
+            var subsToShow = Submarine.SavedSubmarines;
+#endif
 
             subList.ClearChildren();
 
@@ -180,14 +185,21 @@ namespace Barotrauma
                     };
                 }
             }
-            if (Submarine.SavedSubmarines.Any()) subList.Select(Submarine.SavedSubmarines.First());
+            if (Submarine.SavedSubmarines.Any())
+            {
+                var nonShuttles = subsToShow.Where(s => !s.HasTag(SubmarineTag.Shuttle)).ToList();
+                if (nonShuttles.Count > 0)
+                {
+                    subList.Select(nonShuttles[Rand.Int(nonShuttles.Count)]);
+                }
+            }
         }
 
-        public void UpdateLoadMenu()
+        public void UpdateLoadMenu(IEnumerable<string> saveFiles=null)
         {
             loadGameContainer.ClearChildren();
 
-            string[] saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
+            if (saveFiles==null) saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
 
             saveList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform, Anchor.CenterLeft))
             {

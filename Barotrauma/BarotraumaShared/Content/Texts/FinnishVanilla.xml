@@ -1,0 +1,811 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="Finnish (Google Translate)">
+  <!-- Loading screen -->
+  <Loading>Ladataan...</Loading>
+  <PressAnyKey>Paina mitä tahansa näppäintä jatkaaksesi.</PressAnyKey>
+  <!-- Main menu buttons -->
+  <TutorialButton>Koulutus</TutorialButton>
+  <NewGameButton>Uusi peli</NewGameButton>
+  <LoadGameButton>Lataa peli</LoadGameButton>
+  <JoinServerButton>Liity palvelimelle</JoinServerButton>
+  <HostServerButton>Luo palvelin</HostServerButton>
+  <SubEditorButton>Sukellusvene-editori</SubEditorButton>
+  <CharacterEditorButton>Hahmoeditori</CharacterEditorButton>
+  <SettingsButton>Asetukset</SettingsButton>
+  <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
+  <QuitButton>Poistu</QuitButton>
+  <!-- Host server menu -->
+  <ServerName>Palvelimen nimi</ServerName>
+  <ServerPort>Palvelimen portti</ServerPort>
+  <ServerPortToolTip>Portti, jota käytetään kommunikointiin pelaajien kanssa. Jos pelaajat eivät pysty muodostamaan yhteyttä palvelimeen, saatat joutua ottamaan käyttöön UPnP-portin edelleenlähetyksen portin siirtämiseksi manuaalisesti eteenpäin.</ServerPortToolTip>
+  <ServerQueryPort>Kyselyportti</ServerQueryPort>
+  <ServerQueryPortToolTip>Portti, jota käytetään kommunikoimaan Steamin palvelinselaimen kanssa ja vastaamaan asiakkaiden tiedotuspisteisiin. Jos asiakkaat eivät näe palvelimesi palvelinluettelossa tai jos niiden häyryn tunnuksen autentikointi epäonnistuu, saatat joutua ottamaan käyttään UPnP-portin edelleenlähetyksen portin siirtämiseksi manuaalisesti eteenpäin.</ServerQueryPortToolTip>
+  <MaxPlayers>Maksimimäärä pelaajia</MaxPlayers>
+  <Password>Salasana</Password>
+  <PublicServer>Julkinen palvelin</PublicServer>
+  <PublicServerToolTip>Julkiset palvelimet näkyvät "Join Server" -tab -palvelimen käytettävissä olevien palvelimien luettelossa.</PublicServerToolTip>
+  <AttemptUPnP>Yritä UPnP-portin edelleenlähetys</AttemptUPnP>
+  <AttemptUPnPToolTip>UPnP: tä voidaan käyttää reitittimen porttien välittämiseen, jotta pelaajat voivat liittyä palvelimeen. Kuitenkin, kaikki reitittimet eivät tue UPnP: tä, joten sinun on ehkä asetettava portti eteenpäin manuaalisesti, jos pelaajat eivät pysty liittymään palvelimeen (katso ohjeet lukemista varten).</AttemptUPnPToolTip>
+  <StartServerButton>alkaa</StartServerButton>
+  <PleaseWaitUPnP>Odota...</PleaseWaitUPnP>
+  <AttemptingUPnP>Yritetään UPnP-portin edelleenlähetystä.</AttemptingUPnP>
+  <UPnPUnavailable>UPnP ei ole käytettävissä.</UPnPUnavailable>
+  <UPnPTimedOut>UPnP-etsintä kestää.</UPnPTimedOut>
+  <!-- Steam Workshop menu -->
+  <DownloadButton>Lataa</DownloadButton>
+  <!-- Settings menu -->
+  <Settings>Asetukset</Settings>
+  <Resolution>Päätöslauselma</Resolution>
+  <DisplayMode>Näyttötila</DisplayMode>
+  <Fullscreen>Koko näyttö</Fullscreen>
+  <Windowed>Ikkunoitu</Windowed>
+  <BorderlessWindowed>Reunaton ikkuna</BorderlessWindowed>
+  <EnableVSync>VSync käytössä</EnableVSync>
+  <ParticleLimit>Partikkelien määrä</ParticleLimit>
+  <LosEffect>Näkökenttä-efekti</LosEffect>
+  <LosModeNone>Ei mitään</LosModeNone>
+  <LosModeTransparent>Läpinäkyvä</LosModeTransparent>
+  <LosModeOpaque>Läpinäkymätön</LosModeOpaque>
+  <ChromaticAberration>Chromatic aberration</ChromaticAberration>
+  <SoundVolume>Äänenvoimakkuus</SoundVolume>
+  <MusicVolume>Musiikin voimakkuus</MusicVolume>
+  <Controls>Kontrollit</Controls>
+  <Language>Kieli</Language>
+  <ContentPackage>Sisältöpaketti</ContentPackage>
+  <ContentPackages>Sisältöpaketit</ContentPackages>
+  <CorePackageRequiredWarning>Et voi poistaa sisältöpaketin valintaa, koska se on ydinpaketti, jota peli tarvitsee. Voit vaihtaa sen valitsemalla toisen ydinpaketin.</CorePackageRequiredWarning>
+  <ApplySettingsButton>Käytä</ApplySettingsButton>
+  <ApplySettingsLabel>Ota muutokset käyttöön?</ApplySettingsLabel>
+  <ApplySettingsQuestion>Haluatko soveltaa asetuksia vai hylätä muutokset?</ApplySettingsQuestion>
+  <ApplySettingsYes>Käytä</ApplySettingsYes>
+  <ApplySettingsNo>Hylkää</ApplySettingsNo>
+  <RestartRequiredLabel>Uudelleenkäynnistys vaaditaan</RestartRequiredLabel>
+  <RestartRequiredText>Sinun täytyy käynnistää peli uudelleen, jotta päätöslauselman muutokset tulevat voimaan.</RestartRequiredText>
+  <!-- Server settings menu -->
+  <ServerSettingsRoundsTab>Kierrokset</ServerSettingsRoundsTab>
+  <ServerSettingsServerTab>Palvelin</ServerSettingsServerTab>
+  <ServerSettingsBanlistTab>Bannilista</ServerSettingsBanlistTab>
+  <ServerSettingsWhiteListTab>Whitelist</ServerSettingsWhiteListTab>
+  <ServerSettingsSubSelection>Sukellusveneen valinta</ServerSettingsSubSelection>
+  <ServerSettingsModeSelection>Pelimoodin valinta</ServerSettingsModeSelection>
+  <ServerSettingsEndRoundWhenDestReached>Lopeta, kun kohde saavutetaan</ServerSettingsEndRoundWhenDestReached>
+  <ServerSettingsEndRoundVoting>Lopeta kierros äänestämällä</ServerSettingsEndRoundVoting>
+  <ServerSettingsEndRoundVotesRequired>Vaaditut äänet:</ServerSettingsEndRoundVotesRequired>
+  <ServerSettingsAllowRespawning>Salli respawnaus</ServerSettingsAllowRespawning>
+  <ServerSettingsRespawnInterval>Aikaväli:</ServerSettingsRespawnInterval>
+  <ServerSettingsMinRespawn>Respawnattavien pelaajien minimimäärä:</ServerSettingsMinRespawn>
+  <ServerSettingsMinRespawnToolTip>Mikä prosenttiosuus pelaajista on kuollut / katseltava, kunnes respawn-shuttle lähetetään.</ServerSettingsMinRespawnToolTip>
+  <ServerSettingsRespawnDuration>Lunastetun kuljetuksen kesto:</ServerSettingsRespawnDuration>
+  <ServerSettingsRespawnDurationToolTip>Pelattavien pelaajien määrä on suunnattava jälleenmyyjäksi tärkeimmille sukellusveneille. Kun kesto päättyy, sukkula siirtyy automaattisesti takaisin tasosta.</ServerSettingsRespawnDurationToolTip>
+  <ServerSettingsMonsterSpawns>Monster Spawns</ServerSettingsMonsterSpawns>
+  <ServerSettingsAdditionalCargo>Lisää lastia</ServerSettingsAdditionalCargo>
+  <ServerSettingsAutoRestartDelay>Autorestart-viive:</ServerSettingsAutoRestartDelay>
+  <ServerSettingsAllowSpectating>Salli katsominen</ServerSettingsAllowSpectating>
+  <ServerSettingsAllowVoteKick>Salli ääni potkia</ServerSettingsAllowVoteKick>
+  <ServerSettingsKickVotesRequired>Vaaditut äänet:</ServerSettingsKickVotesRequired>
+  <ServerSettingsAutobanTime>Autoban kesto:</ServerSettingsAutobanTime>
+  <ServerSettingsShareSubFiles>Jaa sukellusvenetyyppiset tiedostot pelaajien kanssa</ServerSettingsShareSubFiles>
+  <ServerSettingsRandomizeSeed>Randomize tasorasvojen välillä kierroksia</ServerSettingsRandomizeSeed>
+  <ServerSettingsSaveLogs>Tallenna palvelinlokit</ServerSettingsSaveLogs>
+  <ServerSettingsAllowRagdollButton>Salli ragdoll -painike</ServerSettingsAllowRagdollButton>
+  <ServerSettingsUseTraitorRatio>Käytä% pelaajista max pettureille</ServerSettingsUseTraitorRatio>
+  <ServerSettingsTraitorRatio>Petturi suhde:</ServerSettingsTraitorRatio>
+  <ServerSettingsTraitorCount>Poliittisten määrä:</ServerSettingsTraitorCount>
+  <ServerSettingsUseKarma>Käytä Karmaa</ServerSettingsUseKarma>
+  <WhiteListEnabled>Käytössä</WhiteListEnabled>
+  <WhiteListName>Nimi</WhiteListName>
+  <WhiteListIP>IP-osoite</WhiteListIP>
+  <WhiteListAdd>Lisää sallittujen luetteloon</WhiteListAdd>
+  <WhiteListRemove>Poistaa</WhiteListRemove>
+  <BanRange>Ban-alue</BanRange>
+  <BanListRemove>Poistaa</BanListRemove>
+  <BanExpires>Vanhentuu [time]</BanExpires>
+  <BanDuration>Kesto</BanDuration>
+  <BanPermanent>Pysyvä</BanPermanent>
+  <BanReason>Syy:</BanReason>
+  <!-- Round summary -->
+  <RoundSummaryProgress>[sub] on siirtynyt [location].</RoundSummaryProgress>
+  <RoundSummaryProgress>[sub] on saapunut [location].</RoundSummaryProgress>
+  <RoundSummaryReturn>[sub] on palannut [location].</RoundSummaryReturn>
+  <RoundSummaryGameOver>Meri on väittänyt [sub] ja sen miehistön.</RoundSummaryGameOver>
+  <RoundSummaryCrewStatus>Miehistön tila</RoundSummaryCrewStatus>
+  <!-- Character HUD -->
+  <OxygenHUDWarning>Happi alhainen</OxygenHUDWarning>
+  <PressureHUDWarning>Korkeapaine</PressureHUDWarning>
+  <Grabbing>tarttumalla</Grabbing>
+  <Stun>Tainnuttaa</Stun>
+  <Disguised>(Naamioitu)</Disguised>
+  <UseItemButton>Käyttää</UseItemButton>
+  <GrabHint>[[avain]] Tartu</GrabHint>
+  <HealHint>[[key]] Heal</HealHint>
+  <!-- Status -->
+  <StatusOK>kunnossa</StatusOK>
+  <Unconscious>Tajuton</Unconscious>
+  <Injured>Loukkaantunut</Injured>
+  <!-- Limbs -->
+  <LeftHand>Vasen käsi</LeftHand>
+  <RightHand>Oikea käsi</RightHand>
+  <Hands>kädet</Hands>
+  <LeftArm>Vasen käsi</LeftArm>
+  <RightArm>Oikea käsi</RightArm>
+  <LeftLeg>Vasen jalka</LeftLeg>
+  <RightLeg>Oikea jalka</RightLeg>
+  <LeftFoot>Vasen jalka</LeftFoot>
+  <RightFoot>Oikea jalka</RightFoot>
+  <Head>Pää</Head>
+  <Torso>Torso</Torso>
+  <Tail>pyrstä</Tail>
+  <Legs>jalat</Legs>
+  <RightThigh>Oikea reite</RightThigh>
+  <LeftThigh>Vasen reisi</LeftThigh>
+  <Waist>Vyätärä</Waist>
+  <!-- Misc -->
+  <Yes>Joo</Yes>
+  <No>Ei</No>
+  <OK>OK</OK>
+  <Skills>Taidot</Skills>
+  <Male>Mies</Male>
+  <Female>Nainen</Female>
+  <Order>Tilata</Order>
+  <Submarine>Sukellusvene</Submarine>
+  <Shuttle>sukkula</Shuttle>
+  <RespawnShuttle>Respawn-shuttle</RespawnShuttle>
+  <Editing>editointi</Editing>
+  <Error>Virhe</Error>
+  <Warning>Varoitus</Warning>
+  <Unknown>Tuntematon</Unknown>
+  <None>Ei mitään</None>
+  <Close>kiinni</Close>
+  <Cancel>Peruuttaa</Cancel>
+  <Delete>Poistaa</Delete>
+  <Load>Ladata</Load>
+  <Back>Takaisin</Back>
+  <Days>päivää</Days>
+  <Hours>tuntia</Hours>
+  <Retry>yritä uudelleen</Retry>
+  <ManagePlayers>Hallinnoi pelaajia</ManagePlayers>
+  <Destination>määränpää</Destination>
+  <DeleteDialogLabel>Poista tiedosto?</DeleteDialogLabel>
+  <DeleteDialogQuestion>Haluatko varmasti poistaa "[file]"?</DeleteDialogQuestion>
+  <DeleteFileError>Tiedostoa "[file]" ei voitu poistaa!</DeleteFileError>
+  <!-- Pronouns -->
+  <PronounMale>Hän</PronounMale>
+  <PronounPossessiveMale>Hänen</PronounPossessiveMale>
+  <PronounReflexiveMale>Hän itse</PronounReflexiveMale>
+  <PronounFemale>Hän</PronounFemale>
+  <PronounPossessiveFemale>Hänen</PronounPossessiveFemale>
+  <PronounReflexiveFemale>Oma itsensä</PronounReflexiveFemale>
+  <!-- Mission info -->
+  <MissionInfo>Lähetystiedot</MissionInfo>
+  <NoMission>Ei missään tehtävässä</NoMission>
+  <MissionReward>Palkinto: [reward]</MissionReward>
+  <!-- Campaign setup menu -->
+  <CampaignSetup>Kampanja-asetukset</CampaignSetup>
+  <NewCampaign>Uusi kampanja</NewCampaign>
+  <LoadCampaign>Lataa kampanja</LoadCampaign>
+  <LoadButton>Ladata</LoadButton>
+  <DeleteButton>Poistaa</DeleteButton>
+  <SubNotSelected>Sukellusvene ei ole valittu!</SubNotSelected>
+  <SelectSubRequest>Valitse sukellusvene.</SelectSubRequest>
+  <SelectedSub>Valittu sukellusvene</SelectedSub>
+  <SaveName>Tallenna nimi</SaveName>
+  <LastSaved>Viimeksi tallennettu</LastSaved>
+  <MapSeed>Kartta siemenet</MapSeed>
+  <StartCampaignButton>alkaa</StartCampaignButton>
+  <ShuttleSelected>Shuttle valittu</ShuttleSelected>
+  <ShuttleWarning>Suurin osa kuljettajista ei ole riittävän varusteltu käsittelemään Europanin syvyyden vaaroja. Haluatko varmasti valita sukkulan aluksestasi?</ShuttleWarning>
+  <ContentPackageMismatch>Sisältöpaketin yhteensopimattomuus</ContentPackageMismatch>
+  <ContentPackageMismatchWarning>Sukellusvene ei ehkä ole yhteensopiva nykyisten sisältöpakettien kanssa, koska se vaatii sisältöpaketteja [requiredcontentpackages]. Haluatko varmasti valita sukellusveneen?</ContentPackageMismatchWarning>
+  <!-- Campaign menu -->
+  <Map>Kartta</Map>
+  <Crew>Miehistö</Crew>
+  <Store>Myymälä</Store>
+  <Hire>Vuokraus</Hire>
+  <HireButton>Vuokraus</HireButton>
+  <Location>Sijainti</Location>
+  <HireUnavailable>Ei ole vuokrattavissa.</HireUnavailable>
+  <Mission>Tehtävä</Mission>
+  <Reward>Palkkio: [reward] krediittiä</Reward>
+  <Credit>Krediitti</Credit>
+  <PlayerCredits>Varat: [credits] krediittiä</PlayerCredits>
+  <!-- Ingame menus -->
+  <InfoButton>Tiedot</InfoButton>
+  <EndRound>Lopeta kierros</EndRound>
+  <EnterLocation>Anna [sijaintiin nimi]</EnterLocation>
+  <LeaveSubBehind>Yksi alistasi ei ole vielä poistumassa. Haluatko jättää sen takana?</LeaveSubBehind>
+  <LeaveSubsBehind>Jotkut aluksistasi eivät vielä ole poistumassa. Haluatko jättää heidät taakse?</LeaveSubsBehind>
+  <!-- Server list -->
+  <JoinServer>Liity palvelimeen</JoinServer>
+  <YourName>Sinun nimesi</YourName>
+  <ServerIP>Palvelin IP</ServerIP>
+  <ServerListName>Nimi</ServerListName>
+  <ServerListPlayers>Pelaajat</ServerListPlayers>
+  <ServerListVersion>Peliversio</ServerListVersion>
+  <ServerListPing>Ping</ServerListPing>
+  <ServerListHasPassword>Salasana suojattu</ServerListHasPassword>
+  <ServerListUsingWhitelist>Valkoisen luettelon käyttö</ServerListUsingWhitelist>
+  <ServerListContentPackages>Sisältöpaketit</ServerListContentPackages>
+  <ServerListSubSelection>Merenalainen valinta</ServerListSubSelection>
+  <ServerListModeSelection>Pelitilan valinta</ServerListModeSelection>
+  <ServerListAllowSpectating>Salli katsominen</ServerListAllowSpectating>
+  <ServerListCompatible>Yhteensopiva</ServerListCompatible>
+  <ServerListRoundStarted>Kierros alkoi</ServerListRoundStarted>
+  <ServerListInfo>Tiedot</ServerListInfo>
+  <ServerListRefresh>virkistää</ServerListRefresh>
+  <ServerListJoin>Liittyä seuraan</ServerListJoin>
+  <ServerListUnknownVersion>Yhteensopivuutta (tuntematon peliversio) ei voitu määrittää</ServerListUnknownVersion>
+  <ServerListUnknownContentPackage>Yhteensopivuutta (tuntematonta sisältää) ei voitu määrittää</ServerListUnknownContentPackage>
+  <ServerListIncompatibleVersion>Tämä palvelin ei ole yhteensopiva versioasi Barotrauma [version] kanssa).</ServerListIncompatibleVersion>
+  <ServerListIncompatibleContentPackage>sisältöpaketti "[contentpackage]" (MD5: [hash]), joka vaaditaan pelaamaan tällä palvelimella.</ServerListIncompatibleContentPackage>
+  <FilterServers>Suodatinpalvelimet</FilterServers>
+  <FilterPassword>Salasanaa ei tarvita</FilterPassword>
+  <FilterIncompatibleServers>Piilota yhteensopimattomat palvelimet</FilterIncompatibleServers>
+  <FilterFullServers>Piilota kaikki palvelimet</FilterFullServers>
+  <FilterEmptyServers>Piilota tyhjät palvelimet</FilterEmptyServers>
+  <NoMatchingServers>Vastaavia palvelimia ei läytynyt.</NoMatchingServers>
+  <RefreshingServerList>Päivitä palvelinluettelo ...</RefreshingServerList>
+  <NoServers>Palvelimia ei läytynyt.</NoServers>
+  <ServerListNoSteamConnection>Palvelimia ei löydy (ei liitetty Steam-palveluun).</ServerListNoSteamConnection>
+  <MasterServerErrorLabel>Yhteysvirhe</MasterServerErrorLabel>
+  <MasterServerTimeOutError>Yhteys pääkäyttäjään ei onnistunut (pyyntä vanhentui).</MasterServerTimeOutError>
+  <MasterServerErrorException>Virhe yhdistettäessä isäntäpalvelimelle {[virhe]}</MasterServerErrorException>
+  <MasterServerError404>Virhe yhdistettynä pääkäyttäjään (404 - [masterserverurl] ei läytynyt)</MasterServerError404>
+  <MasterServerErrorUnavailable>Virhe kytkettynä pääpalvelimeen (505 - Palvelu ei ole käytettävissä). Pääpalvelin saattaa olla alhaalla huoltoa tai tilapäisesti ylikuormitettua. Yritä uudelleen hetken kuluttua.</MasterServerErrorUnavailable>
+  <MasterServerErrorDefault>Virhe kytkettynä pääpalvelimeen ([statuscode]: [statusdescription])</MasterServerErrorDefault>
+  <CouldNotConnectToServer>Yhteyttä palvelimeen ei voitu muodostaa.</CouldNotConnectToServer>
+  <InvalidIPAddress>Osoitteen "[serverip]: [portti]" epäonnistui. Varmista, että olet antanut voimassa olevan IP-osoitteen.</InvalidIPAddress>
+  <Connecting>YHDISTÄMINEN</Connecting>
+  <ConnectionLost>Yhteys kadotettu</ConnectionLost>
+  <ConnectionLostReconnecting>Yhteytesi palvelimeen on katkaistu. Yhdistetään uudelleen ...</ConnectionLostReconnecting>
+  <ConnectionFailed>Yhteys epäonnistui</ConnectionFailed>
+  <ConnectingTo>Liittyminen [serverip]</ConnectingTo>
+  <ServerFullQuestionPrompt>Haluatko odottaa palvelimen jonon liittymistä ja odottamaan paikka vapautua?</ServerFullQuestionPrompt>
+  <ServerQueue>Jonottaa</ServerQueue>
+  <ServerQueuePleaseWait>Odota...</ServerQueuePleaseWait>
+  <WaitingInServerQueue>Odotetaan paikka vapautua palvelimelle.</WaitingInServerQueue>
+  <!-- Disconnect reasons -->
+  <DisconnectReason.Banned>Sinut on kielletty palvelimelta.</DisconnectReason.Banned>
+  <DisconnectReason.Kicked>Sinut on potkut palvelimelta.</DisconnectReason.Kicked>
+  <DisconnectReason.ServerShutdown>Palvelin on suljettu.</DisconnectReason.ServerShutdown>
+  <DisconnectReason.ServerFull>Palvelin on täynnä.</DisconnectReason.ServerFull>
+  <DisconnectReason.AuthenticationRequired>Asiakas ei pyytänyt oikein todentamista.</DisconnectReason.AuthenticationRequired>
+  <DisconnectReason.SteamAuthenticationRequired>Steam-todennus vaaditaan. Varmista, että Steam on käynnissä ja olet kirjautunut sisään tiliin.</DisconnectReason.SteamAuthenticationRequired>
+  <DisconnectReason.SteamAuthenticationFailed>Steam-todennus epäonnistui.</DisconnectReason.SteamAuthenticationFailed>
+  <DisconnectReason.SessionTaken>Istuntosi otti uusi yhteys samasta IP-osoitteesta.</DisconnectReason.SessionTaken>
+  <DisconnectReason.TooManyFailedLogins>Liian monet epäonnistuneet kirjautumisyritykset.</DisconnectReason.TooManyFailedLogins>
+  <DisconnectReason.NoName>Ei nimeä.</DisconnectReason.NoName>
+  <DisconnectReason.InvalidName>Nimesi sisältää laittomia symboleja.</DisconnectReason.InvalidName>
+  <DisconnectReason.NameTaken>Tämä nimi on otettu.</DisconnectReason.NameTaken>
+  <DisconnectReason.InvalidVersion>Ei-yhteensopiva peliversio.</DisconnectReason.InvalidVersion>
+  <DisconnectReason.MissingContentPackage>Puuttuva sisältöpaketti.</DisconnectReason.MissingContentPackage>
+  <DisconnectReason.IncompatibleContentPackage>Yhteensopimaton sisältöpaketti.</DisconnectReason.IncompatibleContentPackage>
+  <DisconnectReason.NotOnWhitelist>Et ole palvelimen sallittujen luettelossa.</DisconnectReason.NotOnWhitelist>
+  <DisconnectMessage.SteamAuthNoLongerValid>Häytämuodotus ei ole enää voimassa ([status]).</DisconnectMessage.SteamAuthNoLongerValid>
+  <DisconnectMessage.TooManyFailedLogins>Liian monet epäonnistuneet kirjautumisyritykset.</DisconnectMessage.TooManyFailedLogins>
+  <DisconnectMessage.InvalidVersion>Versio "[versio]", joka tarvitaan yhteyden muodostamiseen palvelimeen (versio: "[asiakasversio]")</DisconnectMessage.InvalidVersion>
+  <DisconnectMessage.MissingContentPackage>Tarvitset sisällän paketin [missingcontentpackage] pelaamaan palvelimella.</DisconnectMessage.MissingContentPackage>
+  <DisconnectMessage.MissingContentPackages>Tarvitset sisältöpaketit [missingcontentpackages], jotka pelataan palvelimella.</DisconnectMessage.MissingContentPackages>
+  <DisconnectMessage.IncompatibleContentPackage>Sinun on poistettava sisällän pakkaus [incompatiblecontentpackage] ennen liittymistä.</DisconnectMessage.IncompatibleContentPackage>
+  <DisconnectMessage.IncompatibleContentPackages>Sinun on poistettava sisältöpaketit [incompatiblecontentpackages] ennen liittymistä.</DisconnectMessage.IncompatibleContentPackages>
+  <!-- Server lobby -->
+  <RestartingIn>Käynnistäminen uudelleen</RestartingIn>
+  <Votes>ääntä</Votes>
+  <GameMode>Pelitila</GameMode>
+  <MissionType>Lähetystyyppi</MissionType>
+  <Random>satunnainen</Random>
+  <LevelSeed>Taso siemen</LevelSeed>
+  <LevelDifficulty>Taso vaikeus</LevelDifficulty>
+  <Traitors>pettureita</Traitors>
+  <BotCount>Bot count</BotCount>
+  <BotSpawnMode>Bot-kutsu</BotSpawnMode>
+  <AutoRestart>Automaattinen uudelleenkäynnistys</AutoRestart>
+  <ServerLog>Palvelinloki</ServerLog>
+  <CampaignView>Kampanjan näkymä</CampaignView>
+  <PlayYourself>Pelaa itseäsi</PlayYourself>
+  <StartGameButton>alkaa</StartGameButton>
+  <ServerSettingsButton>asetukset</ServerSettingsButton>
+  <SpectateButton>Katsomoon</SpectateButton>
+  <Gender>sukupuoli</Gender>
+  <JobPreferences>Tyäasetukset</JobPreferences>
+  <PlayingAsSpectator>Näyttelijä</PlayingAsSpectator>
+  <SubNotFound>Sukellusveneitä ei löydy sukellusveneen kansioista</SubNotFound>
+  <SubDoesntMatch>Sukellusveneen versio ei vastaa palvelinversiota</SubDoesntMatch>
+  <Rank>arvo</Rank>
+  <CustomRank>asiakassuhde</CustomRank>
+  <Permissions>käyttäoikeudet</Permissions>
+  <PermittedConsoleCommands>Salli konsolikomennot</PermittedConsoleCommands>
+  <Kick>Potkia</Kick>
+  <VoteToKick>äänestä potkia</VoteToKick>
+  <Ban>Kieltää</Ban>
+  <BanRange>Ban-alue</BanRange>
+  <BanReasonPrompt>Kiellon syy?</BanReasonPrompt>
+  <KickReasonPrompt>Syy potkimiseen?</KickReasonPrompt>
+  <PrivateMessageTag>[PM]</PrivateMessageTag>
+  <SubNotFoundError>Palvelin valitsi sukellusveneen [alatunnuksen]. Vastaavaa tiedostoa ei löydy sukellusveneen kansiosta.</SubNotFoundError>
+  <SubLoadError>Sukellusveneitä ei voitu ladata [alatunniste]. Tiedosto voi olla vioittunut.</SubLoadError>
+  <SubDoesntMatchError>Submarine-tiedostosi [alinimi] versio ei vastaa palvelimen versiota! \ NOma MD5-hajautus: [myhash] \ nServerin MD5-hajautus: [serverhash] \ n</SubDoesntMatchError>
+  <DownloadSubLabel>Sukellusvene ei löydy!</DownloadSubLabel>
+  <DownloadSubQuestion>Haluatko ladata tiedoston palvelimen isännältä?</DownloadSubQuestion>
+  <WaitForFileTransfers>Odotetaan tiedostojen siirtoa loppuun ennen kierroksen aloittamista ...</WaitForFileTransfers>
+  <StartNow>Aloita nyt</StartNow>
+  <ServerInitFailed>Palvelimen käynnistäminen epäonnistui.</ServerInitFailed>
+  <ServerInitFailedAddressAlreadyInUse>[Errormsg]. Yritätko käyttää useita palvelimia samassa satamassa?</ServerInitFailedAddressAlreadyInUse>
+  <PermissionsRemoved>Isäntä on poistanut kaikki erityiset käyttäoikeudet.</PermissionsRemoved>
+  <CurrentPermissions>Nykyiset käyttäoikeudet:</CurrentPermissions>
+  <PermissionsChanged>Käyttäoikeudet muuttuivat</PermissionsChanged>
+  <PermittedConsoleCommands>Salli konsolikomennot:</PermittedConsoleCommands>
+  <PleaseWaitRoundRunning>Odota</PleaseWaitRoundRunning>
+  <RoundRunningSpectateDisabled>Kierros on jo käynnissä ja ylläpitäjä on poissa käytöstä. Sinun täytyy odottaa uuden kierroksen aloittamista.</RoundRunningSpectateDisabled>
+  <RoundRunningSpectateEnabled>Pyäreä pelaaja on jo käynnissä, mutta voit pelata peliä samalla kun odotat respawn-shuttleä tai uutta kierrosta.</RoundRunningSpectateEnabled>
+  <ServerDownloadFinished>Lataus valmis</ServerDownloadFinished>
+  <DownloadingFile>Lataaminen [tiedostonimi]</DownloadingFile>
+  <FileDownloadedNotification>Tiedosto "[tiedostonimi]" ladattiin onnistuneesti.</FileDownloadedNotification>
+  <!-- Ingame UI -->
+  <EndRoundVotes>äänestys kierroksen loppuun (y / n) [y] / [n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle lähetetään [aika]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning-pelaajat [aika]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle lähti [aika]</RespawnShuttleLeavingIn>
+  <InsufficientSkills>Taitosi saattaa olla riittämätän käyttää kohdetta! [requiredskill] -taso [requiredlevel] vaaditaan.</InsufficientSkills>
+  <SkillIncreased>[nimi]: n [taidon nimi] taito kasvoi [uusi taso]!</SkillIncreased>
+  <!-- Sub editor -->
+  <Items>Tuotteet</Items>
+  <Structures>rakenteet</Structures>
+  <TotalHullVolume>Rungon kokonaismäärä</TotalHullVolume>
+  <SelectedHullVolume>Valittu rungon määrä</SelectedHullVolume>
+  <OptimalBallastLevel>optimaalinen neutraali painolastitaso on [arvo]</OptimalBallastLevel>
+  <SaveItemAssembly>Tallenna nimellä kokoonpano</SaveItemAssembly>
+  <InsufficientBallast>riittämätän tilavuus kelluvuusvalvontaan</InsufficientBallast>
+  <PhysicsBodies>Fysiikan laitokset</PhysicsBodies>
+  <OpenSubButton>Avata...</OpenSubButton>
+  <SaveSubButton>Tallentaa</SaveSubButton>
+  <AddSubButton>Lisää sukellusvene</AddSubButton>
+  <AddSubToolTip>Asettaa toinen sukellusvene nykyiseen sukellusveneen tiedostoon. Voidaan käyttää pienempien alusten, paukkojen tai irrotettavien osien, kuten tärkeimpien sukellusveneen, lisäämiseen.</AddSubToolTip>
+  <HoldToLink>Pidä tila yhteyttä toiseen kohteeseen</HoldToLink>
+  <FilterMapEntities>Suodattaa</FilterMapEntities>
+  <CharacterModeButton>Merkkitoiminto</CharacterModeButton>
+  <CharacterModeToolTip>Voit hakea ja käyttää kohteita. Hyädyllisiä asioihin, kuten asettamalla esineitä kaappeihin, kytkemällä laitteet päälle / pois ja tekemällä johdotukset.</CharacterModeToolTip>
+  <WiringModeButton>Johdotustila</WiringModeButton>
+  <WiringModeToolTip>Voit liittää johdot eri kohteiden välillä.</WiringModeToolTip>
+  <GenerateWaypointsButton>Luo reittipisteitä</GenerateWaypointsButton>
+  <GenerateWaypointsToolTip>AI-ohjatut miehistän jäsenet tarvitsevat reittipisteitä navigoimaan alia.</GenerateWaypointsToolTip>
+  <ShowEntitiesLabel>Show</ShowEntitiesLabel>
+  <ShowLighting>Valaistus</ShowLighting>
+  <ShowWaypoints>reittipisteet</ShowWaypoints>
+  <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
+  <ShowLinks>Linkit</ShowLinks>
+  <ShowHulls>rungot</ShowHulls>
+  <ShowGaps>aukkoja</ShowGaps>
+  <PreviouslyUsedLabel>Aiemmin käytetty</PreviouslyUsedLabel>
+  <SubNameMissingWarning>Nimi sukellusveneesi ennen sen tallentamista.</SubNameMissingWarning>
+  <SubNameIllegalCharsWarning>Tiedostonimen laittomat tunnukset ([illegalchar])</SubNameIllegalCharsWarning>
+  <SubSavedNotification>Sukellusvene tallennettu [tiedostopolkuun].</SubSavedNotification>
+  <SaveSubDialogHeader>Tallenna sukellusvene</SaveSubDialogHeader>
+  <SaveSubDialogName>Nimi</SaveSubDialogName>
+  <SaveSubDialogDescription>Kuvaus</SaveSubDialogDescription>
+  <SaveSubDialogSettings>Asetukset</SaveSubDialogSettings>
+  <SaveItemAssemblyDialogHeader>Tallenna kokoonpano</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyDialogName>Nimi</SaveItemAssemblyDialogName>
+  <SaveItemAssemblyDialogDescription>Kuvaus</SaveItemAssemblyDialogDescription>
+  <ItemAssemblyNameMissingWarning>Nimeä laitteesi kokoonpano ennen sen tallentamista.</ItemAssemblyNameMissingWarning>
+  <ItemAssemblyNameIllegalCharsWarning>Tiedostonimen laittomat tunnukset ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
+  <NoHullsWarning>Sukellusveneessä ei ole rungoja. Rungot määrittävät yksittäisen huoneen "rajat" ja niitä tarvitaan veden ja ilman jakamisen toimimiseen.</NoHullsWarning>
+  <DisconnectedVentsWarning>Sukellusvene sisältää suuttimia, joita ei ole liitetty happigeneraattoriin. Valitse tuuletus ja napsauta hapen generaattoria pitämällä tilaa liittääksesi ne.</DisconnectedVentsWarning>
+  <DisconnectedTurretsWarning>Sukellusvene sisältää [nimikkeen nimiä], joita ei ole liitetty ammuskuormaajiin. Valitse kohde ja napsauta lataajaa pitämällä tilaa liittääksesi ne.</DisconnectedTurretsWarning>
+  <NoWaypointsWarning>Sukellusveneessä ei läytynyt reittipisteitä. AI-ohjatut miehistän jäsenet eivät voi liikkua ilman reittipisteitä.</NoWaypointsWarning>
+  <NoCargoSpawnpointWarning>"Sukellusveneellä ei ole roskapisteitä (joita käytetään määrittämään, mihin paikkaan ostetaan ostetut tuotteet). Tämän korjaamiseksi luodaan uusi kumpupiste ja muutetaan sen" kutee "-parametri" lastille ".</NoCargoSpawnpointWarning>
+  <FarAwayEntitiesWarning>Yksi tai useampi rakenne on sijoitettu hyvin kaukana sukellusveneestä. Näytä rakenteet?</FarAwayEntitiesWarning>
+  <AdjustLightsPrompt>Tämä sukellusvene tallennettiin Barotrauman vanhemman version avulla, joka käytti erilaista kaavaa valaistuksen laskemiseen. Sukellusveneen valaistus voi nyt näyttää liian kirkkaalta. Haluatko säätää automaattisesti uuden valaistuskaavan valaistuksen?</AdjustLightsPrompt>
+  <AdjustedLightsNotification>Valojen kirkkautta on säädetty. Alueet, joissa on useita valonlähteitä, voivat silti olla liian kirkkaita ja vaativat valojen valaistuksen tai kirkkauden pienentämistä manuaalisesti. Voit myäs käyttää konsolikomentoa "multiplylights" säätääksesi kaikkien valojen kirkkauden yhtä kertaa. Esimerkiksi "monisuuntaiset valot 1,1,1,0,5" vähentäisivät kirkkautta 50%: lla.</AdjustedLightsNotification>
+  <NoBallastTagsWarning>Sinun tulisi lisätä merkintä "painolastit" painolastipumppuihin, jotta AI-merkkiä voidaan tunnistaa, mitkä pumput käytetään sukellusveneen kelluvuuden hallintaan.</NoBallastTagsWarning>
+  <NoHullNamesWarning>Mitään rungosta ei anneta nimeä, jotka käyttävät itsenäisiä nimiä. Hahmot käyttävät nimiä viittaamaan eri huoneisiin ilmoittaessaan asioita, kuten rungon rikkomuksia.</NoHullNamesWarning>
+
+  <!-- Entity categories -->
+  <MapEntityCategory.Structure>Rakenne</MapEntityCategory.Structure>
+  <MapEntityCategory.Machine>Kone</MapEntityCategory.Machine>
+  <MapEntityCategory.Equipment>Varuste</MapEntityCategory.Equipment>
+  <MapEntityCategory.Electrical>Elektroniikka</MapEntityCategory.Electrical>
+  <MapEntityCategory.Material>Materiaali</MapEntityCategory.Material>
+  <MapEntityCategory.Misc>Muu</MapEntityCategory.Misc>
+  <MapEntityCategory.Alien>Alien</MapEntityCategory.Alien>
+  <MapEntityCategory.ItemAssembly>Kokoonpano</MapEntityCategory.ItemAssembly>
+  <MapEntityCategory.Legacy>Vanhentunut</MapEntityCategory.Legacy>
+
+  <!-- Particle editor -->
+  <ParticleEditorSaveAll>Tallenna kaikki</ParticleEditorSaveAll>
+  <ParticleEditorCopyToClipboard>Kopioi leikepöydälle</ParticleEditorCopyToClipboard>
+  <!-- Rooms -->
+  <ReactorRoom>Reaktoritila</ReactorRoom>
+  <EngineRoom>Konehuone</EngineRoom>
+  <CommandRoom>Komentohuone</CommandRoom>
+  <Airlock>Ilmalukko</Airlock>
+  <SubTopLeft>Ylempi takapää</SubTopLeft>
+  <SubTopCenter>Yläpuolella</SubTopCenter>
+  <SubTopRight>Ylempi etupuoli</SubTopRight>
+  <SubCenterLeft>Mid-puolinen puoli</SubCenterLeft>
+  <SubCenter>Keskilaivassa</SubCenter>
+  <SubCenterRight>Keskimmäinen etuosa</SubCenterRight>
+  <SubBottomLeft>Alempi takaosa</SubBottomLeft>
+  <SubBottomCenter>Ala keskellä</SubBottomCenter>
+  <SubBottomRight>Alempi etuosa</SubBottomRight>
+  <SubDirOClock>[dir] kello</SubDirOClock>
+  <!-- Sub description -->
+  <Dimensions>Mitat</Dimensions>
+  <DimensionsFormat>[leveys] x [korkeus] m</DimensionsFormat>
+  <SubPreviewImageNotFound>Esikatselukuva ei läytynyt</SubPreviewImageNotFound>
+  <RecommendedCrewSize>Suositeltu miehistän koko</RecommendedCrewSize>
+  <RecommendedCrewExperience>Suositeltava miehistän kokemus</RecommendedCrewExperience>
+  <RequiredContentPackages>Pakolliset sisältöpaketit</RequiredContentPackages>
+  <CrewExperienceLow>Aloittelija</CrewExperienceLow>
+  <CrewExperienceMid>Keskitaso</CrewExperienceMid>
+  <CrewExperienceHigh>Kokenut</CrewExperienceHigh>
+  <!-- Waypoints -->
+  <Waypoint>Waypoint</Waypoint>
+  <LinkWaypoint>Pidä tila yhteyttä toiseen reittipisteeseen</LinkWaypoint>
+  <Spawnpoint>Spawnpoint</Spawnpoint>
+  <SpawnType>Spawn tyyppi</SpawnType>
+  <IDCardDescription>henkilökortin kuvaus</IDCardDescription>
+  <IDCardDescriptionTooltip>Hahmot, jotka kutuvat tälle kumpupisteelle, lisäävät henkilötodistukseensa määritetyn kuvauksen. Tätä voidaan käyttää kuvaamaan ylimääräisiä käyttäoikeustasoja, joiden kortti on osassa.</IDCardDescriptionTooltip>
+  <IDCardTags>henkilökorttitunnisteet</IDCardTags>
+  <IDCardTagsTooltip>Hahmot, jotka kutuvat tälle kylpylälle, sisältävät henkilötodistukseen määritetyt tunnisteet. Voit esimerkiksi käyttää näitä tunnisteita rajoittamaan pääsyn osaan osan osista.</IDCardTagsTooltip>
+  <SpawnpointJobs>Assigned jobs</SpawnpointJobs>
+  <SpawnpointJobsTooltip>Vain hahmot, joissa on määritelty tyä, kutsuvat tältä kohdalta.</SpawnpointJobsTooltip>
+  <!-- Linked subs -->
+  <LinkedSub>Linkitetty sukellusvene</LinkedSub>
+  <ReloadLinkedSub>virkistää</ReloadLinkedSub>
+  <ReloadLinkedSubTooltip>Lataa linkitetty sukellusvene määritetystä tiedostosta</ReloadLinkedSubTooltip>
+  <LinkLinkedSub>Pidä tilaa yhteys telakointiporttiin</LinkLinkedSub>
+  <ReloadLinkedSubError>Submarine tiedosto [tiedosto] ei läytynyt!</ReloadLinkedSubError>
+  <!-- Chat -->
+  <SpamFilterKicked>Roskapostisuodatin on potkaissut sinut.</SpamFilterKicked>
+  <SpamFilterBlocked>Roskapostisuodatin on estänyt sinut. Yritä uudelleen 10 sekunnin kuluttua.</SpamFilterBlocked>
+  <!-- Item HUDs -->
+  <EngineForce>tyäntävoima</EngineForce>
+  <EngineBackwards>Taaksepäin</EngineBackwards>
+  <EngineForwards>Eteenpäin</EngineForwards>
+  <EnginePowered>Powered</EnginePowered>
+  <FabricatorRequiredItems>Pakolliset kohteet</FabricatorRequiredItems>
+  <FabricatorRequiredTime>Vaadittava aika</FabricatorRequiredTime>
+  <FabricatorRequiredCondition>Kunto</FabricatorRequiredCondition>
+  <FabricatorRequiredSkills>Kalibroinnin edellyttämät taidot</FabricatorRequiredSkills>
+  <FabricatorCreate>Luoda</FabricatorCreate>
+  <DeconstuctorDeconstruct>purkaa</DeconstuctorDeconstruct>
+  <Lvl>lvl</Lvl>
+  <MiniMapHullBreach>Rulla rikkoutuminen</MiniMapHullBreach>
+  <MiniMapWaterLevel>Vedenpinnan korkeus</MiniMapWaterLevel>
+  <MiniMapWaterLevelUnavailable>Vesitiedot eivät ole saatavilla</MiniMapWaterLevelUnavailable>
+  <MiniMapAirQuality>Ilman laatu</MiniMapAirQuality>
+  <MiniMapAirQualityUnavailable>Ilmanlaadun tietoja ei ole saatavilla</MiniMapAirQualityUnavailable>
+  <PumpPowered>Powered</PumpPowered>
+  <PumpIn>SISääN</PumpIn>
+  <PumpOut>OUT</PumpOut>
+  <PumpSpeed>Pumppausnopeus</PumpSpeed>
+  <ReactorAutoTemp>Automaattinen säätä</ReactorAutoTemp>
+  <ReactorOutput>Tulo: [kw] kW</ReactorOutput>
+  <ReactorLoad>Kuormitus: [kw] kW</ReactorLoad>
+  <ReactorShutdownTemp>Sammutuslämpätila</ReactorShutdownTemp>
+  <ReactorFissionRate>Fissioaste</ReactorFissionRate>
+  <ReactorTurbineOutput>Turbiinin tuotos</ReactorTurbineOutput>
+  <ReactorWarningCriticalTemp>Kriittiset \ nHeat</ReactorWarningCriticalTemp>
+  <ReactorWarningCriticalLowTemp>Kriittisesti \ nLow lämpätila</ReactorWarningCriticalLowTemp>
+  <ReactorWarningCriticalOutput>Kriittiset \ nOutput</ReactorWarningCriticalOutput>
+  <ReactorWarningLowTemp>Lämpätila alhainen</ReactorWarningLowTemp>
+  <ReactorWarningOverheating>ylikuumentaa</ReactorWarningOverheating>
+  <ReactorWarningLowOutput>Lähtä vähissä</ReactorWarningLowOutput>
+  <ReactorWarningHighOutput>Teho korkea</ReactorWarningHighOutput>
+  <ReactorWarningLowFuel>Polttoaine vähissä</ReactorWarningLowFuel>
+  <ReactorWarningFuelOut>Polttoaine pois</ReactorWarningFuelOut>
+  <ReactorWarningMeltdown>sulaminen</ReactorWarningMeltdown>
+  <ReactorWarningSCRAM>Scram</ReactorWarningSCRAM>
+  <SteeringAutoPilot>autopilotti</SteeringAutoPilot>
+  <SteeringMaintainPos>Säilytä asema</SteeringMaintainPos>
+  <SteeringVelocityX>Nopeus: [kph] km / h</SteeringVelocityX>
+  <SteeringVelocityY>Laskeutumisnopeus: [kph] km / h</SteeringVelocityY>
+  <SteeringDepth>Syvyys: [m] m</SteeringDepth>
+  <SonarSignalWeak>Signaali heikko</SonarSignalWeak>
+  <SonarNoSignal>Ei signaalia</SonarNoSignal>
+  <PowerContainerCharge>Maksu: [maksu] kWm ([prosenttiosuus]%)</PowerContainerCharge>
+  <PowerContainerRechargeRate>Lataa korko [korko]%</PowerContainerRechargeRate>
+  <PowerTransferPowered>Powered</PowerTransferPowered>
+  <PowerTransferHighVoltage>ylijännite</PowerTransferHighVoltage>
+  <PowerTransferLowVoltage>Alhainen jännite</PowerTransferLowVoltage>
+  <PowerTransferPowerLabel>teho</PowerTransferPowerLabel>
+  <PowerTransferPower>[teho] kW</PowerTransferPower>
+  <PowerTransferLoadLabel>Ladata</PowerTransferLoadLabel>
+  <PowerTransferLoad>[kuorma] kW</PowerTransferLoad>
+  <ConnectionLocked>(Lukittu)</ConnectionLocked>
+  <RequiredRepairSkills>Tarvittavat taidot:</RequiredRepairSkills>
+  <RepairButton>Korjaus</RepairButton>
+  <!-- Item fixing -->
+  <FixHeader>Yritetään korjata [tavaranimi]</FixHeader>
+  <FixButton>Korjata</FixButton>
+  <!-- Traitors -->
+  <NewTraitor>Uusi petturi</NewTraitor>
+  <TraitorStartMessage>Olet petturi! Sinun salainen tehtävä on murhata [kohde nimi]! Harkintavalta on äärimmäisen huoli; sukellusveneen uppoaminen ja koko miehistän tappaminen herättää epäilyslaivastoa. Jos mahdollista, kuolema näyttää onnettomuudelta.</TraitorStartMessage>
+  <TraitorMoreAgentsMessage>On mahdollista, että tällä sukellusveneellä on muita aineita. Et tiedä heidän nimeään, mutta sinulla on viestintätapa. Käytä koodisanoja tervehtimään agenttiä ja koodivastausta vastaamaan. Piilota tällaiset sanat tavalliseen ilmeeseen, jotta miehistä ei epäile mitään. \ N \ nKoodisanoja ovat: [koodisanat]. \ NKoodivastaus on: [koodekoodi].</TraitorMoreAgentsMessage>
+  <TraitorStartMessageServer>[traitorname] on petturi ja kohde on [kohde nimi].</TraitorStartMessageServer>
+  <TraitorEndMessageSuccess>[traitorname] oli petturi! [Genderpronounpossessive] tehtävä oli murhata [kohde-nimi]. Tehtävä onnistui.</TraitorEndMessageSuccess>
+  <TraitorEndMessageSuccessTraitorDead>[traitorname] oli petturi! [Genderpronounpossessive] tehtävä oli murhata [kohde-nimi]. Tehtävä onnistui, mutta petturi ei tehnyt sitä eloon.</TraitorEndMessageSuccessTraitorDead>
+  <TraitorEndMessageSuccessTraitorDetained>[traitorname] oli petturi! [Genderpronounpossessive] tehtävä oli murhata [kohde-nimi]. Tehtävä onnistui, mutta petturi oli onnistuneesti pidätetty.</TraitorEndMessageSuccessTraitorDetained>
+  <TraitorEndMessageFailure>[traitorname] oli petturi! [Genderpronounpossessive] tehtävä oli murhata [kohde-nimi]. Tehtävä epäonnistui.</TraitorEndMessageFailure>
+  <TraitorEndMessageFailureTraitorDead>[traitorname] oli petturi! [Genderpronounpossessive] tehtävä oli murhata [kohde-nimi], mutta [genderpronoun] sai [genderpronounreflexive] tapetuksi ennen sen täyttämistä.</TraitorEndMessageFailureTraitorDead>
+  <TraitorEndMessageFailureTraitorDetained>[traitorname] oli petturi! [Genderpronounpossessive] tehtävä oli murhata [kohde-nimi]. Tehtävä epäonnistui - [genderpronoun] pidätettiin menestyksekkäästi.</TraitorEndMessageFailureTraitorDetained>
+  <!-- Causes of death -->
+  <CauseOfDeath>Kuolinsyy</CauseOfDeath>
+  <CauseOfDeath.Damage>Vahingoittaa</CauseOfDeath.Damage>
+  <CauseOfDeath.Bloodloss>Verenhukka</CauseOfDeath.Bloodloss>
+  <CauseOfDeath.Drowning>hukkuminen</CauseOfDeath.Drowning>
+  <CauseOfDeath.Suffocation>Tukehtuminen</CauseOfDeath.Suffocation>
+  <CauseOfDeath.Pressure>Paine</CauseOfDeath.Pressure>
+  <CauseOfDeath.Burn>Polttaa</CauseOfDeath.Burn>
+  <CauseOfDeath.Husk>Haimatulehdus</CauseOfDeath.Husk>
+  <CauseOfDeath.Disconnected>Aivokuollut</CauseOfDeath.Disconnected>
+  <CauseOfDeathDescription.Damage>Loukkaantui heidän vammoihinsa</CauseOfDeathDescription.Damage>
+  <CauseOfDeathDescription.Bloodloss>Väsynyt</CauseOfDeathDescription.Bloodloss>
+  <CauseOfDeathDescription.Drowning>Hukkunut</CauseOfDeathDescription.Drowning>
+  <CauseOfDeathDescription.Suffocation>tukehtui</CauseOfDeathDescription.Suffocation>
+  <CauseOfDeathDescription.Pressure>Murskattu vedenpaineella</CauseOfDeathDescription.Pressure>
+  <CauseOfDeathDescription.Burn>Poltettu kuoliaaksi</CauseOfDeathDescription.Burn>
+  <CauseOfDeathDescription.Husk>Parasiitti otti sen vastaan</CauseOfDeathDescription.Husk>
+  <CauseOfDeathDescription.Disconnected>Yhteys katkaistu</CauseOfDeathDescription.Disconnected>
+  <CauseOfDeathDescription.Unknown>Tuntematon</CauseOfDeathDescription.Unknown>
+  <Self_CauseOfDeathDescription.Damage>Olet kärsinyt vammoista.</Self_CauseOfDeathDescription.Damage>
+  <Self_CauseOfDeathDescription.Bloodloss>Sinä olet väsynyt.</Self_CauseOfDeathDescription.Bloodloss>
+  <Self_CauseOfDeathDescription.Drowning>Olet hukkunut.</Self_CauseOfDeathDescription.Drowning>
+  <Self_CauseOfDeathDescription.Suffocation>Olet tukehtunut.</Self_CauseOfDeathDescription.Suffocation>
+  <Self_CauseOfDeathDescription.Pressure>Sinut on murskattu vedenpaineella.</Self_CauseOfDeathDescription.Pressure>
+  <Self_CauseOfDeathDescription.Burn>Olet polttanut kuolemaan.</Self_CauseOfDeathDescription.Burn>
+  <Self_CauseOfDeathDescription.Husk>Loinen on ottanut ruumiinne.</Self_CauseOfDeathDescription.Husk>
+  <Self_CauseOfDeathDescription.Disconnected>Sinut irrotettiin palvelimesta.</Self_CauseOfDeathDescription.Disconnected>
+  <GiveInButton>Luovuttaa</GiveInButton>
+  <GiveInHelpMultiplayer>Pudota hahmosi ja päästä katsojamoodiin (muut pelaajat eivät enää voi elvyttää sinua)</GiveInHelpMultiplayer>
+  <GiveInHelpSingleplayer>Merkkiä ei voi enää elvyttää, jos annat sisään.</GiveInHelpSingleplayer>
+  <DeathChatNotification>Chat-viestit näkyvät vain toisille kuolleille pelaajille.</DeathChatNotification>
+
+  <!-- Afflictions -->
+  <AfflictionName.internaldamage>Sisäinen vamma</AfflictionName.internaldamage>
+  <AfflictionDescription.internaldamage>Esdfkgnsdkfjgnkdgawekjfnsadkjfn</AfflictionDescription.internaldamage>
+  <AfflictionCauseOfDeath.internaldamage>Kuoli vammoihinsa</AfflictionCauseOfDeath.internaldamage>
+  <AfflictionCauseOfDeathSelf.internaldamage>Kuolit vammoihisi</AfflictionCauseOfDeathSelf.internaldamage>
+
+  <!-- Character dialogue -->
+  <DialogAffirmative>Aye aye!</DialogAffirmative>
+  <DialogAffirmative>Kyllä herra!</DialogAffirmative>
+  <DialogAffirmative>Aye!</DialogAffirmative>
+  <DialogAffirmative>Sain sen!</DialogAffirmative>
+  <DialogReactorFuel>Lisää polttoainetta reaktoriin!</DialogReactorFuel>
+  <DialogLoadTurret>Ammusten lataaminen [itemname]: iin!</DialogLoadTurret>
+  <DialogFireTurret>Ampuminen!</DialogFireTurret>
+  <DialogFireTurret>Tuli reikään!</DialogFireTurret>
+  <DialogChargeBatteries>Lataaminen [itemname] kohteessa [rate]%!</DialogChargeBatteries>
+  <DialogChargeBatteries>[itemname] lataa nyt [rate]%: ssa!</DialogChargeBatteries>
+  <StopChargingBatteries>Latauksen lopettaminen [tuotenimi]!</StopChargingBatteries>
+  <DialogLeakFixed>Yksi vuoto kiinnitetty [huoneen nimiin]!</DialogLeakFixed>
+  <DialogLeakFixed>Korjataan [roomname], muutama reikää mennä!</DialogLeakFixed>
+  <DialogLeaksFixed>Kaikki vuodot korjataan [huoneen nimessä]!</DialogLeaksFixed>
+  <DialogLeaksFixed>Ei enää vuotoja [huoneen nimessä]!</DialogLeaksFixed>
+  <DialogItemRepaired>[itemname] korjattu!</DialogItemRepaired>
+  <DialogItemRepaired>[itemname] takaisin järjestyksessä!</DialogItemRepaired>
+  <DialogItemRepaired>[itemname] kiinteä!</DialogItemRepaired>
+  <DialogGetDivingGear>Tarvitsetko läytää sukelluspuku!</DialogGetDivingGear>
+  <DialogGetDivingGear>Tarvitsen sukellusvarusteet!</DialogGetDivingGear>
+  <DialogGetOxygenTank>Tarvitaan happea!</DialogGetOxygenTank>
+  <DialogGetOxygenTank>Tarvitsen hapen säiliän!</DialogGetOxygenTank>
+  <DialogLowOxygen>Olen ohitse!</DialogLowOxygen>
+  <DialogLowOxygen>Ei voi hengittää!</DialogLowOxygen>
+  <DialogLowOxygen>* Huohottaen *</DialogLowOxygen>
+  <DialogBleeding>Auta, minä vuotanen!</DialogBleeding>
+  <DialogBleeding>Vuodan kuiviin!</DialogBleeding>
+  <DialogBleeding>Olen menettämässä verta!</DialogBleeding>
+  <DialogPressure>Paine nousee [roomname]: ssa!</DialogPressure>
+  <DialogPressure>Vaarallinen paine huoneessa [roomname]!</DialogPressure>
+  <DialogPressure>Paine taso vaarallisesti korkea huoneen nimessä!</DialogPressure>
+  <DialogFindExtinguisher>Tarvitsen sammutin!</DialogFindExtinguisher>
+  <DialogFindExtinguisher>Yritetään läytää sammutin!</DialogFindExtinguisher>
+  <DialogFindExtinguisher>On läydettävä sammutin!</DialogFindExtinguisher>
+  <DialogPutOutFire>Laita tulipalo [huoneen nimiin]!</DialogPutOutFire>
+  <DialogPutOutFire>Sammutettiin tulipalo [roomname]: ssa!</DialogPutOutFire>
+  <DialogSonarTarget>Kohde sonarissa [suuntaan]!</DialogSonarTarget>
+  <DialogSonarTarget>Kaapaa äänimerkki [suuntaan]!</DialogSonarTarget>
+  <DialogSonarTarget>Jotain sonarissa [suuntaan]!</DialogSonarTarget>
+  <DialogSonarTarget>Sait kohteen [suuntaan]!</DialogSonarTarget>
+  <DialogSonarTargetLarge>Suuri kohde sonarissa [suuntaan]!</DialogSonarTargetLarge>
+  <DialogSonarTargetLarge>Suuri ping on [suunta]!</DialogSonarTargetLarge>
+  <DialogSonarTargetLarge>Jotain isoa sonarissa [suuntaan]!</DialogSonarTargetLarge>
+  <DialogSonarTargetMultiple>[count] tavoitteet sonarissa [suuntaan]!</DialogSonarTargetMultiple>
+  <DialogSonarTargetMultiple>Meillä on [määrä] tavoitteita [suuntaan]!</DialogSonarTargetMultiple>
+  
+  <OrderName.follow>Seuraa</OrderName.follow>
+  <OrderNameDoing.follow>Seuraa</OrderNameDoing.follow>
+  <OrderDialog.follow>[name], seuraa minua!</OrderDialog.follow>
+  <OrderName.Wait>Odota</OrderName.Wait>
+  <OrderNameDoing.Wait>Odottaa</OrderNameDoing.Wait>
+  <OrderDialog.wait>[name], pysy siinä!</OrderDialog.wait>
+  <OrderName.dismissed>Vapaa</OrderName.dismissed>
+  <OrderNameDoing.dismissed>Vapautettu</OrderNameDoing.dismissed>
+  <OrderDialog.dismissed>[name], vapaa tehtävistä!</OrderDialog.dismissed>
+  <OrderName.operatereactor>Operoi reaktoria</OrderName.operatereactor>
+  <OrderNameDoing.operatereactor>Operoi reaktoria</OrderNameDoing.operatereactor>
+  <OrderOptions.operatereactor>Käynnistä, Sammuta</OrderOptions.operatereactor>
+  <OrderDialog.operatereactor>[name], operoi reaktoria!</OrderDialog.operatereactor>
+  <OrderDialog.operatereactor.powerup>[name], käynnistä reaktori!</OrderDialog.operatereactor.powerup>
+  <OrderDialog.operatereactor.shutdown>[name], sammuta reaktori!</OrderDialog.operatereactor.shutdown>
+  <OrderName.operateweapons>Operoi aseita</OrderName.operateweapons>
+  <OrderNameDoing.operateweapons>Operoi aseita</OrderNameDoing.operateweapons>
+  <OrderOptions.operateweapons>Tuli vapaa, Tuli seis</OrderOptions.operateweapons>
+  <OrderDialog.operateweapons>[name], aseisiin!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons.fireatwill>[name], tuli vapaa!</OrderDialog.operateweapons.fireatwill>
+  <OrderDialog.operateweapons.holdfire>[name], tuli seis!</OrderDialog.operateweapons.holdfire>
+  <OrderName.steer>Ohjaa</OrderName.steer>
+  <OrderNameDoing.steer>Ohjaa</OrderNameDoing.steer>
+  <OrderOptions.steer>Seis, Taaksepäin, Eteenpäin</OrderOptions.steer>
+  <OrderDialog.steer>[name], ohjaa alusta!</OrderDialog.steer>
+  <OrderDialog.steer.maintainposition>[name], pidä positio!</OrderDialog.steer.maintainposition>
+  <OrderDialog.steer.navigateback>[name], kurssi taaksepäin!</OrderDialog.steer.navigateback>
+  <OrderDialog.steer.navigatetodestination>[name], kurssi eteenpäin!</OrderDialog.steer.navigatetodestination>
+  <OrderName.fixleaks>Korjaa vuotoja</OrderName.fixleaks>
+  <OrderNameDoing.fixleaks>Korjaa vuotoja</OrderNameDoing.fixleaks>
+  <OrderDialog.fixleaks>[name], korjaa vuotoja!</OrderDialog.fixleaks>
+  <OrderName.extinguishfires>Sammuta palot</OrderName.extinguishfires>
+  <OrderNameDoing.extinguishfires>Sammuttaa paloja</OrderNameDoing.extinguishfires>
+  <OrderDialog.extinguishfires>[name], sammuta tulipalot!</OrderDialog.extinguishfires>
+  <OrderName.chargebatteries>Operoi paristoja</OrderName.chargebatteries>
+  <OrderNameDoing.chargebatteries>Operoi paristoja</OrderNameDoing.chargebatteries>
+  <OrderOptions.chargebatteries>Lataa, Keskeytä lataus</OrderOptions.chargebatteries>
+  <OrderDialog.chargebatteries>[name], operoi paristoja!</OrderDialog.chargebatteries>
+  <OrderDialog.chargebatteries.charge>[name], lataa paristot!</OrderDialog.chargebatteries.charge>
+  <OrderDialog.chargebatteries.stopcharging>[name], keskeytä paristojen lataus!</OrderDialog.chargebatteries.stopcharging>
+  <OrderName.pumpwater>Operoi pumppuja</OrderName.pumpwater>
+  <OrderNameDoing.pumpwater>Operoi pumppuja</OrderNameDoing.pumpwater>
+  <OrderOptions.pumpwater>Käynnistä pumput, Pysäytä pumput</OrderOptions.pumpwater>
+  <OrderDialog.pumpwater>[name], operoi pumppuja!</OrderDialog.pumpwater>
+  <OrderDialog.pumpwater.pumpout>[name], pumput täysille!</OrderDialog.pumpwater.pumpout>
+  <OrderDialog.pumpwater.stoppumping>[name], pysäytä pumput!</OrderDialog.pumpwater.stoppumping>
+  <OrderName.rescue>Ensiapu</OrderName.rescue>
+  <OrderNameDoing.rescue>Antaa ensiapua</OrderNameDoing.rescue>
+  <OrderDialog.rescue>[name], anna ensiapua jos joku sitä tarvitsee!</OrderDialog.rescue>
+  <OrderName.repairsystems>Korjaa laitteita</OrderName.repairsystems>
+  <OrderNameDoing.repairsystems>Korjaa laitteita</OrderNameDoing.repairsystems>
+  <OrderDialog.repairsystems>[name], korjaa vaurioituneet laitteet!</OrderDialog.repairsystems>
+  <OrderName.reportfire>Raportoi tulipalo</OrderName.reportfire>
+  <OrderDialog.reportfire>Tulipalo huoneessa [roomname]!</OrderDialog.reportfire>
+  <OrderName.reportbreach>Raportoi vuoto</OrderName.reportbreach>
+  <OrderDialog.reportbreach>Vuoto huoneessa [roomname]!</OrderDialog.reportbreach>
+  <OrderName.reportintruders>Raportoi hyökkääjä</OrderName.reportintruders>
+  <OrderDialog.reportintruders>Vihollisia huoneessa [roomname]!</OrderDialog.reportintruders>
+  <OrderName.reportbrokendevices>Raportoi vaurioitunut laite</OrderName.reportbrokendevices>
+  <OrderDialog.reportbrokendevices>Vaurioituneita laitteita huoneessa [roomname]!</OrderDialog.reportbrokendevices>
+  <OrderName.requestfirstaid>Pyydä ensiapua</OrderName.requestfirstaid>
+  <OrderDialog.requestfirstaid>Lääkintämies huoneeseen [roomname]!</OrderDialog.requestfirstaid>
+
+  <!-- Status -->
+  <Deceased>Kuollut</Deceased>
+  <Unconscious>Tajuton</Unconscious>
+  <Stunned>Järkyttynyt</Stunned>
+  <HuskInfectionTransition>Velonaceps calyx-infektio</HuskInfectionTransition>
+  <HuskInfectionActive>Edistyksellinen Velonaceps calyx infektio</HuskInfectionActive>
+  <MinorBleeding>Vähemmän verenvuotoa</MinorBleeding>
+  <Bleeding>verenvuoto</Bleeding>
+  <HeavyBleeding>Raskas verenvuoto</HeavyBleeding>
+  <CatastrophicBleeding>Katastrofaalinen verenvuoto</CatastrophicBleeding>
+  <NoInjuries>Ei näkyviä vammoja</NoInjuries>
+  <MinorInjuries>Lieviä vammoja</MinorInjuries>
+  <Injuries>Loukkaantunut</Injuries>
+  <MajorInjuries>Suuret vammat</MajorInjuries>
+  <CriticalInjuries>Kriittisesti loukkaantunut</CriticalInjuries>
+  <OxygenNormal>Happi taso normaali</OxygenNormal>
+  <OxygenReduced>Höyryttää ilmaa</OxygenReduced>
+  <OxygenLow>Merkit hapenpuutteesta</OxygenLow>
+  <NotBreathing>Ei hengitys</NotBreathing>
+  <NoAvailableMedicalItems>Ei lääketieteellisiä kohteita</NoAvailableMedicalItems>
+  <!-- Huskification -->
+  <HuskDormant>Kurkkusi on kipeä</HuskDormant>
+  <HuskDormant>Tunnet kuumetta</HuskDormant>
+  <HuskDormant>Se tuntuu jotain juuttuneen kurkkuun</HuskDormant>
+  <HuskDormant>Lihakset ovat tuskallisia</HuskDormant>
+  <HuskCantSpeak>Tunnet jotain liikkeestä kurkussa. Yrität huutaa, mutta mitään ääntä ei tule ulos.</HuskCantSpeak>
+  <HuskActivate>Outoinen kitininen liite puhkeaa suustasi. Käytä sitä injektoimaan munat eläväksi elimistäksi painamalla [Attack] -painiketta.</HuskActivate>
+  
+  <!-- Missions -->
+  <MissionName.salvageskyholderartifactruins>Artefaktin etsintä</MissionName.salvageskyholderartifactruins>
+  <MissionDescription.salvageskyholderartifactruins>[location1]:n tutkijat ovat poimineet infraäänisignaalin, joka on hyvin samankaltainen kuin aiemmin havaitut vieraiden artefaktien lähettämät Euroopassa. Tutki signaali ja nouta potentiaalinen artefakti.</MissionDescription.salvageskyholderartifactruins>
+  <MissionSonarLabel.salvageskyholderartifactruins>Infraäänisignaali</MissionSonarLabel.salvageskyholderartifactruins>
+  <MissionFailure.salvageskyholderartifactruins>Artefaktin noutaminen epäonnistui.</MissionFailure.salvageskyholderartifactruins>
+  <MissionSuccess.salvageskyholderartifactruins>Artefaktin noutaminen onnistui.</MissionSuccess.salvageskyholderartifactruins>
+  <MissionHeader0.salvageskyholderartifactruins>Artefakti kerätty.</MissionHeader0.salvageskyholderartifactruins>
+  <MissionMessage0.salvageskyholderartifactruins>Esine on nyt aluksella. Selaa sukellusvenettä ulos luolasta saadaksesi palkkion.</MissionMessage0.salvageskyholderartifactruins>
+
+  <MissionName.salvagethermalartifactruins>Artefaktin etsintä</MissionName.salvagethermalartifactruins>
+  <MissionDescription.salvagethermalartifactruins>[location1]:n tutkijat ovat poimineet infraäänisignaalin, joka on hyvin samankaltainen kuin aiemmin havaitut vieraiden artefaktien lähettämät Euroopassa. Tutki signaali ja nouta potentiaalinen artefakti.</MissionDescription.salvagethermalartifactruins>
+  <MissionSonarLabel.salvagethermalartifactruins>Infraäänisignaali</MissionSonarLabel.salvagethermalartifactruins>
+  <MissionFailure.salvagethermalartifactruins>Artefaktin noutaminen epäonnistui.</MissionFailure.salvagethermalartifactruins>
+  <MissionSuccess.salvagethermalartifactruins>Artefaktin noutaminen onnistui.</MissionSuccess.salvagethermalartifactruins>
+  <MissionHeader0.salvagethermalartifactruins>Artefakti kerätty.</MissionHeader0.salvagethermalartifactruins>
+  <MissionMessage0.salvagethermalartifactruins>Esine on nyt aluksella. Selaa sukellusvenettä ulos luolasta saadaksesi palkkion.</MissionMessage0.salvagethermalartifactruins>
+
+  <MissionName.pvpmission>Etsi ja tuhoa</MissionName.pvpmission>
+  <MissionDescriptionNeutral.pvpmission>Koalitioalus on lähetetty [sijainti1]: n romuttamoaluksen tuhoamisesta [sijainti2]: n laitamilla.</MissionDescriptionNeutral.pvpmission>
+  <MissionDescription1.pvpmission>Jälleenmurtamaa alusta on havaittu [location2]: n laitamilla. Kauppaa Europa-koalitioa vastaan voidaan rangaista kuolemalla - eliminoida renegadit millä tahansa tarpeellisella tavalla.</MissionDescription1.pvpmission>
+  <MissionDescription2.pvpmission>Olet jäsen rikollisryhmässä, joka vastustaa Europa Coalitionia. Teidän informanttienne [location1] mukaan koalitioalus on juuri lähetetty tehtävään ottaa veneen alas. Hävitä heidän miehistönsä millä tahansa tarpeellisella tavalla.</MissionDescription2.pvpmission>
+  <MissionTeam1.pvpmission>Koalitio</MissionTeam1.pvpmission>
+  <MissionTeam2.pvpmission>Kapinalliset</MissionTeam2.pvpmission>
+  <MissionHeader0.pvpmission>Uhmaa miehistöä on voitettu!</MissionHeader0.pvpmission>
+  <MissionMessage0.pvpmission>Koalitio miehistöä on voitettu!</MissionMessage0.pvpmission>
+
+  <!-- Gameplay tips -->
+  <LoadingScreenTip>Et voi maksaa rahdin toimittamisesta, jos jokin rahdista puuttuu tai vahingoittaa kuljetuksen aikana.</LoadingScreenTip>
+  <LoadingScreenTip>Jupiterin ympärillä olevat säteilyhihnat tekevät siitä epäkäytännöllistä luoda pysyviä siirtokuntia Euroopan pinnan yläpuolelle, ja sinällään lähes kaikki Europanin etuvartiot sijaitsevat sen jäisen kuoren alapuolella.</LoadingScreenTip>
+  <LoadingScreenTip>Euroopan vedenalaisen ekosysteemin dynamiikkaa ei vieläkään täysin ymmärretä, mutta uskotaan, että elintarvikeketjun perusta muodostuu useimmiten kemosynteettisistä bakteereista.</LoadingScreenTip>
+  <LoadingScreenTip>Eurooppa-koalitio alkoi kauppa- ja yhteistyösopimuksena kahden suurimman europanelakohteen ja kourallisen yksityisten puolisotilaallisten ryhmien välillä, mutta vähitellen kasvoi siitä, mikä on lähinnä euroopan hallitus.</LoadingScreenTip>
+  <LoadingScreenTip>Hyvin laiskannut aloite, jolla autetaan ajajat menestymään jännittävään ympäristöön sisällyttämällä ammattiviihdyttäjiä miehistöihin, pidettiin viivytyksettä epäonnistuneeksi ja lopetettiin.</LoadingScreenTip>
+
+  <!-- Entity names and descriptions -->
+  <EntityName.hull>Runko</EntityName.hull>
+  <EntityDescription.hull>Rungot määrittävät, mitkä osat katsotaan "osaston sisällä". Yleensä jokaisen huoneen on oltava rungon mukana.</EntityDescription.hull>
+
+  <EntityName.gap>Aukko</EntityName.gap>
+  <EntityDescription.gap>Aukot antavat veden ja ilman virrata kahden rungon väliin.</EntityDescription.gap>
+
+  <EntityName.waypoint>Reittipiste</EntityName.waypoint>
+  <EntityDescription.waypoint>Käytetään AI-merkkien avulla navigoida sukellusveneen sisällä.</EntityDescription.waypoint>
+
+  <EntityName.spawnpoint>Kutupiste</EntityName.spawnpoint>
+  <EntityDescription.spawnpoint>Määrittää, mitkä huoneet miehistö kutsuvat sisälle.</EntityDescription.spawnpoint>
+
+  <OxygenTankEmpty>Happipullo (tyhjä)</OxygenTankEmpty>
+  <WeldingFuelTankEmpty>Hitsauskaasupullo (tyhjä)</WeldingFuelTankEmpty>
+
+  <weldingtool.Name>Hitsausväline</weldingtool.Name>
+  <weldingtool.Description>Tärkeä verme sukellusveneessä. Toimii myös veden alla.</weldingtool.Description>
+  <plasmacutter.Name>Plasmaleikkuri</plasmacutter.Name>
+  <plasmacutter.Description>Leikkaa seiniä yms</plasmacutter.Description>
+  <weldingfueltank.Name>Hitsauskaasupullo</weldingfueltank.Name>
+  <weldingfueltank.Description></weldingfueltank.Description>
+  <extinguisher.Name>Jauhesammutin</extinguisher.Name>
+  <extinguisher.Description>Käsikäyttöinen jauhesammutin.</extinguisher.Description>
+  <screwdriver.Name>Ruuvimeisseli</screwdriver.Name>
+  <screwdriver.Description></screwdriver.Description>
+  <wrench.Name>Jakoavain</wrench.Name>
+  <wrench.Description></wrench.Description>
+  <crowbar.Name>Sorkkarauta</crowbar.Name>
+  <crowbar.Description></crowbar.Description>
+
+  <JobName.captain>Kapteeni</JobName.captain>
+  <JobDescription.captain>Komentaa miehistöä.</JobDescription.captain>
+  <JobName.engineer>Insinööri</JobName.engineer>
+  <JobDescription.engineer>Tekee sähköhommia.</JobDescription.engineer>
+  <JobName.mechanic>Mekaanikko</JobName.mechanic>
+  <JobDescription.mechanic>Hoitaa mekaaniset korjaukset ja huollot.</JobDescription.mechanic>
+  <JobName.securityofficer>Turvamies</JobName.securityofficer>
+  <JobDescription.securityofficer>Vahtii ettei aluksessa perseillä.</JobDescription.securityofficer>
+  <JobName.medicaldoctor>Lääkintäupseeri</JobName.medicaldoctor>
+  <JobDescription.medicaldoctor>Hoitaa vammautuneita yms.</JobDescription.medicaldoctor>
+  <JobName.assistant>Avustaja</JobName.assistant>
+  <JobDescription.assistant>Antaa apu apustusta</JobDescription.assistant>
+
+  <SkillName.helm>Ruori</SkillName.helm>
+  <SkillName.weapons>Aseet</SkillName.weapons>
+  <SkillName.mechanical>Mekaaninen Insinööri</SkillName.mechanical>
+  <SkillName.electrical>Sähkötekniikka</SkillName.electrical>
+  <SkillName.medical>Lääketiede</SkillName.medical>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+</infotexts>

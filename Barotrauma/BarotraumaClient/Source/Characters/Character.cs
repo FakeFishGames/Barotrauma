@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         public static bool DisableControls;
 
+        public static bool DebugDrawInteract;
+
         protected float soundTimer;
         protected float soundInterval;
         protected float hudInfoTimer;
@@ -22,7 +24,7 @@ namespace Barotrauma
 
         protected float lastRecvPositionUpdateTime;
 
-        float hudInfoHeight;
+        private float hudInfoHeight;
 
         private List<CharacterSound> sounds;
 
@@ -78,6 +80,24 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        public string BloodDecalName
+        {
+            get;
+            private set;
+        }
+                
+        private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
+        public IEnumerable<ParticleEmitter> BloodEmitters
+        {
+            get { return bloodEmitters; }
+        }
+
+        private List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
+        public IEnumerable<ParticleEmitter> GibEmitters
+        {
+            get { return gibEmitters; }
+        }
+
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
@@ -89,31 +109,42 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            var soundElements = doc.Root.Elements("sound").ToList();
+            BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
             sounds = new List<CharacterSound>();
-            foreach (XElement soundElement in soundElements)
+            foreach (XElement subElement in doc.Root.Elements())
             {
-                sounds.Add(new CharacterSound(soundElement));
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sound":
+                        sounds.Add(new CharacterSound(subElement));
+                        break;
+                    case "bloodemitter":
+                        bloodEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "gibemitter":
+                        gibEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                }
             }
 
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }
 
+        partial void UpdateLimbLightSource(Limb limb)
+        {
+            if (limb.LightSource != null)
+            {
+                limb.LightSource.Enabled = enabled;
+            }
+        }
 
         /// <summary>
         /// Control the Character according to player input
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (!DisableControls)
-            {
-                for (int i = 0; i < keys.Length; i++)
-                {
-                    keys[i].SetState();
-                }
-            }
-            else
+            if (DisableControls)
             {
                 foreach (Key key in keys)
                 {
@@ -121,68 +152,74 @@ namespace Barotrauma
                     key.Reset();
                 }
             }
-
-            if (moveCam)
+            else
             {
-                if (needsAir &&
-                    pressureProtection < 80.0f &&
-                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
+                for (int i = 0; i < keys.Length; i++)
                 {
-                    float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
-
-                    cam.Zoom = MathHelper.Lerp(cam.Zoom,
-                        (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
-                        (pressure - 50.0f) / 50.0f);
+                    keys[i].SetState();
                 }
 
-                if (IsHumanoid)
+                if (moveCam)
                 {
-                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
-                }
-                else
-                {
-                    //increased visibility range when controlling large a non-humanoid
-                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
-                }
-            }
-            
-            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-            if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
-            {
-                cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-            }  
+                    if (needsAir &&
+                        pressureProtection < 80.0f &&
+                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
+                    {
+                        float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
 
-            Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (GUI.PauseMenuOpen)
-            {
-                cam.OffsetAmount = 0.0f;
-            }
-            else if (SelectedConstruction != null &&
-                SelectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUI.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUI.MouseOn))))
-            {
-                cam.OffsetAmount = 0.0f;
-            }
-            else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
-            {
-                if (GUI.PauseMenuOpen || IsUnconscious)
+                        cam.Zoom = MathHelper.Lerp(cam.Zoom,
+                            (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
+                            (pressure - 50.0f) / 50.0f);
+                    }
+
+                    if (IsHumanoid)
+                    {
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                    }
+                    else
+                    {
+                        //increased visibility range when controlling large a non-humanoid
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
+                    }
+                }
+
+                cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (AnimController.CurrentHull?.Submarine != null)
                 {
-                    if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
+                    cursorPosition -= AnimController.CurrentHull.Submarine.Position;
+                }
+
+                Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+                if (GUI.PauseMenuOpen)
+                {
+                    cam.OffsetAmount = 0.0f;
+                }
+                else if (SelectedConstruction != null && SelectedConstruction.components.Any(ic => (ic.GuiFrame != null && GUI.IsMouseOn(ic.GuiFrame))))
+                {
+                    cam.OffsetAmount = 0.0f;
                 }
                 else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                 {
-                    Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
-                    Structure structure = body == null ? null : body.UserData as Structure;
-
-                    float sightDist = Submarine.LastPickedFraction;
-                    if (body?.UserData is Structure && !((Structure)body.UserData).CastShadow)
+                    if (GUI.PauseMenuOpen || IsUnconscious)
                     {
-                        sightDist = 1.0f;
+                        if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
                     }
-                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Math.Max(250.0f, sightDist * 500.0f), 0.05f);
-                }
-            }
+                    else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+                    {
+                        Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
+                        Structure structure = body == null ? null : body.UserData as Structure;
 
-            DoInteractionUpdate(deltaTime, mouseSimPos);
+                        float sightDist = Submarine.LastPickedFraction;
+                        if (body?.UserData is Structure && !((Structure)body.UserData).CastShadow)
+                        {
+                            sightDist = 1.0f;
+                        }
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Math.Max(250.0f, sightDist * 500.0f), 0.05f);
+                    }
+                }
+
+                DoInteractionUpdate(deltaTime, mouseSimPos);
+            }
 
             DisableControls = false;
         }
@@ -190,20 +227,31 @@ namespace Barotrauma
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
-
+            
             ControlLocalPlayer(deltaTime, cam);
 
             Lights.LightManager.ViewTarget = this;
-            CharacterHUD.Update(deltaTime, this);
+            CharacterHUD.Update(deltaTime, this, cam);
+
+            bool removeProgressBars = false;
 
             foreach (HUDProgressBar progressBar in hudProgressBars.Values)
             {
+                if (progressBar.FadeTimer <= 0.0f)
+                {
+                    removeProgressBars = true;
+                    continue;
+                }
                 progressBar.Update(deltaTime);
             }
 
-            foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+            if (removeProgressBars)
             {
-                hudProgressBars.Remove(pb.Key);
+                // TODO: this generates garbage, can we fix anything here?
+                foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+                {
+                    hudProgressBars.Remove(pb.Key);
+                }
             }
         }
         
@@ -235,7 +283,7 @@ namespace Barotrauma
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
             
-            if (GameMain.NetworkMember?.Character == this) GameMain.NetworkMember.Character = null;
+            if (GameMain.Client?.Character == this) GameMain.Client.Character = null;
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }
@@ -290,11 +338,11 @@ namespace Barotrauma
             }
         }
         
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             if (!Enabled) return;
 
-            AnimController.Draw(spriteBatch);
+            AnimController.Draw(spriteBatch, cam);
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
@@ -339,7 +387,32 @@ namespace Barotrauma
                     Math.Min(speechBubbleTimer, 1.0f));
             }
 
-            if (this == controlled) return;
+            if (this == controlled)
+            {
+                if (DebugDrawInteract)
+                {
+                    Vector2 cursorPos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    cursorPos.Y = -cursorPos.Y;
+                    foreach (Item item in debugInteractablesAtCursor)
+                    {
+                        GUI.DrawLine(spriteBatch, cursorPos,
+                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.LightGreen, width: 4);
+                    }
+                    foreach (Item item in debugInteractablesInRange)
+                    {
+                        GUI.DrawLine(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y),
+                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.White * 0.1f, width: 4);
+                    }
+                    foreach (Pair<Item, float> item in debugInteractablesNearCursor)
+                    {
+                        GUI.DrawLine(spriteBatch,
+                            cursorPos,
+                            new Vector2(item.First.DrawPosition.X, -item.First.DrawPosition.Y),
+                            ToolBox.GradientLerp(item.Second, Color.Red, Color.Orange, Color.Green), width: 2);
+                    }
+                }
+                return;
+            }
 
             float hoverRange = 300.0f;
             float fadeOutRange = 200.0f;
@@ -418,7 +491,7 @@ namespace Barotrauma
             if (matchingSounds.Count == 0) return;
 
             var selectedSound = matchingSounds[Rand.Int(matchingSounds.Count)];
-            SoundPlayer.PlaySound(selectedSound.Sound, 1.0f, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
+            SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
         }
 
         partial void ImplodeFX()

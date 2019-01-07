@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class MalfunctionEvent : ScriptedEvent
     {
-        private string[] targetItemNames;
+        private string[] targetItemIdentifiers;
 
         private List<Item> targetItems;
 
@@ -22,7 +22,7 @@ namespace Barotrauma
 
         public override string DebugDrawText
         {
-            get { return "MalfunctionEvent (" + string.Join(", ", targetItemNames) + ")"; }
+            get { return "MalfunctionEvent (" + string.Join(", ", targetItemIdentifiers) + ")"; }
         }
 
         public MalfunctionEvent(ScriptedEventPrefab prefab)
@@ -36,28 +36,23 @@ namespace Barotrauma
             decreaseConditionAmount = prefab.ConfigElement.GetAttributeFloat("decreaseconditionamount", 0.0f);
             duration = prefab.ConfigElement.GetAttributeFloat("duration", 0.0f);
 
-            targetItemNames = prefab.ConfigElement.GetAttributeStringArray("itemnames", new string[0]);
+            targetItemIdentifiers = prefab.ConfigElement.GetAttributeStringArray("itemidentifiers", new string[0]);
         }
 
         public override bool CanAffectSubImmediately(Level level)
         {
-            return Item.ItemList.Count(i => i.Condition > 0.0f && targetItemNames.Any(name => i.Prefab.NameMatches(name))) >= maxItemAmount;
+            return Item.ItemList.Count(i => i.Condition > 0.0f && targetItemIdentifiers.Contains(i.Prefab.Identifier)) >= maxItemAmount;
         }
 
         public override void Init(bool affectSubImmediately)
         {
-            var matchingItems = Item.ItemList.FindAll(i => i.Condition > 0.0f && targetItemNames.Any(name => i.Prefab.NameMatches(name)));
+            var matchingItems = Item.ItemList.FindAll(i => i.Condition > 0.0f && targetItemIdentifiers.Contains(i.Prefab.Identifier));
             int itemAmount = Rand.Range(minItemAmount, maxItemAmount, Rand.RandSync.Server);
             for (int i = 0; i < itemAmount; i++)
             {
                 if (matchingItems.Count == 0) break;
                 targetItems.Add(matchingItems[Rand.Int(matchingItems.Count, Rand.RandSync.Server)]);
             }
-        }
-
-        public override void Finished()
-        {
-            base.Finished();
         }
 
         public override void Update(float deltaTime)

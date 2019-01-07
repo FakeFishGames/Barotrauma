@@ -54,14 +54,14 @@ namespace Barotrauma
             }
 
             VoronoiCell wallCell = new VoronoiCell(vertices.ToArray());
-            for (int i = 0; i < wallCell.edges.Count; i++)
+            for (int i = 0; i < wallCell.Edges.Count; i++)
             {
-                wallCell.edges[i].Cell1 = wallCell;
-                wallCell.edges[i].IsSolid = true;
+                wallCell.Edges[i].Cell1 = wallCell;
+                wallCell.Edges[i].IsSolid = true;
             }
             cells = new List<VoronoiCell>() { wallCell };
 
-            body = CaveGenerator.GeneratePolygons(cells, level, out List<Vector2[]> triangles, false);
+            body = CaveGenerator.GeneratePolygons(cells, level, out List<Vector2[]> triangles);
 #if CLIENT
             List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
             SetBodyVertices(bodyVertices.ToArray(), color);
@@ -82,22 +82,22 @@ namespace Barotrauma
 
                 VoronoiCell wallCell = new VoronoiCell(vertices);
                 wallCell.CellType = CellType.Edge;
-                wallCell.edges[0].Cell1 = wallCell;
-                wallCell.edges[1].Cell1 = wallCell;
-                wallCell.edges[2].Cell1 = wallCell;
-                wallCell.edges[3].Cell1 = wallCell;
-                wallCell.edges[0].IsSolid = true;
+                wallCell.Edges[0].Cell1 = wallCell;
+                wallCell.Edges[1].Cell1 = wallCell;
+                wallCell.Edges[2].Cell1 = wallCell;
+                wallCell.Edges[3].Cell1 = wallCell;
+                wallCell.Edges[0].IsSolid = true;
 
                 if (i > 1)
                 {
-                    wallCell.edges[3].Cell2 = cells[i - 1];
-                    cells[i - 1].edges[1].Cell2 = wallCell;
+                    wallCell.Edges[3].Cell2 = cells[i - 1];
+                    cells[i - 1].Edges[1].Cell2 = wallCell;
                 }
 
                 cells.Add(wallCell);
             }
             
-            body = CaveGenerator.GeneratePolygons(cells, level, out List<Vector2[]> triangles, false);
+            body = CaveGenerator.GeneratePolygons(cells, level, out List<Vector2[]> triangles);
             body.CollisionCategories = Physics.CollisionLevel;
 
 #if CLIENT

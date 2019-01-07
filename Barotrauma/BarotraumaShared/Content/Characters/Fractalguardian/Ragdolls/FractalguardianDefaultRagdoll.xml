@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Ragdoll type="fractalguardian" canentersubmarine="false">
+
+  <collider radius="50"/>
+  <!-- head -->
+  <limb id = "0" radius="65" type="Head" steerforce="3.0">
+    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,0,129,128" depth="0.04"/>
+    <attack type="Hit" range="120" damagerange="70" duration="0.2" stun="2" force="10" targetforce="80" structuresoundtype="StructureBlunt">
+      <Affliction identifier="internaldamage" strength="50"/>
+      <Affliction identifier="stun" strength="2"/>
+    </attack>
+  </limb>
+
+  <!-- body -->
+  <limb id = "1" radius="50">
+    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,125,108,105" depth="0.03" origin="0.5,0.5"/>
+  </limb>
+
+  <!-- body -->
+  <limb id = "2" radius="45" height="75">
+    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,239,90,136" depth="0.02" origin="0.5,0.5"/>
+  </limb>
+
+  <limb id = "3" width="30" height="175" type="Tail">
+    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.01" origin="0.5,0.5"/>
+  </limb>
+
+  <limb id = "4" width="30" height="239">
+    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,0,53,238" depth="0.05" origin="0.5,0.5"/>
+    <attack range="150" damagerange="120" duration="0.5" torque="-150" structuresoundtype="StructureSlash">
+      <Affliction identifier="internaldamage" strength="10"/>
+      <Affliction identifier="bleeding" strength="20"/>
+      <Affliction identifier="stun" strength="1"/>
+    </attack>
+
+  </limb>
+
+  <limb id = "5" width="30" height="239">
+    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,0,53,238" size="-1,1" depth="0.05" origin="0.5,0.5"/>
+    <attack range="150" damagerange="120" duration="0.5" torque="150" structuresoundtype="StructureSlash">
+      <Affliction identifier="internaldamage" strength="10"/>
+      <Affliction identifier="bleeding" strength="20"/>
+      <Affliction identifier="stun" strength="1"/>
+    </attack>
+  </limb>
+        
+
+  <!-- head to body -->
+  <joint limb1="0" limb1anchor="0,-60" limb2="1" limb2anchor="0,30" lowerlimit="-30" upperlimit="30" canbesevered="true"/>
+
+  <joint limb1="1" limb1anchor="0,-47" limb2="2" limb2anchor="0,56" lowerlimit="-30" upperlimit="30" canbesevered="true"/>
+
+  <joint limb1="2" limb1anchor="0,-60" limb2="3" limb2anchor="0,80" lowerlimit="-30" upperlimit="30" canbesevered="true"/>
+
+  <joint limb1="0" limb1anchor="30,10" limb2="4" limb2anchor="0,-110" lowerlimit="-180" upperlimit="-90" canbesevered="true"/>
+  
+  <joint limb1="0" limb1anchor="-30,10" limb2="5" limb2anchor="0,-110" lowerlimit="90" upperlimit="180" canbesevered="true"/>
+</Ragdoll>
+

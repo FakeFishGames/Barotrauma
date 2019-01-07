@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -21,7 +22,6 @@ namespace Barotrauma
         public static GameSettings Config;
 
         public static GameServer Server;
-        public const GameClient Client = null;
         public static NetworkMember NetworkMember
         {
             get { return Server as NetworkMember; }
@@ -51,10 +51,14 @@ namespace Barotrauma
             get { return Config.SelectedContentPackages; }
         }
 
-        public GameMain()
+        public readonly string[] CommandLineArgs;
+
+        public GameMain(string[] args)
         {
             Instance = this;
-            
+
+            CommandLineArgs = args;
+
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -68,7 +72,9 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-            
+
+            TextManager.LoadTextPacks(Path.Combine("Content", "Texts"));
+
             SteamManager.Initialize();
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
             
@@ -83,10 +89,11 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
-            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            ItemAssemblyPrefab.LoadAll();
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             LevelObjectPrefab.LoadAll();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
@@ -98,6 +105,34 @@ namespace Barotrauma
             Screen.SelectNull();
 
             NetLobbyScreen = new NetLobbyScreen();
+
+            CheckContentPackage();
+        }
+
+
+        private void CheckContentPackage()
+        {
+
+            foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
+            {
+                var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
+                if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
+                {
+                    DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
+                            .Replace("[selectedpackage]", contentPackage.Name)
+                            .Replace("[exename]", exePaths.First()),
+                        (option) =>
+                        {
+                            if (option.ToLower() == "y" || option.ToLower() == "yes")
+                            {
+                                string fullPath = Path.GetFullPath(exePaths.First());
+                                Process.Start(fullPath);
+                                ShouldRun = false;
+                            }
+                        });
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -110,22 +145,93 @@ namespace Barotrauma
 
         public void StartServer()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(GameServer.SettingsFile);
+            XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc == null)
             {
-                DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
+                DebugConsole.ThrowError("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
                 Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
                 return;
             }
 
+            string name = doc.Root.GetAttributeString("name", "Server");
+            int port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
+            int queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
+            bool publiclyVisible = doc.Root.GetAttributeBool("public", false);
+            string password = doc.Root.GetAttributeString("password", "");
+            bool enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
+            int maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
+            int ownerKey = 0;
+            
+            int tempInt;
+            bool tempBool;
+
+            for (int i=0;i<CommandLineArgs.Length;i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-name":
+                        name = CommandLineArgs[i + 1];
+                        i++;
+                        break;
+                    case "-port":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            port = tempInt;
+                        }
+                        i++;
+                        break;
+                    case "-queryport":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            queryPort = tempInt;
+                        }
+                        i++;
+                        break;
+                    case "-public":
+                        if (bool.TryParse(CommandLineArgs[i + 1], out tempBool))
+                        {
+                            publiclyVisible = tempBool;
+                        }
+                        i++;
+                        break;
+                    case "-password":
+                        password = CommandLineArgs[i + 1];
+                        i++;
+                        break;
+                    case "-upnp":
+                    case "-enableupnp":
+                        if (bool.TryParse(CommandLineArgs[i + 1], out tempBool))
+                        {
+                            enableUpnp = tempBool;
+                        }
+                        i++;
+                        break;
+                    case "-maxplayers":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            maxPlayers = tempInt;
+                        }
+                        i++;
+                        break;
+                    case "-ownerkey":
+                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
+                        {
+                            ownerKey = tempInt;
+                        }
+                        i++;
+                        break;
+                }
+            }
+
             Server = new GameServer(
-                doc.Root.GetAttributeString("name", "Server"),
-                doc.Root.GetAttributeInt("port", NetConfig.DefaultPort),
-                doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort),
-                doc.Root.GetAttributeBool("public", false),
-                doc.Root.GetAttributeString("password", ""),
-                doc.Root.GetAttributeBool("enableupnp", false),
-                doc.Root.GetAttributeInt("maxplayers", 10));
+                name,
+                port,
+                queryPort,
+                publiclyVisible,
+                password,
+                enableUpnp,
+                maxPlayers,
+                ownerKey);
         }
 
         public void CloseServer()
@@ -178,18 +284,6 @@ namespace Barotrauma
             CloseServer();
         }
         
-        public void ProcessInput()
-        {
-            while (true)
-            {
-                string input = Console.ReadLine();
-                lock (DebugConsole.QueuedCommands)
-                {
-                    DebugConsole.QueuedCommands.Add(input);
-                }
-            }
-        }
-
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);

@@ -1,240 +1,615 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Items>	
-	<Item
+<Items>
+  <Item
 		name="Fabricator"
     identifier="fabricator"
-		linkable="true"		
     category="Machine"
-    description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
+		linkable="true"
+    allowedlinks="deconstructor,cabinet"
+    description="A machine capable of manufacturing a wide range of items out of basic raw materials."
+    scale="0.4">
 
-    <Sprite texture="Content/Items/Fabricators/FF_Fabricator.png" sourcerect="0,0,220,200" depth="0.5"/>
+    <Sprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="0,0,351,488" depth="0.8"/>
+    <BrokenSprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="351,0,351,488" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="702,0,351,488" depth="0.8" maxcondition="0" />
 
-		<Fabricator canbeselected = "true" powerconsumption="500.0">
-
-      <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
+    <Fabricator canbeselected = "true" powerconsumption="500.0">
+      <GuiFrame relativesize="0.25,0.5" maxsize="460,800" style="ItemUI" anchor="Center" absoluteoffset="10,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
-      <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
-      </fabricableitem>
-      <fabricableitem name="Spear" requireditems="Steel Bar" requiredtime="10"/>
-      <fabricableitem name="Revolver Round" requireditems="Copper Bar" requiredtime="10">
-        <Item name="Aluminium" mincondition="0.5" usecondition="true"/>
-      </fabricableitem>
-
-      <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
-      </fabricableitem>
-      <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
-      </fabricableitem>
-
-      <fabricableitem name="Railgun Shell" requireditems="Steel Bar, Steel Bar, Polycarbonate Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="25"/>
-      </fabricableitem>
-      <fabricableitem name="Nuclear Shell" requireditems="Steel Bar, Steel Bar, Uranium Bar, Polycarbonate Bar" requiredtime="30">
-        <RequiredSkill name="Construction" level="40"/>
-      </fabricableitem>
-      <fabricableitem name="Depth Charge Shell" requireditems="Steel Bar, Steel Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="25"/>
-      </fabricableitem>
-      <fabricableitem name="Nuclear Depth Charge" requireditems="Steel Bar, Steel Bar, Uranium Bar" requiredtime="30">
-        <RequiredSkill name="Construction" level="40"/>
-      </fabricableitem>
-      <fabricableitem name="Diving Mask" requireditems="Polycarbonate Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="25"/>
-      </fabricableitem>
-      <fabricableitem name="Diving Suit" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, Aluminium, Aluminium" requiredtime="30">
-        <RequiredSkill name="Construction" level="40"/>
-      </fabricableitem>
-
-      <fabricableitem name="Fire Extinguisher" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="10"/>
-      <fabricableitem name="Flashlight" requireditems="Copper Bar, Polycarbonate Bar" requiredtime="10"/>
-
-      <fabricableitem name="Wire" requireditems="Copper Bar" requiredtime="5"/>
+      <!-- materials ************************************************************************************* -->
+      <FabricableItem identifier="steel" requiredtime="5">
+        <RequiredItem identifier="carbon"/>
+        <RequiredItem identifier="iron"/>
+      </FabricableItem>
+      <FabricableItem identifier="aluminium" requiredtime="5">
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="silicon"/>
+      </FabricableItem>
+      <FabricableItem identifier="titaniumaluminiumalloy" requiredtime="5">
+        <RequiredItem identifier="titanium"/>
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+      <FabricableItem identifier="plastic" requiredtime="5">
+        <RequiredItem identifier="silicon"/>
+        <RequiredItem identifier="carbon"/>
+      </FabricableItem>
+      <FabricableItem identifier="ballisticfiber" requiredtime="5">
+        <RequiredItem identifier="plastic"/>
+        <RequiredItem identifier="titanium"/>
+      </FabricableItem>
+      <FabricableItem identifier="flashpowder" requiredtime="5">
+        <RequiredItem identifier="magnesium"/>
+        <RequiredItem identifier="potassium"/>
+      </FabricableItem>
       
-      <fabricableitem name="Button" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Switch" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="And Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Or Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Not Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Relay Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Delay Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Light Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Oxygen Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Water Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
-      <fabricableitem name="Motion Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Signal Check Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>      
-      <fabricableitem name="RegEx Find Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
-      <fabricableitem name="Oscillator" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Wifi Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Emergency Siren" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-      <fabricableitem name="Alarm Buzzer" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <!-- electrical stuff ************************************************************************************* -->
 
-      <fabricableitem name="Underwater Scooter" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, FPGA Circuit" requiredtime="30"/>
+      <FabricableItem identifier="bluewire" requiredtime="5">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+      <FabricableItem identifier="redwire" requiredtime="5">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+      <FabricableItem identifier="orangewire" requiredtime="5">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="button" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      <FabricableItem identifier="switch" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      <FabricableItem identifier="andcomponent"  requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="orcomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="notcomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="relaycomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>      
+      <FabricableItem identifier="delaycomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="signalcheckcomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="regexcomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="oscillator" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="wificomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
+      <FabricableItem identifier="alarmbuzzer" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="tin"/>
+      </FabricableItem>
       
-      <fabricableitem name="Fulgurium Battery Cell" requireditems="Steel Bar, Fulgurium Bar" requiredtime="10">
-        <Item name="Sulphuric Acid" mincondition="0.75"/>
-      </fabricableitem>
-
-      <fabricableitem name="Flare" requiredtime="10">
-        <Item name="Phosphorus" mincondition="0.25" usecondition="true"/>
-        <Item name="Aluminium" mincondition="0.25" usecondition="true"/>
-      </fabricableitem>
-
-      <fabricableitem name ="Stun Grenade" requireditems="Steel Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
-        <Item name="Flash Powder" mincondition="0.75"/>
-        <Item name="Chloral Hydrate" mincondition="0.75"/>
-      </fabricableitem>
-
-      <fabricableitem name ="Incendium Grenade" requireditems="Steel Bar, Incendium Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="40"/>
-        <Item name="Flash Powder" mincondition="0.75"/>
-      </fabricableitem>
-
-      <fabricableitem name ="IC-4 Block" requireditems="C-4 Block, Incendium Bar" requiredtime="20"/>
+      <FabricableItem identifier="lightcomponent" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="phosphorus"/>
+      </FabricableItem>
       
-      <fabricableitem name="Battery Cell" requireditems="Steel Bar, Copper Bar" requiredtime="10">
-        <Item name="Sulphuric Acid" mincondition="0.75"/>
-      </fabricableitem>
+      <FabricableItem identifier="oxygendetector" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="silicon"/>
+      </FabricableItem>
+      <FabricableItem identifier="waterdetector" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="silicon"/>
+      </FabricableItem>
+      <FabricableItem identifier="motiondetector" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="silicon"/>
+      </FabricableItem>
+      <FabricableItem identifier="smokedetector" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="silicon"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="emergencysiren" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="steel"/>
+      </FabricableItem>
 
-      <fabricableitem name="Fuel Rod" requireditems="Steel Bar, Uranium Bar"/>
+      <!-- tools ************************************************************************************* -->
 
-      <fabricableitem name="Incendium Fuel Rod" requireditems="Steel Bar, Incendium Bar"/>
+      <FabricableItem identifier="plasmacutter" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="30"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      <FabricableItem identifier="weldingtool" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="30"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
 
-      <fabricableitem name="Uranium Bar">
-        <Item name="Uranium Powder" count="3" mincondition="0.75"/>
-      </fabricableitem>
+      <FabricableItem identifier="crowbar" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="30"/>
+        <RequiredItem identifier="iron"/>
+      </FabricableItem>
+      <FabricableItem identifier="screwdriver" requiredtime="20">
+        <RequiredItem identifier="iron"/>
+      </FabricableItem>
+      <FabricableItem identifier="wrench" requiredtime="20">
+        <RequiredItem identifier="iron"/>
+      </FabricableItem>
+      
 
-      <fabricableitem name="Oxygen Tank" displayname="Oxygen Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
-      <fabricableitem name="Oxygenite Tank" requireditems="Steel Bar, Liquid Oxygenite, Liquid Oxygenite, Liquid Oxygenite" outcondition="100.0" requiredtime="5" />
-      <fabricableitem name="Welding Fuel Tank" requireditems="Steel Bar, Ethanol" requiredtime="10"/>
-      <fabricableitem name="Welding Fuel Tank" displayname="Welding Fuel Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
+      <!-- equipment ************************************************************************************* -->
+
+      <FabricableItem identifier="underwaterscooter" requiredtime="30">
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="divingmask" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="25"/>
+        <RequiredItem identifier="plastic"/>
+        <RequiredItem identifier="rubber"/>
+        <RequiredItem identifier="rubber"/>
+      </FabricableItem>
+      <FabricableItem identifier="divingsuit" requiredtime="30">
+        <RequiredSkill identifier="mechanical" level="40"/>
+        <RequiredItem identifier="titaniumaluminiumalloy"/>
+        <RequiredItem identifier="rubber"/>
+        <RequiredItem identifier="rubber"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="flashlight" requiredtime="10">
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="lightcomponent"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="handheldsonar" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      <FabricableItem identifier="sonarbeacon" requiredtime="10">
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="ballistichelmet" requiredtime="20">
+        <RequiredItem identifier="ballisticfiber"/>
+      </FabricableItem>
+      <FabricableItem identifier="bodyarmor" requiredtime="30">
+        <RequiredItem identifier="ballisticfiber"/>
+        <RequiredItem identifier="ballisticfiber"/>
+      </FabricableItem>
+      
+      <!-- TODO: implement
+      <FabricableItem identifier="alienhelmet" requiredtime="30">
+        <RequiredSkill identifier="mechanical" level="40"/>
+        <RequiredItem identifier="physicorium"/>
+      </FabricableItem>
+      <FabricableItem identifier="alienarmor" requiredtime="40">
+        <RequiredSkill identifier="mechanical" level="40"/>
+        <RequiredItem identifier="physicorium"/>
+        <RequiredItem identifier="physicorium"/>
+      </FabricableItem>-->
+      
+      <FabricableItem identifier="handcuffs" requiredtime="10">
+        <RequiredSkill identifier="mechanical" level="20"/>
+        <RequiredItem identifier="steel"/>
+      </FabricableItem>
+      <FabricableItem identifier="riotshield" requiredtime="10">
+        <RequiredSkill identifier="mechanical" level="50"/>
+        <RequiredItem identifier="titaniumaluminiumalloy"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="healthscanner" requiredtime="10">
+        <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="fpgacircuit"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      <!-- supplies ************************************************************************************* -->
+
+      <FabricableItem identifier="batterycell" requiredtime="10">
+        <RequiredItem identifier="zinc"/>
+        <RequiredItem identifier="lithium"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="fulguriumbatterycell" requiredtime="10">
+        <RequiredItem identifier="fulgurium"/>
+        <RequiredItem identifier="zinc"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="oxygentank" displayname="OxygenTankEmpty" outcondition="0.0">
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+      <FabricableItem identifier="oxygenitetank" outcondition="100.0" requiredtime="5">
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="liquidoxygenite"/>
+        <RequiredItem identifier="liquidoxygenite"/>
+      </FabricableItem>
+      <FabricableItem identifier="weldingfueltank" requiredtime="10">
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="ethanol"/>
+      </FabricableItem>
+      <FabricableItem identifier="weldingfueltank" displayname="WeldingFuelTankEmpty" outcondition="0.0">
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="extinguisher" requiredtime="10">
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="sodium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="flare" requiredtime="10">
+        <RequiredItem identifier="flashpowder" mincondition="0.25" usecondition="true"/>
+        <RequiredItem identifier="plastic" mincondition="0.25" usecondition="true"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="fuelrod" requiredtime="10">
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="uranium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="fulguriumfuelrod">
+        <RequiredItem identifier="fulgurium"/>
+        <RequiredItem identifier="steel"/>
+      </FabricableItem>
+            
+      <!-- weaponry ************************************************************************************* -->
+
+      <FabricableItem identifier="harpoongun" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="30"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="divingknife" requiredtime="10">
+        <RequiredSkill identifier="weapons" level="30"/>
+        <RequiredItem identifier="iron"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="stunbaton" requiredtime="10">
+        <RequiredSkill identifier="weapons" level="30"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="button"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="syringegun" requiredtime="10">
+        <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="spear" requiredtime="10">
+        <RequiredItem identifier="steel"/>
+      </FabricableItem>
+      <FabricableItem identifier="explosivespear" requiredtime="10">
+        <RequiredItem identifier="spear"/>
+        <RequiredItem identifier="c4block"/>
+      </FabricableItem>
+      <FabricableItem identifier="revolverround" requiredtime="10">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="lead" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="stungrenade" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="30"/>
+        <RequiredItem identifier="iron"/>
+        <RequiredItem identifier="phosphorus"/>
+        <RequiredItem identifier="flashpowder"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="incendiumgrenade" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="40"/>
+        <RequiredItem identifier="iron"/>
+        <RequiredItem identifier="incendium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="empgrenade" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="50"/>
+        <RequiredItem identifier="iron"/>
+        <RequiredItem identifier="copper"/>
+        <RequiredItem identifier="uex"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="fraggrenade" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="60"/>
+        <RequiredItem identifier="iron"/>
+        <RequiredItem identifier="uex"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="uex" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="60"/>
+        <RequiredItem identifier="sodium"/>
+        <RequiredItem identifier="phosphorus"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="c4block" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="70"/>
+        <RequiredItem identifier="uex"/>
+        <RequiredItem identifier="plastic"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="ic4block" requiredtime="20">
+        <RequiredSkill identifier="weapons" level="50"/>
+        <RequiredItem identifier="c4block"/>
+        <RequiredItem identifier="incendium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="railgunshell" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="25"/>
+        <RequiredItem identifier="steel"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="nuclearshell" requiredtime="30">
+        <RequiredSkill identifier="mechanical" level="40"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="uranium"/>
+        <RequiredItem identifier="uex"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="depthchargeshell" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="25"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="nucleardepthcharge" requiredtime="30">
+        <RequiredSkill identifier="mechanical" level="40"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="uranium"/>
+        <RequiredItem identifier="uex"/>
+      </FabricableItem>
     </Fabricator>
-		
-		<ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-			<requireditem name="Screwdriver" type="Equipped"/>
-			<output name="power_in"/>
-		</ConnectionPanel>
 
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
-	</Item>
+    <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <output name="power_in"/>
+    </ConnectionPanel>
+
+    <Repairable selectkey="Action" name="Electrical repairs"
+        fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
+    </Repairable>
+
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" slotsperrow="5" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
+  </Item>
 
   <Item
     name="Medical Fabricator"
     identifier="medicalfabricator"
-    linkable="true"    
     category="Machine"
+		linkable="true"
+    allowedlinks="deconstructor"
     description="A machine that can be used to manufacture various medicines.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,200"/>
-    
-    <Fabricator canbeselected = "true" powerconsumption="100.0">
+    <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,199"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" sourcerect="139,0,139,199" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" sourcerect="278,0,139,199" depth="0.8" maxcondition="0" />
 
-      <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
+    <Fabricator canbeselected = "true" powerconsumption="100.0">
+      <GuiFrame relativesize="0.35,0.5" minsize="400,400" maxsize="800,800" anchor="Center" style="ItemUI" absoluteoffset="10,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
-      <fabricableitem name="Medical Syringe" requireditems="Steel Bar" requiredtime="10"/>
-      <fabricableitem name="Chloral Hydrate" requireditems="Chlorine, Ethanol" requiredtime="20">
-        <RequiredSkill name="Medical" level="30"/>
-      </fabricableitem>
-      <fabricableitem name="Compound N" requireditems="Aluminium, Potassium, Sulphuric Acid" requiredtime="20">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
-      <fabricableitem name="Volatile Compound N" requireditems="Compound N, Flash Powder" requiredtime="20">
-        <RequiredSkill name="Medical" level="40"/>
-      </fabricableitem>
-            
-      <fabricableitem name="Morphine" requireditems="Stabilozine, Chloral Hydrate" requiredtime="10">
-        <RequiredSkill name="Medical" level="50"/>
-      </fabricableitem>
-      <fabricableitem name="Fentanyl" requireditems="Stabilozine, Morphine" requiredtime="20">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
+      <FabricableItem identifier="medicalsyringe" requiredtime="10">
+        <RequiredItem identifier="steel"/>
+      </FabricableItem>
+      <FabricableItem identifier="chloralhydrate" requiredtime="20">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="chlorine"/>
+        <RequiredItem identifier="ethanol"/>
+      </FabricableItem>
+      <FabricableItem identifier="compoundn" requiredtime="20">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="potassium"/>
+        <RequiredItem identifier="sulphuricacid"/>
+      </FabricableItem>
+      <FabricableItem identifier="volatilecompoundn" requiredtime="20">
+        <RequiredSkill identifier="medical" level="40"/>
+        <RequiredItem identifier="compoundn"/>
+        <RequiredItem identifier="flashpowder"/>
+      </FabricableItem>
 
-      <fabricableitem name="Erythrozine" requireditems="Stabilozine, Iron Powder" requiredtime="20">
-        <RequiredSkill name="Medical" level="50"/>
-      </fabricableitem>
+      <FabricableItem identifier="antidama1" requiredtime="10">
+        <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="opium"/>
+        <RequiredItem identifier="opium"/>
+      </FabricableItem>
+      <FabricableItem identifier="antidama2" requiredtime="20">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="antidama1"/>
+        <RequiredItem identifier="adrenaline"/>
+        <RequiredItem identifier="ethanol"/>
+      </FabricableItem>
 
-      <fabricableitem name="Hemostop" requireditems="Stabilozine, Phosphorus" requiredtime="20">
-        <RequiredSkill name="Medical" level="50"/>
-      </fabricableitem>
+      <FabricableItem identifier="antibloodloss1" requiredtime="10">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="sodium"/>
+        <RequiredItem identifier="chlorine"/>
+      </FabricableItem>
+      <FabricableItem identifier="antibloodloss2" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="alienblood"/>
+        <RequiredItem identifier="antibloodloss1"/>
+        <RequiredItem identifier="stabilozine"/>
+      </FabricableItem>
 
-      <fabricableitem name="Chloromydride" requireditems="Stabilozine, Erythrozine, Chloral Hydrate" requiredtime="20">
-        <RequiredSkill name="Medical" level="50"/>
-      </fabricableitem>
+      <FabricableItem identifier="antibleeding1" requiredtime="10">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="organicfiber"/>
+      </FabricableItem>
+      <FabricableItem identifier="antibleeding2" requiredtime="20">
+        <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="antibleeding1"/>
+        <RequiredItem identifier="elastin"/>
+      </FabricableItem>
+      <FabricableItem identifier="antibleeding3" requiredtime="20">
+        <RequiredSkill identifier="medical" level="70"/>
+        <RequiredItem identifier="stabilozine"/>
+        <RequiredItem identifier="antibiotics"/>
+        <RequiredItem identifier="elastin"/>
+      </FabricableItem>
 
-      <fabricableitem name="Flash Powder" requireditems="Aluminium, Potassium" requiredtime="25">
-        <RequiredSkill name="Medical" level="40"/>
-      </fabricableitem>
+      <FabricableItem identifier="flashpowder" requiredtime="5">
+        <RequiredItem identifier="magnesium"/>
+        <RequiredItem identifier="potassium"/>
+      </FabricableItem>
 
-      <fabricableitem name="Auxiliorizine" requireditems="Fentanyl, Erythrozine, Flash Powder" requiredtime="25">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
+      <FabricableItem identifier="deusizine" requiredtime="25">
+        <RequiredSkill identifier="medical" level="70"/>
+        <RequiredItem identifier="antibleeding3"/>
+        <RequiredItem identifier="antidama2"/>
+        <RequiredItem identifier="liquidoxygenite"/>
+      </FabricableItem>
 
-      <fabricableitem name="Hyperzine" requireditems="Phosphorus, Uranium Powder" requiredtime="25">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
+      <FabricableItem identifier="calyxanide" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="huskeggs" mincondition="0.25" usecondition="true"/>
+        <RequiredItem identifier="antibiotics"/>
+        <RequiredItem identifier="stabilozine"/>
+      </FabricableItem>
 
-      <fabricableitem name="Morbusine" requireditems="Sulphuric Acid, Auxiliorizine" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
+      <FabricableItem identifier="antinarc" requiredtime="10">
+        <RequiredSkill identifier="medical" level="50"/>
+        <RequiredItem identifier="antidama1"/>
+        <RequiredItem identifier="stabilozine"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="antipsychosis" requiredtime="20">
+        <RequiredSkill identifier="medical" level="40"/>
+        <RequiredItem identifier="lithium"/>
+        <RequiredItem identifier="carbon"/>
+        <RequiredItem identifier="chlorine"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="tonicliquid" requiredtime="5">
+        <RequiredSkill identifier="medical" level="30"/>
+        <RequiredItem identifier="calcium"/>
+        <RequiredItem identifier="zinc"/>
+        <RequiredItem identifier="potassium"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="liquidoxygenite" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="tonicliquid"/>
+        <RequiredItem identifier="stabilozine"/>
+        <RequiredItem identifier="oxygeniteshard"/>
+      </FabricableItem>
 
-      <fabricableitem name="Morbusanide" outcondition="0.25" requiredtime="10">
-        <RequiredSkill name="Medical" level="60"/>
-        <Item name="Morbusine" mincondition="0.25"/>
-        <Item name="Stabilozine" mincondition="0.25"/>
-      </fabricableitem>
+      <FabricableItem identifier="steroids" requiredtime="20">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="tonicliquid"/>
+        <RequiredItem identifier="antidama2"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="meth" requiredtime="20">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="phosphorus"/>
+        <RequiredItem identifier="chlorine"/>
+        <RequiredItem identifier="carbon"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="hyperzine" requiredtime="25">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="meth"/>
+        <RequiredItem identifier="steroids"/>
+      </FabricableItem>
 
-      <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Morphine" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
-
-      <fabricableitem name="Sufforin" requireditems="Erythrozine, Flash Powder, Sulphuric Acid" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
+      <FabricableItem identifier="morbusine" requiredtime="30">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="sulphuricacid"/>
+        <RequiredItem identifier="deusizine" count="2"/>
+      </FabricableItem>
+      <FabricableItem identifier="morbusineantidote" outcondition="0.25" requiredtime="10">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="morbusine" mincondition="0.25"/>
+        <RequiredItem identifier="stabilozine" mincondition="0.25"/>
+      </FabricableItem>
+      
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
+    </Repairable>
+
+    <ItemContainer capacity="4" canbeselected="true" hideitems="true" slotsperrow="4" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
   </Item>
 
   <Item
     name="Deconstructor"
     identifier="deconstructor"
-    linkable="true"    
     category="Machine"
-    description="Disassembles and breaks down items to reusable components and material bars.">
+		linkable="true"
+    allowedlinks="fabricator,medicalfabricator,cabinet"
+    description="Disassembles and breaks down items to reusable components and material bars."
+    scale="0.4">
 
-    <Sprite texture="Content/Items/Fabricators/FF_deconstructor.png" depth="0.8" sourcerect="0,0,264,164"/>
+    <Sprite texture="Content/Items/Fabricators/Deconstructor.png" depth="0.8" sourcerect="0,0,302,426"/>
+    <BrokenSprite texture="Content/Items/Fabricators/Deconstructor.png" sourcerect="302,0,302,426" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/Deconstructor.png" sourcerect="605,0,302,426" depth="0.8" maxcondition="0" />
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" style="ItemUI" anchor="Center" absoluteoffset="-10,0"/>
       <sound file="Content/Items/Fabricators/deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
-
-      <GuiFrame rect="0,0,300,200" alignment="Center" style="ItemUI"/>
     </Deconstructor>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5"/>
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5"/>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+	  <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
+    </Repairable>
+
+    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5" uilabel="Output" allowuioverlap="true"/>
   </Item>
 </Items>

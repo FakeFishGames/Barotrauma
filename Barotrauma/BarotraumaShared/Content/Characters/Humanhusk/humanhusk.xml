@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Character name="humanhusk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false">
+
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <bloodemitter particle="blackblood" particleamount="5"/>
+  <bloodemitter particle="blackwaterblood" particleamount="1"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+
+  <health
+    usehealthwindow="true"
+    vitality="100"
+    crushdepth="-30000.0"
+    doesbleed="true">
+    <Sprite texture="Content/UI/Health/MedUI_Silhouette.png" columns="7" rows="3" sourcerect="0,0,980,1056"/>
+    <Limb name="Head">
+      <Sprite texture="Content/UI/Health/MedUI_Head.png" sourcerect="0,0,140,352" highlightarea="44,0,52,58"/>
+      <VitalityMultiplier type="damage" multiplier="2.0"/>
+    </Limb>
+    <Limb name="Torso">
+      <Sprite texture="Content/UI/Health/MedUI_Torso.png" sourcerect="0,0,140,352" highlightarea="39,59,62,109"/>
+      <VitalityMultiplier type="bleeding" multiplier="2.0"/>
+    </Limb>
+    <Limb name="LeftArm">
+      <Sprite texture="Content/UI/Health/MedUI_LeftArm.png" sourcerect="0,0,140,352" highlightarea="104,70,36,145"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb name="RightArm">
+      <Sprite texture="Content/UI/Health/MedUI_RightArm.png" sourcerect="0,0,140,352" highlightarea="0,70,36,145"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb name="LeftLeg">
+      <Sprite texture="Content/UI/Health/MedUI_LeftLeg.png" sourcerect="0,0,140,352" highlightarea="74,187,34,165"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb name="RightLeg">
+      <Sprite texture="Content/UI/Health/MedUI_RightLeg.png" sourcerect="0,0,140,352" highlightarea="31,187,34,165"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+  </health>
+
+  <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+
+  <ai
+    combatstrength="100"
+    sight="0.5"
+    hearing="1.0"
+    attackcooldown="5.0">
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="nasonov" state="Attack" priority="60"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="stronger" state="Escape" priority="30"/>
+    <targetpriority tag="room" state="Attack" priority="5"/>
+    <targetpriority tag="husk" state="Attack" priority="0"/>
+  </ai>
+
+  <inventory slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
+
+</Character>
+

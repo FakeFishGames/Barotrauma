@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [InGameEditable, Serialize(1.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true)]
         public float Frequency
         {
             get { return frequency; }
@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
                 case "set_frequency":
                 case "frequency_in":
                     float newFrequency;
-                    if (float.TryParse(signal, out newFrequency))
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
                     {
                         Frequency = newFrequency;
                     }

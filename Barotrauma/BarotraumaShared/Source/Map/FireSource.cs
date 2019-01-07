@@ -1,7 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.Networking;
 #if CLIENT
 using Barotrauma.Sounds;
 using Barotrauma.Lights;
@@ -39,7 +39,7 @@ namespace Barotrauma
 
         public Vector2 WorldPosition
         {
-            get { return Submarine.Position + position; }
+            get { return Submarine == null ? position : Submarine.Position + position; }
         }
 
         public Vector2 Size
@@ -70,18 +70,23 @@ namespace Barotrauma
         public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false)
         {
             hull = Hull.FindHull(worldPosition, spawningHull);
-            if (hull == null) return;
-
-            if (!isNetworkMessage && GameMain.Client != null) return;
-            
-            hull.AddFireSource(this);
-
-            Submarine = hull.Submarine;
-
-            this.position = worldPosition - new Vector2(-5.0f, 5.0f) - Submarine.Position;
+            if (hull == null || worldPosition.Y < hull.WorldSurface) return;
 
 #if CLIENT
-            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
+            if (!isNetworkMessage && GameMain.Client != null) return;
+#endif
+            
+            hull.AddFireSource(this);
+            
+            position = worldPosition - new Vector2(-5.0f, 5.0f);
+            if (hull.Submarine != null)
+            {
+                Submarine = hull.Submarine;
+                position -= Submarine.Position;
+            }
+
+#if CLIENT
+            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull?.Submarine);
 #endif
 
             size = new Vector2(10.0f, 10.0f);
@@ -165,7 +170,9 @@ namespace Barotrauma
 
             UpdateProjSpecific(growModifier);
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (size.X < 1.0f) Remove();
         }
@@ -221,7 +228,10 @@ namespace Barotrauma
 
         private void DamageItems(float deltaTime)
         {
-            if (size.X <= 0.0f || GameMain.Client != null) return;
+            if (size.X <= 0.0f) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
             foreach (Item item in Item.ItemList)
             {
@@ -241,9 +251,9 @@ namespace Barotrauma
                 if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
 
                 item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
-                if (item.Condition <= 0.0f && GameMain.Server != null)
+                if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                    GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
                 }
             }
         }
@@ -267,10 +277,6 @@ namespace Barotrauma
 
                 var particle = GameMain.ParticleManager.CreateParticle("steam",
                     spawnPos, speed, 0.0f, hull);
-
-                if (particle == null) continue;
-
-                particle.Size *= MathHelper.Clamp(size.X / 10.0f, 0.5f, 3.0f);
             }
 #endif
 
@@ -280,7 +286,9 @@ namespace Barotrauma
             //evaporate some of the water
             hull.WaterVolume -= extinguishAmount;
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (size.X < 1.0f) Remove();
         }
@@ -299,10 +307,6 @@ namespace Barotrauma
 
                 var particle = GameMain.ParticleManager.CreateParticle("steam",
                     spawnPos, speed, 0.0f, hull);
-
-                if (particle == null) continue;
-
-                particle.Size *= MathHelper.Clamp(size.X / 10.0f, 0.5f, 3.0f);
             }
 #endif
 
@@ -311,7 +315,9 @@ namespace Barotrauma
 
             hull.WaterVolume -= extinguishAmount;
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (size.X < 1.0f) Remove();
         }

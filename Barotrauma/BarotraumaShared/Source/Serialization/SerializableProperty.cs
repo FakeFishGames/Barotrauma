@@ -14,11 +14,14 @@ namespace Barotrauma
     public class Editable : Attribute
     {
         public int MaxLength;
+        public int DecimalCount = 1;
 
         public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
 
         public string ToolTip;
+
+        public string DisplayName;
 
         public Editable(int maxLength = 20)
         {
@@ -31,10 +34,11 @@ namespace Barotrauma
             MaxValueInt = maxValue;
         }
 
-        public Editable(float minValue, float maxValue)
+        public Editable(float minValue, float maxValue, int decimals = 1)
         {
             MinValueFloat = minValue;
             MaxValueFloat = maxValue;
+            DecimalCount = decimals;
         }
     }
 
@@ -65,6 +69,7 @@ namespace Barotrauma
             { typeof(int), "int" },
             { typeof(float), "float" },
             { typeof(string), "string" },
+            { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
             { typeof(Vector3), "vector3" },
             { typeof(Vector4), "vector4" },
@@ -94,6 +99,11 @@ namespace Barotrauma
             }
         }
 
+        public object ParentObject
+        {
+            get { return obj; }
+        }
+
         public SerializableProperty(PropertyDescriptor property, object obj)
         {
             this.propertyDescriptor = property;
@@ -109,6 +119,11 @@ namespace Barotrauma
             }
 
             return default(T);
+        }
+
+        public void SetValue(object val)
+        {
+            propertyInfo.SetValue(obj, val);
         }
 
         public bool TrySetValue(string value)
@@ -173,6 +188,9 @@ namespace Barotrauma
                     case "string":
                         propertyInfo.SetValue(obj, value, null);
                         break;
+                    case "point":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParsePoint(value));
+                        break;
                     case "vector2":
                         propertyInfo.SetValue(obj, XMLExtensions.ParseVector2(value));
                         break;
@@ -207,8 +225,7 @@ namespace Barotrauma
 
             try
             {
-                string typeName;
-                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out typeName))
+                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
                 {
                     if (propertyDescriptor.PropertyType.IsEnum)
                     {
@@ -242,6 +259,9 @@ namespace Barotrauma
                         {
                             case "string":
                                 propertyInfo.SetValue(obj, value, null);
+                                return true;
+                            case "point":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "vector2":
                                 propertyInfo.SetValue(obj, XMLExtensions.ParseVector2((string)value));
@@ -367,6 +387,17 @@ namespace Barotrauma
             }
         }
 
+        public static string GetSupportedTypeName(Type type)
+        {
+            string typeName = null;
+            if (type.IsEnum) return "Enum";
+            if (!supportedTypes.TryGetValue(type, out typeName))
+            {
+                return null;
+            }
+            return typeName;
+        }
+
         public static List<SerializableProperty> GetProperties<T>(ISerializableEntity obj)
         {
             List<SerializableProperty> editableProperties = new List<SerializableProperty>();
@@ -456,8 +487,7 @@ namespace Barotrauma
                 }
 
                 string stringValue;
-                string typeName;
-                if (!supportedTypes.TryGetValue(value.GetType(), out typeName))
+                if (!supportedTypes.TryGetValue(value.GetType(), out string typeName))
                 {
                     if (property.PropertyType.IsEnum)
                     {
@@ -476,6 +506,9 @@ namespace Barotrauma
                         case "float":
                             //make sure the decimal point isn't converted to a comma or anything else
                             stringValue = ((float)value).ToString("G", CultureInfo.InvariantCulture);
+                            break;
+                        case "point":
+                            stringValue = XMLExtensions.PointToString((Point)value);
                             break;
                         case "vector2":
                             stringValue = XMLExtensions.Vector2ToString((Vector2)value);
@@ -497,7 +530,8 @@ namespace Barotrauma
                             break;
                     }
                 }
-                
+
+                element.Attribute(property.Name)?.Remove();
                 element.SetAttributeValue(property.Name.ToLowerInvariant(), stringValue);
             }
         }

@@ -3,20 +3,23 @@
   <Item
     name="Depth Charge Tube"
     identifier="depthchargetube"
+    tags="depthchargelauncher"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true">
+    linkable="true"
+    allowedlinks="depthchargeammosource">
+    
+    <Sprite texture="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
-    <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
-
-    <Turret canbeselected = "true" linkable="true" barrelpos="23, 76"
+    <Turret canbeselected="false" linkable="true" characterusable="false" 
+            barrelpos="23, 76"
             rotationlimits="90,90"
             powerconsumption="0.0"/>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,wire" type="Equipped"/>
       <input name="trigger_in"/>
     </ConnectionPanel>
   </Item>
@@ -24,37 +27,46 @@
   <Item
     name="Depth Charge Loader"
     identifier="depthchargeloader"
+    tags="depthchargeammosource"
     category="Machine"
-    linkable="true">
+    linkable="true"
+    allowedlinks="depthchargelauncher">
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected = "true">
-      <Containable name="Depth Charge Shell"/>
-      <Containable name="Nuclear Depth Charge"/>      
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected="true"
+                   autointeractwithcontained="true">
+      <Containable identifiers="depthchargeammo"/>      
     </ItemContainer>
   </Item>
 
   <Item
     name="Depth Charge Shell"
     identifier="depthchargeshell"
+    tags="depthchargeammo"
     category="Misc"
-    sonarsize="5">
+    sonarsize="5"
+    scale="0.25">
 
+    <Price locationtype="Military" buyprice="140"/>
+    <Price locationtype="City" buyprice="150"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steel"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
-    <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.55"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
+    <Sprite texture="DepthChargeShell.png" sourcerect="0,0,253,172" depth="0.55"/>
 
-    <Body width="68" height="47" density="30"/>
+    <Body width="253" height="172" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
       <StatusEffect type="OnImpact" target="Contained">
         <Use/>
@@ -62,39 +74,46 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
-      <Containable name="explosive"/>
+      <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
 
   <Item
     name="Nuclear Depth Charge"
     identifier="nucleardepthcharge"
+    tags="depthchargeammo"
     category="Misc"
-    sonarsize="5">
+    sonarsize="5"
+    scale="0.25">
+
+    <Price locationtype="Military" buyprice="300"/>
+    <Price locationtype="City" buyprice="400"/>
+    <Price locationtype="Outpost" buyprice="500"/>
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Uranium Bar"/>
+      <Item identifier="steel"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uex"/>
     </Deconstruct>
 
-    <Sprite texture="railgunetc.png" sourcerect="187,210,68,47" depth="0.55"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64"/>
+    <Sprite texture="NuclearDepthCharge.png" sourcerect="0,0,253,172" depth="0.55"/>
 
-    <Body width="68" height="47" density="30"/>
+    <Body width="253" height="172" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <affliction name="Internal Damage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10"/>
       </Attack>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
-          <affliction name="Burn" strength="500"/>
-          <affliction name="Internal Damage" strength="500"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="500"/>
+          <Affliction identifier="internaldamage" strength="500"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
@@ -103,8 +122,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
-      <Containable name="explosive"/>
+      <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
   

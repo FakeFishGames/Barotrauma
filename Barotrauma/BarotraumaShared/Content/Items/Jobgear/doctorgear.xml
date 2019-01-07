@@ -4,16 +4,27 @@
     identifier="healthscanner"
     category="Equipment"
     tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="A heads-up display that displays information of the vital signs and status of nearby humans.">
 
-    <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
+    <Deconstruct time="10">
+      <Item identifier="plastic" />
+      <Item identifier="fpgacircuit" />
+    </Deconstruct>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64"/>
+    <Sprite texture="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
 
     <Body width="18" height="6" density="30"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
-      <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
-    </Wearable>
+      <sprite texture="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
+    </Wearable>U
 
     <StatusHUD drawhudwhenequipped="true"/>
   </Item>
@@ -22,10 +33,16 @@
     name="Doctor's Uniform"
     identifier="doctorsuniform"
     category="Equipment"  
-    cargocontainername="Metal Crate"  
+    cargocontaineridentifier="metalcrate"  
     tags="smallitem">
 
-    <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,320,64,64"/>
+    <Sprite texture="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
 
     <Body width="52" height="17" density="30"/>
 
@@ -47,8 +64,7 @@
     </Wearable>
 
     <ItemContainer capacity="3">
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="chem,medical"/>
     </ItemContainer>
   </Item>
 </Items>

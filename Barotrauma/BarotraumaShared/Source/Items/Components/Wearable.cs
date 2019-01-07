@@ -14,6 +14,9 @@ namespace Barotrauma.Items.Components
         public readonly bool HideLimb;
         public readonly bool HideOtherWearables;
         public readonly bool InheritLimbDepth;
+        public readonly bool InheritTextureScale;
+        public readonly bool InheritOrigin;
+        public readonly bool InheritSourceRect;
         public readonly LimbType DepthLimb;
 
         public LightComponent LightComponent;
@@ -29,12 +32,15 @@ namespace Barotrauma.Items.Components
             spritePath = Path.GetDirectoryName(item.Item.Prefab.ConfigFile) + "/" + spritePath;
             Sprite = new Sprite(subElement, "", spritePath);
 
-            Limb                = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("limb", "Head"), true);
-            HideLimb            = subElement.GetAttributeBool("hidelimb", false);
-            HideOtherWearables  = subElement.GetAttributeBool("hideotherwearables", false);
-            InheritLimbDepth    = subElement.GetAttributeBool("inheritlimbdepth", true);
-            DepthLimb           = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true);
-            Sound               = subElement.GetAttributeString("sound", "");
+            Limb                    = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("limb", "Head"), true);
+            HideLimb                = subElement.GetAttributeBool("hidelimb", false);
+            HideOtherWearables      = subElement.GetAttributeBool("hideotherwearables", false);
+            InheritLimbDepth        = subElement.GetAttributeBool("inheritlimbdepth", true);
+            InheritTextureScale     = subElement.GetAttributeBool("inherittexturescale", false);
+            InheritOrigin           = subElement.GetAttributeBool("inheritorigin", false);
+            InheritSourceRect       = subElement.GetAttributeBool("inheritsourcerect", false);
+            DepthLimb               = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true);
+            Sound                   = subElement.GetAttributeString("sound", "");
         }
     }
 
@@ -91,7 +97,7 @@ namespace Barotrauma.Items.Components
                         i++;
                         break;
                     case "damagemodifier":
-                        damageModifiers.Add(new DamageModifier(subElement));
+                        damageModifiers.Add(new DamageModifier(subElement, item.Name + ", Wearable"));
                         break;
                 }
             }

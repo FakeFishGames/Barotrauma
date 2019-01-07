@@ -98,7 +98,14 @@ namespace Barotrauma.Networking
 
             public void ReadBytes(NetIncomingMessage inc)
             {
-                byte[] all = inc.ReadBytes(inc.LengthBytes - inc.PositionInBytes);
+                int bytesToRead = inc.LengthBytes - inc.PositionInBytes;
+                if (Received + (ulong)(bytesToRead) > FileSize)
+                {
+                    //strip out excess bytes
+                    bytesToRead -= (int)((Received + (ulong)bytesToRead) - FileSize);
+                }
+
+                byte[] all = inc.ReadBytes(bytesToRead);
                 Received += (ulong)all.Length;
                 WriteStream.Write(all, 0, all.Length);
 
@@ -160,21 +167,11 @@ namespace Barotrauma.Networking
 
         public FileReceiver()
         {
-            if (GameMain.Server != null)
-            {
-                throw new InvalidOperationException("Creating a file receiver is not allowed when a server is running.");
-            }
-
             activeTransfers = new List<FileTransferIn>();
         }
         
         public void ReadMessage(NetIncomingMessage inc)
         {
-            if (GameMain.Server != null)
-            {
-                throw new InvalidOperationException("Receiving files when a server is running is not allowed");
-            }
-
             System.Diagnostics.Debug.Assert(!activeTransfers.Any(t => 
                 t.Status == FileTransferStatus.Error ||
                 t.Status == FileTransferStatus.Canceled ||
@@ -259,10 +256,15 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    if (activeTransfer.Received + (ulong)(inc.LengthBytes - inc.PositionInBytes) > activeTransfer.FileSize)
+                    //allow one extra byte at the end for the 0 that identifies non-compressed messages
+                    if (activeTransfer.Received + (ulong)(inc.LengthBytes - inc.PositionInBytes) > activeTransfer.FileSize + 1)
                     {
                         GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
-                        DebugConsole.ThrowError("File transfer error: Received more data than expected");
+                        DebugConsole.ThrowError("File transfer error: Received more data than expected (total received: " + activeTransfer.Received +
+                            ", msg received: " + (inc.LengthBytes - inc.PositionInBytes) +
+                            ", msg length: " + inc.LengthBytes +
+                            ", msg read: " + inc.PositionInBytes +
+                            ", filesize: " + activeTransfer.FileSize);
                         activeTransfer.Status = FileTransferStatus.Error;
                         StopTransfer(activeTransfer);
                         return;

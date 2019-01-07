@@ -41,9 +41,17 @@ namespace Barotrauma.Lights
         public ConvexHull ConvexHull;
 
         public bool IsHorizontal;
+        public bool IsAxisAligned;
 
         public Segment(SegmentPoint start, SegmentPoint end, ConvexHull convexHull)
         {
+            if (start.Pos.Y > end.Pos.Y)
+            {
+                var temp = start;
+                start = end;
+                end = temp;
+            }
+
             Start = start;
             End = end;
             ConvexHull = convexHull;
@@ -52,6 +60,7 @@ namespace Barotrauma.Lights
             end.ConvexHull = convexHull;
 
             IsHorizontal = Math.Abs(start.Pos.X - end.Pos.X) > Math.Abs(start.Pos.Y - end.Pos.Y);
+            IsAxisAligned = Math.Abs(start.Pos.X - end.Pos.X) < 0.1f || Math.Abs(start.Pos.Y - end.Pos.Y) < 0.001f;
         }
     }
 
@@ -345,10 +354,8 @@ namespace Barotrauma.Lights
         /// <summary>
         /// Returns the segments that are facing towards viewPosition
         /// </summary>
-        public List<Segment> GetVisibleSegments(Vector2 viewPosition)
-        {
-            List<Segment> visibleFaces = new List<Segment>();
-            
+        public void GetVisibleSegments(Vector2 viewPosition, List<Segment> visibleSegments)
+        {            
             for (int i = 0; i < 4; i++)
             {
                 if (ignoreEdge[i]) continue;
@@ -366,23 +373,26 @@ namespace Barotrauma.Lights
 
                 if (Vector2.Dot(N, L) > 0)
                 {
-                    visibleFaces.Add(segments[i]);
+                    visibleSegments.Add(segments[i]);
                 }
             }
-
-            return visibleFaces;
         }
 
 
         public void RefreshWorldPositions()
         {
-            if (parentEntity == null || parentEntity.Submarine == null) return;
             for (int i = 0; i < 4; i++)
             {
-                vertices[i].WorldPos = vertices[i].Pos + parentEntity.Submarine.DrawPosition;
-                segments[i].Start.WorldPos = segments[i].Start.Pos + parentEntity.Submarine.DrawPosition;
-                segments[i].End.WorldPos = segments[i].End.Pos + parentEntity.Submarine.DrawPosition;
-
+                vertices[i].WorldPos = vertices[i].Pos;
+                segments[i].Start.WorldPos = segments[i].Start.Pos;
+                segments[i].End.WorldPos = segments[i].End.Pos;
+            }
+            if (parentEntity == null || parentEntity.Submarine == null) { return; }
+            for (int i = 0; i < 4; i++)
+            {
+                vertices[i].WorldPos += parentEntity.Submarine.DrawPosition;
+                segments[i].Start.WorldPos += parentEntity.Submarine.DrawPosition;
+                segments[i].End.WorldPos += parentEntity.Submarine.DrawPosition;
             }
         }
 

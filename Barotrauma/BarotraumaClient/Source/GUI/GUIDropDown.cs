@@ -15,6 +15,9 @@ namespace Barotrauma
         private GUIListBox listBox;
 
         private RectTransform currentListBoxParent;
+        private List<RectTransform> parentHierarchy = new List<RectTransform>();
+
+        private bool selectMultiple;
 
         public bool Dropped { get; set; }
 
@@ -22,8 +25,8 @@ namespace Barotrauma
         {
             get
             {
-                if (listBox.Selected == null) return null;
-                return listBox.Selected.UserData;
+                if (listBox.SelectedComponent == null) return null;
+                return listBox.SelectedComponent.UserData;
             }
         }
 
@@ -35,7 +38,7 @@ namespace Barotrauma
 
         public GUIComponent Selected
         {
-            get { return listBox.Selected; }
+            get { return listBox.SelectedComponent; }
         }
 
         public GUIListBox ListBox
@@ -47,7 +50,7 @@ namespace Barotrauma
         {
             get
             {
-                return (listBox.Selected == null) ? null : listBox.Selected.UserData;
+                return listBox.SelectedComponent?.UserData;
             }
         }
 
@@ -55,9 +58,27 @@ namespace Barotrauma
         {
             get
             {
-                if (listBox.Selected == null) return -1;
-                return listBox.Content.GetChildIndex(listBox.Selected);
+                if (listBox.SelectedComponent == null) return -1;
+                return listBox.Content.GetChildIndex(listBox.SelectedComponent);
             }
+        }
+
+        private List<object> selectedDataMultiple = new List<object>();
+        public IEnumerable<object> SelectedDataMultiple
+        {
+            get { return selectedDataMultiple; }
+        }
+
+        private List<int> selectedIndexMultiple = new List<int>();
+        public IEnumerable<int> SelectedIndexMultiple
+        {
+            get { return selectedIndexMultiple; }
+        }
+
+        public string Text
+        {
+            get { return button.Text; }
+            set { button.Text = value; }
         }
 
         public override string ToolTip
@@ -73,20 +94,21 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
-        
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "") : base(style, rectT)
+                
+        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false) : base(style, rectT)
         {
+            this.selectMultiple = selectMultiple;
+
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {
                 OnClicked = OnClicked
             };
             GUI.Style.Apply(button, "", this);
             
-            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 5, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
+            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
+            { IsFixedSize = false }, style: style)
             {
-                IsFixedSize = false
-            }, style: style)
-            {
+                Enabled = !selectMultiple,
                 OnSelected = SelectItem
             };
 
@@ -110,33 +132,70 @@ namespace Barotrauma
         /// </summary>
         private RectTransform FindListBoxParent()
         {
-            List<RectTransform> parents = new List<RectTransform>() { RectTransform.Parent };
-            while (parents.Last().Parent != null)
+            parentHierarchy.Clear();
+            parentHierarchy = new List<RectTransform>() { RectTransform.Parent };
+            while (parentHierarchy.Last().Parent != null)
             {
-                parents.Add(parents.Last().Parent);
+                parentHierarchy.Add(parentHierarchy.Last().Parent);
             }
             //find the parent GUIListBox highest in the hierarchy
-            for (int i = parents.Count - 1; i >= 0; i--)
+            for (int i = parentHierarchy.Count - 1; i >= 0; i--)
             {
-                if (parents[i].GUIComponent is GUIListBox) return parents[i];
+                if (parentHierarchy[i].GUIComponent is GUIListBox) return parentHierarchy[i];
             }
             //or just go with the direct parent if there are no listboxes in the hierarchy
+            parentHierarchy.Clear();
+            parentHierarchy.Add(RectTransform.Parent);
             return RectTransform.Parent;
         }
-
-        
+                
         public void AddItem(string text, object userData = null, string toolTip = "")
         {
-            GUITextBlock textBlock = null;
+            if (selectMultiple)
+            {
+                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                { IsFixedSize = false }, style: "ListBoxElement")
+                {
+                    UserData = userData,
+                    ToolTip = toolTip
+                };
 
-            textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                new GUITickBox(new RectTransform(new Point((int)(button.Rect.Height * 0.8f)), frame.RectTransform, anchor: Anchor.CenterLeft), text)
+                {
+                    UserData = userData,
+                    ToolTip = toolTip,
+                    OnSelected = (GUITickBox tb) =>
+                    {
+                        List<string> texts = new List<string>();
+                        selectedDataMultiple.Clear();
+                        selectedIndexMultiple.Clear();
+                        int i = 0;
+                        foreach (GUIComponent child in ListBox.Content.Children)
+                        {
+                            var tickBox = child.GetChild<GUITickBox>();
+                            if (tickBox.Selected)
+                            {
+                                selectedDataMultiple.Add(child.UserData);
+                                selectedIndexMultiple.Add(i);
+                                texts.Add(tickBox.Text);
+                            }
+                            i++;
+                        }
+                        button.Text = string.Join(", ", texts);
+                        OnSelected?.Invoke(tb.Parent, tb.Parent.UserData);
+                        return true;
+                    }
+                };
+            }
+            else
             {
-                IsFixedSize = false
-            }, text, style: "ListBoxElement")
-            {
-                UserData = userData,
-                ToolTip = toolTip
-            };
+                new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                { IsFixedSize = false }, text, style: "ListBoxElement")
+                {
+                    UserData = userData,
+                    ToolTip = toolTip
+                };
+            }
         }
 
         public override void ClearChildren()
@@ -151,13 +210,24 @@ namespace Barotrauma
 
         private bool SelectItem(GUIComponent component, object obj)
         {
-            GUITextBlock textBlock = component as GUITextBlock;
-            if (textBlock == null)
+            if (selectMultiple)
             {
-                textBlock = component.GetChild<GUITextBlock>();
-                if (textBlock == null) return false;
+                foreach (GUIComponent child in ListBox.Content.Children)
+                {
+                    var tickBox = child.GetChild<GUITickBox>();
+                    if (obj == child.UserData) { tickBox.Selected = true; }
+                }
             }
-            button.Text = textBlock.Text;
+            else
+            {
+                GUITextBlock textBlock = component as GUITextBlock;
+                if (textBlock == null)
+                {
+                    textBlock = component.GetChild<GUITextBlock>();
+                    if (textBlock == null) return false;
+                }
+                button.Text = textBlock.Text;
+            }
             Dropped = false;
             OnSelected?.Invoke(component, component.UserData);
             return true;
@@ -165,12 +235,30 @@ namespace Barotrauma
 
         public void SelectItem(object userData)
         {
-            listBox.Select(userData);
+            if (selectMultiple)
+            {
+                SelectItem(listBox.Content.FindChild(userData), userData);
+            }
+            else
+            {
+                listBox.Select(userData);
+            }
         }
 
         public void Select(int index)
         {
-            listBox.Select(index);
+            if (selectMultiple)
+            {
+                var child = listBox.Content.GetChild(index);
+                if (child != null)
+                {
+                    SelectItem(null, child.UserData);
+                }
+            }
+            else
+            {
+                listBox.Select(index);
+            }
         }
 
         private bool wasOpened;
@@ -183,21 +271,26 @@ namespace Barotrauma
             Dropped = !Dropped;
             if (Dropped && Enabled)
             {
-                OnDropped?.Invoke(this, userData);                
+                OnDropped?.Invoke(this, userData);
+                listBox.UpdateScrollBarSize();
             }
             return true;
         }
 
         private void AddListBoxToGUIUpdateList(GUIComponent parent)
-        {            
+        {
             //the parent is not our parent anymore :(
             //can happen when subscribed to a parent higher in the hierarchy (instead of the direct parent),
             //and somewhere between this component and the higher parent a component was removed
-            if (!parent.IsParentOf(this))
+            for (int i = 1; i < parentHierarchy.Count; i++)
             {
-                parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                return;
+                if (!parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
+                {
+                    parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                    return;
+                }
             }
+
             if (Dropped)
             {
                 listBox.AddToGUIUpdateList(false, UpdateOrder);

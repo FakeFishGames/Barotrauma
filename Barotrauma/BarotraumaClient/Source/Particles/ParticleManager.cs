@@ -47,6 +47,12 @@ namespace Barotrauma.Particles
         private Dictionary<string, ParticlePrefab> prefabs;
 
         private Camera cam;
+
+        public Camera Camera
+        {
+            get { return cam; }
+            set { cam = value; }
+        }
         
         public ParticleManager(Camera cam)
         {

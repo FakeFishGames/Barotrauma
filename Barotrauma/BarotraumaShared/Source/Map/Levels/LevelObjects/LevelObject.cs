@@ -66,7 +66,7 @@ namespace Barotrauma
                         -sa * triggerPosition.X + ca * triggerPosition.Y);
                 }
 
-                var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale);
+                var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale, prefab.Name);
                 int parentTriggerIndex = prefab.LevelTriggerElements.IndexOf(triggerElement.Parent);
                 if (parentTriggerIndex > -1) newTrigger.ParentTrigger = Triggers[parentTriggerIndex];
                 Triggers.Add(newTrigger);
@@ -81,9 +81,9 @@ namespace Barotrauma
         {
             Vector2 emitterPos = localPosition * Scale;
 
-            if (Rotation != 0.0f || Prefab.SwingAmount != 0.0f)
+            if (Rotation != 0.0f || Prefab.SwingAmountRad != 0.0f)
             {
-                float rot = Rotation + swingState * Prefab.SwingAmount;
+                float rot = Rotation + swingState * Prefab.SwingAmountRad;
 
                 var ca = (float)Math.Cos(rot);
                 var sa = (float)Math.Sin(rot);

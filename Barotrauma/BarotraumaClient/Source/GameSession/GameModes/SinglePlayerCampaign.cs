@@ -20,11 +20,6 @@ namespace Barotrauma
         private Submarine leavingSub;
         private bool atEndPosition;
 
-        protected CrewManager CrewManager
-        {
-            get { return GameMain.GameSession?.CrewManager; }
-        }
-
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
         {
@@ -72,7 +67,12 @@ namespace Barotrauma
 
             return true;
         }
-        
+
+        public void FireCharacter(CharacterInfo characterInfo)
+        {
+            CrewManager.RemoveCharacterInfo(characterInfo);
+        }
+
         private Submarine GetLeavingSub()
         {
             if (Character.Controlled != null && Character.Controlled.Submarine != null)
@@ -140,8 +140,6 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            CrewManager.Update(deltaTime);
-
             endRoundButton.UpdateManually(deltaTime);
 
             if (!crewDead)
@@ -201,6 +199,15 @@ namespace Barotrauma
                 }
                 Map.ProgressWorld();
 
+                //save and remove all items that are in someone's inventory
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.Info == null || c.Inventory == null) { continue; }
+                    var inventoryElement = new XElement("inventory");
+                    c.SaveInventory(c.Inventory, inventoryElement);
+                    c.Info.InventoryData = inventoryElement;
+                    c.Inventory?.DeleteAllItems();
+                }
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 

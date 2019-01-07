@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -13,6 +14,8 @@ namespace Barotrauma
 
         public static int size = 20;
 
+        private GUIRadioButtonGroup radioButtonGroup;
+
         private bool selected;
 
         public bool Selected
@@ -21,10 +24,21 @@ namespace Barotrauma
             set 
             { 
                 if (value == selected) return;
+                if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
+                {
+                    selected = true;
+                    return;
+                }
+                
                 selected = value;
                 state = (selected) ? ComponentState.Selected : ComponentState.None;
-
                 box.State = state;
+                if (value && radioButtonGroup != null)
+                {
+                    radioButtonGroup.SelectRadioButton(this);
+                }
+
+                OnSelected?.Invoke(this);
             }
         }
         
@@ -69,12 +83,16 @@ namespace Barotrauma
             {
                 base.ToolTip = value;
                 box.ToolTip = value;
+                text.ToolTip = value;
             }
         }
 
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
+        public string Text
+        {
+            get { return text.Text; }
+            set { text.Text = value; }
+        }
+
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
             box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft)
@@ -96,10 +114,16 @@ namespace Barotrauma
             rectT.ScaleChanged += ResizeBox;
             rectT.SizeChanged += ResizeBox;
         }
+        
+        public void SetRadioButtonGroup(GUIRadioButtonGroup rbg)
+        {
+            radioButtonGroup = rbg;
+        }
 
         private void ResizeBox()
         {
-            box.RectTransform.NonScaledSize = new Point(box.RectTransform.NonScaledSize.Y);
+            box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
+            text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         
         protected override void Update(float deltaTime)
@@ -117,8 +141,14 @@ namespace Barotrauma
 
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    Selected = !Selected;
-                    OnSelected?.Invoke(this);
+                    if (radioButtonGroup == null)
+                    {
+                        Selected = !Selected;
+                    }
+                    else if (!selected)
+                    {
+                        Selected = true;
+                    }
                 }
             }
             else

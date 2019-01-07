@@ -37,9 +37,9 @@ namespace EventInput
     public class CharacterEventArgs : EventArgs
     {
         private readonly char character;
-        private readonly int lParam;
+        private readonly long lParam;
 
-        public CharacterEventArgs(char character, int lParam)
+        public CharacterEventArgs(char character, long lParam)
         {
             this.character = character;
             this.lParam = lParam;
@@ -50,12 +50,12 @@ namespace EventInput
             get { return character; }
         }
 
-        public int Param
+        public long Param
         {
             get { return lParam; }
         }
 
-        public int RepeatCount
+        public long RepeatCount
         {
             get { return lParam & 0xffff; }
         }
@@ -120,7 +120,7 @@ namespace EventInput
 
 #if WINDOWS
         delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-        
+
         static IntPtr prevWndProc;
         static WndProc hookProcDelegate;
         static IntPtr hIMC;
@@ -187,45 +187,60 @@ namespace EventInput
 #if WINDOWS
         static IntPtr HookProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-        IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
+            IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
 
-        switch (msg)
+            switch (msg)
+            {
+                case WM_GETDLGCODE:
+                    returnCode = (IntPtr)(returnCode.ToInt32() | DLGC_WANTALLKEYS);
+                    break;
+
+                case WM_KEYDOWN:
+                    if (KeyDown != null)
+                        KeyDown(null, new KeyEventArgs(HandleKeyInput(wParam)));
+                    break;
+
+                case WM_KEYUP:
+                    if (KeyUp != null)
+                        KeyUp(null, new KeyEventArgs(HandleKeyInput(wParam)));
+                    break;
+
+                case WM_CHAR:
+                    if (CharEntered != null)
+                        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt64()));
+                    break;
+
+                case WM_IME_SETCONTEXT:
+                    if (wParam.ToInt32() == 1)
+                        ImmAssociateContext(hWnd, hIMC);
+                    break;
+
+                case WM_INPUTLANGCHANGE:
+                    ImmAssociateContext(hWnd, hIMC);
+                    returnCode = (IntPtr)1;
+                    break;
+            }
+
+            return returnCode;
+        }
+
+        static Keys HandleKeyInput(IntPtr wParam)
         {
-        case WM_GETDLGCODE:
-        returnCode = (IntPtr)(returnCode.ToInt32() | DLGC_WANTALLKEYS);
-        break;
-
-        case WM_KEYDOWN:
-        if (KeyDown != null)
-        KeyDown(null, new KeyEventArgs((Keys)wParam));
-
-        break;
-
-        case WM_KEYUP:
-        if (KeyUp != null)
-        KeyUp(null, new KeyEventArgs((Keys)wParam));
-        break;
-
-        case WM_CHAR:
-        if (CharEntered != null)
-        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt32()));
-        break;
-
-        case WM_IME_SETCONTEXT:
-        if (wParam.ToInt32() == 1)
-        ImmAssociateContext(hWnd, hIMC);
-        break;
-
-        case WM_INPUTLANGCHANGE:
-        ImmAssociateContext(hWnd, hIMC);
-        returnCode = (IntPtr)1;
-        break;
+            // The conversion does not work for Shift or CTRL. Hence the hack.
+            Keys key = (Keys)wParam;
+            int k = (int)key;
+            if (k == 16)
+            {
+                // Could also be RightShift
+                key = Keys.LeftShift;
+            }
+            else if (k == 17)
+            {
+                // Could also be RightControl
+                key = Keys.LeftControl;
+            }
+            return key;
         }
-
-        return returnCode;
-        }
-
 #endif
     }
-
 }

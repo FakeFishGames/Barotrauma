@@ -1,0 +1,11 @@
+﻿<SeamantisSwimFast
+  AnimationType="SwimFast"
+  movementspeed="4.440001"
+  waveamplitude="1.51"
+  wavelength="27.75"
+  steertorque="25"
+  flip="True"
+  mirror="True"
+  rotatetowardsmovement="True"
+  headangle="-112.5"
+  torsoangle="6" />

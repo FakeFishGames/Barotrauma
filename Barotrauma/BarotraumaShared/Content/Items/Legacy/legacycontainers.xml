@@ -3,12 +3,13 @@
     name="Steel Cabinet"
     category="Legacy"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150"
+    waterproof="true">
 
     <Sprite texture="locker.png" depth="0.84" sourcerect="0,0,128,128"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
 
@@ -16,14 +17,13 @@
     name="Medicine Cabinet"
     category="Legacy"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150"
+    waterproof="true">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
+    <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="smallitem,chem,medical"/>
     </ItemContainer>
   </Item>
   
@@ -31,14 +31,13 @@
     name="Toxic Cabinet"
     category="Legacy"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150"
+    waterproof="true">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
+    <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="smallitem,chem,medical"/>
     </ItemContainer>
   </Item>
 </Items>

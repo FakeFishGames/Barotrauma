@@ -18,40 +18,49 @@ namespace Barotrauma.Items.Components
             powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform),
                 TextManager.Get("PowerTransferPowered"), style: "IndicatorLightGreen")
             {
-                CanBeFocused = false
+                Enabled = false
             };
             highVoltageIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 40) },
                 TextManager.Get("PowerTransferHighVoltage"), style: "IndicatorLightRed")
             {
-                CanBeFocused = false
+                ToolTip = TextManager.Get("PowerTransferTipOvervoltage"),
+                Enabled = false
             };
             lowVoltageIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 80) },
                 TextManager.Get("PowerTransferLowVoltage"), style: "IndicatorLightRed")
             {
-                CanBeFocused = false
+                ToolTip = TextManager.Get("PowerTransferTipLowvoltage"),
+                Enabled = false                
             };
 
             var textContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), paddedFrame.RectTransform, Anchor.TopRight));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContainer.RectTransform),
-                TextManager.Get("PowerTransferPowerLabel"), font: GUI.LargeFont);
+                TextManager.Get("PowerTransferPowerLabel"), font: GUI.LargeFont)
+            {
+                ToolTip = TextManager.Get("PowerTransferTipPower")
+            };
             string powerStr = TextManager.Get("PowerTransferPower");
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightGreen)
             {
+                ToolTip = TextManager.Get("PowerTransferTipPower"),
                 TextGetter = () => { return powerStr.Replace("[power]", ((int)(-currPowerConsumption)).ToString()); }
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContainer.RectTransform),
-                TextManager.Get("PowerTransferLoadLabel"), font: GUI.LargeFont);
-
+                TextManager.Get("PowerTransferLoadLabel"), font: GUI.LargeFont)
+            {
+                ToolTip = TextManager.Get("PowerTransferTipLoad")
+            };
             string loadStr = TextManager.Get("PowerTransferLoad");
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightBlue)
             {
+                ToolTip = TextManager.Get("PowerTransferTipLoad"),
                 TextGetter = () => { return loadStr.Replace("[load]", ((int)(powerLoad)).ToString()); }
             };
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (GuiFrame == null) return;
 
@@ -59,11 +68,6 @@ namespace Barotrauma.Items.Components
             powerIndicator.Selected = IsActive && currPowerConsumption < -0.1f;
             highVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage > 1.2f;
             lowVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage < 0.8f;
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame?.AddToGUIUpdateList();
         }
     }
 }

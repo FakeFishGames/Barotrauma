@@ -209,8 +209,8 @@ namespace Voronoi2
             for ( int i = 0; i < nsites; i++ )
             {
                 sites[i] = new Site();
-                sites[i].coord.setPoint ( xValues[i], yValues[i] );
-                sites[i].sitenbr = i;
+                sites[i].Coord.SetPoint ( xValues[i], yValues[i] );
+                sites[i].SiteNbr = i;
                 
                 if ( xValues[i] < xmin )
                     xmin = xValues[i];
@@ -253,12 +253,12 @@ namespace Voronoi2
             newedge.ep [0] = null;
             newedge.ep[1] = null;
             
-            dx = s2.coord.x - s1.coord.x;
-            dy = s2.coord.y - s1.coord.y;
+            dx = s2.Coord.X - s1.Coord.X;
+            dy = s2.Coord.Y - s1.Coord.Y;
             
             adx = dx > 0 ? dx : -dx;
             ady = dy > 0 ? dy : -dy;
-            newedge.c = (double)(s1.coord.x * dx + s1.coord.y * dy + (dx * dx + dy* dy) * 0.5);
+            newedge.c = (double)(s1.Coord.X * dx + s1.Coord.Y * dy + (dx * dx + dy* dy) * 0.5);
             
             if ( adx > ady )
             {
@@ -281,7 +281,7 @@ namespace Voronoi2
         
         private void makevertex ( Site v )
         {
-            v.sitenbr = nvertices;
+            v.SiteNbr = nvertices;
             nvertices++;
         }
         
@@ -320,14 +320,14 @@ namespace Voronoi2
             Halfedge last, next;
             
             he.vertex = v;
-            he.ystar = (double)(v.coord.y + offset);
+            he.ystar = (double)(v.Coord.Y + offset);
             last = PQhash [ PQbucket (he) ];
             
             while
                 (
                     (next = last.PQnext) != null
                     && 
-                    (he.ystar > next.ystar || (he.ystar == next.ystar && v.coord.x > next.vertex.coord.x))
+                    (he.ystar > next.ystar || (he.ystar == next.ystar && v.Coord.X > next.vertex.Coord.X))
                 )
             {
                 last = next;
@@ -362,17 +362,17 @@ namespace Voronoi2
             return ( PQcount == 0 );
         }
         
-        private Point PQ_min ()
+        private DoubleVector2 PQ_min ()
         {
-            Point answer = new Point ();
+            DoubleVector2 answer = new DoubleVector2 ();
             
             while ( PQhash[PQmin].PQnext == null  )
             {
                 PQmin++;
             }
             
-            answer.x = PQhash[PQmin].PQnext.vertex.coord.x;
-            answer.y = PQhash[PQmin].PQnext.ystar;
+            answer.X = PQhash[PQmin].PQnext.vertex.Coord.X;
+            answer.Y = PQhash[PQmin].PQnext.ystar;
             return answer;
         }
         
@@ -474,7 +474,7 @@ namespace Voronoi2
             return null;
         }
         
-        private Halfedge ELleftbnd( Point p )
+        private Halfedge ELleftbnd( DoubleVector2 p )
         {
             int bucket;
             Halfedge he;
@@ -482,7 +482,7 @@ namespace Voronoi2
             /* Use hash table to get close to desired halfedge */
             // use the hash function to find the place in the hash map that this
             // HalfEdge should be
-            bucket = (int) ((p.x - xmin) / deltax * ELhashsize);
+            bucket = (int) ((p.X - xmin) / deltax * ELhashsize);
             
             // make sure that the bucket position is within the range of the hash
             // array
@@ -550,10 +550,10 @@ namespace Voronoi2
             double pxmin, pxmax, pymin, pymax;
             Site s1, s2;
             
-            double x1 = e.reg[0].coord.x;
-            double y1 = e.reg[0].coord.y;
-            double x2 = e.reg[1].coord.x;
-            double y2 = e.reg[1].coord.y;
+            double x1 = e.reg[0].Coord.X;
+            double y1 = e.reg[0].Coord.Y;
+            double x2 = e.reg[1].Coord.X;
+            double y2 = e.reg[1].Coord.Y;
             double x = x2- x1;
             double y = y2 - y1;
             
@@ -583,15 +583,15 @@ namespace Voronoi2
             {
                 y1 = pymin;
                 
-                if ( s1 != null && s1.coord.y > pymin )
-                    y1 = s1.coord.y;
+                if ( s1 != null && s1.Coord.Y > pymin )
+                    y1 = s1.Coord.Y;
                 if ( y1 > pymax )
                     y1 = pymax;
                 x1 = e.c - e.b * y1;
                 y2 = pymax;
                 
-                if ( s2 != null && s2.coord.y < pymax )
-                    y2 = s2.coord.y;
+                if ( s2 != null && s2.Coord.Y < pymax )
+                    y2 = s2.Coord.Y;
                 if ( y2 < pymin )
                     y2 = pymin;
                 x2 = e.c - e.b * y2;
@@ -623,15 +623,15 @@ namespace Voronoi2
             else
             {
                 x1 = pxmin;
-                if ( s1 != null && s1.coord.x > pxmin )
-                    x1 = s1.coord.x;
+                if ( s1 != null && s1.Coord.X > pxmin )
+                    x1 = s1.Coord.X;
                 if ( x1 > pxmax )
                     x1 = pxmax;
                 y1 = e.c - e.a * x1;
                 
                 x2 = pxmax;
-                if ( s2 != null && s2.coord.x < pxmax )
-                    x2 = s2.coord.x;
+                if ( s2 != null && s2.Coord.X < pxmax )
+                    x2 = s2.Coord.X;
                 if ( x2 < pxmin )
                     x2 = pxmin;
                 y2 = e.c - e.a * x2;
@@ -673,7 +673,7 @@ namespace Voronoi2
         }
         
         /* returns true if p is to right of halfedge e */
-        private bool right_of(Halfedge el, Point p)
+        private bool right_of(Halfedge el, DoubleVector2 p)
         {
             Edge e;
             Site topsite;
@@ -684,7 +684,7 @@ namespace Voronoi2
             e = el.ELedge;
             topsite = e.reg[1];
             
-            if ( p.x > topsite.coord.x )
+            if ( p.X > topsite.Coord.X )
                 right_of_site = true;
             else
                 right_of_site = false;
@@ -696,8 +696,8 @@ namespace Voronoi2
             
             if ( e.a == 1.0 )
             {
-                dxp = p.x - topsite.coord.x;
-                dyp = p.y - topsite.coord.y;
+                dxp = p.X - topsite.Coord.X;
+                dyp = p.Y - topsite.Coord.Y;
                 fast = false;
                 
                 if ( (!right_of_site & (e.b < 0.0)) | (right_of_site & (e.b >= 0.0)) )
@@ -707,7 +707,7 @@ namespace Voronoi2
                 }
                 else
                 {
-                    above = p.x + p.y * e.b > e.c;
+                    above = p.X + p.Y * e.b > e.c;
                     if ( e.b < 0.0 )
                         above = !above;
                     if ( !above )
@@ -715,7 +715,7 @@ namespace Voronoi2
                 }
                 if ( !fast )
                 {
-                    dxs = topsite.coord.x - ( e.reg[0] ).coord.x;
+                    dxs = topsite.Coord.X - ( e.reg[0] ).Coord.X;
                     above = e.b * (dxp * dxp - dyp * dyp) 
                     < dxs * dyp * (1.0 + 2.0 * dxp / dxs + e.b * e.b);
                     
@@ -725,10 +725,10 @@ namespace Voronoi2
             }
             else // e.b == 1.0
             {
-                yl = e.c - e.a * p.x;
-                t1 = p.y - yl;
-                t2 = p.x - topsite.coord.x;
-                t3 = yl - topsite.coord.y;
+                yl = e.c - e.a * p.X;
+                t1 = p.Y - yl;
+                t2 = p.X - topsite.Coord.X;
+                t3 = yl - topsite.Coord.Y;
                 above = t1 * t1 > t2 * t2 + t3 * t3;
             }
             return ( el.ELpm == LE ? above : !above );
@@ -751,8 +751,8 @@ namespace Voronoi2
         private double dist( Site s, Site t )
         {
             double dx, dy;
-            dx = s.coord.x - t.coord.x;
-            dy = s.coord.y - t.coord.y;
+            dx = s.Coord.X - t.Coord.X;
+            dy = s.Coord.Y - t.Coord.Y;
             return Math.Sqrt ( dx * dx + dy * dy );
         }
         
@@ -783,8 +783,8 @@ namespace Voronoi2
             xint = ( e1.c * e2.b - e2.c * e1.b ) / d;
             yint = ( e2.c * e1.a - e1.c * e2.a ) / d;
             
-            if ( (e1.reg[1].coord.y < e2.reg[1].coord.y)
-                || (e1.reg[1].coord.y == e2.reg[1].coord.y && e1.reg[1].coord.x < e2.reg[1].coord.x) )
+            if ( (e1.reg[1].Coord.Y < e2.reg[1].Coord.Y)
+                || (e1.reg[1].Coord.Y == e2.reg[1].Coord.Y && e1.reg[1].Coord.X < e2.reg[1].Coord.X) )
             {
                 el = el1;
                 e = e1;
@@ -795,7 +795,7 @@ namespace Voronoi2
                 e = e2;
             }
             
-            right_of_site = xint >= e.reg[1].coord.x;
+            right_of_site = xint >= e.reg[1].Coord.X;
             if ((right_of_site && el.ELpm == LE)
                 || (!right_of_site && el.ELpm == RE))
                 return null;
@@ -803,8 +803,8 @@ namespace Voronoi2
             // create a new site at the point of intersection - this is a new vector
             // event waiting to happen
             v = new Site();
-            v.coord.x = xint;
-            v.coord.y = yint;
+            v.Coord.X = xint;
+            v.Coord.Y = yint;
             return v;
         }
         
@@ -817,7 +817,7 @@ namespace Voronoi2
         {
             Site newsite, bot, top, temp, p;
             Site v;
-            Point newintstar = null;
+            DoubleVector2 newintstar = null;
             int pm;
             Halfedge lbnd, rbnd, llbnd, rrbnd, bisector;
             Edge e;
@@ -838,13 +838,13 @@ namespace Voronoi2
                 // process the site otherwise process the vector intersection
 
                 if (newsite != null && (PQempty()
-                                        || newsite.coord.y < newintstar.y
-                                        || (newsite.coord.y == newintstar.y
-                                            && newsite.coord.x < newintstar.x)))
+                                        || newsite.Coord.Y < newintstar.Y
+                                        || (newsite.Coord.Y == newintstar.Y
+                                            && newsite.Coord.X < newintstar.X)))
                 {
                     /* new site is smallest -this is a site event */
                     // get the first HalfEdge to the LEFT of the new site
-                    lbnd = ELleftbnd((newsite.coord));
+                    lbnd = ELleftbnd((newsite.Coord));
                     // get the first HalfEdge to the RIGHT of the new site
                     rbnd = ELright(lbnd);
                     // if this halfedge has no edge,bot =bottom site (whatever that
@@ -917,7 +917,7 @@ namespace Voronoi2
                     // to it in Hash Map
                     pm = LE; // set the pm variable to zero
 
-                    if (bot.coord.y > top.coord.y)
+                    if (bot.Coord.Y > top.Coord.Y)
                         // if the site to the left of the event is higher than the
                         // Site
                     { // to the right of it, then swap them and set the 'pm'
@@ -969,19 +969,7 @@ namespace Voronoi2
 
             return true;
         }
-
-        public List<GraphEdge> MakeVoronoiGraph(List<Vector2> sites, float minX, float minY, float maxX, float maxY)
-        {
-            double[] xVal = new double[sites.Count];
-            double[] yVal = new double[sites.Count];
-            for (int i = 0; i < sites.Count; i++)
-            {
-                xVal[i] = sites[i].X;
-                yVal[i] = sites[i].Y;
-            }
-            return generateVoronoi(xVal, yVal, minX, maxX, minY, maxY);
-        }
-
+        
         public List<GraphEdge> MakeVoronoiGraph(List<Vector2> sites, int width, int height)
         {
             double[] xVal = new double[sites.Count];
@@ -991,6 +979,11 @@ namespace Voronoi2
                 xVal[i] = sites[i].X;
                 yVal[i] = sites[i].Y;
             }
+            return generateVoronoi(xVal, yVal, 0, width, 0, height);
+        }
+
+        public List<GraphEdge> MakeVoronoiGraph(double[] xVal, double[] yVal, int width, int height)
+        {
             return generateVoronoi(xVal, yVal, 0, width, 0, height);
         }
 

@@ -1,0 +1,1053 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- Notes to modders/translators:
+  - The file must be encoded using UTF-8 for special symbols (e.g. non-english alphabets) to work.
+    In Notepad the encoding can be selected in the save dialog. In Notepad++ it's selected in the encoding menu.
+    
+  - The game automatically loads all the xml files in the Texts-folder, and uses the ones that in the same
+    language that the user has selected. 
+      
+  - Text files should not be included in content package configs, but mods can include additional texts files in
+    case you want to add things such as new item names/descriptions or provide translation files for your mod.
+    
+  - There are a couple of console commands that may be helpful for translating the game:
+    - dumptexts writes all of the texts in this file into Content/Texts/EnglishVanilla.txt, removing all the xml tags
+    - loadtexts reads the lines from Content/Texts/EnglishVanilla.txt and inserts them back to this xml file.
+    - dumpentitytexts writes all the vanilla entity names and descriptions into Content/Texts/EntityTexts.txt along with the correct xml tags.
+    - updatetextfile takes a text xml file, compares it to another one, and adds all the elements that are only present in the first one into the second one.
+      Can be used to update old translation text files without having to manually check what's new in the updated text file.
+    
+  - Item/structure names and descriptions can be translated using the identifier of the item:
+    <EntityName.weldingtool>Eldingway Ooltay</ItemName.weldingtool>
+    <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</ItemDescription.weldingtool>
+  
+  - Job names and descriptions can be translated using the identifier of the job:
+    <JobName.captain>капитан</JobName.captain>
+    <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
+    
+  - Affliction texts can be translated using the identifier of the affliction:  
+    <AfflictionName.internaldamage>Interizzle daizzle</AfflictionName.internaldamage>
+    <AfflictionDescription.internaldamage>Dizzle to interizzle oizzle interizzle bleedizzle or broizzle boizzle.</AfflictionDescription.internaldamage>
+    <AfflictionCauseOfDeath.internaldamage>Died of interizzle injurizzle</AfflictionCauseOfDeath.internaldamage>
+    <AfflictionCauseOfDeathSelf.internaldamage>You have succizzle to your interizzle injurizzle </AfflictionCauseOfDeathSelf.internaldamage>
+    
+  - Mission texts can be translated using the identifier of the mission:
+    <MissionName.salvageskyholderartifactruins>Rescatar un artefacto</MissionName.salvageskyholderartifactruins>
+    <MissionDescription.salvageskyholderartifactruins>Los investigadores de [location1] han captado una señal infrasónica muy similar a las emitidas por artefactos alienígenas descubiertos previamente en Europa. Investigue la señal y recupere el artefacto potencial.</MissionDescription.salvageskyholderartifactruins>
+    <MissionSonarLabel.salvageskyholderartifactruins>Señal infrasónica</MissionSonarLabel.salvageskyholderartifactruins>
+    <MissionFailure.salvageskyholderartifactruins>Misión fallida.</MissionFailure.salvageskyholderartifactruins>
+    <MissionSuccess.salvageskyholderartifactruins>Artefacto rescatado con éxito.</MissionSuccess.salvageskyholderartifactruins>
+    <MissionHeader0.salvageskyholderartifactruins>Artefacto recolectado.</MissionHeader0.salvageskyholderartifactruins>
+    <MissionMessage0.salvageskyholderartifactruins>El artefacto está ahora a bordo. Navega el submarino fuera de la caverna para reclamar la recompensa...</MissionMessage0.salvageskyholderartifactruins>
+
+  - AI order/report texts can be translated using the AITag of the order, as follows:
+    <OrderName.operatereactor>Roperate eactor</OrderName.operatereactor>
+    <OrderOptions.operatereactor>Ower Pup, Dut shown</OrderOptions.operatereactor>
+    <OrderNameDoing.operatereactor>Roperating eactor</OrderNameDoing.operatereactor>
+    <OrderDialog.operatereactor>[name], roperate the eactor!</OrderDialog.operatereactor>
+    <OrderDialog.operatereactor.powerup>[name], rower pup the eactor!</OrderDialog.operatereactor.powerup>
+    <OrderDialog.operatereactor.shutdown>[name], rutdown the sheactor!</OrderDialog.operatereactor.shutdown>
+    
+  - AI conversation files are a bit of a special case, as they can be added/removed by content packages and replaced by translation files.
+    When creating a mod with custom AI conversations, you simply configure the files in the content package the same way as in the Vanilla content package.
+    If you want to translate a conversation file, you should add the translated file to the Content/NPCConversations-folder, 
+    and use the identifier attribute to define which file it replaces.
+    
+    If you for example are creating a russian translation of the vanilla game, you should create a conversation file that's configured as:
+      <Conversations identifier="vanillaconversations" Language="Russian">
+    
+    If you wanted to create a more comprehensive translation that also translates some common mods, you could add multiple translation files:
+      <Conversations identifier="barotraumaexpandedconversations" Language="Russian">
+      <Conversations identifier="mememod" Language="Russian">
+    
+-->
+
+<infotexts language="English">    
+  <!-- Loading screen -->
+  <Loading>Loading...</Loading>
+  <PressAnyKey>Press any key to continue</PressAnyKey>
+  
+  <!-- Main menu buttons -->
+  <TutorialButton>Training</TutorialButton>
+  <NewGameButton>New Game</NewGameButton>
+  <LoadGameButton>Load Game</LoadGameButton>
+  <JoinServerButton>Join Server</JoinServerButton>
+  <HostServerButton>Host Server</HostServerButton>
+  <SubEditorButton>Submarine Editor</SubEditorButton>
+  <CharacterEditorButton>Character Editor</CharacterEditorButton>
+  <SettingsButton>Settings</SettingsButton>
+  <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
+  <QuitButton>Quit</QuitButton>
+  
+  <!-- Pause menu -->
+  <PauseMenuResume>Resume</PauseMenuResume>
+  <PauseMenuSettings>Settings</PauseMenuSettings>
+  <PauseMenuRetry>Retry</PauseMenuRetry>
+  <PauseMenuSaveQuit>Save and Quit</PauseMenuSaveQuit>
+  <PauseMenuQuit>Quit</PauseMenuQuit>
+  <PauseMenuQuitVerification>Are you sure you want to quit the game? All your unsaved progress will be lost.</PauseMenuQuitVerification>
+  <PauseMenuRetryVerification>Are you sure you want to stop the mission and load the previous save file? All your unsaved progress will be lost.</PauseMenuRetryVerification>
+
+  <!-- Host server menu -->
+  <ServerName>Server name</ServerName>
+  <ServerPort>Server port</ServerPort>
+  <ServerPortToolTip>The port used to communicate with clients. If clients fail to connect to your server, you may need to enable UPnP port forwarding on forward the port manually.</ServerPortToolTip>
+  <ServerQueryPort>Query port</ServerQueryPort>
+  <ServerQueryPortToolTip>The port used to communicate with Steam's server browser and respond to info pings from clients. If clients don't see your server in the server list or if authenticating their Steam ID fails, you may need to enable UPnP port forwarding on forward the port manually.</ServerQueryPortToolTip>
+  <MaxPlayers>Max players</MaxPlayers>
+  <Password>Password</Password>
+  <PublicServer>Public server</PublicServer>
+  <PublicServerToolTip>Public servers are shown in the list of available servers in the "Join Server" -tab.</PublicServerToolTip>
+  <AttemptUPnP>Attempt UPnP port forwarding</AttemptUPnP>
+  <AttemptUPnPToolTip>UPnP can be used for forwarding ports on your router to allow players join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</AttemptUPnPToolTip>
+  <StartServerButton>Start</StartServerButton>
+  <PleaseWaitUPnP>Please wait...</PleaseWaitUPnP>
+  <AttemptingUPnP>Attempting UPnP port forwarding.</AttemptingUPnP>
+  <UPnPUnavailable>UPnP not available.</UPnPUnavailable>
+  <UPnPTimedOut>UPnP discovery timed out.</UPnPTimedOut>
+
+  <!-- Steam Workshop menu -->
+  <DownloadButton>Download</DownloadButton>  
+  
+  <!-- Settings menu -->
+  <Settings>Settings</Settings>
+  <Resolution>Resolution</Resolution>
+  <DisplayMode>Display mode</DisplayMode>
+  <Fullscreen>Fullscreen</Fullscreen>
+  <Windowed>Windowed</Windowed>
+  <BorderlessWindowed>Borderless windowed</BorderlessWindowed>
+  <EnableVSync>Enable vertical sync</EnableVSync>
+  <ParticleLimit>Particle limit</ParticleLimit>
+  <LosEffect>Line of sight effect</LosEffect>
+  <LosModeNone>None</LosModeNone>
+  <LosModeTransparent>Transparent</LosModeTransparent>
+  <LosModeOpaque>Opaque</LosModeOpaque>
+  <LightMapScale>Lighting resolution</LightMapScale>
+  <LightMapScaleToolTip>Lower values improve performance, but cause shadows to appear more pixellated.</LightMapScaleToolTip>
+  <SpecularLighting>Specular lighting</SpecularLighting>
+  <SpecularLightingToolTip>Enables specular lighting, an effect which creates brighter spots of light on shiny objects.</SpecularLightingToolTip>
+  <ChromaticAberration>Chromatic aberration</ChromaticAberration>
+  <ChromaticAberrationToolTip>Enables a subtle color distortion effect at the edges of the screen.</ChromaticAberrationToolTip>
+  <HUDScale>HUD scale</HUDScale>
+  <InventoryScale>Inventory scale</InventoryScale>
+  <SoundVolume>Sound volume</SoundVolume>
+  <MusicVolume>Music volume</MusicVolume>
+  <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
+  <Controls>Controls</Controls>
+  <AimAssist>Aim assist</AimAssist>
+  <Language>Language</Language>  
+  <ContentPackage>Content package</ContentPackage>
+  <ContentPackages>Content packages</ContentPackages>
+  <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
+  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
+  <ApplySettingsButton>Apply</ApplySettingsButton>
+  <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
+  <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
+  <ApplySettingsYes>Apply</ApplySettingsYes>
+  <ApplySettingsNo>Discard</ApplySettingsNo>
+  <RestartRequiredLabel>Restart required</RestartRequiredLabel>
+  <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
+  <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
+
+  <InputType.Select>Select</InputType.Select>
+  <InputType.Use>Use</InputType.Use>
+  <InputType.Aim>Aim</InputType.Aim>
+  <InputType.Up>Up</InputType.Up>
+  <InputType.Down>Down</InputType.Down>
+  <InputType.Left>Left</InputType.Left>
+  <InputType.Right>Right</InputType.Right>
+  <InputType.Attack>Attack</InputType.Attack>
+  <InputType.Run>Run</InputType.Run>
+  <InputType.Crouch>Crouch</InputType.Crouch>
+  <InputType.Chat>Chat</InputType.Chat>
+  <InputType.RadioChat>Radio chat</InputType.RadioChat>
+  <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
+  <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
+  <InputType.Health>Health</InputType.Health>
+  <InputType.Grab>Grab</InputType.Grab>
+  <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
+  <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
+  <InputType.Voice>Push-to-talk</InputType.Voice>
+  
+  <!-- Server settings menu -->
+  <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
+  <ServerSettingsServerTab>Server</ServerSettingsServerTab>
+  <ServerSettingsBanlistTab>Banlist</ServerSettingsBanlistTab>
+  <ServerSettingsWhiteListTab>Whitelist</ServerSettingsWhiteListTab>
+  <ServerSettingsSubSelection>Submarine selection</ServerSettingsSubSelection>
+  <ServerSettingsModeSelection>Game mode selection</ServerSettingsModeSelection>
+  <ServerSettingsEndRoundWhenDestReached>End round when destination reached</ServerSettingsEndRoundWhenDestReached>
+  <ServerSettingsEndRoundVoting>End round by voting</ServerSettingsEndRoundVoting>
+  <ServerSettingsEndRoundVotesRequired>Votes required: </ServerSettingsEndRoundVotesRequired>
+  <ServerSettingsAllowRespawning>Allow respawning</ServerSettingsAllowRespawning>
+  <ServerSettingsRespawnInterval>Interval: </ServerSettingsRespawnInterval>
+  <ServerSettingsMinRespawn>Minimum players to respawn: </ServerSettingsMinRespawn>
+  <ServerSettingsMinRespawnToolTip>What percentage of players has to be dead/spectating until a respawn shuttle is dispatched.</ServerSettingsMinRespawnToolTip>
+  <ServerSettingsRespawnDuration>Duration of respawn transport: </ServerSettingsRespawnDuration>
+  <ServerSettingsRespawnDurationToolTip>The amount of time respawned players have to navigate the respawn shuttle to the main submarine. After the duration expires, the shuttle will automatically head back out of the level.</ServerSettingsRespawnDurationToolTip>
+  <ServerSettingsMonsterSpawns>Monster Spawns</ServerSettingsMonsterSpawns>
+  <ServerSettingsAdditionalCargo>Additional Cargo</ServerSettingsAdditionalCargo>
+  <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
+  <ServerSettingsStartWhenClientsReady>Start when players are ready</ServerSettingsStartWhenClientsReady>
+  <ServerSettingsStartWhenClientsReadyRatio>[percentage] % need to be ready</ServerSettingsStartWhenClientsReadyRatio>  
+  <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
+  <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
+  <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
+  <ServerSettingsAutobanTime>Autoban duration: </ServerSettingsAutobanTime>
+  <ServerSettingsShareSubFiles>Share submarine files with players</ServerSettingsShareSubFiles>
+  <ServerSettingsRandomizeSeed>Randomize level seed between rounds</ServerSettingsRandomizeSeed>
+  <ServerSettingsSaveLogs>Save server logs</ServerSettingsSaveLogs>
+  <ServerSettingsAllowRagdollButton>Allow ragdoll button</ServerSettingsAllowRagdollButton>
+  <ServerSettingsUseTraitorRatio>Use % of players for max traitors</ServerSettingsUseTraitorRatio>
+  <ServerSettingsTraitorRatio>Traitor ratio: </ServerSettingsTraitorRatio>
+  <ServerSettingsTraitorCount>Traitor count: </ServerSettingsTraitorCount>
+  <ServerSettingsUseKarma>Use Karma</ServerSettingsUseKarma>
+  <WhiteListEnabled>Enabled</WhiteListEnabled>
+  <WhiteListName>Name</WhiteListName>
+  <WhiteListIP>IP Address</WhiteListIP>
+  <WhiteListAdd>Add to whitelist</WhiteListAdd>
+  <WhiteListRemove>Remove</WhiteListRemove>
+  <BanRange>Ban range</BanRange>
+  <BanListRemove>Remove</BanListRemove>
+  <BanExpires>Expires [time]</BanExpires>
+  <BanDuration>Duration</BanDuration>
+  <BanPermanent>Permanent</BanPermanent>
+  <BanReason>Reason: </BanReason>
+
+
+  <!-- Round summary -->
+  <RoundSummaryProgress>[sub] has made its way to [location].</RoundSummaryProgress>
+  <RoundSummaryProgress>[sub] has arrived at [location].</RoundSummaryProgress>
+  <RoundSummaryReturn>[sub] has returned to [location].</RoundSummaryReturn>
+  <RoundSummaryGameOver>The ocean has claimed [sub] and its crew.</RoundSummaryGameOver>
+  <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>
+  
+  <!-- Character HUD -->
+  <OxygenHUDWarning>Oxygen low</OxygenHUDWarning>
+  <PressureHUDWarning>High pressure</PressureHUDWarning>
+  <Grabbing>Grabbing</Grabbing>
+  <Stun>Stun</Stun>
+  <Disguised>(Disguised)</Disguised>
+  <UseItemButton>Use</UseItemButton>
+  <GrabHint>[[key]] Grab</GrabHint>
+  <HealHint>[[key]] Heal</HealHint>
+  <QuickUseAction.Equip>Equip</QuickUseAction.Equip>
+  <QuickUseAction.Unequip>Unequip</QuickUseAction.Unequip>
+  <QuickUseAction.Drop>Hold to drop</QuickUseAction.Drop>
+  <QuickUseAction.TakeFromContainer>Take</QuickUseAction.TakeFromContainer>
+  <QuickUseAction.TakeFromCharacter>Take</QuickUseAction.TakeFromCharacter>
+  <QuickUseAction.PutToContainer>Put to container</QuickUseAction.PutToContainer>
+  <QuickUseAction.PutToCharacter>Put to selected character</QuickUseAction.PutToCharacter>
+  <QuickUseAction.UseTreatment>Use as treatment</QuickUseAction.UseTreatment>
+
+  <!-- Status -->
+  <StatusOK>OK</StatusOK>
+  <Unconscious>Unconscious</Unconscious>
+  <Injured>Injured</Injured>
+
+  <!-- Limbs -->
+  <LeftHand>Left hand</LeftHand>
+  <RightHand>Right hand</RightHand>
+  <Hands>Hands</Hands>
+  <LeftArm>Left arm</LeftArm>
+  <RightArm>Right arm</RightArm>
+  <LeftLeg>Left leg</LeftLeg>
+  <RightLeg>Right leg</RightLeg>
+  <LeftFoot>Left foot</LeftFoot>
+  <RightFoot>Right foot</RightFoot>
+  <Head>Head</Head>
+  <Torso>Torso</Torso>
+  <Tail>Tail</Tail>
+  <Legs>Legs</Legs>
+  <RightThigh>Right thigh</RightThigh>
+  <LeftThigh>Left thigh</LeftThigh>
+  <Waist>Waist</Waist>
+
+  <!-- Misc -->
+  <Yes>Yes</Yes>
+  <No>No</No>
+  <OK>OK</OK>
+  <Skills>Skills</Skills>
+  <Male>Male</Male>
+  <Female>Female</Female>
+  <Order>Order</Order>
+  <Submarine>Submarine</Submarine>
+  <Shuttle>Shuttle</Shuttle>
+  <RespawnShuttle>Respawn shuttle</RespawnShuttle>
+  <Editing>Editing</Editing>
+  <Error>Error</Error>
+  <Warning>Warning</Warning>
+  <Unknown>Unknown</Unknown>
+  <None>None</None>
+  <Any>Any</Any>
+  <Close>Close</Close>
+  <Cancel>Cancel</Cancel>
+  <Done>Done</Done>
+  <Delete>Delete</Delete>
+  <Load>Load</Load>
+  <Back>Back</Back>
+  <Days>Days</Days>
+  <Hours>Hours</Hours>
+  <Retry>Retry</Retry>
+  <ManagePlayers>Manage players</ManagePlayers>
+  <Destination>Destination</Destination>
+
+  <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
+  <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
+  <DeleteFileError>Could not delete file "[file]"!</DeleteFileError>
+
+  <SteamDllNotFound>Initializing Steam client failed (steam_api64.dll not found).</SteamDllNotFound>
+  <SteamClientInitFailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account.</SteamClientInitFailed>
+
+  <!-- Pronouns -->
+  <PronounMale>He</PronounMale>
+  <PronounPossessiveMale>His</PronounPossessiveMale>
+  <PronounReflexiveMale>Himself</PronounReflexiveMale>
+  <PronounFemale>She</PronounFemale>
+  <PronounPossessiveFemale>Her</PronounPossessiveFemale>
+  <PronounReflexiveFemale>Herself</PronounReflexiveFemale>
+
+  <!-- Mission info -->
+  <MissionInfo>Mission info</MissionInfo>
+  <NoMission>No mission</NoMission>
+  <MissionReward>Reward: [reward]</MissionReward>
+
+  <!-- Campaign setup menu -->
+  <CampaignSetup>Campaign Setup</CampaignSetup>
+  <NewCampaign>New campaign</NewCampaign>
+  <LoadCampaign>Load campaign</LoadCampaign>
+  <LoadButton>Load</LoadButton>
+  <DeleteButton>Delete</DeleteButton>
+  <SubNotSelected>Submarine not selected!</SubNotSelected>
+  <SelectSubRequest>Please select a submarine.</SelectSubRequest>
+  <SelectedSub>Selected submarine</SelectedSub>
+  <SaveName>Save name</SaveName>
+  <LastSaved>Last saved</LastSaved>
+  <MapSeed>Map seed</MapSeed>
+  <StartCampaignButton>Start</StartCampaignButton>
+
+  <ShuttleSelected>Shuttle selected</ShuttleSelected>
+  <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
+
+  <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
+  <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content packages, because it requires the content packages [requiredcontentpackages]. Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
+
+  <!-- Campaign menu -->
+  <Map>Map</Map>
+  <Crew>Crew</Crew>
+  <Store>Store</Store>
+  <Hire>Hire</Hire>
+  <HireButton>Hire</HireButton>
+  <FireButton>Fire</FireButton>
+  <FireWarningHeader>Are you sure?</FireWarningHeader>
+  <FireWarningText>Are you sure you want to fire [charactername] from your crew? You will not be able to hire the character again.</FireWarningText>
+  <Location>Location</Location>
+  <HireUnavailable>No-one available for hire.</HireUnavailable>
+  <Mission>Mission</Mission>
+  <Reward>Reward: [reward] credits</Reward>
+  <Credit>Credit</Credit>
+  <PlayerCredits>Credits: [credits]</PlayerCredits>
+
+  <!-- Ingame menus -->
+  <InfoButton>Info</InfoButton>
+  <EndRound>End round</EndRound>
+  <EnterLocation>Enter [locationname]</EnterLocation>
+  <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
+  <LeaveSubsBehind>Some of your vessels aren't at the exit yet. Do you want to leave them behind?</LeaveSubsBehind>
+
+  <!-- Server list -->
+  <JoinServer>Join server</JoinServer>
+  <YourName>Your name</YourName>
+  <ServerIP>Server IP</ServerIP>
+  <ServerListName>Name</ServerListName>
+  <ServerListPlayers>Players</ServerListPlayers>
+  <ServerListVersion>Game version</ServerListVersion>
+  <ServerListHasPassword>Password-protected</ServerListHasPassword>
+  <ServerListUsingWhitelist>Using whitelist</ServerListUsingWhitelist>
+  <ServerListContentPackages>Content packages</ServerListContentPackages>
+  <ServerListSubSelection>Submarine selection</ServerListSubSelection>
+  <ServerListModeSelection>Game mode selection</ServerListModeSelection>
+  <ServerListAllowSpectating>Allow spectating</ServerListAllowSpectating>
+  <ServerListCompatible>Compatible</ServerListCompatible>
+  <ServerListPing>Ping</ServerListPing>
+  <ServerListRoundStarted>Round started</ServerListRoundStarted>
+  <ServerListRoundNotStarted>Round has not started</ServerListRoundNotStarted>
+  <ServerListInfo>Info</ServerListInfo>
+  <ServerListRefresh>Refresh</ServerListRefresh>
+  <ServerListJoin>Join</ServerListJoin>
+  <ServerListUnknownVersion>Could not determine compatibility (unknown game version)</ServerListUnknownVersion>
+  <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
+  <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
+  <ServerListIncompatibleContentPackage>Content package "[contentpackage]" (MD5: [hash]) required to play on this server.</ServerListIncompatibleContentPackage>
+  <FilterServers>Filter servers</FilterServers>
+  <FilterPassword>No password required</FilterPassword>
+  <FilterIncompatibleServers>Hide incompatible servers</FilterIncompatibleServers>
+  <FilterFullServers>Hide full servers</FilterFullServers>
+  <FilterEmptyServers>Hide empty servers</FilterEmptyServers>
+  <NoMatchingServers>No matching servers found.</NoMatchingServers>
+  <RefreshingServerList>Refreshing server list...</RefreshingServerList>
+  <NoServers>Could not find any servers.</NoServers>
+  <ServerListNoSteamConnection>Could not find any servers (not connected to Steam).</ServerListNoSteamConnection>
+  <MasterServerErrorLabel>Connection error</MasterServerErrorLabel>
+  <MasterServerTimeOutError>Could not connect to master server (request timed out).</MasterServerTimeOutError>
+  <MasterServerErrorException>Error while connecting to master server { [error] }</MasterServerErrorException>
+  <MasterServerError404>Error while connecting to master server (404 - [masterserverurl] not found)</MasterServerError404>
+  <MasterServerErrorUnavailable>Error while connecting to master server (505 - Service Unavailable). The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.</MasterServerErrorUnavailable>
+  <MasterServerErrorDefault>Error while connecting to master server ([statuscode]: [statusdescription])</MasterServerErrorDefault>
+  <CouldNotConnectToServer>Could not connect to the server.</CouldNotConnectToServer>
+  <InvalidIPAddress>Failed to resolve address "[serverip]:[port]". Please make sure you have entered a valid IP address.</InvalidIPAddress>
+  <Connecting>CONNECTING</Connecting>
+  <ConnectionLost>Connection lost</ConnectionLost>
+  <ConnectionLostReconnecting>You have been disconnected from the server. Reconnecting...</ConnectionLostReconnecting>
+  <ConnectionFailed>Connecting failed</ConnectionFailed>
+  <ConnectingTo>Connecting to [serverip]</ConnectingTo>
+  <ServerFullQuestionPrompt>Do you want to wait join the server queue and wait for a slot to free up?</ServerFullQuestionPrompt>
+  <ServerQueue>Queue</ServerQueue>
+  <ServerQueuePleaseWait>Please wait...</ServerQueuePleaseWait>
+  <WaitingInServerQueue>Waiting for a slot to free up on the server.</WaitingInServerQueue>
+
+  <!-- Disconnect reasons -->
+  <DisconnectReason.Banned>You have been banned from the server.</DisconnectReason.Banned>
+  <DisconnectReason.Kicked>You have been kicked from the server.</DisconnectReason.Kicked>
+  <DisconnectReason.ServerShutdown>The server has shut down.</DisconnectReason.ServerShutdown>
+  <DisconnectReason.ServerFull>The server is full.</DisconnectReason.ServerFull>
+  <DisconnectReason.AuthenticationRequired>Client did not properly request authentication.</DisconnectReason.AuthenticationRequired>
+  <DisconnectReason.SteamAuthenticationRequired>Steam authentication required. Please make sure Steam is running and you are logged in to an account.</DisconnectReason.SteamAuthenticationRequired>
+  <DisconnectReason.SteamAuthenticationFailed>Steam authentication failed.</DisconnectReason.SteamAuthenticationFailed>
+  <DisconnectReason.SessionTaken>Your session was taken by a new connection on the same IP address.</DisconnectReason.SessionTaken>
+  <DisconnectReason.TooManyFailedLogins>Too many failed login attempts.</DisconnectReason.TooManyFailedLogins>
+  <DisconnectReason.NoName>No name given.</DisconnectReason.NoName>
+  <DisconnectReason.InvalidName>Your name contains illegal symbols.</DisconnectReason.InvalidName>
+  <DisconnectReason.NameTaken>That name is taken.</DisconnectReason.NameTaken>
+  <DisconnectReason.InvalidVersion>Non-matching game version.</DisconnectReason.InvalidVersion>
+  <DisconnectReason.MissingContentPackage>Missing content package.</DisconnectReason.MissingContentPackage>
+  <DisconnectReason.IncompatibleContentPackage>Incompatible content package.</DisconnectReason.IncompatibleContentPackage>
+  <DisconnectReason.NotOnWhitelist>You are not on the server's whitelist.</DisconnectReason.NotOnWhitelist>
+  <DisconnectMessage.AFK>You have been away from keyboard for too long.</DisconnectMessage.AFK>
+  <DisconnectMessage.SteamAuthNoLongerValid>Steam authentication is no longer valid ([status]).</DisconnectMessage.SteamAuthNoLongerValid>
+  <DisconnectMessage.TooManyFailedLogins>Too many failed login attempts.</DisconnectMessage.TooManyFailedLogins>
+  <DisconnectMessage.InvalidVersion>Version "[version]" required to connect to the server (Your version: "[clientversion]")</DisconnectMessage.InvalidVersion>
+  <DisconnectMessage.MissingContentPackage>You need the content package [missingcontentpackage] to play on the server.</DisconnectMessage.MissingContentPackage>
+  <DisconnectMessage.MissingContentPackages>You need the content packages [missingcontentpackages] to play on the server.</DisconnectMessage.MissingContentPackages>
+  <DisconnectMessage.IncompatibleContentPackage>You must disable the content package [incompatiblecontentpackage] before joining.</DisconnectMessage.IncompatibleContentPackage>
+  <DisconnectMessage.IncompatibleContentPackages>You must disable the content packages [incompatiblecontentpackages] before joining.</DisconnectMessage.IncompatibleContentPackages>
+  
+  <!-- Server lobby -->
+  <RestartingIn>Restarting in</RestartingIn>
+  <Votes>Votes</Votes>
+  <GameMode>Game mode</GameMode>
+  <MissionType>Mission type</MissionType>
+  <Random>Random</Random>
+  <LevelSeed>Level seed</LevelSeed>
+  <LevelDifficulty>Level difficulty</LevelDifficulty>
+  <Traitors>Traitors</Traitors>
+  <BotCount>Bot count</BotCount>
+  <BotSpawnMode>Bot spawn mode</BotSpawnMode>
+  <AutoRestart>Automatic restart</AutoRestart>
+  <ServerLog>Server log</ServerLog>
+  <CampaignView>Campaign view</CampaignView>
+  <PlayYourself>Play yourself</PlayYourself>
+  <StartGameButton>Start</StartGameButton>
+  <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
+  <ServerSettingsButton>Settings</ServerSettingsButton>
+  <SpectateButton>Spectate</SpectateButton>
+  <Gender>Gender</Gender>
+  <JobPreferences>Job preferences</JobPreferences>
+  <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
+  <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
+  <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
+  <Rank>Rank</Rank>
+  <CustomRank>Custom</CustomRank>
+  <Permissions>Permissions</Permissions>
+  <PermittedConsoleCommands>Permitted console commands</PermittedConsoleCommands>
+  <Kick>Kick</Kick>
+  <VoteToKick>Vote to kick</VoteToKick>
+  <Ban>Ban</Ban>
+  <BanRange>Ban range</BanRange>
+  <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
+  <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
+  <PrivateMessageTag>[PM]</PrivateMessageTag>
+  <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
+  <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
+  <SubDoesntMatchError>Your version of the submarine file [subname] does not match the server's version!\nYour MD5 hash: [myhash]\nServer's MD5 hash: [serverhash]\n</SubDoesntMatchError>
+  <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
+  <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
+  <WaitForFileTransfers>Waiting for file transfers to finish before starting the round...</WaitForFileTransfers>
+  <StartNow>Start now</StartNow>
+  <ServerInitFailed>Starting the server failed.</ServerInitFailed>
+  <ServerInitFailedAddressAlreadyInUse>[errormsg]. Are you trying to run multiple servers on the same port?</ServerInitFailedAddressAlreadyInUse>
+  <PermissionsRemoved>The host has removed all your special permissions.</PermissionsRemoved>
+  <CurrentPermissions>Current permissions:</CurrentPermissions>
+  <PermissionsChanged>Permissions changed</PermissionsChanged>
+  <PermittedConsoleCommands>Permitted console commands:</PermittedConsoleCommands>
+  <PleaseWaitRoundRunning>Please wait</PleaseWaitRoundRunning>
+  <RoundRunningSpectateDisabled>A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.</RoundRunningSpectateDisabled>
+  <RoundRunningSpectateEnabled>A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round.</RoundRunningSpectateEnabled>
+  <ServerDownloadFinished>Download finished</ServerDownloadFinished>
+  <DownloadingFile>Downloading [filename]</DownloadingFile>
+  <FileDownloadedNotification>File "[filename]" was downloaded successfully.</FileDownloadedNotification>
+  <NewCampaignCharacterHeader>Are you sure?</NewCampaignCharacterHeader>
+  <NewCampaignCharacterText>Creating a new character will discard your previous character, and you will lose all your skill progress and all the items in your possession. Do you wish to create a new character?</NewCampaignCharacterText>
+
+  <!-- Client permissions -->
+  <ClientPermission.None>None</ClientPermission.None>
+  <ClientPermission.ManageRound>Manage round</ClientPermission.ManageRound>
+  <ClientPermission.Kick>Kick</ClientPermission.Kick>
+  <ClientPermission.Ban>Ban</ClientPermission.Ban>
+  <ClientPermission.Unban>Revoke Ban</ClientPermission.Unban>
+  <ClientPermission.SelectSub>Select sub</ClientPermission.SelectSub>
+  <ClientPermission.SelectMode>Select mode</ClientPermission.SelectMode>
+  <ClientPermission.ManageCampaign>Manage campaign</ClientPermission.ManageCampaign>
+  <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
+  <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
+  <ClientPermission.ManageSettings>Manage server settings</ClientPermission.ManageSettings>
+  <ClientPermission.All>All</ClientPermission.All>
+
+  <!-- Game modes -->
+  <GameMode.Sandbox>Sandbox</GameMode.Sandbox>
+  <GameMode.Mission>Mission</GameMode.Mission>
+  <GameMode.Campaign>Campaign</GameMode.Campaign>
+  
+  <!-- Mission types -->
+  <MissionType.None>None</MissionType.None>
+  <MissionType.Random>Random</MissionType.Random>
+  <MissionType.Salvage>Salvage</MissionType.Salvage>
+  <MissionType.Monster>Monster</MissionType.Monster>
+  <MissionType.Cargo>Cargo</MissionType.Cargo>
+  <MissionType.Combat>Combat</MissionType.Combat>
+  
+  <!-- Ingame UI -->
+  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning players in [time]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
+
+  <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
+  <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>
+
+  <!-- Sub editor -->
+  <Items>Items</Items>
+  <Structures>Structures</Structures>
+  <TotalHullVolume>Total hull volume</TotalHullVolume>
+  <SelectedHullVolume>Selected hull volume</SelectedHullVolume>
+  <OptimalBallastLevel>optimal neutral ballast level is [value]</OptimalBallastLevel>
+  <SaveItemAssembly>Save as item assembly</SaveItemAssembly>
+  <InsufficientBallast>insufficient volume for buoyancy control</InsufficientBallast>
+  <PhysicsBodies>Physics bodies</PhysicsBodies>
+  <OpenSubButton>Open...</OpenSubButton>
+  <SaveSubButton>Save</SaveSubButton>
+  <AddSubButton>Add submarine</AddSubButton>
+  <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
+  <HoldToLink>Hold space and click with the mouse to link to another item.</HoldToLink>
+  <AllowedLinks>Allowed links</AllowedLinks>
+  <FilterMapEntities>Filter</FilterMapEntities>
+  <CharacterModeButton>Character mode</CharacterModeButton>
+  <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
+  <WiringModeButton>Wiring mode</WiringModeButton>
+  <WiringModeToolTip>Allows you to connect wires between items.</WiringModeToolTip>
+  <GenerateWaypointsButton>Generate waypoints</GenerateWaypointsButton>
+  <GenerateWaypointsToolTip>AI controlled crew members require waypoints to navigate around the sub.</GenerateWaypointsToolTip>
+  <ShowEntitiesLabel>Show</ShowEntitiesLabel>
+  <ShowWalls>Walls</ShowWalls>
+  <ShowStructures>Structures</ShowStructures>
+  <ShowItems>Items</ShowItems>
+  <ShowLighting>Lighting</ShowLighting>
+  <ShowWaypoints>Waypoints</ShowWaypoints>
+  <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
+  <ShowLinks>Links</ShowLinks>
+  <ShowHulls>Hulls</ShowHulls>
+  <ShowGaps>Gaps</ShowGaps>
+  <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
+  <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
+  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>
+  <SubSavedNotification>Submarine saved to [filepath].</SubSavedNotification>
+  <SaveSubDialogHeader>Save submarine</SaveSubDialogHeader>
+  <SaveSubDialogName>Name</SaveSubDialogName>
+  <SaveSubDialogDescription>Description</SaveSubDialogDescription>
+  <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
+  <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyHideInMenus>Hide in menus</SaveItemAssemblyHideInMenus>
+  <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
+  <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
+  <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
+  <ItemAssemblyFileExistsWarning>There's already an item assembly with the same name. Do you want to replace the existing assembly?</ItemAssemblyFileExistsWarning>
+  <ItemAssemblyNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
+  <NoHullsWarning>No hulls found in the submarine. Hulls determine the "borders" of an individual room and are required for water and air distribution to work correctly.</NoHullsWarning>
+  <DisconnectedVentsWarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</DisconnectedVentsWarning>
+  <DisconnectedTurretsWarning>The submarine contains [itemname]s which haven't been linked to an ammunition loader. Select the item and click a loader while holding space to link them.</DisconnectedTurretsWarning>
+  <NoWaypointsWarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</NoWaypointsWarning>
+  <NoCargoSpawnpointWarning>"The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its "spawn type" parameter to "cargo".</NoCargoSpawnpointWarning>
+  <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
+  <AdjustLightsPrompt>This submarine was saved using an older version of Barotrauma, which used a different formula to calculate lighting. The lighting in the submarine may now appear too bright. Do you want to automatically readjust the lighting for the new lighting formula?</AdjustLightsPrompt>
+  <AdjustedLightsNotification>The brightness of the lights has been adjusted. Areas with multiple light sources may still appear too bright and require reducing the range or brightness of the lights manually. You may also use the console command "multiplylights" to adjust the brightness of all the lights as once. For example, "multiplylights 1,1,1,0.5" would decrease the brightness by 50%.</AdjustedLightsNotification>
+  <NoBallastTagsWarning>You should add the tag "ballast" to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</NoBallastTagsWarning>
+  <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>
+
+  <!-- Entity categories -->
+  <MapEntityCategory.Structure>Structure</MapEntityCategory.Structure>
+  <MapEntityCategory.Machine>Machine</MapEntityCategory.Machine>
+  <MapEntityCategory.Equipment>Equipment</MapEntityCategory.Equipment>
+  <MapEntityCategory.Electrical>Electrical</MapEntityCategory.Electrical>
+  <MapEntityCategory.Material>Material</MapEntityCategory.Material>
+  <MapEntityCategory.Misc>Misc</MapEntityCategory.Misc>
+  <MapEntityCategory.Alien>Alien</MapEntityCategory.Alien>
+  <MapEntityCategory.ItemAssembly>ItemAssembly</MapEntityCategory.ItemAssembly>
+  <MapEntityCategory.Legacy>Legacy</MapEntityCategory.Legacy>
+  
+  <!-- Particle editor -->
+  <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
+  <ParticleEditorCopyToClipboard>Copy to clipboard</ParticleEditorCopyToClipboard>
+
+  <!-- Level editor -->
+  <LevelEditorSaveAll>Save all</LevelEditorSaveAll>
+  <LevelEditorLevelSeed>Level seed</LevelEditorLevelSeed>
+  <LevelEditorGenerate>Generate</LevelEditorGenerate>
+  <LevelEditorLightingEnabled>Enable lighting</LevelEditorLightingEnabled>
+  <LevelEditorCursorLightEnabled>Enable cursor light</LevelEditorCursorLightEnabled>
+  <LevelEditorReloadTextures>Reload textures</LevelEditorReloadTextures>
+  <LevelEditorSpriteEditDone>Done</LevelEditorSpriteEditDone>
+  <LevelEditorLevelObjCommonness>Commonness in [leveltype]</LevelEditorLevelObjCommonness>
+  <LevelEditorEditSprite>Edit sprite</LevelEditorEditSprite>
+  <LevelEditorChildObjects>Child objects</LevelEditorChildObjects>
+  <LevelEditorAddChildObject>Add child object</LevelEditorAddChildObject>
+  <LevelEditorLightSources>Light sources</LevelEditorLightSources>
+  <LevelEditorAddLightSource>Add light source</LevelEditorAddLightSource>
+  <LevelEditorCreateLevelObj>Create a new level object</LevelEditorCreateLevelObj>
+  <LevelEditorLevelObjName>Name</LevelEditorLevelObjName>
+  <LevelEditorLevelObjTexturePath>Texture path</LevelEditorLevelObjTexturePath>
+  <LevelEditorLevelObjNameEmpty>Please enter a name for the level object.</LevelEditorLevelObjNameEmpty>
+  <LevelEditorLevelObjNameTaken>The selected name is already in use.</LevelEditorLevelObjNameTaken>
+  <LevelEditorLevelObjTextureNotFound>Could not find the selected texture file.</LevelEditorLevelObjTextureNotFound>
+  
+  <!-- Rooms -->
+  <ReactorRoom>Reactor room</ReactorRoom>
+  <EngineRoom>Engine room</EngineRoom>
+  <CommandRoom>Command room</CommandRoom>
+  <Airlock>Airlock</Airlock>
+  <Ballast>Ballast</Ballast>
+  <SubTopLeft>Upper aft side</SubTopLeft>
+  <SubTopCenter>Upper mid</SubTopCenter>
+  <SubTopRight>Upper fore side</SubTopRight>
+  <SubCenterLeft>Mid aft side</SubCenterLeft>
+  <SubCenter>Amidships</SubCenter>
+  <SubCenterRight>Mid fore side</SubCenterRight>
+  <SubBottomLeft>Lower aft side</SubBottomLeft>
+  <SubBottomCenter>Lower mid</SubBottomCenter>
+  <SubBottomRight>Lower fore side</SubBottomRight>
+  <SubDirOClock>[dir] o'clock</SubDirOClock>
+
+  <!-- Sub description -->
+  <Dimensions>Dimensions</Dimensions>
+  <DimensionsFormat>[width]x[height] m</DimensionsFormat>
+  <SubPreviewImageNotFound>Preview image not found</SubPreviewImageNotFound>
+  <RecommendedCrewSize>Recommended crew size</RecommendedCrewSize>
+  <RecommendedCrewExperience>Recommended crew experience</RecommendedCrewExperience>
+  <RequiredContentPackages>Required content packages</RequiredContentPackages>
+  <CrewExperienceLow>Beginner</CrewExperienceLow>
+  <CrewExperienceMid>Intermediate</CrewExperienceMid>
+  <CrewExperienceHigh>Experienced</CrewExperienceHigh>
+
+  <!-- Waypoints -->
+  <Waypoint>Waypoint</Waypoint>
+  <LinkWaypoint>Hold space to link to another waypoint</LinkWaypoint>
+  <Spawnpoint>Spawnpoint</Spawnpoint>
+  <SpawnType>Spawn type</SpawnType>
+  <IDCardDescription>ID Card description</IDCardDescription>
+  <IDCardDescriptionTooltip>Characters spawning at this spawnpoint will have the specified description added to their ID card. This can be used to describe additional access levels their card has on the sub.</IDCardDescriptionTooltip>
+  <IDCardTags>ID Card tags</IDCardTags>
+  <IDCardTagsTooltip>Characters spawning at this spawnpoint will have the specified tags added to their ID card. You can, for example, use these tags to limit access to some parts of the sub.</IDCardTagsTooltip>
+  <SpawnpointJobs>Assigned jobs</SpawnpointJobs>
+  <SpawnpointJobsTooltip>Only characters with the specified job will spawn at this spawnpoint.</SpawnpointJobsTooltip>
+
+  <!-- Linked subs -->
+  <LinkedSub>Linked submarine</LinkedSub>
+  <ReloadLinkedSub>Refresh</ReloadLinkedSub>
+  <ReloadLinkedSubTooltip>Reload the linked submarine from the specified file</ReloadLinkedSubTooltip>
+  <LinkLinkedSub>Hold space to link to a docking port</LinkLinkedSub>
+  <ReloadLinkedSubError>Submarine file [file] not found!</ReloadLinkedSubError>
+
+  <!-- Chat -->
+  <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
+  <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
+
+  <!-- Item HUDs -->
+  <ItemInUse>In use by [character]</ItemInUse>
+  <EngineForce>Thrust</EngineForce>
+  <EngineBackwards>Backwards</EngineBackwards>
+  <EngineForwards>Forwards</EngineForwards>
+  <EnginePowered>Powered</EnginePowered>
+  <FabricatorNoPower>Insufficient power</FabricatorNoPower>
+  <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
+  <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
+  <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
+  <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
+  <FabricatorCreate>Create</FabricatorCreate>
+  <FabricatorCancel>Cancel</FabricatorCancel>
+  <DeconstructorNoPower>Insufficient power</DeconstructorNoPower>
+  <DeconstructorDeconstruct>Deconstruct</DeconstructorDeconstruct>
+  <DeconstructorCancel>Cancel</DeconstructorCancel>
+  <Lvl>Lvl</Lvl>
+  <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
+  <MiniMapWaterLevel>Water level</MiniMapWaterLevel>
+  <MiniMapWaterLevelUnavailable>Water level data not available</MiniMapWaterLevelUnavailable>
+  <MiniMapAirQuality>Air quality</MiniMapAirQuality>
+  <MiniMapAirQualityUnavailable>Air quality data not available</MiniMapAirQualityUnavailable>
+  <PumpPowered>Powered</PumpPowered>
+  <PumpIn>IN</PumpIn>
+  <PumpOut>OUT</PumpOut>
+  <PumpSpeed>Pumping speed</PumpSpeed>
+  
+  <ReactorAutoTemp>Automatic Control</ReactorAutoTemp>
+  <ReactorOutput>Output: [kw] kW</ReactorOutput>
+  <ReactorLoad>Load: [kw] kW</ReactorLoad>
+  <ReactorFissionRate>Fission rate</ReactorFissionRate>
+  <ReactorTurbineOutput>Turbine output</ReactorTurbineOutput>
+  <ReactorWarningCriticalTemp>Critical\nHeat</ReactorWarningCriticalTemp>
+  <ReactorWarningCriticalLowTemp>Critically\nLow Temperature</ReactorWarningCriticalLowTemp>
+  <ReactorWarningCriticalOutput>Critical\nOutput</ReactorWarningCriticalOutput>
+  <ReactorWarningLowTemp>Temp Low</ReactorWarningLowTemp>
+  <ReactorWarningOverheating>Overheat</ReactorWarningOverheating>
+  <ReactorWarningLowOutput>Output Low</ReactorWarningLowOutput>
+  <ReactorWarningHighOutput>Output High</ReactorWarningHighOutput>
+  <ReactorWarningLowFuel>Fuel Low</ReactorWarningLowFuel>
+  <ReactorWarningFuelOut>Fuel Out</ReactorWarningFuelOut>
+  <ReactorWarningMeltdown>Meltdown</ReactorWarningMeltdown>
+  <ReactorWarningSCRAM>SCRAM</ReactorWarningSCRAM>
+  <ReactorTipFissionRate>Increasing the fission rate makes the reactor consume more fuel and generate more heat. The heat is used to spin the turbine which generates electricity.</ReactorTipFissionRate>
+  <ReactorTipTurbineOutput>The higher the turbine output, the more the reactor attempts to generate electricity. If the output is too high relative to the fission rate, the reactor will cool down, and if too low, it will overheat.</ReactorTipTurbineOutput>
+  <ReactorTipTemperature>The temperature of the reactor core. The temperature is optimal when the bar is between the red indicators.</ReactorTipTemperature>
+  <ReactorTipLoad>How much power is currently being consumed by the devices connected to the reactor.</ReactorTipLoad>
+  <ReactorTipPower>How much power is currently being generated by the reactor.</ReactorTipPower>
+  <ReactorTipAutoTemp>When automatic control is on, the reactor will automatically adjust itself according to the power consumption. However, the system is not fast enough to react to large fluctuations in power consumption, so manual adjustments may still be needed.</ReactorTipAutoTemp>
+
+  <SteeringManual>Manual steering</SteeringManual>
+  <SteeringAutoPilot>Autopilot</SteeringAutoPilot>
+  <SteeringMaintainPos>Maintain position</SteeringMaintainPos>
+  <SteeringVelocityX>Velocity: [kph] km/h</SteeringVelocityX>
+  <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
+  <SteeringDepth>Depth: [m] m</SteeringDepth>
+  <SteeringDepthWarning>DANGEROUS PRESSURE</SteeringDepthWarning>
+  <SteeringNoPowerTip>WARNING: Insufficient power</SteeringNoPowerTip>
+  <SteeringAutoPilotMaintainPosTip>AUTOPILOT ON\nMaintaining position. Choose the position to maintain by clicking on the display.</SteeringAutoPilotMaintainPosTip>
+  <SteeringAutoPilotLocationTip>AUTOPILOT ON\nAutopilot is set to navigate towards [locationname].</SteeringAutoPilotLocationTip>
+
+  <SonarActive>Active Sonar</SonarActive>
+  <SonarPassive>Passive Sonar</SonarPassive>
+  <SonarZoom>Zoom</SonarZoom>
+  <SonarDirectionalPing>Directional ping</SonarDirectionalPing>
+  <SonarSignalWeak>Signal weak</SonarSignalWeak>
+  <SonarNoSignal>No signal</SonarNoSignal>
+  <SonarTipActive>When active sonar is on, the transponders send out pings that reflect from nearby obstacles. The pings may also be heard by hostile creatures or enemy submarines.</SonarTipActive>
+  <SonarTipPassive>In passive mode, the sonar only listens to sources of sound and sounds reflected from nearby obstacles without actively sending out pings.</SonarTipPassive>
+  
+  <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
+  <PowerContainerRechargeRate>Recharge rate [rate] %</PowerContainerRechargeRate>
+  
+  <PowerTransferPowered>Powered</PowerTransferPowered>
+  <PowerTransferHighVoltage>Overvoltage</PowerTransferHighVoltage>
+  <PowerTransferLowVoltage>Low voltage</PowerTransferLowVoltage>
+  <PowerTransferPowerLabel>Power</PowerTransferPowerLabel>
+  <PowerTransferPower>[power] kW</PowerTransferPower>
+  <PowerTransferLoadLabel>Load</PowerTransferLoadLabel>
+  <PowerTransferLoad>[load] kW</PowerTransferLoad>
+  <PowerTransferTipOvervoltage>When the electrical grid is supplied more power than what is being consumed, the voltage rises which may cause damage to electrical devices.</PowerTransferTipOvervoltage>
+  <PowerTransferTipLowvoltage>When there's not enough power available, the voltage drops which may cause some devices to shut down.</PowerTransferTipLowvoltage>
+  <PowerTransferTipLoad>How much power is currently being consumed by the devices connected to the electrical grid.</PowerTransferTipLoad>
+  <PowerTransferTipPower>How much power is currently being supplied to the electrical grid.</PowerTransferTipPower>
+  
+  <ConnectionLocked>(Locked)</ConnectionLocked>
+  <RequiredRepairSkills>Required skills:</RequiredRepairSkills>
+  <RepairButton>Repair</RepairButton>
+  <Repairing>Repairing</Repairing>
+
+  <!-- Health interface -->
+  <Vitality>Vitality</Vitality>
+  <SuitableTreatments>Suitable treatments:</SuitableTreatments>
+  <HealthItemUseTip>Drop items here to use them on the selected limb. You can also use items with the inventory hotkeys or by double clicking.</HealthItemUseTip>
+  <AfflictionStrengthLow>Light</AfflictionStrengthLow>
+  <AfflictionStrengthMedium>Medium</AfflictionStrengthMedium>
+  <AfflictionStrengthHigh>Heavy</AfflictionStrengthHigh>
+  <LowMedicalSkillWarning>Low medical skill! The suitable treatment list may be inaccurate.</LowMedicalSkillWarning>
+  <HealthLimbName.Head>Head</HealthLimbName.Head>
+  <HealthLimbName.Torso>Torso</HealthLimbName.Torso>
+  <HealthLimbName.LeftArm>Left arm</HealthLimbName.LeftArm>
+  <HealthLimbName.RightArm>Right arm</HealthLimbName.RightArm>
+  <HealthLimbName.LeftLeg>Left leg</HealthLimbName.LeftLeg>
+  <HealthLimbName.RightLeg>Right leg</HealthLimbName.RightLeg>
+
+  <!-- Item fixing -->
+  <FixHeader>Attempting to fix [itemname]</FixHeader>
+  <FixButton>Fix</FixButton>
+
+  <!-- Traitors -->
+  <NewTraitor>New traitor</NewTraitor>
+  <TraitorStartMessage>You are the Traitor! Your secret task is to assassinate [targetname]! Discretion is an utmost concern; sinking the submarine and killing the entire crew will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.</TraitorStartMessage>
+  <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
+  <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
+
+  <TraitorEndMessageSuccess>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
+  <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
+  <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
+  <TraitorEndMessageFailure>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was unsuccessful.</TraitorEndMessageFailure>
+  <TraitorEndMessageFailureTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname], but [genderpronoun] got [genderpronounreflexive] killed before completing it.</TraitorEndMessageFailureTraitorDead>
+  <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed - [genderpronoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
+
+  <!-- Causes of death -->
+  <CauseOfDeath>Cause of death</CauseOfDeath>
+  <CauseOfDeath.Damage>Damage</CauseOfDeath.Damage>
+  <CauseOfDeath.Bloodloss>Bloodloss</CauseOfDeath.Bloodloss>
+  <CauseOfDeath.Drowning>Drowning</CauseOfDeath.Drowning>
+  <CauseOfDeath.Suffocation>Suffocation</CauseOfDeath.Suffocation>
+  <CauseOfDeath.Pressure>Pressure</CauseOfDeath.Pressure>
+  <CauseOfDeath.Burn>Burn</CauseOfDeath.Burn>
+  <CauseOfDeath.Husk>Husk infection</CauseOfDeath.Husk>
+  <CauseOfDeath.Disconnected>Braindead</CauseOfDeath.Disconnected>
+
+  <CauseOfDeathDescription.Damage>Succumbed to their injuries</CauseOfDeathDescription.Damage>
+  <CauseOfDeathDescription.Bloodloss>Bled out</CauseOfDeathDescription.Bloodloss>
+  <CauseOfDeathDescription.Drowning>Drowned</CauseOfDeathDescription.Drowning>
+  <CauseOfDeathDescription.Suffocation>Suffocated</CauseOfDeathDescription.Suffocation>
+  <CauseOfDeathDescription.Pressure>Crushed by water pressure</CauseOfDeathDescription.Pressure>
+  <CauseOfDeathDescription.Burn>Burned to death</CauseOfDeathDescription.Burn>
+  <CauseOfDeathDescription.Husk>Taken over by a parasite</CauseOfDeathDescription.Husk>
+  <CauseOfDeathDescription.Disconnected>Disconnected</CauseOfDeathDescription.Disconnected>
+  <CauseOfDeathDescription.Unknown>Unknown</CauseOfDeathDescription.Unknown>
+
+  <Self_CauseOfDeathDescription.Damage>You have succumbed to your injuries.</Self_CauseOfDeathDescription.Damage>
+  <Self_CauseOfDeathDescription.Bloodloss>You have bled out.</Self_CauseOfDeathDescription.Bloodloss>
+  <Self_CauseOfDeathDescription.Drowning>You have drowned.</Self_CauseOfDeathDescription.Drowning>
+  <Self_CauseOfDeathDescription.Suffocation>You have suffocated.</Self_CauseOfDeathDescription.Suffocation>
+  <Self_CauseOfDeathDescription.Pressure>You have been crushed by water pressure.</Self_CauseOfDeathDescription.Pressure>
+  <Self_CauseOfDeathDescription.Burn>You have burned to death.</Self_CauseOfDeathDescription.Burn>
+  <Self_CauseOfDeathDescription.Husk>The parasite has taken over your body.</Self_CauseOfDeathDescription.Husk>
+  <Self_CauseOfDeathDescription.Disconnected>You were disconnected from the server.</Self_CauseOfDeathDescription.Disconnected>
+
+  <GiveInButton>Give in</GiveInButton>
+  <GiveInHelpMultiplayer>Let go of your character and enter spectator mode (other players will no longer be able to revive you)</GiveInHelpMultiplayer>
+  <GiveInHelpSingleplayer>The character can no longer be revived if you give in.</GiveInHelpSingleplayer>
+  <DeathChatNotification>Your chat messages will only be visible to other dead players.</DeathChatNotification>
+
+  <!-- Character dialogue -->
+  <DialogAffirmative>Aye aye!</DialogAffirmative>
+  <DialogAffirmative>Yes, sir!</DialogAffirmative>
+  <DialogAffirmative>Aye!</DialogAffirmative>
+  <DialogAffirmative>Got it!</DialogAffirmative>
+  <DialogAffirmative>Sure thing!</DialogAffirmative>
+  <DialogAffirmative>Copy that.</DialogAffirmative>
+  <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
+  <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
+  <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
+  <DialogReactorTaken>Hey, we don't need two people at the reactor!</DialogReactorTaken>
+  <DialogCantFindController>I can't find a way to operate the [item]!</DialogCantFindController>
+  <DialogCantFindController>I don't know how to control the [item]!</DialogCantFindController>
+  <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
+  <DialogFireTurret>Firing!</DialogFireTurret>
+  <DialogFireTurret>Fire in the hole!</DialogFireTurret>
+  <DialogTurretTargetDead>Enemy down!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>Target down!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>I think I got it!</DialogTurretTargetDead>
+  <DialogTurretTargetDead>Aand it's dead!</DialogTurretTargetDead>
+  <DialogChargeBatteries>Charging [itemname] at [rate] %!</DialogChargeBatteries>
+  <DialogChargeBatteries>[itemname] now charging at [rate] %!</DialogChargeBatteries>
+  <DialogNoBatteries>What batteries?</DialogNoBatteries>
+  <DialogNoBatteries>There aren't any batteries on this boat!</DialogNoBatteries>
+  <DialogNoBatteries>Can't find any batteries!</DialogNoBatteries>
+  <StopChargingBatteries>Stopped charging [itemname]!</StopChargingBatteries>
+  <DialogLeakFixed>One leak fixed in [roomname]!</DialogLeakFixed>
+  <DialogLeakFixed>Repairing [roomname], a few more holes to go!</DialogLeakFixed>
+  <DialogLeaksFixed>All leaks repaired in [roomname]!</DialogLeaksFixed>
+  <DialogLeaksFixed>No more leaks in [roomname]!</DialogLeaksFixed>
+  <DialogItemRepaired>[itemname] repaired!</DialogItemRepaired>
+  <DialogItemRepaired>[itemname] back in order!</DialogItemRepaired>
+  <DialogItemRepaired>[itemname] fixed!</DialogItemRepaired>
+  <DialogGetDivingGear>Need to find a diving suit!</DialogGetDivingGear>
+  <DialogGetDivingGear>I need diving gear!</DialogGetDivingGear>
+  <DialogGetOxygenTank>Need to find an oxygen tank!</DialogGetOxygenTank>
+  <DialogGetOxygenTank>I need an oxygen tank!</DialogGetOxygenTank>
+  <DialogGetOxygenTank>Where are the oxygen tanks?</DialogGetOxygenTank>
+  <DialogGetOxygenTank>I need oxygen!</DialogGetOxygenTank>
+  <DialogLowOxygen>I'm passing out!</DialogLowOxygen>
+  <DialogLowOxygen>Can't breathe!</DialogLowOxygen>
+  <DialogLowOxygen>*gasping*</DialogLowOxygen>
+  <DialogBleeding>Help, I'm bleeding!</DialogBleeding>
+  <DialogBleeding>I'm bleeding out!</DialogBleeding>
+  <DialogBleeding>I'm losing blood!</DialogBleeding>
+  <DialogPressure>Pressure rising in [roomname]!</DialogPressure>
+  <DialogPressure>Dangerous pressure in [roomname]!</DialogPressure>
+  <DialogPressure>Pressure level dangerously high in [roomname]!</DialogPressure>
+  <DialogFindExtinguisher>I need a fire extinguisher!</DialogFindExtinguisher>
+  <DialogFindExtinguisher>Trying to find an extinguisher!</DialogFindExtinguisher>
+  <DialogFindExtinguisher>Got to find an extinguisher!</DialogFindExtinguisher>
+  <DialogPutOutFire>Put out a fire in [roomname]!</DialogPutOutFire>
+  <DialogPutOutFire>Extinguished a fire in [roomname]!</DialogPutOutFire>
+  <DialogNoFire>What fire?</DialogNoFire>
+  <DialogNoFire>Can't see any fires!</DialogNoFire>
+  <DialogNoFire>I don't think there's any fire to put out!</DialogNoFire>
+  <DialogSteeringTaken>Hey, I'm at the helm now!</DialogSteeringTaken>
+  <DialogSteeringTaken>Hands off please, I'm steering now!</DialogSteeringTaken>
+  <DialogSteeringTaken>Hey, we don't need two people to steer!</DialogSteeringTaken>
+  <DialogSonarTarget>A target on the sonar at [direction]!</DialogSonarTarget>
+  <DialogSonarTarget>A blip on the sonar at [direction]!</DialogSonarTarget>
+  <DialogSonarTarget>Something on the sonar at [direction]!</DialogSonarTarget>
+  <DialogSonarTarget>Got a target at [direction]!</DialogSonarTarget>
+  <DialogSonarTargetLarge>A large target on the sonar at [direction]!</DialogSonarTargetLarge>
+  <DialogSonarTargetLarge>Got a large ping at [direction]!</DialogSonarTargetLarge>
+  <DialogSonarTargetLarge>Something big on the sonar at [direction]!</DialogSonarTargetLarge>
+  <DialogSonarTargetMultiple>[count] targets on the sonar at [direction]!</DialogSonarTargetMultiple>
+  <DialogSonarTargetMultiple>We've got [count] targets at [direction]!</DialogSonarTargetMultiple>
+  <DialogFoundUnconsciousTarget>Found [targetname] unconscious in [roomname]!</DialogFoundUnconsciousTarget>
+  <DialogFoundUnconsciousTarget>Giving first aid to [targetname] in [roomname]!</DialogFoundUnconsciousTarget>
+  <DialogListRequiredTreatments>I need to find [treatmentlist]!</DialogListRequiredTreatments>
+  <DialogListRequiredTreatments>I need [treatmentlist] to treat [targetname]!</DialogListRequiredTreatments>
+  <DialogTargetHealed>[targetname] is back in shape!</DialogTargetHealed>
+  <DialogTargetHealed>[targetname] is alright!</DialogTargetHealed>
+  <DialogTargetHealed>[targetname] has been resuscitated!</DialogTargetHealed>
+  <OrderDialog.follow>[name], follow me!</OrderDialog.follow>
+  <OrderDialog.wait>[name], wait there!</OrderDialog.wait>
+  <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>
+  <OrderDialog.dismissed>[name], you are dismissed!</OrderDialog.dismissed>
+  <OrderDialog.operatereactor>[name], operate the reactor!</OrderDialog.operatereactor>
+  <OrderDialog.operatereactor>[name], man the reactor!</OrderDialog.operatereactor>
+  <OrderDialog.operatereactor.powerup>[name], power up the reactor!</OrderDialog.operatereactor.powerup>
+  <OrderDialog.operatereactor.shutdown>[name], shut down the reactor!</OrderDialog.operatereactor.shutdown>
+  <OrderDialog.operateweapons>[name], operate the weapons!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons>[name], man the weapons!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons>[name], man the guns!</OrderDialog.operateweapons>
+  <OrderDialog.operateweapons.fireatwill>[name], fire at will!</OrderDialog.operateweapons.fireatwill>
+  <OrderDialog.operateweapons.holdfire>[name], hold fire!</OrderDialog.operateweapons.holdfire>
+  <OrderDialog.steer>[name], man the helm!</OrderDialog.steer>
+  <OrderDialog.steer>[name], steer the submarine!</OrderDialog.steer>
+  <OrderDialog.steer.maintainposition>[name], maintain position!</OrderDialog.steer.maintainposition>
+  <OrderDialog.steer.maintainposition>[name], hold our position!</OrderDialog.steer.maintainposition>
+  <OrderDialog.steer.navigateback>[name], set the course back!</OrderDialog.steer.navigateback>
+  <OrderDialog.steer.navigatetodestination>[name], navigate onwards!</OrderDialog.steer.navigatetodestination>
+  <OrderDialog.steer.navigatetodestination>[name], set the course  onwards!</OrderDialog.steer.navigatetodestination>
+  <OrderDialog.steer.navigatetodestination>[name], set the course to our destination!</OrderDialog.steer.navigatetodestination>
+  <OrderDialog.fixleaks>[name], start fixing leaks!</OrderDialog.fixleaks>
+  <OrderDialog.fixleaks>[name], take care of any leaks!</OrderDialog.fixleaks>
+  <OrderDialog.extinguishfires>[name], extinguish the fire!</OrderDialog.extinguishfires>
+  <OrderDialog.chargebatteries>[name], operate the batteries!</OrderDialog.chargebatteries>
+  <OrderDialog.chargebatteries.charge>[name], charge the batteries!</OrderDialog.chargebatteries.charge>
+  <OrderDialog.chargebatteries.charge>[name], make sure all batteries are charged!</OrderDialog.chargebatteries.charge>
+  <OrderDialog.chargebatteries.stopcharging>[name], stop charging the batteries!</OrderDialog.chargebatteries.stopcharging>
+  <OrderDialog.pumpwater>[name], start pumping out water!</OrderDialog.pumpwater>
+  <OrderDialog.pumpwater.pumpout>[name], start pumping out water!</OrderDialog.pumpwater.pumpout>
+  <OrderDialog.pumpwater.stoppumping>[name], shut down the pumps!</OrderDialog.pumpwater.stoppumping>
+  <OrderDialog.pumpwater.stoppumping>[name], stop the pumps!</OrderDialog.pumpwater.stoppumping>
+  <OrderDialog.rescue>[name], rescue anyone in distress!</OrderDialog.rescue>
+  <OrderDialog.rescue>[name], give medical aid to anyone in need!</OrderDialog.rescue>
+  <OrderDialog.repairsystems>[name], repair damaged systems!</OrderDialog.repairsystems>
+  <OrderDialog.repairsystems>[name], take care of broken devices!</OrderDialog.repairsystems>
+  <OrderDialog.repairsystems.jobspecific>[name], repair damaged systems!</OrderDialog.repairsystems.jobspecific>
+  <OrderDialog.repairsystems.jobspecific>[name], take care of broken devices!</OrderDialog.repairsystems.jobspecific>
+  <OrderDialog.repairsystems.all>[name], repair any damaged systems! I don't care if you don't have the skills, do your best!</OrderDialog.repairsystems.all>
+  <OrderDialog.repairsystems.all>[name], try to fix any broken devices, even if it's something you're not trained for!</OrderDialog.repairsystems.all>
+  <OrderDialog.repairsystems.all>[name], repair any damaged devices! Anything you can, I don't care about your training now!</OrderDialog.repairsystems.all>
+
+  <OrderDialog.reportfire>Fire in [roomname]!</OrderDialog.reportfire>
+  <OrderDialog.reportfire>[roomname] is on fire!</OrderDialog.reportfire>
+  <OrderDialog.reportbreach>Hull breach in [roomname]!</OrderDialog.reportbreach>
+  <OrderDialog.reportbreach>Leak in [roomname]!</OrderDialog.reportbreach>
+  <OrderDialog.reportintruders>Intruders in [roomname]!</OrderDialog.reportintruders>
+  <OrderDialog.reportintruders>Hostiles in [roomname]!</OrderDialog.reportintruders>
+  <OrderDialog.reportbrokendevices>Broken devices in [roomname]!</OrderDialog.reportbrokendevices>
+  <OrderDialog.reportbrokendevices>Need someone to repair devices in [roomname]!</OrderDialog.reportbrokendevices>
+  <OrderDialog.requestfirstaid>Need a medic in [roomname]!</OrderDialog.requestfirstaid>
+  <OrderDialog.requestfirstaid>Need medical assistance in [roomname]!</OrderDialog.requestfirstaid>
+  
+  <!-- Status -->
+  <Deceased>Deceased</Deceased>
+  <Unconscious>Unconscious</Unconscious>
+  <Stunned>Stunned</Stunned>
+  <HuskInfectionTransition>Velonaceps calyx infection</HuskInfectionTransition>
+  <HuskInfectionActive>Advanced Velonaceps calyx infection</HuskInfectionActive>
+
+  <MinorBleeding>Minor bleeding</MinorBleeding>
+  <Bleeding>Bleeding</Bleeding>
+  <HeavyBleeding>Heavy bleeding</HeavyBleeding>
+  <CatastrophicBleeding>Catastrophic bleeding</CatastrophicBleeding>
+
+  <NoInjuries>No visible injuries</NoInjuries>
+  <MinorInjuries>Minor injuries</MinorInjuries>
+  <Injuries>Injured</Injuries>
+  <MajorInjuries>Major injuries</MajorInjuries>
+  <CriticalInjuries>Critically injured</CriticalInjuries>
+
+  <OxygenNormal>Oxygen level normal</OxygenNormal>
+  <OxygenReduced>Gasping for air</OxygenReduced>
+  <OxygenLow>Signs of oxygen deprivation</OxygenLow>
+  <NotBreathing>Not breathing</NotBreathing>
+
+  <NoAvailableMedicalItems>No medical items available</NoAvailableMedicalItems>
+  
+  <!-- Huskification -->
+  <HuskDormant>Your throat feels sore</HuskDormant>
+  <HuskDormant>Your feel feverish</HuskDormant>
+  <HuskDormant>It feels as if something was stuck in your throat</HuskDormant>
+  <HuskDormant>Your muscles are aching</HuskDormant>
+  <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
+  <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+  
+  <SkillName.helm>Helm</SkillName.helm>
+  <SkillName.weapons>Weapons</SkillName.weapons>
+  <SkillName.mechanical>Mechanical Engineering</SkillName.mechanical>
+  <SkillName.electrical>Electrical Engineering</SkillName.electrical>
+  <SkillName.medical>Medical</SkillName.medical>  
+  
+  <!-- Entity names and descriptions -->
+  <EntityName.hull>Hull</EntityName.hull>
+  <EntityDescription.Hull>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</EntityDescription.Hull>
+
+  <EntityName.gap>Gap</EntityName.gap>
+  <EntityDescription.gap>Gaps allow water and air to flow between two hulls.</EntityDescription.gap>
+
+  <EntityName.waypoint>Waypoint</EntityName.waypoint>
+  <EntityDescription.waypoint>Used by AI characters to navigate inside the submarine.</EntityDescription.waypoint>
+
+  <EntityName.spawnpoint>Spawnpoint</EntityName.spawnpoint>
+  <EntityDescription.spawnpoint>Determines which rooms the crew spawns inside.</EntityDescription.spawnpoint>
+
+  <OxygenTankEmpty>Oxygen Tank (empty)</OxygenTankEmpty>
+  <WeldingFuelTankEmpty>Welding Fuel Tank (empty)</WeldingFuelTankEmpty>
+
+  <!-- Item messages -->
+  <ItemMsgPressSelect>Press [select]</ItemMsgPressSelect>
+  <ItemMsgUnauthorizedAccess>UNAUTHORIZED ACCESS</ItemMsgUnauthorizedAccess>
+  <ItemMsgRewireScrewdriver>Rewire [Screwdriver]</ItemMsgRewireScrewdriver>
+  <ItemMsgDetachWrench>Detach [Wrench]</ItemMsgDetachWrench>
+  <ItemMsgForceOpenCrowbar>Force open [Crowbar]</ItemMsgForceOpenCrowbar>
+  <ItemMsgRepairScrewdriver>Repair [Screwdriver]</ItemMsgRepairScrewdriver>
+  <ItemMsgRepairWeldingTool>Repair [Welding Tool]</ItemMsgRepairWeldingTool>
+  <ItemMsgRepairWrench>Repair [Wrench]</ItemMsgRepairWrench>
+  <ItemMsgBatteryCellRequired>Battery cell required</ItemMsgBatteryCellRequired>
+  <ItemMsgWeldingFuelRequired>Welding fuel required</ItemMsgWeldingFuelRequired>
+  <ItemMsgOxygenTankRequired>Oxygen tank required</ItemMsgOxygenTankRequired>
+  <ItemMsgSpearRequired>Out of spears</ItemMsgSpearRequired>
+  <ItemMsgAmmoRequired>Out of ammo</ItemMsgAmmoRequired>
+  <ItemMsgSyringeRequired>Out of syringes</ItemMsgSyringeRequired>
+  <ItemMsgUsePlasmaCutter>Cut [Plasma Cutter]</ItemMsgUsePlasmaCutter>
+
+  <IDCardName>This belongs to [name].</IDCardName>
+  <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
+
+  <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:  
+  <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
+  <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
+  -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</infotexts>

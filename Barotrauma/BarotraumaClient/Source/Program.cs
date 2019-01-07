@@ -85,11 +85,12 @@ namespace Barotrauma
         {
 #if WINDOWS
 
-            if (e is SharpDX.SharpDXException)
+            if (e is SharpDX.SharpDXException sharpDxException)
             {
-                DebugConsole.NewMessage("SharpDX exception caught. (" + e.Message + "). Attempting to fix...", Microsoft.Xna.Framework.Color.Red);
+                DebugConsole.NewMessage("SharpDX exception caught. ("
+                    + e.Message + ", " + sharpDxException.ResultCode.Code.ToString("X") + "). Attempting to fix...", Microsoft.Xna.Framework.Color.Red);
 
-                switch ((uint)((SharpDX.SharpDXException)e).ResultCode.Code)
+                switch ((UInt32)sharpDxException.ResultCode.Code)
                 {
                     case 0x887A0022: //DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
                         switch (restartAttempts)
@@ -102,19 +103,20 @@ namespace Barotrauma
                             case 1:
                                 //force focus to this window
                                 DebugConsole.NewMessage("Forcing focus to the window and retrying...", Microsoft.Xna.Framework.Color.Red);
-                                var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(game.Window.Handle);
+                                var myForm = (Form)Control.FromHandle(game.Window.Handle);
                                 myForm.Focus();
                                 return true;
                             case 2:
                                 //try disabling hardware mode switch
                                 if (GameMain.Config.WindowMode == WindowMode.Fullscreen)
                                 {
-                                    DebugConsole.NewMessage("Failed to set fullscreen mode, switching configuration to borderless windowed", Microsoft.Xna.Framework.Color.Red);
+                                    DebugConsole.NewMessage("Failed to set fullscreen mode, switching configuration to borderless windowed.", Microsoft.Xna.Framework.Color.Red);
                                     GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
                                     GameMain.Config.Save();
                                 }
                                 return false;
                             default:
+                                DebugConsole.NewMessage("Failed to resolve the DXGI_ERROR_NOT_CURRENTLY_AVAILABLE exception. Give up and let it crash :(", Microsoft.Xna.Framework.Color.Red);
                                 return false;
                             
                         }
@@ -130,6 +132,7 @@ namespace Barotrauma
 
                         return true;
                     default:
+                        DebugConsole.NewMessage("Unknown SharpDX exception code (" + sharpDxException.ResultCode.Code.ToString("X") + ")", Microsoft.Xna.Framework.Color.Red);
                         return false;
                 }
             }
@@ -148,6 +151,14 @@ namespace Barotrauma
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
         {
+            int existingFiles = 0;
+            string originalFilePath = filePath;
+            while (File.Exists(filePath))
+            {
+                existingFiles++;
+                filePath = Path.GetFileNameWithoutExtension(originalFilePath) + " (" + (existingFiles + 1) + ")" + Path.GetExtension(originalFilePath);
+            }
+
             DebugConsole.DequeueMessages();
 
             StreamWriter sw = new StreamWriter(filePath);
@@ -162,17 +173,19 @@ namespace Barotrauma
 #else
             sb.AppendLine("Game version " + GameMain.Version);
 #endif
-            sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
-            sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+            if (GameMain.Config != null)
+            {
+                sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
+            }
+            if (GameMain.SelectedPackages != null)
+            {
+                sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+            }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
-
-            if (GameMain.Server != null)
-            {
-                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hadn't been started)"));
-            }
-            else if (GameMain.Client != null)
+            
+            if (GameMain.Client != null)
             {
                 sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
@@ -215,30 +228,30 @@ namespace Barotrauma
             sb.AppendLine("\n");
 
             sb.AppendLine("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+            for (int i = DebugConsole.Messages.Count - 1; i >= 0; i--)
             {
                 sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
             }
 
             string crashReport = sb.ToString();
-            
+
             sw.WriteLine(crashReport);
             sw.Close();
-            
+
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 
             if (GameSettings.SendUserStatistics)
             {
-                CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
+                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.");
                 GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnStop();
             }
             else
             {
-                CrashMessageBox("A crash report (\"crashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
+                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
                     " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
             }
         }
     }
 #endif
-}
+        }

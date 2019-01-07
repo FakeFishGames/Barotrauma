@@ -14,6 +14,9 @@ namespace Barotrauma.Networking
         public int MaxPlayers;
         public bool HasPassword;
 
+        public bool PingChecked;
+        public int Ping = -1;
+
         //null value means that the value isn't known (the server may be using 
         //an old version of the game that didn't report these values or the FetchRules query to Steam may not have finished yet)
         public bool? UsingWhiteList;

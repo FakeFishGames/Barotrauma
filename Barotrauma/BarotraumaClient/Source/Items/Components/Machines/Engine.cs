@@ -51,12 +51,8 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newTargetForce - targetForce) < 0.01) return false;
 
                     targetForce = newTargetForce;
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled.LogName + " set the force speed of " + item.Name + " to " + (int)(targetForce) + " %", ServerLog.MessageType.ItemInteraction);
-                    }
-                    else if (GameMain.Client != null)
+
+                    if (GameMain.Client != null)
                     {
                         correctionTimer = CorrectionDelay;
                         item.CreateClientEvent(this);
@@ -78,13 +74,8 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             powerIndicator.Selected = hasPower && IsActive;
 
@@ -116,6 +107,14 @@ namespace Barotrauma.Items.Components
                 drawPos.Y = -drawPos.Y;
 
                 propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
+            }
+
+            if (editing)
+            {
+                Vector2 drawPos = item.DrawPosition;
+                drawPos += PropellerPos;
+                drawPos.Y = -drawPos.Y;
+                GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red);
             }
         }
 

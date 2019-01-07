@@ -14,6 +14,11 @@ namespace Barotrauma
         protected GameModePreset preset;
 
         private string endMessage;
+        
+        protected CrewManager CrewManager
+        {
+            get { return GameMain.GameSession?.CrewManager; }
+        }
 
         public virtual Mission Mission
         {
@@ -70,7 +75,10 @@ namespace Barotrauma
 #endif
         }
 
-        public virtual void Update(float deltaTime) { }
+        public virtual void Update(float deltaTime)
+        {
+            CrewManager?.Update(deltaTime);
+        }
 
         public virtual void End(string endMessage = "")
         {

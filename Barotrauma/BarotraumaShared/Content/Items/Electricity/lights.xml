@@ -13,14 +13,15 @@
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37" alpha="1.0"/>
     </LightComponent>
 
     <AITarget/>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="power"/>
       <input name="toggle"/>
       <input name="set_state"/>      
@@ -36,14 +37,15 @@
     <Sprite texture="lamp.png" sourcerect="0,48,48,16" depth="0.8"/>
 
     <LightComponent lightcolor="1.0,0.0,0.0,0.1" range="500.0" IsOn="true">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="0,48,48,16" alpha="1.0"/>
     </LightComponent>
 
     <AITarget/>
     
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
     </ConnectionPanel>

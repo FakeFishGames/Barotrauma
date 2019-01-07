@@ -22,7 +22,8 @@
   ConnectionIterationMultiplier="0.2"
   ConnectionDisplacementMultiplier="0.5"
   ConnectionIndicatorIterationMultiplier="0.1"
-  ConnectionIndicatorDisplacementMultiplier="0.1">
+  ConnectionIndicatorDisplacementMultiplier="0.1"
+  LocationIconSize="20">
   <ConnectionSprite texture="Content/Map/MapLine.png"/>
   <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_01.png"/>
   <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_02.png"/>

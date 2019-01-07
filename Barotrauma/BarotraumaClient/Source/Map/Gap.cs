@@ -8,6 +8,14 @@ namespace Barotrauma
     {
         private float particleTimer;
 
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowGaps;
+            }
+        }
+
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
             if (GameMain.DebugDraw)
@@ -28,9 +36,31 @@ namespace Barotrauma
 
             GUI.DrawRectangle(
                 sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height),
-                clr * 0.5f, true,
-                depth,
-                (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                clr * 0.2f, true, depth);
+
+            int lineWidth = 5;
+            if (IsHorizontal)
+            {
+                GUI.DrawLine(sb,
+                    new Vector2(WorldRect.X, -WorldRect.Y + lineWidth / 2),
+                    new Vector2(WorldRect.Right, -WorldRect.Y + lineWidth / 2),
+                    clr * 0.6f, width: lineWidth);
+                GUI.DrawLine(sb,
+                    new Vector2(WorldRect.X, -WorldRect.Y + rect.Height - lineWidth / 2),
+                    new Vector2(WorldRect.Right, -WorldRect.Y + rect.Height - lineWidth / 2),
+                    clr * 0.6f, width: lineWidth);
+            }
+            else
+            {
+                GUI.DrawLine(sb,
+                    new Vector2(WorldRect.X + lineWidth / 2, -WorldRect.Y),
+                    new Vector2(WorldRect.X + lineWidth / 2, -WorldRect.Y + rect.Height),
+                    clr * 0.6f, width: lineWidth);
+                GUI.DrawLine(sb,
+                    new Vector2(WorldRect.Right - lineWidth / 2, -WorldRect.Y),
+                    new Vector2(WorldRect.Right - lineWidth / 2, -WorldRect.Y + rect.Height),
+                    clr * 0.6f, width: lineWidth);
+            }
 
             for (int i = 0; i < linkedTo.Count; i++)
             {
@@ -39,12 +69,17 @@ namespace Barotrauma
                     : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
 
                 Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
-                arrowPos += new Vector2(dir.X * (WorldRect.Width / 2 + 10), dir.Y * (WorldRect.Height / 2 + 10));
+                arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));
+
+                float arrowWidth = 32.0f;
+                float arrowSize = 15.0f;
 
                 GUI.Arrow.Draw(sb,
                     arrowPos, clr * 0.8f,
                     GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
-                    IsHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f),
+                    IsHorizontal ? 
+                        new Vector2(Math.Min(rect.Height, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y) : 
+                        new Vector2(Math.Min(rect.Width, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y),
                     SpriteEffects.None, depth);
             }
 

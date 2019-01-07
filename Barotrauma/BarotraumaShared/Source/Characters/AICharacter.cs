@@ -20,8 +20,8 @@ namespace Barotrauma
             get { return aiController; }
         }
         
-        public AICharacter(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
-            : base(file, position, seed, characterInfo, isNetworkPlayer)
+        public AICharacter(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
+            : base(file, position, seed, characterInfo, isNetworkPlayer, ragdoll)
         {
         }
 
@@ -50,12 +50,13 @@ namespace Barotrauma
             if (!IsRemotePlayer)
             {
                 float characterDist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     //get the distance from the closest player to this character
                     foreach (Character c in CharacterList)
                     {
-                        if (c != this && (c.IsRemotePlayer || c == GameMain.Server.Character))
+                        if (c != this && c.IsRemotePlayer)
                         {
                             float dist = Vector2.DistanceSquared(c.WorldPosition, WorldPosition);
                             if (dist < characterDist)
@@ -66,6 +67,7 @@ namespace Barotrauma
                         }
                     }
                 }
+#endif
 
                 if (characterDist > EnableSimplePhysicsDistSqr)
                 {
@@ -78,8 +80,10 @@ namespace Barotrauma
             }
 
             if (IsDead || Vitality <= 0.0f || IsUnconscious || Stun > 0.0f) return;
-            if (Controlled == this || !aiController.Enabled) return;
-            
+            if (!aiController.Enabled) return;
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer) return;
+            if (Controlled == this) return;
+
             SoundUpdate(deltaTime);
 
             if (!IsRemotePlayer)

@@ -54,10 +54,12 @@ namespace Barotrauma
             public float MinRadialDistortStrength, MaxRadialDistortStrength;
             public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
 
+            public string DialogFlag;
+
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
-            public Effect(XElement element)
+            public Effect(XElement element, string parentDebugName)
             {
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
@@ -83,7 +85,9 @@ namespace Barotrauma
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
-                
+
+                DialogFlag = element.GetAttributeString("dialogflag", "");
+
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
                 foreach (XElement subElement in element.Elements())
@@ -91,7 +95,7 @@ namespace Barotrauma
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
                         case "statuseffect":
-                            StatusEffects.Add(StatusEffect.Load(subElement));
+                            StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                             break;
                     }
                 }
@@ -120,6 +124,8 @@ namespace Barotrauma
         //(e.g. mental health problems on head, lack of oxygen on torso...)
         public readonly LimbType IndicatorLimb;
 
+        public readonly string Identifier;
+
         public readonly string Name, Description;
 
         public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
@@ -137,6 +143,7 @@ namespace Barotrauma
         public readonly string AchievementOnRemoved;
 
         public readonly Sprite Icon;
+        public readonly Color IconColor;
 
         private List<Effect> effects = new List<Effect>();
 
@@ -145,6 +152,11 @@ namespace Barotrauma
         private readonly string typeName;
 
         private readonly ConstructorInfo constructor;
+
+        public Dictionary<string, float> TreatmentSuitability
+        {
+            get { return treatmentSuitability; }
+        }
 
         public static void LoadAll(IEnumerable<string> filePaths)
         {
@@ -206,9 +218,11 @@ namespace Barotrauma
         {
             typeName = type == null ? element.Name.ToString() : type.Name;
 
-            AfflictionType  = element.GetAttributeString("type", "");
-            Name            = element.GetAttributeString("name", "");
-            Description     = element.GetAttributeString("description", "");
+            Identifier = element.GetAttributeString("identifier", "");
+
+            AfflictionType = element.GetAttributeString("type", "");
+            Name = TextManager.Get("AfflictionName." + Identifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("AfflictionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
@@ -227,29 +241,21 @@ namespace Barotrauma
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
 
-            CauseOfDeathDescription     = element.GetAttributeString("causeofdeathdescription", "");
-            SelfCauseOfDeathDescription = element.GetAttributeString("selfcauseofdeathdescription", "");
+            CauseOfDeathDescription     = TextManager.Get("AfflictionCauseOfDeath." + Identifier, true) ?? element.GetAttributeString("causeofdeathdescription", "");
+            SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
+                        IconColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "effect":
-                        effects.Add(new Effect(subElement));
-                        break;
-                    case "suitabletreatment":
-                        string treatmentName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        if (treatmentSuitability.ContainsKey(treatmentName))
-                        {
-                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentName + "\" defined multiple times");
-                            continue;
-                        }
-                        treatmentSuitability.Add(treatmentName, subElement.GetAttributeFloat("suitability", 0.0f));
+                        effects.Add(new Effect(subElement, Name));
                         break;
                 }
             }
@@ -319,8 +325,11 @@ namespace Barotrauma
 
         public float GetTreatmentSuitability(Item item)
         {
-            if (item == null || !treatmentSuitability.ContainsKey(item.Name.ToLowerInvariant())) return 0.0f;
-            return treatmentSuitability[item.Name.ToLowerInvariant()];
+            if (item == null || !treatmentSuitability.ContainsKey(item.Prefab.Identifier.ToLowerInvariant()))
+            {
+                return 0.0f;
+            }
+            return treatmentSuitability[item.Prefab.Identifier.ToLowerInvariant()];
         }
     }
 }

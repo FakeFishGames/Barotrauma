@@ -5,23 +5,25 @@ namespace Barotrauma.Items.Components
 {
     class RegExFindComponent : ItemComponent
     {
-        private string output;
-
         private string expression;
 
         private string receivedSignal;
         private string previousReceivedSignal;
 
-        bool previousResult;
+        private bool previousResult;
 
         private Regex regex;
 
+        private bool nonContinuousOutputSent;
+
         [InGameEditable, Serialize("1", true)]
-        public string Output
-        {
-            get { return output; }
-            set { output = value; }
-        }
+        public string Output { get; set; }
+
+        [InGameEditable, Serialize("0", true)]
+        public string FalseOutput { get; set; }
+
+        [Serialize(true, true), InGameEditable(ToolTip = "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.")]
+        public bool ContinuousOutput { get; set; }
 
         [InGameEditable, Serialize("", true)]
         public string Expression
@@ -73,8 +75,16 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-
-            item.SendSignal(0, previousResult ? output : "0", "signal_out", null);
+            string signalOut = previousResult ? Output : FalseOutput;
+            if (ContinuousOutput)
+            {
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
+            }
+            else if (!nonContinuousOutputSent)
+            {
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
+                nonContinuousOutputSent = true;
+            }
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
@@ -83,9 +93,10 @@ namespace Barotrauma.Items.Components
             {
                 case "signal_in":
                     receivedSignal = signal;
+                    nonContinuousOutputSent = false;
                     break;
                 case "set_output":
-                    output = signal;
+                    Output = signal;
                     break;
             }
         }

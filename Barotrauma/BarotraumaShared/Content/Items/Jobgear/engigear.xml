@@ -5,9 +5,15 @@
     category="Equipment"    
     tags="smallitem"
     fireproof="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="The fire-resistant fabric offers some protection against fires.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
     <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
@@ -33,9 +39,15 @@
     category="Equipment"
     tags="smallitem"
     fireproof="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="The fire-resistant fabric offers some protection against fires.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,320,64,64"/>
     <Sprite texture="engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
@@ -63,17 +75,15 @@
     fireproof="true"
     description="">
 
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,256,64,64"/>
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="1,0,68,39"/>
 
     <Body width="50" height="17" density="20"/>
 
-    <Pickable slots="Pack" />
+    <Pickable slots="Any,RightHand,LeftHand" />
 
     <ItemContainer capacity="12">
-      <BackSprite texture="Content/UI/inventoryAtlas.png" sourcerect="475,492,183,450" origin="0.0,0.0"/>
-      <TopSprite texture="Content/UI/inventoryAtlas.png" sourcerect="181,790,252,111" origin="0.5,0.71"/>
-      <BottomSprite texture="Content/UI/inventoryAtlas.png" sourcerect="182,908,245,107" origin="0.5,0.0"/>
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
 </Items>

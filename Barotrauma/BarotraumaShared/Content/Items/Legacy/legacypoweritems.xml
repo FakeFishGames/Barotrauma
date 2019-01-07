@@ -11,35 +11,30 @@
     <BrokenSprite texture="junctionbox.png" sourcerect="70,0,70,84" depth="0.8" maxcondition="50" fadein="true"/>
     <BrokenSprite texture="junctionbox.png" sourcerect="140,0,70,84" depth="0.8" maxcondition="0"/>
 
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="electrical" level="40"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+    </Repairable>
 
     <PowerTransfer canbeselected = "true">
+      <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" condition="-0.5"/>
-      <GuiFrame rect="0,0,350,160" alignment="Center" style="ItemUI"/>
     </PowerTransfer>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <RequiredSkill name="Electrical Engineering" level="30"/>
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="30"/>
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="50.0" damage="0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true"/>
+        <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false"/>
       </StatusEffect>
 
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power"/>
       <output name="signal_0"/>
       <output name="signal_1"/>
       <output name="signal_2"/>
       <output name="signal_3"/>      
     </ConnectionPanel>
-
-    <Optimizable optimizationtype="electrical" description="Make sure all connections are properly secured and insulated. Makes the junction box less likely to break or cause a fire when overloaded.">
-      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
-    </Optimizable>
   </Item>
 </Items>

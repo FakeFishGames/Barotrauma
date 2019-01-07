@@ -9,7 +9,8 @@ namespace Barotrauma
     {
         public int MinContainedAmount = 1;
 
-        private string[] itemNames;
+        //can either be a tag or an identifier
+        private string[] itemIdentifiers;
 
         private ItemContainer container;
 
@@ -21,16 +22,21 @@ namespace Barotrauma
 
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
-
-        public AIObjectiveContainItem(Character character, string itemName, ItemContainer container)
-            : this(character, new string[] { itemName }, container)
+        
+        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container)
+            : this(character, new string[] { itemIdentifier }, container)
         {
         }
 
-        public AIObjectiveContainItem(Character character, string[] itemNames, ItemContainer container)
+        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container)
             : base (character, "")
         {
-            this.itemNames = itemNames;
+            this.itemIdentifiers = itemIdentifiers;
+            for (int i = 0; i < itemIdentifiers.Length; i++)
+            {
+                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
+            }
+
             this.container = container;
         }
 
@@ -41,7 +47,7 @@ namespace Barotrauma
             int containedItemCount = 0;
             foreach (Item item in container.Inventory.Items)
             {
-                if (item != null && itemNames.Any(name => item.Prefab.NameMatches(name) || item.HasTag(name))) containedItemCount++;
+                if (item != null && itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) containedItemCount++;
             }
 
             return containedItemCount >= MinContainedAmount;
@@ -75,12 +81,20 @@ namespace Barotrauma
             if (isCompleted) return;
 
             //get the item that should be contained
-            var itemToContain = character.Inventory.FindItem(itemNames);
+            Item itemToContain = null;
+            foreach (string identifier in itemIdentifiers)
+            {
+                itemToContain = character.Inventory.FindItemByIdentifier(identifier) ?? character.Inventory.FindItemByTag(identifier);
+                if (itemToContain != null) break;
+            }
+            
             if (itemToContain == null)
             {
-                getItemObjective = new AIObjectiveGetItem(character, itemNames);
-                getItemObjective.GetItemPriority = GetItemPriority;
-                getItemObjective.IgnoreContainedItems = IgnoreAlreadyContainedItems;
+                getItemObjective = new AIObjectiveGetItem(character, itemIdentifiers)
+                {
+                    GetItemPriority = GetItemPriority,
+                    IgnoreContainedItems = IgnoreAlreadyContainedItems
+                };
                 AddSubObjective(getItemObjective);
                 return;
             }
@@ -116,11 +130,11 @@ namespace Barotrauma
             AIObjectiveContainItem objective = otherObjective as AIObjectiveContainItem;
             if (objective == null) return false;
             if (objective.container != container) return false;
-            if (objective.itemNames.Length != itemNames.Length) return false;
+            if (objective.itemIdentifiers.Length != itemIdentifiers.Length) return false;
 
-            for (int i = 0; i < itemNames.Length; i++)
+            for (int i = 0; i < itemIdentifiers.Length; i++)
             {
-                if (objective.itemNames[i] != itemNames[i]) return false;
+                if (objective.itemIdentifiers[i] != itemIdentifiers[i]) return false;
             }
 
             return true;

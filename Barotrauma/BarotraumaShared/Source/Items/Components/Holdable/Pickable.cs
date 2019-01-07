@@ -64,9 +64,11 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
-                if (picker.PickingItem == null)
+                if (picker.PickingItem == null && PickingTime <= float.MaxValue)
                 {
+#if SERVER
                     item.CreateServerEvent(this);
+#endif
                     CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
                 }
                 return false;
@@ -134,7 +136,7 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 #endif
 
-                picker.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f));
+                picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                 
                 pickTimer += CoroutineManager.DeltaTime;
 
@@ -143,7 +145,11 @@ namespace Barotrauma.Items.Components
 
             StopPicking(picker);
 
-            if (!picker.IsRemotePlayer || GameMain.Server != null) OnPicked(picker);
+            bool isNotRemote = true;
+#if CLIENT
+            isNotRemote = !picker.IsRemotePlayer;
+#endif
+            if (isNotRemote) OnPicked(picker);
 
             yield return CoroutineStatus.Success;
         }
@@ -162,20 +168,19 @@ namespace Barotrauma.Items.Components
         protected void DropConnectedWires(Character character)
         {
             Vector2 pos = character == null ? item.SimPosition : character.SimPosition;
-
-            var connectionPanel = item.GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return;
             
-            foreach (Connection c in connectionPanel.Connections)
+            foreach (ConnectionPanel connectionPanel in item.GetComponents<ConnectionPanel>())
             {
-                foreach (Wire w in c.Wires)
+                foreach (Connection c in connectionPanel.Connections)
                 {
-                    if (w == null) continue;
-
-                    w.Item.Drop(character);
-                    w.Item.SetTransform(pos, 0.0f);
+                    foreach (Wire w in c.Wires)
+                    {
+                        if (w == null) continue;
+                        w.Item.Drop(character);
+                        w.Item.SetTransform(pos, 0.0f);
+                    }
                 }
-            }            
+            }                       
         }
         
         public override void Drop(Character dropper)

@@ -13,8 +13,6 @@ namespace Barotrauma.Items.Components
 
         private float? targetLevel;
         
-        public Hull hull1;
-
         private bool hasPower;
 
         [Serialize(0.0f, true)]
@@ -49,25 +47,11 @@ namespace Barotrauma.Items.Components
         public Pump(Item item, XElement element)
             : base(item, element)
         {
-            GetHull();
-
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
-
-        public override void Move(Vector2 amount)
-        {
-            base.Move(amount);
-
-            GetHull();
-        }
-
-        public override void OnMapLoaded()
-        {
-            GetHull();
-        }
-
+        partial void InitProjSpecific(XElement element);
+        
         public override void Update(float deltaTime, Camera cam)
         {
             currFlow = 0.0f;
@@ -76,38 +60,37 @@ namespace Barotrauma.Items.Components
             if (targetLevel != null)
             {
                 float hullPercentage = 0.0f;
-                if (hull1 != null) hullPercentage = (hull1.WaterVolume / hull1.Volume) * 100.0f;
+                if (item.CurrentHull != null) hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f;
                 FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
+            //pumps consume more power when in a bad condition
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
             if (voltage < minVoltage) return;
+
+            UpdateProjSpecific(deltaTime);
 
             hasPower = true;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            //check the hull if the item is movable
-            if (item.body != null) GetHull();
-            if (hull1 == null) return;            
+            if (item.CurrentHull == null) { return; }      
 
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
-            if (item.IsOptimized("mechanical")) currFlow *= 2.0f;
+            //less effective when in a bad condition
+            currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / 100.0f);
 
-            hull1.WaterVolume += currFlow;
-            if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;
+            item.CurrentHull.WaterVolume += currFlow;
+            if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
             
             voltage = 0.0f;
         }
 
-        private void GetHull()
-        {
-            hull1 = Hull.FindHull(item.WorldPosition, item.CurrentHull);
-        }
+        partial void UpdateProjSpecific(float deltaTime);
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
@@ -141,55 +124,29 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
-            if (objective.Option.ToLowerInvariant() == "stop pumping")
+            if (objective.Option.ToLowerInvariant() == "stoppumping")
             {
+#if SERVER
                 if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
+#endif
                 FlowPercentage = 0.0f;
             }
             else
             {
+#if SERVER
                 if (!IsActive || FlowPercentage > -100.0f)
                 {
                     item.CreateServerEvent(this);
                 }
+#endif
                 IsActive = true;
                 FlowPercentage = -100.0f;
             }
             return true;
         }
-
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
-        {
-            float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            bool newIsActive        = msg.ReadBoolean();
-
-            if (item.CanClientAccess(c))
-            {
-                if (newFlowPercentage != FlowPercentage)
-                {
-                    GameServer.Log(c.Character.LogName + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
-                }
-                if (newIsActive != IsActive)
-                {
-                    GameServer.Log(c.Character.LogName + (newIsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
-                }
-
-                FlowPercentage  = newFlowPercentage;
-                IsActive        = newIsActive;
-            } 
-            
-            //notify all clients of the changed state
-            item.CreateServerEvent(this);
-        }
-
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
-        {
-            //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
-            msg.Write(IsActive);
-        }
-
     }
 }

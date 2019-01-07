@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="watcher" humanoid="false">
 
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10" scalemin="1" scalemax="2"/>
+  <bloodemitter particle="waterblood" particleamount="1" scalemin="1" scalemax="2"/>
+  <gibemitter particle="gib" particleamount="30" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
+  <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
+
   <health
     vitality="1000"
     doesbleed="true"/>
@@ -27,37 +35,4 @@
     <targetpriority tag="light" state="None" priority="10"/>
   </ai>
 
-  <ragdoll waveamplitude="0.0" 
-           swimspeed="0.5" swimspeedmultiplier="3.0"
-           mirror="true" rotatetowardsmovement="false" 
-           impacttolerance="15"
-           headangle="-90">
-
-    <collider radius="160"/>
-    
-    <!-- head -->
-    <limb id = "0" type="Head" width="350" height="320" steerforce="1.0" flip="true">
-      <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,0,369,348" depth="0.02" origin ="0.5,0.6"/>
-      <attack range="250" damagerange="170" duration="0.05" force="20" targetforce="100" structuresoundtype="StructureBlunt">
-        <affliction name="Internal Damage" strength="200"/>
-        <affliction name="Stun" strength="5"/>
-      </attack>
-      <damagemodifier armorsector="0.0,360.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
-    </limb>
-
-    <limb id = "1" radius="50" height="120" flip="true">
-      <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="395,0,117,239" depth="0.025" origin="0.5,0.5"/>
-      <lightsource range="200.0" color="0.8,0.8,1.0,1.0" castshadows="false">
-        <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="391,282,121,230" depth="0.025" origin="0.5,0.5"/>
-      </lightsource>
-    </limb>
-
-    <limb id = "2" width="300" height="119" flip="true" type="Tail">
-      <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,370,302,142" depth="0.025" origin="0.5,0.5"/>
-    </limb>    
-
-    <joint limb1="0" limb1anchor="60,130" limb2="1" limb2anchor="-30,100" lowerlimit="70" upperlimit="80"/>
-    <joint limb1="0" limb1anchor="72,110" limb2="2" limb2anchor="120,-20" lowerlimit="90" upperlimit="180"/>
-  </ragdoll>
 </Character>

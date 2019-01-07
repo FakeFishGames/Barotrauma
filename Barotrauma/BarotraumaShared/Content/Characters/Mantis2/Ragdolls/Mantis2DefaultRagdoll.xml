@@ -1,0 +1,528 @@
+﻿<Ragdoll
+  type="mantis2"
+  minscale="0.8"
+  maxscale="1.2"
+  impacttolerance="10"
+  draggable="True"
+  limbscale="0.866"
+  jointscale="1.01"
+  colliderheightfromfloor="40"
+  canentersubmarine="True">
+  <collider
+    radius="60" />
+  <!-- head -->
+  <limb
+    id="0"
+    radius="40"
+    height="90"
+    mass="9"
+    type="Head"
+    flip="True"
+    steerforce="1"
+    mouthpos="30,65"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    stepoffset="0,0"
+    width="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="0,0,120,173"
+      depth="0.02"
+      origin="0.3843316,0.5346977" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.05"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.02" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="damage"
+      damagemultiplier="0.5"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="bleeding"
+      damagemultiplier="0.1"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+  </limb>
+  <!-- tail root -->
+  <limb
+    id="1"
+    width="42"
+    height="61"
+    mass="4"
+    flip="True"
+    type="None"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-157"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="2,184,65,71"
+      depth="0.015"
+      origin="0.4091243,0.5152385" />
+    <!--
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+      <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="damage"
+      damagemultiplier="0.5"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="bleeding"
+      damagemultiplier="0.1"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+  </limb>
+  <!-- tail middle -->
+  <limb
+    id="2"
+    width="35"
+    height="52"
+    mass="2"
+    flip="True"
+    type="None"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="65,180,54,56"
+      depth="0.022"
+      origin="0.5054215,0.5258026" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+      <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="damage"
+      damagemultiplier="0.5"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="bleeding"
+      damagemultiplier="0.1"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+  </limb>
+  <!-- tail end -->
+  <limb
+    id="3"
+    radius="20"
+    mass="2"
+    type="Tail"
+    flip="True"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    height="0"
+    width="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="133,158,40,76"
+      depth="0.023"
+      origin="0.4695634,0.5421604" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+      <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="damage"
+      damagemultiplier="0.5"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+    <damagemodifier
+      armorsector="0.0,180.0"
+      afflictiontypes="bleeding"
+      damagemultiplier="0.1"
+      damagesound="LimbArmor"
+      deflectprojectiles="true" />
+  </limb>
+  <!-- leg -->
+  <limb
+    id="4"
+    width="15"
+    height="63"
+    mass="4"
+    refjoint="3"
+    flip="True"
+    type="None"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="212,172,44,85"
+      depth="0.012"
+      origin="0.5724889,0.5594661" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="232,153,20,63" depth="0.012" origin="0.5,0.5" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+  </limb>
+  <!-- leg -->
+  <limb
+    id="5"
+    width="15"
+    height="63"
+    mass="3"
+    refjoint="3"
+    flip="True"
+    type="None"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="223,79,34,82"
+      depth="0.011"
+      origin="0.4201707,0.5288049" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+  </limb>
+  <!-- claw -->
+  <limb
+    id="6"
+    width="15"
+    height="63"
+    mass="2"
+    flip="True"
+    pullpos="0,30"
+    refjoint="0"
+    type="None"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="227,2,33,71"
+      depth="0.01"
+      origin="0.4362165,0.5219763" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <attack
+      range="200"
+      damagerange="100"
+      duration="0.25"
+      structuredamage="10"
+      itemdamage="12"
+      structuresoundtype="StructureSlash"
+      targetimpulse="-20"
+      severlimbsprobability="0.8"
+      torque="-20"
+      force="10"
+      applyforceonlimbs="0,6">
+      <Affliction
+        identifier="internaldamage"
+        strength="10" />
+      <Affliction
+        identifier="bleeding"
+        strength="50" />
+      <Affliction
+        identifier="stun"
+        strength="0.1" />
+    </attack>
+  </limb>
+  <limb
+    id="7"
+    width="15"
+    height="63"
+    mass="4"
+    type="LeftLeg"
+    flip="True"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="-1"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="185,91,40,76"
+      depth="0.013"
+      origin="0.4703945,0.5015142" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="205,91,20,63" depth="0.013" origin="0.5,0.5" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+  </limb>
+  <limb
+    id="8"
+    width="15"
+    height="63"
+    mass="4"
+    type="LeftFoot"
+    flip="True"
+    pullpos="6.532121,25.0761"
+    refjoint="0"
+    stepoffset="100,0"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="196,0,29,87"
+      depth="0.014"
+      origin="0.303151,0.4763264" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="206,3,20,85" depth="0.014" subdivisions="5,5">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <sound
+      tag="footstep_armor_heavy" />
+  </limb>
+  <limb
+    id="9"
+    width="30"
+    height="63"
+    mass="4"
+    type="RightLeg"
+    flip="True"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    stepoffset="0,0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    pullpos="0,0"
+    refjoint="5"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="147,1,52,89"
+      depth="0.015"
+      origin="0.5192029,0.4668961" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="159,3,38,66" depth="0.015" origin="0.5,0.5" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+  </limb>
+  <limb
+    id="10"
+    width="15"
+    height="50"
+    mass="4"
+    type="RightFoot"
+    flip="True"
+    pullpos="3.570576,21.33143"
+    refjoint="5"
+    stepoffset="-200,0"
+    bodytype="Dynamic"
+    healthindex="0"
+    attackpriority="0"
+    steerforce="0"
+    radius="0"
+    friction="0.3"
+    restitution="0.05"
+    density="10"
+    ignorecollisions="False">
+    <sprite
+      texture="Content/Characters/Mantis2/mantis2.png"
+      sourcerect="116,30,31,62"
+      depth="0.016"
+      origin="0.4578256,0.5280801" />
+    <!--
+    <deformablesprite texture="Content/Characters/Mantis2/mantis2.png" sourcerect="111,0,32,112" depth="0.016" origin="0.5,0.5" subdivisions="15,15">
+      <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
+      <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
+    </deformablesprite>    
+    -->
+    <sound
+      tag="footstep_armor_heavy" />
+  </limb>
+  <joint
+    limb1="0"
+    limb1anchor="-22.20408,-63.236"
+    limb2="1"
+    limb2anchor="0.5819141,9.498479"
+    lowerlimit="-30.4086"
+    upperlimit="34.33888"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="1"
+    limb1anchor="3.839443,-16.50023"
+    limb2="2"
+    limb2anchor="0.2357211,17.51407"
+    lowerlimit="-26.42899"
+    upperlimit="28.04329"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="2"
+    limb1anchor="-2.889166,-13.18337"
+    limb2="3"
+    limb2anchor="-0.1681972,26.66736"
+    lowerlimit="-91.80525"
+    upperlimit="10.52122"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="0"
+    limb1anchor="3.774296,-0.1121167"
+    limb2="4"
+    limb2anchor="4.13646,-28.61113"
+    lowerlimit="-81.43127"
+    upperlimit="44.60538"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="4"
+    limb1anchor="-1.39974,28.20447"
+    limb2="5"
+    limb2anchor="3.986628,-23.59713"
+    lowerlimit="72.83967"
+    upperlimit="143.6885"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="5"
+    limb1anchor="4.317762,29.49946"
+    limb2="6"
+    limb2anchor="3.137196,-18.55895"
+    lowerlimit="-10.29746"
+    upperlimit="77.87037"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="0"
+    limb1anchor="57.03612,-19.66409"
+    limb2="7"
+    limb2anchor="-2.230457,-19.53907"
+    lowerlimit="-75.59978"
+    upperlimit="42.01623"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="7"
+    limb1anchor="4.067602,24.7472"
+    limb2="8"
+    limb2anchor="5.662767,-22.45475"
+    lowerlimit="203.4738"
+    upperlimit="348.0404"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="0"
+    limb1anchor="14.58506,-64.48965"
+    limb2="9"
+    limb2anchor="-4.508872,20.71739"
+    lowerlimit="-32.11826"
+    upperlimit="67.86116"
+    canbesevered="True"
+    limitenabled="True" />
+  <joint
+    limb1="9"
+    limb1anchor="-4.577688,-35.79649"
+    limb2="10"
+    limb2anchor="0.6595855,-12.88831"
+    lowerlimit="221.9762"
+    upperlimit="278.1491"
+    canbesevered="True"
+    limitenabled="True" />
+</Ragdoll>

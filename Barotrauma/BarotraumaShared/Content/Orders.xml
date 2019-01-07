@@ -1,126 +1,92 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Orders>
+  <Order name="Dismissed" aitag="dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,1.0"/>
+  
   <Order name="Follow" aitag="follow" doingtext="Following" color="1.0,0.5,0.1,1.0">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,0,64,64"/>
-    <ChatMessage msg="[name], follow me!"/>
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="0,128,128,128"/>
   </Order>
 
   <Order name="Wait" aitag="wait" doingtext="Waiting" color="1.0,0.0,0.0,1.0">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,0,64,64"/>
-    <ChatMessage msg="[name], wait there!"/>
-    <ChatMessage msg="[name], stay where you are!"/>
-  </Order>
-  
-  <Order name="Dismissed" aitag="dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,1.0">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,0,64,64"/>
-    <ChatMessage msg="[name], you are dismissed!"/>
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,0,128,128"/>
   </Order>
 
-  <Order name="Operate Reactor" aitag="operatereactor" doingtext="Operating Reactor" 
-         targetitemtype="Reactor" options="Power up, Shutdown" color="1.0,0.78,0.05,1.0"
-         appropriatejobs="Mechanic,Engineer">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
-    <ChatMessage msg="[name], operate the reactor!"/>
-    <ChatMessage msg="[name], man the reactor!"/>
-    <ChatMessage option="Power up" msg="[name], power up the reactor!"/>
-    <ChatMessage option="Shutdown" msg="[name], shut down the reactor!"/>
+  <Order name="Operate Reactor" aitag="operatereactor" doingtext="Operating Reactor"
+         targetitemtype="Reactor"
+         options="powerup, shutdown" optionnames="Power up, Shutdown"
+         color="1.0,0.78,0.05,1.0"
+         appropriatejobs="mechanic">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="384,0,128,128"/>
   </Order>
 
-  <Order name="Operate Weapons" aitag="operateweapons" doingtext="Operating Weapons" 
-         targetitemname="turret,Railgun,Coilgun" targetitemtype="Turret" 
-         usecontroller="true" options="Fire at will, Hold fire" color="0.12,0.3,0.5,1.0"
-         appropriatejobs="Security Officer">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
-    <ChatMessage msg="[name], operate the weapons!"/>
-    <ChatMessage msg="[name], man the weapons!"/>
-    <ChatMessage option="Fire at will" msg="[name], fire at will!"/>
-    <ChatMessage option="Hold fire" msg="[name], hold fire!"/>
+  <Order name="Operate Weapons" aitag="operateweapons" doingtext="Operating Weapons"
+         targetitemidentifiers="turret,railgun,coilgun" targetitemtype="Turret"
+         options="fireatwill,holdfire" optionnames="Fire at will, Hold fire"
+         usecontroller="true"
+         color="0.12,0.3,0.5,1.0"
+         appropriatejobs="securityofficer">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,128,128,128"/>
   </Order>
 
   <Order name="Steer" aitag="steer" doingtext="Steering"
-         targetitemtype="Steering" options="Maintain position, Navigate back, Navigate to destination" color="0.0,0.0,1.0,1.0"
-         appropriatejobs="Captain">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,128,64,64"/>
-    <ChatMessage msg="[name], man the helm!"/>
-    <ChatMessage msg="[name], steer the submarine!"/>
-    <ChatMessage option="Maintain position" msg="[name], maintain position!"/>
-    <ChatMessage option="Maintain position" msg="[name], hold our position!"/>
-    <ChatMessage option="Navigate back" msg="[name], set the course back!"/>
-    <ChatMessage option="Navigate to destination" msg="[name], set the course to our destination!"/>
-    <ChatMessage option="Navigate to destination" msg="[name], navigate onwards!"/>
-    <ChatMessage option="Navigate to destination" msg="[name], set the course  onwards!"/>
+         targetitemtype="Steering"
+         options="maintainposition,navigateback,navigatetodestination" optionnames="Maintain position, Navigate back, Navigate to destination"
+         color="0.0,0.0,1.0,1.0"
+         appropriatejobs="captain">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="128,0,128,128"/>
   </Order>
-  
+
   <Order name="Fix Leaks" aitag="fixleaks" doingtext="Fixing Leaks" color="0.6,0.85,1.0,1.0"
-         appropriatejobs="Mechanic">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
-    <ChatMessage msg="[name], start fixing leaks!"/>
+         appropriatejobs="mechanic">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="896,0,128,128"/>
   </Order>
 
   <Order name="Extinguish Fires" aitag="extinguishfires" doingtext="Extinguishing Fires" color="1.0,0.0,0.0,1.0">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,64,64,64"/>
-    <ChatMessage msg="[name], extinguish the fire!"/>
-  </Order>
-  
-  <Order name="Charge Batteries" aitag="chargebatteries" doingtext="Charging Batteries" options="Charge, Stop charging" color="0.6,0.85,1.0,1.0"
-         appropriatejobs="Engineer">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
-    <ChatMessage msg="[name], operate the batteries!"/>
-    <ChatMessage option="Charge" msg="[name], charge the batteries!"/>
-    <ChatMessage option="Charge" msg="[name], make sure all batteries are charged!"/>
-    <ChatMessage option="Stop charging"  msg="[name], stop charging the batteries!"/>
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="768,0,128,128"/>
   </Order>
 
-  <Order name="Pump Water" aitag="pumpwater" doingtext="Operating pumps" options="Pump out, Stop pumping" color="0.2,0.4,1.0,1.0"
-         appropriatejobs="Mechanic">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
-    <ChatMessage msg="[name], start pumping out water!"/>
-    <ChatMessage option="Pump out" msg="[name], start pumping out water!"/>
-    <ChatMessage option="Stop pumping" msg="[name], shut down the pumps!"/>
-    <ChatMessage option="Stop pumping" msg="[name], stop the pumps!"/>
+  <Order name="Charge Batteries" aitag="chargebatteries" doingtext="Charging Batteries"
+         options="charge,stopcharging" optionnames="Charge, Stop charging"
+         color="0.6,0.85,1.0,1.0"
+         appropriatejobs="engineer">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="512,0,128,128"/>
   </Order>
-  
+
+  <Order name="Pump Water" aitag="pumpwater" doingtext="Operating pumps"
+         options="pumpout,stoppumping" optionnames="Pump out, Stop pumping"
+         color="0.2,0.4,1.0,1.0"
+         appropriatejobs="mechanic">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="128,128,128,128"/>
+  </Order>
+
   <Order name="Rescue" aitag="rescue" doingtext="Rescuing Characters" color="0.6,0.5,1.0,1.0"
-         appropriatejobs="Medical Doctor">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,128,64,64"/>
-    <ChatMessage msg="[name], rescue anyone in distress!"/>
-    <ChatMessage msg="[name], give medical aid to anyone in need!"/>
+         appropriatejobs="medicaldoctor">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="0,0,128,128"/>
   </Order>
 
   <Order name="Repair Damaged Systems" aitag="repairsystems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0"
-         appropriatejobs="Mechanic,Engineer">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,64,64,64"/>
-    <ChatMessage msg="[name], repair all damaged systems!"/>
+         appropriatejobs="mechanic,engineer" options="jobspecific,all" optionnames="Repair job-specific, Repair everything">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="640,0,128,128"/>
   </Order>
 
-  <Order name="Report Fire" aitag="reportfire" color="1.0,0.0,0.0,1.0" targetallcharacters="true" fadeouttime="20">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,64,64,64"/>
-    <ChatMessage msg="Fire in [roomname]!"/>
-    <ChatMessage msg="[roomname] is on fire!"/>
+  <Order name="Report Fire" aitag="reportfire" color="178,143,94,255" targetallcharacters="true" fadeouttime="20">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,512,128,128"/>
   </Order>
 
-  <Order name="Report Breach" aitag="reportbreach" color="0.6,0.85,1.0,1.0" targetallcharacters="true" fadeouttime="20">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
-    <ChatMessage msg="Hull breach in [roomname]!"/>
-    <ChatMessage msg="Leak in [roomname]!"/>
+  <Order name="Report Breach" aitag="reportbreach" color="94,143,178,255" targetallcharacters="true" fadeouttime="20">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="384,512,128,128"/>
   </Order>
 
-  <Order name="Report Intruders" aitag="reportintruders" color="0.6,0.2,0.1,1.0" targetallcharacters="true" fadeouttime="20">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,128,64,64"/>
-    <ChatMessage msg="Intruders in [roomname]!"/>
-    <ChatMessage msg="Hostiles in [roomname]!"/>
+  <Order name="Report Intruders" aitag="reportintruders" color="89,115,64,255" targetallcharacters="true" fadeouttime="20">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="640,512,128,128"/>
   </Order>
 
-  <Order name="Report Broken Devices" aitag="reportbrokendevices" color="0.6,0.2,0.1,1.0" targetallcharacters="true" 
-         appropriatejobs="Engineer, Mechanic" fadeouttime="20">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,128,64,64"/>
-    <ChatMessage msg="Broken devices in [roomname]!"/>
-    <ChatMessage msg="Need someone to repair devices in [roomname]!"/>
+  <Order name="Report Broken Devices" aitag="reportbrokendevices" color="111,64,115,255" targetallcharacters="true" 
+         appropriatejobs="engineer,mechanic" fadeouttime="20">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="512,512,128,128"/>
   </Order>
   
-  <Order name="Request First Aid" aitag="requestfirstaid" color="1.0,0.0,0.0,1.0" targetallcharacters="true"
-         appropriatejobs="Medical Doctor" fadeouttime="20">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,128,64,64"/>
-    <ChatMessage msg="Need a medic in [roomname]!"/>
+  <Order name="Request First Aid" aitag="requestfirstaid" color="178,104,94,255" targetallcharacters="true"
+         appropriatejobs="medicaldoctor" fadeouttime="20">
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="128,512,128,128"/>
   </Order>
 </Orders>

@@ -176,7 +176,7 @@ namespace Barotrauma
         {
             get 
             {
-                return subBody.Borders;
+                return subBody == null ? Rectangle.Empty : subBody.Borders;
             }
         }
 
@@ -303,6 +303,15 @@ namespace Barotrauma
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
                     RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
                     RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
+
+                    //backwards compatibility (use text tags instead of the actual text)
+                    if (RecommendedCrewExperience == "Beginner")
+                        RecommendedCrewExperience = "CrewExperienceLow";
+                    else if (RecommendedCrewExperience == "Intermediate")
+                        RecommendedCrewExperience = "CrewExperienceMid";
+                    else if (RecommendedCrewExperience == "Experienced")
+                        RecommendedCrewExperience = "CrewExperienceHigh";
+                    
                     string[] contentPackageNames = doc.Root.GetAttributeStringArray("requiredcontentpackages", new string[0]);
                     foreach (string contentPackageName in contentPackageNames)
                     {
@@ -410,15 +419,21 @@ namespace Barotrauma
         {
             Rectangle dockedBorders = GetDockedBorders();
 
+            Vector2 diffFromDockedBorders = 
+                new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
+                - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
+
             int iterations = 0;
+            int margin = 500;
             bool wallTooClose = false;
             do
             {
                 Rectangle worldBorders = new Rectangle(
-                    dockedBorders.X + (int)spawnPos.X,
+                    dockedBorders.X + (int)spawnPos.X - margin,
                     dockedBorders.Y + (int)spawnPos.Y,
-                    dockedBorders.Width,
+                    dockedBorders.Width + margin * 2,
                     dockedBorders.Height);
+                spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
 
                 wallTooClose = false;
 
@@ -427,44 +442,37 @@ namespace Barotrauma
 
                 foreach (VoronoiCell cell in nearbyCells)
                 {
-                    if (cell.CellType == CellType.Empty) continue;
-
-                    foreach (GraphEdge e in cell.edges)
+                    if (cell.CellType == CellType.Empty) { continue; }
+                    
+                    foreach (GraphEdge e in cell.Edges)
                     {
                         List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.Point1, e.Point2, worldBorders);
-                        foreach (Vector2 intersection in intersections)
+                        if (intersections.Count == 0) { continue; }
+
+                        wallTooClose = true;
+                                                        
+                        if (intersections[0].X < spawnPos.X)
                         {
-                            wallTooClose = true;
-
-                            if (intersection.X < spawnPos.X)
-                            {
-                                spawnPos.X += intersection.X - worldBorders.X;
-                            }
-                            else
-                            {
-                                spawnPos.X += intersection.X - worldBorders.Right;
-                            }
-
-                            if (intersection.Y < spawnPos.Y)
-                            {
-                                spawnPos.Y += intersection.Y - (worldBorders.Y - worldBorders.Height);
-                            }
-                            else
-                            {
-                                spawnPos.Y += intersection.Y - worldBorders.Y;
-                            }
-
-                            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2);
+                            spawnPos.X += Math.Max(e.Point1.X, e.Point2.X) - worldBorders.X + margin;
                         }
+                        else
+                        {
+                            spawnPos.X -= worldBorders.Right - Math.Min(e.Point1.X, e.Point2.X) + margin;
+                        }
+
+                        spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+                        worldBorders = new Rectangle(
+                            dockedBorders.X + (int)spawnPos.X - margin,
+                            dockedBorders.Y + (int)spawnPos.Y,
+                            dockedBorders.Width + margin * 2,
+                            dockedBorders.Height);                        
                     }
                 }
 
                 iterations++;
             } while (wallTooClose && iterations < 10);
 
-            return spawnPos;
-
-        
+            return spawnPos - diffFromDockedBorders;        
         }
         
         //drawing ----------------------------------------------------
@@ -725,8 +733,7 @@ namespace Barotrauma
 
             foreach (MapEntity e in subEntities)
             {
-                if (e.MoveWithLevel || e is Item) continue;
-
+                if (e is Item) continue;
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -1048,7 +1055,7 @@ namespace Barotrauma
             return doc;
         }
 
-        public void Load(bool unloadPrevious, XElement submarineElement = null)
+        public void Load(bool unloadPrevious, XElement submarineElement = null, bool showWarningMessages = true)
         {
             if (unloadPrevious) Unload();
 
@@ -1062,6 +1069,7 @@ namespace Barotrauma
                 submarineElement = doc.Root;
             }
 
+            GameVersion = GameVersion ?? new Version(submarineElement.GetAttributeString("gameversion", "0.0.0.0"));
             Description = submarineElement.GetAttributeString("description", "");
             Enum.TryParse(submarineElement.GetAttributeString("tags", ""), out tags);
             
@@ -1127,7 +1135,7 @@ namespace Barotrauma
                 }
             }
 
-            subBody = new SubmarineBody(this);
+            subBody = new SubmarineBody(this, showWarningMessages);
             subBody.SetPosition(HiddenSubPosition);
 
             loaded.Add(this);
@@ -1160,6 +1168,21 @@ namespace Barotrauma
 #if CLIENT
             GameMain.LightManager.OnMapLoaded();
 #endif
+            //if the sub was made using an older version, 
+            //halve the brightness of the lights to make them look (almost) right on the new lighting formula
+            if (showWarningMessages && Screen.Selected != GameMain.SubEditorScreen && (GameVersion == null || GameVersion < new Version("0.9.0.0")))
+            {
+                DebugConsole.ThrowError("The submarine \"" + Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
+                    + "The game automatically adjusts the lights make them look better with the new formula, but it's recommended to open the submarine in the submarine editor and make sure everything looks right after the automatic conversion.");
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != this) continue;
+                    if (item.ParentInventory != null || item.body != null) continue;
+                    var lightComponent = item.GetComponent<Items.Components.LightComponent>();
+                    if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
+                }
+            }
+
 
             ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
         }
@@ -1233,19 +1256,10 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
             element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", RequiredContentPackages)));
-
+            
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
-                if (e.linkedTo == null) continue;
-                for (int i = e.linkedTo.Count - 1; i >= 0; i--)
-                {
-                    if (!e.linkedTo[i].ShouldBeSaved) e.linkedTo.RemoveAt(i);
-                }
-            }
-
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                if (e.MoveWithLevel || e.Submarine != this || !e.ShouldBeSaved) continue;
+                if (e.Submarine != this || !e.ShouldBeSaved) continue;
                 e.Save(element);
             }
         }

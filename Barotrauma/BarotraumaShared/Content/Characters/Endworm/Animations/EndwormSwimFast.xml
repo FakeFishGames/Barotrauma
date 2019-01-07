@@ -1,0 +1,17 @@
+﻿<EndwormSwimFast
+  movementspeed="3"
+  waveamplitude="5"
+  wavelength="100"
+  flip="False"
+  mirror="False"
+  rotatetowardsmovement="True"
+  torsotorque="200"
+  headtorque="200"
+  foottorque="200"
+  tailtorque="50"
+  footangles=""
+  steertorque="25"
+  cyclespeed="1"
+  headangle="0"
+  torsoangle="0"
+  animationtype="SwimFast" />

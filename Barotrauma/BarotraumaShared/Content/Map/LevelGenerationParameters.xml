@@ -32,13 +32,14 @@
   
   <ColdCavernsBasic
     biomes="Cold Caverns"
-    width="150000"
+    MinWidth="100000"
+    MaxWidth="200000"
     height="60000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
     MainPathNodeIntervalRange="10000,30000"
     AmbientLightColor="27,30,36"
-    WallColor="148,159,164"
+    WallColor="192,192,192"
     BackgroundColor="54,60,72"
     SmallTunnelCount="5"
     SmallTunnelLengthRange="10000,20000"
@@ -47,7 +48,8 @@
     levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
+    ItemCount="100"
+    SeaFloorDepth="-300000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
@@ -59,13 +61,14 @@
 
   <ColdCavernsMaze
     biomes="Cold Caverns"
-    width="100000"
+    MinWidth="60000"
+    MaxWidth="100000"
     height="70000"
     VoronoiSiteInterval="1500,1500"
     VoronoiSiteVariance="700,700"
     MainPathNodeIntervalRange="20000,50000"
     AmbientLightColor="27,30,36"
-    WallColor="148,159,164"
+    WallColor="192,192,192"
     BackgroundColor="27,30,36"
     SmallTunnelCount="10"
     SmallTunnelLengthRange="5000,50000"
@@ -74,7 +77,7 @@
     levelobjectamount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
-    SeaFloorDepth="-300000.0"
+    SeaFloorDepth="-300000"
     SeaFloorVariance="20000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">
@@ -87,13 +90,14 @@
   
   <RidgeBasic
     biomes="Europan Ridge"
-    width="100000"
+    MinWidth="75000"
+    MaxWidth="150000"
     height="50000"
     VoronoiSiteInterval="1500,1500"
     VoronoiSiteVariance="700,700"
     MainPathNodeIntervalRange="6000,10000"
     AmbientLightColor="20,22,27"
-    WallColor="114,130,141"
+    WallColor="192,192,192"
     BackgroundColor="27,30,36"
     SmallTunnelCount="10"
     SmallTunnelLengthRange="5000,50000"
@@ -103,7 +107,7 @@
     levelobjectamount="1500"
     MountainCountMin="1"
     MountainCountMax="1"
-    SeaFloorDepth="-100000.0"
+    SeaFloorDepth="-100000"
     SeaFloorVariance="2000"
     MountainHeightMin="80000"
     MountainHeightMax="120000">
@@ -116,7 +120,8 @@
 
   <PlateauBasic
     biomes="The Aphotic Plateau"
-    width="200000"
+    MinWidth="100000"
+    MaxWidth="200000"
     height="25000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
@@ -127,7 +132,7 @@
     RuinCount="1"
     BottomHoleProbability="0.9"
     levelobjectamount="1000"
-    SeaFloorDepth="0.0"
+    SeaFloorDepth="0"
     SeaFloorVariance="500"
     MountainCountMin="1"
     MountainCountMax="2"
@@ -142,7 +147,8 @@
 
   <VoidBasic
     biomes="The Great Void"
-    width="200000"
+    MinWidth="100000"
+    MaxWidth="200000"
     height="50000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
@@ -165,7 +171,8 @@
 
   <WastesBasic
     biomes="Hydrothermal Wastes"
-    width="100000"
+    MinWidth="75000"
+    MaxWidth="150000"
     height="50000"
     VoronoiSiteInterval="1500,1500"
     VoronoiSiteVariance="700,700"
@@ -180,7 +187,7 @@
     levelobjectamount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
-    SeaFloorDepth="-50000.0"
+    SeaFloorDepth="-50000"
     SeaFloorVariance="2000"
     MountainHeightMin="40000"
     MountainHeightMax="50000"

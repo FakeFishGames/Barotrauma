@@ -15,20 +15,12 @@ namespace Barotrauma
             {
                 if (value == allowSubVoting) return;
                 allowSubVoting = value;
-                GameMain.NetLobbyScreen.SubList.Enabled = value || GameMain.Server != null ||
+                GameMain.NetLobbyScreen.SubList.Enabled = value ||
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("subvotes", true).Visible = value;
 
-                if (GameMain.Server != null)
-                {
-                    UpdateVoteTexts(value ? GameMain.Server.ConnectedClients : null, VoteType.Sub);
-                    GameMain.Server.UpdateVoteStatus();
-                }
-                else
-                {
-                    UpdateVoteTexts(null, VoteType.Sub);
-                    GameMain.NetLobbyScreen.SubList.Deselect();
-                }
+                UpdateVoteTexts(null, VoteType.Sub);
+                GameMain.NetLobbyScreen.SubList.Deselect();
             }
         }
         public bool AllowModeVoting
@@ -39,7 +31,7 @@ namespace Barotrauma
                 if (value == allowModeVoting) return;
                 allowModeVoting = value;
                 GameMain.NetLobbyScreen.ModeList.Enabled = 
-                    value || GameMain.Server != null || 
+                    value || 
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
 
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
@@ -51,37 +43,62 @@ namespace Barotrauma
                         new Color(comp.TextColor.R, comp.TextColor.G, comp.TextColor.B, 
                             !allowModeVoting || ((GameModePreset)comp.UserData).Votable ? (byte)255 : (byte)100);
                 }
-
-                if (GameMain.Server != null)
-                {
-                    UpdateVoteTexts(value ? GameMain.Server.ConnectedClients : null, VoteType.Mode);
-                    GameMain.Server.UpdateVoteStatus();
-                }
-                else
-                {
-                    UpdateVoteTexts(null, VoteType.Mode);
-                    GameMain.NetLobbyScreen.ModeList.Deselect();
-                }
+                
+                UpdateVoteTexts(null, VoteType.Mode);
+                GameMain.NetLobbyScreen.ModeList.Deselect();
             }
         }
 
         public void UpdateVoteTexts(List<Client> clients, VoteType voteType)
         {
-            GUIListBox listBox = (voteType == VoteType.Sub) ?
-                GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
-
-            foreach (GUIComponent comp in listBox.Content.Children)
+            switch (voteType)
             {
-                if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
-            }
+                case VoteType.Sub:
+                case VoteType.Mode:
+                    GUIListBox listBox = (voteType == VoteType.Sub) ?
+                        GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
 
-            if (clients != null)
-            {
-                List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
-                foreach (Pair<object, int> votable in voteList)
-                {
-                    SetVoteText(listBox, votable.First, votable.Second);
-                }
+                    foreach (GUIComponent comp in listBox.Content.Children)
+                    {
+                        if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
+                    }
+
+                    if (clients == null) return;
+                    
+                    List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
+                    foreach (Pair<object, int> votable in voteList)
+                    {
+                        SetVoteText(listBox, votable.First, votable.Second);
+                    }                    
+                    break;
+                case VoteType.StartRound:
+                    if (clients == null) return;
+                    foreach (Client client in clients)
+                    {
+                        var clientNameBox = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client.Name);
+                        if (clientNameBox == null) continue;
+
+                        var clientReady = clientNameBox.FindChild("clientready");
+                        if (!client.GetVote<bool>(VoteType.StartRound))
+                        {
+                            if (clientReady != null) clientReady.Parent.RemoveChild(clientReady);
+                        }
+                        else
+                        {
+                            if (clientReady == null)
+                            {
+                                new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), clientNameBox.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "")
+                                {
+                                    Selected = true,
+                                    Enabled = false,
+                                    ToolTip = "Ready to start",
+                                    UserData = "clientready"
+                                };
+                            }
+                        }
+
+                    }
+                    break;
             }
         }
 
@@ -107,8 +124,6 @@ namespace Barotrauma
 
         public void ClientWrite(NetBuffer msg, VoteType voteType, object data)
         {
-            if (GameMain.Server != null) return;
-
             msg.Write((byte)voteType);
 
             switch (voteType)
@@ -122,12 +137,10 @@ namespace Barotrauma
                 case VoteType.Mode:
                     GameModePreset gameMode = data as GameModePreset;
                     if (gameMode == null) return;
-
                     msg.Write(gameMode.Name);
                     break;
                 case VoteType.EndRound:
                     if (!(data is bool)) return;
-
                     msg.Write((bool)data);
                     break;
                 case VoteType.Kick:
@@ -136,15 +149,17 @@ namespace Barotrauma
 
                     msg.Write(votedClient.ID);
                     break;
+                case VoteType.StartRound:
+                    if (!(data is bool)) return;
+                    msg.Write((bool)data);
+                    break;
             }
 
             msg.WritePadBits();
         }
         
-        public void ClientRead(NetIncomingMessage inc)
+        public void ClientRead(NetBuffer inc)
         {
-            if (GameMain.Server != null) return;
-
             AllowSubVoting = inc.ReadBoolean();
             if (allowSubVoting)
             {
@@ -183,6 +198,16 @@ namespace Barotrauma
                 GameMain.NetworkMember.EndVoteMax = inc.ReadByte();
             }
             AllowVoteKick = inc.ReadBoolean();
+
+            GameMain.NetworkMember.ConnectedClients.ForEach(c => c.SetVote(VoteType.StartRound, false));
+            byte readyClientCount = inc.ReadByte();
+            for (int i = 0; i < readyClientCount; i++)
+            {
+                byte clientID = inc.ReadByte();
+                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                matchingClient?.SetVote(VoteType.StartRound, true);
+            }
+            UpdateVoteTexts(GameMain.NetworkMember.ConnectedClients, VoteType.StartRound);
 
             inc.ReadPadBits();
         }

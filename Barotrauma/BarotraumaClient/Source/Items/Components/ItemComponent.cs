@@ -11,24 +11,38 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
+    enum SoundSelectionMode
+    {
+        Random,
+        CharacterSpecific,
+        ItemSpecific,
+        All
+    }
+
     class ItemSound
     {
-        public readonly Sound Sound;
+        public readonly RoundSound RoundSound;
         public readonly ActionType Type;
 
         public string VolumeProperty;
-        public float VolumeMultiplier;
+        public float VolumeMultiplier
+        {
+            get { return RoundSound.Volume; }
+        }
         
-        public readonly float Range;
+        public float Range
+        {
+            get { return RoundSound.Range; }
+        }
+
+
 
         public readonly bool Loop;
 
-        public ItemSound(Sound sound, ActionType type, float range, bool loop = false)
+        public ItemSound(RoundSound sound, ActionType type, bool loop = false)
         {
-            this.Sound = sound;
+            this.RoundSound = sound;
             this.Type = type;
-            this.Range = range;
-
             this.Loop = loop;
         }
     }
@@ -38,26 +52,100 @@ namespace Barotrauma.Items.Components
         private Dictionary<ActionType, List<ItemSound>> sounds;
         private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
 
-        protected GUIFrame guiFrame;
+        public GUILayoutSettings DefaultLayout { get; protected set; }
+        public GUILayoutSettings AlternativeLayout { get; protected set; }
 
-        enum SoundSelectionMode
+        public class GUILayoutSettings
         {
-            Random, 
-            CharacterSpecific,
-            ItemSpecific
+            public Vector2? RelativeSize { get; private set; }
+            public Point? AbsoluteSize { get; private set; }
+            public Vector2? RelativeOffset { get; private set; }
+            public Point? AbsoluteOffset { get; private set; }
+            public Anchor? Anchor { get; private set; }
+            public Pivot? Pivot { get; private set; }
+
+            public static GUILayoutSettings Load(XElement element)
+            {
+                var layout = new GUILayoutSettings();
+                var relativeSize = XMLExtensions.GetAttributeVector2(element, "relativesize", Vector2.Zero);
+                var absoluteSize = XMLExtensions.GetAttributePoint(element, "absolutesize", new Point(-1000, -1000));
+                var relativeOffset = XMLExtensions.GetAttributeVector2(element, "relativeoffset", Vector2.Zero);
+                var absoluteOffset = XMLExtensions.GetAttributePoint(element, "absoluteoffset", new Point(-1000, -1000));
+                if (relativeSize.Length() > 0)
+                {
+                    layout.RelativeSize = relativeSize;
+                }
+                if (absoluteSize.X > 0 && absoluteSize.Y > 0)
+                {
+                    layout.AbsoluteSize = absoluteSize;
+                }
+                if (relativeOffset.Length() > 0)
+                {
+                    layout.RelativeOffset = relativeOffset;
+                }
+                if (absoluteOffset.X > -1000 && absoluteOffset.Y > -1000)
+                {
+                    layout.AbsoluteOffset = absoluteOffset;
+                }
+                if (Enum.TryParse(XMLExtensions.GetAttributeString(element, "anchor", ""), out Anchor a))
+                {
+                    layout.Anchor = a;
+                }
+                if (Enum.TryParse(XMLExtensions.GetAttributeString(element, "pivot", ""), out Pivot p))
+                {
+                    layout.Pivot = p;
+                }
+                return layout;
+            }
+
+            public void ApplyTo(RectTransform target)
+            {
+                if (RelativeOffset.HasValue)
+                {
+                    target.RelativeOffset = RelativeOffset.Value;
+                }
+                else if (AbsoluteOffset.HasValue)
+                {
+                    target.AbsoluteOffset = AbsoluteOffset.Value;
+                }
+                if (RelativeSize.HasValue)
+                {
+                    target.RelativeSize = RelativeSize.Value;
+                }
+                else if (AbsoluteSize.HasValue)
+                {
+                    target.NonScaledSize = AbsoluteSize.Value;
+                }
+                if (Anchor.HasValue)
+                {
+                    target.Anchor = Anchor.Value;
+                }
+                if (Pivot.HasValue)
+                {
+                    target.Pivot = Pivot.Value;
+                }
+                else
+                {
+                    target.Pivot = RectTransform.MatchPivotToAnchor(target.Anchor);
+                }
+                target.RecalculateChildren(true, true);
+            }
         }
 
-        public GUIFrame GuiFrame
+        public GUIFrame GuiFrame { get; protected set; }
+
+        [Serialize(false, false)]
+        public bool AllowUIOverlap
         {
-            get
-            {
-                /*if (guiFrame == null)
-                {
-                    DebugConsole.ThrowError("Error: the component " + name + " in " + item.Name + " doesn't have a GuiFrame component");
-                    guiFrame = new GUIFrame(new Rectangle(0, 0, 100, 100), Color.Black);
-                }*/
-                return guiFrame;
-            }
+            get;
+            set;
+        }
+
+        [Serialize(-1, false)]
+        public int LinkUIToComponent
+        {
+            get;
+            set;
         }
 
         [Serialize(0, false)]
@@ -66,7 +154,31 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-        
+
+        private bool useAlternativeLayout;
+        public bool UseAlternativeLayout
+        {
+            get { return useAlternativeLayout; }
+            set
+            {
+                if (AlternativeLayout != null)
+                {
+                    if (value == useAlternativeLayout) { return; }
+                    useAlternativeLayout = value;
+                    if (useAlternativeLayout)
+                    {
+                        AlternativeLayout?.ApplyTo(GuiFrame.RectTransform);
+                    }
+                    else
+                    {
+                        DefaultLayout?.ApplyTo(GuiFrame.RectTransform);
+                    }
+                }
+            }
+        }
+
+        private bool shouldMuffleLooping;
+        private float lastMuffleCheckTime;
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
         public void PlaySound(ActionType type, Vector2 position, Character user = null)
@@ -82,13 +194,16 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
-                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
                     loopingSoundChannel.Dispose(); loopingSoundChannel = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
-                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
+                        new Vector3(position.X, position.Y, 0.0f), 
+                        GetSoundVolume(loopingSound),
+                        SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
@@ -96,6 +211,12 @@ namespace Barotrauma.Items.Components
                 }
                 if (loopingSoundChannel != null)
                 {
+                    if (Timing.TotalTime > lastMuffleCheckTime + 0.2f)
+                    {
+                        shouldMuffleLooping = SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull);
+                        lastMuffleCheckTime = (float)Timing.TotalTime;
+                    }
+                    loopingSoundChannel.Muffled = shouldMuffleLooping;
                     loopingSoundChannel.Gain = GetSoundVolume(loopingSound);
                     loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
                 }
@@ -103,7 +224,7 @@ namespace Barotrauma.Items.Components
             }
 
             if (!sounds.TryGetValue(type, out List<ItemSound> matchingSounds)) return;
-
+            
             ItemSound itemSound = null;
             if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
@@ -117,16 +238,28 @@ namespace Barotrauma.Items.Components
                 {
                     index = item.ID % matchingSounds.Count;
                 }
+                else if (soundSelectionMode == SoundSelectionMode.All)
+                {
+                    foreach (ItemSound sound in matchingSounds)
+                    {
+                        PlaySound(sound, position, user);
+                    }
+                    return;
+                }
                 else
                 {
                     index = Rand.Int(matchingSounds.Count);
                 }
-                    
+
                 itemSound = matchingSounds[index];
+                PlaySound(matchingSounds[index], position, user);
             }
 
-            if (itemSound == null) return;
+        }
 
+
+        private void PlaySound(ItemSound itemSound, Vector2 position, Character user = null)
+        {
             if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > itemSound.Range * itemSound.Range)
             {
                 return;
@@ -135,13 +268,16 @@ namespace Barotrauma.Items.Components
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
-                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
                     loopingSoundChannel.Dispose(); loopingSoundChannel = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
-                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
+                        new Vector3(position.X, position.Y, 0.0f), 
+                        GetSoundVolume(loopingSound),
+                        muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
@@ -151,8 +287,8 @@ namespace Barotrauma.Items.Components
             else
             {
                 float volume = GetSoundVolume(itemSound);
-                if (volume == 0.0f) return;
-                SoundPlayer.PlaySound(itemSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
+                if (volume <= 0.0f) return;
+                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
             }
         }
 
@@ -175,8 +311,7 @@ namespace Barotrauma.Items.Components
             if (sound == null) return 0.0f;
             if (sound.VolumeProperty == "") return 1.0f;
 
-            SerializableProperty property = null;
-            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out property))
+            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out SerializableProperty property))
             {
                 float newVolume = 0.0f;
                 try
@@ -188,6 +323,16 @@ namespace Barotrauma.Items.Components
                     return 0.0f;
                 }
                 newVolume *= sound.VolumeMultiplier;
+
+                if (!MathUtils.IsValid(newVolume))
+                {
+                    DebugConsole.Log("Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "ItemComponent.PlaySound:" + item.Name + GetType().ToString(),
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
+                    return 0.0f;
+                }
 
                 return MathHelper.Clamp(newVolume, 0.0f, 1.0f);
             }
@@ -202,46 +347,36 @@ namespace Barotrauma.Items.Components
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
-        public virtual void AddToGUIUpdateList() { }
+        public virtual void AddToGUIUpdateList()
+        {
+            GuiFrame?.AddToGUIUpdateList();
+        }
 
-        public virtual void UpdateHUD(Character character, float deltaTime) { }
+        public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
 
         private bool LoadElemProjSpecific(XElement subElement)
         {
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
-                    string rectStr = subElement.GetAttributeString("rect", "0.0,0.0,0.5,0.5");
-
-                    string[] components = rectStr.Split(',');
-                    if (components.Length < 4) break;
-
-                    Vector4 rect = subElement.GetAttributeVector4("rect", Vector4.One);
-                    if (components[0].Contains(".")) rect.X *= GameMain.GraphicsWidth;
-                    if (components[1].Contains(".")) rect.Y *= GameMain.GraphicsHeight;
-                    if (components[2].Contains(".")) rect.Z *= GameMain.GraphicsWidth;
-                    if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
-
-                    string style = subElement.GetAttributeString("style", "");
-                    
-                    Alignment alignment = Alignment.Center;
-                    try
+                    if (subElement.Attribute("rect") != null)
                     {
-                        alignment = (Alignment)Enum.Parse(typeof(Alignment),
-                            subElement.GetAttributeString("alignment", "Center"), true);
-                    }
-                    catch
-                    {
-                        DebugConsole.ThrowError("Error in " + subElement.Parent + "! \"" + subElement.Parent.Attribute("type").Value + "\" is not a valid alignment");
+                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - GUIFrame defined as rect, use RectTransform instead.");
+                        break;
                     }
 
-                    Color? color = null;                        
+                    Color? color = null;
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
+                    string style = subElement.Attribute("style") == null ?
+                        null : subElement.GetAttributeString("style", "");
 
-                    guiFrame = new GUIFrame(new RectTransform(new Point((int)rect.Z, (int)rect.W), GUI.Canvas, Anchor.Center)
-                        { AbsoluteOffset = new Point((int)rect.X, (int)rect.Y) }, style, color);
-
+                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
+                    DefaultLayout = GUILayoutSettings.Load(subElement);
                     break;
+                case "alternativelayout":
+                    AlternativeLayout = GUILayoutSettings.Load(subElement);
+                    break;
+                case "itemsound":
                 case "sound":
                     string filePath = subElement.GetAttributeString("file", "");
 
@@ -269,12 +404,11 @@ namespace Barotrauma.Items.Components
                         break;
                     }
                     
-                    Sound sound = Submarine.LoadRoundSound(filePath);
-                    float range = subElement.GetAttributeFloat("range", 800.0f);
-                    bool loop = subElement.GetAttributeBool("loop", false);
-                    ItemSound itemSound = new ItemSound(sound, type, range, loop);
-                    itemSound.VolumeProperty = subElement.GetAttributeString("volume", "");
-                    itemSound.VolumeMultiplier = subElement.GetAttributeFloat("volumemultiplier", 1.0f);
+                    RoundSound sound = Submarine.LoadRoundSound(subElement);
+                    ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
+                    {
+                        VolumeProperty = subElement.GetAttributeString("volumeproperty", "")
+                    };
 
                     if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
                     if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)

@@ -11,8 +11,8 @@ namespace Barotrauma
 
         private bool isHorizontal;
 
-        private GUIFrame frame;
-        private GUIButton bar;
+        public GUIFrame Frame { get; private set; }
+        public GUIButton Bar { get; private set; }
         private float barSize;
         private float barScroll;
 
@@ -22,6 +22,17 @@ namespace Barotrauma
         public OnMovedHandler OnMoved;
         
         public bool IsBooleanSwitch;
+
+        public override string ToolTip
+        {
+            get { return base.ToolTip; }
+            set
+            {
+                base.ToolTip = value;
+                Frame.ToolTip = value;
+                Bar.ToolTip = value;
+            }
+        }
 
         private float minValue;
         public float MinValue
@@ -62,7 +73,8 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                bar.Enabled = value;
+                Bar.Enabled = value;
+                if (!enabled) Bar.Selected = false;
             }
         }
 
@@ -70,8 +82,41 @@ namespace Barotrauma
         {
             get
             {
-                if (frame?.Style == null) return Vector4.Zero;
-                return frame.Style.Padding;
+                if (Frame?.Style == null) return Vector4.Zero;
+                return Frame.Style.Padding;
+            }
+        }
+
+        private Vector2 range;
+        public Vector2 Range
+        {
+            get
+            {
+                return range;
+            }
+            set
+            {
+                float oldBarScrollValue = BarScrollValue;
+                range = value;
+                BarScrollValue = oldBarScrollValue;
+            }
+        }
+
+        public delegate float ScrollConversion(GUIScrollBar scrollBar, float f);
+        public ScrollConversion ScrollToValue = null;
+        public ScrollConversion ValueToScroll = null;
+
+        public float BarScrollValue
+        {
+            get
+            {
+                if (ScrollToValue==null) return (BarScroll * (Range.Y - Range.X)) + Range.X;
+                return ScrollToValue(this, BarScroll);
+            }
+            set
+            {
+                if (ValueToScroll==null) BarScroll = (value - Range.X) / (Range.Y - Range.X);
+                else BarScroll = ValueToScroll(this, value);
             }
         }
 
@@ -86,21 +131,21 @@ namespace Barotrauma
                 }
 
                 barScroll = MathHelper.Clamp(value, minValue, maxValue);
-                int newX = bar.RectTransform.AbsoluteOffset.X;
-                int newY = bar.RectTransform.AbsoluteOffset.Y;
+                int newX = Bar.RectTransform.AbsoluteOffset.X;
+                int newY = Bar.RectTransform.AbsoluteOffset.Y;
                 float newScroll = step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step);
                 if (isHorizontal)
                 {
-                    newX = (int)(Padding.X + newScroll * (frame.Rect.Width - bar.Rect.Width - Padding.X - Padding.Z));
-                    newX = MathHelper.Clamp(newX, (int)Padding.X, frame.Rect.Width - bar.Rect.Width - (int)Padding.Z);
+                    newX = (int)(Padding.X + newScroll * (Frame.Rect.Width - Bar.Rect.Width - Padding.X - Padding.Z));
+                    newX = MathHelper.Clamp(newX, (int)Padding.X, Frame.Rect.Width - Bar.Rect.Width - (int)Padding.Z);
                 }
                 else
                 {
-                    newY = (int)(Padding.Y + newScroll * (frame.Rect.Height - bar.Rect.Height - Padding.Y - Padding.W));
-                    newY = MathHelper.Clamp(newY, (int)Padding.Y, frame.Rect.Height - bar.Rect.Height - (int)Padding.W);
+                    newY = (int)(Padding.Y + newScroll * (Frame.Rect.Height - Bar.Rect.Height - Padding.Y - Padding.W));
+                    newY = MathHelper.Clamp(newY, (int)Padding.Y, Frame.Rect.Height - Bar.Rect.Height - (int)Padding.W);
                 }
 
-                bar.RectTransform.AbsoluteOffset = new Point(newX, newY);
+                Bar.RectTransform.AbsoluteOffset = new Point(newX, newY);
             }
         }
 
@@ -129,25 +174,28 @@ namespace Barotrauma
         public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "", bool? isHorizontal = null) : base(style, rectT)
         {
             this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
-            GUI.Style.Apply(frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
+            Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
+            GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
-            bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color);
-            GUI.Style.Apply(bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
-            bar.OnPressed = SelectBar;
+            Bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color);
+            GUI.Style.Apply(Bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
+            Bar.OnPressed = SelectBar;
             enabled = true;
             UpdateRect();
+            BarScroll = 0.0f;
 
             rectT.SizeChanged += UpdateRect;
             rectT.ScaleChanged += UpdateRect;
+            Bar.RectTransform.SizeChanged += () => { BarScroll = barScroll; };
         }
 
         private void UpdateRect()
         {
-            Vector4 padding = frame.Style.Padding;
+            Vector4 padding = Frame.Style.Padding;
             var newSize = new Point((int)(Rect.Size.X - padding.X - padding.Z), (int)(Rect.Size.Y - padding.Y - padding.W));
             newSize = IsHorizontal ? newSize.Multiply(new Vector2(BarSize, 1)) : newSize.Multiply(new Vector2(1, BarSize));
-            bar.RectTransform.Resize(newSize);
+            Bar.RectTransform.Resize(newSize);
+            BarScroll = barScroll;
         }
         
         protected override void Update(float deltaTime)
@@ -169,21 +217,24 @@ namespace Barotrauma
                     BarScroll += dir * 0.1f;
                 }
             }
-
-            if (GUI.MouseOn == frame)
+            
+            if (draggingBar == this)
+            {
+                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
+                if ((isHorizontal && PlayerInput.MousePosition.X > Rect.X && PlayerInput.MousePosition.X < Rect.Right) ||
+                    (!isHorizontal && PlayerInput.MousePosition.Y > Rect.Y && PlayerInput.MousePosition.Y < Rect.Bottom))
+                {
+                    MoveButton(PlayerInput.MouseSpeed);
+                }
+            }
+            else if (GUI.MouseOn == Frame)
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
                     MoveButton(new Vector2(
-                        Math.Sign(PlayerInput.MousePosition.X - bar.Rect.Center.X) * bar.Rect.Width,
-                        Math.Sign(PlayerInput.MousePosition.Y - bar.Rect.Center.Y) * bar.Rect.Height));
+                        Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
+                        Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));
                 }
-            }
-
-            if (draggingBar == this)
-            {
-                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
-                MoveButton(PlayerInput.MouseSpeed);
             }       
         }
 
@@ -205,12 +256,12 @@ namespace Barotrauma
             if (isHorizontal)
             {
                 moveAmount.Y = 0.0f;
-                newScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - Padding.X - Padding.Z);
+                newScroll += moveAmount.X / (Frame.Rect.Width - Bar.Rect.Width - Padding.X - Padding.Z);
             }
             else
             {
                 moveAmount.X = 0.0f;
-                newScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - Padding.Y - Padding.W);
+                newScroll += moveAmount.Y / (Frame.Rect.Height - Bar.Rect.Height - Padding.Y - Padding.W);
             }
 
             BarScroll = newScroll;

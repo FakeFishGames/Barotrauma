@@ -1,0 +1,12 @@
+﻿<SeamantisWalk
+  AnimationType="Walk"
+  spmovementspeedeed="2.400001"
+  stepsize="0.1500002,0.3700003"
+  legtorque="10"
+  colliderstandangle="0"
+  footangle="290.9999"
+  flip="True"
+  headposition="1.1"
+  torsoposition="1.24"
+  headangle="299.9999"
+  torsoangle="-39" />

@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     /// <summary>
     ///     Sprite batch extensions for drawing primitive shapes
-    ///     Original source: https://github.com/craftworkgames/MonoGame.Extended/blob/develop/Source/MonoGame.Extended/ShapeExtensions.cs
+    ///     Modified from: https://github.com/craftworkgames/MonoGame.Extended/blob/develop/Source/MonoGame.Extended/ShapeExtensions.cs
     /// </summary>
     public static class ShapeExtensions
     {
@@ -28,12 +28,6 @@ namespace Barotrauma
         /// <summary>
         ///     Draws a closed polygon from a <see cref="Polygon" /> shape
         /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// ///
-        /// <param name="position">Where to position the polygon</param>
-        /// <param name="polygon">The polygon to draw</param>
-        /// <param name="color">The color to use</param>
-        /// <param name="thickness">The thickness of the lines</param>
         public static void DrawPolygon(this SpriteBatch spriteBatch, Vector2 position, Polygon polygon, Color color,
             float thickness = 1f)
         {
@@ -43,12 +37,6 @@ namespace Barotrauma
         /// <summary>
         ///     Draws a closed polygon from an array of points
         /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// ///
-        /// <param name="offset">Where to offset the points</param>
-        /// <param name="points">The points to connect with lines</param>
-        /// <param name="color">The color to use</param>
-        /// <param name="thickness">The thickness of the lines</param>
         public static void DrawPolygon(this SpriteBatch spriteBatch, Vector2 offset, IReadOnlyList<Vector2> points, Color color,
             float thickness = 1f)
         {
@@ -82,13 +70,6 @@ namespace Barotrauma
         /// <summary>
         ///     Draws a line from point1 to point2 with an offset
         /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// <param name="x1">The X coord of the first point</param>
-        /// <param name="y1">The Y coord of the first point</param>
-        /// <param name="x2">The X coord of the second point</param>
-        /// <param name="y2">The Y coord of the second point</param>
-        /// <param name="color">The color to use</param>
-        /// <param name="thickness">The thickness of the line</param>
         public static void DrawLine(this SpriteBatch spriteBatch, float x1, float y1, float x2, float y2, Color color,
             float thickness = 1f)
         {
@@ -98,11 +79,6 @@ namespace Barotrauma
         /// <summary>
         ///     Draws a line from point1 to point2 with an offset
         /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// <param name="point1">The first point</param>
-        /// <param name="point2">The second point</param>
-        /// <param name="color">The color to use</param>
-        /// <param name="thickness">The thickness of the line</param>
         public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color,
             float thickness = 1f)
         {
@@ -118,12 +94,6 @@ namespace Barotrauma
         /// <summary>
         ///     Draws a line from point1 to point2 with an offset
         /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// <param name="point">The starting point</param>
-        /// <param name="length">The length of the line</param>
-        /// <param name="angle">The angle of this line from the starting point</param>
-        /// <param name="color">The color to use</param>
-        /// <param name="thickness">The thickness of the line</param>
         public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point, float length, float angle, Color color,
             float thickness = 1f)
         {
@@ -150,51 +120,42 @@ namespace Barotrauma
             spriteBatch.Draw(GetTexture(spriteBatch), position + offset, color: color, scale: scale);
         }
 
-        /// <summary>
-        ///     Draw a circle
-        /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// <param name="center">The center of the circle</param>
-        /// <param name="radius">The radius of the circle</param>
-        /// <param name="sides">The number of sides to generate</param>
-        /// <param name="color">The color of the circle</param>
-        /// <param name="thickness">The thickness of the lines used</param>
         public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color,
             float thickness = 1f)
         {
             DrawPolygon(spriteBatch, center, CreateCircle(radius, sides), color, thickness);
         }
 
-        /// <summary>
-        ///     Draw a circle
-        /// </summary>
-        /// <param name="spriteBatch">The destination drawing surface</param>
-        /// <param name="x">The center X of the circle</param>
-        /// <param name="y">The center Y of the circle</param>
-        /// <param name="radius">The radius of the circle</param>
-        /// <param name="sides">The number of sides to generate</param>
-        /// <param name="color">The color of the circle</param>
-        /// <param name="thickness">The thickness of the line</param>
         public static void DrawCircle(this SpriteBatch spriteBatch, float x, float y, float radius, int sides,
             Color color, float thickness = 1f)
         {
             DrawPolygon(spriteBatch, new Vector2(x, y), CreateCircle(radius, sides), color, thickness);
         }
 
-        private static Vector2[] CreateCircle(double radius, int sides)
+        public static void DrawSector(this SpriteBatch spriteBatch, Vector2 center, float radius, float radians, int sides, Color color, float offset = 0, float thickness = 1)
         {
-            const double max = 2.0 * Math.PI;
-            var points = new Vector2[sides];
-            var step = max / sides;
-            var theta = 0.0;
+            DrawPolygon(spriteBatch, center, CreateSector(radius, sides, radians, offset), color, thickness);
+        }
 
+        private static Vector2[] CreateSector(double radius, int sides, float radians, float offset = 0)
+        {
+            //circle sectors need one extra point at the center
+            var points = new Vector2[radians < MathHelper.TwoPi ? sides + 1 : sides];
+            var step = radians / sides;
+
+            double theta = offset;
             for (var i = 0; i < sides; i++)
             {
-                points[i] = new Vector2((float)(radius * Math.Cos(theta)), (float)(radius * Math.Sin(theta)));
+                points[i] = new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta)) * (float)radius;
                 theta += step;
             }
 
             return points;
+        }
+
+        private static Vector2[] CreateCircle(double radius, int sides)
+        {
+            return CreateSector(radius, sides, MathHelper.TwoPi);
         }
     }
 

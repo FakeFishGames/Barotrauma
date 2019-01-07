@@ -44,12 +44,7 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newRechargeSpeed - rechargeSpeed) < 0.1f) return false;
 
                     RechargeSpeed = newRechargeSpeed;
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
@@ -78,31 +73,53 @@ namespace Barotrauma.Items.Components
             };
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void OnItemLoaded()
+        {
+            if (rechargeSpeedSlider != null)
+            {
+                rechargeSpeedSlider.BarScroll = rechargeSpeed / MaxRechargeSpeed;
+            }
+        }
+        
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             float chargeRatio = charge / capacity;
-            chargeIndicator.Color = chargeRatio < 0.5f ?
-                Color.Lerp(Color.Red, Color.Yellow, chargeRatio * 2) :
-                Color.Lerp(Color.Yellow, Color.Green, (chargeRatio - 0.5f) * 2);
+            chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            //TODO: proper sprite for the battery recharge indicator
+            if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) return;
 
             GUI.DrawRectangle(spriteBatch,
-                new Vector2(item.DrawPosition.X - 4, -item.DrawPosition.Y),
-                new Vector2(8, 22), Color.Black);
+                new Vector2(
+                    item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale,
+                    -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale),
+                indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.00001f);
 
             if (charge > 0)
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(item.DrawPosition.X - 3, -item.DrawPosition.Y + 1 + (20.0f * (1.0f - charge / capacity))),
-                    new Vector2(6, 20 * (charge / capacity)), Color.Green, true);
-        }
-        
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
+            {
+                Color indicatorColor = ToolBox.GradientLerp(charge / capacity, Color.Red, Color.Orange, Color.Green);
+                if (!isHorizontal)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                    new Vector2(
+                        item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1,
+                        -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1 + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))),
+                    new Vector2(indicatorSize.X * item.Scale - 2, (indicatorSize.Y * item.Scale - 2) * (charge / capacity)), indicatorColor, true, 
+                    depth: item.SpriteDepth - 0.00001f);
+                }
+                else
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                    new Vector2(
+                        item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1 ,
+                        -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1),
+                    new Vector2((indicatorSize.X * item.Scale - 2) * (charge / capacity), indicatorSize.Y * item.Scale - 2), indicatorColor, true, 
+                    depth: item.SpriteDepth - 0.00001f);
+                }
+            }
+
         }
         
         public void ClientWrite(NetBuffer msg, object[] extraData)

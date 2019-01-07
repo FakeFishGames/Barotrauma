@@ -13,7 +13,11 @@ namespace Barotrauma.Networking
 {
     class VoipCapture : VoipQueue, IDisposable
     {
-        private static VoipCapture instance = null;
+        public static VoipCapture Instance
+        {
+            get;
+            private set;
+        }
 
         private IntPtr captureDevice;
 
@@ -21,17 +25,39 @@ namespace Barotrauma.Networking
 
         private bool capturing;
 
-        public VoipCapture(byte id) : base(id,true,false) { //TODO: receive GameClient as parameter?
-            if (instance!=null)
+        public double LastdB
+        {
+            get;
+            private set;
+        }
+
+        public override byte QueueID
+        {
+            get
+            {
+                return GameMain.Client?.ID ?? 0;
+            }
+            protected set
+            {
+                //do nothing
+            }
+        }
+
+        public static void Create(UInt16? storedBufferID=null)
+        {
+            if (Instance != null)
             {
                 throw new Exception("Tried to instance more than one VoipCapture object");
             }
 
-            instance = this;
+            Instance = new VoipCapture();
+            Instance.LatestBufferID = storedBufferID??BUFFER_COUNT-1;
+        }
 
+        private VoipCapture() : base(GameMain.Client?.ID ?? 0,true,false) {
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(null, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
-
+            
             ALError alError = AL.GetError();
             AlcError alcError = Alc.GetError(captureDevice);
             if (alcError != AlcError.NoError)
@@ -74,7 +100,6 @@ namespace Barotrauma.Networking
 
                 if (sampleCount < VoipConfig.BUFFER_SIZE)
                 {
-                    DebugConsole.NewMessage(sampleCount.ToString(), Color.Lime);
                     int sleepMs = (VoipConfig.BUFFER_SIZE - sampleCount) * 800 / VoipConfig.FREQUENCY;
                     if (sleepMs < 5) sleepMs = 5;
                     Thread.Sleep(sleepMs);
@@ -96,12 +121,52 @@ namespace Barotrauma.Networking
                 {
                     throw new Exception("Failed to capture samples: " + alcError.ToString());
                 }
-                
-                //encode audio and enqueue it
-                lock (buffers)
+
+                double maxAmplitude = 0.0f;
+                for (int i=0;i<VoipConfig.BUFFER_SIZE;i++)
                 {
-                    int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
-                    EnqueueBuffer(compressedCount);
+                    double sampleVal = (double)uncompressedBuffer[i] / (double)short.MaxValue;
+                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
+                }
+                double dB = Math.Min(20*Math.Log10(maxAmplitude),0.0);
+
+                LastdB = dB;
+
+                bool allowEnqueue = false;
+                if (GameMain.WindowActive)
+                {
+                    if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
+                    {
+                        if (dB > GameMain.Config.NoiseGateThreshold)
+                        {
+                            allowEnqueue = true;
+                        }
+                    }
+                    else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
+                    {
+                        if (PlayerInput.KeyDown(InputType.Voice))
+                        {
+                            allowEnqueue = true;
+                        }
+                    }
+                }
+
+                if (allowEnqueue)
+                {
+                    //encode audio and enqueue it
+                    lock (buffers)
+                    {
+                        int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                        EnqueueBuffer(compressedCount);
+                    }
+                }
+                else
+                {
+                    //enqueue silence
+                    lock (buffers)
+                    {
+                        EnqueueBuffer(0);
+                    }
                 }
 
                 Thread.Sleep(VoipConfig.BUFFER_SIZE * 800 / VoipConfig.FREQUENCY);
@@ -123,7 +188,8 @@ namespace Barotrauma.Networking
 
         public override void Dispose()
         {
-            instance = null;
+            Instance = null;
+            capturing = false;
             captureThread.Join();
             captureThread = null;
         }

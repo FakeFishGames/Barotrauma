@@ -9,10 +9,9 @@ namespace Barotrauma.Items.Components
         {
             if (!editing || !MapEntity.SelectedList.Contains(item)) return;
 
-            Vector2 pos = new Vector2(item.DrawPosition.X, -item.DrawPosition.Y);
-            ShapeExtensions.DrawLine(spriteBatch, pos + Vector2.UnitY * range, pos - Vector2.UnitY * range, Color.Cyan * 0.5f, 2);
-            ShapeExtensions.DrawLine(spriteBatch, pos + Vector2.UnitX * range, pos - Vector2.UnitX * range, Color.Cyan * 0.5f, 2);
-            ShapeExtensions.DrawCircle(spriteBatch, pos, range, 32, Color.Cyan * 0.5f, 3);
+            Vector2 pos = item.WorldPosition + detectOffset;
+            pos.Y = -pos.Y;
+            GUI.DrawRectangle(spriteBatch, pos - new Vector2(rangeX, rangeY), new Vector2(rangeX, rangeY) * 2.0f, Color.Cyan * 0.5f, isFilled: false, thickness: 2);
         }
     }
 }

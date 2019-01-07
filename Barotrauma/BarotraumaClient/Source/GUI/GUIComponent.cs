@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public GUIComponent GetChild(int index)
         {
-            if (index < 0 || index > CountChildren) return null;
+            if (index < 0 || index >= CountChildren) return null;
             return RectTransform.GetChild(index).GUIComponent;
         }
 
@@ -47,17 +47,17 @@ namespace Barotrauma
 
         /// <summary>
         /// Returns all child elements in the hierarchy.
-        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the Element property directly.
+        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the GUIComponent property directly.
         /// </summary>
         public IEnumerable<GUIComponent> GetAllChildren()
         {
             return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
-        public bool IsParentOf(GUIComponent component)
+        public bool IsParentOf(GUIComponent component, bool recursive = true)
         {
             if (component == null) { return false; }
-            return RectTransform.IsParentOf(component.RectTransform);
+            return RectTransform.IsParentOf(component.RectTransform, recursive);
         }
 
         public virtual void RemoveChild(GUIComponent child)
@@ -103,9 +103,7 @@ namespace Barotrauma
         public int UpdateOrder { get; set; }
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
-
-        const float FlashDuration = 1.5f;
-
+        
         public enum ComponentState { None, Hover, Pressed, Selected };
 
         protected Alignment alignment;
@@ -119,10 +117,12 @@ namespace Barotrauma
         protected Color color;
         protected Color hoverColor;
         protected Color selectedColor;
+        protected Color pressedColor;
 
         protected ComponentState state;
 
         protected Color flashColor;
+        protected float flashDuration = 1.5f;
         protected float flashTimer;
 
         public bool IgnoreLayoutGroups;
@@ -251,6 +251,12 @@ namespace Barotrauma
         {
             get { return selectedColor; }
             set { selectedColor = value; }
+        }
+
+        public virtual Color PressedColor
+        {
+            get { return pressedColor; }
+            set { pressedColor = value; }
         }
 
         private RectTransform rectTransform;
@@ -385,27 +391,32 @@ namespace Barotrauma
         /// <summary>
         /// Draws all the children manually.
         /// </summary>
-        public void DrawChildren(SpriteBatch spriteBatch, bool recursive)
+        public virtual void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
             RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
+        }
+
+        protected virtual Color GetCurrentColor(ComponentState state)
+        {
+            switch (state)
+            {
+                case ComponentState.Hover:
+                    return HoverColor;
+                case ComponentState.Pressed:
+                    return PressedColor;
+                case ComponentState.Selected:
+                    return SelectedColor;
+                default:
+                    return Color;
+            }
         }
 
         protected virtual void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
             var rect = Rect;
-
-            Color currColor = color;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-
-            if (flashTimer > 0.0f)
-            {
-                GUI.DrawRectangle(spriteBatch,
-                    new Rectangle(rect.X - 5, rect.Y - 5, rect.Width + 10, rect.Height + 10),
-                    flashColor * (flashTimer / FlashDuration), true);
-            }
-
+            
+            Color currColor = GetCurrentColor(state);
             if (currColor.A > 0.0f && (sprites == null || !sprites.Any())) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
             if (sprites != null && sprites[state] != null && currColor.A > 0.0f)
@@ -414,6 +425,19 @@ namespace Barotrauma
                 {
                     uiSprite.Draw(spriteBatch, rect, currColor * (currColor.A / 255.0f), SpriteEffects);
                 }
+            }
+
+            if (flashTimer > 0.0f)
+            {
+                //the number of flashes depends on the duration, 1 flash per 1 full second
+                int flashCycleCount = (int)Math.Max(flashDuration, 1);
+                float flashCycleDuration = flashDuration / flashCycleCount;
+
+                //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
+                //i.e. quickly bumps up from almost full brightness to full and then fades out
+                GUI.UIGlow.Draw(spriteBatch,
+                    rect,
+                    flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
             }
         }
 
@@ -424,20 +448,31 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
+            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect);
+        }
+
+        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement)
+        {
             int width = 400;
-            if (toolTipBlock == null || (string)toolTipBlock.userData != ToolTip)
+            if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, 18), null), ToolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, 18), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20),
                     toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
-                toolTipBlock.userData = ToolTip;
+                toolTipBlock.userData = toolTip;
             }
 
-            toolTipBlock.RectTransform.AbsoluteOffset = new Point(GUI.MouseOn.Rect.Center.X, GUI.MouseOn.Rect.Bottom);
+            toolTipBlock.RectTransform.AbsoluteOffset = new Point(targetElement.Center.X, targetElement.Bottom);
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
             {
-                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Right - (GameMain.GraphicsWidth - 10), 0);
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width, 0);
+            }
+            if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(
+                    (targetElement.Width / 2) * Math.Sign(targetElement.Center.X - toolTipBlock.Center.X), 
+                    toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
             }
             toolTipBlock.SetTextPos();
 
@@ -450,10 +485,11 @@ namespace Barotrauma
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f)
         {
-            flashTimer = FlashDuration;
-            flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
+            flashTimer = flashDuration;
+            this.flashDuration = flashDuration;
+            flashColor = (color == null) ? Color.Red : (Color)color;
         }
 
         public void FadeOut(float duration, bool removeAfter)
@@ -492,6 +528,7 @@ namespace Barotrauma
             color = style.Color;
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
+            pressedColor = style.PressedColor;
             
             sprites = style.Sprites;
 

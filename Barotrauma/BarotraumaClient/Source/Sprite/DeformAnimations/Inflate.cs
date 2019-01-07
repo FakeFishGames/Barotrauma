@@ -1,34 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.SpriteDeformations
 {
+    class InflateParams : SpriteDeformationParams
+    {
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float Frequency { get; set; }
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
+        public float Scale { get; set; }
+
+        public InflateParams(XElement element) : base(element)
+        {
+        }
+    }
+
     class Inflate : SpriteDeformation
     {
-        private float frequency;
-        private float scale;
-
         private float phase;
 
         private Vector2[,] deformation;
 
-        public Inflate(XElement element) : base(element)
-        {
-            frequency = element.GetAttributeFloat("frequency", 0.0f);
-            scale = element.GetAttributeFloat("scale", 1.0f);
+        private InflateParams InflateParams => deformationParams as InflateParams;
 
-            deformation = new Vector2[resolution.X, resolution.Y];
-            for (int x = 0; x < resolution.X; x++)
+        public Inflate(XElement element) : base(element, new InflateParams(element))
+        {
+            deformation = new Vector2[Resolution.X, Resolution.Y];
+            for (int x = 0; x < Resolution.X; x++)
             {
-                float normalizedX = x / (float)(resolution.X - 1);
-                for (int y = 0; y < resolution.Y; y++)
+                float normalizedX = x / (float)(Resolution.X - 1);
+                for (int y = 0; y < Resolution.Y; y++)
                 {
-                    float normalizedY = y / (float)(resolution.X - 1);
+                    float normalizedY = y / (float)(Resolution.X - 1);
 
                     Vector2 centerDiff = new Vector2(normalizedX - 0.5f, normalizedY - 0.5f);
                     float centerDist = centerDiff.Length() * 2.0f;
@@ -44,12 +48,12 @@ namespace Barotrauma.SpriteDeformations
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
             deformation = this.deformation;
-            multiplier = frequency <= 0.0f ? scale : (float)(Math.Sin(phase)+1.0f) / 2.0f * scale;
+            multiplier = InflateParams.Frequency <= 0.0f ? InflateParams.Scale : (float)(Math.Sin(phase) + 1.0f) / 2.0f * InflateParams.Scale;
         }
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * frequency;
+            phase += deltaTime * InflateParams.Frequency;
             phase %= MathHelper.TwoPi;
         }
     }

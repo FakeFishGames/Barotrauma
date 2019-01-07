@@ -5,10 +5,12 @@
     <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.5" origin="0.5,0.5"/>
     <attack range="70" damagerange="35" duration="0.1" targetforce="10"
         force="5" applyforceonlimbs="1" torque="-10" structuresoundtype="StructureBlunt">
-      <StatusEffect type="OnUse" target="This" Health="20.0" disabledeltatime="true"/>
-      <affliction name="Bleeding" strength="10"/>
-      <affliction name="Husk infection" strength="5"/>
-      <affliction name="Stun" strength="0.5"/>
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <ReduceAffliction identifier="internaldamage" strength="5"/>
+      </StatusEffect>
+      <Affliction identifier="bleeding" strength="10"/>
+      <Affliction identifier="huskinfection" strength="5"/>
+      <Affliction identifier="stun" strength="0.5"/>
     </attack>
   </limb>
 

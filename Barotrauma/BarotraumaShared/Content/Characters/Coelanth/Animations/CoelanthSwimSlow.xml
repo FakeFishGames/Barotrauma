@@ -1,0 +1,17 @@
+﻿<CoelanthSwimSlow
+  waveamplitude="0.2"
+  wavelength="50"
+  steertorque="300"
+  movementspeed="3"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True"
+  torsotorque="80"
+  headtorque="25"
+  foottorque="25"
+  tailtorque="50"
+  footangles=""
+  cyclespeed="1"
+  headangle="0"
+  torsoangle="0"
+  animationtype="SwimSlow" />

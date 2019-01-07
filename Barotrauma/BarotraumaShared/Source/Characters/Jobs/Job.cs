@@ -43,78 +43,104 @@ namespace Barotrauma
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                skills.Add(skillPrefab.Name, new Skill(skillPrefab));
+                skills.Add(skillPrefab.Identifier, new Skill(skillPrefab));
             }
         }
 
         public Job(XElement element)
         {
-            string name = element.GetAttributeString("name", "").ToLowerInvariant();
-            prefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == name);
+            string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
+            prefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == identifier);
+
+            string name = "";
+            if (prefab == null)
+            {
+                name = element.GetAttributeString("name", "").ToLowerInvariant();
+                prefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == name);
+            }
+            if (prefab == null)
+            {
+                DebugConsole.ThrowError("Could not find the job \"" + name + "\" (identifier " + identifier + "). Giving the character a random job.");
+                prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count)];
+            }
 
             skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "skill") continue;
-                string skillName = subElement.GetAttributeString("name", "");
-                if (string.IsNullOrEmpty(name)) continue;
+                string skillIdentifier = subElement.GetAttributeString("identifier", "");
+                if (string.IsNullOrEmpty(skillIdentifier)) continue;
                 skills.Add(
-                    skillName,
-                    new Skill(skillName, subElement.GetAttributeFloat("level", 0)));
+                    skillIdentifier,
+                    new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
             }
         }
         
-        public static Job Random()
+        public static Job Random(Rand.RandSync randSync)
         {
-            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count - 1, Rand.RandSync.Server)];
+            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count - 1, randSync)];
 
             return new Job(prefab);
         }
 
-        public float GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillIdentifier)
         {
-            Skill skill = null;
-            skills.TryGetValue(skillName, out skill);
+            skills.TryGetValue(skillIdentifier, out Skill skill);
 
             return (skill == null) ? 0.0f : skill.Level;
         }
 
-        public void IncreaseSkillLevel(string skillName, float increase)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase)
         {
-            Skill skill = null;
-            if (skills.TryGetValue(skillName, out skill))
+            if (skills.TryGetValue(skillIdentifier, out Skill skill))
             {
                 skill.Level += increase;
             }
         }
 
-        public void GiveJobItems(Character character, WayPoint spawnPoint)
+        public void GiveJobItems(Character character, WayPoint spawnPoint = null)
         {
             if (SpawnItems == null) return;
 
             foreach (XElement itemElement in SpawnItems.Elements())
             {
-                InitializeJobItem(character, spawnPoint, itemElement);
+                InitializeJobItem(character, itemElement, spawnPoint);
             }            
         }
 
-        private void InitializeJobItem(Character character, WayPoint spawnPoint, XElement itemElement, Item parentItem = null)
+        private void InitializeJobItem(Character character, XElement itemElement, WayPoint spawnPoint = null, Item parentItem = null)
         {
-            string itemName = itemElement.GetAttributeString("name", "");
-              
-            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null)
+            ItemPrefab itemPrefab;
+            if (itemElement.Attribute("name") != null)
             {
-                DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
-                return;
+                string itemName = itemElement.Attribute("name").Value;
+                DebugConsole.ThrowError("Error in Job config (" + Name + ") - use item identifiers instead of names to configure the items.");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
+                    return;
+                }
+            }
+            else
+            {
+                string itemIdentifier = itemElement.GetAttributeString("identifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
+                    return;
+                }
             }
 
             Item item = new Item(itemPrefab, character.Position, null);
-            
+
+#if SERVER
             if (GameMain.Server != null && Entity.Spawner != null)
             {
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
+#endif
 
             if (itemElement.GetAttributeBool("equip", false))
             {
@@ -128,7 +154,7 @@ namespace Barotrauma
                 character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
 
-            if (item.Prefab.NameMatches("ID Card") && spawnPoint != null)
+            if (item.Prefab.Identifier == "idcard" && spawnPoint != null)
             {
                 foreach (string s in spawnPoint.IdCardTags)
                 {
@@ -149,7 +175,7 @@ namespace Barotrauma
 
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeJobItem(character, spawnPoint, childItemElement, item);
+                InitializeJobItem(character, childItemElement, spawnPoint, item);
             } 
         }
 
@@ -161,7 +187,7 @@ namespace Barotrauma
 
             foreach (KeyValuePair<string, Skill> skill in skills)
             {
-                jobElement.Add(new XElement("skill", new XAttribute("name", skill.Value.Name), new XAttribute("level", skill.Value.Level)));
+                jobElement.Add(new XElement("skill", new XAttribute("identifier", skill.Value.Identifier), new XAttribute("level", skill.Value.Level)));
             }
             
             parentElement.Add(jobElement);

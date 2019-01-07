@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Barotrauma.Extensions;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -36,7 +37,7 @@ namespace Barotrauma
             get { return parent; }
             set
             {
-                if (parent == value) { return; }
+                if (parent == value || value == this) { return; }
                 // Remove the child from the old parent
                 RemoveFromHierarchy(displayErrors: false);
                 parent = value;
@@ -64,6 +65,7 @@ namespace Barotrauma
             get { return relativeSize; }
             set
             {
+                if (relativeSize.NearlyEquals(value)) { return; }
                 relativeSize = value;
                 RecalculateAll(resize: true, scale: false, withChildren: true);
             }
@@ -79,12 +81,15 @@ namespace Barotrauma
             get { return minSize ?? Point.Zero; }
             set
             {
+                if (minSize == value) { return; }
                 minSize = value;
                 RecalculateAll(true, false, true);
             }
         }
+
         private static Point maxPoint = new Point(int.MaxValue, int.MaxValue);
         private Point? maxSize;
+
         /// <summary>
         /// Max size in pixels.
         /// Does not affect scaling.
@@ -94,6 +99,7 @@ namespace Barotrauma
             get { return maxSize ?? maxPoint; }
             set
             {
+                if (maxSize == value) { return; }
                 maxSize = value;
                 RecalculateAll(true, false, true);
             }
@@ -108,6 +114,7 @@ namespace Barotrauma
             get { return nonScaledSize; }
             set
             {
+                if (nonScaledSize == value) { return; }
                 nonScaledSize = value.Clamp(MinSize, MaxSize);
                 RecalculateRelativeSize();
                 RecalculateAnchorPoint();
@@ -138,6 +145,7 @@ namespace Barotrauma
             get { return localScale; }
             set
             {
+                if (localScale.NearlyEquals(value)) { return; }
                 localScale = value;
                 RecalculateAll(resize: false, scale: true, withChildren: true);
                 ScaleChanged?.Invoke();
@@ -151,13 +159,14 @@ namespace Barotrauma
         private Point screenSpaceOffset = Point.Zero;
         /// <summary>
         /// Defined as portions of the parent size.
-        /// Also the direction of the offset is relative, calculated away from the anchor point, like a padding.
+        /// Also the direction of the offset is relative, calculated away from the anchor point.
         /// </summary>
         public Vector2 RelativeOffset
         {
             get { return relativeOffset; }
             set
             {
+                if (relativeOffset.NearlyEquals(value)) { return; }
                 relativeOffset = value;
                 RecalculateChildren(false, false);
             }
@@ -172,7 +181,9 @@ namespace Barotrauma
             get { return absoluteOffset; }
             set
             {
+                if (absoluteOffset == value) { return; }
                 absoluteOffset = value;
+                recalculateRect = true;
                 RecalculateChildren(false, false);
             }
         }
@@ -184,7 +195,9 @@ namespace Barotrauma
             get { return screenSpaceOffset; }
             set
             {
+                if (screenSpaceOffset == value) { return; }
                 screenSpaceOffset = value;
+                recalculateRect = true;
                 RecalculateChildren(false, false);
             }
         }
@@ -219,7 +232,20 @@ namespace Barotrauma
             }
         }
 
-        public Rectangle Rect => new Rectangle(TopLeft, ScaledSize);
+        private bool recalculateRect = true;
+        private Rectangle _rect;
+        public Rectangle Rect
+        {
+            get
+            {
+                if (recalculateRect)
+                {
+                    _rect = new Rectangle(TopLeft, ScaledSize);
+                    recalculateRect = false;
+                }
+                return _rect;
+            }
+        }
         public Rectangle ParentRect => Parent != null ? Parent.Rect : ScreenRect;
 
         protected Rectangle NonScaledRect => new Rectangle(NonScaledTopLeft, NonScaledSize);
@@ -247,7 +273,7 @@ namespace Barotrauma
         /// <summary>
         /// Does not automatically calculate children.
         /// Note also that if you change the anchor point with this property, the pivot does not automatically match the anchor.
-        /// You can use SetPosition to change everything automatcally or MatchPivotToAnchor to match the pivot to anchor.
+        /// You can use SetPosition to change everything automatically or MatchPivotToAnchor to match the pivot to anchor.
         /// </summary>
         public Anchor Anchor
         {
@@ -323,6 +349,33 @@ namespace Barotrauma
             parent?.ChildrenChanged?.Invoke(this);
         }
 
+        public static RectTransform Load(XElement element, RectTransform parent)
+        {
+            Enum.TryParse(element.GetAttributeString("anchor", "Center"), out Anchor anchor);
+            Enum.TryParse(element.GetAttributeString("pivot", anchor.ToString()), out Pivot pivot);
+
+            Point? minSize = null, maxSize = null;
+            if (element.Attribute("minsize") != null) minSize = element.GetAttributePoint("minsize", Point.Zero);
+            if (element.Attribute("maxsize") != null) maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
+
+            RectTransform rectTransform;
+            if (element.Attribute("relativesize") != null)
+            {
+                rectTransform = new RectTransform(element.GetAttributeVector2("relativesize", Vector2.One), parent, anchor, pivot, minSize, maxSize);
+            }
+            else
+            {
+                rectTransform = new RectTransform(element.GetAttributePoint("absolutesize", new Point(1000, 1000)), parent, anchor, pivot)
+                {
+                    minSize = minSize,
+                    maxSize = maxSize
+                };
+            }
+            rectTransform.RelativeOffset = element.GetAttributeVector2("relativeoffset", Vector2.Zero);
+            rectTransform.AbsoluteOffset = element.GetAttributePoint("absoluteoffset", Point.Zero);
+            return rectTransform;
+        }
+
         private void Init(RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             this.parent = parent;
@@ -338,28 +391,33 @@ namespace Barotrauma
             var scale = LocalScale * globalScale;
             var parents = GetParents();
             Scale = parents.Any() ? parents.Select(rt => rt.LocalScale).Aggregate((parent, child) => parent * child) * scale : scale;
+            recalculateRect = true;
             ScaleChanged?.Invoke();
         }
 
         protected void RecalculatePivotOffset()
         {
             PivotOffset = CalculatePivotOffset(Pivot, ScaledSize);
+            recalculateRect = true;
         }
 
         protected void RecalculateAnchorPoint()
         {
             AnchorPoint = CalculateAnchorPoint(Anchor, ParentRect);
+            recalculateRect = true;
         }
 
         protected void RecalculateRelativeSize()
         {
             relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(NonScaledParentRect.Width, NonScaledParentRect.Height);
+            recalculateRect = true;
             SizeChanged?.Invoke();
         }
 
         protected void RecalculateAbsoluteSize()
         {
             nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
+            recalculateRect = true;
             SizeChanged?.Invoke();
         }
 
@@ -424,6 +482,7 @@ namespace Barotrauma
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(anchor);
             ScreenSpaceOffset = Point.Zero;
+            recalculateRect = true;
             RecalculateChildren(false, false);
         }
 
@@ -509,9 +568,9 @@ namespace Barotrauma
             return children[index];
         }
 
-        public bool IsParentOf(RectTransform rectT)
+        public bool IsParentOf(RectTransform rectT, bool recursive = true)
         {
-            return children.Contains(rectT) || children.Any(c => c.IsParentOf(rectT));
+            return children.Contains(rectT) || (recursive && children.Any(c => c.IsParentOf(rectT)));
         }
 
         public void ClearChildren()

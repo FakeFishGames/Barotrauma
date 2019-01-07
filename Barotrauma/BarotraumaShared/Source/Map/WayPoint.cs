@@ -74,15 +74,15 @@ namespace Barotrauma
             private set
             {
                 idCardTags = value;
-                for (int i = 0; i<idCardTags.Length; i++)
+                for (int i = 0; i < idCardTags.Length; i++)
                 {
-                    idCardTags[i] = idCardTags[i].Trim();
+                    idCardTags[i] = idCardTags[i].Trim().ToLowerInvariant();
                 }
             }
         }
 
         public WayPoint(Vector2 position, SpawnType spawnType, Submarine submarine, Gap gap = null)
-            : this(new Rectangle((int)position.X-3, (int)position.Y+3, 6, 6), submarine)
+            : this(new Rectangle((int)position.X - 3, (int)position.Y + 3, 6, 6), submarine)
         {
             this.spawnType = spawnType;
             ConnectedGap = gap;
@@ -109,7 +109,7 @@ namespace Barotrauma
             idCardTags = new string[0];
 
 #if CLIENT
-            if (iconTexture==null)
+            if (iconTexture == null)
             {
                 iconTexture = Sprite.LoadTexture("Content/Map/waypointIcons.png");
             }
@@ -123,11 +123,13 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            var clone = new WayPoint(rect, Submarine);
-            clone.idCardDesc = idCardDesc;
-            clone.idCardTags = idCardTags;
-            clone.spawnType = spawnType;
-            clone.assignedJob = assignedJob;
+            var clone = new WayPoint(rect, Submarine)
+            {
+                idCardDesc = idCardDesc,
+                idCardTags = idCardTags,
+                spawnType = spawnType,
+                assignedJob = assignedJob
+            };
 
             return clone;
         }
@@ -178,7 +180,7 @@ namespace Barotrauma
 
                 WayPoint prevWaypoint = null;
 
-                if (hull.Rect.Width<minDist*3.0f)
+                if (hull.Rect.Width < minDist * 3.0f)
                 {
                     new WayPoint(
                         new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, submarine);
@@ -372,9 +374,12 @@ namespace Barotrauma
                     newPoint.ConnectTo(prevPoint);
                 }
                 
+                //connect ladder waypoints to hull points at the right and left side
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {
                     ladderPoint.Ladders = ladders;
+                    //don't connect if the waypoint is at a gap (= at the boundary of hulls and/or at a hatch)
+                    if (ladderPoint.ConnectedGap != null) continue;
 
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
@@ -614,10 +619,12 @@ namespace Barotrauma
                 w.IdCardTags = idCardTagString.Split(',');
             }
 
-            string jobName = element.GetAttributeString("job", "").ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(jobName))
+            string jobIdentifier = element.GetAttributeString("job", "").ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(jobIdentifier))
             {
-                w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName);
+                w.assignedJob = 
+                    JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier) ??
+                    JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);
@@ -635,7 +642,7 @@ namespace Barotrauma
 
         public override XElement Save(XElement parentElement)
         {
-            if (MoveWithLevel) return null;
+            if (!ShouldBeSaved) return null;
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),
@@ -649,9 +656,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));
             }
 
-            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Name));
-
-
+            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Identifier));
             if (ConnectedGap != null) element.Add(new XAttribute("gap", ConnectedGap.ID));
             if (Ladders != null) element.Add(new XAttribute("ladders", Ladders.Item.ID));
 
@@ -662,6 +667,7 @@ namespace Barotrauma
                 int i = 0;
                 foreach (MapEntity e in linkedTo)
                 {
+                    if (!e.ShouldBeSaved) continue;
                     element.Add(new XAttribute("linkedto" + i, e.ID));
                     i += 1;
                 }

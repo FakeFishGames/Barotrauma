@@ -149,14 +149,14 @@ namespace Barotrauma.Tutorials
             }
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?                
-                new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name == "Engineer")) :
+                new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
             
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
             Character.Controlled = character;
             character.GiveJobItems(null);
 
-            var idCard = character.Inventory.FindItem("ID Card");
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
             if (idCard == null)
             {
                 DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");

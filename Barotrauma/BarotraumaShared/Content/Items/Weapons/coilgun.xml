@@ -1,123 +1,88 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item
-    name="Coilgun"
-    identifier="coilgun"
-    Tags="turret"
-    category="Machine"    
-    spritecolor="1.0,0.0,0.0,1.0"
-    focusonselected="true"
-    offsetonselected="700"
-    linkable="true">
-
-    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
-
-    <Turret barrelsprite="railgunbarrel.png" canbeselected="true" linkable="true" origin="0.5, 0.85" barrelpos="128, 128" 
-      rotationlimits="180,360"
-      powerconsumption="200.0"
-      showchargeindicator="true"
-      showprojectileindicator="true"
-      recoildistance="50"
-      reload="0.25"
-      springstiffnesslowskill="2" springstiffnesshighskill="50"
-      springdampinglowskill="0.5" springdampinghighskill="10"
-      rotationspeedlowskill="1" rotationspeedhighskill="8"
-      hudtint="0.4,0.6,0.7,0.05">
-      <sound file="Content/Items/Weapons/coilgun.ogg" range="2000" type="OnUse"/>
-      <Crosshair texture="crosshair.png"/>
-      <CrosshairPointer texture="crosshairPointer.png"/>
-      <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
-      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
-      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
-      <RequiredSkill name="Weapons" level="50"/>
+  <Item name="Coilgun" identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coligunequipment">
+    <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
+    <StaticBody width="80" radius="80" />
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
+      <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
+      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" depth="0.011" origin="0.64, 0.7"/>
+      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" depth="0.012" origin="0.6, 0.8"/>
+      <Crosshair texture="Content/Items/Weapons/crosshair.png" />
+      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
+      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
+      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
+      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
+      <RequiredSkill identifier="weapons" level="50" />
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+      </LightComponent>
     </Turret>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="position_in"/>
-      <input name="trigger_in"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <input name="power_in" />
+      <input name="position_in" />
+      <input name="trigger_in" />
+      <input name="toggle_light" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Coilgun Loader"
-    identifier="coilgunloader"
-    category="Machine"
-    linkable="true">
-
-    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
-      <Containable name="Coilgun Ammunition Box"/>
+  <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun">
+    <Sprite texture="coilgunloader.png" depth="0.8" sourcerect="0,0,80,128" />
+	  <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
+    </Repairable>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="40,-90" iteminterval="0,0" itemrotation="0" canbeselected="true"
+                   autointeractwithcontained="true">
+      <Containable identifiers="coilgunammobox" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem name="Coilgun Ammunition Box" type="Contained"/>
-        <Use/>        
+        <RequiredItem identifiers="coilgunammobox" type="Contained" />
+        <Use />
       </StatusEffect>
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Coilgun Ammunition Box"
-    identifier="coilgunammobox"
-    category="Machine"
-    linkable="true">
-
-    <Sprite texture ="Content/Items/Containers/crates.png" depth="0.54" sourcerect="81,0,47,42"/>    
-    <Body width="45" height="41" density="50"/>
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
-    
-    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false">
+  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" tags="coilgunequipment" category="Machine" linkable="true">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="78,5,50,40"/>
+    <Body width="50" height="40" density="50"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" 
+                   ShowConditionInContainedStateIndicator="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
-      of the item, and when the condition is 0, the box is considered empty. -->      
+      of the item, and when the condition is 0, the box is considered empty. -->
       <!--  -0.5 per usage = 200 shots per box -->
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
-        <SpawnItem name="Coilgun Bolt" spawnposition="ThisInventory"/>
+        <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory" />
       </StatusEffect>
-      <Containable name="Coilgun Bolt"/>
+      <Containable identifiers="coilgunbolt" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Coilgun Bolt"
-    identifier="coilgunbolt"
-    category="Misc"
-    sonarsize="2">
-
-    <Price locationtype="Outpost" buyprice="300"/>
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="300"/>
-
-    <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Polycarbonate Bar"/>
-    </Deconstruct>
-
-    <Sprite texture="weapons.png" sourcerect="0,50,65,7" depth="0.55"/>
-
-    <Body width="64" height="5" density="20"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
-
+  <Item name="Coilgun Bolt" identifier="coilgunbolt" category="Misc" sonarsize="2">
+    <Price locationtype="Outpost" buyprice="300" />
+    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="City" buyprice="300" />
+    <Sprite texture="weapons.png" sourcerect="0,48,65,9" depth="0.55" />
+    <Body width="64" height="5" density="20" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
-      <Attack structuredamage="20" severlimbsprobability="0.5">
-        <affliction name="Internal Damage" strength="20"/>
-        <affliction name="Bleeding" strength="5"/>
+      <Attack structuredamage="5" severlimbsprobability="0.5">
+        <Affliction identifier="internaldamage" strength="10" />
+        <Affliction identifier="bleeding" strength="0.5" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
-        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
       <!-- reduce condition to give the bolt a 5 second lifetime -->
-      <StatusEffect type="OnNotContained" target="This" condition="-20"/>
+      <StatusEffect type="OnNotContained" target="This" condition="-20" />
       <StatusEffect type="OnImpact" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Projectile>
   </Item>

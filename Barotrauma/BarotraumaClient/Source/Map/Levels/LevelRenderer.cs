@@ -15,6 +15,8 @@ namespace Barotrauma
         private Vector2 defaultDustVelocity;
         private Vector2 dustVelocity;
 
+        private RasterizerState cullNone;
+
         private Level level;
 
         private VertexBuffer wallVertices, bodyVertices;
@@ -22,6 +24,8 @@ namespace Barotrauma
         public LevelRenderer(Level level)
         {
             defaultDustVelocity = Vector2.UnitY * 10.0f;
+
+            cullNone = new RasterizerState() { CullMode = CullMode.None };
 
             if (wallEdgeEffect == null)
             {
@@ -47,6 +51,14 @@ namespace Barotrauma
             }
                 
             this.level = level;
+        }
+
+        public void ReloadTextures()
+        {
+            level.GenerationParams.WallEdgeSprite.ReloadTexture();
+            wallEdgeEffect.Texture = level.GenerationParams.WallEdgeSprite.Texture;
+            level.GenerationParams.WallSprite.ReloadTexture();
+            wallCenterEffect.Texture = level.GenerationParams.WallSprite.Texture;
         }
         
         public void Update(float deltaTime, Camera cam)
@@ -138,7 +150,7 @@ namespace Barotrauma
                     var backgroundTop = level.GenerationParams.BackgroundTopSprite;
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
                     backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
-                        color: level.BackgroundColor);
+                        color: level.BackgroundTextureColor);
                 }
                 if (backgroundPos.Y > -1024 && level.GenerationParams.BackgroundSprite != null)
                 {
@@ -147,7 +159,7 @@ namespace Barotrauma
                     background.DrawTiled(spriteBatch,
                         (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
                         new Vector2(GameMain.GraphicsWidth, (int)Math.Ceiling(1024 - backgroundPos.Y)),
-                        color: level.BackgroundColor);
+                        color: level.BackgroundTextureColor);
                 }
             }
 
@@ -155,11 +167,11 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
-                SamplerState.LinearWrap, DepthStencilState.Default, null, null,
+                SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);            
 
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
-            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
+            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch, cam);
 
             if (level.GenerationParams.WaterParticles != null)
             {
@@ -176,8 +188,8 @@ namespace Barotrauma
                 {
                     float scale = (1.0f - i * 0.2f);
 
-                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.3-0.1
-                    float alpha = (cam.Zoom * scale) < 0.3f ? (cam.Zoom * scale - 0.1f) * 5.0f : 1.0f;
+                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.1 - 0.05
+                    float alpha = (cam.Zoom * scale) < 0.1f ? (cam.Zoom * scale - 0.05f) * 20.0f : 1.0f;
                     if (alpha <= 0.0f) continue;
 
                     Vector2 offsetS = offset * scale
@@ -201,7 +213,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            RenderWalls(GameMain.Instance.GraphicsDevice, cam);
+            RenderWalls(GameMain.Instance.GraphicsDevice, cam, specular: false);
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
@@ -211,33 +223,33 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GameMain.DebugDraw && GameMain.GameScreen.Cam.Zoom > 0.05f)
+            if (GameMain.DebugDraw && cam.Zoom > 0.05f)
             {
-                var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
+                var cells = level.GetCells(cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)
                 {
                     GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
                     GUI.DrawLine(spriteBatch,
-                        new Vector2(cell.edges[0].Point1.X + cell.Translation.X, -(cell.edges[0].Point1.Y + cell.Translation.Y)),
+                        new Vector2(cell.Edges[0].Point1.X + cell.Translation.X, -(cell.Edges[0].Point1.Y + cell.Translation.Y)),
                         new Vector2(cell.Center.X, -(cell.Center.Y)),
                         Color.Blue * 0.5f);
 
-                    foreach (GraphEdge edge in cell.edges)
+                    foreach (GraphEdge edge in cell.Edges)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
-                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.body == null ? Color.Cyan * 0.5f : Color.White);
+                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.Body == null ? Color.Cyan * 0.5f : Color.White);
                     }
 
-                    foreach (Vector2 point in cell.bodyVertices)
+                    foreach (Vector2 point in cell.BodyVertices)
                     {
                         GUI.DrawRectangle(spriteBatch, new Vector2(point.X + cell.Translation.X, -(point.Y + cell.Translation.Y)), new Vector2(10.0f, 10.0f), Color.White, true);
                     }
                 }
 
-                foreach (List<Vector2> nodeList in level.SmallTunnels)
+                foreach (List<Point> nodeList in level.SmallTunnels)
                 {
                     for (int i = 1; i < nodeList.Count; i++)
                     {
@@ -247,54 +259,59 @@ namespace Barotrauma
                             Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }
+
+                foreach (var ruin in level.Ruins)
+                {
+                    ruin.DebugDraw(spriteBatch);
+                }
             }
 
             Vector2 pos = new Vector2(0.0f, -level.Size.Y);
 
-            if (GameMain.GameScreen.Cam.WorldView.Y >= -pos.Y - 1024)
+            if (cam.WorldView.Y >= -pos.Y - 1024)
             {
-                pos.X = GameMain.GameScreen.Cam.WorldView.X -1024;
-                int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                pos.X = cam.WorldView.X -1024;
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
                 GUI.DrawRectangle(spriteBatch,new Rectangle(
                     (int)(MathUtils.Round(pos.X, 1024)), 
-                    -GameMain.GameScreen.Cam.WorldView.Y, 
+                    -cam.WorldView.Y, 
                     width, 
-                    (int)(GameMain.GameScreen.Cam.WorldView.Y + pos.Y) - 30),
+                    (int)(cam.WorldView.Y + pos.Y) - 30),
                     Color.Black, true);
 
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y-1000, width, 1024),
                     new Rectangle(0, 0, width, -1024),
-                    level.BackgroundColor, 0.0f,
+                    level.BackgroundTextureColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.None, 0.0f);
             }
 
-            if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
+            if (cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024)
             {
-                pos = new Vector2(GameMain.GameScreen.Cam.WorldView.X - 1024, -level.BottomPos);
+                pos = new Vector2(cam.WorldView.X - 1024, -level.BottomPos);
 
-                int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle(
                     (int)(MathUtils.Round(pos.X, 1024)), 
                     (int)-(level.BottomPos - 30), 
                     width, 
-                    (int)(level.BottomPos - (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height))), 
+                    (int)(level.BottomPos - (cam.WorldView.Y - cam.WorldView.Height))), 
                     Color.Black, true);
 
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-level.BottomPos, width, 1024),
                     new Rectangle(0, 0, width, -1024),
-                    level.BackgroundColor, 0.0f,
+                    level.BackgroundTextureColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.FlipVertically, 0.0f);
             }
         }
 
 
-        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
+        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam, bool specular)
         {
             if (wallVertices == null) return;
 
@@ -305,7 +322,7 @@ namespace Barotrauma
 
             Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
-
+                        
             wallEdgeEffect.World = transformMatrix;
             wallCenterEffect.World = transformMatrix;
             
@@ -326,7 +343,9 @@ namespace Barotrauma
                 graphicsDevice.SetVertexBuffer(wall.BodyVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
             }
-            
+
+            var defaultRasterizerState = graphicsDevice.RasterizerState;
+            graphicsDevice.RasterizerState = cullNone;
             wallEdgeEffect.World = transformMatrix;
             wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -343,7 +362,8 @@ namespace Barotrauma
                 wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
                 graphicsDevice.SetVertexBuffer(wall.WallVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
-            }                     
+            }
+            graphicsDevice.RasterizerState = defaultRasterizerState;
         }
 
         public void Dispose()

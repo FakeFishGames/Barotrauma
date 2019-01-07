@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Barotrauma
 {
@@ -9,6 +7,10 @@ namespace Barotrauma
         public AIObjectiveExtinguishFires(Character character) : 
             base(character, "")
         {
+            if (!Hull.hullList.Any(h => h.FireSources.Count > 0))
+            {
+                character?.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
+            }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)

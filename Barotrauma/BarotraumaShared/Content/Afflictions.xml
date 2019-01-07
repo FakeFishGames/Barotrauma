@@ -56,63 +56,57 @@
   
   <InternalDamage
     name="Internal Damage"
-    description="Asdsdl kfsldk flsdkf sdasd lasdfk asdlfk give morphine or fentanyl"
+    identifier="internaldamage"
+    description="Trauma to bones, organs or other internal systems. Treated by morphine or fentanyl or Xenogland Extract."
     type="damage"
     causeofdeathdescription="Died of internal injuries"
     selfcauseofdeathdescription="You have succumbed to your internal injuries."    
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <SuitableTreatment name="Morphine" suitability="100"/>
-    <SuitableTreatment name="Fentanyl" suitability="80"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
   </InternalDamage>
 
   <Bleeding
     name="Bleeding"
-    description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents."
+    identifier="bleeding"
+    description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents such as hemostop."
     type="bleeding"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="80"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
       strengthchange="-0.1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="896,640,128,128" color="139,60,42,255" origin="0,0"/>
    </Bleeding>
 
   <Burn
     name="Burn"
-    description="Thermal, chemical, electrical or radiological damage."
+    identifier="burn"
+    description="Thermal, chemical, electrical or radiological damage. Best treated with Fentanyl and bandages."
     type="burn"
     causeofdeathdescription="Burned to death"
     selfcauseofdeathdescription="You have burned to death."
     limbspecific="true"
     maxstrength="100"
     burnoverlayalpha="1">
-    <SuitableTreatment name="Fentanyl" suitability="100"/>
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="768,640,128,128" color="195,104,60,255" origin="0,0"/>
   </Burn>
 
   <OxygenLow
     name="Oxygen low"
-    description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated by CPR or other means."
+    identifier="oxygenlow"
+    description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated. Best treated by CPR or Oxygenic Acid."
     type="oxygenlow"
     causeofdeathdescription="Suffocated"
     selfcauseofdeathdescription="You have suffocated."
@@ -120,21 +114,16 @@
     indicatorlimb="Torso"
     activationthreshold="1"
     maxstrength="200">
-    <SuitableTreatment name="Erythrozine" suitability="100"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
-    <SuitableTreatment name="Liquid Oxygenite" suitability="50"/>
-    <SuitableTreatment name="Fentanyl" suitability="-100"/>
-    <SuitableTreatment name="Morphine" suitability="-100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,640,128,128" color="68,157,198,255" origin="0,0"/>
   </OxygenLow>
 
   <Bloodloss
     name="Bloodloss"
-    description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs."
+    identifier="bloodloss"
+    description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs. Treat with plasma infusions or Oxygenated Synthacells."
     type="bloodloss"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -142,19 +131,17 @@
     indicatorlimb="Torso"
     activationthreshold="5"
     maxstrength="100">
-    <SuitableTreatment name="Plasma" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="10"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="20"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="5" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
-      strengthchange="-0.1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
+      strengthchange="-0.1"
+      dialogflag="Bloodloss"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,768,128,128" color="139,60,42,255" origin="0,0"/>
   </Bloodloss>
 
   <Stun
     name="Stun"
+    identifier="stun"
     description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="stun"
     limbspecific="false"
@@ -166,11 +153,12 @@
       minvitalitydecrease="0"
       maxvitalitydecrease="0"
       strengthchange="-1.0"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="128,640,128,128" color="195,177,60,255" origin="0,0"/>
   </Stun>
 
   <Pressure
     name="Barotrauma"
+    identifier="pressure"
     description="Massive organ damage caused by hydrostatic pressure."
     type="pressure"
     causeofdeathdescription="Crushed by water pressure"
@@ -182,33 +170,50 @@
     <Effect minstrength="0" maxstrength="1" multiplybymaxvitality="true"
       minvitalitydecrease="1"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="768,768,128,128" color="143,111,160,255" origin="0,0"/>
   </Pressure>
 
   <AfflictionHusk
     name="Husk infection"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    identifier="huskinfection"
+    description="Infection by the husk parasite. Left untreated this will eventually take over the patient. Treat with calyxanide."
     type="huskinfection"
     causeofdeathdescription="Taken over by a husk parasite"
     selfcauseofdeathdescription="You have been taken over by the husk parasite."
     limbspecific="false"
     indicatorlimb="Torso"
     activationthreshold="0"
-    showiconthreshold="100"
+    showiconthreshold="40"
     maxstrength="100"
     achievementonremoved="healhusk">
-    <SuitableTreatment name="Calyxanide" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="0.3"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,640,128,128" color="60,107,195,255" origin="0,0"/>
   </AfflictionHusk>
   
   <!-- Special afflictions -->
 
+  <AfflictionPsychosis
+    name="Psychosis"
+    identifier="psychosis"
+    description="Is this the real life? Is this just fantasy?"
+    type="psychosis"
+    limbspecific="false"
+    indicatorlimb="Head"
+    activationthreshold="0"
+    showiconthreshold="40"
+    maxstrength="100"
+    achievementonremoved="healpsychosis">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="0"
+      strengthchange="-0.1"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,640,128,128" color="150,26,26,255" origin="0,0"/>
+  </AfflictionPsychosis>
+  
   <Affliction
     name="Drunk"
+    identifier="drunk"
     description="Ethanol intoxication leads to a loss of coordination, memory loss, euphoria, loss of conciousness and in extreme cases, death."
     type="poison"
     causeofdeathdescription="Alcohol poisoning"
@@ -238,7 +243,8 @@
       maxscreenblur="1.0"
       strengthchange="-0.2"
       minradialdistort="0.0"
-      maxradialdistort="5.0">
+      maxradialdistort="5.0"
+      dialogflag="DrunkMedium">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
 
@@ -252,16 +258,18 @@
       maxscreenblur="3.0"
       strengthchange="-0.2"
       minradialdistort="5.0"
-      maxradialdistort="10.0">
+      maxradialdistort="10.0"
+      dialogflag="DrunkHigh">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
     
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="384,640,128,128" color="170,194,147,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
     name="Opiate withdrawal"
-    description="While suffering from an opiate addiction, withdrawal symptoms are possible if opiate use is stopped."
+    identifier="opiatewithdrawal"
+    description="While suffering from an opiate addiction, withdrawal symptoms are possible if opiate use is stopped. Treat with any opiate, or naloxone."
     type="poison"
     causeofdeathdescription="Died of opiate withdrawal"
     selfcauseofdeathdescription="You have died of opiate withdrawal."
@@ -269,16 +277,14 @@
     indicatorlimb="Head"
     showiconthreshold="20"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="50"/>
-    <SuitableTreatment name="Fentanyl" suitability="50"/>    
-    <SuitableTreatment name="Naloxone" suitability="100"/>
     <!-- Slow down the character and slightly decrease vitality -->
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
       maxvitalitydecrease="20"
       strengthchange="-0.05"
       minchromaticaberration="0.0"
-      maxchromaticaberration="1.0">
+      maxchromaticaberration="1.0"
+      dialogflag="OpiateWithdrawalLow">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
 
@@ -289,7 +295,8 @@
       maxvitalitydecrease="50"
       strengthchange="-0.1"
       minchromaticaberration="1.0"
-      maxchromaticaberration="5.0">
+      maxchromaticaberration="5.0"
+      dialogflag="OpiateWithdrawalMedium">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
 
@@ -303,16 +310,18 @@
       minchromaticaberration="5.0"
       maxchromaticaberration="10.0"
       minradialdistort="0.0"
-      maxradialdistort="10.0">
-      <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+      maxradialdistort="10.0"
+      dialogflag="OpiateWithdrawalHigh">
+      <StatusEffect target="Character" SpeedMultiplier="0.5" color="195,136,60,255" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,768,128,128" color="209,121,84,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
     name="Opiate overdose"
-    description="Opiate overdose may lead to respiratory failure and death."
+    identifier="opiateoverdose"
+    description="Opiate overdose may lead to respiratory failure and death. Treat promptly with naloxone"
     type="poison"
     causeofdeathdescription="Died of opiate overdose"
     selfcauseofdeathdescription="You have died of opiate overdose."
@@ -320,9 +329,6 @@
     indicatorlimb="Head"
     showiconthreshold="50"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="-100"/>
-    <SuitableTreatment name="Fentanyl" suitability="-100"/>
-    <SuitableTreatment name="Naloxone" suitability="100"/>
     <!-- No effects except slight distortion at this level -->
     <Effect minstrength="0" maxstrength="50"
       strengthchange="-1"
@@ -344,31 +350,31 @@
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,768,128,128" color="103,103,103,255" origin="0,0"/>
   </Affliction>
   
   <!-- Gradually applies the "opiate withdrawal" affliction to the character -->
   <Affliction
     name="Opiate addiction"
-    description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction."
+    identifier="opiateaddiction"
+    description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction. Treated by discontinuing use of opiates, followed by treatment with naloxone."
     type="poison"
     limbspecific="false"
     indicatorlimb="Head"    
     showiconthreshold="20"
     maxstrength="100"
     achievementonremoved="healopiateaddiction">
-    <SuitableTreatment name="Naloxone" suitability="100"/>
     <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
     
     <Effect minstrength="20" maxstrength="40" strengthchange="-0.05">
       <StatusEffect target="Character">
-        <Affliction name="Opiate withdrawal" strength="0.1"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.1"/>
       </StatusEffect>
     </Effect>
     
     <Effect minstrength="40" maxstrength="80" strengthchange="-0.1">
       <StatusEffect target="Character">
-        <Affliction name="Opiate withdrawal" strength="0.25"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.25"/>
       </StatusEffect>
     </Effect>
 
@@ -376,16 +382,17 @@
       minvitalitydecrease="0"
       maxvitalitydecrease="20">
       <StatusEffect target="Character">
-        <Affliction name="Opiate withdrawal" strength="0.5"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.5"/>
       </StatusEffect>
     </Effect>
     
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="384,768,128,128" color="195,180,60,255" origin="0,0"/>
   </Affliction>
 
   <AfflictionBleeding
     name="Gunshot wound"
-    description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood."
+    identifier="gunshotwound"
+    description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood. Bandages, and hemostop are appropriate treatments."
     type="bleeding"
     causeofdeathdescription="Shot to death"
     selfcauseofdeathdescription="You have died of gunshot wounds."
@@ -393,17 +400,16 @@
     maxstrength="100"
     damageoverlayalpha="1"
     strengthchange="-0.1">
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="80"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
-      maxvitalitydecrease="10"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+      maxvitalitydecrease="10"
+      dialogflag="GunshotWound"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
   </AfflictionBleeding>
 
   <Affliction
     name="Morbusine poisoning"
+    identifier="morbusinepoisoning"
     description="Acute morbusine poisoning quickly leads to respiratory failure if left untreated."
     type="poison"
     causeofdeathdescription="Died of morbusine poisoning."
@@ -412,8 +418,6 @@
     indicatorlimb="Torso"
     showiconthreshold="5"
     maxstrength="100">
-    <SuitableTreatment name="Morbusanide" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
     <Effect minstrength="0" maxstrength="100"
@@ -429,6 +433,6 @@
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 </Afflictions>

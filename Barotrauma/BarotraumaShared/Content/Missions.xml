@@ -2,6 +2,8 @@
 <Missions>
   <SalvageMission 
     name="Salvaging an artifact" 
+    identifier="salvageskyholderartifactruins"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="1000"
@@ -10,7 +12,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
-    itemname="Skyholder Artifact">
+    itemidentifier="skyholderartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -30,6 +32,8 @@
 
   <SalvageMission
     name="Salvaging an artifact"
+    identifier="salvagethermalartifactruins"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
@@ -38,7 +42,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
-    itemname="Thermal Artifact">
+    itemidentifier="thermalartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -58,6 +62,8 @@
 
   <SalvageMission
     name="Salvaging an artifact"
+    identifier="salvagethermalartifactcave"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1500"
@@ -66,7 +72,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
-    itemname="Thermal Artifact">
+    itemidentifier="thermalartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -86,6 +92,8 @@
 
   <SalvageMission
     name="Salvaging an artifact"
+    identifier="salvagenasonovartifactruin"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
@@ -94,7 +102,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
-    itemname="Nasonov Artifact">
+    itemidentifier="nasonovartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -114,6 +122,8 @@
 
   <SalvageMission
     name="Salvaging an artifact"
+    identifier="salvagenasonovartifactcave"
+    type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1500"
@@ -122,7 +132,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
-    itemname="Nasonov Artifact">
+    itemidentifier="nasonovartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -142,12 +152,14 @@
 
   <MonsterMission
     name="Killing a Moloch"
+    identifier="killmoloch"
+    type="Monster"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
     reward="1000"
     sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
-    monsterfile="Content/Characters/MolochBoss/molochboss.xml">
+    monsterfile="Content/Characters/Molochboss/molochboss.xml">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -167,12 +179,14 @@
 
   <MonsterMission
     name="Killing a Tiger Thresher"
+    identifier="killtigerthresher"
+    type="Monster"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
     reward="800"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/TigerthresherBoss/tigerthresherboss.xml">
+    monsterfile="Content/Characters/Tigerthresherboss/tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
     <LocationType from="City" to="None"/>
@@ -188,27 +202,34 @@
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Ruins"/>
     
+    <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    
   </MonsterMission>
 
   <MonsterMission
     name="Beast from the Abyss"
+    identifier="killendworm"
+    type="Monster"
     description="Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of 10,000 has been promised to those who get rid of whatever is causing the seismic activity."
     commonness="2"
     reward="10000"
     sonarlabel="Target"
     successmessage="The End Worm is dead and the passageway is open for transport again."
     monsterfile="Content/Characters/Endworm/endworm.xml">
-    <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
     <LocationType from="City" to="Lair"/>
     <LocationType from="Military" to="Lair"/>
     <LocationType from="Outpost" to="Lair"/>
     <LocationType from="Research" to="Lair"/>
     
+    <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    
   </MonsterMission>
 
   <MonsterMission
-    name="Salvaging an artifact" 
+    name="Salvaging an artifact"
+    identifier="salvagekillmoloch"
+    type="Monster"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1000"
@@ -227,20 +248,19 @@
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>
-    
+    <LocationType from="Research" to="Ruins"/>    
   </MonsterMission>
 
   <MonsterMission
     name="Salvaging a Derelict"
+    identifier="salvagekillcarrier"
+    type="Monster"
     description="A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo."
     commonness="10"
     reward="1000"
     sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/carrier.xml">
-    <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
-
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -250,22 +270,26 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
   
+    <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
+
   </MonsterMission>
   
   <CargoMission
     name="Explosive cargo"
+    identifier="cargocompoundn"
+    type="Cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="10"
     reward="500"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
-      <Item name="Explosive Crate">
-        <Item name="Compound N" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="compoundn" amount="10"/>
       </Item>
-      <Item name="Explosive Crate">
-        <Item name="Detonator" amount="10">
-          <Item name="Compound N"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="detonator" amount="10">
+          <Item identifier="compoundn"/>
         </Item>
       </Item>
     </Items>
@@ -287,21 +311,23 @@
 
   <CargoMission
     name="Explosive cargo"
+    identifier="cargovolatilecompoundn"
+    type="Cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="5"
     reward="200"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
-      <Item name="Explosive Crate">
-        <Item name="Compound N" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="compoundn" amount="10"/>
       </Item>
-      <Item name="Explosive Crate">
-        <Item name="Detonator" amount="9">
-          <Item name="Compound N"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="detonator" amount="9">
+          <Item identifier="compoundn"/>
         </Item>
-        <Item name="Detonator">
-          <Item name="Volatile Compound N"/>
+        <Item identifier="detonator">
+          <Item identifier="volatilecompoundn"/>
         </Item>
       </Item>
     </Items>
@@ -323,6 +349,8 @@
 
   <CargoMission
     name="Chemical shipment"
+    identifier="cargochemicals"
+    type="Cargo"
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
     commonness="10"
     reward="200"
@@ -330,14 +358,14 @@
     successmessage="The chemicals have been successfully delivered."
     requireddeliveryamount="20">
     <Items>
-      <Item name="Chemical Crate">
-        <Item name="Auxiliorizine" amount="5"/>
-        <Item name="Sulphuric Acid" amount="5"/>
+      <Item identifier="chemicalcrate">
+        <Item identifier="auxiliorizine" amount="5"/>
+        <Item identifier="sulphuricacid" amount="5"/>
       </Item>
-      <Item name="Chemical Crate">
-        <Item name="Morbusine" amount="5"/>
-        <Item name="Flash Powder" amount="3"/>
-        <Item name="Chloral Hydrate" amount="2"/>
+      <Item identifier="chemicalcrate">
+        <Item identifier="morbusine" amount="5"/>
+        <Item identifier="flashpowder" amount="3"/>
+        <Item identifier="chloralhydrate" amount="2"/>
       </Item>
     </Items>
 
@@ -354,14 +382,16 @@
 
   <CargoMission
     name="Biohazard"
+    identifier="cargohuskeggs"
+    type="Cargo"
     description="Local reseachers are offering 500 credits for delivering a container of husk parasite eggs to [location2]."
     commonness="10"
     reward="500"
     achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
     <Items>
-      <Item name="Chemical Crate">
-        <Item name="Velonaceps Calyx Eggs" amount="10"/>
+      <Item identifier="chemicalcrate">
+        <Item identifier="huskeggs" amount="10"/>
       </Item>
     </Items>
     
@@ -378,17 +408,19 @@
 
   <CargoMission
     name="Handle with care"
+    identifier="cargonitroglycerin"
+    type="Cargo"
     description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
     commonness="15"
     reward="2000"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
-      <Item name="Explosive Crate">
-        <Item name="Nitroglycerin" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="nitroglycerin" amount="10"/>
       </Item>
-      <Item name="Explosive Crate">
-        <Item name="Nitroglycerin" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="nitroglycerin" amount="10"/>
       </Item>
     </Items>
     
@@ -408,20 +440,22 @@
   </CargoMission>
 
   <CargoMission
-   name="Praise the Honkmother"
-   description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
-   commonness="2"
-   reward="100"
-   achievementidentifier="cargomission"
-   successmessage="The clown gear has been successfully delivered."
-   requireddeliveryamount="35">
-    <Items >
-      <Item name="Metal Crate">
-        <Item name="Clown Mask" amount="10"/>
-        <Item name="Clown Costume" amount="10"/>        
+    name="Praise the Honkmother"
+    identifier="cargoclowngear"
+    type="Cargo"
+    description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
+    commonness="2"
+    reward="100"
+    achievementidentifier="cargomission"
+    successmessage="The clown gear has been successfully delivered."
+    requireddeliveryamount="35">
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="clownmask" amount="10"/>
+        <Item identifier="clowncostume" amount="10"/>        
       </Item>
-      <Item name="Metal Crate">
-        <Item name="Bike Horn" amount="20"/>
+      <Item identifier="metalcrate">
+        <Item identifier="bikehorn" amount="20"/>
       </Item>
     </Items>
     
@@ -434,6 +468,8 @@
   
   <CombatMission
     name="Search and Destroy"
+    identifier="pvpmission"
+    type="Combat"
     
     descriptionneutral="A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2]."
     description1="A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades by any means necessary."

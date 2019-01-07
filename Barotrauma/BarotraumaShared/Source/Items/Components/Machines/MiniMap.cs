@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -10,6 +11,9 @@ namespace Barotrauma.Items.Components
         {
             public float? Oxygen;
             public float? Water;
+
+            public bool Distort;
+            public float DistortionTimer;
         }
         
         private DateTime resetDataTime;
@@ -32,7 +36,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable(ToolTip = "Should damaged walls be displayed by the machine."), Serialize(false, true)]
+        [Editable(ToolTip = "Should damaged walls be displayed by the machine."), Serialize(true, true)]
         public bool ShowHullIntegrity
         {
             get;
@@ -55,12 +59,19 @@ namespace Barotrauma.Items.Components
             //(so that outdated hull info won't be shown if detectors stop sending signals)
             if (DateTime.Now > resetDataTime)
             {
-                hullDatas.Clear();
+                foreach (HullData hullData in hullDatas.Values)
+                {
+                    if (!hullData.Distort)
+                    {
+                        hullData.Oxygen = null;
+                        hullData.Water = null;
+                    }
+                }
                 resetDataTime = DateTime.Now + new TimeSpan(0, 0, 1);
             }
 
             currPowerConsumption = powerConsumption;
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
             hasPower = voltage > minVoltage;
             if (hasPower)
@@ -80,14 +91,16 @@ namespace Barotrauma.Items.Components
         {
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
-            if (sender == null || sender.CurrentHull == null) return;
+            if (source == null || source.CurrentHull == null) return;
 
-            Hull senderHull = sender.CurrentHull;
-            if (!hullDatas.TryGetValue(senderHull, out HullData hullData))
+            Hull sourceHull = source.CurrentHull;
+            if (!hullDatas.TryGetValue(sourceHull, out HullData hullData))
             {
                 hullData = new HullData();
-                hullDatas.Add(senderHull, hullData);
+                hullDatas.Add(sourceHull, hullData);
             }
+
+            if (hullData.Distort) return;
 
             switch (connection.Name)
             {
@@ -99,7 +112,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        hullData.Water = Math.Min(senderHull.WaterVolume / senderHull.Volume, 1.0f);
+                        hullData.Water = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
                     }
                     break;
                 case "oxygen_data_in":

@@ -20,6 +20,10 @@ namespace Barotrauma.Particles
         [Editable(0.0f, float.MaxValue, ToolTip = "How many seconds the particle remains alive."), Serialize(5.0f, false)]
         public float LifeTime { get; private set; }
 
+        [Editable(ToolTip = "How long it takes for the particle to appear after spawning it."), Serialize(0.0f, false)]
+        public float StartDelayMin { get; private set; }
+        [Editable(ToolTip = "How long it takes for the particle to appear after spawning it."), Serialize(0.0f, false)]
+        public float StartDelayMax { get; private set; }
         //movement -----------------------------------------
 
         private float angularVelocityMin;
@@ -153,15 +157,12 @@ namespace Barotrauma.Particles
 
         //rendering -----------------------------------------
 
-        [Editable(ToolTip = "The initial color of the particle"), Serialize("1.0,1.0,1.0,1.0", false)]
+        [Editable(ToolTip = "The initial color of the particle."), Serialize("1.0,1.0,1.0,1.0", false)]
         public Color StartColor { get; private set; }
 
-        [Editable(ToolTip = "The initial alpha value of the particle"), Serialize(1.0f, false)]
-        public float StartAlpha { get; private set; }
-
-        [Editable(ToolTip = "How much the color of the particle changes per second."), Serialize("0.0,0.0,0.0,0.0", false)]
-        public Vector4 ColorChange { get; private set; }
-
+        [Editable(ToolTip = "The color of the particle at the end of its lifetime."), Serialize("1.0,1.0,1.0,1.0", false)]
+        public Color EndColor { get; private set; }
+        
         [Editable(ToolTip = "Should the particle be rendered in air, water or both."), Serialize(DrawTargetType.Air, false)]
         public DrawTargetType DrawTarget { get; private set; }
 
@@ -177,7 +178,7 @@ namespace Barotrauma.Particles
         public bool LoopAnim { get; private set; }
 
         //----------------------------------------------------
-
+        
         public readonly List<ParticleEmitterPrefab> SubEmitters = new List<ParticleEmitterPrefab>();
 
         public Dictionary<string, SerializableProperty> SerializableProperties

@@ -471,14 +471,12 @@ namespace Barotrauma.Sounds
                         {
                             throw new Exception("Failed to unqueue buffers from streamed source: " + AL.GetErrorString(alError));
                         }
-                        System.Diagnostics.Debug.WriteLine("!startedplaying, "+buffersToUnqueue+", "+unqueuedBuffers.Length);
                     }
                     else
                     {
                         startedPlaying = false;
                         buffersToUnqueue = 4;
                         unqueuedBuffers = (int[])streamBuffers.Clone();
-                        System.Diagnostics.Debug.WriteLine("startedplaying, " + buffersToUnqueue + ", " + unqueuedBuffers.Length);
                     }
                     
                     for (int i = 0; i < buffersToUnqueue; i++)
@@ -508,7 +506,8 @@ namespace Barotrauma.Sounds
                             alError = AL.GetError();
                             if (alError != ALError.NoError)
                             {
-                                throw new Exception("Failed to assign data to stream buffer: " + AL.GetErrorString(alError));
+                                throw new Exception("Failed to assign data to stream buffer: " +
+                                    AL.GetErrorString(alError) + ": " + unqueuedBuffers[i].ToString() + "/" + unqueuedBuffers.Length + ", readSamples: " + readSamples);
                             }
 
                             AL.SourceQueueBuffer((int)alSource, unqueuedBuffers[i]);

@@ -32,7 +32,7 @@ namespace Barotrauma
                 SoundPlayer.OverrideMusicDuration = 18.0f;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.8f);
+            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
             int width = 760, height = 400;
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
@@ -72,21 +72,26 @@ namespace Barotrauma
                     GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     wrap: true);
 
+                /*TODO: whoops this definitely does not belong here
                 if (GameMain.GameSession.Mission.Completed)
                 {
                     GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
-                }
+                }*/
 
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
                     var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                        TextManager.Get("Reward") + ": " + GameMain.GameSession.Mission.Reward);
+                        TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                 }  
             }
+#if SERVER
+            //TODO: fix?
             else
             {
                 GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
+#endif
+
             foreach (GUIComponent child in infoTextBox.Content.Children)
             {
                 child.CanBeFocused = false;

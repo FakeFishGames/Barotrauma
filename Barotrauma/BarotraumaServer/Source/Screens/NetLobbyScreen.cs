@@ -66,8 +66,6 @@ namespace Barotrauma
             get { return gameModes[SelectedModeIndex]; }
         }
 
-        public string ServerMessageText;
-
         private int missionTypeIndex;
         public int MissionTypeIndex
         {
@@ -75,34 +73,30 @@ namespace Barotrauma
             set
             {
                 lastUpdateID++;
-                missionTypeIndex = Math.Max(0, Math.Min(MissionPrefab.MissionTypes.Count() - 1, value));
+                missionTypeIndex = MathHelper.Clamp(value, 0, Enum.GetValues(typeof(MissionType)).Length - 1);
             }
         }
 
         public string MissionTypeName
         {
-            get { return MissionPrefab.MissionTypes[MissionTypeIndex]; }
+            get { return ((MissionType)missionTypeIndex).ToString(); }
             set
             {
-                for (int i = 0; i < MissionPrefab.MissionTypes.Count(); i++)
+                if (Enum.TryParse(value, out MissionType missionType))
                 {
-                    if (MissionPrefab.MissionTypes[i].ToLower() == value.ToLower())
-                    {
-                        MissionTypeIndex = i;
-                        break;
-                    }
+                    missionTypeIndex = (int)missionType;
                 }
             }
         }
-        
+
         public void ChangeServerName(string n)
         {
-            ServerName = n; lastUpdateID++;
+            GameMain.Server.ServerSettings.ServerName = n; lastUpdateID++;
         }
 
         public void ChangeServerMessage(string m)
         {
-            ServerMessageText = m; lastUpdateID++;
+            GameMain.Server.ServerSettings.ServerMessageText = m; lastUpdateID++;
         }
         
         public List<JobPrefab> JobPreferences
@@ -154,13 +148,7 @@ namespace Barotrauma
                 LocationType.Random(levelSeed); //call to sync up with clients
             }
         }
-
-        public bool StartButtonEnabled
-        {
-            get { return true; }
-            set { /* do nothing */ }
-        }
-
+        
         public void ToggleCampaignMode(bool enabled)
         {
             for (int i = 0; i < GameModes.Length; i++)
@@ -178,19 +166,19 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+            GameMain.Server.ServerSettings.Voting.ResetVotes(GameMain.Server.ConnectedClients);
         }
 
         public void RandomizeSettings()
         {
-            if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
+            if (GameMain.Server.ServerSettings.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
 
-            if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
+            if (GameMain.Server.ServerSettings.SubSelectionMode == SelectionMode.Random)
             {
                 var nonShuttles = Submarine.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
                 SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
-            if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
+            if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)
             {
                 var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Name != "Campaign");
                 SelectedModeName = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Name;

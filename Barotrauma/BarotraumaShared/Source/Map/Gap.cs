@@ -95,15 +95,7 @@ namespace Barotrauma
                 return "Gap";
             }
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return ShowGaps;
-            }
-        }
-
+        
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.MainSub)
         { }
@@ -113,7 +105,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
-            : base (MapEntityPrefab.Find("Gap"), submarine)
+            : base (MapEntityPrefab.Find(null, "gap"), submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -139,13 +131,21 @@ namespace Barotrauma
         {
             base.Move(amount);
 
-            FindHulls();
+            if (!DisableHullRechecks) FindHulls();
         }
 
         public static void UpdateHulls()
         {
             foreach (Gap g in GapList)
             {
+                for (int i = g.linkedTo.Count - 1; i >= 0; i--)
+                {
+                    if (g.linkedTo[i].Removed)
+                    {
+                        g.linkedTo.RemoveAt(i);
+                    }
+                }
+
                 if (g.DisableHullRechecks) continue;
                 g.FindHulls();
             }
@@ -319,17 +319,15 @@ namespace Barotrauma
             if (linkedTo.Count < 2) return;
             Hull hull1 = (Hull)linkedTo[0];
             Hull hull2 = (Hull)linkedTo[1];
-            
+
             Vector2 subOffset = Vector2.Zero;
             if (hull1.Submarine != Submarine)
             {
-                subOffset =Submarine.Position - hull1.Submarine.Position;
+                subOffset = Submarine.Position - hull1.Submarine.Position;
             }
             else if (hull2.Submarine != Submarine)
             {
-
                 subOffset = hull2.Submarine.Position - Submarine.Position;
-
             }
 
             if (hull1.WaterVolume <= 0.0 && hull2.WaterVolume <= 0.0) return;
@@ -636,7 +634,7 @@ namespace Barotrauma
             hull2.Oxygen -= deltaOxygen;            
         }
 
-        public static Gap FindAdjacent(List<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
         {
             foreach (Gap gap in gaps)
             {

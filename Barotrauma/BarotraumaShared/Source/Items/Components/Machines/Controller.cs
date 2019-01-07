@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -142,17 +143,16 @@ namespace Barotrauma.Items.Components
             foreach (LimbPos lb in limbPositions)
             {
                 Limb limb = character.AnimController.GetLimb(lb.limbType);
-                if (limb == null) continue;
+                if (limb == null || !limb.body.Enabled) continue;
 
                 limb.Disabled = true;
+                
+                Vector2 worldPosition = lb.position + new Vector2(item.WorldRect.X, item.WorldRect.Y);
+                Vector2 diff = worldPosition - limb.WorldPosition;
 
-                if (limb.pullJoint == null) continue;
-
-                Vector2 position = ConvertUnits.ToSimUnits(lb.position + new Vector2(item.Rect.X, item.Rect.Y));
-                limb.pullJoint.Enabled = true;
-                limb.pullJoint.WorldAnchorB = position;
-            }
-            
+                limb.PullJointEnabled = true;
+                limb.PullJointWorldAnchorB = limb.SimPosition + ConvertUnits.ToSimUnits(diff);
+            }            
         }
 
         public override bool Use(float deltaTime, Character activator = null)
@@ -226,7 +226,7 @@ namespace Barotrauma.Items.Components
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        centerPos = new Vector2(targetItem.WorldRect.X + turret.BarrelPos.X, targetItem.WorldRect.Y - turret.BarrelPos.Y);
+                        centerPos = new Vector2(targetItem.WorldRect.X + turret.TransformedBarrelPos.X, targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
 
@@ -241,7 +241,7 @@ namespace Barotrauma.Items.Components
 
         private Item GetFocusTarget()
         {
-            item.SendSignal(0, targetRotation.ToString(), "position_out", character);
+            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", character);
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
@@ -276,8 +276,7 @@ namespace Barotrauma.Items.Components
                 if (limb == null) continue;
 
                 limb.Disabled = false;
-
-                limb.pullJoint.Enabled = false;
+                limb.PullJointEnabled = false;
             }
 
             if (character.SelectedConstruction == this.item) character.SelectedConstruction = null;

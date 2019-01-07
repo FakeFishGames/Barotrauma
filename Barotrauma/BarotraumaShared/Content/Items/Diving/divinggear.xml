@@ -2,10 +2,10 @@
 <Items>
   <Item
     name="Oxygen Tank"    
-    identifier="oxytank"
+    identifier="oxygentank"
     category="Equipment,Misc"
     Tags="smallitem,oxygensource"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="City" buyprice="50"/>
@@ -13,20 +13,22 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.55"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64"/>
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="38,31,13,33" depth="0.55"/>
 
     <Body width="12" height="33" density="5"/>
 
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 25"/>
-        <sound file="Content/Items/Reactor/explosion.ogg"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000"/>
         <Explosion range="250.0" structuredamage="10" force="3.0">
-          <affliction name="Internal Damage" strength="20"/>
-          <affliction name="Stun" strength="5"/>
+          <Affliction identifier="burn" strength="5"/>
+          <Affliction identifier="stun" strength="5"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true"/>
@@ -37,25 +39,28 @@
     name="Oxygenite Tank"
     identifier="oxygenitetank"
     category="Equipment,Misc"
-    Tags="meditem,oxygensource"
+    Tags="smallitem,oxygensource"
     description="A Tank containing liquid Oxygenite.">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Liquid Oxygenite" mincondition="0.1"/>
-      <Item name="Liquid Oxygenite" mincondition="0.5"/>
-      <Item name="Liquid Oxygenite" mincondition="0.9"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="liquidoxygenite" mincondition="0.1"/>
+      <Item identifier="liquidoxygenite" mincondition="0.5"/>
+      <Item identifier="liquidoxygenite" mincondition="0.9"/>
     </Deconstruct>
 
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.55"/>
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="1,91,13,33" depth="0.55"/>
 
     <Body width="12" height="33" density="9.9"/>
 
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 20"/>
-        <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="280.0" structuredamage="20" damage="30" stun="8" force="3.0"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" range="5000"/>
+        <Explosion range="280.0" structuredamage="20" stun="8" force="3.0">
+          <Affliction identifier="burn" strength="10"/>
+        </Explosion>
       </StatusEffect>
     </Holdable>
   </Item> 
@@ -65,19 +70,21 @@
     identifier="divingmask"
     category="Equipment"
     Tags="smallitem,diving"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Research" buyprice="55"/>
+    <Price locationtype="City" buyprice="55"/>
+    <Price locationtype="Military" buyprice="55"/>
     <Price locationtype="Outpost" buyprice="100"/>
     
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="plastic"/>
+      <Item identifier="rubber"/>
     </Deconstruct>
-    
-    <Sprite texture ="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,320,64,64"/>
+    <Sprite texture="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
   
     <Body width="26" height="18" density="15"/>
 
@@ -85,24 +92,22 @@
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">
-        <RequiredItem type="Contained" name="Oxygen Tank"/>
+        <RequiredItem identifier="oxygentank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem type="Contained" name="Welding Fuel Tank"/>
+        <RequiredItem identifier="weldingfueltank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3">
-        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+        <RequiredItem identifier="oxygeniteshard" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
-        <RequiredItem type="Contained" name="Oxygenite Tank"/>
+        <RequiredItem identifier="oxygenitetank" type="Contained"/>
       </StatusEffect>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygenite Shard"/>
-      <Containable name="Oxygenite Tank"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27"/>
+      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank"/>
     </ItemContainer>  
   </Item>
 
@@ -110,31 +115,31 @@
     name="Diving Suit"    
     identifier="divingsuit"
     category="Equipment"
-    tags="diving"
+    tags="diving,divingsuit"
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
 
-    <Price locationtype="Research" buyprice="200"/>
-    <Price locationtype="City" buyprice="200"/>
-    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="Research" buyprice="225"/>
+    <Price locationtype="City" buyprice="225"/>
+    <Price locationtype="Military" buyprice="225"/>
     <Price locationtype="Outpost" buyprice="300"/>
     
     <Deconstruct time="30">
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>
-      <Item name="Aluminium"/>
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="rubber"/>
+      <Item identifier="rubber"/>
+      <Item identifier="titaniumaluminiumalloy"/>
+      <Item identifier="titaniumaluminiumalloy"/>
     </Deconstruct>
 
-    <Sprite texture ="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64"/>
+    <Sprite texture="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
 
     <Body width="37" height="113" density="15"/>
 
     <Wearable slots="OuterClothes">
       <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true" hideotherwearables="true"/>
 
-      <sprite texture="DivingSuit.png" limb="Torso" sourcerect="42,0,42,97" origin="0.5,0.55" depth="0.004" inheritlimbdepth="false" depthlimb="Head" hidelimb="true" hideotherwearables="true">
+      <sprite texture="DivingSuit.png" limb="Torso" sourcerect="42,0,42,97" origin="0.5,0.55" depth="0.104" inheritlimbdepth="false" depthlimb="Head" hidelimb="true" hideotherwearables="true">
         <LightComponent range="100.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true">
             <Conditional IsDead="false"/>
@@ -143,35 +148,37 @@
         </LightComponent>
       </sprite>
       
-      <sprite texture="DivingSuit.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" depth="0.0" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" depth="0.1" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0.0" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0.016" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0.1" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0.116" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightArm" sourcerect="0,0,19,43" origin="0.5,0.4" depth="0.001" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" origin="0.5,0.4" depth="0.015" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="RightArm" sourcerect="0,0,19,43" origin="0.5,0.4" depth="0.101" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" origin="0.5,0.4" depth="0.115" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" origin="0.5,0.5" depth="0.011" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftThigh" sourcerect="22,0,18,44" origin="0.5,0.5" depth="0.015" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" origin="0.5,0.5" depth="0.111" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftThigh" sourcerect="22,0,18,44" origin="0.5,0.5" depth="0.115" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.012" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.016" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.112" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.116" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.013" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.013" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="RightFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.113" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.113" inheritlimbdepth="false" hidelimb="true" hideotherwearables="true"/>
 
+      <sprite texture="DivingSuit.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" depth="0.1" inheritlimbdepth="false" hidelimb="true"/>
+      
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3">
-        <RequiredItem type="Contained" name="Oxygen Tank"/>
+        <RequiredItem identifier="oxygentank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem type="Contained" name="Welding Fuel Tank"/>
+        <RequiredItem identifier="weldingfueltank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3">
-        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+        <RequiredItem identifier="oxygeniteshard" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
-        <RequiredItem type="Contained" name="Oxygenite Tank"/>
+        <RequiredItem identifier="oxygenitetank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
 
@@ -181,11 +188,10 @@
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygenite Shard"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27"/>
+      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank"/>
       <StatusEffect type="OnWearing" target="Contained">
-        <RequiredItem type="Contained" name="oxygensource"/>
+        <RequiredItem identifier="oxygensource" type="Contained"/>
         <Conditional condition="lt 5.0"/>
         <Sound file="Content/Items/warningBeep.ogg" range="500"/>
       </StatusEffect>
@@ -197,39 +203,39 @@
     identifier="underwaterscooter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"
-    description="A battery-powered underwater propulsion device.">
+    cargocontaineridentifier="metalcrate"
+    description="A battery-powered underwater propulsion device."
+    Scale="0.32">
 
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="Research" buyprice="150"/>
+    <Price locationtype="City" buyprice="150"/>
+    <Price locationtype="Military" buyprice="150"/>
+    <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Polycarbonate Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="aluminium"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
-    
-    <Sprite texture ="Scooter.png" depth="0.55" sourcerect="0,0,64,64"/>
 
-    <Body width="55" height="30" density="15"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>
+    <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159"/>
 
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="4,10" handle2="6,10"/>
+    <Body width="180" height="95" density="11"/>
 
-    <Propulsion force="80" usablein="water" particles="bubbles">
-      <RequiredItems name="Battery Cell,Fulgurium Battery Cell" type="Contained" msg="Battery Cell required"/>
-      <StatusEffect type="OnUse" target="Contained" Condition="-1.0"/>
-      <sound file="Content/Items/Diving/scooter.ogg" type="OnUse" range="500.0" loop="true"/>
-      <LightComponent LightColor="1.0,1.0,1.0,0.8" range="800">
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69"/>
+
+    <Propulsion force="150" usablein="water" particles="bubbles">
+      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired"/>
+      <StatusEffect type="OnUse" target="Contained" Condition="-0.25"/>
+      <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true"/>
+      <LightComponent LightColor="1.0,1.0,1.0,0.8" range="200">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
       </LightComponent>
     </Propulsion>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell"/>
-      <Containable name="Fulgurium Battery Cell"/>
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31"/>
+      <Containable identifiers="batterycell,fulguriumbatterycell"/>
     </ItemContainer>
   </Item>
 </Items>

@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Label"
+    identifier="label"
+    interactdistance="0"
+    resizehorizontal="true"
+    resizevertical="true">
+
+    <Sprite texture="labels.png" depth="0.85" sourcerect="2,50,14,12"/>
+
+    <ItemLabel/>
+  </Item>
+
+  <Item
+    name="Text Display"
+    identifier="textdisplay">
+
+    <Sprite texture="labels.png" depth="0.85" sourcerect="0,0,63,24"/>
+
+    <ItemLabel scrollable="true" padding="7,0,7,6" textcolor="1,1,1,1">
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.1" IsOn="true" castshadows="false">
+        <sprite texture="Content/Items/Labels/labels.png" sourcerect="0,24,63,24" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+      </LightComponent>
+    </ItemLabel>
+
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <requireditem identifier="screwdriver" type="Equipped"/>
+      <input name="set_text"/>
+    </ConnectionPanel>
+  </Item>
+</Items>
+
+	
+
+

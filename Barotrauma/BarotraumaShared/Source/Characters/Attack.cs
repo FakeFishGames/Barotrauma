@@ -72,14 +72,32 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool OnlyHumans { get; private set; }
 
+        //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
+        //the direction of the force is towards the target that's being attacked
         [Serialize(0.0f, false)]
         public float Force { get; private set; }
 
+        //torque applied to the attacking limb
         [Serialize(0.0f, false)]
         public float Torque { get; private set; }
 
+        //impulse applied to the target the attack hits
+        //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
+        [Serialize(0.0f, false)]
+        public float TargetImpulse { get; private set; }
+
+        //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
+        [Serialize("0.0, 0.0", false)]
+        public Vector2 TargetImpulseWorld { get; private set; }
+
+        //force applied to the target the attack hits 
+        //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
         [Serialize(0.0f, false)]
         public float TargetForce { get; private set; }
+
+        //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
+        [Serialize("0.0, 0.0", false)]
+        public Vector2 TargetForceWorld { get; private set; }
 
         [Serialize(0.0f, false)]
         public float SeverLimbsProbability { get; set; }
@@ -141,12 +159,20 @@ namespace Barotrauma
             StructureDamage = structureDamage;
         }
 
-        public Attack(XElement element)
+        public Attack(XElement element, string parentDebugName)
         {
             SerializableProperty.DeserializeProperties(this, element);
-                                                            
+
+            if (element.Attribute("damage") != null ||
+                element.Attribute("bluntdamage") != null ||
+                element.Attribute("burndamage") != null ||
+                element.Attribute("bleedingdamage") != null)
+            {
+                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).");
+            }
+
             DamageRange = element.GetAttributeFloat("damagerange", Range);
-            
+
             InitProjSpecific(element);
 
             string limbIndicesStr = element.GetAttributeString("applyforceonlimbs", "");
@@ -155,8 +181,7 @@ namespace Barotrauma
                 ApplyForceOnLimbs = new List<int>();
                 foreach (string limbIndexStr in limbIndicesStr.Split(','))
                 {
-                    int limbIndex;
-                    if (int.TryParse(limbIndexStr, out limbIndex))
+                    if (int.TryParse(limbIndexStr, out int limbIndex))
                     {
                         ApplyForceOnLimbs.Add(limbIndex);
                     }
@@ -172,21 +197,32 @@ namespace Barotrauma
                         {
                             statusEffects = new List<StatusEffect>();
                         }
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                         break;
                     case "affliction":
-                        string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        float afflictionStrength = subElement.GetAttributeFloat("strength", 1.0f);
-
-                        AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
-                        if (afflictionPrefab == null)
+                        AfflictionPrefab afflictionPrefab;
+                        if (subElement.Attribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Affliction prefab \"" + afflictionName + "\" not found.");
+                            DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
+                            string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                            if (afflictionPrefab == null)
+                            {
+                                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                            }
                         }
                         else
                         {
-                            Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                            if (afflictionPrefab == null)
+                            {
+                                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
+                            }
                         }
+
+                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
+                        Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
                         break;
                 }
 
@@ -196,15 +232,20 @@ namespace Barotrauma
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
+            Character targetCharacter = target as Character;
             if (OnlyHumans)
             {
-                if (target is Character character && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (targetCharacter != null && targetCharacter.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
             DamageParticles(deltaTime, worldPosition);
-
+            
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            if (targetCharacter != null && targetCharacter.IsDead)
+            {
+                effectType = ActionType.OnEating;
+            }
             if (statusEffects == null) return attackResult;
 
             foreach (StatusEffect effect in statusEffects)

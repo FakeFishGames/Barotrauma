@@ -14,10 +14,12 @@ namespace Barotrauma
             public Sprite IndicatorSprite;
 
             public Rectangle HighlightArea;
+
+            public readonly string Name;
                         
             public readonly List<Affliction> Afflictions = new List<Affliction>();
 
-            public readonly Dictionary<string, float> VitalityNameMultipliers = new Dictionary<string, float>();
+            public readonly Dictionary<string, float> VitalityMultipliers = new Dictionary<string, float>();
             public readonly Dictionary<string, float> VitalityTypeMultipliers = new Dictionary<string, float>();
 
             private readonly CharacterHealth characterHealth;
@@ -31,6 +33,7 @@ namespace Barotrauma
 
             public LimbHealth(XElement element, CharacterHealth characterHealth)
             {
+                Name = TextManager.Get("HealthLimbName." + element.GetAttributeString("name", ""));
                 this.characterHealth = characterHealth;
                 foreach (XElement subElement in element.Elements())
                 {
@@ -41,12 +44,18 @@ namespace Barotrauma
                             HighlightArea = subElement.GetAttributeRect("highlightarea", new Rectangle(0, 0, (int)IndicatorSprite.size.X, (int)IndicatorSprite.size.Y));
                             break;
                         case "vitalitymultiplier":
-                            string afflictionName = subElement.GetAttributeString("name", "");
+                            if (subElement.Attribute("name") != null)
+                            {
+                                DebugConsole.ThrowError("Error in character health config (" + characterHealth.character.Name + ") - define vitality multipliers using affliction identifiers or types instead of names.");
+                                continue;
+                            }
+
+                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "");
                             string afflictionType = subElement.GetAttributeString("type", "");
                             float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                            if (!string.IsNullOrEmpty(afflictionName))
+                            if (!string.IsNullOrEmpty(afflictionIdentifier))
                             {
-                                VitalityNameMultipliers.Add(afflictionName.ToLowerInvariant(), multiplier);
+                                VitalityMultipliers.Add(afflictionIdentifier.ToLowerInvariant(), multiplier);
                             }
                             else
                             {
@@ -72,12 +81,13 @@ namespace Barotrauma
 
         private readonly Character character;
 
+        private float crushDepth;
+
         private float vitality;
         protected float minVitality, maxVitality;
 
         //bleeding settings
         public bool DoesBleed { get; private set; }
-        public bool UseBloodParticles { get; private set; }
 
         public bool UseHealthWindow { get; private set; }
 
@@ -94,6 +104,11 @@ namespace Barotrauma
         public bool IsUnconscious
         {
             get { return vitality <= 0.0f; }
+        }
+
+        public float CrushDepth 
+        {
+            get { return crushDepth; }
         }
 
         public float Vitality
@@ -168,32 +183,26 @@ namespace Barotrauma
             maxVitality = 100.0f;
 
             DoesBleed = true;
-            UseBloodParticles = true;
             UseHealthWindow = false;
 
-            irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
-            irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
-            irremovableAfflictions.Add(pressureAffliction = new Affliction(AfflictionPrefab.Pressure, 0.0f));
-            irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
-            
-            foreach (Affliction affliction in irremovableAfflictions)
-            {
-                afflictions.Add(affliction);
-            }
+            InitIrremovableAfflictions();
 
             limbHealths.Add(new LimbHealth());
 
-            InitProjSpecific(character);
+            InitProjSpecific(null, character);
         }
 
         public CharacterHealth(XElement element, Character character)
-            : this(character) 
         {
+            this.character = character;
+            InitIrremovableAfflictions();
+
+            crushDepth = element.GetAttributeFloat("crushdepth", float.NegativeInfinity);
+
             maxVitality = element.GetAttributeFloat("vitality", 100.0f);
             vitality    = maxVitality;
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
-            UseBloodParticles       = element.GetAttributeBool("usebloodparticles", true);
             UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
 
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
@@ -208,9 +217,28 @@ namespace Barotrauma
             {
                 limbHealths.Add(new LimbHealth());
             }
+
+            InitProjSpecific(element, character);
         }
 
-        partial void InitProjSpecific(Character character);
+        private void InitIrremovableAfflictions()
+        {
+            irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
+            irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
+            irremovableAfflictions.Add(pressureAffliction = new Affliction(AfflictionPrefab.Pressure, 0.0f));
+            irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+            foreach (Affliction affliction in irremovableAfflictions)
+            {
+                afflictions.Add(affliction);
+            }
+        }
+
+        partial void InitProjSpecific(XElement element, Character character);
+
+        public IEnumerable<Affliction> GetAllAfflictions()
+        {
+            return afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions).ToList());
+        }
 
         public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
         {
@@ -236,6 +264,16 @@ namespace Barotrauma
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
                 if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+            }
+            return null;
+        }
+
+        public Limb GetAfflictionLimb(Affliction affliction)
+        {
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                if (!limbHealths[i].Afflictions.Contains(affliction)) continue;
+                return character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
             }
             return null;
         }
@@ -315,8 +353,15 @@ namespace Barotrauma
             {
                 matchingAfflictions.AddRange(limbHealths[targetLimb.HealthIndex].Afflictions);
             }
+            else
+            {
+                foreach (LimbHealth limbHealth in limbHealths)
+                {
+                    matchingAfflictions.AddRange(limbHealth.Afflictions);
+                }
+            }
             matchingAfflictions.RemoveAll(a => 
-                a.Prefab.Name.ToLowerInvariant() != affliction && 
+                a.Prefab.Identifier.ToLowerInvariant() != affliction && 
                 a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
 
             if (matchingAfflictions.Count == 0) return;
@@ -428,7 +473,6 @@ namespace Barotrauma
             if (vitality <= MinVitality) Kill();
         }
 
-
         private void AddAffliction(Affliction newAffliction)
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
@@ -454,6 +498,8 @@ namespace Barotrauma
             if (vitality <= MinVitality) Kill();
         }
         
+        partial void UpdateLimbAfflictionOverlays();
+
         public void Update(float deltaTime)
         {
             UpdateOxygen(deltaTime);
@@ -472,6 +518,7 @@ namespace Barotrauma
                 {
                     Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
                     affliction.Update(this, targetLimb, deltaTime);
+                    affliction.DamagePerSecondTimer += deltaTime;
                     if (affliction is AfflictionBleeding)
                     {
                         UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
@@ -491,23 +538,10 @@ namespace Barotrauma
             for (int i = 0; i < afflictions.Count; i++)
             {
                 afflictions[i].Update(this, null, deltaTime);
+                afflictions[i].DamagePerSecondTimer += deltaTime;
             }
 
-#if CLIENT
-            foreach (Limb limb in character.AnimController.Limbs)
-            {            
-                limb.BurnOverlayStrength = 0.0f;
-                limb.DamageOverlayStrength = 0.0f;
-                if (limbHealths[limb.HealthIndex].Afflictions.Count == 0) continue;
-                foreach (Affliction a in limbHealths[limb.HealthIndex].Afflictions)
-                {
-                    limb.BurnOverlayStrength += a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha;
-                    limb.DamageOverlayStrength +=  a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha;
-                }
-                limb.BurnOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
-                limb.DamageOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
-            }
-#endif
+            UpdateLimbAfflictionOverlays();
 
             CalculateVitality();
             if (vitality <= MinVitality) Kill();
@@ -543,22 +577,25 @@ namespace Barotrauma
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     float vitalityDecrease = affliction.GetVitalityDecrease(this);
-                    if (limbHealth.VitalityNameMultipliers.ContainsKey(affliction.Prefab.Name.ToLowerInvariant()))
+                    if (limbHealth.VitalityMultipliers.ContainsKey(affliction.Prefab.Identifier.ToLowerInvariant()))
                     {
-                        vitalityDecrease *= limbHealth.VitalityNameMultipliers[affliction.Prefab.Name.ToLowerInvariant()];
+                        vitalityDecrease *= limbHealth.VitalityMultipliers[affliction.Prefab.Identifier.ToLowerInvariant()];
                     }
                     if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType.ToLowerInvariant()))
                     {
                         vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
                     }
                     vitality -= vitalityDecrease;
+                    affliction.CalculateDamagePerSecond(vitalityDecrease);
                 }
             }
 
             foreach (Affliction affliction in afflictions)
             {
-                vitality -= affliction.GetVitalityDecrease(this);
-            }            
+                float vitalityDecrease = affliction.GetVitalityDecrease(this);
+                vitality -= vitalityDecrease;
+                affliction.CalculateDamagePerSecond(vitalityDecrease);
+            }
         }
 
         private void Kill()
@@ -607,10 +644,14 @@ namespace Barotrauma
                     var existingAffliction = mergedAfflictions.Find(a => a.Prefab == affliction.Prefab);
                     if (existingAffliction == null)
                     {
-                        mergedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+                        var newAffliction = affliction.Prefab.Instantiate(affliction.Strength);
+                        newAffliction.DamagePerSecond = affliction.DamagePerSecond;
+                        newAffliction.DamagePerSecondTimer = affliction.DamagePerSecondTimer;
+                        mergedAfflictions.Add(newAffliction);
                     }
                     else
                     {
+                        existingAffliction.DamagePerSecond += affliction.DamagePerSecond;
                         existingAffliction.Strength += affliction.Strength;
                     }
                 }

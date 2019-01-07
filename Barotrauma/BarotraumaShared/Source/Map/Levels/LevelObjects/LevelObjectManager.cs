@@ -47,8 +47,8 @@ namespace Barotrauma
                 if (prefab.ClusteringAmount <= 0.0f) return Length;
 
                 float noise = (float)(
-                    PerlinNoise.Perlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, prefab.ClusteringGroup) +
-                    PerlinNoise.Perlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, prefab.ClusteringGroup));
+                    PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, prefab.ClusteringGroup) +
+                    PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, prefab.ClusteringGroup));
 
                 return Length * (float)Math.Pow(noise, prefab.ClusteringAmount);
             }
@@ -57,8 +57,8 @@ namespace Barotrauma
         public void PlaceObjects(Level level, int amount)
         {
             objectGrid = new List<LevelObject>[
-                (int)Math.Ceiling(level.Size.X / GridSize),
-                (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
+                level.Size.X / GridSize,
+                (level.Size.Y - level.BottomPos) / GridSize];
             
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             var levelCells = level.GetAllCells();
@@ -85,7 +85,7 @@ namespace Barotrauma
                 if (posOfInterest.PositionType != Level.PositionType.MainPath) continue;
 
                 availableSpawnPositions.Add(new SpawnPosition(
-                    new GraphEdge(posOfInterest.Position, posOfInterest.Position + Vector2.UnitX), 
+                    new GraphEdge(posOfInterest.Position.ToVector2(), posOfInterest.Position.ToVector2() + Vector2.UnitX), 
                     Vector2.UnitY, 
                     LevelObjectPrefab.SpawnPosType.MainPath, 
                     Alignment.Top));
@@ -106,7 +106,7 @@ namespace Barotrauma
                 {
                     rotation = MathUtils.VectorToAngle(new Vector2(spawnPosition.Normal.Y, spawnPosition.Normal.X));
                 }
-                rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
+                rotation += Rand.Range(prefab.RandomRotationRad.X, prefab.RandomRotationRad.Y, Rand.RandSync.Server);
 
                 Vector2 position = Vector2.Zero;
                 Vector2 edgeDir = Vector2.UnitX;
@@ -123,7 +123,7 @@ namespace Barotrauma
                 }
 
                 var newObject = new LevelObject(prefab,
-                    new Vector3(position, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
+                    new Vector3(position, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.MinSize, prefab.MaxSize, Rand.RandSync.Server), rotation);
                 AddObject(newObject, level);
 
                 foreach (LevelObjectPrefab.ChildObject child in prefab.ChildObjects)
@@ -136,12 +136,12 @@ namespace Barotrauma
                         var childPrefab = prefabCount == 0 ? null : matchingPrefabs.ElementAt(Rand.Range(0, prefabCount, Rand.RandSync.Server));
                         if (childPrefab == null) continue;
 
-                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * newObject.Scale * prefab.MinSurfaceWidth;
+                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * prefab.MinSurfaceWidth;
 
                         var childObject = new LevelObject(childPrefab,
                             new Vector3(childPos, Rand.Range(childPrefab.DepthRange.X, childPrefab.DepthRange.Y, Rand.RandSync.Server)),
-                            Rand.Range(childPrefab.Scale.X, childPrefab.Scale.Y, Rand.RandSync.Server),
-                            rotation + Rand.Range(childPrefab.RandomRotation.X, childPrefab.RandomRotation.Y, Rand.RandSync.Server));
+                            Rand.Range(childPrefab.MinSize, childPrefab.MaxSize, Rand.RandSync.Server),
+                            rotation + Rand.Range(childPrefab.RandomRotationRad.X, childPrefab.RandomRotationRad.Y, Rand.RandSync.Server));
 
                         AddObject(childObject, level);
                     }
@@ -261,6 +261,11 @@ namespace Barotrauma
                 (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
         }
 
+        public List<LevelObject> GetAllObjects()
+        {
+            return new List<LevelObject>(objects);
+        }
+
         public List<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)
         {
             var minIndices = GetGridIndices(worldPosition - Vector2.One * radius);
@@ -295,7 +300,7 @@ namespace Barotrauma
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             foreach (var cell in cells)
             {
-                foreach (var edge in cell.edges)
+                foreach (var edge in cell.Edges)
                 {
                     if (!edge.IsSolid || edge.OutsideLevel) continue;
                     Vector2 normal = edge.GetNormal(cell);
@@ -330,11 +335,11 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in objects)
             {
-                if (GameMain.Server != null)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     if (obj.NeedsNetworkSyncing)
                     {
-                        GameMain.Server.CreateEntityEvent(this, new object[] { obj });
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { obj });
                         obj.NeedsNetworkSyncing = false;
                     }
                 }
@@ -389,11 +394,14 @@ namespace Barotrauma
 
         public override void Remove()
         {
-            foreach (LevelObject obj in objects)
+            if (objects != null)
             {
-                obj.Remove();
+                foreach (LevelObject obj in objects)
+                {
+                    obj.Remove();
+                }
+                objects.Clear();
             }
-            objects.Clear();
             RemoveProjSpecific();
 
             base.Remove();

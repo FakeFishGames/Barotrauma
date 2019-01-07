@@ -29,7 +29,8 @@ namespace Barotrauma
         {
             Force, //default, apply a force to the object over time
             Acceleration, //apply an acceleration to the object, ignoring it's mass
-            Impulse //apply an instant force, ignoring deltaTime
+            Impulse, //apply an instant force, ignoring deltaTime
+            LimitVelocity //clamp the velocity of the triggerer to some value
         }
 
         public Action<LevelTrigger, Entity> OnTriggered;
@@ -187,7 +188,7 @@ namespace Barotrauma
             set;
         }
                 
-        public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
+        public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f, string parentDebugName = "")
         {
             TriggererPosition = new Dictionary<Entity, Vector2>();
 
@@ -218,9 +219,13 @@ namespace Barotrauma
 
             UseNetworkSyncing = element.GetAttributeBool("networksyncing", false);
 
-            unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
+            unrotatedForce = 
+                element.Attribute("force") != null && element.Attribute("force").Value.Contains(',') ?
+                element.GetAttributeVector2("force", Vector2.Zero) :
+                new Vector2(element.GetAttributeFloat("force", 0.0f), 0.0f);
+
             ForceFluctuationInterval = element.GetAttributeFloat("forcefluctuationinterval", 0.01f);
-            ForceFluctuationStrength = MathHelper.Clamp(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f, 1.0f);
+            ForceFluctuationStrength = Math.Max(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f);
             ForceFalloff = element.GetAttributeBool("forcefalloff", true);
 
             ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));
@@ -259,11 +264,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, string.IsNullOrEmpty(parentDebugName) ? "LevelTrigger" : "LevelTrigger in "+ parentDebugName));
                         break;
                     case "attack":
                     case "damage":
-                        var attack = new Attack(subElement);
+                        var attack = new Attack(subElement, string.IsNullOrEmpty(parentDebugName) ? "LevelTrigger" : "LevelTrigger in " + parentDebugName);
                         var multipliedAfflictions = attack.GetMultipliedAfflictions((float)Timing.Step);
                         attack.Afflictions.Clear();
                         foreach (Affliction affliction in multipliedAfflictions)
@@ -305,6 +310,7 @@ namespace Barotrauma
 
             if (entity is Character character)
             {
+                if (character.CurrentHull != null) return false;
                 if (character.ConfigPath == Character.HumanConfigFile)
                 {
                     if (!triggeredBy.HasFlag(TriggererType.Human)) return false;
@@ -314,8 +320,9 @@ namespace Barotrauma
                     if (!triggeredBy.HasFlag(TriggererType.Creature)) return false;
                 }
             }
-            else if (entity is Item)
+            else if (entity is Item item)
             {
+                if (item.CurrentHull != null) return false;
                 if (!triggeredBy.HasFlag(TriggererType.Item)) return false;
             }
             else if (entity is Submarine)
@@ -339,6 +346,15 @@ namespace Barotrauma
         {
             Entity entity = GetEntity(fixtureB);
             if (entity == null) return;
+
+            if (entity is Character character && 
+                (!character.Enabled || character.Removed) &&
+                triggerers.Contains(entity))
+            {
+                TriggererPosition.Remove(entity);
+                triggerers.Remove(entity);
+                return;
+            }
 
             //check if there are any other contacts with the entity
             //(the OnSeparation callback happens when two fixtures separate, 
@@ -404,7 +420,12 @@ namespace Barotrauma
 
             triggerers.RemoveWhere(t => t.Removed);
 
-            if (!UseNetworkSyncing || GameMain.Client == null)
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (!UseNetworkSyncing || isNotClient)
             {
                 if (ForceFluctuationStrength > 0.0f)
                 {
@@ -477,7 +498,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (Force != Vector2.Zero)
+                if (Force.LengthSquared() > 0.01f)
                 {
                     if (triggerer is Character character)
                     {
@@ -528,6 +549,15 @@ namespace Barotrauma
                         body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
                         body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor);
+                    break;
+                case TriggerForceMode.LimitVelocity:
+                    float maxVel = ForceVelocityLimit * currentForceFluctuation * distFactor;
+                    if (body.LinearVelocity.LengthSquared() > maxVel * maxVel)
+                    {
+                        body.ApplyForce(
+                            Vector2.Normalize(-body.LinearVelocity) * 
+                            Force.Length() * body.Mass * currentForceFluctuation * distFactor);
+                    }
                     break;
             }
         }

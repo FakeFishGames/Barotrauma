@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="AlienPumpAssembly" description="" hideinmenus="true">
+  <Item name="Alien Pump" identifier="alienpump" ID="6" rect="-208,128,256,256" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
+    <Pump minvoltage="0.3" powerconsumption="300" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <input name="power_in">
+        <link w="9" />
+      </input>
+      <input name="toggle" />
+      <input name="set_active" />
+      <input name="set_speed" />
+      <input name="set_targetlevel" />
+    </ConnectionPanel>
+    <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Repair [Wrench]">
+      <requireditem identifiers="wrench" type="Equipped" msg="" />
+    </Repairable>
+  </Item>
+  <Item name="Alien Power Cell" identifier="alienpowercell" ID="8" rect="-54,-57,12,15" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="0.3" hideinassemblypreview="true">
+    <LightComponent range="100" castshadows="False" ison="True" blinkfrequency="0" lightcolor="112,146,190,30" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable holdpos="0,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  </Item>
+  <Item name="Alien Generator" identifier="aliengenerator" ID="7" rect="79,80,153,171" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.3">
+    <LightComponent range="800" castshadows="True" ison="True" blinkfrequency="0" lightcolor="112,146,190,50" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="8" />
+    <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
+      <requireditem identifiers="screwdriver" type="Equipped" msg="" />
+      <input name="shutdown" />
+      <output name="power_out">
+        <link w="9" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Black Wire" identifier="blackwire" ID="9" rect="-72,-54,48,20" description="" spritecolor="50,50,50,255" inventoryiconcolor="50,50,50,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" nodes="-80;0;155.5;-5.5" />
+  </Item>
+</ItemAssembly>

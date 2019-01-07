@@ -15,13 +15,26 @@ namespace Barotrauma.Networking
         protected int newestBufferInd;
         protected bool firstRead;
 
+        public int EnqueuedTotalLength
+        {
+            get
+            {
+                int enqueuedTotalLength = 0;
+                for (int i = 0; i < BUFFER_COUNT; i++)
+                {
+                    enqueuedTotalLength += bufferLengths[i];
+                }
+                return enqueuedTotalLength;
+            }
+        }
+
         public byte[] BufferToQueue
         {
             get;
             protected set;
         }
 
-        public byte QueueID
+        public virtual byte QueueID
         {
             get;
             protected set;
@@ -68,10 +81,12 @@ namespace Barotrauma.Networking
 
             newestBufferInd = (newestBufferInd + 1) % BUFFER_COUNT;
 
+            int enqueuedTotalLength = EnqueuedTotalLength;
+
             bufferLengths[newestBufferInd] = length;
             BufferToQueue.CopyTo(buffers[newestBufferInd], 0);
-
-            LatestBufferID++;
+            
+            if ((enqueuedTotalLength+length)>0) LatestBufferID++;
         }
 
         public void RetrieveBuffer(int id,out int outSize,out byte[] outBuf)
@@ -109,7 +124,6 @@ namespace Barotrauma.Networking
             if (!CanReceive) throw new Exception("Called Read on a VoipQueue not set up for receiving");
 
             UInt16 incLatestBufferID = msg.ReadUInt16();
-            DebugConsole.NewMessage(incLatestBufferID.ToString(), Color.Red);
             if (firstRead || NetIdUtils.IdMoreRecent(incLatestBufferID,LatestBufferID))
             {
                 firstRead = false;

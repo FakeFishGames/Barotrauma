@@ -61,7 +61,9 @@ namespace Barotrauma.Items.Components
                 if (IsActive == value) return;
                 
                 IsActive = value;
+#if SERVER
                 if (GameMain.Server != null) item.CreateServerEvent(this);
+#endif
             }
         }
         
@@ -85,7 +87,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
+        [InGameEditable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color LightColor
         {
             get { return lightColor; }
@@ -128,7 +130,7 @@ namespace Barotrauma.Items.Components
         {
 #if CLIENT
             light = new LightSource(element);
-            light.ParentSub = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+            light.ParentSub = item.CurrentHull?.Submarine;
             light.Position = item.Position;
             light.CastShadows = castShadows;
 #endif
@@ -188,7 +190,8 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (voltage > 0.1f && sparkSounds.Count > 0) 
                 {
-                    SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 400.0f, item.WorldPosition, item.CurrentHull);
+                    var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
+                    SoundPlayer.PlaySound(sparkSound.Sound, sparkSound.Volume, sparkSound.Range, item.WorldPosition, item.CurrentHull);
                 }
 #endif
                 lightBrightness = 0.0f;
@@ -220,8 +223,13 @@ namespace Barotrauma.Items.Components
             
             voltage = 0.0f;
         }
-
+                
 #if CLIENT
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            light.Color = Color.Transparent;
+        }
+
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();

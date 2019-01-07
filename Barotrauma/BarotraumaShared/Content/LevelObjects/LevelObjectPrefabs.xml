@@ -1,523 +1,497 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <levelobjects>
-  <hanging1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4"
-            minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15"/>
+  <!--<hanging1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15" />
   </hanging1>
-
-  <hanging2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4"
-            minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15"/>
-  </hanging2>
-
+  <hanging2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="0.5" maxsize="1.5" commonness="5">
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15" />
+  </hanging2>-->
+  <web1 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+             forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="309,13,307,870" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web1>
+  <web2 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="627,42,314,1222" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web2>
+  <web3 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="954,66,317,1400" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web3>
+  <web4 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="69,948,353,496" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web4>
+  <web5 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="1273,0,779,1638" origin="0.5,0.15" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web5>
+  <web6 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="28,1475,443,555" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web6>
+  <web7 spawnpos="Wall, RuinWall" alignment="Bottom" clusteringamount="3" clusteringgroup="0.4" minsize="1" maxsize="2" commonness="0" depthrange="-0.01,-0.01">
+    <overridecommonness commonness="1" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="1" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="2" leveltype="RidgeBasic" />
+    <overridecommonness commonness="4" leveltype="PlateauBasic" />
+    <Trigger position="0,-400" radius="50" triggeredby="Submarine" force="5.0" forcevelocitylimit="100" forcemode="LimitVelocity" forcefalloff="false"
+         forcefluctuationstrength="1.0" forcefluctuationinterval="2"/>
+    <DeformableSprite texture="Content/LevelObjects/Webs.png" sourcerect="0,0,307,946" origin="0.5,0.2" subdivisions="5,5">
+      <SpriteDeformation type="reacttotriggerers" resolution="5,5" maxdeformation="2" reactionspeed="2.0" recoverspeed="0.1"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="1" amplitude="1" changespeed="0.1" blendmode="add" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0 0,0 0,0"
+                         row1="0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5 0.5,0.5"
+                         row2="0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7 0.7,0.7"
+                         row6="1,1 1,1 1,1 1,1 1,1"
+                         row4="1,1 1,1 1,1 1,1 1,1"/>
+    </DeformableSprite>
+  </web7>
   <stalk spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" swingfrequency="0.2" randomrotation="-10,10">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="5" leveltype="ColdCavernsMaze" />
-    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95" />
   </stalk>
-
   <spike spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" alignwithsurface="true" randomrotation="-20,20" commonness="2">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95" />
   </spike>
-
   <leaves spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
-    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
   </leaves>
-
-  <deadbranches1 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="400"
-             minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
+  <deadbranches1 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="400" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9" />
   </deadbranches1>
-
-  <deadbranches2 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200"
-             minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
+  <deadbranches2 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9" />
   </deadbranches2>
-
-  <deadbranches3 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200" 
-             minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
+  <deadbranches3 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9" />
   </deadbranches3>
-
-  <fungus spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.6"
-          minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" swingfrequency="0.1" commonness="3">
+  <fungus spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.6" minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
-    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9" />
   </fungus>
-
-  <thistle spawnpos="Wall" alignment="Top" minsurfacewidth="100"
-           minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
+  <thistle spawnpos="Wall" alignment="Top" minsurfacewidth="100" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95" />
   </thistle>
-
-  <branch spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15"
-          minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
+  <branch1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/vegetation3.png" subdivisions="5,5" origin="0.5,0.95">
-      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
-
-  <branch spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15"
-          minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
+  </branch1>
+  <branch2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="Pillars" />
-    <overridecommonness commonness="1" leveltype="Slabs" />    
+    <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/vegetation4.png" subdivisions="5,5" sourcerect="0,0,818,1024" origin="0.5,0.95">
-      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
-
-  <hay spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15"
-       minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
+  </branch2>
+  <hay spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95" />
   </hay>
-
-  <branch spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" 
-          minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30"  depthrange="-0.01,-0.01"
-          swingamount="10" swingfrequency="0.1" commonness="0">
+  <branch3 spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95">
-      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
-
-  <branch spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1"
-          minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" 
-          swingamount="10" swingfrequency="0.1" commonness="0">
+  </branch3>
+  <branch4 spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95">
-      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
-  </branch>
-
-  <fractalplant1 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  </branch4>
+  <fractalplant1 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
-    <overridecommonness commonness="0.2" leveltype="VoidBasic" />    
-    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="0,0,400,495" origin="0.5,0.8"/>
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="0,0,400,495" origin="0.5,0.8" />
   </fractalplant1>
-  
-  <fractalplant2 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant2 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="411,0,361,495" origin="0.5,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="411,0,361,495" origin="0.5,0.85" />
   </fractalplant2>
-
-  <fractalplant3 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant3 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="32,510,387,324" origin="0.5,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="32,510,387,324" origin="0.5,0.85" />
   </fractalplant3>
-  
-  <fractalplant4 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant4 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="434,491,593,372" origin="0.4,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="434,491,593,372" origin="0.4,0.85" />
   </fractalplant4>
-
-  <fractalplant5 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant5 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="21,1,367,329" origin="0.6,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="21,1,367,329" origin="0.6,0.85" />
   </fractalplant5>
-
-  <fractalplant6 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant6 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="462,32,447,283" origin="0.4,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="462,32,447,283" origin="0.4,0.85" />
   </fractalplant6>
-  
-  <fractalplant7 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant7 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="0,346,397,298" origin="0.5,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="0,346,397,298" origin="0.5,0.85" />
   </fractalplant7>
-
-  <fractalplant8 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
-          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+  <fractalplant8 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4" minsize="1.0" maxsize="1.5" alignwithsurface="true" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <overridecommonness commonness="0.2" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="437,392,481,256" origin="0.6,0.85"/>
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="437,392,481,256" origin="0.6,0.85" />
   </fractalplant8>
-  
-  <spikeplantmedium1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="0,0,683,683" origin="0.8,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium1>
-  
-  <spikeplantmedium2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="683,0,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium2>
-  
-  <spikeplantmedium3 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium3 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="1366,0,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium3>
-
-  <spikeplantmedium4 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium4 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="0,683,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium4>
-
-  <spikeplantmedium5 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium5 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="683,683,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium5>
-
-  <spikeplantmedium6 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium6 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="1366,683,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium6>
-
-  <spikeplantmedium7 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium7 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="0,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium7>
-
-  <spikeplantmedium8 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium8 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="683,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium8>
-
-  <spikeplantmedium9 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantmedium9 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants1.png" subdivisions="3,3" sourcerect="1366,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantmedium9>
-  
   <!-- SPIKEPLANTS2 -->
-
-  <spikeplantsmall1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="0,0,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall1>
-
-  <spikeplantsmall2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="683,0,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall2>
-
-  <spikeplantsmall3 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall3 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="1366,0,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall3>
-
-  <spikeplantsmall4 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall4 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="0,683,683,683" origin="0.5,0.8">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall4>
-
-  <spikeplantsmall5 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall5 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="683,683,683,683" origin="0.5,0.8">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall5>
-
-  <spikeplantsmall6 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall6 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="1366,683,683,683" origin="0.5,0.8">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall6>
-
-  <spikeplantsmall7 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall7 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="0,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall7>
-
-  <spikeplantsmall8 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall8 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="683,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall8>
-
-  <spikeplantsmall9 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall9 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants2.png" subdivisions="3,3" sourcerect="1366,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall9>
-  
   <!-- /SPIKEPLANTS2 -->
-
   <!-- SPIKEPLANTS3 -->
-
-  <spikeplantsmall10 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall10 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants3.png" subdivisions="3,3" sourcerect="0,0,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall10>
-
-  <spikeplantsmall11 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall11 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants3.png" subdivisions="3,3" sourcerect="0,683,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall11>
-
-  <spikeplantsmall12 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantsmall12 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants3.png" subdivisions="3,3" sourcerect="0,1366,683,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantsmall12>
-
-  <spikeplantslarge1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantslarge1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants3.png" subdivisions="3,3" sourcerect="683,0,1364,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantslarge1>
-
-  <spikeplantslarge2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
-        minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
+  <spikeplantslarge2 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8" minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="WastesBasic" />
     <overridecommonness commonness="1" leveltype="PlateauBasic" />
     <DeformableSprite texture="Content/LevelObjects/SpikePlants3.png" subdivisions="3,3" sourcerect="683,683,1364,683" origin="0.5,0.9">
-      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="1,0.5 1,0.5 1.0,0.5"
-                         row1="0,0 0,0 0,0"/>
+      <SpriteDeformation type="noise" resolution="3,3" frequency="5" amplitude="0.1" changespeed="0.1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="1,0.5 1,0.5 1.0,0.5" row1="0,0 0,0 0,0" />
     </DeformableSprite>
   </spikeplantslarge2>
-  
   <!-- /SPIKEPLANTS3 -->
-  
-  <sonarflora1 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
-               minsize="1" maxsize="2" alignwithsurface="true" 
-               scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
+  <sonarflora1 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="1" maxsize="2" alignwithsurface="true" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
@@ -527,24 +501,19 @@
     <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="5,3" sourcerect="492,0,521,288" origin="0.5,0.35">
-      <SpriteDeformation type="inflate" resolution="5,3" frequency="0.5" scale="1"/>
-      <SpriteDeformation type="custom" resolution="5,3" frequency="0.0" blendmode="multiply" 
-                         row0="0,0 0,0 0,0" 
-                         row1="0.1,0.5 1,1 0.1,0.5"/>
+      <SpriteDeformation type="inflate" resolution="5,3" frequency="0.5" scale="1" />
+      <SpriteDeformation type="custom" resolution="5,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.1,0.5 1,1 0.1,0.5" />
     </DeformableSprite>
-    <LightSource range="1500" color="1.0,0.85,0.8,0.4"/>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
-    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
-             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    <LightSource range="1500" color="1.0,0.85,0.8,0.4">
+      <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="492,0,521,288" origin="0.5,0.35" subdivisions="5,3"/>
+    </LightSource>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
-    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora1>
-  
-  <sonarflora2 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
-               minsize="1" maxsize="2" alignwithsurface="true" 
-               scaleoscillation="0.0,0.2" scaleoscillationfrequency="0.3"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
+  <sonarflora2 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="1" maxsize="2" alignwithsurface="true" scaleoscillation="0.0,0.2" scaleoscillationfrequency="0.3" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
@@ -554,24 +523,19 @@
     <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="4,4" sourcerect="151,383,488,341" origin="0.5,0.1">
-      <SpriteDeformation type="inflate" resolution="4,4" frequency="0.5" scale="1"/>
-      <SpriteDeformation type="custom" resolution="4,4" frequency="0.0" blendmode="multiply"
-                         row0="0,0 0,0 0,0"
-                         row1="0.5,0.5 1,1 0.5,0.5"/>
+      <SpriteDeformation type="inflate" resolution="4,4" frequency="0.5" scale="1" />
+      <SpriteDeformation type="custom" resolution="4,4" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5" />
     </DeformableSprite>
-    <LightSource range="1500" color="1.0,0.85,0.8,0.5"/>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
-    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
-             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    <LightSource range="1500" color="1.0,0.85,0.8,0.5">
+      <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="151,383,488,341" origin="0.5,0.1" subdivisions="5,3"/>
+    </LightSource>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
-    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora2>
-  
-  <sonarflora3 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
-               minsize="1" maxsize="2" alignwithsurface="true" 
-               scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
+  <sonarflora3 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="1" maxsize="2" alignwithsurface="true" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
@@ -581,24 +545,19 @@
     <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="4,3" sourcerect="644,366,380,357" origin="0.5,0.15">
-      <SpriteDeformation type="inflate" resolution="4,3" frequency="0.5" scale="0.5"/>
-      <SpriteDeformation type="custom" resolution="4,3" frequency="0.0" blendmode="multiply"
-                         row0="0,0 0,0 0,0"
-                         row1="1.0,0.1 1,0.1 1.0,0.1"/>
+      <SpriteDeformation type="inflate" resolution="4,3" frequency="0.5" scale="0.5" />
+      <SpriteDeformation type="custom" resolution="4,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="1.0,0.1 1,0.1 1.0,0.1" />
     </DeformableSprite>
-    <LightSource range="1200" color="1.0,0.85,0.8,0.4"/>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
-    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
-             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    <LightSource range="1200" color="1.0,0.85,0.8,0.4">
+      <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="644,366,380,357" origin="0.5,0.15" subdivisions="5,3"/>
+    </LightSource>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
-    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora3>
-  
-  <sonarflora4 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
-               minsize="1" maxsize="2" alignwithsurface="true" 
-               scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
+  <sonarflora4 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="1" maxsize="2" alignwithsurface="true" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
@@ -608,24 +567,19 @@
     <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="47,788,318,236" origin="0.6,0.2">
-      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="0,0 0,0 0,0"
-                         row1="0.5,0.5 1,1 0.5,0.5"/>
+      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5" />
     </DeformableSprite>
-    <LightSource range="1000" color="1.0,0.85,0.8,0.4"/>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
-    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
-             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    <LightSource range="1000" color="1.0,0.85,0.8,0.4">
+      <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="47,788,318,236" origin="0.6,0.2" subdivisions="5,3"/>
+    </LightSource>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
-    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora4>
-  
-  <sonarflora5 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
-               minsize="1" maxsize="2" alignwithsurface="true"
-               scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" 
-               randomrotation="180,180" commonness="0" depthrange="-0.01,-0.01">
+  <sonarflora5 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="1" maxsize="2" alignwithsurface="true" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="0" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
@@ -635,24 +589,19 @@
     <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="395,723,309,301" origin="0.5,0.2">
-      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="0,0 0,0 0,0"
-                         row1="0.5,0.1 1,0.2 0.5,0.1"/>
+      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.1 1,0.2 0.5,0.1" />
     </DeformableSprite>
-    <LightSource range="1000" color="1.0,0.85,0.8,0.4"/>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
-    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" 
-             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    <LightSource range="1000" color="1.0,0.85,0.8,0.4">
+      <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="395,723,309,301" origin="0.5,0.2" subdivisions="5,3"/>
+    </LightSource>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
-    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora5>
-  
-  <sonarflora6 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
-               minsize="1" maxsize="2" alignwithsurface="true"
-               scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
+  <sonarflora6 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="1" maxsize="2" alignwithsurface="true" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
@@ -662,196 +611,218 @@
     <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="709,779,304,234" origin="0.5,0.2">
-      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
-      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
-                         row0="0,0 0,0 0,0"
-                         row1="0.5,0.5 1,1 0.5,0.5"/>
+      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1" />
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0.5,0.5 1,1 0.5,0.5" />
     </DeformableSprite>
-    <LightSource range="1000" color="1.0,0.85,0.8,0.4"/>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
-    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
-             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    <LightSource range="1000" color="1.0,0.85,0.8,0.4">
+      <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="709,779,304,234" origin="0.5,0.2" subdivisions="5,3"/>
+    </LightSource>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
-    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora6>
-
-  <sonarflorabranch1 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30" 
-                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" 
-                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
-    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="44,10,319,279" origin="0.5,0.1"/>
+  <sonarflorabranch1 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="44,10,319,279" origin="0.5,0.1" />
   </sonarflorabranch1>
-  <sonarflorabranch2 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30"
-                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1"
-                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
-    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="406,15,206,315" origin="0.5,0.1"/>
+  <sonarflorabranch2 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="406,15,206,315" origin="0.5,0.1" />
   </sonarflorabranch2>
-  <sonarflorabranch3 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30"
-                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1"
-                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
-    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="656,16,366,266" origin="0.8,0.1"/>
+  <sonarflorabranch3 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="656,16,366,266" origin="0.8,0.1" />
   </sonarflorabranch3>
-  <sonarflorabranch4 spawnpos="None" minsize="0.8" maxsize="1.2" randomrotation="-30,30"
-                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1"
-                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
-    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="38,374,499,355" origin="0.9,0.1"/>
+  <sonarflorabranch4 spawnpos="None" minsize="0.8" maxsize="1.2" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="38,374,499,355" origin="0.9,0.1" />
   </sonarflorabranch4>
   
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0"
-            minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
-  </icechunk>
+  <!-- ice chunks-->
+  <icechunk1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+  </icechunk1>
+  <icechunk2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+  </icechunk2>
+  <icechunk3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+  </icechunk3>
+  <icechunk4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
+    <overridecommonness commonness="10" leveltype="RidgeBasic" />
+    <overridecommonness commonness="10" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+  </icechunk4>
 
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
-            minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,355,513" origin="0.5,0.5"/>
-  </icechunk>
-
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
-            minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
-  </icechunk>
-
-  <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
-            minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
-  </icechunk>
-
+  <!-- rocks chunks-->
+  <rock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+  </rock1>
+  <rock2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+  </rock2>
+  <rock3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+  </rock3>
+  <rock4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="WastesBasic" />
+    <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+  </rock4>
+  
+  <!-- mossy rocks chunks-->
+  <mossyrock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+  </mossyrock1>
+  <mossyrock2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+  </mossyrock2>
+  <mossyrock3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+  </mossyrock3>
+  <mossyrock4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
+    <overridecommonness commonness="10" leveltype="PlateauBasic" />
+    <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+  </mossyrock4>
+  
   <blacksmoker1 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-5,5" commonness="0">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <overridecommonness commonness="3" leveltype="RidgeBasic" />
-    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
-    <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine"
-             force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200"/>
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character"
-             force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9" />
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
-        <affliction name="Burn" strength="1"/>
+        <Affliction identifier="burn" strength="1" />
       </Attack>
     </Trigger>
-    <ParticleEmitter
-      particle="hydrosmoke"
-      particlespersecond="4"
-      position="0,1400"
-      anglemin="80"
-      anglemax="100"
-      velocitymin="500"
-      velocitymax="2000"/>
-    <ParticleEmitter
-      particle="hydrosmokesmall"
-      particlespersecond="10"
-      position="0,1400"
-      anglemin="60"
-      anglemax="120"
-      velocitymin="100"
-      velocitymax="600"/>
+    <ParticleEmitter particle="hydrosmoke" particlespersecond="4" position="0,1400" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000" />
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="0,1400" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
   </blacksmoker1>
-
   <blacksmoker2 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
-    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
-    <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine"
-             force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200"/>
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character"
-             force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9" />
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
-        <affliction name="Burn" strength="1"/>
+        <Affliction identifier="burn" strength="1" />
       </Attack>
     </Trigger>
-    <ParticleEmitter
-      particle="hydrosmoke"
-      particlespersecond="4"
-      position="-20,570"
-      anglemin="80"
-      anglemax="100"
-      velocitymin="500"
-      velocitymax="2000"/>
-    <ParticleEmitter
-      particle="hydrosmokesmall"
-      particlespersecond="10"
-      position="-20,570"
-      anglemin="60"
-      anglemax="120"
-      velocitymin="100"
-      velocitymax="600"/>
+    <ParticleEmitter particle="hydrosmoke" particlespersecond="4" position="-20,570" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000" />
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="-20,570" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
   </blacksmoker2>
-
   <blacksmoker3 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
-    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
-    <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" 
-             force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200"/>
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" 
-             force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9" />
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
-        <affliction name="Burn" strength="1"/>
+        <Affliction identifier="burn" strength="1" />
       </Attack>
     </Trigger>
-    <ParticleEmitter
-      particle="hydrosmoke"
-      particlespersecond="4"
-      position="-50,700"
-      anglemin="80"
-      anglemax="100"
-      velocitymin="500"
-      velocitymax="2000"/>
-    <ParticleEmitter
-      particle="hydrosmokesmall"
-      particlespersecond="10"
-      position="-50,700"
-      anglemin="60"
-      anglemax="120"
-      velocitymin="100"
-      velocitymax="600"/>
+    <ParticleEmitter particle="hydrosmoke" particlespersecond="4" position="-50,700" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000" />
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
   </blacksmoker3>
-
   <lavavent spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
-    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9" />
     <Trigger randomtriggerinterval="10" randomtriggerprobability="0.5" staytriggereddelay="5" networksyncing="true">
-      <LightSource range="4000" color="1,0.0,0.0,1"/>
-      <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character"
-              force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
+      <LightSource range="4000" color="1,0.0,0.0,1" />
+      <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character" force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
         <Attack structuredamage="5" damagerange="500">
-          <affliction name="Burn" strength="20"/>
+          <Affliction identifier="burn" strength="20" />
         </Attack>
       </Trigger>
-      <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,700"/>
-      <ParticleEmitter
-        particle="lavasplash"
-        particlespersecond="100"
-        position="-50,700"
-        anglemin="70" anglemax="110"
-        velocitymin="500" velocitymax="5000"/>
-      <ParticleEmitter
-        particle="lavachunk"
-        particlespersecond="40"
-        position="-50,700"
-        anglemin="70" anglemax="110"
-        velocitymin="2500" velocitymax="4000"/>
+      <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,700" />
+      <ParticleEmitter particle="lavasplash" particlespersecond="100" position="-50,700" anglemin="70" anglemax="110" velocitymin="500" velocitymax="5000" />
+      <ParticleEmitter particle="lavachunk" particlespersecond="40" position="-50,700" anglemin="70" anglemax="110" velocitymin="2500" velocitymax="4000" />
     </Trigger>
-
-    <ParticleEmitter
-      particle="hydrosmokesmall"
-      particlespersecond="10"
-      position="-50,700"
-      anglemin="60" anglemax="120"
-      velocitymin="100" velocitymax="600"/>
+    <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
   </lavavent>
+
+  <geothermalvent_A spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,0,280,276" origin="0.5,0.9" />
+  </geothermalvent_A>
+
+  <geothermalvent_B spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="280,0,338,275" origin="0.5,0.9" />
+  </geothermalvent_B>
+
+  <geothermalvent_C spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="620,0,251,276" origin="0.5,0.9" />
+  </geothermalvent_C>
+
+  <geothermalvent_D spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="871,0,196,276" origin="0.5,0.9" />
+  </geothermalvent_D>
+
+  <geothermalvent_E spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="1067,0,260,276" origin="0.5,0.9" />
+  </geothermalvent_E>
+
+  <geothermalvent_F spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,276,280,308" origin="0.5,0.9" />
+  </geothermalvent_F>
+
+  <geothermalvent_G spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="280,276,340,308" origin="0.5,0.9" />
+  </geothermalvent_G>
+
+  <geothermalvent_multiple spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,584,1461,339" origin="0.5,0.9" />
+  </geothermalvent_multiple>
+
+  <geothermalvent_ground spawnpos="Wall, SeaFloor" alignment="Top" minsize="1" maxsize="1.2" alignwithsurface="true" randomrotation="-10,10">
+    <overridecommonness commonness="5" />
+    <Sprite texture="Content/LevelObjects/geothermalvents.png" sourcerect="0,923,1461,204" origin="0.5,0.9" />
+  </geothermalvent_ground>
 
   <watercurrent1 spawnpos="MainPath" alignment="Top, Left, Right, Bottom" minsize="0.5" maxsize="2.0" randomrotation="0,360" commonness="0">
     <overridecommonness commonness="0.5" leveltype="WastesBasic" />
     <overridecommonness commonness="1.5" leveltype="RidgeBasic" />
-    <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,0"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Submarine" networksyncing="true"
-             force="0,1.5" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" forcefluctuationstrength="0.9" forcefluctuationinterval="30"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Character" networksyncing="true" 
-             force="0,5" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="0.9" forcefluctuationinterval="30"/>
+    <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,0" />
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Submarine" networksyncing="true" force="0,0.2" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" />
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Character" networksyncing="true" force="0,2.0" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="2.0" forcefluctuationinterval="20" />
   </watercurrent1>
-
   <!--
   <fallingicechunk spawnpos="Wall, RuinWall" minsurfacewidth="0"
             minsize="0.5" maxsize="1" randomrotation="-180,180" commonness="10" depthrange="-0.5,-0.1">
@@ -859,6 +830,4 @@
     <PhysicsBody radius="330"/>
   </fallingicechunk>
   -->
-
-
 </levelobjects>

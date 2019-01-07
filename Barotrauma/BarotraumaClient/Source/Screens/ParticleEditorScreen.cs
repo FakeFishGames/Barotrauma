@@ -61,7 +61,6 @@ namespace Barotrauma
             }
         }
 
-        private GUIComponent guiRoot;
         private GUIComponent rightPanel, leftPanel;
 
         private GUIListBox prefabList;
@@ -86,16 +85,14 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            guiRoot = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null);
-
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.07f, 1.0f), guiRoot.RectTransform) { MinSize = new Point(150,0) }, 
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.07f, 1.0f), Frame.RectTransform) { MinSize = new Point(150,0) }, 
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
                 Stretch = true
             };
 
-            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), guiRoot.RectTransform, Anchor.TopRight) { MinSize = new Point(450, 0) },
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), Frame.RectTransform, Anchor.TopRight) { MinSize = new Point(450, 0) },
                 style: "GUIFrameRight");
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) {RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
@@ -146,7 +143,14 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+            GameMain.ParticleManager.Camera = cam;
             RefreshPrefabList();
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+            GameMain.ParticleManager.Camera = GameMain.GameScreen.Cam;
         }
 
         private void RefreshPrefabList()
@@ -163,11 +167,6 @@ namespace Barotrauma
                     UserData = particlePrefab
                 };
             }
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            guiRoot.AddToGUIUpdateList();
         }
 
         private void Emit(Vector2 position)
@@ -278,7 +277,7 @@ namespace Barotrauma
 
             //-------------------------------------------------------
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 null, null, null, null,
                 cam.Transform);
@@ -290,7 +289,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.Additive,
                 null, null, null, null,
                 cam.Transform);
@@ -302,7 +301,7 @@ namespace Barotrauma
 
             //-------------------------------------------------------
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
             
             GUI.Draw(Cam, spriteBatch);
 

@@ -2,9 +2,21 @@
 <style>
   <Cursor texture="Content/UI/cursor.png" origin="0,0"/>
   
+  <UIGlow texture="Content/UI/InnerGlow.png"  sourcerect ="0,0,512,384" slice="128,128,384,256"/>
+  
+  <FocusIndicator texture="Content/UI/UI_Atlas2.png" sourcerect="112,784,448,224" rows="2" columns="4"/>
+  
   <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
+
+  <OuterGlow
+    color="1.0,1.0,1.0,0.8"
+    hovercolor="1.0,1.0,1.0,0.8"
+    selectedcolor="1.0,1.0,1.0,0.8">
+
+    <Sprite texture="Content/UI/OuterGlow.png" size="0.0, 0.0" sourcerect ="0, 0, 256, 256" slice="96,96,160,160"/>
+  </OuterGlow>
   
   <GUIFrame
     padding="40.0, 50.0, 40.0, 50.0"
@@ -37,6 +49,16 @@
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 705, 420, 55" slice="87,706,430,739"/>
   </GUIFrameTop>
 
+  <GUIFrameBottom
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    textcolor="0.0, 0.0, 0.0, 1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 55" slice="87,576,430,593"/>
+  </GUIFrameBottom>
+  
   <GUIFrameLeft
     padding="40.0, 40.0, 40.0, 40.0"
     color="1.0,1.0,1.0,1.0"
@@ -72,7 +94,8 @@
   <GUIButton
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    selectedcolor="1.0,1.0,1.0,1.0"
+    pressedcolor="0.9,0.9,0.9,1.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="683, 74, 129, 41" slice="687, 78, 808, 109"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="888, 91, 129, 41" slice="893, 98, 1013, 125"/>
@@ -87,8 +110,9 @@
   <GUIButtonLarge
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
-    
+    selectedcolor="1.0,1.0,1.0,1.0"
+    pressedcolor="0.9,0.9,0.9,1.0">
+
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="4,116,222,59" slice="41,140,189,151"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="415,172,222,59" slice="452,196,600,207"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="646,172,222,59" slice="683,196,831,207"/>    
@@ -98,6 +122,37 @@
       textcolor="0.6, 0.65, 0.7, 1.0"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonLarge>
+
+  <GUIButtonServerListInfo
+    color="0.4,0.59,0.69,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>    
+  </GUIButtonServerListInfo>
+
+  <GUIButtonRefresh
+    color="0.8,0.8,0.8,1.0"
+    hovercolor="0.3,0.3,0.8,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
+  </GUIButtonRefresh>
+
+  <UIToggleButton
+    color="0.9,0.9,0.9,0.8"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,0.9"
+    textcolor="0.0,0.0,0.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect ="96,366,32,352" slice="101,371,123,713"/>
+    <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" maintainaspectratio="true" sourcerect="128,399,32,37"/>
+  </UIToggleButton>
 
   <GUIButtonHorizontalArrow
     color="0.8,0.8,0.8,0.8"
@@ -144,7 +199,7 @@
     color="1.0,1.0,1.0,1.0"
     hovercolor="0.3, 0.3, 0.3, 1.0"
     selectedcolor="1.0, 0.6, 0.0, 1.0"
-    padding="0.0, 0.0, 0.0, 0.0">
+    padding="10.0, 0.0, 0.0, 0.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
   </GUIToolTip>
@@ -219,6 +274,18 @@
     </GUITextBlock>
   </GUITextBox>
 
+  <GUIServerListTextBox
+  color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="0.0,0.5,0.0,1.0"
+    textcolor="0.5, 0.55, 0.6, 1.0">
+    <!--
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="469, 599, 276, 52" slice="480, 610, 731, 640"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="469, 544, 276, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="469, 490, 276, 52" slice="480, 497, 731, 529"/>
+    -->
+  </GUIServerListTextBox>
+
   <GUINumberInput>
     <GUITextBox
       color="1.0,1.0,1.0,1.0"
@@ -247,19 +314,58 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUITickBox>
 
-  <GUIMessageBox
-    padding="40.0, 20.0, 40.0, 20.0"
-    color="1.0, 1.0, 1.0, 1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0"  
-    hovercolor="0.8, 0.8, 0.8, 1.0"
-    selectedcolor="1.0, 0.82, 0.05, 1.0"    
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+  <GUIRadioButton
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0" >
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="976, 431, 23, 24" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="857, 88, 23, 24" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="857, 88, 23, 24" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="517, 943, 23, 24" tile="false"/>
+    <GUITextBlock
+      textcolor="0.5, 0.55, 0.6, 1.0"
+      hovercolor="0.3, 0.3, 0.3, 0.5"
+      selectedcolor="1.0, 0.6, 0.0, 0.3"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUIRadioButton>
+  
+  <GUIServerListCompatibleTickBox
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="389, 166, 16, 16"/>
+  </GUIServerListCompatibleTickBox>
+
+  <GUIServerListPasswordTickBox
+    color="0.2,0.2,0.2,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0" >
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="1001, 639, 10, 14"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 639, 10, 14"/>
+  </GUIServerListPasswordTickBox>
+
+  <GUIServerListRoundStartedTickBox
+    color="0.2,0.2,0.2,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
+  </GUIServerListRoundStartedTickBox>
+
+  <GUIMessageBox    
+    color="0.0, 0.0, 0.0, 0.8"
+    hovercolor="0.0, 0.0, 0.0, 0.8"
+    selectedcolor="0.0, 0.0, 0.0, 0.8"
+    pressedcolor="0.0, 0.0, 0.0, 0.8"
+    textcolor="0.0, 0.0, 0.0, 0.0">
+
+    <Sprite texture="Content/UI/InnerShadow.png" sourcerect="0,0,512,512" slice="170,170,342,342"/>
+    
     <GUIFrame
       padding="40.0, 20.0, 40.0, 20.0"
       color="1.0,1.0,1.0,1.0"
       hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"
-  
+      selectedcolor="1.0,1.0,1.0,1.0"  
       textcolor="0.0, 0.0, 0.0, 1.0">
 
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
@@ -317,6 +423,19 @@
       <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect ="56, 7, 31, 847"/>
     </Slider>
   </GUIProgressBarVertical>
+
+
+  <GUIBackgroundBlocker
+    color="0.0, 0.0, 0.0, 0.8"
+    hovercolor="0.0, 0.0, 0.0, 0.8"
+    selectedcolor="0.0, 0.0, 0.0, 0.8"
+    pressedcolor="0.0, 0.0, 0.0, 0.8"
+    textcolor="0.0, 0.0, 0.0, 0.0">
+
+    <Sprite texture="Content/UI/InnerShadow.png" sourcerect="0,0,512,512" slice="170,170,342,342"/>
+    <GUITextBlock
+      textcolor="0.0, 0.0, 0.0, 0.0"/>
+  </GUIBackgroundBlocker>
   
   <ItemUI
     padding="40.0,40.0,40.0,40.0"
@@ -345,7 +464,7 @@
     outlinecolor="0.0,0.0,0.0,0.0">
     <GUIFrame
       padding="5.0,10.0,5.0,10.0"
-      color="1.0,1.0,1.0,1.0"
+      color="1.0,1.0,1.0,0.95"
       hovercolor="1.0,1.0,1.0,1.0"
       selectedcolor="1.0,1.0,1.0,1.0">
       <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
@@ -362,6 +481,8 @@
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
   </ChatTextBox>
 
+  <!-- Health interface -->
+  
   <CPRButton
     color="0.9,0.9,0.9,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
@@ -376,6 +497,70 @@
       textcolor="0.6, 0.65, 0.7, 1.0"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </CPRButton>
+
+  <AfflictionIconSlot
+    color="1.0,1.0,1.0,0.7"
+    hovercolor="1.0,1.0,1.0,0.9"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
+  </AfflictionIconSlot>
+
+  <HealthCross
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" sourcerect="179,370,26,27"/>
+  </HealthCross>
+  
+  <!--
+  <HealthCircleInner1
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="0,0,683,683"/>
+  </HealthCircleInner1>
+
+  <HealthCircleInner2
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 1366, 682, 682"/>
+  </HealthCircleInner2>
+  -->
+  <HealthCircleInner3
+    color="1,1,1,0.8"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="783, 1466, 483, 482"/>
+  </HealthCircleInner3>
+
+
+  <HealthCircleMid1
+    color="1,1,1,0.4"
+    hovercolor="1,1,1,0.6">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="683, 0, 683, 683"/>
+  </HealthCircleMid1>
+
+  <HealthCircleMid2
+    color="1,1,1,0.6"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 0, 682, 683"/>
+  </HealthCircleMid2>
+
+  <HealthCircleOuter1
+    color="1,1,1,0.3"
+    hovercolor="1,1,1,0.3">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="683, 683, 683, 683"/>
+  </HealthCircleOuter1>
+
+  <HealthCircleOuter2
+    color="1,1,1,0.8"
+    hovercolor="1,1,1,0.8">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 683, 683, 683"/>
+  </HealthCircleOuter2>
+
+  <HealthCircleOuter3
+    color="1,1,1,0.3"
+    hovercolor="1,1,1,0.3">
+    <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="0, 1366, 683, 682"/>
+  </HealthCircleOuter3>
+  <!-- /health interface -->
   
   <IndicatorLightRed
     color="1.0,1.0,1.0,1.0"
@@ -498,6 +683,15 @@
     </GUIButtonVertical>
   </GUISlider>
 
+  <SonarFrame
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"  
+    textcolor="0.0, 0.0, 0.0, 1.0">
+    <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect="96,199,273,166" slice="136,219,326,350"/>
+  </SonarFrame>
+
   <InventorySlotSmall
     color="0.9,0.9,0.9,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
@@ -555,4 +749,22 @@
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,256,32,32" origin="0.5,0.5" tile="false"/>
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="32,256,32,32" origin="0.5,0.5" tile="false"/>
   </ConnectionPanelScrew>
+
+  <MiniMapRoom
+    color="1.0,1.0,1.0,1.0"
+    textcolor="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    outlinecolor="0.0,0.0,0.0,0.0">
+    <Sprite texture="Content/UI/UI_Atlas2.png" sourcerect="96,0,32,32" slice="106,10,118,22"/>
+  </MiniMapRoom>
+
+  <ScanLines
+    color="1.0,1.0,1.0,1.0"
+    textcolor="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    outlinecolor="0.0,0.0,0.0,0.0">
+    <Sprite texture="Content/UI/UI_Atlas2.png" tile="true" sourcerect="96,64,128,128"/>
+  </ScanLines>
 </style>

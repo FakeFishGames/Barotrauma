@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Steam
 {
-    class SteamManager
+    partial class SteamManager
     {
 #if DEBUG
         public static bool USE_STEAM
@@ -66,7 +66,7 @@ namespace Barotrauma.Steam
             {
                 isInitialized = false;
 #if CLIENT
-                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed (steam_api64.dll not found).");
+                new Barotrauma.GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamDllNotFound"));
 #else
                 DebugConsole.ThrowError("Initializing Steam client failed (steam_api64.dll not found).", e);
 #endif
@@ -75,7 +75,7 @@ namespace Barotrauma.Steam
             {
                 isInitialized = false;
 #if CLIENT
-                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account.");
+                new Barotrauma.GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamClientInitFailed"));
 #else
                 DebugConsole.ThrowError("Initializing Steam client failed.", e);
 #endif
@@ -156,6 +156,8 @@ namespace Barotrauma.Steam
                     MaxPlayers = s.MaxPlayers,
                     HasPassword = s.Passworded,
                 };
+                serverInfo.PingChecked = true;
+                serverInfo.Ping = s.Ping;
                 s.FetchRules();
                 s.OnReceivedRules += (_) =>
                 {
@@ -178,8 +180,6 @@ namespace Barotrauma.Steam
                     {
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
                     }
-
-
 
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
                     {
@@ -210,103 +210,6 @@ namespace Barotrauma.Steam
         }
 
 #endregion
-
-#region Server
-
-        public static bool CreateServer(Networking.GameServer server)
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return false;
-            }
-
-            ServerInit options = new ServerInit("Barotrauma", "Barotrauma")
-            {
-                GamePort = (ushort)server.Port,
-                QueryPort = (ushort)server.QueryPort
-            };
-            //options.QueryShareGamePort();
-
-            instance.server = new Server(AppID, options);
-            if (!instance.server.IsValid)
-            {
-                instance.server.Dispose();
-                instance.server = null;
-                DebugConsole.ThrowError("Initializing Steam server failed.");
-                return false;
-            }
-
-            RefreshServerDetails(server);
-
-            instance.server.Auth.OnAuthChange = server.OnAuthChange;
-
-            return true;
-        }
-
-        public static bool RegisterToMasterServer()
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
-            Instance.server.LogOnAnonymous();
-            return true;
-        }
-
-        public static bool RefreshServerDetails(Networking.GameServer server)
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return false;
-            }
-
-            // These server state variables may be changed at any time.  Note that there is no lnoger a mechanism
-            // to send the player count.  The player count is maintained by steam and you should use the player
-            // creation/authentication functions to maintain your player count.
-            instance.server.ServerName = server.Name;
-            instance.server.MaxPlayers = server.MaxPlayers;
-            instance.server.Passworded = server.HasPassword;
-            Instance.server.SetKey("message", GameMain.NetLobbyScreen.ServerMessageText);
-            Instance.server.SetKey("version", GameMain.Version.ToString());
-            Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
-            Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
-            Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
-            Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
-            Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
-            Instance.server.SetKey("allowspectating", server.AllowSpectating.ToString());
-            Instance.server.SetKey("allowrespawn", server.AllowRespawn.ToString());
-            Instance.server.SetKey("traitors", server.TraitorsEnabled.ToString());
-            Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
-            Instance.server.SetKey("gamemode", server.GameMode);
-
-#if SERVER
-            instance.server.DedicatedServer = true;
-#endif
-
-            return true;
-        }
-
-        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
-
-            DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
-            {
-                DebugConsole.Log("Authentication failed");
-                return false;
-            }
-            return true;
-        }
-
-        public static bool CloseServer()
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
-            
-            instance.server.Dispose();
-            instance.server = null;
-            
-            return true;
-        }
-
-        #endregion
 
         #region Workshop
 
