@@ -27,8 +27,15 @@ namespace Barotrauma
             }
         }
 
+        // Only for testing in the debug build. Not saved.
         protected Vector2 textureScale = Vector2.One;
-        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
+
+#if DEBUG
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", false)]
+#else
+        [Editable(DecimalCount = 3)]
+#endif
+
         public Vector2 TextureScale
         {
             get { return textureScale; }
@@ -39,6 +46,14 @@ namespace Barotrauma
                     MathHelper.Clamp(value.Y, 0.01f, 10));
             }
         }
+
+        // Only for testing in the debug build. Not saved.
+        [Editable,
+#if DEBUG
+            Serialize(true, false)
+#endif
+        ]
+        public bool DrawTiled { get; protected set; } = true;
         
         protected Vector2 textureOffset = Vector2.Zero;
         [Editable, Serialize("0.0, 0.0", true)]
@@ -157,7 +172,7 @@ namespace Barotrauma
         {
             Draw(spriteBatch, false, false, damageEffect);
         }
-        
+
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
             if (prefab.sprite == null) return;
@@ -189,28 +204,83 @@ namespace Barotrauma
             Vector2 textureOffset = this.textureOffset;
             if (FlippedX) textureOffset.X = -textureOffset.X;
             if (FlippedY) textureOffset.Y = -textureOffset.Y;
-            
+
             if (back && damageEffect == null)
             {
                 if (prefab.BackgroundSprite != null)
                 {
-                    SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
-                    prefab.BackgroundSprite.effects ^= SpriteEffects;
+                    bool drawDropShadow = Submarine != null && HasBody;
+                    Vector2 dropShadowOffset = Vector2.Zero;
+                    if (drawDropShadow)
+                    {
+                        dropShadowOffset = Submarine.WorldPosition - WorldPosition;
+                        if (dropShadowOffset != Vector2.Zero)
+                        {
+                            if (IsHorizontal)
+                            {
+                                dropShadowOffset = new Vector2(0.0f, Math.Sign(dropShadowOffset.Y) * 10.0f);
+                            }
+                            else
+                            {
+                                dropShadowOffset = new Vector2(Math.Sign(dropShadowOffset.X) * 10.0f, 0.0f);
+                            }
+                            dropShadowOffset.Y = -dropShadowOffset.Y;
+                        }
+                    }
 
-                    Point backGroundOffset = new Point(
-                        MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
-                        MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
+                    if (DrawTiled)
+                    {
+                        SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
+                        prefab.BackgroundSprite.effects ^= SpriteEffects;
 
-                    prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
-                        new Vector2(rect.Width, rect.Height),
-                        color: color,
-                        textureScale: TextureScale,
-                        startOffset: backGroundOffset,
-                        scaleMultiplier: Scale);
+                        Point backGroundOffset = new Point(
+                            MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
+                            MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
 
-                    prefab.BackgroundSprite.effects = oldEffects;
+                        prefab.BackgroundSprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            new Vector2(rect.Width, rect.Height),
+                            color: color,
+                            textureScale: TextureScale * Scale,
+                            startOffset: backGroundOffset);
+
+                        if (drawDropShadow)
+                        {
+                            prefab.BackgroundSprite.DrawTiled(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                new Vector2(rect.Width, rect.Height),
+                                color: Color.Black * 0.5f,
+                                textureScale: TextureScale * Scale,
+                                startOffset: backGroundOffset);
+                        }
+
+                        prefab.BackgroundSprite.effects = oldEffects;
+                    }
+                    else
+                    {
+                        prefab.BackgroundSprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
+
+                        if (drawDropShadow)
+                        {
+                            prefab.BackgroundSprite.Draw(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                Color.Black * 0.5f,
+                                Vector2.Zero,
+                                scale: Scale,
+                                rotate: 0,
+                                spriteEffect: SpriteEffects);
+                        }
+                    }
                 }
             }
 
@@ -223,7 +293,7 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = Sections[i].damage > 0 ? 
+                        float newCutoff = Sections[i].damage > 0 ?
                             MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / prefab.Health) : 0.0f;
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
@@ -231,7 +301,7 @@ namespace Barotrauma
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
                             damageEffect.Parameters["inColor"].SetValue(color.ToVector4());
-                            
+
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
                             Submarine.DamageEffectCutoff = newCutoff;
@@ -239,25 +309,38 @@ namespace Barotrauma
                         }
                     }
 
-                    Point sectionOffset = new Point(
-                        Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
-                    
-                    if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
-                    if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
-                    
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+                    if (DrawTiled)
+                    {
+                        Point sectionOffset = new Point(
+                            Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
+                            Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
 
-                    prefab.sprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
-                        color: color,
-                        startOffset: sectionOffset,
-                        depth: depth,
-                        textureScale: TextureScale,
-                        scaleMultiplier: Scale);
+                        if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
+                        if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
+
+                        sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
+                        sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+
+                        prefab.sprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
+                            new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
+                            color: color,
+                            startOffset: sectionOffset,
+                            depth: depth,
+                            textureScale: TextureScale * Scale);
+                    }
+                    else
+                    {
+                        prefab.sprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
+                    }
                 }
                 prefab.sprite.effects = oldEffects;
             }

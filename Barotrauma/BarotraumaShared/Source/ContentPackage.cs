@@ -14,6 +14,7 @@ namespace Barotrauma
         Submarine,
         Jobs, 
         Item, 
+        ItemAssembly,
         Character,
         Structure,
         Executable,
@@ -40,7 +41,7 @@ namespace Barotrauma
         public static string Folder = "Data/ContentPackages/";
 
         public static List<ContentPackage> List = new List<ContentPackage>();
-
+        
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
         private static HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
@@ -68,6 +69,12 @@ namespace Barotrauma
 
         public string SteamWorkshopUrl;
 
+        public bool HideInWorkshopMenu
+        {
+            get;
+            private set;
+        }
+
         private Md5Hash md5Hash;
         public Md5Hash MD5hash
         {
@@ -85,6 +92,11 @@ namespace Barotrauma
         {
             get;
             set;
+        }
+
+        public Version GameVersion
+        {
+            get; set;
         }
 
         public List<ContentFile> Files;
@@ -113,17 +125,30 @@ namespace Barotrauma
             }
 
             Name = doc.Root.GetAttributeString("name", "");
+            HideInWorkshopMenu = doc.Root.GetAttributeBool("hideinworkshopmenu", false);
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
             SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
-
+            GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+            
+            List<string> errorMsgs = new List<string>();
             foreach (XElement subElement in doc.Root.Elements())
             {
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
-                    DebugConsole.ThrowError("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
-                    continue;
+                    errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
+                    type = ContentType.None;                    
                 }
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+            }
+
+            bool compatible = IsCompatible();
+            //If we know that the package is not compatible, don't display error messages.
+            if (compatible)
+            {
+                foreach (string errorMsg in errorMsgs)
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
             }
         }
 
@@ -132,13 +157,33 @@ namespace Barotrauma
             return Name;
         }
 
+        public bool IsCompatible()
+        {
+            if (Files.All(f => f.Type == ContentType.Submarine))
+            {
+                return true;
+            }
+
+            //content package compatibility checks were added in 0.9
+            //0.9 is not compatible with older content packages
+            if (GameVersion < new Version(0, 9))
+            {
+                return false;
+            }
+
+            //do additional checks here if later versions add changes that break compatibility
+
+            return true;
+        }
+
         public static ContentPackage CreatePackage(string name, string path, bool corePackage)
         {
             ContentPackage newPackage = new ContentPackage()
             {
                 Name = name,
                 Path = path,
-                CorePackage = corePackage
+                CorePackage = corePackage,
+                GameVersion = GameMain.Version
             };
 
             return newPackage;
@@ -166,6 +211,9 @@ namespace Barotrauma
                 new XAttribute("name", Name),
                 new XAttribute("path", Path),
                 new XAttribute("corepackage", CorePackage)));
+
+
+            doc.Root.Add(new XAttribute("gameversion", GameVersion.ToString()));
 
             if (!string.IsNullOrEmpty(SteamWorkshopUrl))
             {
@@ -327,7 +375,7 @@ namespace Barotrauma
             foreach (string filePath in files)
             {
                 ContentPackage package = new ContentPackage(filePath);
-                List.Add(package);
+                List.Add(package);                               
             }
         }
     }

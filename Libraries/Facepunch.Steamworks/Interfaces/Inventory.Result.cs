@@ -114,6 +114,10 @@ namespace Facepunch.Steamworks
                 for ( int i=0; i< steamItems.Length; i++ )
                 {
                     var item = inventory.ItemFrom( Handle, steamItems[i], i );
+                    if ( item == null )
+                    {
+                        continue;
+                    }
 
                     if ( ( steamItems[i].Flags & (int)SteamNative.SteamItemFlags.Removed ) != 0 )
                     {
@@ -181,14 +185,23 @@ namespace Facepunch.Steamworks
 
         internal Item ItemFrom( SteamInventoryResult_t handle, SteamItemDetails_t detail, int index )
         {
-            var props = new Dictionary<string, string>();
+            Dictionary<string, string> props = null;
 
-            if ( inventory.GetResultItemProperty(handle, (uint) index, null, out string propertyNames) )
+            if ( EnableItemProperties && inventory.GetResultItemProperty(handle, (uint) index, null, out string propertyNames) )
             {
+                props = new Dictionary<string, string>();
+
                 foreach ( var propertyName in propertyNames.Split( ',' ) )
                 {
                     if ( inventory.GetResultItemProperty(handle, (uint)index, propertyName, out string propertyValue ) )
                     {
+                        if (propertyName == "error")
+                        {
+                            Console.Write("Steam item error: ");
+                            Console.WriteLine(propertyValue);
+                            return null;
+                        }
+
                         props.Add(propertyName, propertyValue);
                     }
                 }

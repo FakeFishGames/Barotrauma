@@ -46,8 +46,9 @@ namespace Barotrauma
         private bool limbPairEditing = true;
         private bool uniformScaling = true;
         private bool lockSpriteOrigin = true;
-        private bool lockSpritePosition = true;
-        private bool lockSpriteSize = true;
+        private bool lockSpritePosition;
+        private bool lockSpriteSize;
+        private bool recalculateCollider;
         private bool copyJointSettings;
         private bool displayColliders;
         private bool displayBackgroundColor;
@@ -61,8 +62,6 @@ namespace Barotrauma
         private Vector2? anchor1Pos;
 
         private float spriteSheetZoom = 1;
-        private float textureMinScale = 0.1f;
-        private float textureMaxScale = 2;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
@@ -1188,6 +1187,7 @@ namespace Barotrauma
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
+        private GUITickBox displayCollidersToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
@@ -1343,6 +1343,17 @@ namespace Barotrauma
                 }
             };
             lockSpriteSizeToggle.TextColor = Color.White;
+            var recalculateColliderToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Adjust collider")
+            {
+                Selected = recalculateCollider,
+                OnSelected = (GUITickBox box) =>
+                {
+                    recalculateCollider = box.Selected;
+                    displayCollidersToggle.Selected = recalculateCollider;
+                    return true;
+                }
+            };
+            recalculateColliderToggle.TextColor = Color.White;
             // Ragdoll
             Point sliderSize = new Point(300, 20);
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
@@ -1676,7 +1687,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Display Colliders")
+            displayCollidersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Display Colliders")
             {
                 Selected = displayColliders,
                 OnSelected = box =>
@@ -2844,7 +2855,7 @@ namespace Barotrauma
         private Vector2[] corners = new Vector2[4];
         private Vector2[] GetLimbPhysicRect(Limb limb)
         {
-            Vector2 size = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) * Cam.Zoom * limb.Scale;
+            Vector2 size = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) * Cam.Zoom;
             Vector2 up = VectorExtensions.Backward(limb.Rotation);
             Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
             corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size);
@@ -2866,7 +2877,7 @@ namespace Barotrauma
                 {
                     GUI.DrawRectangle(spriteBatch, corners, Color.White, thickness: 3);
                 }
-                if (GUI.MouseOn == null && Widget.selectedWidgets.None() && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                if (GUI.MouseOn == null && Widget.selectedWidgets.None() && !spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                 {
                     if (isSelected)
                     {
@@ -3235,31 +3246,54 @@ namespace Barotrauma
                         var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
                         if (selectedLimbs.Contains(limb))
                         {
-                            if (!lockSpriteOrigin)
+                            var sprite = limb.ActiveSprite;
+                            Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
+                            Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
+                            Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
+                            var originWidget = GetLimbEditWidget($"{limb.limbParams.ID}_origin", limb, widgetSize, Widget.Shape.Cross, initMethod: w =>
                             {
-                                var sprite = limb.ActiveSprite;
-                                Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
-                                Vector2 GetTopRight() => new Vector2(GetTopLeft().X + sprite.SourceRect.Width, GetTopLeft().Y);
-                                Vector2 GetBottomRight() => new Vector2(GetTopRight().X, GetTopRight().Y + sprite.SourceRect.Height);
-                                var originWidget = GetLimbEditWidget($"{limb.limbParams.ID}_origin", limb, widgetSize, Widget.Shape.Cross, initMethod: w =>
+                                w.refresh = () => w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
+                                w.refresh();
+                                w.MouseHeld += dTime =>
                                 {
-                                    w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
-                                    w.MouseHeld += dTime =>
+                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
+                                    w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
+                                    sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                    if (limb.DamagedSprite != null)
                                     {
-                                        var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
-                                        w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
-                                        sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
-                                        w.tooltip = $"Origin: {sprite.RelativeOrigin.FormatDoubleDecimal()}";
-                                    };
-                                    w.PreDraw += (sb, dTime) =>
+                                        limb.DamagedSprite.RelativeOrigin = sprite.RelativeOrigin;
+                                    }
+                                    TryUpdateLimbParam(limb, "origin", sprite.RelativeOrigin);
+                                    if (limbPairEditing)
                                     {
-                                        var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
-                                        w.DrawPos = (spritePos + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * spriteSheetZoom)
-                                            .Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
-                                    };
-                                });
-                                originWidget.Draw(spriteBatch, deltaTime);
-                            }
+                                        UpdateOtherLimbs(limb, otherLimb =>
+                                        {
+                                            otherLimb.ActiveSprite.RelativeOrigin = sprite.RelativeOrigin;
+                                            if (otherLimb.DamagedSprite != null)
+                                            {
+                                                otherLimb.DamagedSprite.RelativeOrigin = sprite.RelativeOrigin;
+                                            }
+                                            TryUpdateLimbParam(otherLimb, "origin", sprite.RelativeOrigin);
+                                        });
+                                    }
+                                };
+                                w.PreUpdate += dTime =>
+                                {
+                                    // Additional condition
+                                    if (w.Enabled)
+                                    {
+                                        w.Enabled = !lockSpriteOrigin;
+                                    }
+                                };
+                                w.PreDraw += (sb, dTime) =>
+                                {
+                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
+                                    w.DrawPos = (spritePos + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * spriteSheetZoom)
+                                        .Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
+                                    w.refresh();
+                                };
+                            });
+                            originWidget.Draw(spriteBatch, deltaTime);
                             if (!lockSpritePosition)
                             {
                                 var positionWidget = GetLimbEditWidget($"{limb.limbParams.ID}_position", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
@@ -3278,6 +3312,7 @@ namespace Barotrauma
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
                                         }
+                                        RecalculateOrigin(limb);
                                         TryUpdateLimbParam(limb, "sourcerect", newRect);
                                         if (limbPairEditing)
                                         {
@@ -3289,8 +3324,23 @@ namespace Barotrauma
                                                     otherLimb.DamagedSprite.SourceRect = newRect;
                                                 }
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                                                RecalculateOrigin(otherLimb);
                                             });
                                         };
+                                        void RecalculateOrigin(Limb l)
+                                        {
+                                            if (lockSpriteOrigin)
+                                            {
+                                                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                                                var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
+                                                l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                            }
+                                            else
+                                            {
+                                                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                                                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
+                                            }
+                                        }
                                     };
                                     w.PreDraw += (sb, dTime) => w.refresh();
                                 });    
@@ -3317,8 +3367,11 @@ namespace Barotrauma
                                         newRect.Size = new Point(width, height);
                                         limb.ActiveSprite.SourceRect = newRect;
                                         limb.ActiveSprite.size = new Vector2(width, height);
-                                        // Refresh the absolute origin, so that the relative origin will be recalculated
-                                        limb.ActiveSprite.Origin = limb.ActiveSprite.Origin;
+                                        if (recalculateCollider)
+                                        {
+                                            RecalculateCollider(limb);
+                                        }
+                                        RecalculateOrigin(limb);
                                         if (limb.DamagedSprite != null)
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
@@ -3329,8 +3382,11 @@ namespace Barotrauma
                                             UpdateOtherLimbs(limb, otherLimb =>
                                             {
                                                 otherLimb.ActiveSprite.SourceRect = newRect;
-                                                // Refresh the absolute origin, so that the relative origin will be recalculated
-                                                otherLimb.ActiveSprite.Origin = otherLimb.ActiveSprite.Origin;
+                                                RecalculateOrigin(otherLimb);
+                                                if (recalculateCollider)
+                                                {
+                                                    RecalculateCollider(otherLimb);
+                                                }
                                                 if (otherLimb.DamagedSprite != null)
                                                 {
                                                     otherLimb.DamagedSprite.SourceRect = newRect;
@@ -3338,6 +3394,26 @@ namespace Barotrauma
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
                                             });
                                         };
+                                        void RecalculateCollider(Limb l)
+                                        {
+                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
+                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius));
+                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width));
+                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height));
+                                        }
+                                        void RecalculateOrigin(Limb l)
+                                        {
+                                            if (lockSpriteOrigin)
+                                            {
+                                                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                                                l.ActiveSprite.Origin = l.ActiveSprite.Origin;
+                                            }
+                                            else
+                                            {
+                                                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                                                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
+                                            }
+                                        }
                                     };
                                     w.PreDraw += (sb, dTime) => w.refresh();
                                 });

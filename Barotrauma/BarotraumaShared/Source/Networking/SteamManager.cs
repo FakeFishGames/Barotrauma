@@ -1,10 +1,12 @@
 ﻿using Barotrauma.Networking;
 using Facepunch.Steamworks;
 using Microsoft.Xna.Framework;
+using RestSharp.Extensions.MonoHttp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Xml.Linq;
 
 namespace Barotrauma.Steam
@@ -124,6 +126,25 @@ namespace Barotrauma.Steam
             }
             return instance.client.SteamId;
         }
+
+        public static ulong GetWorkshopItemIDFromUrl(string url)
+        {
+            try
+            {
+                Uri uri = new Uri(url);
+                string idStr = HttpUtility.ParseQueryString(uri.Query).Get("id");
+                if (ulong.TryParse(idStr, out ulong id))
+                {
+                    return id;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \""+url+"\"!", e);
+            }
+
+            return 0;
+        }
         
         public static bool UnlockAchievement(string achievementName)
         {
@@ -184,8 +205,11 @@ namespace Barotrauma.Steam
                 {
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
+
                     if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
                     if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+                    if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
+
                     if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"]=="True";
                     if (s.Rules.ContainsKey("modeselectionmode"))
                     {
@@ -202,7 +226,8 @@ namespace Barotrauma.Steam
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
                     }
 
-                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
+                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
+                        serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
                     {
                         //invalid contentpackage info
                         serverInfo.ContentPackageNames.Clear();
@@ -288,6 +313,7 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("contentpackageurl", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
             Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
             Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
             Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
@@ -435,6 +461,24 @@ namespace Barotrauma.Steam
             };
         }
 
+        public static void SubscribeToWorkshopItem(string itemUrl)
+        {
+            if (instance == null || !instance.isInitialized) return;
+
+            ulong id = GetWorkshopItemIDFromUrl(itemUrl);
+            if (id == 0) { return; }
+
+            var item = instance.client.Workshop.GetItem(id);
+            if (item == null)
+            {
+                DebugConsole.ThrowError("Failed to find a Steam Workshop item with the ID " + id + ".");
+                return;
+            }
+
+            item.Subscribe();
+            item.Download();
+        }
+
         public static void SaveToWorkshop(Submarine sub)
         {
             if (instance == null || !instance.isInitialized) return;
@@ -558,8 +602,17 @@ namespace Barotrauma.Steam
             itemEditor.Folder = stagingFolder.FullName;
 
             string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
-            File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
-            
+            itemEditor.PreviewImage = previewImagePath;
+
+            using (WebClient client = new WebClient())
+            {
+                if (File.Exists(previewImagePath))
+                {
+                    File.Delete(previewImagePath);
+                }
+                client.DownloadFile(new Uri(existingItem.PreviewImageUrl), previewImagePath);
+            }
+
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
             string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
             File.Copy(tempContentPackage.Path, newContentPackagePath, overwrite: true);
@@ -593,6 +646,8 @@ namespace Barotrauma.Steam
             }
 
             contentPackage.Name = item.Title;
+            contentPackage.GameVersion = GameMain.Version;
+            contentPackage.Save(Path.Combine(WorkshopItemStagingFolder, MetadataFileName));
 
             if (File.Exists(PreviewImageName)) File.Delete(PreviewImageName);
             //move the preview image out of the staging folder, it does not need to be included in the folder sent to Workshop
@@ -703,6 +758,7 @@ namespace Barotrauma.Steam
                         DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", contentFile.Path));
                         continue;
                     }
+                    
                     //make sure the destination directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
                     File.Copy(sourceFile, contentFile.Path, overwrite: true);
@@ -728,8 +784,11 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var newPackage = ContentPackage.CreatePackage(contentPackage.Name, newContentPackagePath, contentPackage.CorePackage);
-            newPackage.SteamWorkshopUrl = item.Url;
+            var newPackage = new ContentPackage(newContentPackagePath)
+            {
+                SteamWorkshopUrl = item.Url
+            };
+            newPackage.Save(newContentPackagePath);
             ContentPackage.List.Add(newPackage);
             if (newPackage.CorePackage)
             {
@@ -825,6 +884,23 @@ namespace Barotrauma.Steam
             }
             errorMsg = "";
             return true;
+        }
+
+        /// <summary>
+        /// Is the item compatible with this version of Barotrauma. Returns null if compatibility couldn't be determined (item not installed)
+        /// </summary>
+        public static bool? CheckWorkshopItemCompatibility(Workshop.Item item)
+        {
+            if (!item.Installed) { return null; }
+
+            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            if (!File.Exists(metaDataPath))
+            {
+                throw new FileNotFoundException("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+            }
+
+            ContentPackage contentPackage = new ContentPackage(metaDataPath);
+            return contentPackage.IsCompatible();
         }
 
         public static bool CheckWorkshopItemEnabled(Workshop.Item item)

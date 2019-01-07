@@ -208,6 +208,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (picker.Removed)
+            {
+                IsActive = false;
+                return;
+            }
+
             item.SetTransform(picker.SimPosition, 0.0f);
             item.SetContainedItemPositions();
             

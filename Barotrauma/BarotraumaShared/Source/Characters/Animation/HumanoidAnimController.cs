@@ -1163,7 +1163,7 @@ namespace Barotrauma
                 ? Vector2.Zero : character.SelectedConstruction.Submarine.Velocity;
 
             Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.3f) * movementFactor;
-            if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = 0.0f; }
+            if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
 
             //apply forces to the collider to move the Character up/down
             Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);

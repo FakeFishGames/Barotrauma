@@ -183,6 +183,12 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+
+            itemPreviewFrame.ClearChildren();
+            createItemFrame.ClearChildren();
+            itemContentPackage = null;
+            itemEditor = null;
+
             RefreshItemLists();
             SelectTab(Tab.Browse);
         }
@@ -193,6 +199,24 @@ namespace Barotrauma
             {
                 tabs[i].Visible = i == (int)tab;
             }
+
+            if (createItemFrame.CountChildren == 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.9f), createItemFrame.RectTransform, Anchor.Center), 
+                    TextManager.Get("WorkshopItemCreateHelpText"), wrap: true)
+                {
+                    CanBeFocused = false
+                };
+            }
+        }
+
+        public void SubscribeToPackages(List<string> packageUrls)
+        {
+            foreach (string url in packageUrls)
+            {
+                SteamManager.SubscribeToWorkshopItem(url);
+            }
+            GameMain.SteamWorkshopScreen.Select();
         }
 
         private void RefreshItemLists()
@@ -224,7 +248,7 @@ namespace Barotrauma
             };
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                if (!string.IsNullOrEmpty(contentPackage.SteamWorkshopUrl)) { continue; }
+                if (!string.IsNullOrEmpty(contentPackage.SteamWorkshopUrl) || contentPackage.HideInWorkshopMenu) { continue; }
                 CreateMyItemFrame(contentPackage, myItemList);
             }
         }
@@ -239,7 +263,7 @@ namespace Barotrauma
 
             if (itemDetails.Count == 0 && listBox == subscribedItemList)
             {
-                new GUITextBox(new RectTransform(new Vector2(0.9f, 0.9f), listBox.Content.RectTransform, Anchor.Center), TextManager.Get("NoSubscribedMods"), wrap: true)
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.9f), listBox.Content.RectTransform, Anchor.Center), TextManager.Get("NoSubscribedMods"), wrap: true)
                 {
                     CanBeFocused = false
                 };
@@ -314,30 +338,41 @@ namespace Barotrauma
             };
 
             var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), rightColumn.RectTransform), item.Title, textAlignment: Alignment.CenterLeft);
-            /*new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.75f), itemFrame.RectTransform, Anchor.BottomLeft), item.Description,
-                wrap: true, font: GUI.SmallFont);*/
-                
+
             if (item.Installed)
             {
-                var enabledTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform), TextManager.Get("WorkshopItemEnabled"))
-                {
-                    UserData = item,
-                };
+                GUITickBox enabledTickBox = null;
                 try
                 {
-                    enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
+                    bool? compatible = SteamManager.CheckWorkshopItemCompatibility(item);
+                    if (compatible.HasValue && !compatible.Value)
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform),
+                            TextManager.Get("WorkshopItemIncompatible"), textColor: Color.Red)
+                        {
+                            ToolTip = TextManager.Get("WorkshopItemIncompatibleTooltip")
+                        };
+                    }
+                    else
+                    {
+                        enabledTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform), TextManager.Get("WorkshopItemEnabled"))
+                        {
+                            UserData = item,
+                        };
+                        enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
+                        enabledTickBox.OnSelected = ToggleItemEnabled;
+                    }
                 }
                 catch (Exception e)
                 {
                     new GUIMessageBox(TextManager.Get("Error"), e.Message);
-                    enabledTickBox.Enabled = false;
+                    if (enabledTickBox != null) { enabledTickBox.Enabled = false; }
                     itemFrame.CanBeFocused = false;
                     itemFrame.Color = Color.Red;
                     itemFrame.HoverColor = Color.Red;
                     itemFrame.SelectedColor = Color.Red;
                     titleText.TextColor = Color.Red;
                 }
-                enabledTickBox.OnSelected = ToggleItemEnabled;
             }
             else if (item.Downloading)
             {
@@ -420,6 +455,7 @@ namespace Barotrauma
         private bool DownloadItem(GUIButton btn, object userdata)
         {
             var item = (Facepunch.Steamworks.Workshop.Item)userdata;
+            if (!item.Subscribed) { item.Subscribe(); }
             item.Download(onInstalled: RefreshItemLists);
             RefreshItemLists();
             return true;
@@ -598,13 +634,13 @@ namespace Barotrauma
 
             if (itemEditor == null) return;
 
-            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), createItemFrame.RectTransform, Anchor.Center))
+            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 0.92f), createItemFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
             
-            var topPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), createItemContent.RectTransform), isHorizontal: true)
+            var topPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), createItemContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.1f
@@ -631,7 +667,7 @@ namespace Barotrauma
             descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTags"));
-            var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform), isHorizontal: true)
+            var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform) { MinSize=new Point(0,50) }, isHorizontal: true)
             {
                 Spacing = 5
             };
@@ -691,7 +727,10 @@ namespace Barotrauma
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
-                        File.Copy(ofd.FileName, previewImagePath, overwrite: true);
+                        if (ofd.FileName != previewImagePath)
+                        {
+                            File.Copy(ofd.FileName, previewImagePath, overwrite: true);
+                        }
 
                         if (itemPreviewSprites.ContainsKey(previewImagePath))
                         {
@@ -700,11 +739,12 @@ namespace Barotrauma
                         var newPreviewImage = new Sprite(previewImagePath, sourceRectangle: null);
                         previewIcon.Sprite = newPreviewImage;
                         itemPreviewSprites[previewImagePath] = newPreviewImage;
+                        itemEditor.PreviewImage = previewImagePath;
                     }
                     return true;
                 }
             };
-
+            
             if (!string.IsNullOrEmpty(itemEditor.PreviewImage))
             {
                 if (itemPreviewSprites.ContainsKey(itemEditor.PreviewImage))
@@ -723,13 +763,18 @@ namespace Barotrauma
                 OnSelected = (tickbox) => { itemContentPackage.CorePackage = tickbox.Selected; return true; }
             };
 
+            // file list --------------------------------------------------------------------------------------
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), style: null);
+
             var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemFiles"));
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"))
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (btn, userdata) => { System.Diagnostics.Process.Start(Path.GetFullPath(SteamManager.WorkshopItemStagingFolder)); return true; }
             };
-            createItemFileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), createItemContent.RectTransform));
+            createItemFileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.35f), createItemContent.RectTransform));
             RefreshCreateItemFileList();
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), isHorizontal: true)
@@ -770,10 +815,53 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.BottomRight),
-                TextManager.Get("WorkshopItemPublish"))
+            //the item has been already published if it has a non-zero ID -> allow adding a changenote
+            if (itemEditor.Id > 0)
             {
-                IgnoreLayoutGroups = true,
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemChangenote"))
+                {
+                    ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
+                };
+                var changenoteBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), createItemContent.RectTransform))
+                {
+                    ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
+                };
+                changenoteBox.OnTextChanged += (textbox, text) => { itemEditor.ChangeNote = text; return true; };
+            }
+
+            var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), createItemContent.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f
+            };
+
+            if (itemEditor.Id > 0)
+            {
+                new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform),
+                    TextManager.Get("WorkshopItemDelete"))
+                {
+                    ToolTip = TextManager.Get("WorkshopItemDeleteTooltip"),
+                    TextColor = Color.Red,
+                    OnClicked = (btn, userData) =>
+                    {
+                        var deleteVerification = new GUIMessageBox("", TextManager.Get("WorkshopItemDeleteVerification").Replace("[itemname]", itemEditor.Title),
+                            new string[] {  TextManager.Get("Yes"), TextManager.Get("No") });
+                        deleteVerification.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                        {
+                            itemEditor.Delete();
+                            itemEditor = null;
+                            RefreshItemLists();
+                            SelectTab(Tab.Browse);
+                            deleteVerification.Close();
+                            return true;
+                        };
+                        deleteVerification.Buttons[1].OnClicked = deleteVerification.Close;
+                        return true;
+                    }
+                };
+            }
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform),
+                TextManager.Get(itemEditor.Id > 0 ? "WorkshopItemUpdate" : "WorkshopItemPublish"))
+            {
                 ToolTip = TextManager.Get("WorkshopItemPublishTooltip"),
                 OnClicked = (btn, userData) => 
                 {
@@ -852,17 +940,18 @@ namespace Barotrauma
                 {
                     UserData = contentFile,
                 };
+                foreach (ContentType contentType in contentTypes)
+                {
+                    contentTypeSelection.AddItem(contentType.ToString(), contentType);
+                }
+                contentTypeSelection.SelectItem(contentFile.Type);
+
                 contentTypeSelection.OnSelected = (GUIComponent selected, object userdata) =>
                 {
                     ((ContentFile)contentTypeSelection.UserData).Type = (ContentType)userdata;
                     itemContentPackage.Save(itemContentPackage.Path);
                     return true;
                 };
-                foreach (ContentType contentType in contentTypes)
-                {
-                    contentTypeSelection.AddItem(contentType.ToString(), contentType);
-                }
-                contentTypeSelection.SelectItem(contentFile.Type);
 
                 new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform), TextManager.Get("Delete"))
                 {
