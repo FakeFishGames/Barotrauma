@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using OpenTK.Audio.OpenAL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -340,11 +341,37 @@ namespace Barotrauma
                 return true;
             };
 
-            var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
+            var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.5f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
                 { RelativeOffset = new Vector2(0.0f, 0.04f) })
                 { RelativeSpacing = 0.01f, Stretch = true };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), voiceSettings.RectTransform), TextManager.Get("VoiceChat"));
+
+            IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+            foreach (string name in deviceNames)
+            {
+                DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
+            }
+
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.2f), voiceSettings.RectTransform), VoiceCaptureDevice, deviceNames.Count);
+            foreach (string name in deviceNames)
+            {
+                deviceList.AddItem(name, name);
+            }
+            deviceList.OnSelected = (GUIComponent selected, object obj) =>
+            {
+                string name = obj as string;
+                if (VoiceCaptureDevice == name) return true;
+                VoiceCaptureDevice = name;
+                if (VoipCapture.Instance != null)
+                {
+                    UInt16 storedBufferID = VoipCapture.Instance.LatestBufferID;
+                    VoipCapture.Instance.Dispose();
+                    VoipCapture.Create(name, storedBufferID);
+                }
+                return true;
+            };
 
             var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), voiceSettings.RectTransform))
             {
@@ -405,7 +432,7 @@ namespace Barotrauma
                     voiceActivityGroup.Visible = true;
                     if (GameMain.Client == null && VoipCapture.Instance == null)
                     {
-                        VoipCapture.Create();
+                        VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
                     }
                 }
                 else
@@ -540,7 +567,7 @@ namespace Barotrauma
                     {
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
-                            VoipCapture.Create();
+                            VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
                         }
                     }
                     break;

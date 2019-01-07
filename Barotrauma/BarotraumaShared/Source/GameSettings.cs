@@ -51,6 +51,7 @@ namespace Barotrauma
         };
 
         public VoiceMode VoiceSetting { get; set; }
+        public string VoiceCaptureDevice { get; set; }
 
         public float NoiseGateThreshold { get; set; }
 
