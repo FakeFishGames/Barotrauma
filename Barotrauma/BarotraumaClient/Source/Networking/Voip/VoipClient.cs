@@ -7,21 +7,20 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
-    class VoipClient
+    class VoipClient : IDisposable
     {
         private GameClient gameClient;
         private NetClient netClient;
         private DateTime lastSendTime;
-        private VoipCapture capture;
         private List<VoipQueue> queues;
+
+        private UInt16 storedBufferID = 0;
 
         public VoipClient(GameClient gClient,NetClient nClient)
         {
             gameClient = gClient;
             netClient = nClient;
-
-            capture = new VoipCapture(gClient.ID);
-
+            
             queues = new List<VoipQueue>();
             
             lastSendTime = DateTime.Now;
@@ -29,7 +28,7 @@ namespace Barotrauma.Networking
 
         public void RegisterQueue(VoipQueue queue)
         {
-            if (queue == capture) return;
+            if (queue == VoipCapture.Instance) return;
             if (!queues.Contains(queue)) queues.Add(queue);
         }
 
@@ -40,13 +39,28 @@ namespace Barotrauma.Networking
 
         public void SendToServer()
         {
+            if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Disabled)
+            {
+                if (VoipCapture.Instance != null)
+                {
+                    storedBufferID = VoipCapture.Instance.LatestBufferID;
+                    VoipCapture.Instance.Dispose();
+                }
+                return;
+            }
+            else
+            {
+                if (VoipCapture.Instance == null) VoipCapture.Create(storedBufferID);
+                if (VoipCapture.Instance.EnqueuedTotalLength == 0) return;
+            }
+
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
             {
                 NetOutgoingMessage msg = netClient.CreateMessage();
 
                 msg.Write((byte)ClientPacketHeader.VOICE);
-                msg.Write((byte)capture.QueueID);
-                capture.Write(msg);
+                msg.Write((byte)VoipCapture.Instance.QueueID);
+                VoipCapture.Instance.Write(msg);
 
                 netClient.SendMessage(msg, NetDeliveryMethod.Unreliable);
 
@@ -67,6 +81,11 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Couldn't find VoipQueue with id " + queueId.ToString()+"!");
                 return;
             }
+        }
+
+        public void Dispose()
+        {
+            VoipCapture.Instance?.Dispose();
         }
     }
 }

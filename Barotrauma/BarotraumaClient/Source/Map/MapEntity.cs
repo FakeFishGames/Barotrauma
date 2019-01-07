@@ -67,6 +67,11 @@ namespace Barotrauma
             }
         }
 
+        public virtual bool SelectableInEditor
+        {
+            get { return true; }
+        }
+
         public static bool SelectedAny
         {
             get { return selectedList.Count > 0; }
@@ -187,7 +192,7 @@ namespace Barotrauma
                             int i = 0;
                             while (i < highlightedEntities.Count &&
                                 e.Sprite != null &&
-                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].Sprite.Depth < e.Sprite.Depth))
+                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].SpriteDepth < e.SpriteDepth))
                             {
                                 i++;
                             }
@@ -250,10 +255,11 @@ namespace Barotrauma
                     //mouse released -> move the entities to the new position of the mouse
 
                     Vector2 moveAmount = position - startMovingPos;
-                    moveAmount = Submarine.VectorToWorldGrid(moveAmount);
-
-                    if (moveAmount != Vector2.Zero)
+                    moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
+                    moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
+                    if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
                     {
+                        moveAmount = Submarine.VectorToWorldGrid(moveAmount);
                         //clone
                         if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                         {
@@ -266,7 +272,6 @@ namespace Barotrauma
                             foreach (MapEntity e in selectedList) e.Move(moveAmount);
                         }
                     }
-
                     startMovingPos = Vector2.Zero;
                 }
 
@@ -340,8 +345,10 @@ namespace Barotrauma
                     {
                         if (e.IsMouseOn(position)) startMovingPos = position;
                     }
-
                     selectionPos = position;
+
+                    //stop camera movement to prevent accidental dragging or rect selection
+                    Screen.Selected.Cam.StopMovement();
                 }
             }
         }
@@ -410,10 +417,12 @@ namespace Barotrauma
             if (startMovingPos != Vector2.Zero)
             {
                 Vector2 moveAmount = position - startMovingPos;
-                moveAmount = Submarine.VectorToWorldGrid(moveAmount);
                 moveAmount.Y = -moveAmount.Y;
+                moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
+                moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
+
                 //started moving the selected entities
-                if (moveAmount != Vector2.Zero)
+                if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
                 {
                     foreach (MapEntity e in selectedList)
                         GUI.DrawRectangle(spriteBatch,
@@ -554,6 +563,42 @@ namespace Barotrauma
         }
 
         public virtual void UpdateEditing(Camera cam) { }
+
+        protected static void PositionEditingHUD()
+        {
+            int maxHeight = 100;
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
+                maxHeight = (GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height) - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20;
+            }
+            else
+            {
+                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.InventoryAreaUpper.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
+                maxHeight = HUDLayoutSettings.InventoryAreaLower.Bottom - HUDLayoutSettings.InventoryAreaLower.Y - 10;
+            }
+
+            var listBox = editingHUD.GetChild<GUIListBox>();
+            if (listBox != null)
+            {
+                int padding = 20;
+                int contentHeight = 0;
+                foreach (GUIComponent child in listBox.Content.Children)
+                {
+                    contentHeight += child.Rect.Height + listBox.Spacing;
+                    child.RectTransform.MaxSize = new Point(int.MaxValue, child.Rect.Height);
+                    child.RectTransform.MinSize = new Point(0, child.Rect.Height);
+                }
+
+                editingHUD.RectTransform.Resize(
+                    new Point(
+                        editingHUD.RectTransform.NonScaledSize.X, 
+                        MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
+                listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
+            }
+        }
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 

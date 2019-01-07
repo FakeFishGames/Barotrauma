@@ -11,59 +11,68 @@ namespace Barotrauma
 {
     partial class CharacterInventory : Inventory
     {        
-        private static Sprite toggleArrow;
-        private float arrowAlpha;
-
-        //which slot is the toggle arrow drawn above
-        private int toggleArrowSlotIndex;
-        
-        public Vector2[] SlotPositions;
-        
-        private Alignment alignment;
-        public Alignment Alignment
+        public enum Layout
         {
-            get { return alignment; }
+            Default,
+            Left, 
+            Right,
+            Center
+        }
+
+        private enum QuickUseAction
+        {
+            None,
+            Equip,
+            Unequip,
+            Drop,
+            TakeFromContainer,
+            TakeFromCharacter,
+            PutToContainer,
+            PutToCharacter,
+            UseTreatment
+        }
+
+        private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
+
+        private Point screenResolution;
+
+        public Vector2[] SlotPositions;
+                
+        private Layout layout;
+        public Layout CurrentLayout
+        {
+            get { return layout; }
             set
             {
-                if (alignment == value) return;
-                alignment = value;
-                SetSlotPositions(alignment);
+                if (layout == value) return;
+                layout = value;
+                SetSlotPositions(layout);
             }
         }
+        public bool Hidden { get; set; }
 
-        private bool hidden;
-        public bool Hidden
-        {
-            get { return hidden; }
-            set { hidden = value; }
-        }
-        
         partial void InitProjSpecific(XElement element)
         {
-            if (toggleArrow == null)
+            Hidden = true;
+
+            if (limbSlotIcons == null)
             {
-                toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
-                toggleArrow.Origin = toggleArrow.size / 2;
+                limbSlotIcons = new Dictionary<InvSlotType, Sprite>();
+
+                int margin = 2;
+                limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/IconAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/IconAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
             }
 
-            toggleArrowSlotIndex = MathHelper.Clamp( element.GetAttributeInt("arrowslot", 0), 0, capacity - 1);
-
-            hidden = true;
-
             SlotPositions = new Vector2[SlotTypes.Length];
-            Alignment = Alignment.Center;
+            CurrentLayout = Layout.Default;
+            SetSlotPositions(layout);
         }
-
-        private bool UseItemOnSelf(GUIButton button, object obj)
-        {
-            if (!(obj is int)) return false;
-
-            int slotIndex = (int)obj;
-
-            return UseItemOnSelf(slotIndex);
-        }
-
-
+        
         protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
             base.PutItem(item, i, user, removeItem, createNetworkEvent);
@@ -76,7 +85,7 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        protected override void CreateSlots()
+        public override void CreateSlots()
         {
             if (slots == null) slots = new InventorySlot[capacity];
             
@@ -85,20 +94,6 @@ namespace Barotrauma
                 InventorySlot prevSlot = slots[i];
                 
                 Sprite slotSprite = slotSpriteSmall;
-                switch (SlotTypes[i])
-                {
-                    case InvSlotType.InnerClothes:
-                        slotSprite = slotSpriteHorizontal;
-                        break;
-                    /*case InvSlotType.OuterClothes:
-                    case InvSlotType.LeftHand:
-                    case InvSlotType.RightHand:
-                    case InvSlotType.Any:
-                    case InvSlotType.Pack:
-                        slotSprite = slotSpriteVertical;
-                        break;*/
-                }
-
                 Rectangle slotRect = new Rectangle(
                     (int)(SlotPositions[i].X), 
                     (int)(SlotPositions[i].Y),
@@ -109,16 +104,18 @@ namespace Barotrauma
                     ItemContainer itemContainer = Items[i].GetComponent<ItemContainer>();
                     if (itemContainer != null)
                     {
-                        //if (itemContainer.InventoryBackSprite != null) slotRect.Width = Math.Max(slotRect.Width, (int)itemContainer.InventoryBackSprite.size.X);
                         if (itemContainer.InventoryTopSprite != null) slotRect.Width = Math.Max(slotRect.Width, (int)(itemContainer.InventoryTopSprite.size.X * UIScale));
                         if (itemContainer.InventoryBottomSprite != null) slotRect.Width = Math.Max(slotRect.Width, (int)(itemContainer.InventoryBottomSprite.size.X * UIScale));
                     }
                 }
 
-                slots[i] = new InventorySlot(slotRect);
-                slots[i].Disabled = false;
-                slots[i].SlotSprite = slotSprite;
-                slots[i].Color = SlotTypes[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f;
+                slots[i] = new InventorySlot(slotRect)
+                {
+                    SubInventoryDir = Math.Sign(HUDLayoutSettings.InventoryAreaUpper.Bottom - slotRect.Center.Y),
+                    Disabled = false,
+                    SlotSprite = slotSprite,
+                    Color = SlotTypes[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f
+                };
                 if (prevSlot != null)
                 {
                     slots[i].DrawOffset = prevSlot.DrawOffset;
@@ -136,6 +133,25 @@ namespace Barotrauma
             highlightedSubInventorySlots.Clear();
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            CalculateBackgroundFrame();
+        }
+
+        protected override void CalculateBackgroundFrame()
+        {
+            Rectangle frame = Rectangle.Empty;
+            for (int i = 0; i < capacity; i++)
+            {
+                if (HideSlot(i)) continue;
+                if (frame == Rectangle.Empty)
+                {
+                    frame = slots[i].Rect;
+                    continue;
+                }
+                frame = Rectangle.Union(frame, slots[i].Rect);
+            }
+            frame.Inflate(10, 30);
+            frame.Location -= new Point(0, 25);
+            BackgroundFrame = frame;
         }
 
         protected override bool HideSlot(int i)
@@ -160,175 +176,193 @@ namespace Barotrauma
             return false;
         }
 
-        private void SetSlotPositions(Alignment alignment)
+        private void SetSlotPositions(Layout layout)
         {
-            int spacing = 10;
-            int x = GameMain.GraphicsWidth / 2;
-            if (alignment == Alignment.Right)
-                x = HUDLayoutSettings.InventoryAreaLower.Right;
-            else if (alignment == Alignment.Left)
-                x = HUDLayoutSettings.InventoryAreaLower.X;
-            int x2 = x;
+            int spacing = (int)(10 * UIScale);
+            Point slotSize = (slotSpriteSmall.size * UIScale).ToPoint();
+            int bottomOffset = slotSize.Y + spacing * 2 + ContainedIndicatorHeight;
 
-            int offsetFromBottom = (int)((slotSpriteRound.size.Y + spacing + slotSpriteSmall.size.Y) * UIScale);
+            if (slots == null) CreateSlots();
 
-            for (int i = 0; i < SlotPositions.Length; i++)
+            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.Head;
+
+            switch (layout)
             {
-                if (alignment == Alignment.Center)
-                {
-                    switch (SlotTypes[i])
+                case Layout.Default:
                     {
-                        case InvSlotType.Headset:
-                            SlotPositions[i] = new Vector2(
-                                HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X + spacing) * UIScale, 
-                                HUDLayoutSettings.InventoryAreaUpper.Y);
-                            break;
-                        case InvSlotType.Card:
-                            SlotPositions[i] = new Vector2(
-                                HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X + spacing) * 2 * UIScale, 
-                                HUDLayoutSettings.InventoryAreaUpper.Y);
-                            break;
-                        case InvSlotType.InnerClothes:
-                            SlotPositions[i] = new Vector2(
-                                HUDLayoutSettings.InventoryAreaUpper.Right - ((slotSpriteSmall.size.X + spacing) * 2 + slotSpriteHorizontal.size.X + spacing) * UIScale, 
-                                HUDLayoutSettings.InventoryAreaUpper.Y);
-                            break;
-                        case InvSlotType.Head:
-                            SlotPositions[i] = new Vector2(
-                                HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X * 3 + spacing * 4 + slotSpriteHorizontal.size.X) * UIScale, 
-                                HUDLayoutSettings.InventoryAreaUpper.Y);
-                            break;
-                        case InvSlotType.OuterClothes:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 200 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
-                            break;
-                        case InvSlotType.LeftHand:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 130 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
-                            break;
-                        case InvSlotType.RightHand:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 60 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
-                            break;
-                        case InvSlotType.Pack:
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 30 * UIScale);
-                            break;
-                        case InvSlotType.Any:
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - offsetFromBottom);
-                            x += (int)((slotSpriteVertical.size.X + spacing) * UIScale);
-                            break;
-                    }
-                }
-                else if (alignment == Alignment.Left)
-                {
-                    if (HideSlot(i)) continue;
-                    if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
-                    {
-                        SlotPositions[i] = new Vector2(x2, GameMain.GraphicsHeight - offsetFromBottom * 2);
-                        x2 += (int)((slots[i].Rect.Width + spacing * UIScale));
-                    }
-                    else
-                    {
-                        SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - offsetFromBottom);
-                        x += (int)((slots[i].Rect.Width + spacing * UIScale));
-                    }
-                }
-                else if (alignment == Alignment.Right)
-                {
-                    if (HideSlot(i)) continue;
-                    if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
-                    {
-                        SlotPositions[i] = new Vector2(x2 - slots[i].Rect.Width, GameMain.GraphicsHeight - offsetFromBottom * 2);
-                        if (i < slots.Length - 1)
+                        int personalSlotCount = SlotTypes.Count(s => upperSlots.HasFlag(s));
+                        int normalSlotCount = SlotTypes.Count(s => !upperSlots.HasFlag(s));
+
+                        int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (slotSize.X + spacing) / 2;
+                        int upperX = HUDLayoutSettings.PortraitArea.X - slotSize.X;
+
+                        //make sure the rightmost normal slot doesn't overlap with the personal slots
+                        x -= Math.Max((x + normalSlotCount * (slotSize.X + spacing)) - (upperX - personalSlotCount * (slotSize.X + spacing)), 0);
+
+                        for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            x2 -= (int)((slots[i].Rect.Width + spacing * UIScale));
+                            if (upperSlots.HasFlag(SlotTypes[i]))
+                            {
+                                SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset);
+                                upperX -= slotSize.X + spacing;
+                            }
+                            else
+                            {
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                                x += slotSize.X + spacing;
+                            }
                         }
                     }
-                    else
+                    break;
+                case Layout.Right:
                     {
-                        SlotPositions[i] = new Vector2(x - slots[i].Rect.Width, GameMain.GraphicsHeight - offsetFromBottom);
-                        if (i < slots.Length - 1)
+                        int extraOffset = 0;
+                        int x = HUDLayoutSettings.InventoryAreaLower.Right;
+                        int upperX = HUDLayoutSettings.InventoryAreaLower.Right;
+                        for (int i = 0; i < slots.Length; i++)
                         {
-                            x -= (int)((slots[i].Rect.Width + spacing * UIScale));
+                            if (HideSlot(i)) continue;
+                            if (upperSlots.HasFlag(SlotTypes[i]))
+                            {
+                                upperX -= slotSize.X + spacing;
+                            }
+                            else
+                            {
+                                x -= slotSize.X + spacing;
+                            }
+                        }
+
+                        int lowerX = x;
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (HideSlot(i)) continue;
+                            if (upperSlots.HasFlag(SlotTypes[i]))
+                            {
+                                SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - spacing * 2);
+                                upperX += slots[i].Rect.Width + spacing;
+                            }
+                            else
+                            {
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
+                                x += slots[i].Rect.Width + spacing;
+                            }
+                        }
+
+                        x = lowerX;
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (!HideSlot(i)) continue;
+                            x -= slots[i].Rect.Width + spacing;
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
                         }
                     }
-                }
+                    break;
+                case Layout.Left:
+                    {
+                        int x = HUDLayoutSettings.InventoryAreaLower.X;
+                        int upperX = x;
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (HideSlot(i)) continue;
+                            if (upperSlots.HasFlag(SlotTypes[i]))
+                            {
+                                SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset * 2 - spacing * 2);
+                                upperX += slots[i].Rect.Width + spacing;
+                            }
+                            else
+                            {
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                                x += slots[i].Rect.Width + spacing;
+                            }
+                        }
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (!HideSlot(i)) continue;
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
+                            x += slots[i].Rect.Width + spacing;
+                        }
+                    }
+                    break;
+                case Layout.Center:
+                    {
+                        int columns = 5;
+                        int startX = (GameMain.GraphicsWidth / 2) - (slotSize.X * columns + spacing * (columns - 1)) / 2;
+                        int startY = GameMain.GraphicsHeight / 2 - (slotSize.Y * 2);
+                        int x = startX, y = startY;
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (HideSlot(i)) continue;
+                            if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
+                            {
+                                SlotPositions[i] = new Vector2(x, y);
+                                x += slots[i].Rect.Width + spacing;
+                            }
+                        }
+                        y += slots[0].Rect.Height + spacing + ContainedIndicatorHeight + slots[0].EquipButtonRect.Height;
+                        x = startX;
+                        int n = 0;
+                        for (int i = 0; i < SlotPositions.Length; i++)
+                        {
+                            if (HideSlot(i)) continue;
+                            if (SlotTypes[i] != InvSlotType.Card && SlotTypes[i] != InvSlotType.Headset && SlotTypes[i] != InvSlotType.InnerClothes)
+                            {
+                                SlotPositions[i] = new Vector2(x, y);
+                                x += slots[i].Rect.Width + spacing;
+                                n++;
+                                if (n >= columns)
+                                {
+                                    x = startX;
+                                    y += slots[i].Rect.Height + spacing + ContainedIndicatorHeight + slots[i].EquipButtonRect.Height;
+                                    n = 0;
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+            
+            CreateSlots();
+            if (layout == Layout.Default)
+            {
+                HUDLayoutSettings.InventoryTopY = slots[0].EquipButtonRect.Y - (int)(15 * GUI.Scale);
             }
 
-            CreateSlots();
         }
 
-        public override void Update(float deltaTime, bool isSubInventory = false)
+        protected override void ControlInput(Camera cam)
         {
-            if (!AccessibleWhenAlive && !character.IsDead) return;
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            base.ControlInput(cam);
+            // Ignore the background frame of this object in purpose, because it encompasses half of the screen.
+            if (highlightedSubInventorySlots.Any(i => i.Inventory != null && i.Inventory.BackgroundFrame.Contains(PlayerInput.MousePosition)))
             {
-                SetSlotPositions(alignment);
+                cam.Freeze = true;
+            }
+        }
+
+        public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
+        {
+            if (!AccessibleWhenAlive && !character.IsDead)
+            {
+                syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
+                return;
             }
 
-            base.Update(deltaTime);
+            base.Update(deltaTime, cam);
 
             bool hoverOnInventory = GUI.MouseOn == null &&
                 ((selectedSlot != null && selectedSlot.IsSubSlot) || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
             if (CharacterHealth.OpenHealthWindow != null) hoverOnInventory = true;
-
-            if (alignment == Alignment.Center)
-            {
-                Rectangle arrowRect = new Rectangle(
-                    (int)(slots[toggleArrowSlotIndex].Rect.Center.X + slots[toggleArrowSlotIndex].DrawOffset.X - toggleArrow.size.X / 2),
-                    (int)(slots[toggleArrowSlotIndex].Rect.Y + slots[toggleArrowSlotIndex].DrawOffset.Y - 50 - toggleArrow.size.Y / 2), 
-                    (int)toggleArrow.size.X, (int)toggleArrow.size.Y);
-                arrowRect.Inflate(30, 0);
-
-                if (arrowRect.Contains(PlayerInput.MousePosition))
-                {
-                    arrowAlpha = Math.Min(arrowAlpha + deltaTime * 10.0f, 1.0f);
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        hidden = !hidden;
-                        HideTimer = 0.0f;
-
-                        foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
-                        {
-                            highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
-                        }
-                        return;
-                    }
-                }
-                else
-                {
-                    arrowAlpha = Math.Max(arrowAlpha - deltaTime * 10.0f, 0.5f);
-                }
-
-                if (GUI.MouseOn == null &&
-                    (slots[toggleArrowSlotIndex].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
-                    slots[toggleArrowSlotIndex].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[toggleArrowSlotIndex].EquipButtonRect.Bottom) &&
-                    slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
-                {
-                    hoverOnInventory = true;
-                }
-            }
-
+            
             if (hoverOnInventory) HideTimer = 0.5f;
             if (HideTimer > 0.0f) HideTimer -= deltaTime;
 
             for (int i = 0; i < capacity; i++)
             {
-                if (SlotTypes[i] == InvSlotType.Any || SlotTypes[i] == InvSlotType.OuterClothes ||
-                    SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand)
-                {
-                    if (hidden && !hoverOnInventory && alignment == Alignment.Center && HideTimer <= 0.0f)
-                    {
-                        slots[i].DrawOffset =
-                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, slots[i].Rect.Size.Y / 2 + slotSpriteRound.size.Y * UIScale, 10.0f * deltaTime));
-                    }
-                    else
-                    {
-                        slots[i].DrawOffset =
-                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, 0, 10.0f * deltaTime));
-                    }
-                }
-                if (Items[i] != null && Character.Controlled?.Inventory == this && 
+                if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
+                    GUI.KeyboardDispatcher.Subscriber == null &&
                     slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
                 {
-                    QuickUseItem(Items[i], true, false);
+                    QuickUseItem(Items[i], true, false, true);
                 }
             }
             
@@ -337,24 +371,11 @@ namespace Barotrauma
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
                 {
-                    UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex);
+                    UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
                 }
-                
-                Rectangle hoverArea = highlightedSubInventorySlot.Slot.Rect;
-                hoverArea.Location += highlightedSubInventorySlot.Slot.DrawOffset.ToPoint();
-                hoverArea = Rectangle.Union(hoverArea, highlightedSubInventorySlot.Slot.EquipButtonRect);
-                if (highlightedSubInventorySlot.Inventory.slots != null)
-                {
-                    foreach (InventorySlot slot in highlightedSubInventorySlot.Inventory.slots)
-                    {
-                        Rectangle subSlotRect = slot.InteractRect;
-                        subSlotRect.Location += slot.DrawOffset.ToPoint();
-                        hoverArea = Rectangle.Union(hoverArea, subSlotRect);
-                    }
-                }
-                hoverArea.Inflate(10, 10);
 
-                if (highlightedSubInventorySlot.Inventory.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
+                Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
+                if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
                 {
                     hideSubInventories.Add(highlightedSubInventorySlot);
                 }
@@ -366,90 +387,94 @@ namespace Barotrauma
 
             if (doubleClickedItem != null)
             {
-                QuickUseItem(doubleClickedItem, true, true);
+                QuickUseItem(doubleClickedItem, true, true, true);
             }
-
-            //make subinventories with one slot always visible
-            for (int i = 0; i < capacity; i++)
-            {
-                Inventory subInventory = GetSubInventory(i);
-                if (subInventory != null && subInventory.Capacity == 1)
-                {
-                    UpdateSubInventory(deltaTime, i);
-                }
-            }
-
+            
             //activate the subinventory of the currently selected slot
             if (selectedSlot?.ParentInventory == this)
             {
                 var subInventory = GetSubInventory(selectedSlot.SlotIndex);
-                if (subInventory != null && subInventory.Capacity > 1)
+                if (subInventory != null)
                 {
                     selectedSlot.Inventory = subInventory;
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
                     {
+                        var slot = selectedSlot;
                         highlightedSubInventorySlots.Add(selectedSlot);
-                        UpdateSubInventory(deltaTime, selectedSlot.SlotIndex);
-                    }
-                }
-            }
+                        UpdateSubInventory(deltaTime, selectedSlot.SlotIndex, cam);
 
-            //force the pack open when the inventory is toggled open
-            int packSlotIndex = FindLimbSlot(InvSlotType.Pack);
-            if (packSlotIndex > -1 && Items[packSlotIndex] != null)
-            {
-                if (!hidden || hoverOnInventory)
-                {
-                    var subInventory = GetSubInventory(packSlotIndex);
-                    if (subInventory != null && subInventory.Capacity > 1)
-                    {
-                        hideSubInventories.RemoveAll(i => i.SlotIndex == packSlotIndex);
-                        subInventory.HideTimer = 1.0f;
-                        if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
+                        //hide previously opened subinventories if this one overlaps with them
+                        Rectangle hoverArea = GetSubInventoryHoverArea(slot);
+                        foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
                         {
-                            highlightedSubInventorySlots.Add(new SlotReference(this, slots[packSlotIndex], packSlotIndex, false, subInventory));
-                            UpdateSubInventory(deltaTime, packSlotIndex);
+                            if (highlightedSubInventorySlot == slot) continue;
+                            if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
+                            {
+                                hideSubInventories.Add(highlightedSubInventorySlot);
+                                highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
+                            }
                         }
                     }
                 }
             }
-
+                       
             foreach (var subInventorySlot in hideSubInventories)
             {
+                if (subInventorySlot.Inventory == null) continue;
                 subInventorySlot.Inventory.HideTimer -= deltaTime;
                 if (subInventorySlot.Inventory.HideTimer <= 0.0f)
                 {
                     highlightedSubInventorySlots.Remove(subInventorySlot);
                 }
             }
-
-            if (character == Character.Controlled)
+            
+            for (int i = 0; i < capacity; i++)
             {
-                for (int i = 0; i < capacity; i++)
+                if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
-                    /*if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
-                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
+                    slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
+                        GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
+                    
+                    if (slots[i].EquipButtonState != GUIComponent.ComponentState.Hover)
                     {
-                        //-3 because selected items are in slots 3 and 4 (hands)
-                        useOnSelfButton[i - 3].Update(deltaTime);
-                    }*/
+                        slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
+                        continue;
+                    }
 
-                    if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                    var quickUseAction = GetQuickUseAction(Items[i], allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
+                    slots[i].QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ? 
+                        "" : TextManager.Get("QuickUseAction." + quickUseAction.ToString());
+                    
+                    //equipped item that can't be put in the inventory, use delayed dropping
+                    if (quickUseAction == QuickUseAction.Drop)
                     {
-                        slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
-                            GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
-
-                        if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)
+                        slots[i].QuickUseButtonToolTip = "Hold to unequip";
+                        if (PlayerInput.LeftButtonHeld())
                         {
-                            if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
-                            if (PlayerInput.LeftButtonClicked())
+                            slots[i].QuickUseTimer = Math.Max(0.1f, slots[i].QuickUseTimer + deltaTime);
+                            if (slots[i].QuickUseTimer >= 1.0f)
                             {
-                                QuickUseItem(Items[i], true, false);
+                                CreateNetworkEvent();
+                                Items[i].Drop(Character.Controlled);
                             }
                         }
+                        else
+                        {
+                            slots[i].QuickUseTimer = Math.Max(0.0f, slots[i].QuickUseTimer - deltaTime * 5.0f);
+                        }
                     }
+                    else
+                    {
+                        if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
+                        if (PlayerInput.LeftButtonClicked())
+                        {
+                            QuickUseItem(Items[i], allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
+                        }
+                    }
+                    
                 }
             }
+            
 
             //cancel dragging if too far away from the container of the dragged item
             if (draggingItem != null)
@@ -459,8 +484,7 @@ namespace Barotrauma
 
                 if (rootContainer != null)
                 {
-                    rootInventory = rootContainer.ParentInventory != null ?
-                        rootContainer.ParentInventory : rootContainer.GetComponent<ItemContainer>().Inventory;
+                    rootInventory = rootContainer.ParentInventory ?? rootContainer.GetComponent<ItemContainer>().Inventory;
                 }
 
                 if (rootInventory != null &&
@@ -468,13 +492,20 @@ namespace Barotrauma
                     rootInventory.Owner != Character.Controlled.SelectedConstruction &&
                     rootInventory.Owner != Character.Controlled.SelectedCharacter)
                 {
-                    draggingItem = null;
+                    //allow interacting if the container is linked to the item the character is interacting with
+                    if (!(rootContainer != null && 
+                        rootContainer.DisplaySideBySideWhenLinked && 
+                        Character.Controlled.SelectedConstruction != null &&
+                        rootContainer.linkedTo.Contains(Character.Controlled.SelectedConstruction)))
+                    {
+                        draggingItem = null;
+                    }
                 }
             }
 
             doubleClickedItem = null;
         }
-
+        
         private void AssignQuickUseNumKeys()
         {
             int num = 1;
@@ -485,34 +516,30 @@ namespace Barotrauma
                     slots[i].QuickUseKey = Keys.None;
                     continue;
                 }
-                //assign non-limb specific slots first to make them start from 1
+
                 if (SlotTypes[i] == InvSlotType.Any)
                 {
-                    slots[i].QuickUseKey = Keys.D0 + num;
-                    num++;
-                }
-            }
-
-            for (int i = 0; i < slots.Length; i++)
-            {
-                if (HideSlot(i)) continue;
-                
-                //assign non-limb specific slots first to make them start from 1
-                if (SlotTypes[i] != InvSlotType.Any)
-                {
-                    slots[i].QuickUseKey = Keys.D0 + num;
+                    slots[i].QuickUseKey = Keys.D0 + num % 10;
                     num++;
                 }
             }
         }
-        
-        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap)
+
+        private QuickUseAction GetQuickUseAction(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
         {
-            bool wasPut = false;
+            if (allowApplyTreatment && CharacterHealth.OpenHealthWindow != null)
+            {
+                return QuickUseAction.UseTreatment;
+            }
+            
             if (item.ParentInventory != this)
             {
                 //in another inventory -> attempt to place in the character's inventory
-                if (allowInventorySwap) wasPut = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                if (allowInventorySwap)
+                {
+                    return item.ParentInventory is CharacterInventory ?
+                        QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                }
             }
             else
             {
@@ -520,127 +547,214 @@ namespace Barotrauma
                 if (selectedContainer != null && selectedContainer.Inventory != null && allowInventorySwap)
                 {
                     //player has selected the inventory of another item -> attempt to move the item there
-                    wasPut = selectedContainer.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    return QuickUseAction.PutToContainer;
                 }
                 else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null && allowInventorySwap)
                 {
                     //player has selected the inventory of another character -> attempt to move the item there
-                    wasPut = character.SelectedCharacter.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    return QuickUseAction.PutToCharacter;
                 }
-                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy && 
+                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy &&
                     character.SelectedBy.Inventory != null && allowInventorySwap)
                 {
-                    //item is in the inventory of another character -> attempt to get the item from there
-                     wasPut = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    return QuickUseAction.TakeFromCharacter;
                 }
                 else if (allowEquip) //doubleclicked and no other inventory is selected
                 {
                     //not equipped -> attempt to equip
                     if (!character.HasEquippedItem(item))
                     {
-                        //attempt to put in a free slot first
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] != null) continue;
-                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-                            wasPut = TryPutItem(item, i, true, false, Character.Controlled, true);
-                            if (wasPut) break;
-                        }
-
-                        if (!wasPut)
-                        {
-                            for (int i = 0; i < capacity; i++)
-                            {
-                                if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-                                //something else already equipped in the slot, attempt to unequip it
-                                if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
-                                {
-                                    TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
-                                }
-                                wasPut = TryPutItem(item, i, true, false, Character.Controlled, true);
-                                if (wasPut) break;
-                            }
-                        }
+                        return QuickUseAction.Equip;
                     }
                     //equipped -> attempt to unequip
                     else if (item.AllowedSlots.Contains(InvSlotType.Any))
                     {
-                        wasPut = TryPutItem(item, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                        return QuickUseAction.Unequip;
                     }
                     else
                     {
-                        //cannot unequip, drop?
-                        //maybe make only some items droppable so you don't accidentally drop diving suits or artifacts?
+                        return QuickUseAction.Drop;
                     }
                 }
             }
 
-            if (wasPut)
+            return QuickUseAction.None;
+        }
+
+        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
+        {
+            var quickUseAction = GetQuickUseAction(item, allowEquip, allowInventorySwap, allowApplyTreatment);
+            bool success = false;
+            switch (quickUseAction)
+            {
+                case QuickUseAction.Equip:
+                    //attempt to put in a free slot first
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        if (Items[i] != null) continue;
+                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                        success = TryPutItem(item, i, true, false, Character.Controlled, true);
+                        if (success) break;
+                    }
+
+                    if (!success)
+                    {
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                            //something else already equipped in the slot, attempt to unequip it
+                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                            {
+                                TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                            }
+                            success = TryPutItem(item, i, true, false, Character.Controlled, true);
+                            if (success) break;
+                        }
+                    }
+                    break;
+                case QuickUseAction.Unequip:
+                    if (item.AllowedSlots.Contains(InvSlotType.Any))
+                    {
+                        success = TryPutItem(item, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                    }
+                    break;
+                case QuickUseAction.UseTreatment:
+                    CharacterHealth.OpenHealthWindow?.OnItemDropped(item, ignoreMousePos: true);
+                    return;
+                case QuickUseAction.Drop:
+                    //do nothing, the item is dropped after a delay
+                    return;
+                case QuickUseAction.PutToCharacter:
+                    if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                    {
+                        //player has selected the inventory of another character -> attempt to move the item there
+                        success = character.SelectedCharacter.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
+                    break;
+                case QuickUseAction.PutToContainer:
+                    var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                    if (selectedContainer != null && selectedContainer.Inventory != null)
+                    {
+                        //player has selected the inventory of another item -> attempt to move the item there
+                        success = selectedContainer.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
+                    break;
+                case QuickUseAction.TakeFromCharacter:
+                    if (character.SelectedBy != null && Character.Controlled == character.SelectedBy &&
+                        character.SelectedBy.Inventory != null)
+                    {
+                        //item is in the inventory of another character -> attempt to get the item from there
+                        success = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
+                    break;
+                case QuickUseAction.TakeFromContainer:
+                    success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    break;  
+            }
+
+            if (success)
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
+                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.4f);
                 }
             }
 
             draggingItem = null;
-            GUI.PlayUISound(wasPut ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+            GUI.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
         }
         
         public void DrawOwn(SpriteBatch spriteBatch)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
-
             if (slots == null) CreateSlots();
-            
+            if (GameMain.GraphicsWidth != screenResolution.X ||
+                GameMain.GraphicsHeight != screenResolution.Y ||
+                prevUIScale != UIScale ||
+                prevHUDScale != GUI.Scale)
+            {
+                SetSlotPositions(layout);
+                prevUIScale = UIScale;
+                prevHUDScale = GUI.Scale;
+            }
+
+            if (layout == Layout.Center)
+            {
+                CalculateBackgroundFrame();
+                GUI.DrawRectangle(spriteBatch, BackgroundFrame, Color.Black * 0.8f, true);
+                GUI.DrawString(spriteBatch,
+                    new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(character.Name).X / 2), (int)BackgroundFrame.Y + 5),
+                    character.Name, Color.White * 0.9f);
+            }
+
             base.Draw(spriteBatch);
 
-            /*if (character == Character.Controlled)
-            {
-                for (int i = 0; i < capacity; i++)
-                {
-                    if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
-                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
-                    {
-                        useOnSelfButton[i - 3].DrawManually(spriteBatch);
-                    }
-                }
-            }*/
-
-
+            InventorySlot highlightedQuickUseSlot = null;
             for (int i = 0; i < capacity; i++)
             {
                 if (HideSlot(i)) continue;
 
-                if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                if (Items[i] == null || 
+                    (draggingItem == Items[i] && !slots[i].InteractRect.Contains(PlayerInput.MousePosition)) || 
+                    !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
-                    Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
-                    if (slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed) color = Color.Gray;
-                    
-                    EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.size / 2, 0, UIScale);
-                    if (character.HasEquippedItem(Items[i]))
+                    //draw limb icons on empty slots
+                    if (limbSlotIcons.ContainsKey(SlotTypes[i]))
                     {
-                        EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
+                        var icon = limbSlotIcons[SlotTypes[i]];
+                        icon.Draw(spriteBatch, slots[i].Rect.Center.ToVector2(), Color.White * 0.3f, origin: icon.size / 2, scale: slots[i].Rect.Width / icon.size.X);
                     }
+                    continue;
                 }
-
-                ItemContainer container = Items[i]?.GetComponent<ItemContainer>();
-                if (container != null && container.Capacity == 1 && container.Inventory.slots != null)
+                if (draggingItem == Items[i] && !slots[i].IsHighlighted) continue;
+                
+                //draw hand icons if the item is equipped in a hand slot
+                if (IsInLimbSlot(Items[i], InvSlotType.LeftHand))
                 {
-                    container.Inventory.slots[0].SlotSprite = slotSpriteRound;
-                    DrawSlot(spriteBatch, this, container.Inventory.slots[0], container.Inventory.Items[0]);
+                    var icon = limbSlotIcons[InvSlotType.LeftHand];
+                    icon.Draw(spriteBatch, new Vector2(slots[i].Rect.X, slots[i].Rect.Bottom), Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.35f, icon.size.Y * 0.75f), scale: slots[i].Rect.Width / icon.size.X * 0.7f);
+                }
+                if (IsInLimbSlot(Items[i], InvSlotType.RightHand))
+                {
+                    var icon = limbSlotIcons[InvSlotType.RightHand];
+                    icon.Draw(spriteBatch, new Vector2(slots[i].Rect.Right, slots[i].Rect.Bottom), Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.65f, icon.size.Y * 0.75f), scale: slots[i].Rect.Width / icon.size.X * 0.7f);
+                }
+
+                Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed ? Color.Gray : Color.White * 0.8f;
+                if (slots[i].EquipButtonState == GUIComponent.ComponentState.Hover)
+                {
+                    color = Color.White;
+                    highlightedQuickUseSlot = slots[i];
+                }
+
+                var quickUseIndicator = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
+                    EquipIndicator : DropIndicator;
+                var quickUseHighlight = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
+                    EquipIndicatorHighlight : DropIndicatorHighlight;
+
+                quickUseIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, quickUseIndicator.Origin, 0, UIScale);
+                slots[i].QuickUseTimer = Math.Min(slots[i].QuickUseTimer, 1.0f);
+                if (slots[i].QuickUseTimer > 0.0f)
+                {
+                    float indicatorFillAmount = character.HasEquippedItem(Items[i]) ? 1.0f - slots[i].QuickUseTimer : slots[i].QuickUseTimer;
+                    quickUseHighlight.DrawTiled(spriteBatch,
+                        slots[i].EquipButtonRect.Center.ToVector2() - quickUseHighlight.Origin * UIScale * 0.85f,
+                        new Vector2(quickUseIndicator.SourceRect.Width * indicatorFillAmount, quickUseIndicator.SourceRect.Height) * UIScale * 0.85f,
+                        null,
+                        color * 0.9f,
+                        null,
+                        Vector2.One * UIScale * 0.85f);
+                }
+                else if (character.HasEquippedItem(Items[i]))
+                {
+                    quickUseHighlight.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, quickUseHighlight.Origin, 0, UIScale * 0.85f);
                 }
             }
 
-            if (CharacterHealth.OpenHealthWindow != null) return;
-
-            if (Alignment == Alignment.Center)
+            if (highlightedQuickUseSlot != null && !string.IsNullOrEmpty(highlightedQuickUseSlot.QuickUseButtonToolTip))
             {
-                toggleArrow.Draw(spriteBatch, 
-                    slots[toggleArrowSlotIndex].DrawOffset + new Vector2(slots[toggleArrowSlotIndex].Rect.Center.X, slots[toggleArrowSlotIndex].Rect.Y - 50), 
-                    Color.White * arrowAlpha, hidden ? 0 : MathHelper.Pi);
+                GUIComponent.DrawToolTip(spriteBatch, highlightedQuickUseSlot.QuickUseButtonToolTip, highlightedQuickUseSlot.EquipButtonRect);
             }
-        
         }
     }
 }

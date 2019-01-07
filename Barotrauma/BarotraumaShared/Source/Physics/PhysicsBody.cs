@@ -99,10 +99,10 @@ namespace Barotrauma
         public float height, width, radius;
         
         private float density;
-        
+
         //the direction the item is facing (for example, a gun has to be 
         //flipped horizontally if the Character holding it turns around)
-        float dir;
+        float dir = 1.0f;
 
         Vector2 offsetFromTargetPos;
         float offsetLerp;
@@ -285,19 +285,14 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
-        public PhysicsBody(XElement element, float scale = 1.0f)
-            : this(element, Vector2.Zero, scale)
-        {
-        }
+        public PhysicsBody(XElement element, float scale = 1.0f) : this(element, Vector2.Zero, scale) { }
+        public PhysicsBody(ColliderParams cParams) : this(cParams, Vector2.Zero) { }
+        public PhysicsBody(LimbParams lParams) : this(lParams, Vector2.Zero) { }
 
         public PhysicsBody(float width, float height, float radius, float density)
         {
             CreateBody(width, height, radius, density);
-            
-            dir = 1.0f;
-            
             LastSentPosition = body.Position;
-
             list.Add(this);
         }
 
@@ -305,9 +300,44 @@ namespace Barotrauma
         {
             body = farseerBody;
             if (body.UserData == null) body.UserData = this;
-
             LastSentPosition = body.Position;
+            list.Add(this);
+        }
 
+        public PhysicsBody(ColliderParams colliderParams, Vector2 position)
+        {
+            float radius = ConvertUnits.ToSimUnits(colliderParams.Radius) * colliderParams.Ragdoll.LimbScale;
+            float height = ConvertUnits.ToSimUnits(colliderParams.Height) * colliderParams.Ragdoll.LimbScale;
+            float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
+            density = 10;
+            CreateBody(width, height, radius, density);
+            body.BodyType = BodyType.Dynamic;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.CollisionCategories = Physics.CollisionCharacter;
+            body.AngularDamping = 5.0f;
+            body.FixedRotation = true;
+            body.Friction = 0.05f;
+            body.Restitution = 0.05f;
+            SetTransformIgnoreContacts(position, 0.0f);
+            LastSentPosition = position;
+            list.Add(this);
+        }
+
+        public PhysicsBody(LimbParams limbParams, Vector2 position)
+        {
+            float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Ragdoll.LimbScale;
+            float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Ragdoll.LimbScale;
+            float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Ragdoll.LimbScale;
+            density = limbParams.Density;
+            CreateBody(width, height, radius, density);
+            body.BodyType = BodyType.Dynamic;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.CollisionCategories = Physics.CollisionItem;
+            body.Friction = limbParams.Friction;
+            body.Restitution = limbParams.Restitution;
+            body.UserData = this;
+            SetTransformIgnoreContacts(position, 0.0f);
+            LastSentPosition = position;
             list.Add(this);
         }
 
@@ -316,28 +346,17 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-
             density = element.GetAttributeFloat("density", 10.0f);
-
             CreateBody(width, height, radius, density);
-
-            dir = 1.0f;
-            
+            //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
+            body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionItem;
             body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-
             body.Friction = element.GetAttributeFloat("friction", 0.3f);
-            body.Restitution = element.GetAttributeFloat("restitution", 0.05f);
-                        
-            Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            body.BodyType = bodyType; ;
-
+            body.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             body.UserData = this;
-
-            SetTransform(position, 0.0f);
-
-            LastSentPosition = position;
-            
+            SetTransformIgnoreContacts(position, 0.0f);
+            LastSentPosition = position;      
             list.Add(this);
         }
 
@@ -385,6 +404,23 @@ namespace Barotrauma
                     return new Vector2(0.0f, radius);
                 case Shape.Rectangle:
                     return new Vector2(0.0f, height / 2.0f);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public float GetMaxExtent()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return height / 2 + radius;
+                case Shape.HorizontalCapsule:
+                    return width / 2 + radius;
+                case Shape.Circle:
+                    return radius;
+                case Shape.Rectangle:
+                    return new Vector2(width * 0.5f, height * 0.5f).Length();
                 default:
                     throw new NotImplementedException();
             }
@@ -699,6 +735,8 @@ namespace Barotrauma
             }
             System.Diagnostics.Debug.Assert(list.Count == 0);
         }
+
+        public static bool IsValidShape(float radius, float height, float width) => radius > 0 || (height > 0 && width > 0);
 
         partial void DisposeProjSpecific();
     }

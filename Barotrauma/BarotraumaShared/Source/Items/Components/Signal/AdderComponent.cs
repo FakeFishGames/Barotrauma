@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -14,7 +15,7 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
         
-        [InGameEditable, Serialize(0.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
         public float TimeFrame
         {
             get { return timeFrame; }
@@ -51,11 +52,11 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in1":
-                    float.TryParse(signal, out receivedSignal[0]);
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     timeSinceReceived[0] = 0.0f;
                     break;
                 case "signal_in2":
-                    float.TryParse(signal, out receivedSignal[1]);
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     timeSinceReceived[1] = 0.0f;
                     break;
             }

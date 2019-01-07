@@ -41,22 +41,26 @@ namespace EventInput
                 return;
             if (char.IsControl(e.Character))
             {
-                //ctrl-v
-                if (e.Character == 0x16)
-                {
-#if WINDOWS
-                    //XNA runs in Multiple Thread Apartment state, which cannot recieve clipboard
-                    Thread thread = new Thread(PasteThread);
-                    thread.SetApartmentState(ApartmentState.STA);
-                    thread.Start();
-                    thread.Join();
-                    _subscriber.ReceiveTextInput(_pasteResult);
-#endif
-                }
-                else
-                {
-                    _subscriber.ReceiveCommandInput(e.Character);
-                }
+                _subscriber.ReceiveCommandInput(e.Character);
+                // Doesn't work as expected. Not sure why this should be run in a separate thread.
+                //#if WINDOWS
+                //                //ctrl-v
+                //                if (e.Character == 0x16) // 22
+                //                {
+                //                    //XNA runs in Multiple Thread Apartment state, which cannot recieve clipboard
+                //                    Thread thread = new Thread(PasteThread);
+                //                    thread.SetApartmentState(ApartmentState.STA);
+                //                    thread.Start();
+                //                    thread.Join();
+                //                    _subscriber.ReceiveTextInput(_pasteResult);
+                //                }
+                //                else
+                //                {
+                //                    _subscriber.ReceiveCommandInput(e.Character);
+                //                }
+                //#else
+                //                _subscriber.ReceiveCommandInput(e.Character);
+                //#endif
             }
             else
             {
@@ -70,6 +74,7 @@ namespace EventInput
             get { return _subscriber; }
             set
             {
+                if (_subscriber == value) return;
                 if (_subscriber != null)
                     _subscriber.Selected = false;
                 _subscriber = value;

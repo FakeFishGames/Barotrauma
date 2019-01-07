@@ -25,6 +25,19 @@ namespace Barotrauma.Items.Components
             get { return inventoryBottomSprite; }
         }
 
+        public Sprite ContainedStateIndicator
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool ShowConditionInContainedStateIndicator
+        {
+            get;
+            set;
+        }
+        
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -40,33 +53,56 @@ namespace Barotrauma.Items.Components
                     case "bottomsprite":
                         inventoryBottomSprite = new Sprite(subElement);
                         break;
+                    case "containedstateindicator":
+                        ContainedStateIndicator = new Sprite(subElement);
+                        break;
                 }
             }
-            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            if (GuiFrame == null)
             {
-                CanBeFocused = false
-            };
-            guiCustomComponent = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
-                onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
-                onUpdate: null)
+                //if a GUIFrame is not defined in the xml, 
+                //we create a full-screen frame and let the inventory position itself on it
+                GuiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                {
+                    CanBeFocused = false
+                };
+                guiCustomComponent = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
+                    onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
+                    onUpdate: null)
+                {
+                    CanBeFocused = false
+                };
+            }
+            else
             {
-                CanBeFocused = false
-            };
+                //if a GUIFrame has been defined, draw the inventory inside it
+                guiCustomComponent = new GUICustomComponent(new RectTransform(new Vector2(0.9f), GuiFrame.RectTransform, Anchor.Center),
+                    onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
+                    onUpdate: null)
+                {
+                    CanBeFocused = false
+                };
+                Inventory.RectTransform = guiCustomComponent.RectTransform;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            if (hideItems || (item.body != null && !item.body.Enabled)) return;
+            if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
+            DrawContainedItems(spriteBatch);
+        }
 
-            Vector2 transformedItemPos = itemPos;
-            Vector2 transformedItemInterval = itemInterval;
+        public void DrawContainedItems(SpriteBatch spriteBatch)
+        {
+            Vector2 transformedItemPos = itemPos * item.Scale;
+            Vector2 transformedItemInterval = itemInterval * item.Scale;
             float currentRotation = itemRotation;
 
             if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) transformedItemPos += item.Submarine.DrawPosition;
-                transformedItemPos = transformedItemPos + itemPos;
+                transformedItemPos = transformedItemPos + itemPos * item.Scale;
             }
             else
             {
@@ -89,31 +125,48 @@ namespace Barotrauma.Items.Components
             {
                 if (containedItem == null) continue;
 
+                if (AutoInteractWithContained)
+                {
+                    containedItem.IsHighlighted = item.IsHighlighted;
+                    item.IsHighlighted = false;
+                }
+
+                if (containedItem.body != null)
+                {
+                    containedItem.body.FarseerBody.Rotation = currentRotation;
+                }
+
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(transformedItemPos.X, -transformedItemPos.Y),
                     containedItem.GetSpriteColor(),
                     -currentRotation,
-                    1.0f,
+                    containedItem.Scale,
                     (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+
+                foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
+                {
+                    if (ic.hideItems) continue;
+                    ic.DrawContainedItems(spriteBatch);
+                }
 
                 transformedItemPos += transformedItemInterval;
             }
         }
-        
-        public override void UpdateHUD(Character character, float deltaTime)
+
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (Inventory.RectTransform != null)
+            {
+                guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
+            }
+
             //if the item is in the character's inventory, no need to update the item's inventory 
             //because the player can see it by hovering the cursor over the item
             guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
             if (!guiCustomComponent.Visible) return;
 
-            Inventory.Update(deltaTime);
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame?.AddToGUIUpdateList();
+            Inventory.Update(deltaTime, cam);
         }
 
         /*public override void DrawHUD(SpriteBatch spriteBatch, Character character)

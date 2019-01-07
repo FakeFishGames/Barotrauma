@@ -13,8 +13,6 @@ namespace Barotrauma
 
         private AIObjectiveManager objectiveManager;
         
-        private AITarget selectedAiTarget;
-
         private float updateObjectiveTimer;
 
         private bool shouldCrouch;
@@ -84,7 +82,7 @@ namespace Barotrauma
                 updateObjectiveTimer = UpdateObjectiveInterval;
             }
 
-            if (Character.CanSpeak)
+            if (Character.SpeechImpediment < 100.0f)
             {
                 ReportProblems();
                 UpdateSpeaking();
@@ -92,15 +90,10 @@ namespace Barotrauma
 
             objectiveManager.DoCurrentObjective(deltaTime);
          
-            float currObjectivePriority = objectiveManager.GetCurrentPriority(Character);
-            float moveSpeed = 1.0f;
+            float currObjectivePriority = objectiveManager.GetCurrentPriority();
 
-            if (currObjectivePriority > 30.0f)
-            {
-                moveSpeed *= Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier;                
-            }
-            
-            steeringManager.Update(moveSpeed);
+            bool run = currObjectivePriority > 30.0f;         
+            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
                 (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
@@ -120,13 +113,20 @@ namespace Barotrauma
             {
                 Vector2 targetMovement = new Vector2(
                     Character.AnimController.TargetMovement.X,
-                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f)) * Character.SpeedMultiplier;
-                float maxSpeed = Character.GetCurrentMaxSpeed();
+                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
+
+                float maxSpeed = Character.GetCurrentMaxSpeed(run);
                 targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
                 targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
 
+                //apply speed multiplier if 
+                //  a. it's boosting the movement speed and the character is trying to move fast (= running)
+                //  b. it's a debuff that decreases movement speed
+                if (run || Character.SpeedMultiplier <= 0.0f) targetMovement *= Character.SpeedMultiplier;
+                
+                Character.SpeedMultiplier = 1.0f;   // Reset, items will set the value before the next update
+
                 Character.AnimController.TargetMovement = targetMovement;
-                Character.SpeedMultiplier = 1.0f;
             }
 
             if (Character.SelectedConstruction != null && Character.SelectedConstruction.GetComponent<Items.Components.Ladder>()!=null)
@@ -146,7 +146,7 @@ namespace Barotrauma
             //-> take the suit off
             if (canTakeOffSuit && (Character.Oxygen < 50.0f || objectiveManager.CurrentObjective is AIObjectiveIdle))
             {
-                var divingSuit = Character.Inventory.FindItem("Diving Suit");
+                var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
                 if (divingSuit != null) divingSuit.Drop(Character);
             }
 
@@ -170,58 +170,8 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
         }
-        
-        private void ReportProblems()
-        {
-            if (GameMain.Client != null) return;
 
-            Order newOrder = null;
-            if (Character.CurrentHull != null)
-            {
-                if (Character.CurrentHull.FireSources.Count > 0)
-                {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
-                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
-                {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
-                    {
-                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                    }
-                }
-            }
-
-            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
-            {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-            }
-
-            if (newOrder != null)
-            {
-                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
-                {
-                    Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
-
-                    if (GameMain.Server != null)
-                    {
-                        OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
-                }
-            }
-        }
+        partial void ReportProblems();
 
         private void UpdateSpeaking()
         {
@@ -259,7 +209,7 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option, orderGiver);
-            if (speak && Character.CanSpeak) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+            if (speak && Character.SpeechImpediment < 100.0f) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);
         }

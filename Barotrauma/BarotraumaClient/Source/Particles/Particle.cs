@@ -30,13 +30,14 @@ namespace Barotrauma.Particles
         private Vector2 sizeChange;
 
         private Color color;
-        private Vector4 colorChange;
-        private float alpha;
+        private bool changeColor;
 
         private int spriteIndex;
 
         private float totalLifeTime;
         private float lifeTime;
+
+        private float startDelay;
 
         private Vector2 velocityChange;
         private Vector2 velocityChangeWater;
@@ -64,6 +65,12 @@ namespace Barotrauma.Particles
         public ParticleBlendState BlendState
         {
             get { return prefab.BlendState; }
+        }
+
+        public float StartDelay
+        {
+            get { return startDelay; }
+            set { startDelay = MathHelper.Clamp(value, Prefab.StartDelayMin, prefab.StartDelayMax); }
         }
         
         public Vector2 Size
@@ -102,7 +109,7 @@ namespace Barotrauma.Particles
             
             velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
 
-            if (currentHull != null && currentHull.Submarine != null)
+            if (currentHull?.Submarine != null)
             {
                 velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
             }
@@ -114,14 +121,14 @@ namespace Barotrauma.Particles
 
             totalLifeTime = prefab.LifeTime;
             lifeTime = prefab.LifeTime;
+            startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);
             
             size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
-            color = new Color(prefab.StartColor, 1.0f);
-            colorChange = prefab.ColorChange;
-            alpha = prefab.StartAlpha;
+            color = prefab.StartColor;
+            changeColor = prefab.StartColor != prefab.EndColor;
             
             velocityChange = prefab.VelocityChangeDisplay;
             velocityChangeWater = prefab.VelocityChangeWaterDisplay;
@@ -151,6 +158,12 @@ namespace Barotrauma.Particles
         
         public bool Update(float deltaTime)
         {
+            if (startDelay > 0.0f)
+            {
+                startDelay -= deltaTime;
+                return true;
+            }
+
             prevPosition = position;
             prevRotation = rotation;
 
@@ -198,13 +211,11 @@ namespace Barotrauma.Particles
             size.X += sizeChange.X * deltaTime;
             size.Y += sizeChange.Y * deltaTime;  
 
-            alpha += prefab.ColorChange.W * deltaTime;
-
-            color = new Color(
-                color.R / 255.0f + prefab.ColorChange.X * deltaTime,
-                color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
-                color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
-
+            if (changeColor)
+            {
+                color = Color.Lerp(prefab.EndColor, prefab.StartColor, lifeTime / prefab.LifeTime);
+            }
+            
             if (prefab.Sprites[spriteIndex] is SpriteSheet)
             {
                 animState += deltaTime;
@@ -213,7 +224,7 @@ namespace Barotrauma.Particles
             }
             
             lifeTime -= deltaTime;
-            if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
+            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
             if (hasSubEmitters)
             {
@@ -346,7 +357,7 @@ namespace Barotrauma.Particles
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
-            Vector2 subVel = ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity);
+            Vector2 subVel = prevHull?.Submarine != null ? ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity) : Vector2.Zero;
             velocity -= subVel;
 
             if (Math.Abs(collisionNormal.X) > Math.Abs(collisionNormal.Y))
@@ -439,7 +450,7 @@ namespace Barotrauma.Particles
                 ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
                     spriteBatch, animFrame,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * alpha,
+                    color * (color.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }
@@ -447,7 +458,7 @@ namespace Barotrauma.Particles
             {
                 prefab.Sprites[spriteIndex].Draw(spriteBatch,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * alpha,
+                    color * (color.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }

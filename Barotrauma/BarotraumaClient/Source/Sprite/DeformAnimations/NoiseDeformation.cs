@@ -3,57 +3,65 @@ using System.Xml.Linq;
 
 namespace Barotrauma.SpriteDeformations
 {
+    class NoiseDeformationParams : SpriteDeformationParams
+    {
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f,
+            ToolTip = "The frequency of the noise.")]
+        public float Frequency { get; set; }
+
+        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
+            ToolTip = "How much the noise distorts the sprite.")]
+        public float Amplitude { get; set; }
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
+            ToolTip = "How fast the noise changes.")]
+        public float ChangeSpeed { get; set; }
+
+        public NoiseDeformationParams(XElement element) : base(element)
+        {
+        }
+    }
+
     class NoiseDeformation : SpriteDeformation
     {
-        private float frequency;
-        private float amplitude;
-        private float changeSpeed;
+        private NoiseDeformationParams NoiseDeformationParams => deformationParams as NoiseDeformationParams;
 
         private float phase;
 
-        private Vector2[,] deformation;
-
-        public NoiseDeformation(XElement element) : base(element)
+        public NoiseDeformation(XElement element) : base(element, new NoiseDeformationParams(element))
         {
-            frequency = element.GetAttributeFloat("frequency", 0.0f);
-            amplitude = element.GetAttributeFloat("amplitude", 1.0f);
-            changeSpeed = element.GetAttributeFloat("changespeed", 0.0f);
-
-            deformation = new Vector2[resolution.X, resolution.Y];
-
             phase = Rand.Range(0.0f, 255.0f);
-
             UpdateNoise();
         }
 
         private void UpdateNoise()
         {
-            for (int x = 0; x < resolution.X; x++)
+            for (int x = 0; x < Resolution.X; x++)
             {
-                float normalizedX = x / (float)(resolution.X - 1);
-                for (int y = 0; y < resolution.Y; y++)
+                float normalizedX = x / (float)(Resolution.X - 1) * NoiseDeformationParams.Frequency;
+                for (int y = 0; y < Resolution.Y; y++)
                 {
-                    float normalizedY = y / (float)(resolution.X - 1);
+                    float normalizedY = y / (float)(Resolution.X - 1) * NoiseDeformationParams.Frequency;
                     
-                    deformation[x, y] = new Vector2(
-                        (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase) - 0.5f,
-                        (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase + 0.5f) - 0.5f);
+                    Deformation[x, y] = new Vector2(
+                        PerlinNoise.GetPerlin(normalizedX + phase, normalizedY + phase) - 0.5f,
+                        PerlinNoise.GetPerlin(normalizedY - phase, normalizedX - phase) - 0.5f);
                 }
             }
         }
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
         {
-            deformation = this.deformation;
-            multiplier = amplitude;
+            deformation = Deformation;
+            multiplier = NoiseDeformationParams.Amplitude;
         }
 
         public override void Update(float deltaTime)
         {
-            if (changeSpeed > 0.0f)
+            if (NoiseDeformationParams.ChangeSpeed > 0.0f)
             {
-                phase += deltaTime * changeSpeed;
-                phase %= 255;
+                phase += deltaTime * NoiseDeformationParams.ChangeSpeed / 100.0f;
+                phase %= 1.0f;
                 UpdateNoise();
             }
         }

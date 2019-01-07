@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
         
-        [InGameEditable, Serialize(0.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
         public float TimeFrame
         {
             get { return timeFrame; }

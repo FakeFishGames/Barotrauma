@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -44,6 +45,12 @@ namespace Barotrauma
             return (float)(sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
+        public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)
+        {
+            Assert(sync);
+            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
+        }
+
         public static int Range(int minimum, int maximum, RandSync sync = RandSync.Unsynced)
         {
             Assert(sync);
@@ -61,11 +68,11 @@ namespace Barotrauma
             Assert(sync);
             Vector2 randomVector = new Vector2(Range(-1.0f, 1.0f, sync), Range(-1.0f, 1.0f, sync));
 
-            if (randomVector == Vector2.Zero) return new Vector2(0.0f, length);
+            if (randomVector.LengthSquared() < 0.001f) return new Vector2(0.0f, length);
 
             return Vector2.Normalize(randomVector) * length;
         }
-
+        
         /// <summary>
         /// Random float between 0 and 1.
         /// </summary>
@@ -84,6 +91,18 @@ namespace Barotrauma
             {
                 return new Color(Value(sync), Value(sync), Value(sync));
             }
+        }
+
+        public static DoubleVector2 Vector(double length, RandSync sync = RandSync.Unsynced)
+        {
+            Assert(sync);
+            double x = Range(-1.0, 1.0, sync);
+            double y = Range(-1.0, 1.0, sync);
+
+            double len = Math.Sqrt(x * x + y * y);
+            if (len < 0.00001) return new DoubleVector2(0.0, length);
+
+            return new DoubleVector2(x / len * length, y / len * length);
         }
     }
 }

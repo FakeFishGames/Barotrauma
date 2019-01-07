@@ -21,10 +21,16 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             GetRescueTargets();
+            if (!rescueTargets.Any()) { return 0.0f; }
+            
+            if (objectiveManager.CurrentObjective == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
 
             //if there are targets to rescue, the priority is slightly less 
             //than the priority of explicit orders given to the character
-            return rescueTargets.Any() ? AIObjectiveManager.OrderPriority - 5.0f : 0.0f;
+            return AIObjectiveManager.OrderPriority - 5.0f;
         }
 
         private void GetRescueTargets()

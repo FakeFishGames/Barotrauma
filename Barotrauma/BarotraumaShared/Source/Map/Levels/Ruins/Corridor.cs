@@ -49,11 +49,18 @@ namespace Barotrauma.RuinGeneration
                 var leaves2 = room.Adjacent.GetLeaves();
 
                 var suitableLeaves = GetSuitableLeafRooms(leaves1, leaves2, width, isHorizontal);
-                room1 = suitableLeaves[0].Rect;
-                room2 = suitableLeaves[1].Rect;
-
-                ConnectedRooms[0] = suitableLeaves[0];
-                ConnectedRooms[1] = suitableLeaves[1];
+                if (suitableLeaves == null || suitableLeaves.Length < 2)
+                {
+                    DebugConsole.ThrowError("Error while generating ruins. Could not find a suitable position for a corridor. The width of the corridors may be too large compared to the sizes of the rooms.");
+                    return;
+                }
+                else
+                {
+                    room1 = suitableLeaves[0].Rect;
+                    room2 = suitableLeaves[1].Rect;
+                    ConnectedRooms[0] = suitableLeaves[0];
+                    ConnectedRooms[1] = suitableLeaves[1];
+                }
             }
 
             if (isHorizontal)
@@ -62,9 +69,8 @@ namespace Barotrauma.RuinGeneration
                 int right = Math.Max(room1.X, room2.X);
 
                 int top = Math.Max(room1.Y, room2.Y);
-                int bottom = Math.Min(room1.Bottom, room2.Bottom);
-
-                int yPos = Rand.Range(top, bottom - width, Rand.RandSync.Server);
+                //int bottom = Math.Min(room1.Bottom, room2.Bottom);
+                int yPos = top;//Rand.Range(top, bottom - width, Rand.RandSync.Server);
 
                 rect = new Rectangle(left, yPos, right - left, width);
             }
@@ -116,31 +122,27 @@ namespace Barotrauma.RuinGeneration
 
         public override void CreateWalls()
         {
-
-
             Walls = new List<Line>();
-
             if (IsHorizontal)
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinStructureType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y)));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom)));
             }
             else
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinStructureType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom)));
+                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom)));
             }
         }
 
         /// <summary>
-        /// find two rooms which have two face-two-face walls that we can place a corridor in between
+        /// Find two rooms which have two face-two-face walls that we can place a corridor in between
         /// </summary>
         /// <returns></returns>
         private BTRoom[] GetSuitableLeafRooms(List<BTRoom> leaves1, List<BTRoom> leaves2, int width, bool isHorizontal)
         {
             int iOffset = Rand.Int(leaves1.Count, Rand.RandSync.Server);
             int jOffset = Rand.Int(leaves2.Count, Rand.RandSync.Server);
-
 
             for (int iCount = 0; iCount < leaves1.Count; iCount++)
             {
@@ -152,21 +154,14 @@ namespace Barotrauma.RuinGeneration
 
                     if (isHorizontal)
                     {
-                        //if (Math.Min(leaves1[i].Rect.Bottom, leaves2[i].Rect.Bottom) - Math.Max(leaves1[i].Rect.Y, leaves2[j].Rect.Y) < width) continue;
-                        
-
-                        if (leaves1[i].Rect.Y > leaves2[j].Rect.Bottom-width) continue;
-                        if (leaves1[i].Rect.Bottom < leaves2[j].Rect.Y+width) continue;
+                        if (leaves1[i].Rect.Y > leaves2[j].Rect.Bottom - width) continue;
+                        if (leaves1[i].Rect.Bottom < leaves2[j].Rect.Y + width) continue;
                     }
                     else
                     {
-                        //if (Math.Min(leaves1[i].Rect.Right, leaves2[i].Rect.Right) - Math.Max(leaves1[i].Rect.X, leaves2[j].Rect.X) < width) continue;
-                        
-
-                        if (leaves1[i].Rect.X > leaves2[j].Rect.Right-width) continue;
-                        if (leaves1[i].Rect.Right < leaves2[j].Rect.X+width) continue;
+                        if (leaves1[i].Rect.X > leaves2[j].Rect.Right - width) continue;
+                        if (leaves1[i].Rect.Right < leaves2[j].Rect.X + width) continue;
                     }
-
 
                     return new BTRoom[] { leaves1[i], leaves2[j] };
                 }
@@ -174,8 +169,5 @@ namespace Barotrauma.RuinGeneration
 
             return null;
         }
-
-
     }
-
 }

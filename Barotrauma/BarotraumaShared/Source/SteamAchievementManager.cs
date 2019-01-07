@@ -47,7 +47,10 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            if (GameMain.GameSession == null || GameMain.Client != null) return;
+            if (GameMain.GameSession == null) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;
@@ -114,7 +117,10 @@ namespace Barotrauma
 
         public static void OnItemRepaired(Item item, Character fixer)
         {
-            if (GameMain.Client != null || fixer == null) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+            if (fixer == null) return;
             
             UnlockAchievement(fixer, "repairdevice");
             UnlockAchievement(fixer, "repair" + item.Prefab.Identifier);
@@ -124,19 +130,26 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) return;
 
-            if (GameMain.Client != null) return;            
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
             UnlockAchievement(character, affliction.Prefab.AchievementOnRemoved);
         }
 
         public static void OnCharacterRevived(Character character, Character reviver)
         {
-            if (reviver == null || GameMain.Client != null) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+            if (reviver == null) return;
             UnlockAchievement(reviver, "healcrit");
         }
 
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
-            if (GameMain.Client != null) return;
+#if CLIENT
+            if (GameMain.Client != null || GameMain.GameSession == null) return;
+#endif
 
             roundData.Casualties.Add(character);
 
@@ -154,20 +167,24 @@ namespace Barotrauma
 
             if (causeOfDeath.DamageSource is Item item)
             {
-                if (item.Prefab.NameMatches("weldingtool") || item.Prefab.NameMatches("plasmacutter") || item.Prefab.NameMatches("wrench"))
+                switch (item.Prefab.Identifier)
                 {
-                    UnlockAchievement(causeOfDeath.Killer, "killtool");
-                }
-                else if (item.Prefab.NameMatches("morbusine"))
-                {
-                    UnlockAchievement(causeOfDeath.Killer, "killpoison");
-                }
-                else if (item.Prefab.NameMatches("nuclearshell") || item.Prefab.NameMatches("nucleardepthcharge"))
-                {
-                    UnlockAchievement(causeOfDeath.Killer, "killnuke");
+                    case "weldingtool":
+                    case "plasmacutter":
+                    case "wrench":
+                        UnlockAchievement(causeOfDeath.Killer, "killtool");
+                        break;
+                    case "morbusine":
+                        UnlockAchievement(causeOfDeath.Killer, "killpoison");
+                        break;
+                    case "nuclearshell":
+                    case "nucleardepthcharge":
+                        UnlockAchievement(causeOfDeath.Killer, "killnuke");
+                        break;
                 }
             }
 
+#if SERVER
             if (GameMain.Server?.TraitorManager != null)
             {
                 foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
@@ -184,19 +201,24 @@ namespace Barotrauma
                     }
                 }
             }
+#endif
         }
 
         public static void OnRoundEnded(GameSession gameSession)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             if (gameSession.Mission != null)
             {
                 if (gameSession.Mission is CombatMission combatMission)
                 {
+#if CLIENT
                     //all characters that are alive and in the winning team get an achievement
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + Character.Controlled.TeamID, true, 
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
+#endif
                 }
                 else
                 {
@@ -208,15 +230,19 @@ namespace Barotrauma
             //made it to the destination
             if (gameSession.Submarine.AtEndPosition)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     //in MP all characters that were inside the sub during reactor meltdown and still alive at the end of the round get an achievement
                     UnlockAchievement("survivereactormeltdown", true, c => c != null && !c.IsDead && roundData.ReactorMeltdown.Contains(c));
                 }
-                else if (roundData.ReactorMeltdown.Any()) //in SP getting to the destination after a meltdown is enough
+#endif
+#if CLIENT
+                if (roundData.ReactorMeltdown.Any()) //in SP getting to the destination after a meltdown is enough
                 {
                     UnlockAchievement("survivereactormeltdown");
                 }
+#endif
 
                 var charactersInSub = Character.CharacterList.FindAll(c => c.Submarine == gameSession.Submarine && !c.IsDead);
                 if (charactersInSub.Count == 1)
@@ -238,20 +264,22 @@ namespace Barotrauma
         {
             if (CheatsEnabled) return;
             if (recipient == null) return;
+#if CLIENT
             if (recipient == Character.Controlled)
             {
                 UnlockAchievement(identifier);
             }
-            else
-            {
-                GameMain.Server?.GiveAchievement(recipient, identifier);
-            }
+#endif
+#if SERVER
+            GameMain.Server?.GiveAchievement(recipient, identifier);
+#endif
         }
         
         public static void UnlockAchievement(string identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
         {
             if (CheatsEnabled) return;
 
+#if SERVER
             if (unlockClients && GameMain.Server != null)
             {
                 foreach (Client c in GameMain.Server.ConnectedClients)
@@ -260,12 +288,15 @@ namespace Barotrauma
                     GameMain.Server.GiveAchievement(c, identifier);
                 }
             }
+#endif
 
             //already unlocked, no need to do anything
             if (unlockedAchievements.Contains(identifier)) return;
             unlockedAchievements.Add(identifier);
 
+#if CLIENT
             if (conditions != null && !conditions(Character.Controlled)) return;
+#endif
 
             SteamManager.UnlockAchievement(identifier);
 

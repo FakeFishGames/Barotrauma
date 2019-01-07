@@ -5,33 +5,62 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml.Linq;
+using System.Globalization;
 
 namespace Barotrauma
 {
     static partial class DebugConsole
     {
-        static bool isOpen;
-
-        private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
-
-        private static GUITextBlock activeQuestionText;
-        
-        public static bool IsOpen
+        public partial class Command
         {
-            get
+            /// <summary>
+            /// Executed when a client uses the command. If not set, the command is relayed to the server as-is.
+            /// </summary>
+            public Action<string[]> OnClientExecute;
+
+            public bool RelayToServer = true;
+
+            public void ClientExecute(string[] args)
             {
-                return isOpen;
+                if (!CheatsEnabled && IsCheat)
+                {
+                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
+                    if (GameMain.Config.UseSteam)
+                    {
+                        NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
+                    }
+                    return;
+                }
+
+                if (OnClientExecute != null)
+                {
+                    OnClientExecute(args);
+                }
+                else
+                {
+                    OnExecute(args);
+                }
             }
         }
 
-        static GUIFrame frame;
-        static GUIListBox listBox;
-        static GUITextBox textBox;
+        private static bool isOpen;
+        public static bool IsOpen => isOpen;
+        
+        private static GUITextBlock activeQuestionText;
+        
+        private static GUIFrame frame;
+        private static GUIListBox listBox;
+        private static GUITextBox textBox;
+
+        public static GUITextBox TextBox => textBox;
 
         public static void Init()
         {
-            frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) }, 
+            frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
@@ -44,10 +73,12 @@ namespace Barotrauma
             {
                 IsFixedSize = false
             });
-            textBox.OnTextChanged += (textBox, text) =>
+            textBox.OnKeyHit += (sender, key) =>
             {
-                ResetAutoComplete();
-                return true;
+                if (key != Keys.Tab)
+                {
+                    ResetAutoComplete();
+                }
             };
 
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
@@ -108,15 +139,15 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyHit(Keys.Up))
                 {
-                    textBox.Text = SelectMessage(-1);
+                    textBox.Text = SelectMessage(-1, textBox.Text);
                 }
                 else if (PlayerInput.KeyHit(Keys.Down))
                 {
-                    textBox.Text = SelectMessage(1);
+                    textBox.Text = SelectMessage(1, textBox.Text);
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
-                    textBox.Text = AutoComplete(textBox.Text);
+                     textBox.Text = AutoComplete(textBox.Text);
                 }
 
                 if (PlayerInput.KeyHit(Keys.Enter))
@@ -143,6 +174,9 @@ namespace Barotrauma
                 case "ban":
                 case "banip":
                     return client.HasPermission(ClientPermissions.Ban);
+                case "unban":
+                case "unbanip":
+                    return client.HasPermission(ClientPermissions.Unban);
                 case "netstats":
                 case "help":
                 case "dumpids":
@@ -159,7 +193,15 @@ namespace Barotrauma
             while (queuedMessages.Count > 0)
             {
                 var newMsg = queuedMessages.Dequeue();
-                AddMessage(newMsg);
+                if (listBox == null)
+                {
+                    //don't attempt to add to the listbox if it hasn't been created yet                    
+                    Messages.Add(newMsg);
+                }
+                else
+                {
+                    AddMessage(newMsg);
+                }
 
                 if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
             }
@@ -200,7 +242,7 @@ namespace Barotrauma
             selectedIndex = Messages.Count;
         }
 
-        private static void AddHelpMessage(Command command)
+        static partial void AddHelpMessage(Command command)
         {
             if (listBox.Content.CountChildren > MaxMessages)
             {
@@ -222,15 +264,40 @@ namespace Barotrauma
             textBlock.SetTextPos();
             var nameBlock = new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
                 command.names[0], textAlignment: Alignment.TopLeft);
-            
+
             listBox.UpdateScrollBarSize();
             listBox.BarScroll = 1.0f;
 
             selectedIndex = Messages.Count;
         }
 
+        private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
+        {
+            Command command = commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            command.OnClientExecute = onClientExecute;
+            command.RelayToServer = false;
+        }
+
+        private static void AssignRelayToServer(string names, bool relay)
+        {
+            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).RelayToServer = relay;
+        }
+
         private static void InitProjectSpecific()
         {
+#if WINDOWS
+            commands.Add(new Command("copyitemnames", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (MapEntityPrefab mp in MapEntityPrefab.List)
+                {
+                    if (!(mp is ItemPrefab)) continue;
+                    sb.AppendLine(mp.Name);
+                }
+                System.Windows.Clipboard.SetText(sb.ToString());
+            }));
+#endif
+
             commands.Add(new Command("autohull", "", (string[] args) =>
             {
                 if (Screen.Selected != GameMain.SubEditorScreen) return;
@@ -238,7 +305,8 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
                 {
                     ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
-                        (option) => {
+                        (option) =>
+                        {
                             if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull();
                         });
                 }
@@ -254,8 +322,7 @@ namespace Barotrauma
 
                 if (GameMain.Client == null)
                 {
-                    GameMain.NetworkMember = new GameClient("Name");
-                    GameMain.Client.ConnectToServer(args[0]);
+                    GameMain.Client = new GameClient("Name", args[0]);
                 }
             }));
 
@@ -286,57 +353,63 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editcharacter", "", (string[] args) =>
-            {
-                GameMain.CharacterEditorScreen.Select();
-            }));
-
-            commands.Add(new Command("editparticles", "", (string[] args) =>
+            commands.Add(new Command("editparticles|particleeditor", "", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editanimations|animedit|animationeditor|animeditor|animationedit", "animationeditor: Edit animations.", (string[] args) =>
+            commands.Add(new Command("editlevels|editlevel|leveleditor", "", (string[] args) =>
             {
-                GameMain.AnimationEditorScreen.Select();
+                GameMain.LevelEditorScreen.Select();
             }));
 
+            commands.Add(new Command("editsprites|editsprite|spriteeditor|spriteedit", "", (string[] args) =>
+            {
+                GameMain.SpriteEditorScreen.Select();
+            }));
 
-            commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
+            commands.Add(new Command("charactereditor|editcharacter|editcharacters|editanimation|editanimations|animedit|animationeditor|animeditor|animationedit", "charactereditor: Edit characters, animations, ragdolls....", (string[] args) =>
+            {
+                GameMain.CharacterEditorScreen.Select();
+            }));
+
+            AssignRelayToServer("kick", false);
+            AssignRelayToServer("kickid", false);
+            AssignRelayToServer("ban", false);
+            AssignRelayToServer("banid", false);
+            AssignRelayToServer("dumpids", false);
+            AssignRelayToServer("findentityids", false);
+            AssignRelayToServer("campaigninfo", false);
+
+            AssignOnExecute("control", (string[] args) =>
             {
                 if (args.Length < 1) return;
-
                 var character = FindMatchingCharacter(args, true);
-
                 if (character != null)
                 {
                     Character.Controlled = character;
                 }
-            },
-            () =>
-            {
-                return new string[][]
-                {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
-                };
-            }, isCheat: true));
+            });
+            AssignRelayToServer("control", true);
 
             commands.Add(new Command("shake", "", (string[] args) =>
             {
                 GameMain.GameScreen.Cam.Shake = 10.0f;
             }));
 
-            commands.Add(new Command("los", "los: Toggle the line of sight effect on/off.", (string[] args) =>
+            AssignOnExecute("los",(string[] args) =>
             {
                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("los", false);
 
-            commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
+            AssignOnExecute("lighting|lights", (string[] args) =>
             {
                 GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("lighting|lights", false);
 
             commands.Add(new Command("multiplylights [color]", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
             {
@@ -347,9 +420,9 @@ namespace Barotrauma
                 {
                     if (item.ParentInventory != null || item.body != null) continue;
                     var lightComponent = item.GetComponent<LightComponent>();
-                    if (lightComponent != null) lightComponent.LightColor = 
+                    if (lightComponent != null) lightComponent.LightColor =
                         new Color(
-                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f), 
+                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f),
                             (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
                             (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
                             (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
@@ -405,9 +478,9 @@ namespace Barotrauma
                         NewMessage("Removed " + me.Name + " (simposition " + me.SimPosition + ")", Color.Orange);
                         MapEntity.mapEntityList.RemoveAt(i);
                     }
-                    else if (me.MoveWithLevel)
+                    else if (!me.ShouldBeSaved)
                     {
-                        NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
+                        NewMessage("Removed " + me.Name + " (!ShouldBeSaved)", Color.Orange);
                         MapEntity.mapEntityList.RemoveAt(i);
                     }
                     else if (me is Item)
@@ -430,11 +503,12 @@ namespace Barotrauma
                 new GUIMessageBox("", string.Join(" ", args));
             }));
 
-            commands.Add(new Command("debugdraw", "debugdraw: Toggle the debug drawing mode on/off.", (string[] args) =>
+            AssignOnExecute("debugdraw", (string[] args) =>
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("debugdraw", false);
 
             commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
             {
@@ -447,31 +521,140 @@ namespace Barotrauma
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
 
-            commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
+            commands.Add(new Command("hudlayoutdebugdraw|debugdrawhudlayout", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {
                 HUDLayoutSettings.DebugDraw = !HUDLayoutSettings.DebugDraw;
                 NewMessage("HUD layout debug draw mode " + (HUDLayoutSettings.DebugDraw ? "enabled" : "disabled"), Color.White);
-
             }));
 
-            commands.Add(new Command("togglehud|hud", "togglehud/hud: Toggle the character HUD (inventories, icons, buttons, etc) on/off.", (string[] args) =>
+            commands.Add(new Command("interactdebugdraw|debugdrawinteract", "interactdebugdraw: Toggle the debug drawing mode of item interaction ranges on/off.", (string[] args) =>
+            {
+                Character.DebugDrawInteract = !Character.DebugDrawInteract;
+                NewMessage("Interact debug draw mode " + (Character.DebugDrawInteract ? "enabled" : "disabled"), Color.White);
+            }, isCheat: true));
+
+            AssignOnExecute("togglehud|hud", (string[] args) =>
             {
                 GUI.DisableHUD = !GUI.DisableHUD;
                 GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
-            }));
+            });
+            AssignRelayToServer("togglehud|hud", false);
 
-            commands.Add(new Command("followsub", "followsub: Toggle whether the camera should follow the nearest submarine.", (string[] args) =>
+            AssignOnExecute("followsub", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
                 NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
-            }));
+            });
+            AssignRelayToServer("followsub", false);
 
-            commands.Add(new Command("toggleaitargets|aitargets", "toggleaitargets/aitargets: Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from).", (string[] args) =>
+            AssignOnExecute("toggleaitargets|aitargets", (string[] args) =>
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
-            }, isCheat: true));
+            });
+            AssignRelayToServer("toggleaitargets|aitargets", false);
+
+            commands.Add(new Command("checkcrafting", "checkcrafting: Checks item deconstruction & crafting recipes for inconsistencies.", (string[] args) =>
+            {
+                List<FabricableItem> fabricableItems = new List<FabricableItem>();
+                foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+                {
+                    if (mapEntityPrefab is ItemPrefab itemPrefab)
+                    {
+                        var fabricatorElement = itemPrefab.ConfigElement.Element("Fabricator");
+                        if (fabricatorElement == null) { continue; }
+
+                        foreach (XElement element in fabricatorElement.Elements())
+                        {
+                            if (element.Name.ToString().ToLowerInvariant() != "fabricableitem") { continue; }
+                            fabricableItems.Add(new FabricableItem(element));
+                        }
+
+                    }
+                }
+                foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+                {
+                    if (mapEntityPrefab is ItemPrefab itemPrefab)
+                    {
+                        int? minCost = itemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                        int? fabricationCost = null;
+                        int? deconstructProductCost = null;
+
+                        var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                        if (fabricationRecipe != null)
+                        {
+                            foreach (var ingredient in fabricationRecipe.RequiredItems)
+                            {
+                                int? ingredientPrice = ingredient.ItemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                                if (ingredientPrice.HasValue)
+                                {
+                                    if (!fabricationCost.HasValue) { fabricationCost = 0; }
+                                    float useAmount = ingredient.UseCondition ? ingredient.MinCondition : 1.0f;
+                                    fabricationCost += (int)(ingredientPrice.Value * ingredient.Amount * useAmount);
+                                }
+                            }
+                        }
+
+                        foreach (var deconstructItem in itemPrefab.DeconstructItems)
+                        {
+                            var targetItem = MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) as ItemPrefab;
+                            if (targetItem == null)
+                            {
+                                ThrowError("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
+                                continue;
+                            }
+
+                            int? deconstructProductPrice = targetItem.GetPrices()?.Min(p => p.BuyPrice);
+                            if (deconstructProductPrice.HasValue)
+                            {
+                                if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
+                                deconstructProductCost += (int)(deconstructProductPrice * deconstructItem.OutCondition);
+                            }
+
+                            if (fabricationRecipe != null)
+                            {
+                                if (!fabricationRecipe.RequiredItems.Any(r => r.ItemPrefab == targetItem))
+                                {
+                                    NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Orange);
+                                }
+                            }
+                        }
+
+                        if (fabricationCost.HasValue && minCost.HasValue)
+                        {
+                            if (fabricationCost.Value < minCost * 0.9f)
+                            {
+                                float ratio = (float)fabricationCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio, Color.Red, Color.Yellow, Color.Green);
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" only cost " + (int)(ratio * 100) + "% of the price of the item. Item price: " + minCost.Value + ", ingredient prices: " + fabricationCost.Value, color);
+                            }
+                            else if (fabricationCost.Value > minCost * 1.1f)
+                            {
+                                float ratio = (float)fabricationCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio - 1.0f, Color.Green, Color.Yellow, Color.Red);
+                                NewMessage("The fabrication ingredients of \"" + itemPrefab.Name + "\" cost " + (int)(ratio * 100 - 100) + "% more than the price of the item. Item price: " + minCost.Value + ", ingredient prices: " + fabricationCost.Value, color);
+                            }
+                        }
+                        if (deconstructProductCost.HasValue && minCost.HasValue)
+                        {
+                            if (deconstructProductCost.Value < minCost * 0.8f)
+                            {
+                                float ratio = (float)deconstructProductCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio, Color.Red, Color.Yellow, Color.Green);
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is only worth " + (int)(ratio * 100) + "% of the price of the item. Item price: " + minCost.Value + ", output value: " + deconstructProductCost.Value, color);
+                            }
+                            else if (deconstructProductCost.Value > minCost * 1.1f)
+                            {
+                                float ratio = (float)deconstructProductCost.Value / minCost.Value;
+                                Color color = ToolBox.GradientLerp(ratio - 1.0f, Color.Green, Color.Yellow, Color.Red);
+                                NewMessage("The deconstruction output of \"" + itemPrefab.Name + "\" is worth " + (int)(ratio * 100 - 100) + "% more than the price of the item. Item price: " + minCost.Value + ", output value: " + deconstructProductCost.Value, color);
+                            }
+                        }
+                    }
+                }
+            }, isCheat: false));
+            
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
@@ -482,17 +665,142 @@ namespace Barotrauma
 
                 for (int i = 0; i < msgCount; i++)
                 {
-                    if (GameMain.Server != null)
-                    {
-                        GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
                     }
                 }
             }));
+
+            commands.Add(new Command("camerasettings", "camerasettings [defaultzoom] [zoomsmoothness] [movesmoothness] [minzoom] [maxzoom]: debug command for testing camera settings. The values default to 1.1, 8.0, 8.0, 0.1 and 2.0.", (string[] args) =>
+            {
+                float defaultZoom = Screen.Selected.Cam.DefaultZoom;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out defaultZoom);
+
+                float zoomSmoothness = Screen.Selected.Cam.ZoomSmoothness;
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out zoomSmoothness);
+                float moveSmoothness = Screen.Selected.Cam.MoveSmoothness;
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out moveSmoothness);
+
+                float minZoom = Screen.Selected.Cam.MinZoom;
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out minZoom);
+                float maxZoom = Screen.Selected.Cam.MaxZoom;
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out maxZoom);
+
+                Screen.Selected.Cam.DefaultZoom = defaultZoom;
+                Screen.Selected.Cam.ZoomSmoothness = zoomSmoothness;
+                Screen.Selected.Cam.MoveSmoothness = moveSmoothness;
+                Screen.Selected.Cam.MinZoom = minZoom;
+                Screen.Selected.Cam.MaxZoom = maxZoom;
+            }));
 #endif
+
+            commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
+                var doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc?.Root == null) return;
+                List<string> lines = new List<string>();
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    lines.Add(element.ElementInnerText());
+                }
+                File.WriteAllLines(Path.GetFileNameWithoutExtension(filePath) + ".txt", lines);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    TextManager.GetTextFiles().Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("loadtexts", "loadtexts [sourcefile] [destinationfile]: Loads all lines of text from a given .txt file and inserts them sequientially into the elements of an xml file. If the file paths are omitted, EnglishVanilla.txt and EnglishVanilla.xml are used.", (string[] args) =>
+            {
+                string sourcePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.txt";
+                string destinationPath = args.Length > 1 ? args[1] : "Content/Texts/EnglishVanilla.xml";
+
+                string[] lines;
+                try
+                {
+                    lines = File.ReadAllLines(sourcePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Reading the file \"" + sourcePath + "\" failed.", e);
+                    return;
+                }
+                var doc = XMLExtensions.TryLoadXml(destinationPath);
+                int i = 0;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (i >= lines.Length)
+                    {
+                        ThrowError("Error while loading texts to the xml file. The xml has more elements than the number of lines in the text file.");
+                        return;
+                    }
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
+                    files.Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("updatetextfile", "updatetextfile [sourcefile] [destinationfile]: Inserts all the xml elements that are only present in the source file into the destination file. Can be used to update outdated translation files more easily.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                string sourcePath = args[0];
+                string destinationPath = args[1];
+
+                var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
+                var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                XElement destinationElement = destinationDoc.Root.Elements().First();
+                foreach (XElement element in sourceDoc.Root.Elements())
+                {
+                    if (destinationDoc.Root.Element(element.Name) == null)
+                    {
+                        element.Value = "!!!!!!!!!!!!!" + element.Value;
+                        destinationElement.AddAfterSelf(element);
+                    }
+                    XNode nextNode = destinationElement.NextNode;
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
+                    destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
+                }
+                File.WriteAllLines(filePath, lines);
+            }));
+
+
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
                 GameMain.Config.MusicVolume = 0.5f;
@@ -560,7 +868,7 @@ namespace Barotrauma
                     NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
                 }
 
-                if (System.IO.File.Exists(GameServer.SettingsFile))
+                /*if (System.IO.File.Exists(GameServer.SettingsFile))
                 {
                     System.IO.File.Delete(GameServer.SettingsFile);
                     NewMessage("Deleted server settings", Color.Green);
@@ -570,7 +878,7 @@ namespace Barotrauma
                 {
                     System.IO.File.Delete(GameServer.ClientPermissionsFile);
                     NewMessage("Deleted client permission file", Color.Green);
-                }
+                }*/
 
                 if (System.IO.File.Exists("crashreport.log"))
                 {
@@ -583,7 +891,348 @@ namespace Barotrauma
                     ThrowError("TutorialSub.sub not found!");
                 }
             }));
+            
+            AssignOnClientExecute(
+                "giveperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
 
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    NewMessage("Valid permissions are:", Color.White);
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        NewMessage(" - " + permission.ToString(), Color.White);
+                    }
+                    ShowQuestionPrompt("Permission to grant to client #" + id + "?", (perm) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("giveperm " + id + " " + perm);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "revokeperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    NewMessage("Valid permissions are:", Color.White);
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        NewMessage(" - " + permission.ToString(), Color.White);
+                    }
+
+                    ShowQuestionPrompt("Permission to revoke from client #" + id + "?", (perm) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("revokeperm " + id + " " + perm);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "giverank",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    NewMessage("Valid ranks are:", Color.White);
+                    foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                    {
+                        NewMessage(" - " + permissionPreset.Name, Color.White);
+                    }
+                    ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("giverank " + id + " " + rank);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "givecommandperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "revokecommandperm",
+                (string[] args) =>
+                {
+                    //TODO: revoke lol
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    {
+                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                    });
+                }
+            );
+
+            AssignOnClientExecute(
+                "showperm",
+                (string[] args) =>
+                {
+                    if (args.Length < 1) return;
+
+                    if (!int.TryParse(args[0], out int id))
+                    {
+                        ThrowError("\"" + id + "\" is not a valid client ID.");
+                        return;
+                    }
+
+                    GameMain.Client.SendConsoleCommand("showperm " + id);
+                }
+            );
+
+            AssignOnClientExecute(
+                "banip",
+                (string[] args) =>
+                {
+                    if (GameMain.Client == null || args.Length == 0) return;
+                    ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                    {
+                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                        {
+                            TimeSpan? banDuration = null;
+                            if (!string.IsNullOrWhiteSpace(duration))
+                            {
+                                if (!TryParseTimeSpan(duration, out TimeSpan parsedBanDuration))
+                                {
+                                    ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
+                                    return;
+                                }
+                                banDuration = parsedBanDuration;
+                            }
+
+                            GameMain.Client.SendConsoleCommand(
+                                "banip " +
+                                args[0] + " " +
+                                (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
+                                reason);
+                        });
+                    });
+                }
+            );
+
+            commands.Add(new Command("unban", "unban [name]: Unban a specific client.", (string[] args) =>
+            {
+                if (GameMain.Client == null || args.Length == 0) return;
+                string clientName = string.Join(" ", args);
+                GameMain.Client.UnbanPlayer(clientName, "");
+            }));
+
+            commands.Add(new Command("unbanip", "unbanip [ip]: Unban a specific IP.", (string[] args) =>
+            {
+                if (GameMain.Client == null || args.Length == 0) return;
+                GameMain.Client.UnbanPlayer("", args[0]);
+            }));
+
+            AssignOnClientExecute(
+                "campaigndestination|setcampaigndestination",
+                (string[] args) =>
+                {
+                    var campaign = GameMain.GameSession?.GameMode as CampaignMode;
+                    if (campaign == null)
+                    {
+                        ThrowError("No campaign active!");
+                        return;
+                    }
+
+                    if (args.Length == 0)
+                    {
+                        int i = 0;
+                        foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
+                        {
+                            NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                            i++;
+                        }
+                        ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>
+                        {
+                            int destinationIndex = -1;
+                            if (!int.TryParse(selectedDestination, out destinationIndex)) return;
+                            if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
+                            {
+                                NewMessage("Index out of bounds!", Color.Red);
+                                return;
+                            }
+                            GameMain.Client.SendConsoleCommand("campaigndestination " + destinationIndex);
+                        });
+                    }
+                    else
+                    {
+                        int destinationIndex = -1;
+                        if (!int.TryParse(args[0], out destinationIndex)) return;
+                        if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
+                        {
+                            NewMessage("Index out of bounds!", Color.Red);
+                            return;
+                        }
+                        GameMain.Client.SendConsoleCommand("campaigndestination " + destinationIndex);
+                    }
+                }
+            );
+
+            commands.Add(new Command("reloadtextures|reloadtexture", "", (string[] args) =>
+            {
+                var item = Character.Controlled.FocusedItem;
+                var character = Character.Controlled;
+                if (item != null)
+                {
+                    item.Sprite.ReloadTexture();
+                }
+                else if (character != null)
+                {
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        limb.Sprite?.ReloadTexture();
+                        limb.DamagedSprite?.ReloadTexture();
+                        limb.DeformSprite?.Sprite.ReloadTexture();
+                        // update specular
+                        limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                    }
+                }
+                else
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("limbscale", "Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
+                if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
+                {
+                    ThrowError("Failed to parse float value from the arguments");
+                    return;
+                }
+                RagdollParams ragdollParams = character.AnimController.RagdollParams;
+                ragdollParams.LimbScale = value;
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate();
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("jointscale", "Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
+                if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
+                {
+                    ThrowError("Failed to parse float value from the arguments");
+                    return;
+                }
+                RagdollParams ragdollParams = character.AnimController.RagdollParams;
+                ragdollParams.JointScale = value;
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate();
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("ragdollscale", "Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the value after the command.");
+                    return;
+                }
+                if (!float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float value))
+                {
+                    ThrowError("Failed to parse float value from the arguments");
+                    return;
+                }
+                RagdollParams ragdollParams = character.AnimController.RagdollParams;
+                ragdollParams.LimbScale = value;
+                ragdollParams.JointScale = value;
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate();
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("recreateragdoll", "", (string[] args) =>
+            {
+                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                var pos = character.WorldPosition;
+                character.AnimController.Recreate();
+                character.TeleportTo(pos);
+            }, isCheat: true));
+
+            commands.Add(new Command("resetragdoll", "", (string[] args) =>
+            {
+                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                character.AnimController.ResetRagdoll();
+            }, isCheat: true));
         }
     }
 }

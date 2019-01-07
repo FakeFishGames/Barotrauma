@@ -42,6 +42,12 @@ namespace Barotrauma
         [Serialize(2000, true)]
         public int Size { get; set; }
 
+        [Serialize(20.0f, true), Editable(0.0f, 5000.0f, ToolTip = "Connections with a length smaller or equal to this generate the smallest possible levels (using the MinWidth parameter in the level generation paramaters).")]
+        public float SmallLevelConnectionLength { get; set; }
+
+        [Serialize(200.0f, true), Editable(0.0f, 5000.0f, ToolTip = "Connections with a length larger or equal to this generate the largest possible levels (using the MaxWidth parameter in the level generation paramaters).")]
+        public float LargeLevelConnectionLength { get; set; }
+
         [Serialize(1024, true)]
         public int NoiseResolution { get; set; } //Resolution of the noisemap overlay
 
@@ -118,6 +124,17 @@ namespace Barotrauma
         public Sprite ConnectionSprite { get; private set; }
 
 #if CLIENT
+        
+        [Serialize(15.0f, true), Editable(1.0f, 1000.0f, ToolTip = "Size of the location icons in pixels when at 100% zoom.")]
+        public float LocationIconSize { get; set; }
+
+        [Serialize("0,1,0,1", true), Editable(ToolTip = "The color used to display the low-difficulty connections on the map.")]
+        public Color LowDifficultyColor { get; set; }
+        [Serialize("1,0.5,0.15,1", true), Editable(ToolTip = "The color used to display the medium-difficulty connections on the map.")]
+        public Color MediumDifficultyColor { get; set; }
+        [Serialize("1,0,0,1", true), Editable(ToolTip = "The color used to display the high-difficulty connections on the map.")]
+        public Color HighDifficultyColor { get; set; }
+
         public SpriteSheet DecorativeMapSprite { get; private set; }
         public SpriteSheet DecorativeGraphSprite { get; private set; }
         public SpriteSheet DecorativeLineTop { get; private set; }

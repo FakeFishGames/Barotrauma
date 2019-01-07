@@ -18,22 +18,33 @@ namespace Barotrauma
         {
             get
             {
-                return state>0 ? Vector2.Zero : ConvertUnits.ToDisplayUnits(item.SimPosition);
+                return state > 0 ? Vector2.Zero : ConvertUnits.ToDisplayUnits(item.SimPosition);
             }
         }
 
         public SalvageMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
-
-            itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null)
+            if (prefab.ConfigElement.Attribute("itemname") != null)
             {
-                DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
-                return;
+                DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.");
+                string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
+                }
             }
-            
+            else
+            {
+                string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in SalvageMission - couldn't find an item prefab with the identifier " + itemIdentifier);
+                }
+            }
+
             string spawnPositionTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
                 !Enum.TryParse(spawnPositionTypeStr, true, out spawnPositionType))
@@ -49,7 +60,6 @@ namespace Barotrauma
             Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
             
             item = new Item(itemPrefab, position, null);
-            item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 
             if (item.HasTag("alien"))
@@ -77,8 +87,8 @@ namespace Barotrauma
             {
                 case 0:
                     //item.body.LinearVelocity = Vector2.Zero;
-                    if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
-                    if (item.CurrentHull == null) return;
+                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.CurrentHull?.Submarine == null) return;
 
 #if CLIENT
                     ShowMessage(state);
@@ -97,7 +107,7 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (item.CurrentHull == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) return;
+            if (item.CurrentHull?.Submarine == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) return;
             item.Remove();
 
             GiveReward();

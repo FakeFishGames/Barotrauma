@@ -12,6 +12,8 @@ namespace Barotrauma
 
         private AIState state;
 
+        protected AITarget selectedAiTarget;
+
         protected SteeringManager steeringManager;
 
         public SteeringManager SteeringManager
@@ -45,9 +47,19 @@ namespace Barotrauma
             get { return true; }
         }
 
+        public virtual bool CanFlip
+        {
+            get { return true; }
+        }
+
         public virtual AIObjectiveManager ObjectiveManager
         {
             get { return null; }
+        }
+
+        public AITarget SelectedAiTarget
+        {
+            get { return selectedAiTarget; }
         }
 
         public AIState State

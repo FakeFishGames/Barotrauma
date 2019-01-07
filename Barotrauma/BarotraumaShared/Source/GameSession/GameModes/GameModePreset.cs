@@ -53,15 +53,23 @@ namespace Barotrauma
 #if CLIENT
             new GameModePreset("Single Player", typeof(SinglePlayerCampaign), true);
             new GameModePreset("Tutorial", typeof(TutorialMode), true);
+            new GameModePreset("SPSandbox", typeof(GameMode), true)
+            {
+                Description = "Single player sandbox mode for debugging."
+            };
 #endif
 
-            var mode = new GameModePreset("SandBox", typeof(GameMode), false);
-            mode.Description = "A game mode with no specific objectives.";
-            
-            mode = new GameModePreset("Mission", typeof(MissionMode), false);
-            mode.Description = "The crew must work together to complete a specific task, such as retrieving "
+            new GameModePreset("Sandbox", typeof(GameMode), false)
+            {
+                Description = "A game mode with no specific objectives."
+            };
+
+            new GameModePreset("Mission", typeof(MissionMode), false)
+            {
+                Description = "The crew must work together to complete a specific task, such as retrieving "
                 + "an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends "
-                + "when the task is completed or everyone in the crew has died.";
+                + "when the task is completed or everyone in the crew has died."
+            };
 
             new GameModePreset("Campaign", typeof(MultiPlayerCampaign), false, false);
         }

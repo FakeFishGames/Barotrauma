@@ -44,10 +44,11 @@ namespace Barotrauma.Particles
         {
             get
             {
-                return position 
+                Vector2 worldPos = position
                     + clippedSourceRect.Size.ToVector2() / 2 * scale
-                    + hull.Rect.Location.ToVector2() 
-                    + hull.Submarine.DrawPosition;
+                    + hull.Rect.Location.ToVector2();
+                if (hull.Submarine != null) { worldPos += hull.Submarine.DrawPosition; }
+                return worldPos;
             }
         }
 
@@ -108,7 +109,7 @@ namespace Barotrauma.Particles
         public void Draw(SpriteBatch spriteBatch, Hull hull, float depth)
         {
             Vector2 drawPos = position + hull.Rect.Location.ToVector2();
-            drawPos += hull.Submarine.DrawPosition;
+            if (hull.Submarine != null) { drawPos += hull.Submarine.DrawPosition; }
             drawPos.Y = -drawPos.Y;
             
             spriteBatch.Draw(Sprite.Texture, drawPos, clippedSourceRect, Color * GetAlpha(), 0, Vector2.Zero, scale, SpriteEffects.None, depth);

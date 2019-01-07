@@ -17,8 +17,9 @@ namespace Barotrauma
 
         static bool doubleClicked;
 
-        public static Keys selectKey = Keys.E;
-
+        static bool allowInput;
+        static bool wasWindowActive;
+        
         public static Vector2 MousePosition
         {
             get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
@@ -47,9 +48,16 @@ namespace Barotrauma
         {
             get
             {
-                return GameMain.WindowActive ? MousePosition - new Vector2(oldMouseState.X, oldMouseState.Y) : Vector2.Zero;
+                return AllowInput ? MousePosition - new Vector2(oldMouseState.X, oldMouseState.Y) : Vector2.Zero;
             }
         }
+
+        private static bool AllowInput
+        {
+            get { return GameMain.WindowActive && allowInput; }
+        }
+
+        public static Vector2 MouseSpeedPerSecond { get; private set; }
 
         public static KeyboardState GetKeyboardState
         {
@@ -63,97 +71,114 @@ namespace Barotrauma
 
         public static int ScrollWheelSpeed
         {
-            get { return GameMain.WindowActive ? mouseState.ScrollWheelValue - oldMouseState.ScrollWheelValue : 0; }
+            get { return AllowInput ? mouseState.ScrollWheelValue - oldMouseState.ScrollWheelValue : 0; }
 
         }
 
         public static bool LeftButtonHeld()
         {
-            return GameMain.WindowActive && mouseState.LeftButton == ButtonState.Pressed;
+            return AllowInput && mouseState.LeftButton == ButtonState.Pressed;
         }
 
         public static bool LeftButtonDown()
         {
-            return GameMain.WindowActive &&
+            return AllowInput &&
                 oldMouseState.LeftButton == ButtonState.Released &&
                 mouseState.LeftButton == ButtonState.Pressed;
         }
 
         public static bool LeftButtonReleased()
         {
-            return GameMain.WindowActive && mouseState.LeftButton == ButtonState.Released;
+            return AllowInput && mouseState.LeftButton == ButtonState.Released;
         }
 
 
         public static bool LeftButtonClicked()
         {
-            return (GameMain.WindowActive &&
+            return (AllowInput &&
                 oldMouseState.LeftButton == ButtonState.Pressed
                 && mouseState.LeftButton == ButtonState.Released);
         }
 
         public static bool RightButtonHeld()
         {
-            return GameMain.WindowActive && mouseState.RightButton == ButtonState.Pressed;
+            return AllowInput && mouseState.RightButton == ButtonState.Pressed;
         }
 
         public static bool RightButtonClicked()
         {
-            return (GameMain.WindowActive &&
+            return (AllowInput &&
                 oldMouseState.RightButton == ButtonState.Pressed
                 && mouseState.RightButton == ButtonState.Released);
         }
 
         public static bool MidButtonClicked()
         {
-            return (GameMain.WindowActive &&
+            return (AllowInput &&
                 oldMouseState.MiddleButton == ButtonState.Pressed
                 && mouseState.MiddleButton == ButtonState.Released);
         }
 
         public static bool MidButtonHeld()
         {
-            return GameMain.WindowActive && mouseState.MiddleButton == ButtonState.Pressed;
+            return AllowInput && mouseState.MiddleButton == ButtonState.Pressed;
         }
 
         public static bool DoubleClicked()
         {
-            return GameMain.WindowActive && doubleClicked;
+            return AllowInput && doubleClicked;
         }
 
         public static bool KeyHit(InputType inputType)
         {
-            return GameMain.WindowActive && GameMain.Config.KeyBind(inputType).IsHit();
+            return AllowInput && GameMain.Config.KeyBind(inputType).IsHit();
         }
 
         public static bool KeyDown(InputType inputType)
         {
-            return GameMain.WindowActive && GameMain.Config.KeyBind(inputType).IsDown();
+            return AllowInput && GameMain.Config.KeyBind(inputType).IsDown();
         }
 
         public static bool KeyUp(InputType inputType)
         {
-            return GameMain.WindowActive && !GameMain.Config.KeyBind(inputType).IsDown();
+            return AllowInput && !GameMain.Config.KeyBind(inputType).IsDown();
         }
 
         public static bool KeyHit(Keys button)
         {
-            return (GameMain.WindowActive && oldKeyboardState.IsKeyDown(button) && keyboardState.IsKeyUp(button));
+            return (AllowInput && oldKeyboardState.IsKeyDown(button) && keyboardState.IsKeyUp(button));
         }
 
         public static bool KeyDown(Keys button)
         {
-            return (GameMain.WindowActive && keyboardState.IsKeyDown(button));
+            return (AllowInput && keyboardState.IsKeyDown(button));
         }
 
         public static bool KeyUp(Keys button)
         {
-            return GameMain.WindowActive && keyboardState.IsKeyUp(button);
+            return AllowInput && keyboardState.IsKeyUp(button);
         }
 
         public static void Update(double deltaTime)
         {
             timeSinceClick += deltaTime;
+
+            if (!GameMain.WindowActive)
+            {
+                wasWindowActive = false;
+                return;
+            }
+
+            //window was not active during the previous frame -> ignore inputs from this frame
+            if (!wasWindowActive)
+            {
+                wasWindowActive = true;
+                allowInput = false;
+            }
+            else
+            {
+                allowInput = true;
+            }
 
             oldMouseState = mouseState;
             mouseState = latestMouseState;
@@ -161,6 +186,8 @@ namespace Barotrauma
 
             oldKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
+
+            MouseSpeedPerSecond = MouseSpeed / (float)deltaTime;
 
             doubleClicked = false;
             if (LeftButtonClicked())

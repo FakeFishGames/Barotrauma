@@ -25,7 +25,7 @@ namespace Barotrauma
         public readonly Sprite SymbolSprite;
 
         public readonly Type ItemComponentType;
-        public readonly string[] ItemNames;
+        public readonly string[] ItemIdentifiers;
 
         public readonly string AITag;
 
@@ -41,12 +41,9 @@ namespace Barotrauma
         public readonly bool UseController;
         public Controller ConnectedController; 
         
-        //key = the given option ("" if no option is given)
-        //value = a list of chatmessages sent when the order is issued
-        private readonly Dictionary<string, List<string>> chatMessages = new Dictionary<string, List<string>>();
-
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
+        public readonly string[] OptionNames;
 
         static Order()
         {
@@ -66,53 +63,51 @@ namespace Barotrauma
 
         private Order(XElement orderElement)
         {
-            Name = orderElement.GetAttributeString("name", "Name not found");
-            DoingText = orderElement.GetAttributeString("doingtext", "");
+            AITag = orderElement.GetAttributeString("aitag", "");
+            Name = TextManager.Get("OrderName." + AITag, true) ?? orderElement.GetAttributeString("name", "Name not found");
+            DoingText = TextManager.Get("OrderNameDoing." + AITag, true) ?? orderElement.GetAttributeString("doingtext", "");
 
-            string targetItemName = orderElement.GetAttributeString("targetitemtype", "");
-
-            if (!string.IsNullOrWhiteSpace(targetItemName))
+            string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
+            if (!string.IsNullOrWhiteSpace(targetItemType))
             {
                 try
                 {
-                    ItemComponentType = Type.GetType("Barotrauma.Items.Components." + targetItemName, true, true);
+                    ItemComponentType = Type.GetType("Barotrauma.Items.Components." + targetItemType, true, true);
                 }
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + ConfigFile + ", item component type " + targetItemName + " not found", e);
+                    DebugConsole.ThrowError("Error in " + ConfigFile + ", item component type " + targetItemType + " not found", e);
                 }
             }
 
-            AITag = orderElement.GetAttributeString("aitag", "");
-            ItemNames = orderElement.GetAttributeStringArray("targetitemname", new string[0]);
+            ItemIdentifiers = orderElement.GetAttributeStringArray("targetitemidentifiers", new string[0], trim: true, convertToLowerInvariant: true);
             Color = orderElement.GetAttributeColor("color", Color.White);
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
-            string appropriateJobsStr = orderElement.GetAttributeString("appropriatejobs", "");
-            if (!string.IsNullOrWhiteSpace(appropriateJobsStr))
+            AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
+            Options = orderElement.GetAttributeStringArray("options", new string[0]);
+
+            string translatedOptionNames = TextManager.Get("OrderOptions." + AITag, true);
+            if (translatedOptionNames == null)
             {
-                AppropriateJobs = appropriateJobsStr.Split(',');
-                for (int i = 0; i<AppropriateJobs.Length; i++)
-                {
-                    AppropriateJobs[i] = AppropriateJobs[i].Trim();
-                }
-            }
-            
-            string optionStr = orderElement.GetAttributeString("options", "");
-            if (string.IsNullOrWhiteSpace(optionStr))
-            {
-                Options = new string[0];
+                OptionNames = orderElement.GetAttributeStringArray("optionnames", new string[0]);
             }
             else
             {
-                Options = optionStr.Split(',');
-
-                for (int i = 0; i<Options.Length; i++)
+                string[] splitOptionNames = translatedOptionNames.Split(',');
+                OptionNames = new string[Options.Length];
+                for (int i = 0; i < Options.Length && i < splitOptionNames.Length; i++)
                 {
-                    Options[i] = Options[i].Trim();
+                    OptionNames[i] = splitOptionNames[i].Trim();
                 }
+            }
+
+            if (OptionNames.Length != Options.Length)
+            {
+                DebugConsole.ThrowError("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
+                OptionNames = Options;
             }
 
             foreach (XElement subElement in orderElement.Elements())
@@ -122,28 +117,10 @@ namespace Barotrauma
                     case "sprite":
                         SymbolSprite = new Sprite(subElement);
                         break;
-                    case "chatmessage":
-                        string option = subElement.GetAttributeString("option", "");
-                        
-                        if (!chatMessages.ContainsKey(option))
-                        {
-                            chatMessages[option] = new List<string>();
-                        }
-
-                        chatMessages[option].Add(subElement.GetAttributeString("msg", ""));
-                        break;
                 }
             }
         }
-
-        private Order(string name, string doingText, Type itemComponentType, string[] parameters = null)
-        {
-            Name = name;
-            DoingText = doingText;
-            ItemComponentType = itemComponentType;
-            Options = parameters == null ? new string[0] : parameters;
-        }
-
+        
         public Order(Order prefab, Entity targetEntity, ItemComponent targetItem)
         {
             Prefab = prefab;
@@ -158,7 +135,6 @@ namespace Barotrauma
             UseController       = prefab.UseController;
             TargetAllCharacters = prefab.TargetAllCharacters;
             AppropriateJobs     = prefab.AppropriateJobs;
-            chatMessages        = prefab.chatMessages;
             FadeOutTime         = prefab.FadeOutTime;
 
             TargetEntity = targetEntity;
@@ -173,19 +149,14 @@ namespace Barotrauma
                 TargetItemComponent = targetItem;
             }
         }
-
-        private Order(string name, string doingText, string[] parameters = null)
-            : this(name, doingText, null, parameters)
-        {
-        }
-
+        
         public bool HasAppropriateJob(Character character)
         {
             if (AppropriateJobs == null || AppropriateJobs.Length == 0) return true;
             if (character.Info == null || character.Info.Job == null) return false;
             for (int i = 0; i < AppropriateJobs.Length; i++)
             {
-                if (character.Info.Job.Name.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) return true;
+                if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) return true;
             }
             return false;
         }
@@ -193,12 +164,16 @@ namespace Barotrauma
         public string GetChatMessage(string targetCharacterName, string targetRoomName, string orderOption = "")
         {
             orderOption = orderOption ?? "";
-            if (!chatMessages.ContainsKey(orderOption)) return "";
+
+            string messageTag = "OrderDialog." + AITag;
+            if (!string.IsNullOrEmpty(orderOption)) messageTag += "." + orderOption;
+
+            string msg = TextManager.Get(messageTag, true);
+            if (msg == null) return "";
             
-            string message = chatMessages[orderOption].Count > 0 ? chatMessages[orderOption][Rand.Range(0, chatMessages[orderOption].Count)] : "";
             if (targetCharacterName == null) targetCharacterName = "";
             if (targetRoomName == null) targetRoomName = "";            
-            return message.Replace("[name]", targetCharacterName).Replace("[roomname]", targetRoomName);
+            return msg.Replace("[name]", targetCharacterName).Replace("[roomname]", targetRoomName);
         }
     }
 

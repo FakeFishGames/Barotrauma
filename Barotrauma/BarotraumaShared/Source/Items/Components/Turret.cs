@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -12,12 +13,15 @@ namespace Barotrauma.Items.Components
 {
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
-        private Sprite barrelSprite;
+        private Sprite barrelSprite, railSprite;
 
         private Vector2 barrelPos;
+        private Vector2 transformedBarrelPos;
 
         private bool? hasLight;
         private LightComponent lightComponent;
+
+        private float baseAngle;
 
         private float rotation, targetRotation;
 
@@ -32,7 +36,7 @@ namespace Barotrauma.Items.Components
         private float angularVelocity;
 
         private Character user;
-
+        
         [Serialize("0,0", false)]
         public Vector2 BarrelPos
         {
@@ -40,9 +44,18 @@ namespace Barotrauma.Items.Components
             { 
                 return barrelPos; 
             }
-            set 
+            set
             { 
                 barrelPos = value;
+                UpdateTransformedBarrelPos();
+            }
+        }
+
+        public Vector2 TransformedBarrelPos
+        {
+            get
+            {
+                return transformedBarrelPos;
             }
         }
 
@@ -76,62 +89,75 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(5.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringStiffnessLowSkill
         {
             get;
             private set;
         }
-        [Serialize(2.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(2.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringStiffnessHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(50.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(50.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringDampingLowSkill
         {
             get;
             private set;
         }
-        [Serialize(10.0f, false), Editable(0.0f, 1000.0f)]
+        [Serialize(10.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
         public float SpringDampingHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false), Editable(0.0f, 100.0f)]
+        [Serialize(1.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
         public float RotationSpeedLowSkill
         {
             get;
             private set;
         }
-        [Serialize(5.0f, false), Editable(0.0f, 100.0f)]
+        [Serialize(5.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
         public float RotationSpeedHighSkill
         {
             get;
             private set;
         }
 
+        private float baseRotationRad;
+        [Serialize(0.0f, true), Editable(0.0f, 360.0f)]
+        public float BaseRotation
+        {
+            get { return MathHelper.ToDegrees(baseRotationRad); }
+            set
+            {
+                baseRotationRad = MathHelper.ToRadians(value);
+                UpdateTransformedBarrelPos();
+            }
+        }
+
+
+
         public Turret(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
-
-            string barrelSpritePath = element.GetAttributeString("barrelsprite", "");
-
-            if (!string.IsNullOrWhiteSpace(barrelSpritePath))
+            
+            foreach (XElement subElement in element.Elements())
             {
-                if (!barrelSpritePath.Contains("/"))
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    barrelSpritePath = Path.Combine(Path.GetDirectoryName(item.Prefab.ConfigFile), barrelSpritePath);
+                    case "barrelsprite":
+                        barrelSprite = new Sprite(subElement);
+                        break;
+                    case "railsprite":
+                        railSprite = new Sprite(subElement);
+                        break;
                 }
-
-                barrelSprite = new Sprite(
-                    barrelSpritePath,
-                    element.GetAttributeVector2("origin", Vector2.Zero));
             }
 
             hasLight = null;
@@ -141,15 +167,26 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
+        private void UpdateTransformedBarrelPos()
+        {
+            float flippedRotation = BaseRotation;
+            if (item.FlippedX) flippedRotation = -flippedRotation;
+            if (item.FlippedY) flippedRotation = 180.0f - flippedRotation;
+            transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos * item.Scale, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), flippedRotation);
+#if CLIENT
+            item.SpriteRotation = MathHelper.ToRadians(flippedRotation);
+#endif
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (hasLight == null)
             {
-                List<LightComponent> lightComponents = item.GetComponents<LightComponent>();
+                var lightComponents = item.GetComponents<LightComponent>();
                 
-                if (lightComponents != null && lightComponents.Count>0)
+                if (lightComponents != null && lightComponents.Count() > 0)
                 {
-                    lightComponent = lightComponents.Find(lc => lc.Parent == this);
+                    lightComponent = lightComponents.FirstOrDefault(lc => lc.Parent == this);
                     hasLight = (lightComponent != null);
                 }
                 else
@@ -212,15 +249,33 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (!characterUsable && character != null) return false;
+            return TryLaunch(deltaTime, character);
+        }
+
+        private bool TryLaunch(float deltaTime, Character character = null)
+        {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
             if (reload > 0.0f) return false;
-            
-            if (GetAvailablePower() < powerConsumption) return false;
 
+            if (GetAvailablePower() < powerConsumption)
+            {
+#if CLIENT
+                if (!flashLowPower && character != null && character == Character.Controlled)
+                {
+                    flashLowPower = true;
+                    GUI.PlayUISound(GUISoundType.PickItemFail);
+                }
+#endif
+                return false;
+            }
+            
             foreach (MapEntity e in item.linkedTo)
             {
-                //use linked projectile containers in case they have to react to it somehow
+                //use linked projectile containers in case they have to react to the turret being launched somehow
                 //(play a sound, spawn more projectiles)
                 Item linkedItem = e as Item;
                 if (linkedItem == null) continue;
@@ -229,8 +284,18 @@ namespace Barotrauma.Items.Components
             }
 
             var projectiles = GetLoadedProjectiles(true);
-            if (projectiles.Count == 0) return false;
-            
+            if (projectiles.Count == 0)
+            {
+#if CLIENT
+                if (!flashNoAmmo && character != null && character == Character.Controlled)
+                {
+                    flashNoAmmo = true;
+                    GUI.PlayUISound(GUISoundType.PickItemFail);
+                }
+#endif
+                return false;
+            }
+
             var batteries = item.GetConnectedComponents<PowerContainer>();
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
@@ -240,14 +305,17 @@ namespace Barotrauma.Items.Components
 
                 battery.Charge -= takePower / 3600.0f;
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     battery.Item.CreateServerEvent(battery);
                 }
+#endif
             }
-         
+
             Launch(projectiles[0].Item, character);
 
+#if SERVER
             if (character != null)
             {
                 string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
@@ -261,6 +329,7 @@ namespace Barotrauma.Items.Components
                 }
                 GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
             return true;
         }
@@ -274,7 +343,7 @@ namespace Barotrauma.Items.Components
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
-            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y)), -rotation);
+            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), -rotation);
             projectile.FindHull();
             projectile.Submarine = projectile.body.Submarine;
 
@@ -286,12 +355,13 @@ namespace Barotrauma.Items.Components
             }
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
-
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
+                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
 
+            ApplyStatusEffects(ActionType.OnUse, 1.0f);
             LaunchProjSpecific();
         }
 
@@ -299,7 +369,12 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-
+            if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
+                previousTarget.IsDead)
+            {
+                character?.Speak(TextManager.Get("DialogTurretTargetDead"), null, 0.0f, "killedtarget" + previousTarget.ID, 30.0f);
+                character.AIController.SelectTarget(null);
+            }
 
             if (GetAvailablePower() < powerConsumption)
             {
@@ -341,7 +416,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fire at will"))
+            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -355,7 +430,7 @@ namespace Barotrauma.Items.Components
 
                 if (container == null || container.ContainableItems.Count == 0) return true;
 
-                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
+                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
                 containShellObjective.MinContainedAmount = projectileCount + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;
@@ -365,13 +440,13 @@ namespace Barotrauma.Items.Components
 
             //enough shells and power
             Character closestEnemy = null;
-            float closestDist = 3000.0f;
+            float closestDist = 10000.0f * 10000.0f;
             foreach (Character enemy in Character.CharacterList)
             {
                 //ignore humans and characters that are inside the sub
                 if (enemy.IsDead || enemy.SpeciesName == "human" || enemy.AnimController.CurrentHull != null) continue;
 
-                float dist = Vector2.Distance(enemy.WorldPosition, item.WorldPosition);
+                float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
                 if (dist < closestDist)
                 {
                     closestEnemy = enemy;
@@ -380,6 +455,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (closestEnemy == null) return false;
+            
+            character.AIController.SelectTarget(closestEnemy.AiTarget);
 
             character.CursorPosition = closestEnemy.WorldPosition;
             if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
@@ -393,7 +470,7 @@ namespace Barotrauma.Items.Components
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
 
-            if (objective.Option.ToLowerInvariant() == "fire at will")
+            if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
                 character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
                 character.SetInput(InputType.Use, true, true);
@@ -435,62 +512,67 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
 
             if (barrelSprite != null) barrelSprite.Remove();
+            if (railSprite != null) railSprite.Remove();
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
-            moveSound?.Dispose(); moveSound = null;
-            endMoveSound?.Dispose(); endMoveSound = null;
-            startMoveSound?.Dispose(); startMoveSound = null;
 #endif
         }
 
         private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
         {
             List<Projectile> projectiles = new List<Projectile>();
+            //check the item itself first
+            CheckProjectileContainer(item, projectiles, returnFirst);
             foreach (MapEntity e in item.linkedTo)
             {
-                var projectileContainer = e as Item;
-                if (projectileContainer == null) continue;
-
-                var containedItems = projectileContainer.ContainedItems;
-                if (containedItems == null) continue;
-
-                for (int i = 0; i < containedItems.Length; i++)
-                {
-                    var projectileComponent = containedItems[i].GetComponent<Projectile>();
-                    if (projectileComponent != null)
-                    {
-                        projectiles.Add(projectileComponent);
-                        if (returnFirst) return projectiles;
-                    }
-                    else
-                    {
-                        //check if the contained item is another itemcontainer with projectiles inside it
-                        if (containedItems[i].ContainedItems == null) continue;
-                        for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
-                        {
-                            projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
-                            if (projectileComponent != null)
-                            {
-                                projectiles.Add(projectileComponent);
-                                if (returnFirst) return projectiles;
-                            }
-                        }
-                    }                    
-                }
+                if (e is Item projectileContainer) { CheckProjectileContainer(projectileContainer, projectiles, returnFirst); }
+                if (returnFirst && projectiles.Any()) return projectiles;
             }
 
             return projectiles;
         }
 
+        private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, bool returnFirst)
+        {
+            var containedItems = projectileContainer.ContainedItems;
+            if (containedItems == null) return;
+
+            for (int i = 0; i < containedItems.Length; i++)
+            {
+                var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                if (projectileComponent != null)
+                {
+                    projectiles.Add(projectileComponent);
+                    if (returnFirst) return;
+                }
+                else
+                {
+                    //check if the contained item is another itemcontainer with projectiles inside it
+                    if (containedItems[i].ContainedItems == null) continue;
+                    for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
+                    {
+                        projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
+                        if (projectileComponent != null)
+                        {
+                            projectiles.Add(projectileComponent);
+                            if (returnFirst) return;
+                        }
+                    }
+                }
+            }
+        }
+
         public override void FlipX(bool relativeToSub)
         {
-            minRotation = (float)Math.PI - minRotation;
-            maxRotation = (float)Math.PI - maxRotation;
+            minRotation = MathHelper.Pi - minRotation;
+            maxRotation = MathHelper.Pi - maxRotation;
 
             var temp = minRotation;
             minRotation = maxRotation;
             maxRotation = temp;
+
+            barrelPos.X = item.Rect.Width / item.Scale - barrelPos.X;
 
             while (minRotation < 0)
             {
@@ -498,6 +580,8 @@ namespace Barotrauma.Items.Components
                 maxRotation += MathHelper.TwoPi;
             }
             rotation = (minRotation + maxRotation) / 2;
+
+            UpdateTransformedBarrelPos();
         }
 
         public override void FlipY(bool relativeToSub)
@@ -509,12 +593,16 @@ namespace Barotrauma.Items.Components
             minRotation = maxRotation;
             maxRotation = temp;
 
+            barrelPos.Y = item.Rect.Height / item.Scale - barrelPos.Y;
+
             while (minRotation < 0)
             {
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
             rotation = (minRotation + maxRotation) / 2;
+
+            UpdateTransformedBarrelPos();
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
@@ -522,13 +610,32 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    float.TryParse(signal, out targetRotation);
-                    IsActive = true;
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
+                    {
+                        targetRotation = MathHelper.ToRadians(newRotation);
+                        IsActive = true;
+                    }
                     user = sender;
                     break;
                 case "trigger_in":
                     item.Use((float)Timing.Step, sender);
                     user = sender;
+                    //triggering the Use method through item.Use will fail if the item is not characterusable and the signal was sent by a character
+                    //so lets do it manually
+                    if (!characterUsable && sender != null)
+                    {
+                        TryLaunch((float)Timing.Step, sender);
+                    }
+                    break;
+                case "toggle":
+                case "toggle_light":
+                    foreach (ItemComponent component in item.components)
+                    {
+                        if (component.Parent == this && component is LightComponent lightComponent)
+                        {
+                            lightComponent.IsOn = !lightComponent.IsOn;
+                        }
+                    }
                     break;
             }
         }

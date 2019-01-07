@@ -23,12 +23,29 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private const float DirectionalPingSector = 30.0f;
+        private static readonly float DirectionalPingDotProduct;
+
+        static Sonar()
+        {
+            DirectionalPingDotProduct = (float)Math.Cos(MathHelper.ToRadians(DirectionalPingSector) * 0.5f);
+        }
+
         private float range;
 
         private float pingState;
 
-        private readonly Sprite pingCircle, screenOverlay;
+        private const float MinZoom = 1.0f, MaxZoom = 5.0f;
+        private float zoom = 1.0f;
 
+        private bool useDirectionalPing = false;
+        private Vector2 lastPingDirection = new Vector2(1.0f, 0.0f);
+        private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
+
+        //was the last ping sent with directional pinging
+        private bool isLastPingDirectional;
+
+        private readonly Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
         private readonly Sprite sonarBlip;
 
         private bool aiPingCheckPending;
@@ -72,8 +89,13 @@ namespace Barotrauma.Items.Components
             set
             {
                 base.IsActive = value;
+                if (!value && item.CurrentHull != null)
+                {
+                    item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                }
 #if CLIENT
-                if (isActiveTickBox != null) isActiveTickBox.Selected = value;
+                if (activeTickBox != null) activeTickBox.Selected = value;
+                if (passiveTickBox != null) passiveTickBox.Selected = !value;
 #endif
             }
         }
@@ -90,8 +112,14 @@ namespace Barotrauma.Items.Components
                     case "pingcircle":
                         pingCircle = new Sprite(subElement);
                         break;
+                    case "directionalpingcircle":
+                        directionalPingCircle = new Sprite(subElement);
+                        break;
                     case "screenoverlay":
                         screenOverlay = new Sprite(subElement);
+                        break;
+                    case "screenbackground":
+                        screenBackground = new Sprite(subElement);
                         break;
                     case "blip":
                         sonarBlip = new Sprite(subElement);
@@ -126,15 +154,31 @@ namespace Barotrauma.Items.Components
                 pingState = pingState + deltaTime * 0.5f;
                 if (pingState > 1.0f)
                 {
-                    if (item.CurrentHull != null) item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState, item.CurrentHull.AiTarget.SoundRange);
-                    if (item.AiTarget != null) item.AiTarget.SoundRange = Math.Max(Range * pingState, item.AiTarget.SoundRange);
+                    if (item.CurrentHull != null)
+                    {
+                        item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.CurrentHull.AiTarget.SoundRange);
+                        item.CurrentHull.AiTarget.SectorDegrees = isLastPingDirectional ? DirectionalPingSector : 360.0f;
+                        item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                    }
+                    if (item.AiTarget != null)
+                    {
+                        item.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.AiTarget.SoundRange);
+                        item.AiTarget.SectorDegrees = isLastPingDirectional ? DirectionalPingSector : 360.0f;
+                        item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                    }
                     aiPingCheckPending = true;
+                    isLastPingDirectional = useDirectionalPing;
+                    lastPingDirection = pingDirection;
                     item.Use(deltaTime);
                     pingState = 0.0f;
                 }
             }
             else
             {
+                if (item.CurrentHull != null)
+                {
+                    item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                }
                 aiPingCheckPending = false;
                 pingState = 0.0f;
             }
@@ -149,8 +193,11 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            if (pingCircle != null) pingCircle.Remove();
-            if (screenOverlay != null) screenOverlay.Remove();
+            sonarBlip?.Remove();
+            pingCircle?.Remove();
+            directionalPingCircle?.Remove();
+            screenOverlay?.Remove();
+            screenBackground?.Remove();
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -244,20 +291,59 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
+            bool directionalPing = useDirectionalPing;
+            float zoomT = zoom, pingDirectionT = 0.0f;
+            if (isActive)
+            {
+                zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                directionalPing = msg.ReadBoolean();
+                if (directionalPing)
+                {
+                    pingDirectionT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                }
+            }
 
             if (!item.CanClientAccess(c)) return; 
 
             IsActive = isActive;
-#if CLIENT
-            isActiveTickBox.Selected = IsActive;
-#endif
 
+            //TODO: cleanup
+#if CLIENT
+            activeTickBox.Selected = IsActive;
+#endif
+            if (isActive)
+            {
+                zoom = MathHelper.Lerp(MinZoom, MaxZoom, zoomT);
+                useDirectionalPing = directionalPing;
+                if (useDirectionalPing)
+                {
+                    float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, pingDirectionT);
+                    pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
+                }
+#if CLIENT
+                zoomSlider.BarScroll = zoomT;
+                directionalTickBox.Selected = useDirectionalPing;
+                directionalSlider.BarScroll = pingDirectionT;
+#endif
+            }
+#if SERVER
             item.CreateServerEvent(this);
+#endif
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(IsActive);
+            if (IsActive)
+            {
+                msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
+                msg.Write(useDirectionalPing);
+                if (useDirectionalPing)
+                {
+                    float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
+                    msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
+                }
+            }
         }
     }
 }

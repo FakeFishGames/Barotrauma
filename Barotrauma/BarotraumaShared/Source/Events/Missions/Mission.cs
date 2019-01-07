@@ -87,36 +87,31 @@ namespace Barotrauma
                 }
             }
         }
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, string missionType = "", bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
             return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, string missionType = "", bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
-            //todo: use something else than strings to define the mission type
-            missionType = missionType.ToLowerInvariant();
-            
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
-            if (missionType == "random")
+            if (missionType == MissionType.Random)
             {
                 allowedMissions.AddRange(MissionPrefab.List);
+#if SERVER
                 if (GameMain.Server != null)
                 {
-                    allowedMissions.RemoveAll(mission => !GameMain.Server.AllowedRandomMissionTypes.Any(a => mission.TypeMatches(a)));
+                    allowedMissions.RemoveAll(mission => !GameMain.Server.ServerSettings.AllowedRandomMissionTypes.Contains(mission.type));
                 }
+#endif
             }
-            else if (missionType == "none")
+            else if (missionType == MissionType.None)
             {
                 return null;
             }
-            else if (string.IsNullOrWhiteSpace(missionType))
-            {
-                allowedMissions.AddRange(MissionPrefab.List);
-            }
             else
             {
-                allowedMissions = MissionPrefab.List.FindAll(m => m.TypeMatches(missionType));
+                allowedMissions = MissionPrefab.List.FindAll(m => m.type == missionType);
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            

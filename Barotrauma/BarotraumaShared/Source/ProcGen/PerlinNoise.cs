@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace Barotrauma
             double amplitude = 3;
             for (int i = 0; i < octaves; i++)
             {
-                total += Perlin(x * frequency, y * frequency, z * frequency) * amplitude;
+                total += CalculatePerlin(x * frequency, y * frequency, z * frequency) * amplitude;
 
                 amplitude *= persistence;
                 frequency *= 2;
@@ -45,6 +46,10 @@ namespace Barotrauma
 
         private static readonly int[] p;                                                    // Doubled permutation to avoid overflow
 
+        private static readonly float[] cachedNoise;
+
+        private const int CacheResolution = 256;
+
         static PerlinNoise()
         {
             p = new int[512];
@@ -52,9 +57,58 @@ namespace Barotrauma
             {
                 p[x] = permutation[x % 256];
             }
+
+            float minValue = float.MaxValue;
+            float maxValue = float.MinValue;
+            cachedNoise = new float[CacheResolution * CacheResolution];
+            for (int x = 0; x < CacheResolution; x++)
+            {
+                for (int y = 0; y < CacheResolution; y++)
+                {
+                    cachedNoise[x + CacheResolution * y] = (float)OctavePerlin(x / (double)CacheResolution, y / (double)CacheResolution, 0.5, 10, 4, 0.5f);
+                }
+            }
+
+            for (int i = 0; i < CacheResolution * CacheResolution; i++)
+            {
+                minValue = Math.Min(cachedNoise[i], minValue);
+                maxValue = Math.Max(cachedNoise[i], maxValue);
+            }
+
+            //normalize to 0-1 range
+            for (int i = 0; i < CacheResolution * CacheResolution; i++)
+            {
+                cachedNoise[i] = (cachedNoise[i] - minValue) / (maxValue - minValue);
+            }
         }
 
-        public static double Perlin(double x, double y, double z)
+        /// <summary>
+        /// Sample a pre-generated perlin noise map. Faster than calculating the noise on the fly.
+        /// </summary>
+        /// <param name="x">Normalized x position. The noise map starts repeating after x > 1</param>
+        /// <param name="y">Normalized y position. The noise map starts repeating after y > 1</param>
+        /// <returns>A noise value between 0.0f and 1.0f</returns>
+        public static float GetPerlin(float x, float y)
+        {
+            x = Math.Abs(x) % 1.0f;
+            y = Math.Abs(y) % 1.0f;
+            
+            float xIndex = x < 0.5f ? (x * 2.0f * CacheResolution) : CacheResolution - ((x - 0.5f) * 2.0f * CacheResolution);
+            xIndex = Math.Min(xIndex, CacheResolution - 1);
+
+            float yIndex = y < 0.5f ? (y * 2.0f * CacheResolution) : CacheResolution - ((y - 0.5f) * 2.0f * CacheResolution);
+            yIndex = Math.Min(yIndex, CacheResolution - 1);
+
+            int minX = (int)xIndex, maxX = (int)Math.Ceiling(xIndex);
+            int minY = (int)yIndex, maxY = (int)Math.Ceiling(yIndex);
+            
+            return MathHelper.Lerp(
+                MathHelper.Lerp(cachedNoise[minX + minY * CacheResolution], cachedNoise[maxX + minY * CacheResolution], xIndex % 1.0f),
+                MathHelper.Lerp(cachedNoise[minX + maxY * CacheResolution], cachedNoise[maxX + maxY * CacheResolution], xIndex % 1.0f),
+                yIndex % 1.0f);
+        }
+
+        public static double CalculatePerlin(double x, double y, double z)
         {
             int xi = (int)x & 255;                              // Calculate the "unit cube" that the point asked will be located in
             int yi = (int)y & 255;                              // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that

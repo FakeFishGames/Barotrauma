@@ -31,15 +31,20 @@ namespace Barotrauma
             get
             {
                 if (descriptions == null) return "";
-                
-                if (GameMain.NetworkMember == null || GameMain.NetworkMember.Character == null)
+
+#if CLIENT
+                if (GameMain.Client == null || GameMain.Client.Character == null)
                 {
                     //non-team-specific description
                     return descriptions[0];
                 }
 
                 //team specific
-                return descriptions[GameMain.NetworkMember.Character.TeamID];
+                return descriptions[GameMain.Client.Character.TeamID];
+#elif SERVER
+                //non-team-specific description
+                return descriptions[0];
+#endif
             }
         }
 
@@ -61,9 +66,9 @@ namespace Barotrauma
         {
             descriptions = new string[]
             {
-                prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
-                prefab.ConfigElement.GetAttributeString("description1", ""),
-                prefab.ConfigElement.GetAttributeString("description2", "")
+                TextManager.Get("MissionDescriptionNeutral." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
+                TextManager.Get("MissionDescription1." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("description1", ""),
+                TextManager.Get("MissionDescription2." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("description2", "")
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -76,8 +81,8 @@ namespace Barotrauma
 
             teamNames = new string[]
             {
-                prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
-                prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
+                TextManager.Get("MissionTeam1." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
+                TextManager.Get("MissionTeam2." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
             };
         }
 
@@ -148,7 +153,7 @@ namespace Barotrauma
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
             subs[0].TeamID = 1; subs[1].TeamID = 2;
-            subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
+            subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
 
             //prevent wifi components from communicating between subs
@@ -195,11 +200,13 @@ namespace Barotrauma
                     }
                 }
 
+#if CLIENT
                 if (GameMain.Client != null)
                 {
                     //no characters in one of the teams, the client may not have received all spawn messages yet
                     if (crews[0].Count == 0 || crews[1].Count == 0) return;
                 }
+#endif
 
                 initialized = true;
             }
@@ -236,7 +243,9 @@ namespace Barotrauma
 #if CLIENT
                     GameMain.GameSession.CrewManager.WinningTeam = winner + 1;
 #endif
+#if SERVER
                     if (GameMain.Server != null) GameMain.Server.EndGame();
+#endif
                 }
             }
 
@@ -246,7 +255,9 @@ namespace Barotrauma
                 GameMain.GameSession.CrewManager.WinningTeam = 0;
 #endif
                 winner = -1;
+#if SERVER
                 if (GameMain.Server != null) GameMain.Server.EndGame();
+#endif
             }
         }
 

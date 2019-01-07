@@ -26,6 +26,10 @@ namespace Barotrauma
 
         private float checkWallsTimer;
 
+        private float wanderZPhase;
+        private Vector2 obstacleDiff;
+        private float obstacleDist;
+
         public Swarm Swarm;
 
         Vector2 drawPosition;
@@ -71,12 +75,9 @@ namespace Barotrauma
                 Rand.Range(0.0f, prefab.WanderZAmount));
 
             checkWallsTimer = Rand.Range(0.0f, CheckWallsInterval);
-            
+
         }
-
-        float ang;
-        Vector2 obstacleDiff;
-
+        
         public void Update(float deltaTime)
         {
             position += new Vector2(velocity.X, velocity.Y) * deltaTime;
@@ -109,30 +110,33 @@ namespace Barotrauma
                     var cells = Level.Loaded.GetCells(position, 1);
                     if (cells.Count > 0)
                     {
-
+                        int cellCount = 0;
                         foreach (Voronoi2.VoronoiCell cell in cells)
                         {
-                            obstacleDiff += cell.Center - position;
+                            Vector2 diff = cell.Center - position;
+                            if (diff.LengthSquared() > 5000.0f * 5000.0f) continue;
+                            obstacleDiff += diff;
+                            cellCount++;
                         }
-                        obstacleDiff /= cells.Count;
-
-                        obstacleDiff = Vector2.Normalize(obstacleDiff) * prefab.Speed;
+                        if (cellCount > 0)
+                        {
+                            obstacleDiff /= cellCount;
+                            obstacleDist = obstacleDiff.Length();
+                            obstacleDiff = Vector2.Normalize(obstacleDiff);
+                        }
                     }
                 }
             }
 
-
-
-
-            if (Swarm!=null)
+            if (Swarm != null)
             {
                 Vector2 midPoint = Swarm.MidPoint();
-                float midPointDist = Vector2.Distance(SimPosition, midPoint);
-
+                float midPointDist = Vector2.Distance(SimPosition, midPoint) * 100.0f;
                 if (midPointDist > Swarm.MaxDistance)
                 {
-                    steeringManager.SteeringSeek(midPoint, (midPointDist / Swarm.MaxDistance) * prefab.Speed);
+                    steeringManager.SteeringSeek(midPoint, ((midPointDist / Swarm.MaxDistance) - 1.0f) * prefab.Speed);
                 }
+                steeringManager.SteeringManual(deltaTime, Swarm.AvgVelocity() * Swarm.Cohesion);
             }
 
             if (prefab.WanderAmount > 0.0f)
@@ -140,26 +144,23 @@ namespace Barotrauma
                 steeringManager.SteeringWander(prefab.Speed);
             }
 
-            //Level.Loaded.Size
-
-
             if (obstacleDiff != Vector2.Zero)
             {
-                steeringManager.SteeringSeek(SimPosition-obstacleDiff, prefab.Speed*2.0f);
+                steeringManager.SteeringManual(deltaTime, -obstacleDiff * (1.0f - obstacleDist / 5000.0f) * prefab.Speed);
             }
 
             steeringManager.Update(prefab.Speed);
 
-            if (prefab.WanderZAmount>0.0f)
+            if (prefab.WanderZAmount > 0.0f)
             {
-                ang += Rand.Range(-prefab.WanderZAmount, prefab.WanderZAmount);
-                velocity.Z = (float)Math.Sin(ang)*prefab.Speed;
+                wanderZPhase += Rand.Range(-prefab.WanderZAmount, prefab.WanderZAmount);
+                velocity.Z = (float)Math.Sin(wanderZPhase) * prefab.Speed;
             }
-            
+
             velocity = Vector3.Lerp(velocity, new Vector3(Steering.X, Steering.Y, velocity.Z), deltaTime);
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             float rotation = 0.0f;
             if (!prefab.DisableRotation)
@@ -168,20 +169,18 @@ namespace Barotrauma
                 if (velocity.X < 0.0f) rotation -= MathHelper.Pi;
             }
 
-            drawPosition = position;// +Level.Loaded.Position;
-
+            drawPosition = position;
             if (depth > 0.0f)
             {
-                Vector2 camOffset = drawPosition - GameMain.GameScreen.Cam.WorldViewCenter;
-
+                Vector2 camOffset = drawPosition - cam.WorldViewCenter;
                 drawPosition -= camOffset * (depth / MaxDepth) * 0.05f;
             }
-            
-            prefab.Sprite.Draw(spriteBatch, 
-                new Vector2(drawPosition.X, -drawPosition.Y), 
-                Color.Lerp(Color.White, Color.DarkBlue, (depth/MaxDepth)*0.3f),
-                rotation, (1.0f - (depth / MaxDepth) * 0.2f) * prefab.Scale, 
-                velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 
+
+            prefab.Sprite.Draw(spriteBatch,
+                new Vector2(drawPosition.X, -drawPosition.Y),
+                Color.Lerp(Color.White, Level.Loaded.BackgroundColor, (depth / MaxDepth) * 0.2f),
+                rotation, (1.0f - (depth / MaxDepth) * 0.2f) * prefab.Scale,
+                velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally,
                 (depth / MaxDepth));
         }
     }
@@ -191,6 +190,7 @@ namespace Barotrauma
         public List<BackgroundCreature> Members;
 
         public readonly float MaxDistance;
+        public readonly float Cohesion;
 
         public Vector2 MidPoint()
         {
@@ -213,23 +213,19 @@ namespace Barotrauma
             if (Members.Count == 0) return Vector2.Zero;
 
             Vector2 avgVel = Vector2.Zero;
-
             foreach (BackgroundCreature member in Members)
             {
                 avgVel += member.Velocity;
             }
-
-           avgVel /= Members.Count;
-
+            avgVel /= Members.Count;
             return avgVel;
         }
 
-        public Swarm(List<BackgroundCreature> members, float maxDistance)
+        public Swarm(List<BackgroundCreature> members, float maxDistance, float cohesion)
         {
-            this.Members = members;
-
-            this.MaxDistance = maxDistance;
-
+            Members = members;
+            MaxDistance = maxDistance;
+            Cohesion = cohesion;
             foreach (BackgroundCreature bgSprite in members)
             {
                 bgSprite.Swarm = this;

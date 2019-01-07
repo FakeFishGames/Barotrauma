@@ -13,6 +13,11 @@ namespace Barotrauma
         private Character character;
 
         private AIObjective currentOrder;
+
+        /// <summary>
+        /// When set above zero, the character will stand still doing nothing until the timer runs out (assuming they don't a high priority order active)
+        /// </summary>
+        public float WaitTimer;
         
         public AIObjective CurrentOrder
         {
@@ -48,15 +53,21 @@ namespace Barotrauma
             return null;
         }
 
-        public float GetCurrentPriority(Character character)
+        private AIObjective GetCurrentObjective()
         {
             if (CurrentOrder != null &&
                 (objectives.Count == 0 || currentOrder.GetPriority(this) > objectives[0].GetPriority(this)))
             {
-                return CurrentOrder.GetPriority(this);
+                return CurrentOrder;
             }
 
-            return objectives.Count == 0 ? 0.0f : objectives[0].GetPriority(this);
+            return objectives.Count == 0 ? null : objectives[0];
+        }
+
+        public float GetCurrentPriority()
+        {
+            var currentObjective = GetCurrentObjective();
+            return currentObjective == null ? 0.0f : currentObjective.GetPriority(this);
         }
 
         public void UpdateObjectives()
@@ -68,21 +79,22 @@ namespace Barotrauma
 
             //sort objectives according to priority
             objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
+            GetCurrentObjective()?.SortSubObjectives(this);
         }
 
+        
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentOrder != null && (!objectives.Any() || objectives[0].GetPriority(this) < currentOrder.GetPriority(this)))
+            CurrentObjective = GetCurrentObjective();
+
+            if (CurrentObjective == null || (CurrentObjective.GetPriority(this) < OrderPriority && WaitTimer > 0.0f))
             {
-                CurrentObjective = currentOrder;
-                currentOrder.TryComplete(deltaTime);
+                WaitTimer -= deltaTime;
+                character.AIController.SteeringManager.Reset();
                 return;
             }
 
-            if (!objectives.Any()) return;
-            objectives[0].TryComplete(deltaTime);
-
-            CurrentObjective = objectives[0];
+            CurrentObjective?.TryComplete(deltaTime);
         }
 
         public void SetOrder(Order order, string option, Character orderGiver)
@@ -93,10 +105,18 @@ namespace Barotrauma
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true);
+                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
+                    {
+                        CloseEnough = 1.5f,
+                        AllowGoingOutside = true,
+                        IgnoreIfTargetDead = true
+                    };
                     break;
                 case "wait":
-                    currentOrder = new AIObjectiveGoTo(character, character, true);
+                    currentOrder = new AIObjectiveGoTo(character, character, true)
+                    {
+                        AllowGoingOutside = true
+                    };
                     break;
                 case "fixleaks":
                     currentOrder = new AIObjectiveFixLeaks(character);
@@ -108,7 +128,7 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveRescueAll(character);
                     break;
                 case "repairsystems":
-                    currentOrder = new AIObjectiveRepairItems(character);
+                    currentOrder = new AIObjectiveRepairItems(character) { RequireAdequateSkills = option != "all" };
                     break;
                 case "pumpwater":
                     currentOrder = new AIObjectivePumpWater(character, option);

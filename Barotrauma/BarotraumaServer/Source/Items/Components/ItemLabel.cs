@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
         public override void Move(Vector2 amount)
         {
             //do nothing

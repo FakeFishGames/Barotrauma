@@ -22,9 +22,8 @@ namespace Barotrauma
             }
         }
 
-        public void DebugDrawHUD(SpriteBatch spriteBatch)
+        public void DebugDrawHUD(SpriteBatch spriteBatch, int y)
         {
-            int y = 250;
             GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + eventCoolDown, Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)(currentIntensity * 100), Color.Lerp(Color.White, Color.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);

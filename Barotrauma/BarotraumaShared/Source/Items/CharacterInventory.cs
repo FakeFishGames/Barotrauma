@@ -11,7 +11,7 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Pack = 256
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128
     };
 
     partial class CharacterInventory : Inventory
@@ -55,11 +55,10 @@ namespace Barotrauma
                 SlotTypes[i] = parsedSlotType;
                 switch (SlotTypes[i])
                 {
-                    case InvSlotType.Head:
+                    //case InvSlotType.Head:
                     case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
-                    case InvSlotType.Pack:
                         hideEmptySlot[i] = true;
                         break;
                 }               
@@ -67,18 +66,20 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+#if CLIENT
             //clients don't create items until the server says so
             if (GameMain.Client != null) return;
+#endif
 
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "item") continue;
-
-                string itemName = subElement.GetAttributeString("name", "");
-                ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                
+                string itemIdentifier = subElement.GetAttributeString("identifier", "");
+                ItemPrefab itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemName + "\" not found.");
+                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.");
                     continue;
                 }
 
@@ -88,39 +89,6 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element);
 
-        private bool UseItemOnSelf(int slotIndex)
-        {
-            if (Items[slotIndex] == null) return false;
-
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect });
-                return true;
-            }
-#endif
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
-            }
-
-            Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-
-            //item may have been removed by a status effect
-            if (Items[slotIndex] == null) return true;
-
-            foreach (ItemComponent ic in Items[slotIndex].components)
-            {
-                if (ic.DeleteOnUse)
-                {
-                    Entity.Spawner.AddToRemoveQueue(Items[slotIndex]);
-                }
-            }
-            
-            return true;
-        }
-        
         public int FindLimbSlot(InvSlotType limbSlot)
         {
             for (int i = 0; i < Items.Length; i++)
@@ -210,7 +178,10 @@ namespace Barotrauma
                     {
                         free = false;
 #if CLIENT
-                        if (slots != null) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        for (int j = 0; j < capacity; j++)
+			            {
+                            if (slots != null && Items[j] == Items[i]) slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+			            }
 #endif
                     }
                 }
@@ -273,82 +244,7 @@ namespace Barotrauma
             {
                 if (Items[index] == item) return false;
 
-                bool combined = false;
-                if (allowCombine && Items[index].Combine(item))
-                {
-                    System.Diagnostics.Debug.Assert(Items[index] != null);
-                 
-                    Inventory otherInventory = Items[index].ParentInventory;
-                    if (otherInventory != null && otherInventory.Owner!=null)
-                    {
-                        
-                    }
-
-                    combined = true;
-                }
-                //if moving the item between slots in the same inventory
-                else if (item.ParentInventory == this && allowSwapping)
-                {
-                    int currentIndex = Array.IndexOf(Items, item);                    
-                    Item existingItem = Items[index];
-
-                    if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
-                    {
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
-                            {
-                                Items[i] = null;
-                            }
-                        }
-                    }
-
-                    for (int i = 0; i < capacity; i++)
-                    {
-                        if (Items[i] == item || Items[i] == existingItem)
-                        {
-                            Items[i] = null;
-                        }
-                    }
-                    
-                    //if the item in the slot can be moved to the slot of the moved item
-                    if (TryPutItem(existingItem, currentIndex, false, false, user, createNetworkEvent) &&
-                        TryPutItem(item, index, false, false, user, createNetworkEvent))
-                    {
-#if CLIENT
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == item || Items[i] == existingItem)
-                            {
-                                slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
-                            }
-                        }
-#endif
-                    }
-                    else
-                    {
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == item || Items[i] == existingItem) Items[i] = null;
-                        }
-
-                        //swapping the items failed -> move them back to where they were
-                        TryPutItem(item, currentIndex, false, false, user, createNetworkEvent);
-                        TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
-#if CLIENT
-                        for (int i = 0; i < capacity; i++)
-                        {
-                            if (Items[i] == existingItem)
-                            {
-                                slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
-                            }
-                        }
-#endif
-
-                    }
-                }
-
-                return combined;
+                return base.TryPutItem(item, index, allowSwapping, allowCombine, user, createNetworkEvent);
             }
 
             if (SlotTypes[index] == InvSlotType.Any)

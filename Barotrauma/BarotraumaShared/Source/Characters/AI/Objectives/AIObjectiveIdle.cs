@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +39,16 @@ namespace Barotrauma
         {
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
             if (pathSteering == null) return;
+
+            //don't keep dragging others when idling
+            if (character.SelectedCharacter != null)
+            {
+                character.DeselectCharacter();
+            }
+            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
+            {
+                character.SelectedConstruction = null;
+            }
             
             if (character.AnimController.InWater)
             {
@@ -138,15 +150,16 @@ namespace Barotrauma
 
         private AITarget FindRandomTarget()
         {
-            if (Rand.Int(5)==1)
+            //random chance of navigating back to the room where the character spawned
+            if (Rand.Int(5) == 1)
             {
-                var idCard = character.Inventory.FindItem("ID Card");
-                if (idCard==null) return null;
+                var idCard = character.Inventory.FindItemByIdentifier("idcard");
+                if (idCard == null) return null;
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull==null) continue;
-                 
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) continue;
+
                     foreach (string tag in wp.IdCardTags)
                     {
                         if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;
@@ -158,9 +171,27 @@ namespace Barotrauma
                 List<Hull> targetHulls = new List<Hull>(Hull.hullList);
                 //ignore all hulls with fires or water in them
                 targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
-                if (!targetHulls.Any()) return null;
 
-                return targetHulls[Rand.Range(0, targetHulls.Count)].AiTarget;
+                //remove ballast hulls
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.HasTag("ballast") && targetHulls.Contains(item.CurrentHull))
+                    {
+                        targetHulls.Remove(item.CurrentHull);
+                    }
+                }
+
+                //ignore hulls that are too low to stand inside
+                if (character.AnimController is HumanoidAnimController animController)
+                {
+                    float minHeight = ConvertUnits.ToDisplayUnits(animController.HumanWalkParams.HeadPosition);
+                    targetHulls.RemoveAll(h => h.CeilingHeight < minHeight);
+                }
+                if (!targetHulls.Any()) return null;
+                
+                //prefer larger hulls
+                var targetHull = ToolBox.SelectWeightedRandom(targetHulls, targetHulls.Select(h => h.Volume).ToList(), Rand.RandSync.Unsynced);
+                return targetHull?.AiTarget;
             }
 
             return null;

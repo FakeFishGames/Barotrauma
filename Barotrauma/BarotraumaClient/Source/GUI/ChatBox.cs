@@ -3,14 +3,13 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
     class ChatBox
     {
-        const float HideDelay = 5.0f;
-
         private static Sprite radioIcon;
         
         private GUIFrame guiFrame;
@@ -25,60 +24,27 @@ namespace Barotrauma
         private Point screenResolution;
 
         private bool isSinglePlayer;
-
-        private float hideTimer;
-
-        private bool toggleOpen;
+        public bool IsSinglePlayer => isSinglePlayer;
+               
+        private bool toggleOpen = true;
         private float openState;
 
-        public float HideTimer
-        {
-            get { return hideTimer; }
-            set { hideTimer = MathHelper.Clamp(value, 0.0f, HideDelay); }
-        }
+        private float prevUIScale;
+
+        //individual message texts that pop up when the chatbox is hidden
+        const float PopupMessageDuration = 5.0f;
+        private float popupMessageTimer;
+        private Queue<GUIComponent> popupMessages = new Queue<GUIComponent>();
 
         public GUITextBox.OnEnterHandler OnEnterMessage
         {
-            get
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return null;
-                }
-                return inputBox.OnEnterPressed;
-            }
-            set
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return;
-                }
-                inputBox.OnEnterPressed = value;
-            }
+            get { return inputBox.OnEnterPressed; }
+            set { inputBox.OnEnterPressed = value; }
         }
 
-        public GUITextBox.OnTextChangedHandler OnTextChanged
+        public GUIFrame GUIFrame
         {
-            get
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return null;
-                }
-                return inputBox.OnTextChanged;
-            }
-            set
-            {
-                if (isSinglePlayer)
-                {
-                    DebugConsole.ThrowError("Cannot access chat input box in single player!\n" + Environment.StackTrace);
-                    return;
-                }
-                inputBox.OnTextChanged = value;
-            }
+            get { return guiFrame; }
         }
 
         public GUIButton RadioButton
@@ -89,6 +55,11 @@ namespace Barotrauma
         public GUITextBox InputBox
         {
             get { return inputBox; }
+        }
+
+        public GUIButton ToggleButton
+        {
+            get { return toggleButton; }
         }
 
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
@@ -102,12 +73,12 @@ namespace Barotrauma
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
+            int toggleButtonWidth = (int)(30 * GUI.Scale);
             guiFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
-            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, isSinglePlayer ? 1.0f : 0.9f), guiFrame.RectTransform), style: "ChatBox");
-
-            toggleButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.2f), guiFrame.RectTransform, Anchor.TopRight, Pivot.TopLeft)
-                { RelativeOffset = new Vector2(-0.01f, 0.0f) },
-                style: "GUIButtonHorizontalArrow");
+            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), guiFrame.RectTransform), style: "ChatBox");
+            toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
+                style: "UIToggleButton");
+            
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleOpen = !toggleOpen;
@@ -119,52 +90,77 @@ namespace Barotrauma
                 return true;
             };
             
-            if (isSinglePlayer)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
+                style: "ChatTextBox")
             {
-                radioButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.2f), guiFrame.RectTransform, Anchor.BottomRight, Pivot.BottomLeft),
-                    style: null);
-                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true)
-                {
-                    Color = Color.White * 0.8f
-                };
-                radioButton.OnClicked = (GUIButton btn, object userData) =>
-                {
-                    GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = !GameMain.GameSession.CrewManager.ToggleCrewAreaOpen;
-                    return true;
-                };
-            }
-            else
-            {
-                inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
-                    style: "ChatTextBox")
-                {
-                    Font = GUI.SmallFont,
-                    MaxTextLength = ChatMessage.MaxLength
-                };
+                Font = GUI.SmallFont,
+                MaxTextLength = ChatMessage.MaxLength
+            };
 
-                radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.2f), inputBox.RectTransform, Anchor.CenterRight, Pivot.Center),
-                    style: null);
-                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
-                radioButton.OnClicked = (GUIButton btn, object userData) =>
+            radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 2.0f), inputBox.RectTransform,
+                HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Anchor.BottomRight : Anchor.BottomLeft,
+                HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Pivot.TopRight : Pivot.TopLeft),
+                style: null);
+            new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
+            radioButton.OnClicked = (GUIButton btn, object userData) =>
+            {
+                if (inputBox.Selected)
                 {
-                    if (inputBox.Selected)
+                    inputBox.Text = "";
+                    inputBox.Deselect();
+                }
+                else
+                {
+                    inputBox.Select();
+                    var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                    if (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit())
                     {
-                        inputBox.Text = "";
-                        inputBox.Deselect();
+                        inputBox.Text = "r; ";
+                    }
+                }
+                return true;
+            };
+        }
+
+        public bool TypingChatMessage(GUITextBox textBox, string text)
+        {
+            string command = ChatMessage.GetChatMessageCommand(text, out _);
+            if (IsSinglePlayer)
+            {
+                //radio is the only allowed special message type in single player
+                if (command != "r" && command != "radio")
+                {
+                    command = "";
+                }
+            }            
+
+            switch (command)
+            {
+                case "r":
+                case "radio":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
+                    break;
+                case "d":
+                case "dead":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    break;
+                default:
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || Character.Controlled.SpeechImpediment >= 100.0f))
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    }
+                    else if (command != "") //PMing
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
                     }
                     else
                     {
-                        inputBox.Select();
-                        var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        if (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit())
-                        {
-                            inputBox.Text = "r; ";
-                            inputBox.OnTextChanged?.Invoke(inputBox, inputBox.Text);
-                        }
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
                     }
-                    return true;
-                };
+                    break;
             }
+
+            return true;
         }
 
         public void AddMessage(ChatMessage message)
@@ -183,29 +179,67 @@ namespace Barotrauma
                 senderName = (message.Type == ChatMessageType.Private ? "[PM] " : "") + message.SenderName;
             }
 
-            GUITextBlock senderText = null;
+            var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
+                    color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f);
+
+            GUITextBlock senderNameBlock = null;
             if (!string.IsNullOrEmpty(senderName))
             {
-                senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), chatBox.Content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) },
-                    senderName, textColor: Color.White, font: GUI.SmallFont, style: null,
-                    color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
+                senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform)
+                { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+                    senderName, textColor: Color.White, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
                 {
-                    CanBeFocused = false
+                    CanBeFocused = true
                 };
             }
 
-            GUITextBlock msg = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), chatBox.Content.RectTransform) { RelativeOffset = new Vector2(0.08f, 0.0f) },
-                displayedText, textColor: message.Color, font: GUI.SmallFont, style: null, wrap: true,
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
+            { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameBlock == null ? 0 : senderNameBlock.Rect.Height) },
+                displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
             {
                 UserData = message.SenderName,
-                CanBeFocused = false
+                CanBeFocused = true
             };
-            msg.Flash(Color.Yellow * 0.5f);
-            //some spacing at the bottom of the msg
-            msg.RectTransform.NonScaledSize += new Point(0, 5);
+
+            if (message is OrderChatMessage orderChatMsg && 
+                Character.Controlled != null && 
+                orderChatMsg.TargetCharacter == Character.Controlled)
+            {
+                msgHolder.Flash(Color.OrangeRed * 0.6f, flashDuration: 5.0f);
+            }
+            else
+            {
+                msgHolder.Flash(Color.Yellow * 0.6f);
+            }
+            //resize the holder to match the size of the message and add some spacing
+            msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
                         
             chatBox.UpdateScrollBarSize();
+
+            if (!toggleOpen)
+            {
+                var popupMsg = new GUIFrame(new RectTransform(Vector2.One, guiFrame.RectTransform), style: "GUIToolTip")
+                {
+                    Visible = false
+                };
+                var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), popupMsg.RectTransform, Anchor.TopRight),
+                    senderName, textColor: Color.White, font: GUI.SmallFont, textAlignment: Alignment.TopRight)
+                {
+                    CanBeFocused = false
+                };
+                var msgText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), popupMsg.RectTransform, Anchor.TopRight)
+                    { AbsoluteOffset = new Point(0, senderText.Rect.Height) },
+                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopRight, style: null, wrap: true)
+                {
+                    CanBeFocused = false
+                };
+                int textWidth = (int)Math.Max(
+                    msgText.Font.MeasureString(msgText.WrappedText).X, 
+                    senderText.Font.MeasureString(senderText.WrappedText).X);
+                popupMsg.RectTransform.Resize(new Point(textWidth + 20, msgText.Rect.Bottom - senderText.Rect.Y), resizeChildren: false);
+                popupMessages.Enqueue(popupMsg);
+            }
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
 
@@ -220,41 +254,87 @@ namespace Barotrauma
             }
 
             GUI.PlayUISound(soundType);
-            hideTimer = HideDelay;
+        }
+
+        private void SetUILayout()
+        {
+            guiFrame.RectTransform.AbsoluteOffset = Point.Zero;
+            guiFrame.RectTransform.RelativeOffset = new Vector2(
+                HUDLayoutSettings.ChatBoxArea.X / (float)GameMain.GraphicsWidth,
+                HUDLayoutSettings.ChatBoxArea.Y / (float)GameMain.GraphicsHeight);
+            guiFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
+
+            int toggleButtonWidth = (int)(30 * GUI.Scale);
+            //make room for the toggle button
+            if (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left)
+            {
+                guiFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
+            }
+            guiFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
+
+            toggleButton.RectTransform.NonScaledSize = new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height);
+            toggleButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ?
+                new Point(HUDLayoutSettings.ChatBoxArea.X, HUDLayoutSettings.ChatBoxArea.Y) :
+                new Point(HUDLayoutSettings.ChatBoxArea.Right - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y);
         }
                 
         public void Update(float deltaTime)
         {
-            if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
-
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale)
             {
-                guiFrame.RectTransform.AbsoluteOffset = Point.Zero;
-                guiFrame.RectTransform.RelativeOffset = new Vector2(
-                    HUDLayoutSettings.ChatBoxArea.X / (float)GameMain.GraphicsWidth,
-                    HUDLayoutSettings.ChatBoxArea.Y / (float)GameMain.GraphicsHeight);
-                guiFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
+                SetUILayout();
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                prevUIScale = GUI.Scale;
             }
 
-            bool hovering =
-                (PlayerInput.MousePosition.X > Math.Min(Math.Min(chatBox.Rect.X, toggleButton.Rect.X), radioButton.Rect.X) || HUDLayoutSettings.ChatBoxAlignment == Alignment.Left) &&
-                (PlayerInput.MousePosition.X < Math.Max(Math.Max(chatBox.Rect.Right, radioButton.Rect.Right), toggleButton.Rect.Right) || HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) &&
-                PlayerInput.MousePosition.Y > chatBox.Rect.Y &&
-                PlayerInput.MousePosition.Y < Math.Max(chatBox.Rect.Bottom, radioButton.Rect.Bottom);
 
-            hideTimer -= deltaTime;
-
-            if ((hideTimer > 0.0f || hovering || toggleOpen) && Inventory.draggingItem == null)
+            
+            if (toggleOpen || (inputBox != null && inputBox.Selected))
             {
                 openState += deltaTime * 5.0f;
+                //delete all popup messages when the chatbox is open
+                while (popupMessages.Count > 0)
+                {
+                    var popupMsg = popupMessages.Dequeue();
+                    popupMsg.Parent.RemoveChild(popupMsg);
+                }
             }
             else
             {
                 openState -= deltaTime * 5.0f;
+
+                //make the first popup message visible
+                var popupMsg = popupMessages.Count > 0 ? popupMessages.Peek() : null;
+                if (popupMsg != null)
+                {
+                    popupMsg.Visible = true;
+                    //popup messages appear and disappear faster when there's more pending messages
+                    popupMessageTimer += deltaTime * popupMessages.Count * popupMessages.Count;
+                    if (popupMessageTimer > PopupMessageDuration)
+                    {
+                        //move the message out of the screen and delete it
+                        popupMsg.RectTransform.ScreenSpaceOffset =
+                            new Point((int)MathHelper.SmoothStep(-popupMsg.Rect.Width - toggleButton.Rect.Width * 2, 10, (popupMessageTimer - PopupMessageDuration) * 5.0f), 0);
+                        if (popupMessageTimer > PopupMessageDuration + 1.0f)
+                        {
+                            popupMessageTimer = 0.0f;
+                            popupMsg.Parent.RemoveChild(popupMsg);
+                            popupMessages.Dequeue();
+                        }
+                    }
+                    else
+                    {
+                        //move the message on the screen
+                        popupMsg.RectTransform.ScreenSpaceOffset = new Point(
+                            (int)MathHelper.SmoothStep(0, -popupMsg.Rect.Width - toggleButton.Rect.Width * 2 - (int)(35 * GUI.Scale), popupMessageTimer * 5.0f), 0);
+                    }
+                }
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
-            guiFrame.RectTransform.AbsoluteOffset = new Point((int)MathHelper.SmoothStep(-guiFrame.Rect.Width, 0, openState), 0);
+            int hiddenBoxOffset = guiFrame.Rect.Width + toggleButton.Rect.Width;
+            if (radioButton != null) hiddenBoxOffset += (int)(radioButton.Rect.Width * 1.5f);
+            guiFrame.RectTransform.AbsoluteOffset =
+                new Point((int)MathHelper.SmoothStep(hiddenBoxOffset * (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ? -1 : 1), 0, openState), 0);
         }
     }
 }

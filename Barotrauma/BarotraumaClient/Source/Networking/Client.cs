@@ -7,7 +7,14 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
-    partial class Client
+    struct TempClient
+    {
+        public string Name;
+        public byte ID;
+        public UInt16 CharacterID;
+    }
+
+    partial class Client : IDisposable
     {
         public VoipSound VoipSound
         {
@@ -15,18 +22,33 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        partial void InitVoipProjSpecific()
+        public void UpdateSoundPosition()
         {
-            if (GameMain.Client != null)
+            if (VoipSound != null)
             {
-                GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
+                if (character != null)
+                {
+                    VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
+                }
+                else
+                {
+                    VoipSound.SetPosition(null);
+                }
             }
+        }
+
+        partial void InitProjSpecific()
+        {
+            VoipQueue = null; VoipSound = null;
+            if (ID == GameMain.Client.ID) return;
+            VoipQueue = new VoipQueue(ID, false, true);
+            GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
             VoipSound = new VoipSound(GameMain.SoundManager,VoipQueue);
         }
 
         partial void DisposeProjSpecific()
         {
-            if (GameMain.Client != null)
+            if (VoipQueue != null)
             {
                 GameMain.Client.VoipClient.UnregisterQueue(VoipQueue);
             }

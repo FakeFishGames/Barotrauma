@@ -19,7 +19,7 @@ namespace Barotrauma
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
 
-        public static GUIComponent VisibleBox => MessageBoxes.FirstOrDefault();
+        public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
         
         public GUIMessageBox(string headerText, string text)
             : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
@@ -35,7 +35,7 @@ namespace Barotrauma
         
         // TODO: allow to use a relative size.
         public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft)
-            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null, color: Color.Black * 0.5f)
+            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "")
         {
             int headerHeight = 30;
 
@@ -84,11 +84,11 @@ namespace Barotrauma
             MessageBoxes.Add(this);
         }
 
-        /// <summary>
-        /// This is the new constructor.
-        /// TODO: for some reason the background does not prohibit input on the elements that are behind the box
-        /// TODO: allow providing buttons in the constructor
-        /// </summary>
+        ///// <summary>
+        ///// This is the new constructor.
+        ///// TODO: for some reason the background does not prohibit input on the elements that are behind the box
+        ///// TODO: allow providing buttons in the constructor
+        ///// </summary>
         /*public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
             : base(rectT, "")
         {

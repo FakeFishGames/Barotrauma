@@ -47,8 +47,23 @@ namespace Barotrauma
             private set;
         }
 
+        //in display units
+        [Serialize("0.0,0.0", false)]
+        public Vector2 BodyOffset
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool Platform
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool AllowAttachItems
         {
             get;
             private set;
@@ -116,11 +131,16 @@ namespace Barotrauma
         
         public static StructurePrefab Load(XElement element)
         {
-            StructurePrefab sp = new StructurePrefab();
-            sp.name = element.GetAttributeString("name", "");
+            StructurePrefab sp = new StructurePrefab
+            {
+                name = element.GetAttributeString("name", "")
+            };
             if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
             sp.identifier = element.GetAttributeString("identifier", "");
-            
+
+            string translatedName = TextManager.Get("EntityName." + sp.identifier, true);
+            if (!string.IsNullOrEmpty(translatedName)) sp.name = translatedName;
+
             sp.Tags = new HashSet<string>();
             string joinedTags = element.GetAttributeString("tags", "");
             if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
@@ -161,8 +181,7 @@ namespace Barotrauma
                 }
             }
 
-            MapEntityCategory category;
-            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Structure;
             }
@@ -173,8 +192,10 @@ namespace Barotrauma
             {
                 sp.Aliases = aliases.Split(',');
             }
-            
+
             SerializableProperty.DeserializeProperties(sp, element);
+            string translatedDescription = TextManager.Get("EntityDescription." + sp.identifier, true);
+            if (!string.IsNullOrEmpty(translatedDescription)) sp.Description = translatedDescription;
 
             //backwards compatibility
             if (element.Attribute("size") == null)

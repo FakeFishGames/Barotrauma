@@ -30,6 +30,30 @@ namespace Barotrauma
             set { sightRange = Math.Max(value, MinSightRange); }
         }
 
+        private float sectorRad = MathHelper.TwoPi;
+        public float SectorDegrees
+        {
+            get { return MathHelper.ToDegrees(sectorRad); }
+            set { sectorRad = MathHelper.ToRadians(value); }
+        }
+
+        private Vector2 sectorDir;
+        public Vector2 SectorDir
+        {
+            get { return sectorDir; }
+            set
+            {
+                if (!MathUtils.IsValid(value))
+                {
+                    string errorMsg = "Invalid AITarget sector direction (" + value + ")\n" + Environment.StackTrace;
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + Entity?.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return;
+                }
+                sectorDir = value;
+            }
+        }
+
         public string SonarLabel;
 
         public bool Enabled = true;
@@ -85,6 +109,14 @@ namespace Barotrauma
         {
             Entity = e;
             List.Add(this);
+        }
+
+        public bool IsWithinSector(Vector2 worldPosition)
+        {
+            if (sectorRad >= MathHelper.TwoPi) return true;
+
+            Vector2 diff = worldPosition - WorldPosition;
+            return MathUtils.GetShortestAngle(MathUtils.VectorToAngle(diff), MathUtils.VectorToAngle(sectorDir)) <= sectorRad * 0.5f;
         }
 
         public void Remove()

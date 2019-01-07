@@ -6,8 +6,7 @@ namespace Barotrauma
     class Skill
     {
         private SkillPrefab prefab;
-
-        private string name;
+        
         private float level;
 
         static string[] levelNames = new string[] { 
@@ -15,11 +14,12 @@ namespace Barotrauma
             "Adequate", "Competent", "Proficient", 
             "Professional", "Master", "Legendary" };
 
-        public string Name
+        string identifier;
+        public string Identifier
         {
-            get { return name; }
+            get { return identifier; }
         }
-
+        
         public float Level
         {
             get { return level; }
@@ -29,15 +29,14 @@ namespace Barotrauma
         public Skill(SkillPrefab prefab)
         {
             this.prefab = prefab;
-            this.name = prefab.Name;
+            this.identifier = prefab.Identifier;
 
             this.level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y);
         }
 
-        public Skill(string name, float level)
+        public Skill(string identifier, float level)
         {
-            this.name = name;
-
+            this.identifier = identifier;
             this.level = level;
         }
 

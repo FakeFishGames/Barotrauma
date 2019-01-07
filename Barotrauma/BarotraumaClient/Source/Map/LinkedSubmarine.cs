@@ -40,12 +40,16 @@ namespace Barotrauma
             drawRect.Y = -rect.Y;
             GUI.DrawRectangle(spriteBatch, drawRect, Color.Red, true);
 
+            if (!Item.ShowLinks) return;
+
             foreach (MapEntity e in linkedTo)
             {
+                bool isLinkAllowed = e is Item item && item.HasTag("dock");
+
                 GUI.DrawLine(spriteBatch,
                     new Vector2(WorldPosition.X, -WorldPosition.Y),
                      new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
-                    Color.Red * 0.3f);
+                    isLinkAllowed ? Color.LightGreen * 0.5f : Color.Red * 0.5f, width: 3);
             }
         }
 
@@ -99,7 +103,7 @@ namespace Barotrauma
             if (!inGame)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
-                    TextManager.Get("LinkLinkedSub"), font: GUI.SmallFont);
+                    TextManager.Get("LinkLinkedSub"), textColor: Color.Yellow, font: GUI.SmallFont);
             }
 
             var pathContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true);
@@ -111,7 +115,9 @@ namespace Barotrauma
                 UserData = pathBox,
                 ToolTip = TextManager.Get("ReloadLinkedSubTooltip")
             };
-            
+
+            PositionEditingHUD();
+
             return editingHUD;
         }
 

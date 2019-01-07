@@ -1,4 +1,130 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.2.3
+---------------------------------------------------------------------------------------------------------
+
+- Clients can now join servers that have an IPv6 address.
+- Added "unban" and "unbanip" commands.
+- Fixed a bunch of bugs that were causing "attempted to apply an invalid force/impulse to a physics body"
+errors.
+- Fixed a bunch of bugs that were causing "attempted to move a pulljoint extremely far" errors.
+- Fixed DebugConsole selecting non-command lines if up/down is pressed when there are no commands in the 
+console. 
+- Fixed inventory syncing not working on the controlled character's inventory if the character is 
+unconscious or wearing handcuffs.
+- Verify that the launched exe belongs to the currently selected content package when starting up the game.
+- Fixed console messages that have been created before initializing the debug console not being present
+in crash logs. Made it difficult to diagnose crashes that occur immediately when the game starts.
+- Additional error logging to diagnose SharpDX errors on startup.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.2.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients not seeing explosions from items that explode on impact or when their condition reaches zero.
+- Fixed conditionals being ignored on delayed status effects.
+- Fixed clients staying in an unsynced state if they rejoin while their character is dead or unconscious,
+causing the camera not to follow the character and preventing the player from giving up.
+- Fixed LightComponent sprites and broken device sprites not being mirrored in mirrored subs.
+- Fixed a few ragdoll animation bugs that caused "attempted to move pulljoint anchor extremely far" errors.
+- Fixed AI characters (most often mantises) being able to attack through walls.
+- Fixed alien ruins occasionally overlapping with each other or being above the upper boundary of the level.
+- Docking ports automatically stretch the hulls between them to cover the area between the docked subs. 
+Otherwise there may be areas uncovered by hulls if the docking port is positioned slightly outside the 
+extents of the submarine's hulls, causing characters to implode or get thrown back when they try to pass 
+from sub to another.
+- Fixed client-side docking ports creating duplicate bodies on doors, causing characters to collide with 
+an invisible door when trying to move between docked subs (until the server forces them through it).
+- Fixed characters occasionally getting teleported outside the sub for a few frames when moving between 
+docked subs.
+- Fixed status effects that deplete oxygen affecting characters that don't need air to breathe.
+- More error logging to diagnose syncing errors.
+- Melee weapons can only hit one character per swing (makes stun batons and medical syringes less OP).
+- Option to make RegEx component only send a signal when it receives a signal (not continuously according 
+to the last received signal).
+- Added FalseOutput property to RegEx components.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.2.1
+---------------------------------------------------------------------------------------------------------
+
+- Husks or huskified humans don't gain health by attacking corpses.
+- Fixed dragged characters occasionally getting launched away at a high speed when moving from sub to
+another.
+- Fixed dragged characters staying floating mid-air after they've been dragged up/down ladders.
+- Attempt to fix items occasionally dropping client-side when moving them from an inventory to another.
+- Fixed incorrect rotation of welding tools and other 2-handed items that are held in one hand when not 
+aiming. The items were rotated according to the left hand, but positioned on the right hand.
+- Spaces and exclamation marks are allowed in client names by default.
+- Hitscan weapons like the revolver can hit targets outside the sub when firing from the inside and 
+vice versa.
+- Fixed crashing when attempting to clone linked submarines in the sub editor.
+- Fixed crashing when attempting to clone items with non-default required items.
+- Fixed autopilot being unable to navigate to the destination in mirrored levels.
+- Ragdolls can't be dragged through walls or other colliders.
+- Dropped flashlights don't consume and battery and turn off automatically.
+- Oxygenite tanks can be stored in cabinets.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.2.0
+---------------------------------------------------------------------------------------------------------
+
+Networking additions:
+	- Added a server setting for selecting which symbols are allowed in client names (see 
+	AllowedClientNameChars in the server settings file).
+	- Custom servers can modify all editable item properties mid-round, not just in-game editable ones.
+	- Clients can be given access to server logs.
+	- Respawn durations can be changed mid-round.
+	- Servers have the option to disable the disguise feature.
+	- Increased midround syncing timeout.
+	
+Misc changes:
+	- Levels are mirrored when travelling through the backwards in the campaign mode.
+	- Added colliders to railguns (so they cannot go through walls or enemy subs anymore).
+	- Melee weapons can hit multiple targets on one swing. Fixes weapons occasionally  not hitting 
+	the target in tight spaces due to touching the ceiling/walls first.
+	- The voltage required for a PowerTransfer item to take damage and the probability for a fire can be 
+	configured in the item xmls.
+	- Docking ports and hatches aren't damaged by excess voltage.
+	- Added more color variants of wires.
+	- Characters point the harpoon gun down when not aiming.
+	- Added parameter autocompletion to the kill command.
+	- Added a property that can be used to lock connection panels but still keep the panel rewireable 
+	in the submarine editor.
+	- Items outside the sub cannot be deattached from walls.
+	- Fabricators show the list of required items even if the character does not have the skills to craft 
+	the item.
+
+Networking bugfixes:
+	- Fixed file transfers failing if the client disconnects during an active transfer, rejoins and 
+	attempts to receive the same file.
+	- Fixed a bug in door syncing that caused the door states to differ between the server and clients 
+	in some	subs with more complex door wiring setups.
+	- Fixed clients being able to spam kick votes (duplicate votes were not counted but caused unnecessary 
+	chat messages to be sent).
+	- Fixed item conditions occasionally not matching exactly between the server and clients, causing 
+	issues such as not clients not being able to fabricate items due to the condition being slightly 
+	below the minimum condition at their end.
+
+Bugfixes:
+	- Added a workaround to a MonoGame bug that makes the screen turn white when alt-tabbing out of fullscreen.
+	- Fixed docking ports flooding for no reason in some custom subs.
+	- Fixed LightComponents staying active on broken items.
+	- Fixed railguns and depth charge tubes being directly usable by characters (= they could be launched 
+	simply by selecting them and left clicking, without the need to use a railgun controller).
+	- Fixed items salvaged from ruins not being saved in the campaign mode.
+	- Fixed LOS effect being brighter than the ambient light in some of the darker levels, causing 
+	the player to see obstructed areas better than unobstructed ones.
+	- Fixed severed limbs staying disabled when a dismembered character is revived using console commands.
+	- Fixed characters holding non-aimable two-handed items such as railgun shells in one hand when aiming.
+	- Fixed stereo sounds not being loaded correctly.
+	- Fixed modified sprite colors not working correctly on worn items.
+	- Fixed modified maximum recharge speeds of PowerContainers resetting to the default value after 
+	saving and reloading.
+	- Fixed handcuffed players being able to perform CPR and grab/drag bodies.
+	- Fixed diving suit's damage modifiers being bypassed if the character gets hit in the waist.
+	- Fixed clown costumes not hiding the torso of the wearer.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.12
 ---------------------------------------------------------------------------------------------------------
 

@@ -5,15 +5,35 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    enum MissionType
+    {
+        Random,
+        None,
+        Salvage,
+        Monster,
+        Cargo,
+        Combat
+    }
+
     class MissionPrefab
     {
-        public static readonly List<string> MissionTypes = new List<string>() { "Random" };
         public static readonly List<MissionPrefab> List = new List<MissionPrefab>();
 
-        private Type missionType;
+        private static readonly Dictionary<MissionType, Type> missionClasses = new Dictionary<MissionType, Type>()
+        {
+            { MissionType.Salvage, typeof(SalvageMission) },
+            { MissionType.Monster, typeof(MonsterMission) },
+            { MissionType.Cargo, typeof(CargoMission) },
+            { MissionType.Combat, typeof(CombatMission) },
+        };
+        
         private ConstructorInfo constructor;
 
+        public readonly MissionType type;
+
         public readonly bool MultiplayerOnly, SingleplayerOnly;
+
+        public readonly string Identifier;
 
         public readonly string Name;
         public readonly string Description;
@@ -45,9 +65,6 @@ namespace Barotrauma
 
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    string missionTypeName = element.Name.ToString();
-                    missionTypeName = missionTypeName.Replace("Mission", "");
-                    if (!MissionTypes.Contains(missionTypeName)) MissionTypes.Add(missionTypeName);
                     List.Add(new MissionPrefab(element));
                 }
             }
@@ -56,20 +73,22 @@ namespace Barotrauma
         public MissionPrefab(XElement element)
         {
             ConfigElement = element;
-            
-            Name = element.GetAttributeString("name", "");
-            Description = element.GetAttributeString("description", "");
-            Reward = element.GetAttributeInt("reward", 1);
 
-            Commonness = element.GetAttributeInt("commonness", 1);
+            Identifier = element.GetAttributeString("identifier", "");
 
-            SuccessMessage = element.GetAttributeString("successmessage", "Mission completed successfully");
-            FailureMessage = element.GetAttributeString("failuremessage", "Mission failed");
+            Name        = TextManager.Get("MissionName." + Identifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("MissionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
+            Reward      = element.GetAttributeInt("reward", 1);
 
-            MultiplayerOnly = element.GetAttributeBool("multiplayeronly", false);
-            SingleplayerOnly = element.GetAttributeBool("singleplayeronly", false);
+            Commonness  = element.GetAttributeInt("commonness", 1);
 
-            SonarLabel = element.GetAttributeString("sonarlabel", "");
+            SuccessMessage  = TextManager.Get("MissionSuccess." + Identifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
+            FailureMessage  = TextManager.Get("MissionFailure." + Identifier, true) ?? element.GetAttributeString("failuremessage", "Mission failed");
+
+            SonarLabel      = TextManager.Get("MissionSonarLabel." + Identifier, true) ?? element.GetAttributeString("sonarlabel", "");
+
+            MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
+            SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);
 
             AchievementIdentifier = element.GetAttributeString("achievementidentifier", "");
 
@@ -78,38 +97,40 @@ namespace Barotrauma
             AllowedLocationTypes = new List<Pair<string, string>>();
             foreach (XElement subElement in element.Elements())
             {
-                switch(subElement.Name.ToString().ToLowerInvariant())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "message":
-                        Headers.Add(subElement.GetAttributeString("header", ""));
-                        Messages.Add(subElement.GetAttributeString("text", ""));
+                        int index = Messages.Count;
+
+                        Headers.Add(TextManager.Get("MissionHeader" + index + "." + Identifier, true) ?? subElement.GetAttributeString("header", ""));
+                        Messages.Add(TextManager.Get("MissionMessage" + index + "." + Identifier, true) ?? subElement.GetAttributeString("text", ""));
                         break;
                     case "locationtype":
                         AllowedLocationTypes.Add(new Pair<string, string>(
-                            subElement.GetAttributeString("from", ""), 
+                            subElement.GetAttributeString("from", ""),
                             subElement.GetAttributeString("to", "")));
-
                         break;
-                }                
-            }
-
-            string type = element.Name.ToString();
-
-            try
-            {
-                missionType = Type.GetType("Barotrauma." + type, true, true);
-                if (missionType == null)
-                {
-                    DebugConsole.ThrowError("Error in mission prefab " + Name + "! Could not find a mission class of the type \"" + type + "\".");
-                    return;
                 }
             }
-            catch
+
+            string missionTypeName = element.GetAttributeString("type", "");
+            if (!Enum.TryParse(missionTypeName, out type))
             {
-                DebugConsole.ThrowError("Error in mission prefab " + Name + "! Could not find a mission class of the type \"" + type + "\".");
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
                 return;
             }
-            constructor = missionType.GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+            if (type == MissionType.Random)
+            {
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be random.");
+                return;
+            }
+            if (type == MissionType.None)
+            {
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
+                return;
+            }
+
+            constructor = missionClasses[type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
         }
 
         public bool IsAllowed(Location from, Location to)
@@ -129,18 +150,10 @@ namespace Barotrauma
 
             return false;
         }
-
         
         public Mission Instantiate(Location[] locations)
         {
             return constructor?.Invoke(new object[] { this, locations }) as Mission;
-        }
-
-        public bool TypeMatches(string typeName)
-        {
-            //TODO: use enums instead of strings?
-            typeName = typeName.ToLowerInvariant();
-            return missionType.Name.ToString().Replace("Mission", "").ToLowerInvariant() == typeName;
         }
     }
 }

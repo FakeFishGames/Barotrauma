@@ -17,8 +17,8 @@ namespace Barotrauma
 
         private float delay;
 
-        public DelayedEffect(XElement element)
-            : base(element)
+        public DelayedEffect(XElement element, string parentDebugName)
+            : base(element, parentDebugName)
         {
             delay = element.GetAttributeFloat("delay", 1.0f);
         }
@@ -27,8 +27,9 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target)) return;
-
-            if (targetNames != null && !targetNames.Contains(target.Name)) return;
+            
+            if (targetIdentifiers != null && !IsValidTarget(target)) return;
+            if (!HasRequiredConditions(new List<ISerializableEntity>() { target })) return;
 
             DelayedListElement element = new DelayedListElement
             {
@@ -47,11 +48,13 @@ namespace Barotrauma
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) return;
 
             //remove invalid targets
-            if (targetNames != null)
+            if (targetIdentifiers != null)
             {
-                targets.RemoveAll(t => !targetNames.Contains(t.Name));
+                targets.RemoveAll(t => !IsValidTarget(t));
                 if (targets.Count == 0) return;
             }
+
+            if (!HasRequiredConditions(targets)) return;
 
             DelayedListElement element = new DelayedListElement
             {

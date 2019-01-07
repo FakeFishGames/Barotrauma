@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         private InfoFrameTab selectedTab;
         private GUIButton infoButton;
-        private GUIFrame infoFrame;
+        private GUIButton infoFrame;
 
         private GUIFrame infoFrameContent;
 
@@ -35,8 +35,12 @@ namespace Barotrauma
         public void CreateInfoFrame()
         {
             int width = 600, height = 400;
-            
-            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style:null, color: Color.Black * 0.8f);
+
+            infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleInfoFrame(btn, userdata); return true; }
+            };
+
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
 
@@ -59,6 +63,7 @@ namespace Barotrauma
                 OnClicked = SelectInfoFrameTab
             };
 
+            /*TODO: fix
             if (GameMain.Server != null)
             {
                 var manageButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("ManagePlayers"))
@@ -66,7 +71,7 @@ namespace Barotrauma
                     UserData = InfoFrameTab.ManagePlayers,
                     OnClicked = SelectInfoFrameTab
                 };
-            }
+            }*/
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.08f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
             {
@@ -90,7 +95,8 @@ namespace Barotrauma
                     CreateMissionInfo(infoFrameContent);
                     break;
                 case InfoFrameTab.ManagePlayers:
-                    GameMain.Server.ManagePlayersFrame(infoFrameContent);
+                    //TODO: fix
+                    //GameMain.Server.ManagePlayersFrame(infoFrameContent);
                     break;
             }
 

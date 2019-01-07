@@ -55,7 +55,10 @@ namespace Barotrauma
                 var bestHull = FindBestHull();
                 if (bestHull != null)
                 {
-                    goToObjective = new AIObjectiveGoTo(bestHull, character);
+                    goToObjective = new AIObjectiveGoTo(bestHull, character)
+                    {
+                        AllowGoingOutside = true
+                    };
                 }
 
                 searchHullTimer = SearchHullInterval;

@@ -92,7 +92,7 @@ namespace Barotrauma
                 }
                 if (amount > 0)
                 {
-                    new Swarm(swarmMembers, prefab.SwarmRadius);
+                    new Swarm(swarmMembers, prefab.SwarmRadius, prefab.SwarmCohesion);
                 }
             }
         }
@@ -126,12 +126,12 @@ namespace Barotrauma
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             foreach (BackgroundCreature sprite in activeSprites)
             {
                 if (!sprite.Enabled) continue;
-                sprite.Draw(spriteBatch);
+                sprite.Draw(spriteBatch, cam);
             }
         }
     }

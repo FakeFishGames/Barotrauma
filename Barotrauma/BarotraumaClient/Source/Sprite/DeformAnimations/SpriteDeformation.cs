@@ -3,60 +3,184 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.SpriteDeformations
 {
+    abstract class SpriteDeformationParams : ISerializableEntity
+    {
+        /// <summary>
+        /// A negative value means that the deformation is used only by one sprite only (default). 
+        /// A positive value means that this deformation is or could be used for multiple sprites.
+        /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
+        /// </summary>
+        [Serialize(-1, true)]
+        public int Sync
+        {
+            get;
+            private set;
+        }
+
+        [Serialize("", true)]
+        public string TypeName
+        {
+            get;
+            set;
+        }
+
+        [Serialize(SpriteDeformation.DeformationBlendMode.Add, true), Editable]
+        public SpriteDeformation.DeformationBlendMode BlendMode
+        {
+            get;
+            set;
+        }
+
+        public string Name => GetType().Name;
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Defined in the shader.
+        /// </summary>
+        public static readonly Point ShaderMaxResolution = new Point(15, 15);
+
+        private Point _resolution;
+        [Serialize("2,2", true)]
+        public Point Resolution
+        {
+            get { return _resolution; }
+            set
+            {
+                if (_resolution == value) { return; }
+                _resolution = value.Clamp(new Point(2, 2), ShaderMaxResolution);
+            }
+        }
+
+        public SpriteDeformationParams(XElement element)
+        {
+            if (element != null)
+            {
+                TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
+            }
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+    }
+
     abstract class SpriteDeformation
     {
-        public enum BlendMode
+        public enum DeformationBlendMode
         {
             Add, 
             Multiply,
             Override
         }
 
-        protected Point resolution;
+        protected Vector2[,] Deformation { get; private set; }
 
-        protected BlendMode blendMode;
-        
-        public static SpriteDeformation Load(XElement element)
+        protected SpriteDeformationParams deformationParams;
+
+        private static readonly string[] deformationTypes = new string[] { "Inflate", "Custom", "Noise", "BendJoint", "ReactToTriggerers" };
+        public static IEnumerable<string> DeformationTypes
         {
-            string typeName = element.GetAttributeString("type", "");
+            get { return deformationTypes; }
+        }
+
+        public Point Resolution
+        {
+            get
+            {
+                if (deformationParams.Resolution.X != Deformation.GetLength(0) || deformationParams.Resolution.Y != Deformation.GetLength(1))
+                {
+                    Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+                }
+                return deformationParams.Resolution;
+            }
+            set { SetResolution(value); }
+        }
+
+        public SpriteDeformationParams DeformationParams
+        {
+            get { return deformationParams; }
+            set { deformationParams = value; }
+        }
+
+        public string TypeName => deformationParams.TypeName;
+
+        public int Sync => deformationParams.Sync;
+
+        public static SpriteDeformation Load(string deformationType, string parentDebugName)
+        {
+            return Load(null, deformationType, parentDebugName);
+        }
+        public static SpriteDeformation Load(XElement element, string parentDebugName)
+        {
+            return Load(element, null, parentDebugName);
+        }
+
+        private static SpriteDeformation Load(XElement element, string deformationType, string parentDebugName)
+        {
+            string typeName = deformationType;
+
+            if (element != null)
+            {
+                typeName = element.GetAttributeString("typename", null) ?? element.GetAttributeString("type", "");
+            }
+            
+            SpriteDeformation newDeformation = null;
             switch (typeName.ToLowerInvariant())
             {
                 case "inflate":
-                    return new Inflate(element);
+                    newDeformation = new Inflate(element);
+                    break;
                 case "custom":
-                    return new CustomDeformation(element);
+                    newDeformation = new CustomDeformation(element);
+                    break;
                 case "noise":
-                    return new NoiseDeformation(element);
+                    newDeformation = new NoiseDeformation(element);
+                    break;
+                case "jointbend":
+                case "bendjoint":
+                    newDeformation = new JointBendDeformation(element);
+                    break;
                 case "reacttotriggerers":
+                    return new PositionalDeformation(element);
                 default:
                     if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))
                     {
-                        return new PositionalDeformation(element)
+                        newDeformation = new PositionalDeformation(element)
                         {
                             Type = reactionType
                         };
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Could not load sprite deformation animation - \"" + typeName + "\" is not a valid deformation type.");
+                        DebugConsole.ThrowError("Could not load sprite deformation animation in " + parentDebugName + " - \"" + typeName + "\" is not a valid deformation type.");
                     }
-                    return null;
+                    break;
             }
+
+            if (newDeformation != null)
+            {
+                newDeformation.deformationParams.TypeName = typeName;
+            }
+            return newDeformation;
         }
 
-        protected SpriteDeformation(XElement element)
+        protected SpriteDeformation(XElement element, SpriteDeformationParams deformationParams)
         {
-            string blendModeStr = element.GetAttributeString("blendmode", "override");
-            if (!Enum.TryParse(blendModeStr, true, out blendMode))
-            {
-                DebugConsole.ThrowError("Error in SpriteDeformation - \""+blendModeStr+"\" is not a valid blend mode");
-                blendMode = BlendMode.Add;
-            }
+            this.deformationParams = deformationParams;
+            SerializableProperty.DeserializeProperties(deformationParams, element);
+            Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+        }
 
-            resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
+        public void SetResolution(Point resolution)
+        {
+            deformationParams.Resolution = resolution;
+            Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
@@ -65,14 +189,12 @@ namespace Barotrauma.SpriteDeformations
 
         public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale)
         {
-            Point resolution = animations.First().resolution;
-            foreach (SpriteDeformation animation in animations)
+            Point resolution = animations.First().Resolution;
+            if (animations.Any(a => a.Resolution != resolution))
             {
-                if (animation.resolution != resolution)
-                {
-                    DebugConsole.ThrowError("Could not merge sprite deformation animations - all animations must have the same resolution.");
-                    return null;
-                }
+                DebugConsole.ThrowError("All animations must have the same resolution! Using the lowest resolution.");
+                resolution = animations.OrderBy(anim => anim.Resolution.X + anim.Resolution.Y).First().Resolution;
+                animations.ForEach(a => a.Resolution = resolution);
             }
 
             Vector2[,] deformation = new Vector2[resolution.X, resolution.Y];
@@ -85,15 +207,15 @@ namespace Barotrauma.SpriteDeformations
                 {
                     for (int y = 0; y < resolution.Y; y++)
                     {
-                        switch (animation.blendMode)
+                        switch (animation.deformationParams.BlendMode)
                         {
-                            case BlendMode.Override:
+                            case DeformationBlendMode.Override:
                                 deformation[x,y] = animDeformation[x,y] * scale * multiplier;
                                 break;
-                            case BlendMode.Add:
+                            case DeformationBlendMode.Add:
                                 deformation[x, y] += animDeformation[x, y] * scale * multiplier;
                                 break;
-                            case BlendMode.Multiply:
+                            case DeformationBlendMode.Multiply:
                                 deformation[x, y] *= animDeformation[x, y] * multiplier;
                                 break;
                         }
@@ -101,6 +223,11 @@ namespace Barotrauma.SpriteDeformations
                 }
             }
             return deformation;
+        }
+
+        public virtual void Save(XElement element)
+        {
+            SerializableProperty.SerializeProperties(deformationParams, element);
         }
     }
 }

@@ -6,12 +6,15 @@ namespace Barotrauma.Networking
 {
     partial class ServerLog
     {
-        public GUIFrame LogFrame;
+        public GUIButton LogFrame;
         private GUIListBox listBox;
 
         public void CreateLogFrame()
         {
-            LogFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            LogFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) LogFrame = null; return true; }
+            };
             new GUIButton(new RectTransform(Vector2.One, LogFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
                 LogFrame = null;
@@ -23,7 +26,7 @@ namespace Barotrauma.Networking
 
             new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), "Filter", font: GUI.SmallFont);            
             GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), font: GUI.SmallFont);
-            searchBox.OnTextChanged = (textBox, text) =>
+            searchBox.OnTextChanged += (textBox, text) =>
             {
                 msgFilter = text;
                 FilterMessages();

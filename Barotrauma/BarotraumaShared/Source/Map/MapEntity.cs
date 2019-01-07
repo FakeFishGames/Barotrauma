@@ -15,7 +15,7 @@ namespace Barotrauma
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
 
-        private MapEntityPrefab prefab;
+        public readonly MapEntityPrefab prefab;
 
         protected List<ushort> linkedToID;
 
@@ -25,13 +25,7 @@ namespace Barotrauma
         private bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
         public bool FlippedY { get { return flippedY; } }
-
-        public bool MoveWithLevel
-        {
-            get;
-            set;
-        }
-
+        
         public bool ShouldBeSaved = true;
         
         //the position and dimensions of the entity
@@ -66,7 +60,7 @@ namespace Barotrauma
         {
             get
             {
-                return Sprite != null && Sprite.Depth > 0.5f;
+                return Sprite != null && SpriteDepth > 0.5f;
             }
         }
 
@@ -91,6 +85,8 @@ namespace Barotrauma
             get { return false; }
         }
 
+        public List<string> AllowedLinks => prefab == null ? new List<string>() : prefab.AllowedLinks;
+
         public bool ResizeHorizontal
         {
             get { return prefab != null && prefab.ResizeHorizontal; }
@@ -98,11 +94,6 @@ namespace Barotrauma
         public bool ResizeVertical
         {
             get { return prefab != null && prefab.ResizeVertical; }
-        }
-
-        public virtual bool SelectableInEditor
-        {
-            get { return true; }
         }
 
         public override Vector2 Position
@@ -175,10 +166,7 @@ namespace Barotrauma
             return (Submarine.RectContains(WorldRect, position));
         }
 
-        public virtual MapEntity Clone()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract MapEntity Clone();
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
         {
@@ -186,7 +174,19 @@ namespace Barotrauma
             foreach (MapEntity e in entitiesToClone)
             {
                 Debug.Assert(e != null);
-                clones.Add(e.Clone());
+                try
+                {
+                    clones.Add(e.Clone());
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.ThrowError("Cloning entity \"" + e.Name + "\" failed.", ex);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "MapEntity.Clone:" + e.Name,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace);
+                    return clones;
+                }
                 Debug.Assert(clones.Last() != null);
             }
 
@@ -440,10 +440,12 @@ namespace Barotrauma
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
+        private bool mapLoadedCalled;
         public static void MapLoaded(List<MapEntity> entities, bool updateHulls)
         {
             foreach (MapEntity e in entities)
             {
+                if (e.mapLoadedCalled) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -458,6 +460,7 @@ namespace Barotrauma
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
             for (int i = 0; i < entities.Count; i++)
             {
+                if (entities[i].mapLoadedCalled) continue;
                 if (entities[i] is LinkedSubmarine)
                 {
                     linkedSubs.Add((LinkedSubmarine)entities[i]);
@@ -472,6 +475,8 @@ namespace Barotrauma
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
+
+            entities.ForEach(e => e.mapLoadedCalled = true);
 
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {
@@ -492,6 +497,34 @@ namespace Barotrauma
             if (linkedTo == null) return;
             if (linkedTo.Contains(e)) linkedTo.Remove(e);
         }
-        
+
+        #region Serialized properties
+        // We could use NaN or nullables, but in this case the first is not preferable, because it needs to be checked every time the value is used.
+        // Nullable on the other requires boxing that we don't want to do too often, since it generates garbage.
+        public bool SpriteDepthOverrideIsSet { get; private set; }
+        public float SpriteOverrideDepth => SpriteDepth;
+        private float _spriteOverrideDepth = float.NaN;
+        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
+        public float SpriteDepth
+        {
+            get
+            {
+                if (SpriteDepthOverrideIsSet) { return _spriteOverrideDepth; }
+                return Sprite != null ? Sprite.Depth : 0;
+            }
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    SpriteDepthOverrideIsSet = true;
+                }
+            }
+        }
+
+        // TODO: use for scaling the whole entity (physics, source rect etc). Turn saveable, when done.
+        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3)]
+        public float Scale { get; set; } = 1;
+        #endregion
     }
 }

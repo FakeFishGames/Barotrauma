@@ -49,7 +49,13 @@ namespace Barotrauma.Items.Components
             get { return item; }
         }
 
-        public Connection(XElement element, Item item)
+        public ConnectionPanel ConnectionPanel
+        {
+            get;
+            private set;
+        }
+
+        public Connection(XElement element, ConnectionPanel connectionPanel)
         {
 
 #if CLIENT
@@ -62,8 +68,8 @@ namespace Barotrauma.Items.Components
                 screwSprites = GUI.Style.GetComponentStyle("ConnectionPanelScrew").Sprites[GUIComponent.ComponentState.None].Select(s => s.Sprite).ToList();
             }
 #endif
-
-            this.item = item;
+            ConnectionPanel = connectionPanel;
+            item = connectionPanel.Item;
 
             wires = new Wire[MaxLinked];
 
@@ -95,7 +101,7 @@ namespace Barotrauma.Items.Components
                         break;
 
                     case "statuseffect":
-                        effects.Add(StatusEffect.Load(subElement));
+                        effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
                 }
             }

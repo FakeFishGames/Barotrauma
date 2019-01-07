@@ -18,7 +18,7 @@ namespace Barotrauma.Sounds
         private VoipQueue queue;
         public int bufferID = 0;
         
-        SoundChannel soundChannel;
+        private SoundChannel soundChannel;
 
         public VoipSound(SoundManager owner,VoipQueue q) : base(owner, "voip", true, true)
         {
@@ -34,6 +34,13 @@ namespace Barotrauma.Sounds
             soundChannel = chn;
 
             VoipConfig.SetupEncoding();
+        }
+
+        public void SetPosition(Vector3? pos)
+        {
+            soundChannel.Near = 300.0f;
+            soundChannel.Far = 750.0f;
+            soundChannel.Position = pos;
         }
 
         public override SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
@@ -60,7 +67,6 @@ namespace Barotrauma.Sounds
         {
             byte[] compressedBuffer;
             int compressedSize;
-            DebugConsole.NewMessage(bufferID.ToString(), Color.Yellow);
             queue.RetrieveBuffer(bufferID, out compressedSize, out compressedBuffer);
             if (compressedSize>0)
             {

@@ -7,27 +7,23 @@ namespace Barotrauma
 {
     class RelatedItem
     {
-        [Flags]
         public enum RelationType
         {
-            None = 0,
-            Contained = 1,
-            Equipped = 2,
-            Picked = 4,
-            Container = 8
+            None,
+            Contained,
+            Equipped,
+            Picked,
+            Container
         }
 
-        string[] names;
+        private string[] identifiers;
 
-        RelationType type;
+        private string[] excludedIdentifiers;
+
+        private RelationType type;
 
         public List<StatusEffect> statusEffects;
-
-        //public string[] Names
-        //{
-        //    get { return names; }
-        //}
-
+        
         public string Msg;
 
         public RelationType Type
@@ -35,40 +31,62 @@ namespace Barotrauma
             get { return type; }
         }
 
-        public bool MatchesItem(Item item)
+        public string JoinedIdentifiers
         {
-            if (item == null) return false;
-            return names.Any(name => item.Name == name || item.HasTag(name));
-        }
-
-        public string JoinedNames
-        {
-            get { return string.Join(",", names); }
+            get { return string.Join(",", identifiers); }
             set
-            {                
+            {
                 if (value == null) return;
 
-                names = value.Split(',');
-                for (int i = 0; i < names.Length;i++ )
+                identifiers = value.Split(',');
+                for (int i = 0; i < identifiers.Length; i++)
                 {
-                    names[i] = names[i].Trim();
+                    identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
+                }
+            }
+        }
+        
+        public string[] Identifiers
+        {
+            get { return identifiers; }
+        }
+
+        public string JoinedExcludedIdentifiers
+        {
+            get { return string.Join(",", excludedIdentifiers); }
+            set
+            {
+                if (value == null) return;
+
+                excludedIdentifiers = value.Split(',');
+                for (int i = 0; i < excludedIdentifiers.Length; i++)
+                {
+                    excludedIdentifiers[i] = excludedIdentifiers[i].Trim().ToLowerInvariant();
                 }
             }
         }
 
-
-        public string[] Names
+        public bool MatchesItem(Item item)
         {
-            get { return names; }
+            if (item == null) return false;
+            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) return false;
+            return identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
         }
 
-        public RelatedItem(string[] names)
+        public RelatedItem(string[] identifiers, string[] excludedIdentifiers)
         {
-            for (int i = 0; i < names.Length; i++)
+            for (int i = 0; i < identifiers.Length; i++)
             {
-                names[i] = names[i].Trim();
+                identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
             }
-            this.names = names;
+            this.identifiers = identifiers;
+
+            for (int i = 0; i < excludedIdentifiers.Length; i++)
+            {
+                excludedIdentifiers[i] = excludedIdentifiers[i].Trim().ToLowerInvariant();
+            }
+            this.excludedIdentifiers = excludedIdentifiers;
+
             statusEffects = new List<StatusEffect>();
         }
 
@@ -97,11 +115,11 @@ namespace Barotrauma
                     {
                         if (equippedItem == null) continue;
 
-                        if (equippedItem.Condition>0.0f && MatchesItem(equippedItem)) return true;
+                        if (equippedItem.Condition > 0.0f && MatchesItem(equippedItem)) return true;
                     }
                     break;
                 case RelationType.Picked:
-                    if (character == null || character.Inventory==null) return false;
+                    if (character == null || character.Inventory == null) return false;
                     foreach (Item pickedItem in character.Inventory.Items)
                     {
                         if (pickedItem == null) continue;
@@ -119,38 +137,86 @@ namespace Barotrauma
         public void Save(XElement element)
         {
             element.Add(
-                new XAttribute("name", JoinedNames),
+                new XAttribute("identifiers", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()));
+
+            if (excludedIdentifiers.Length > 0)
+            {
+                element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
+            }
 
             if (!string.IsNullOrWhiteSpace("msg")) element.Add(new XAttribute("msg", Msg));
         }
 
-        public static RelatedItem Load(XElement element)
+        public static RelatedItem Load(XElement element, string parentDebugName)
         {
-            string nameString = element.GetAttributeString("name", "");
-            if (nameString == "") return null;
-
-            string[] names = nameString.Split(',');
-                        
-            RelatedItem ri = new RelatedItem(names);
-
-            try
+            string[] identifiers;
+            if (element.Attribute("name") != null)
             {
-                ri.type = (RelationType)Enum.Parse(typeof(RelationType), element.GetAttributeString("type", "None"));
+                //backwards compatibility + a console warning
+                DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item identifiers or tags instead of names.");
+                string[] itemNames = element.GetAttributeStringArray("name", new string[0]);
+                //attempt to convert to identifiers and tags
+                List<string> convertedIdentifiers = new List<string>();
+                foreach (string itemName in itemNames)
+                {
+                    if (MapEntityPrefab.List.Find(me => me.Name == itemName) is ItemPrefab matchingItem)
+                    {
+                        convertedIdentifiers.Add(matchingItem.Identifier);
+                    }
+                    else
+                    {
+                        //no matching item found, this must be a tag
+                        convertedIdentifiers.Add(itemName);
+                    }
+                }
+                identifiers = convertedIdentifiers.ToArray();
+            }
+            else
+            {
+                identifiers = element.GetAttributeStringArray("identifiers", new string[0]);
+                if (identifiers.Length == 0) identifiers = element.GetAttributeStringArray("identifier", new string[0]);
             }
 
-            catch
+            string[] excludedIdentifiers = element.GetAttributeStringArray("excludedidentifiers", new string[0]);
+            if (excludedIdentifiers.Length == 0) excludedIdentifiers = element.GetAttributeStringArray("excludedidentifier", new string[0]);
+
+            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) return null;
+
+            RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
+            
+            string typeStr = element.GetAttributeString("type", "");
+            if (string.IsNullOrEmpty(typeStr))
             {
-                ri.type = RelationType.None;
+                if (element.Name.ToString().ToLowerInvariant() == "containable") typeStr = "Contained";
+            }
+            if (!Enum.TryParse(typeStr, true, out ri.type))
+            {
+                DebugConsole.ThrowError("Error in RelatedItem config ("+parentDebugName+") - \""+ typeStr +"\" is not a valid relation type.");
+                return null;
             }
 
-            ri.Msg = element.GetAttributeString("msg", "");
+            string msgTag = element.GetAttributeString("msg", "");
+            string msg = TextManager.Get(msgTag, true);
+            if (msg == null)
+            {
+                ri.Msg = msgTag;
+            }
+            else
+            {
+#if CLIENT
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                ri.Msg = msg;
+#endif
+            }
 
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "statuseffect") continue;
-
-                ri.statusEffects.Add(StatusEffect.Load(subElement));
+                ri.statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
             }
             
             return ri;

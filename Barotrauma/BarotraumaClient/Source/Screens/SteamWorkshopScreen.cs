@@ -268,10 +268,8 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(0.2f,0.05f), createItemContent.RectTransform), "Title");
             var titleBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.05f), createItemContent.RectTransform), itemEditor.Title);
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.05f), createItemContent.RectTransform), "Description");
-            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.1f), createItemContent.RectTransform), itemEditor.Description)
-            {
-                OnTextChanged = (textBox, text) => { itemEditor.Description = text; return true; }
-            };
+            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.1f), createItemContent.RectTransform), itemEditor.Description);
+            descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
 
             new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.TopRight), "Show folder")
             {
@@ -368,7 +366,7 @@ namespace Barotrauma
             GameMain.TitleScreen.DrawLoadingText = false;
             GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
             
             GUI.Draw(Cam, spriteBatch);
 

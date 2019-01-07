@@ -51,7 +51,7 @@ namespace Barotrauma
         {
             get;
             protected set;
-        }
+        } = new HashSet<string>();
 
         public static MapEntityPrefab Selected
         {
@@ -72,7 +72,12 @@ namespace Barotrauma
             get;
             private set;
         }
-                
+
+        /// <summary>
+        /// Links defined to identifiers.
+        /// </summary>
+        public List<string> AllowedLinks { get; protected set; } = new List<string>();
+
         public MapEntityCategory Category
         {
             get;
@@ -86,12 +91,10 @@ namespace Barotrauma
             protected set;
         }
 
-        [Serialize("1.0,1.0,1.0,1.0", false)]
-        public Color InventoryIconColor
-        {
-            get;
-            protected set;
-        }
+
+        // TODO: use for scaling the whole entity (physics, source rect etc). Turn saveable, when done.
+        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3)]
+        public float Scale { get; set; } = 1;
 
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
         //(allows changing names while keeping backwards compatibility with older sub files)
@@ -103,34 +106,44 @@ namespace Barotrauma
 
         public static void Init()
         {
-            MapEntityPrefab ep = new MapEntityPrefab();
-            ep.name = "Hull";
-            ep.identifier = "Hull";
-            ep.Description = "Hulls determine which parts are considered to be \"inside the sub\". Generally every room should be enclosed by a hull.";
-            ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
-            ep.ResizeHorizontal = true;
-            ep.ResizeVertical = true;
+            MapEntityPrefab ep = new MapEntityPrefab
+            {
+                identifier = "hull",
+                name = TextManager.Get("EntityName.hull"),
+                Description = TextManager.Get("EntityDescription.hull"),
+                constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
+                ResizeHorizontal = true,
+                ResizeVertical = true
+            };
             List.Add(ep);
 
-            ep = new MapEntityPrefab();
-            ep.name = "Gap";
-            ep.identifier = "Gap";
-            ep.Description = "Gaps allow water and air to flow between two hulls. ";
-            ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
-            ep.ResizeHorizontal = true;
-            ep.ResizeVertical = true;
+            ep = new MapEntityPrefab
+            {
+                identifier = "gap",
+                name = TextManager.Get("EntityName.gap"),
+                Description = TextManager.Get("EntityDescription.gap"),
+                constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
+                ResizeHorizontal = true,
+                ResizeVertical = true
+            };
             List.Add(ep);
 
-            ep = new MapEntityPrefab();
-            ep.name = "Waypoint";
-            ep.identifier = "Waypoint";
-            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
+            ep = new MapEntityPrefab
+            {
+                identifier = "waypoint",
+                name = TextManager.Get("EntityName.waypoint"),
+                Description = TextManager.Get("EntityDescription.waypoint"),
+                constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
+            };
             List.Add(ep);
 
-            ep = new MapEntityPrefab();
-            ep.name = "Spawnpoint";
-            ep.name = "Spawnpoint";
-            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
+            ep = new MapEntityPrefab
+            {
+                identifier = "spawnpoint",
+                name = TextManager.Get("EntityName.spawnpoint"),
+                Description = TextManager.Get("EntityDescription.spawnpoint"),
+                constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
+            };
             List.Add(ep);
         }
 
@@ -200,13 +213,13 @@ namespace Barotrauma
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Find a matching map entity prefab
         /// </summary>
         /// <param name="name">The name of the item (can be omitted when searching based on identifier)</param>
         /// <param name="identifier">The identifier of the item (if null, the identifier is ignored and the search is done only based on the name)</param>
-        public static MapEntityPrefab Find(string name, string identifier = null)
+        public static MapEntityPrefab Find(string name, string identifier = null, bool showErrorMessages = true)
         {
             if (name != null) name = name.ToLowerInvariant();
             foreach (MapEntityPrefab prefab in List)
@@ -228,6 +241,10 @@ namespace Barotrauma
                 }
             }
 
+            if (showErrorMessages)
+            {
+                DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace);
+            }
             return null;
         }
 
@@ -256,11 +273,17 @@ namespace Barotrauma
             return false;
         }
 
+        public bool IsLinkAllowed(MapEntityPrefab target)
+        {
+            if (target == null) { return false; }
+            return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(identifier)
+                || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+        }
+
         //a method that allows the GUIListBoxes to check through a delegate if the entityprefab is still selected
         public static object GetSelected()
         {
             return (object)selected;            
-        }
-        
+        }      
     }
 }

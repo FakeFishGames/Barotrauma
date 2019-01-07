@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class DamageModifier
+    partial class DamageModifier
     {
         [Serialize(1.0f, false)]
         public float DamageMultiplier
@@ -11,7 +11,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         [Serialize("0.0,360", false)]
         public Vector2 ArmorSector
         {
@@ -33,7 +33,7 @@ namespace Barotrauma
             private set;
         }
 
-        public string[] AfflictionNames
+        public string[] AfflictionIdentifiers
         {
             get;
             private set;
@@ -45,26 +45,20 @@ namespace Barotrauma
             private set;
         }
 
-
-
-#if CLIENT
-        [Serialize("", false)]
-        public string DamageSound
-        {
-            get;
-            private set;
-        }
-#endif
-
-        public DamageModifier(XElement element)
+        public DamageModifier(XElement element, string parentDebugName)
         {
             SerializableProperty.DeserializeProperties(this, element);
             ArmorSector = new Vector2(MathHelper.ToRadians(ArmorSector.X), MathHelper.ToRadians(ArmorSector.Y));
 
-            AfflictionNames = element.GetAttributeStringArray("afflictionnames", new string[0]);
-            for (int i = 0; i < AfflictionNames.Length; i++)
+            if (element.Attribute("afflictionnames") != null)
             {
-                AfflictionNames[i] = AfflictionNames[i].ToLowerInvariant();
+                DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+            }
+
+            AfflictionIdentifiers = element.GetAttributeStringArray("afflictionidentifiers", new string[0]);
+            for (int i = 0; i < AfflictionIdentifiers.Length; i++)
+            {
+                AfflictionIdentifiers[i] = AfflictionIdentifiers[i].ToLowerInvariant();
             }
             AfflictionTypes = element.GetAttributeStringArray("afflictiontypes", new string[0]);
             for (int i = 0; i < AfflictionTypes.Length; i++)
@@ -75,9 +69,9 @@ namespace Barotrauma
 
         public bool MatchesAffliction(Affliction affliction)
         {
-            foreach (string afflictionName in AfflictionNames)
+            foreach (string afflictionName in AfflictionIdentifiers)
             {
-                if (affliction.Prefab.Name.ToLowerInvariant() == afflictionName) return true;
+                if (affliction.Prefab.Identifier.ToLowerInvariant() == afflictionName) return true;
             }
             foreach (string afflictionType in AfflictionTypes)
             {

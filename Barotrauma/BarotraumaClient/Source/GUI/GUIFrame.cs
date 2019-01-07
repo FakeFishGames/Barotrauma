@@ -17,10 +17,8 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-                           
-            Color currColor = color;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-            if (state == ComponentState.Hover) currColor = hoverColor;
+
+            Color currColor = GetCurrentColor(state);
 
             if (sprites == null || !sprites.Any()) GUI.DrawRectangle(spriteBatch, Rect, currColor * (currColor.A/255.0f), true);
             base.Draw(spriteBatch);

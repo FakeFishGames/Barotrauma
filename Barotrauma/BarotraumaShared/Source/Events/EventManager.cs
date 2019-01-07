@@ -57,7 +57,7 @@ namespace Barotrauma
 
         public void StartRound(Level level)
         {
-            if (GameMain.Client != null) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
             var suitableSettings = EventManagerSettings.List.FindAll(s =>
                 level.Difficulty >= s.MinLevelDifficulty &&
@@ -173,8 +173,8 @@ namespace Barotrauma
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)
             CalculateCurrentIntensity(deltaTime);
-            
-            if (GameMain.Client != null) return;
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
             roundDuration += deltaTime;
 
@@ -213,12 +213,14 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead) continue;
+#if CLIENT
                 if ((character.AIController is HumanAIController || character.IsRemotePlayer ||  character == Character.Controlled) &&
-                    (GameMain.NetworkMember?.Character == null || GameMain.NetworkMember.Character.TeamID == character.TeamID))
+                    (GameMain.Client?.Character == null || GameMain.Client.Character.TeamID == character.TeamID))
                 {
                     avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
                     characterCount++;
                 }
+#endif
             }
             if (characterCount > 0)
             {

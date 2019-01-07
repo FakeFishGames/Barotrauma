@@ -2,12 +2,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Barotrauma
 {
     public partial class Sprite
     {
         protected Texture2D texture;
+
+        private bool preMultipliedAlpha;
 
         public Texture2D Texture
         {
@@ -35,6 +38,7 @@ namespace Barotrauma
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
         {
+            preMultipliedAlpha = preMultiplyAlpha;
             texture = LoadTexture(this.file, preMultiplyAlpha);
 
             if (texture == null)
@@ -47,6 +51,19 @@ namespace Barotrauma
             if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
         }
 
+        public void ReloadTexture()
+        {
+            var sprites = LoadedSprites.Where(s => s.Texture == texture).ToList();
+            texture.Dispose();
+            texture = null;
+
+            texture = TextureLoader.FromFile(file, preMultipliedAlpha);
+            foreach (Sprite sprite in sprites)
+            {
+                sprite.texture = texture;
+            }
+        }
+
         partial void CalculateSourceRect()
         {
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
@@ -55,9 +72,12 @@ namespace Barotrauma
 
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
+            if (string.IsNullOrWhiteSpace(file)) { return new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1); }
+            file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (s.file == file) return s.texture;
+                if (string.IsNullOrEmpty(s.FilePath)) continue;
+                if (Path.GetFullPath(s.file) == file) return s.texture;
             }
 
             if (File.Exists(file))
@@ -111,11 +131,13 @@ namespace Barotrauma
         }
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 position, Vector2 targetSize,
-            Rectangle? rect = null, Color? color = null, Point? startOffset = null, Vector2? textureScale = null, float? depth = null)
+            Rectangle? rect = null, Color? color = null, Point? startOffset = null, Vector2? textureScale = null, float? depth = null, float scaleMultiplier = 1)
         {
             //Init optional values
             Vector2 drawOffset = startOffset.HasValue ? new Vector2(startOffset.Value.X, startOffset.Value.Y) : Vector2.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
+            scale *= scaleMultiplier;
+            targetSize *= scaleMultiplier;
             Color drawColor = color ?? Color.White;
 
             bool flipHorizontal = (effects & SpriteEffects.FlipHorizontally) != 0;
@@ -260,9 +282,11 @@ namespace Barotrauma
             //check if another sprite is using the same texture
             if (!string.IsNullOrEmpty(file)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
+                string normalizedFilePath = Path.GetFullPath(file);
                 foreach (Sprite s in list)
                 {
-                    if (s.file == file) return;
+                    if (string.IsNullOrEmpty(s.file)) continue;
+                    if (Path.GetFullPath(s.file) == normalizedFilePath) return;
                 }
             }
             

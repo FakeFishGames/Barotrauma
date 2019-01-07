@@ -34,12 +34,24 @@ namespace Barotrauma
         public ArtifactEvent(ScriptedEventPrefab prefab)
             : base(prefab)
         {
-            string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
-            itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-
-            if (itemPrefab == null)
+            if (prefab.ConfigElement.Attribute("itemname") != null)
             {
-                DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
+                DebugConsole.ThrowError("Error in ArtifactEvent - use item identifier instead of the name of the item.");
+                string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
+                }
+            }
+            else
+            {
+                string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in ArtifactEvent - couldn't find an item prefab with the identifier " + itemIdentifier);
+                }
             }
         }
 
@@ -51,11 +63,10 @@ namespace Barotrauma
 
             spawnPending = true;
         }
-
+        
         private void SpawnItem()
         {
             item = new Item(itemPrefab, spawnPos, null);
-            item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 
             //try to find a nearby artifact holder (or any alien itemcontainer) and place the artifact inside it
@@ -78,10 +89,12 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Initialized ArtifactEvent (" + item.Name + ")", Color.White);
             }
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
+#endif
         }
 
         public override void Update(float deltaTime)
@@ -95,7 +108,7 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;                    
                     if (item.CurrentHull == null) return;
 
                     state = 1;

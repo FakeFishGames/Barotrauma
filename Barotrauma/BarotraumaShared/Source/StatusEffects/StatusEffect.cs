@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 #if CLIENT
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
@@ -17,14 +18,22 @@ namespace Barotrauma
         public List<ISerializableEntity> Targets;
         public float Timer;
     }
-
-
+    
     partial class StatusEffect
     {
         [Flags]
         public enum TargetType
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64, Limb = 128, AllLimbs = 256
+            This = 1,
+            Parent = 2,
+            Character = 4,
+            Contained = 8,
+            NearbyCharacters = 16,
+            NearbyItems = 32,
+            UseTarget = 64,
+            Hull = 128,
+            Limb = 256,
+            AllLimbs = 512
         }
 
         class ItemSpawnInfo
@@ -41,35 +50,56 @@ namespace Barotrauma
             public readonly float Speed;
             public readonly float Rotation;
 
-            public ItemSpawnInfo(XElement element)
+            public ItemSpawnInfo(XElement element, string parentDebugName)
             {
-                string itemPrefabName = element.GetAttributeString("name", "");
-                ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && m.NameMatches(itemPrefabName)) as ItemPrefab;
-                if (ItemPrefab == null)
+                if (element.Attribute("name") != null)
                 {
-                    DebugConsole.ThrowError("Error in StatusEffect config - item prefab \"" + itemPrefabName + "\" not found.");
+                    //backwards compatibility
+                    DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.");
+                    string itemPrefabName = element.GetAttributeString("name", "");
+                    ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && (m.NameMatches(itemPrefabName) || m.Tags.Contains(itemPrefabName))) as ItemPrefab;
+                    if (ItemPrefab == null)
+                    {
+                        DebugConsole.ThrowError("Error in StatusEffect \""+ parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.");
+                    }
                 }
-
+                else
+                {
+                    string itemPrefabIdentifier = element.GetAttributeString("identifier", "");
+                    if (string.IsNullOrEmpty(itemPrefabIdentifier)) itemPrefabIdentifier = element.GetAttributeString("identifiers", "");
+                    if (string.IsNullOrEmpty(itemPrefabIdentifier))
+                    {
+                        DebugConsole.ThrowError("Invalid item spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
+                    }
+                    ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && m.Identifier == itemPrefabIdentifier) as ItemPrefab;
+                    if (ItemPrefab == null)
+                    {
+                        DebugConsole.ThrowError("Error in StatusEffect config - item prefab with the identifier \"" + itemPrefabIdentifier + "\" not found.");
+                        return;
+                    }
+                }
+                
                 Speed = element.GetAttributeFloat("speed", 0.0f);
                 Rotation = MathHelper.ToRadians(element.GetAttributeFloat("rotation", 0.0f));
 
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
                 if (!Enum.TryParse(spawnTypeStr, out SpawnPosition))
                 {
-                    DebugConsole.ThrowError("Error in StatusEffect config - \""+spawnTypeStr+"\" is not a valid spawn position.");
+                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
                 }
             }
         }
 
         private TargetType targetTypes;
-        protected HashSet<string> targetNames;
+        protected HashSet<string> targetIdentifiers;
 
         private List<RelatedItem> requiredItems;
 
 #if CLIENT
         private List<ParticleEmitter> particleEmitters;
 
-        private Sound sound;
+        private List<RoundSound> sounds = new List<RoundSound>();
+        private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private bool loopSound;
 #endif
@@ -82,8 +112,7 @@ namespace Barotrauma
         private bool setValue;
         
         private bool disableDeltaTime;
-
-        private HashSet<string> onContainingNames;
+        
         private HashSet<string> tags;
         
         private readonly float duration;
@@ -105,16 +134,11 @@ namespace Barotrauma
 
         public readonly float FireSize;
         
-        public HashSet<string> TargetNames
+        public HashSet<string> TargetIdentifiers
         {
-            get { return targetNames; }
+            get { return targetIdentifiers; }
         }
-
-        public HashSet<string> OnContainingNames
-        {
-            get { return onContainingNames; }
-        }
-
+        
         public List<Affliction> Afflictions
         {
             get;
@@ -122,6 +146,13 @@ namespace Barotrauma
         }
 
         private List<Pair<string, float>> ReduceAffliction;
+
+        //only applicable if targeting NearbyCharacters or NearbyItems
+        public float Range
+        {
+            get;
+            private set;
+        }
 
         public string Tags
         {
@@ -141,23 +172,25 @@ namespace Barotrauma
             }
         }
 
-        public static StatusEffect Load(XElement element)
+        public static StatusEffect Load(XElement element, string parentDebugName)
         {
-            if (element.Attribute("delay")!=null)
+            if (element.Attribute("delay") != null)
             {
-                return new DelayedEffect(element);
+                return new DelayedEffect(element, parentDebugName);
             }
-                
-            return new StatusEffect(element);
+
+            return new StatusEffect(element, parentDebugName);
         }
-                
-        protected StatusEffect(XElement element)
+
+        protected StatusEffect(XElement element, string parentDebugName)
         {
             requiredItems = new List<RelatedItem>();
             spawnItems = new List<ItemSpawnInfo>();
             Afflictions = new List<Affliction>();
             ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
+
+            Range = element.GetAttributeFloat("range", 0.0f);
 
 #if CLIENT
             particleEmitters = new List<ParticleEmitter>();
@@ -179,17 +212,8 @@ namespace Barotrauma
 
                         catch
                         {
-                            string[] split = attribute.Value.Split('=');
-                            type = (ActionType)Enum.Parse(typeof(ActionType), split[0], true);
-
-                            string[] containingNames = split[1].Split(',');
-                            onContainingNames = new HashSet<string>();
-                            for (int i = 0; i < containingNames.Length; i++)
-                            {
-                                onContainingNames.Add(containingNames[i].Trim());
-                            }
+                            DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
-
                         break;
                     case "target":
                         string[] Flags = attribute.Value.Split(',');
@@ -199,18 +223,21 @@ namespace Barotrauma
                         }
 
                         break;
-                    case "disabledeltatime":                        
+                    case "disabledeltatime":
                         disableDeltaTime = attribute.GetAttributeBool(false);
                         break;
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
-                        string[] names = attribute.Value.Split(',');
-                        targetNames = new HashSet<string>();
-                        for (int i=0; i < names.Length; i++ )
+                        DebugConsole.ThrowError("Error in StatusEffect config (" + parentDebugName + ") - use identifiers or tags to define the targets instead of names.");
+                        break;
+                    case "targetidentifiers":
+                        string[] identifiers = attribute.Value.Split(',');
+                        targetIdentifiers = new HashSet<string>();
+                        for (int i = 0; i < identifiers.Length; i++)
                         {
-                            targetNames.Add(names[i].Trim());
+                            targetIdentifiers.Add(identifiers[i].Trim().ToLowerInvariant());
                         }
                         break;
                     case "duration":
@@ -225,7 +252,7 @@ namespace Barotrauma
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
                             " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
-                        break;                    
+                        break;
                     default:
                         propertyAttributes.Add(attribute);
                         break;
@@ -249,7 +276,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "explosion":
-                        explosion = new Explosion(subElement);
+                        explosion = new Explosion(subElement, parentDebugName);
                         break;
                     case "fire":
                         FireSize = subElement.GetAttributeFloat("size",10.0f);
@@ -264,40 +291,65 @@ namespace Barotrauma
                         break;
                     case "requireditem":
                     case "requireditems":
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement);
-
-                        if (newRequiredItem == null) continue;
-                        
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, parentDebugName);
+                        if (newRequiredItem == null)
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect config - requires an item with no identifiers.");
+                            continue;
+                        }
                         requiredItems.Add(newRequiredItem);
                         break;
                     case "conditional":
                         IEnumerable<XAttribute> conditionalAttributes = subElement.Attributes();
                         foreach (XAttribute attribute in conditionalAttributes)
                         {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
                             propertyConditionals.Add(new PropertyConditional(attribute));
                         }
                         break;
                     case "affliction":
-                        string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-
-                        AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
-                        if (afflictionPrefab == null)
+                        AfflictionPrefab afflictionPrefab;
+                        if (subElement.Attribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Affliction prefab \"" + afflictionName + "\" not found.");
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
+                            string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                            if (afflictionPrefab == null)
+                            {
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                            }
                         }
                         else
                         {
-                            Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                            if (afflictionPrefab == null)
+                            {
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
+                            }
                         }
+
+                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
+                        Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        
                         break;
                     case "reduceaffliction":
-                        ReduceAffliction.Add(new Pair<string, float>(
-                            subElement.GetAttributeString("name", "").ToLowerInvariant(),
-                            subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+                            ReduceAffliction.Add(new Pair<string, float>(
+                                subElement.GetAttributeString("name", "").ToLowerInvariant(),
+                                subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                        }
+                        else
+                        {
+                            ReduceAffliction.Add(new Pair<string, float>(
+                                (subElement.GetAttributeString("identifier", null) ?? subElement.GetAttributeString("type", null)).ToLowerInvariant(),
+                                subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                        }
                         break;
                     case "spawnitem":
-                        var newSpawnItem = new ItemSpawnInfo(subElement);
+                        var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
                         if (newSpawnItem.ItemPrefab != null) spawnItems.Add(newSpawnItem);
                         break;
 #if CLIENT
@@ -305,8 +357,17 @@ namespace Barotrauma
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "sound":
-                        sound = Submarine.LoadRoundSound(subElement);
+                        var sound = Submarine.LoadRoundSound(subElement);
                         loopSound = subElement.GetAttributeBool("loop", false);
+                        if (subElement.Attribute("selectionmode") != null)
+                        {
+                            if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                            {
+                                soundSelectionMode = selectionMode;
+                            }
+                        }
+
+                        sounds.Add(sound);
                         break;
 #endif
                 }
@@ -339,6 +400,37 @@ namespace Barotrauma
             return true;
         }
 
+        public void GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets)
+        {
+            if (Range <= 0.0f) { return; }
+            if (HasTargetType(TargetType.NearbyCharacters))
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (!c.Enabled) { continue; }
+                    float xDiff = Math.Abs(c.WorldPosition.X - worldPosition.X);
+                    if (xDiff > Range) { continue; }
+                    float yDiff = Math.Abs(c.WorldPosition.Y - worldPosition.Y);
+                    if (yDiff > Range) { continue; }
+
+                    if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(c); }
+                }
+            }
+            if (HasTargetType(TargetType.NearbyItems))
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    float xDiff = Math.Abs(item.WorldPosition.X - worldPosition.X);
+                    if (xDiff > Range) { continue; }
+                    float yDiff = Math.Abs(item.WorldPosition.Y - worldPosition.Y);
+                    if (yDiff > Range) { continue; }
+
+                    if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(item); }
+                }
+            }
+            return;
+        }
+
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
             if (!propertyConditionals.Any()) return true;
@@ -353,11 +445,30 @@ namespace Barotrauma
             return false;
         }
 
+        protected bool IsValidTarget(ISerializableEntity entity)
+        {
+            if (entity is Item item)
+            {
+                if (item.HasTag(targetIdentifiers)) return true;
+                if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
+            }
+            else if (entity is Structure structure)
+            {
+                if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
+            }
+            else if (entity is Character character)
+            {
+                if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
+            }
+
+            return targetIdentifiers.Any(id => id == entity.Name);
+        }
+
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
 
-            if (targetNames != null && !targetNames.Contains(target.Name)) return;
+            if (targetIdentifiers != null && !IsValidTarget(target)) return;
             
             if (duration > 0.0f && !Stackable)
             {
@@ -382,22 +493,9 @@ namespace Barotrauma
             if (this.type != type) return;
 
             //remove invalid targets
-            if (targetNames != null)
+            if (targetIdentifiers != null)
             {
-                targets.RemoveAll(t => 
-                {
-                    Item item = t as Item;
-                    if (item == null)
-                    {
-                        return !targetNames.Contains(t.Name);
-                    }
-                    else
-                    {
-                        if (item.HasTag(targetNames)) return false;
-                        if (item.Prefab.NameMatches(targetNames)) return false;
-                    }
-                    return true;
-                });
+                targets.RemoveAll(t => !IsValidTarget(t));
                 if (targets.Count == 0) return;
             }
 
@@ -429,12 +527,37 @@ namespace Barotrauma
                 hull = ((Item)entity).CurrentHull;
             }
 #if CLIENT
-            if (sound != null && entity != null)
+            if (entity != null && sounds.Count > 0)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    soundChannel = SoundPlayer.PlaySound(sound, 1.0f, sound.BaseFar, entity.WorldPosition, hull);
-                    if (soundChannel != null) soundChannel.Looping = loopSound;
+                    if (soundSelectionMode == SoundSelectionMode.All)
+                    {
+                        foreach (RoundSound sound in sounds)
+                        {
+                            soundChannel = SoundPlayer.PlaySound(sound.Sound, sound.Volume, sound.Range, entity.WorldPosition, hull);
+                            if (soundChannel != null) soundChannel.Looping = loopSound;
+                        }
+                    }
+                    else
+                    {
+                        int selectedSoundIndex = 0;
+                        if (soundSelectionMode == SoundSelectionMode.ItemSpecific && entity is Item item)
+                        {
+                            selectedSoundIndex = item.ID % sounds.Count;
+                        }
+                        else if (soundSelectionMode == SoundSelectionMode.CharacterSpecific && entity is Character user)
+                        {
+                            selectedSoundIndex = user.ID % sounds.Count;
+                        }
+                        else
+                        {
+                            selectedSoundIndex = Rand.Int(sounds.Count);
+                        }
+                        var selectedSound = sounds[selectedSoundIndex];
+                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, entity.WorldPosition, hull);
+                        if (soundChannel != null) soundChannel.Looping = loopSound;
+                    }
                 }
             }
 #endif            
@@ -536,8 +659,13 @@ namespace Barotrauma
                 var fire = new FireSource(entity.WorldPosition, hull);
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
+            
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
 
-            if (GameMain.Client == null && entity != null) //clients are not allowed to spawn items
+            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
             {
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
@@ -550,15 +678,18 @@ namespace Barotrauma
                             { 
                                 if (entity is Character character)
                                 {
-                                    if (character.Inventory != null)
+                                    if (character.Inventory != null && character.Inventory.Items.Any(it => it == null))
                                     {
                                         Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
                                     }
                                 }
                                 else if (entity is Item item)
                                 {
-                                    var inventory = item?.GetComponent<Items.Components.ItemContainer>()?.Inventory;
-                                    Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                    var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    if (inventory != null && inventory.Items.Any(it => it == null))
+                                    {
+                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                    }
                                 }
                             }
                             break;
@@ -571,14 +702,14 @@ namespace Barotrauma
                                 }
                                 else if (entity is Item item)
                                 {
-                                    thisInventory = item?.GetComponent<Items.Components.ItemContainer>()?.Inventory;
+                                    thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
                                 }
                                 if (thisInventory != null)
                                 {
                                     foreach (Item item in thisInventory.Items)
                                     {
                                         if (item == null) continue;
-                                        Inventory containedInventory = item.GetComponent<Items.Components.ItemContainer>()?.Inventory;
+                                        Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
                                         if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
                                         Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
                                         break;

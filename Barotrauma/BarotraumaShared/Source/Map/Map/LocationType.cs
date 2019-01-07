@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -12,8 +13,6 @@ namespace Barotrauma
     {
         public static readonly List<LocationType> List = new List<LocationType>();
         
-        private int commonness;
-
         private List<string> nameFormats;
         private List<string> names;
 
@@ -24,11 +23,8 @@ namespace Barotrauma
         //<name, commonness>
         private List<Tuple<JobPrefab, float>> hireableJobs;
         private float totalHireableWeight;
-
-        //placeholder
-        public readonly Color HaloColor;
-
-        public List<int> AllowedZones = new List<int>();
+        
+        public Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
 
         public readonly string Name;
 
@@ -51,6 +47,12 @@ namespace Barotrauma
             get { return symbolSprite; }
         }
 
+        public Color SpriteColor
+        {
+            get;
+            private set;
+        }
+
         public Sprite Background
         {
             get { return backGround; }
@@ -60,9 +62,7 @@ namespace Barotrauma
         {
             Name = element.Name.ToString();
             DisplayName = element.GetAttributeString("name", "Name");
-
-            commonness = element.GetAttributeInt("commonness", 1);
-
+            
             nameFormats = new List<string>();
             foreach (XAttribute nameFormat in element.Element("nameformats").Attributes())
             {
@@ -80,9 +80,19 @@ namespace Barotrauma
                 names = new List<string>() { "Name file not found" };
             }
 
-            HaloColor = element.GetAttributeColor("halo", Color.Transparent);
-
-            AllowedZones = element.GetAttributeIntArray("allowedzones", new int[] { 1,2,3,4,5,6,7,8,9 }).ToList();
+            string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", new string[] { "" });
+            foreach (string commonnessPerZoneStr in commonnessPerZoneStrs)
+            {
+                string[] splitCommonnessPerZone = commonnessPerZoneStr.Split(':');                
+                if (splitCommonnessPerZone.Length != 2 ||
+                    !int.TryParse(splitCommonnessPerZone[0].Trim(), out int zoneIndex) ||
+                    !float.TryParse(splitCommonnessPerZone[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoneCommonness))
+                {
+                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Name + "\" - commonness should be given in the format \"zone0index: zone0commonness, zone1index: zone1commonness\"");
+                    break;
+                }
+                CommonnessPerZone[zoneIndex] = zoneCommonness;
+            }
 
             hireableJobs = new List<Tuple<JobPrefab, float>>();
             foreach (XElement subElement in element.Elements())
@@ -90,11 +100,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "hireable":
-                        string jobName = subElement.GetAttributeString("name", "");
-                        JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName.ToLowerInvariant());
+                        string jobIdentifier = subElement.GetAttributeString("identifier", "");
+                        JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
                         if (jobPrefab == null)
                         {
-                            DebugConsole.ThrowError("Invalid job name (" + jobName + ") in location type " + Name);
+                            DebugConsole.ThrowError("Invalid job name (" + jobIdentifier + ") in location type " + Name);
                             continue;
                         }
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
@@ -104,6 +114,7 @@ namespace Barotrauma
                         break;
                     case "symbol":
                         symbolSprite = new Sprite(subElement);
+                        SpriteColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "changeto":
                         CanChangeTo.Add(new LocationTypeChange(subElement));
@@ -142,21 +153,24 @@ namespace Barotrauma
                 Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
             }
 
-            List<LocationType> allowedLocationTypes = zone.HasValue ? List.FindAll(lt => lt.AllowedZones.Contains(zone.Value)) : List;
+            List<LocationType> allowedLocationTypes = zone.HasValue ? List.FindAll(lt => lt.CommonnessPerZone.ContainsKey(zone.Value)) : List;
 
             if (allowedLocationTypes.Count == 0)
             {
                 DebugConsole.ThrowError("Could not generate a random location type - no location types for the zone " + zone + " found!");
             }
 
-            int randInt = Rand.Int(allowedLocationTypes.Sum(lt => lt.commonness), Rand.RandSync.Server);
-            foreach (LocationType type in allowedLocationTypes)
+            if (zone.HasValue)
             {
-                if (randInt < type.commonness) return type;
-                randInt -= type.commonness;
+                return ToolBox.SelectWeightedRandom(
+                    allowedLocationTypes, 
+                    allowedLocationTypes.Select(a => a.CommonnessPerZone[zone.Value]).ToList(), 
+                    Rand.RandSync.Server);
             }
-
-            return null;
+            else
+            {
+                return allowedLocationTypes[Rand.Int(allowedLocationTypes.Count, Rand.RandSync.Server)];
+            }
         }
 
         public static void Init()

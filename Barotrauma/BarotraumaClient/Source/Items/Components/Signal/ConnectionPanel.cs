@@ -16,9 +16,18 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific(XElement element)
         {
             if (GuiFrame == null) return;
-            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null);
+            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
+            {
+                UserData = this
+            };
         }
-
+        
+        public override void Move(Vector2 amount)
+        {
+            if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;
+            MoveConnectedWires(amount);
+        }
+        
         public override bool ShouldDrawHUD(Character character)
         {
             return character == Character.Controlled && character == user;
@@ -29,7 +38,7 @@ namespace Barotrauma.Items.Components
             GuiFrame?.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (character != Character.Controlled || character != user) return;
             

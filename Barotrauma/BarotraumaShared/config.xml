@@ -1,17 +1,55 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<config masterserverurl="http://www.undertowgames.com/baromaster" autocheckupdates="true" musicvolume="0.5" soundvolume="0.5" usesteammatchmaking="true" verboselogging="false" savedebugconsolelogs="false">
+<config
+  language="English"
+  masterserverurl="http://www.undertowgames.com/baromaster"
+  autocheckupdates="true"
+  musicvolume="0.5"
+  soundvolume="0.5"
+  verboselogging="false"
+  savedebugconsolelogs="false"
+  enablesplashscreen="true"
+  usesteammatchmaking="true"
+  quickstartsub = "Turso" 
+  requiresteamauthentication="true">
   <graphicsmode fullscreen="true" vsync="true" />
-  <contentpackage path="Data/ContentPackages/Vanilla 0.8.xml" />
+  <graphicssettings
+    particlelimit="1500"
+    lightmapscale="0.5"
+    specularity="true"
+    chromaticaberration="true"
+    losmode="Transparent"
+    hudscale="1"
+    inventoryscale="1" />
+  <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
   <player name=""/>
-  <keymapping Select="E" Use="0" Aim="1" Up="W" Down="S" Left="A" Right="D" Attack="R" Run="LeftShift" Crouch="LeftControl" Chat="Tab" RadioChat="OemTilde" CrewOrders="C" Ragdoll="Space" Health="H"/> />
+  <keymapping
+    Select="E"
+    Use="0"
+    Aim="1"
+    Up="W"
+    Down="S"
+    Left="A"
+    Right="D"
+    Attack="F"
+    Run="LeftShift"
+    Crouch="LeftControl"
+    Chat="Tab"
+    RadioChat="OemTilde"
+    CrewOrders="C"
+    Ragdoll="Space"
+    Health="H"
+    Grab="G"
+    SelectPreviousCharacter="Z"
+    SelectNextCharacter="X" />  
   <gameplay>
     <jobpreferences>
-      <job name="Engineer" />
-      <job name="Mechanic" />
-      <job name="Captain" />
-      <job name="Security Officer" />
-      <job name="Medical Doctor" />
-      <job name="Assistant" />
+      <job identifier="captain" />
+      <job identifier="engineer" />
+      <job identifier="mechanic" />
+      <job identifier="securityofficer" />
+      <job identifier="medicaldoctor" />
+      <job identifier="assistant" />
     </jobpreferences>
   </gameplay>
+  
 </config>

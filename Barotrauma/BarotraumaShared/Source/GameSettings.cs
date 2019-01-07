@@ -37,7 +37,22 @@ namespace Barotrauma
 
         public int ParticleLimit { get; set; }
 
+        public float LightMapScale { get; set; }
+        public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
+
+        public bool MuteOnFocusLost { get; set; }
+
+        public enum VoiceMode
+        {
+            Disabled,
+            PushToTalk,
+            Activity
+        };
+
+        public VoiceMode VoiceSetting { get; set; }
+
+        public float NoiseGateThreshold { get; set; }
 
         private KeyOrMouse[] keyMapping;
 
@@ -45,10 +60,16 @@ namespace Barotrauma
 
         private LosMode losMode;
 
-        public List<string> jobNamePreferences;
+        public List<string> jobPreferences;
 
         private bool useSteamMatchmaking;
         private bool requireSteamAuthentication;
+
+        public string QuickStartSubmarineName
+        {
+            get;
+            set;
+        }
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
@@ -63,6 +84,7 @@ namespace Barotrauma
             get { return useSteamMatchmaking && UseSteam; }
             set { useSteamMatchmaking = value; }
         }
+
 #else
         //steam functionality determined at compile time
         public bool UseSteam
@@ -98,10 +120,10 @@ namespace Barotrauma
             }
         }
 
-        public List<string> JobNamePreferences
+        public List<string> JobPreferences
         {
-            get { return jobNamePreferences; }
-            set { jobNamePreferences = value; }
+            get { return jobPreferences; }
+            set { jobPreferences = value; }
         }
 
         private int characterHeadIndex;
@@ -126,6 +148,13 @@ namespace Barotrauma
                 characterGender = value;
                 Save();
             }
+        }
+
+        private float aimAssistAmount;
+        public float AimAssistAmount
+        {
+            get { return aimAssistAmount; }
+            set { aimAssistAmount = MathHelper.Clamp(value, 0.0f, 5.0f); }
         }
 
         private bool unsavedSettings;
@@ -158,11 +187,11 @@ namespace Barotrauma
             {
                 soundVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                if (GameMain.SoundManager!=null)
+                if (GameMain.SoundManager != null)
                 {
-                    GameMain.SoundManager.SetCategoryGainMultiplier("default",soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("ui",soundVolume);
-                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience",soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("default", soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui", soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", soundVolume);
                 }
 #endif
             }
@@ -175,9 +204,15 @@ namespace Barotrauma
             {
                 musicVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                SoundPlayer.MusicVolume = musicVolume;
+                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume);
 #endif
             }
+        }
+
+        public string Language
+        {
+            get { return TextManager.Language; }
+            set { TextManager.Language = value; }
         }
 
         public HashSet<ContentPackage> SelectedContentPackages { get; set; }
@@ -209,6 +244,11 @@ namespace Barotrauma
             set { losMode = value; }
         }
 
+        private const float MinHUDScale = 0.75f, MaxHUDScale = 1.25f;
+        public static float HUDScale { get; set; } = 1.0f;
+        private const float MinInventoryScale = 0.75f, MaxInventoryScale = 1.25f;
+        public static float InventoryScale { get; set; } = 1.0f;
+
         public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
@@ -239,6 +279,8 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             
+            Language = doc.Root.GetAttributeString("language", "English");
+
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
@@ -258,6 +300,7 @@ namespace Barotrauma
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
 #endif
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (doc == null)
             {
@@ -268,25 +311,28 @@ namespace Barotrauma
 
                 SelectedContentPackages.Add(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
 
-                jobNamePreferences = new List<string>();
+                jobPreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    jobNamePreferences.Add(job.Name);
+                    jobPreferences.Add(job.Identifier);
                 }
                 return;
             }
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
-            GraphicsWidth = graphicsMode.GetAttributeInt("width", 0);
-            GraphicsHeight = graphicsMode.GetAttributeInt("height", 0);
-            VSyncEnabled = graphicsMode.GetAttributeBool("vsync", true);
+            GraphicsWidth   = graphicsMode.GetAttributeInt("width", 0);
+            GraphicsHeight  = graphicsMode.GetAttributeInt("height", 0);
+            VSyncEnabled    = graphicsMode.GetAttributeBool("vsync", true);
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
-            ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
-            ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", true);
-
-            var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
-            if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
+            ParticleLimit               = graphicsSettings.GetAttributeInt("particlelimit", 1500);
+            LightMapScale               = MathHelper.Clamp(graphicsSettings.GetAttributeFloat("lightmapscale", 0.5f), 0.1f, 1.0f);
+            SpecularityEnabled          = graphicsSettings.GetAttributeBool("specularity", true);
+            ChromaticAberrationEnabled  = graphicsSettings.GetAttributeBool("chromaticaberration", true);
+            HUDScale                    = graphicsSettings.GetAttributeFloat("hudscale", 1.0f);
+            InventoryScale              = graphicsSettings.GetAttributeFloat("inventoryscale", 1.0f);
+            var losModeStr              = graphicsSettings.GetAttributeString("losmode", "Transparent");
+            if (!Enum.TryParse(losModeStr, out losMode))
             {
                 losMode = LosMode.Transparent;
             }
@@ -312,15 +358,17 @@ namespace Barotrauma
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
+
 #if DEBUG
-            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
-            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
+            EnableSplashScreen = false;
 #else
-            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
-            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
+            EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 #endif
 
-            EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
+            AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
+
 
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
@@ -334,6 +382,11 @@ namespace Barotrauma
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
             keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
+
+            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+
+            keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
@@ -362,10 +415,12 @@ namespace Barotrauma
                         }
                         break;
                     case "gameplay":
-                        jobNamePreferences = new List<string>();
+                        jobPreferences = new List<string>();
                         foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
                         {
-                            jobNamePreferences.Add(ele.GetAttributeString("name", ""));
+                            string jobIdentifier = ele.GetAttributeString("identifier", "");
+                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
+                            jobPreferences.Add(jobIdentifier);
                         }
                         break;
                     case "player":
@@ -426,6 +481,7 @@ namespace Barotrauma
             }
 
             doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
@@ -434,7 +490,9 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -473,9 +531,14 @@ namespace Barotrauma
                 doc.Root.Add(gSettings);
             }
 
-            gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
-            gSettings.ReplaceAttributes(new XAttribute("chromaticaberration", ChromaticAberrationEnabled));
-            gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
+            gSettings.ReplaceAttributes(
+                new XAttribute("particlelimit", ParticleLimit),
+                new XAttribute("lightmapscale", LightMapScale),
+                new XAttribute("specularity", SpecularityEnabled),
+                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
+                new XAttribute("losmode", LosMode),
+                new XAttribute("hudscale", HUDScale),
+                new XAttribute("inventoryscale", InventoryScale));
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
@@ -499,9 +562,9 @@ namespace Barotrauma
 
             var gameplay = new XElement("gameplay");
             var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobNamePreferences)
+            foreach (string jobName in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("name", jobName)));
+                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
             }
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);

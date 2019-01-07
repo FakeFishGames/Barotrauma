@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,7 +19,7 @@ namespace Barotrauma
         
         public float CameraShake;
 
-        private bool sparks, shockwave, flames, smoke, flash;
+        private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
 
         private float empStrength;
 
@@ -35,17 +36,19 @@ namespace Barotrauma
             shockwave = true;
             smoke = true;
             flames = true;
+            underwaterBubble = true;
         }
 
-        public Explosion(XElement element)
+        public Explosion(XElement element, string parentDebugName)
         {
-            attack = new Attack(element);
+            attack = new Attack(element, parentDebugName + ", Explosion");
 
             force = element.GetAttributeFloat("force", 0.0f);
 
             sparks      = element.GetAttributeBool("sparks", true);
             shockwave   = element.GetAttributeBool("shockwave", true);
             flames      = element.GetAttributeBool("flames", true);
+            underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
             smoke       = element.GetAttributeBool("smoke", true);
             flash       = element.GetAttributeBool("flash", true);
 
@@ -77,9 +80,10 @@ namespace Barotrauma
             float displayRange = attack.Range;
             if (displayRange < 0.1f) return;
 
-            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition) / 2.0f;
+            Vector2 cameraPos = Character.Controlled != null ? Character.Controlled.WorldPosition : GameMain.GameScreen.Cam.Position;
+            float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
             GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist) / displayRange, 0.0f);
-
+            
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
                 RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f));
@@ -98,7 +102,7 @@ namespace Barotrauma
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
                     if (powered == null || !powered.VulnerableToEMP) continue;
-                    if (item.FixRequirements.Count > 0)
+                    if (item.Repairables.Any())
                     {
                         item.Condition -= 100 * empStrength * distFactor;
                     }
@@ -115,33 +119,35 @@ namespace Barotrauma
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
             DamageCharacters(worldPosition, attack, force, damageSource);
-
-            if (flames && GameMain.Client == null)
+            
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
-                foreach (Item item in Item.ItemList)
+                if (flames)
                 {
-                    if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
-
-                    //don't apply OnFire effects if the item is inside a fireproof container
-                    //(or if it's inside a container that's inside a fireproof container, etc)
-                    Item container = item.Container;
-                    while (container != null)
+                    foreach (Item item in Item.ItemList)
                     {
-                        if (container.FireProof) return;
-                        container = container.Container;
-                    }
+                        if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
 
-                    if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
+                        //don't apply OnFire effects if the item is inside a fireproof container
+                        //(or if it's inside a container that's inside a fireproof container, etc)
+                        Item container = item.Container;
+                        while (container != null)
+                        {
+                            if (container.FireProof) return;
+                            container = container.Container;
+                        }
 
-                    item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+                        if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
 
-                    if (item.Condition <= 0.0f && GameMain.Server != null)
-                    {
-                        GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                        item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+                        
+                        if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                        {
+                            GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                        }
                     }
                 }
             }
-
         }
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
@@ -191,7 +197,7 @@ namespace Barotrauma
                     List<Affliction> modifiedAfflictions = new List<Affliction>();
                     foreach (Affliction affliction in attack.Afflictions)
                     {
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor));
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
                     }
                     c.LastDamageSource = damageSource;
                     Character attacker = null;
@@ -202,12 +208,15 @@ namespace Barotrauma
                     }
                     c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
 
-                    var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
-                    foreach (StatusEffect statusEffect in attack.StatusEffects)
+                    if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
-                        statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
-                        statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
-                        if (underWater) statusEffect.Apply(ActionType.InWater, 1.0f, damageSource, statusEffectTargets);
+                        var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
+                        foreach (StatusEffect statusEffect in attack.StatusEffects)
+                        {
+                            statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
+                            statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
+                            statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);
+                        }
                     }
                     
                     if (limb.WorldPosition != worldPosition && force > 0.0f)

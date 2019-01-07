@@ -1,30 +1,58 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
-        private GUITickBox autopilotTickBox, maintainPosTickBox;
-        private GUITickBox levelEndTickBox, levelStartTickBox;
+        enum Mode
+        {
+            AutoPilot,
+            Manual
+        };
+        private GUITickBox autopilotTickBox, manualTickBox;
+
+        enum Destination
+        {
+            MaintainPos,
+            LevelEnd,
+            LevelStart
+        };
+        private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
+
+        private GUIFrame autoPilotControlsDisabler;
 
         private GUIComponent steerArea;
 
+        private GUITextBlock pressureWarningText;
+
+        private GUITextBlock tipContainer;
+
+        private string noPowerTip, autoPilotMaintainPosTip, autoPilotLevelStartTip, autoPilotLevelEndTip;
+
+        private Vector2 keyboardInput = Vector2.Zero;
+        private float inputCumulation;
+
+        private bool levelStartSelected;
         public bool LevelStartSelected
         {
             get { return levelStartTickBox.Selected; }
             set { levelStartTickBox.Selected = value; }
         }
 
+        private bool levelEndSelected;
         public bool LevelEndSelected
         {
             get { return levelEndTickBox.Selected; }
             set { levelEndTickBox.Selected = value; }
         }
 
+        private bool maintainPos;
         public bool MaintainPos
         {
             get { return maintainPosTickBox.Selected; }
@@ -33,59 +61,168 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null)
+            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
+            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.CenterLeft)
+                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.99f), (int)(viewSize * 0.05f)) }, "SonarFrame");
+            var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center))
             {
-                CanBeFocused = false
-            };
-            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1.0f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 30) })
-            {
-                AbsoluteSpacing = 5
+                RelativeSpacing = 0.03f,
+                Stretch = true
             };
 
-            autopilotTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                TextManager.Get("SteeringAutoPilot"))
+            var statusContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
+                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, "SonarFrame");
+            var paddedStatusContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), statusContainer.RectTransform, Anchor.Center))
+            {
+                RelativeSpacing = 0.03f,
+                Stretch = true
+            };
+
+            manualTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
+                TextManager.Get("SteeringManual"), style: "GUIRadioButton")
+            {
+                Selected = true,
+                OnSelected = (GUITickBox box) =>
+                {
+                    AutoPilot = !box.Selected;
+                    unsentChanges = true;
+                    user = Character.Controlled;
+
+                    return true;
+                }
+            };
+            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
+                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
             {
                 OnSelected = (GUITickBox box) =>
                 {
                     AutoPilot = box.Selected;
+                    if (AutoPilot && MaintainPos)
+                    {
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
+                    }
                     unsentChanges = true;
+                    user = Character.Controlled;
 
                     return true;
                 }
             };
 
-            maintainPosTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
+            GUIRadioButtonGroup modes = new GUIRadioButtonGroup();
+            modes.AddRadioButton(Mode.AutoPilot, autopilotTickBox);
+            modes.AddRadioButton(Mode.Manual, manualTickBox);
+            modes.Selected = Mode.Manual;
+            
+            var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), paddedControlContainer.RectTransform), "InnerFrame");
+            var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.8f), autoPilotControls.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
+
+            maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
             {
                 Enabled = false,
-                OnSelected = ToggleMaintainPosition
+                Selected = maintainPos,
+                OnSelected = tickBox =>
+                {
+                    if (maintainPos != tickBox.Selected)
+                    {
+                        unsentChanges = true;
+                        user = Character.Controlled;
+                        maintainPos = tickBox.Selected;
+                        if (maintainPos)
+                        {
+                            if (controlledSub == null)
+                            {
+                                posToMaintain = null;
+                            }
+                            else
+                            {
+                                posToMaintain = controlledSub.WorldPosition;
+                            }
+                        }
+                        else if (!LevelEndSelected && !LevelStartSelected)
+                        {
+                            AutoPilot = false;
+                        }
+                        if (!maintainPos)
+                        {
+                            posToMaintain = null;
+                        }
+                    }
+                    return true;
+                }
             };
 
-            levelStartTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
+            levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
-                OnSelected = SelectDestination
+                Selected = levelStartSelected,
+                OnSelected = tickBox =>
+                {
+                    if (levelStartSelected != tickBox.Selected)
+                    {
+                        unsentChanges = true;
+                        user = Character.Controlled;
+                        levelStartSelected = tickBox.Selected;
+                        levelEndSelected = !levelStartSelected;
+                        if (levelStartSelected)
+                        {
+                            UpdatePath();
+                        }
+                        else if (!MaintainPos && !LevelEndSelected)
+                        {
+                            AutoPilot = false;
+                        }
+                    }
+                    return true;
+                }
             };
 
-            levelEndTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
+            levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
+                GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
-                OnSelected = SelectDestination
+                Selected = levelEndSelected,
+                OnSelected = tickBox =>
+                {
+                    if (levelEndSelected != tickBox.Selected)
+                    {
+                        unsentChanges = true;
+                        user = Character.Controlled;
+                        levelEndSelected = tickBox.Selected;
+                        levelStartSelected = !levelEndSelected;
+                        if (levelEndSelected)
+                        {
+                            UpdatePath();
+                        }
+                        else if (!MaintainPos && !LevelStartSelected)
+                        {
+                            AutoPilot = false;
+                        }
+                    }
+                    return true;
+                }
             };
 
-            var textContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), paddedFrame.RectTransform, Anchor.BottomLeft), childAnchor: Anchor.BottomLeft)
-            {
-                AbsoluteSpacing = 5
-            };
+            autoPilotControlsDisabler = new GUIFrame(new RectTransform(Vector2.One, autoPilotControls.RectTransform), "InnerFrame");
 
+            GUIRadioButtonGroup destinations = new GUIRadioButtonGroup();
+            destinations.AddRadioButton(Destination.MaintainPos, maintainPosTickBox);
+            destinations.AddRadioButton(Destination.LevelStart, levelStartTickBox);
+            destinations.AddRadioButton(Destination.LevelEnd, levelEndTickBox);
+            destinations.Selected = maintainPos        ? Destination.MaintainPos :
+                                    levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd;
+            
             string steeringVelX = TextManager.Get("SteeringVelocityX");
             string steeringVelY = TextManager.Get("SteeringVelocityY");
             string steeringDepth = TextManager.Get("SteeringDepth");
-            new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), "")
             {
                 TextGetter = () =>
                 {
@@ -94,7 +231,7 @@ namespace Barotrauma.Items.Components
                     return steeringVelY.Replace("[kph]", ((int)-realWorldVel).ToString());
                 }
             };
-            new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), "")
             {
                 TextGetter = () =>
                 {
@@ -103,7 +240,7 @@ namespace Barotrauma.Items.Components
                     return steeringVelX.Replace("[kph]", ((int)realWorldVel).ToString());
                 }
             };
-            new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), "")
             {
                 TextGetter = () =>
                 {
@@ -113,29 +250,35 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            steerArea = new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
+            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), Color.Red)
+            {
+                Visible = false
+            };
+
+            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.12f), GuiFrame.RectTransform, Anchor.BottomLeft)
+            { MinSize = new Point(150, 0), RelativeOffset = new Vector2(0.0f, -0.05f) }, "", wrap: true, style: "GUIToolTip")
+            {
+                AutoScale = true
+            };
+
+            noPowerTip = TextManager.Get("SteeringNoPowerTip");
+            autoPilotMaintainPosTip = TextManager.Get("SteeringAutoPilotMaintainPosTip");
+            autoPilotLevelStartTip = TextManager.Get("SteeringAutoPilotLocationTip").Replace("[locationname]", 
+                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.Name);
+            autoPilotLevelEndTip = TextManager.Get("SteeringAutoPilotLocationTip").Replace("[locationname]", 
+                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
+
+            steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
         }
 
-        private bool ToggleMaintainPosition(GUITickBox tickBox)
+        /// <summary>
+        /// Makes the sonar view CustomComponent render the steering HUD, preventing it from being drawn behing the sonar
+        /// </summary>
+        public void AttachToSonarHUD(GUICustomComponent sonarView)
         {
-            unsentChanges = true;
-
-            levelStartTickBox.Selected = false;
-            levelEndTickBox.Selected = false;
-
-            if (controlledSub == null)
-            {
-                posToMaintain = null;
-            }
-            else
-            {
-                posToMaintain = controlledSub.WorldPosition;
-            }
-
-            tickBox.Selected = true;
-
-            return true;
+            steerArea.Visible = false;
+            sonarView.OnDraw += (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); };
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
@@ -154,7 +297,13 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                Vector2 steeringInputPos = new Vector2(velRect.Center.X + steeringInput.X, velRect.Center.Y - steeringInput.Y);
+                Vector2 unitSteeringInput = steeringInput / 100.0f;
+                //map input from rectangle to circle
+                Vector2 steeringInputPos = new Vector2(
+                    steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
+                    -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
+                steeringInputPos.X += velRect.Center.X;
+                steeringInputPos.Y += velRect.Center.Y;
 
                 GUI.DrawLine(spriteBatch,
                     new Vector2(velRect.Center.X, velRect.Center.Y),
@@ -163,7 +312,8 @@ namespace Barotrauma.Items.Components
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
 
-                if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
+                //if (keyboardInput.Length() > 0 || Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
+                if (velRect.Contains(PlayerInput.MousePosition))
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
                 }
@@ -183,66 +333,193 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 steeringPos = new Vector2(velRect.Center.X + targetVelocity.X * 0.9f, velRect.Center.Y - targetVelocity.Y * 0.9f);
+            //map velocity from rectangle to circle
+            Vector2 unitTargetVel = targetVelocity / 100.0f;
+            Vector2 steeringPos = new Vector2(
+                targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
+                -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
+            steeringPos.X += velRect.Center.X;
+            steeringPos.Y += velRect.Center.Y;
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X, velRect.Center.Y),
                 steeringPos,
-                Color.CadetBlue, 0, 2);
+                Color.CadetBlue, 0, 2);            
         }
 
-        public override void AddToGUIUpdateList()
+        public void DebugDrawHUD(SpriteBatch spriteBatch, Vector2 transducerCenter, float displayScale, float displayRadius, Vector2 center)
         {
-            GuiFrame.AddToGUIUpdateList();
+            if (SteeringPath == null) return;
+
+            Vector2 prevPos = Vector2.Zero;
+            foreach (WayPoint wp in SteeringPath.Nodes)
+            {
+                Vector2 pos = (wp.Position - transducerCenter) * displayScale;
+                if (pos.Length() > displayRadius) continue;
+
+                pos.Y = -pos.Y;
+                pos += center;
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
+
+                if (prevPos != Vector2.Zero)
+                {
+                    GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
+                }
+
+                prevPos = pos;
+            }
+
+            foreach (ObstacleDebugInfo obstacle in debugDrawObstacles)
+            {
+                Vector2 pos1 = (obstacle.Point1 - transducerCenter) * displayScale;
+                pos1.Y = -pos1.Y;
+                pos1 += center;
+                Vector2 pos2 = (obstacle.Point2 - transducerCenter) * displayScale;
+                pos2.Y = -pos2.Y;
+                pos2 += center;
+
+                GUI.DrawLine(spriteBatch, 
+                    pos1, 
+                    pos2,
+                    Color.Red * 0.6f, width: 3);
+
+                if (obstacle.Intersection.HasValue)
+                {
+                    Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) *displayScale;
+                    intersectionPos.Y = -intersectionPos.Y;
+                    intersectionPos += center;
+                    GUI.DrawRectangle(spriteBatch, intersectionPos - Vector2.One * 2, Vector2.One * 4, Color.Red);
+                }
+
+                Vector2 obstacleCenter = (pos1 + pos2) / 2;
+                if (obstacle.AvoidStrength.LengthSquared() > 0.01f)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        obstacleCenter,
+                        obstacleCenter + new Vector2(obstacle.AvoidStrength.X, -obstacle.AvoidStrength.Y) * 100,
+                        Color.Lerp(Color.Green, Color.Orange, obstacle.Dot), width: 2);
+                }
+            }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+            if (steerArea.Rect.Contains(PlayerInput.MousePosition))
+            {
+                if (!PlayerInput.KeyDown(InputType.Select) && !PlayerInput.KeyHit(InputType.Select))
+                {
+                    Character.DisableControls = true;
+                }
+            }
+
+            autoPilotControlsDisabler.Visible = !AutoPilot;
+
+            if (voltage < minVoltage && currPowerConsumption > 0.0f)
+            {
+                tipContainer.Visible = true;
+                tipContainer.Text = noPowerTip;
+                return;
+            }
+
+
+            tipContainer.Visible = AutoPilot;
+            if (AutoPilot)
+            {
+                if (maintainPos)
+                {
+                    tipContainer.Text = autoPilotMaintainPosTip;
+                }
+                else if (LevelStartSelected)
+                {
+                    tipContainer.Text = autoPilotLevelStartTip;
+                }
+                else if (LevelEndSelected)
+                {
+                    tipContainer.Text = autoPilotLevelEndTip;
+                }
+            }
+
+            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
             if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
+                    Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                    inputPos.Y = -inputPos.Y;
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
-                        Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
-                        inputPos.Y = -inputPos.Y;
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition
-                            + inputPos / sonar.DisplayRadius * sonar.Range;                        
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition + inputPos / sonar.DisplayRadius * sonar.Range;                        
                     }
                     else
                     {
-                        SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
-                        steeringInput.Y = -steeringInput.Y;
-                        steeringAdjustSpeed = character == null ? 
-                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
+                        SteeringInput = inputPos;
                     }
                     unsentChanges = true;
+                    user = Character.Controlled;
                 }
             }
-        }
-
-        private bool SelectDestination(GUITickBox tickBox)
-        {
-            unsentChanges = true;
-
-            if (tickBox == levelStartTickBox)
+            if (!AutoPilot && Character.DisableControls)
             {
-                levelEndTickBox.Selected = false;
+                steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                Vector2 input = Vector2.Zero;
+                if (PlayerInput.KeyDown(InputType.Left))
+                {
+                    input -= Vector2.UnitX;
+                }
+                if (PlayerInput.KeyDown(InputType.Right))
+                {
+                    input += Vector2.UnitX;
+                }
+                if (PlayerInput.KeyDown(InputType.Up))
+                {
+                    input += Vector2.UnitY;
+                }
+                if (PlayerInput.KeyDown(InputType.Down))
+                {
+                    input -= Vector2.UnitY;
+                }
+                if (PlayerInput.KeyDown(Keys.LeftShift))
+                {
+                    SteeringInput += input * deltaTime * 200;
+                    inputCumulation = 0;
+                    keyboardInput = Vector2.Zero;
+                    unsentChanges = true;
+                }
+                else
+                {
+                    float step = deltaTime * 5;
+                    if (input.Length() > 0)
+                    {
+                        inputCumulation += step;
+                    }
+                    else
+                    {
+                        inputCumulation -= step;
+                    }
+                    float maxCumulation = 1;
+                    inputCumulation = MathHelper.Clamp(inputCumulation, 0, maxCumulation);
+                    float length = MathHelper.Lerp(0, 0.2f, MathUtils.InverseLerp(0, maxCumulation, inputCumulation));
+                    var normalizedInput = Vector2.Normalize(input);
+                    if (MathUtils.IsValid(normalizedInput))
+                    {
+                        keyboardInput += normalizedInput * length;
+                    }
+                    if (keyboardInput.LengthSquared() > 0.01f)
+                    {
+                        SteeringInput += keyboardInput;
+                        unsentChanges = true;
+                        user = Character.Controlled;
+                        keyboardInput *= MathHelper.Clamp(1 - step, 0, 1);
+                    }
+                }
             }
             else
             {
-                levelStartTickBox.Selected = false;
+                inputCumulation = 0;
+                keyboardInput = Vector2.Zero;
             }
-
-            maintainPosTickBox.Selected = false;
-            posToMaintain = null;
-            tickBox.Selected = true;
-
-            UpdatePath();
-
-            return true;
         }
 
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)

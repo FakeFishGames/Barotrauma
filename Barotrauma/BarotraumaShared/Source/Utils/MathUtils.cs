@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    //TODO: perhaps find a better place for this?
+    //TODO: Currently this is only used for text positioning? -> move there?
     [Flags]
     public enum Alignment
     {
@@ -19,6 +20,27 @@ namespace Barotrauma
         public static int PositiveModulo(int i, int n)
         {
             return (i % n + n) % n;
+        }
+
+        public static double Distance(double x1, double y1, double x2, double y2)
+        {
+            double dX = x1 - x2;
+            double dY = y1 - y2;
+            return Math.Sqrt(dX * dX + dY * dY);
+        }
+
+        public static double DistanceSquared(double x1, double y1, double x2, double y2)
+        {
+            double dX = x1 - x2;
+            double dY = y1 - y2;
+            return dX * dX + dY * dY;
+        }
+
+        public static int DistanceSquared(int x1, int y1, int x2, int y2)
+        {
+            int dX = x1 - x2;
+            int dY = y1 - y2;
+            return dX * dX + dY * dY;
         }
 
         public static Vector2 SmoothStep(Vector2 v1, Vector2 v2, float amount)
@@ -36,6 +58,11 @@ namespace Barotrauma
                 return v / currLength * length;
             }
             return v;
+        }
+
+        public static bool Contains(this Rectangle rect, double x, double y)
+        {
+            return x > rect.X && x < rect.Right && y > rect.Y && y < rect.Bottom;
         }
 
         public static float Round(float value, float div)
@@ -240,11 +267,12 @@ namespace Barotrauma
         {
             if (!isHorizontal)
             {
-                if (Math.Sign(a1.X - axisAligned1.X) == Math.Sign(a2.X - axisAligned1.X))                
+                float xDiff = axisAligned1.X - a1.X;
+                if (Math.Sign(xDiff) == Math.Sign(axisAligned1.X - a2.X))                
                     return null;
                 
                 float s = (a2.Y - a1.Y) / (a2.X - a1.X);
-                float y = a1.Y + (axisAligned1.X - a1.X) * s;
+                float y = a1.Y + xDiff * s;
 
                 if (axisAligned1.Y < axisAligned2.Y)
                 {
@@ -261,11 +289,12 @@ namespace Barotrauma
             }
             else //horizontal line
             {
-                if (Math.Sign(a1.Y - axisAligned1.Y) == Math.Sign(a2.Y - axisAligned1.Y))                
+                float yDiff = axisAligned1.Y - a1.Y;
+                if (Math.Sign(yDiff) == Math.Sign(axisAligned1.Y - a2.Y))                
                     return null;
 
                 float s = (a2.X - a1.X) / (a2.Y - a1.Y);
-                float x = a1.X + (axisAligned1.Y - a1.Y) * s;
+                float x = a1.X + yDiff * s;
 
                 if (axisAligned1.X < axisAligned2.X)
                 {
@@ -346,6 +375,91 @@ namespace Barotrauma
             return intersections;
         }
 
+
+        /// <summary>
+        /// Get the intersections between a line (either infinite or a line segment) and a circle
+        /// </summary>
+        /// <param name="circlePos">Center of the circle</param>
+        /// <param name="radius">Radius of the circle</param>
+        /// <param name="point1">1st point on the line</param>
+        /// <param name="point2">2nd point on the line</param>
+        /// <param name="isLineSegment">Is the line a segment or infinite</param>
+        /// <returns>The number of intersections</returns>
+        public static int GetLineCircleIntersections(Vector2 circlePos, float radius,
+            Vector2 point1, Vector2 point2, bool isLineSegment, out Vector2? intersection1, out Vector2? intersection2)
+        {
+            float dx, dy, A, B, C, det;
+
+            dx = point2.X - point1.X;
+            dy = point2.Y - point1.Y;
+
+            A = dx * dx + dy * dy;
+            B = 2 * (dx * (point1.X - circlePos.X) + dy * (point1.Y - circlePos.Y));
+            C = (point1.X - circlePos.X) * (point1.X - circlePos.X) + (point1.Y - circlePos.Y) * (point1.Y - circlePos.Y) - radius * radius;
+
+            det = B * B - 4 * A * C;
+            if ((A <= 0.0000001) || (det < 0))
+            {
+                // No real solutions.
+                intersection1 = null;
+                intersection2 = null;
+                return 0;
+            }
+            else if (det == 0)
+            {
+                // One solution.
+                float t = -B / (2 * A);
+                intersection1 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
+                intersection2 = null;
+                return 1;
+            }
+            else
+            {
+                // Two solutions.
+                float t1 = (float)((-B + Math.Sqrt(det)) / (2 * A));
+                float t2 = (float)((-B - Math.Sqrt(det)) / (2 * A));
+
+                //if the line is not infinite, we need to check if the intersections are on the segment
+                if (isLineSegment)
+                {
+                    if (t1 >= 0 && t1 <= 1.0f)
+                    {
+                        intersection1 = point1 + new Vector2(dx, dy) * t1;
+                        if (t2 >= 0 && t2 <= 1.0f)
+                        {
+                            //both intersections on the segment
+                            intersection2 = point1 + new Vector2(dx, dy) * t2;
+                            return 2;
+
+                        }
+                        //only the first intersection is on the segment
+                        intersection2 = null;
+                        return 1;
+                    }
+                    else if (t2 >= 0 && t2 <= 1.0f)
+                    {
+                        //only the second intersection is on the segment
+                        intersection1 = point1 + new Vector2(dx, dy) * t2;
+                        intersection2 = null;
+                        return 1;
+                    }
+                    else
+                    {
+                        //neither is on the segment
+                        intersection1 = null;
+                        intersection2 = null;
+                        return 0;
+                    }
+                }
+                else
+                {
+                    intersection1 = point1 + new Vector2(dx, dy) * t1;
+                    intersection2 = point1 + new Vector2(dx, dy) * t2;
+                    return 2;
+                }
+            }
+        }
+
         public static float LineToPointDistance(Vector2 lineA, Vector2 lineB, Vector2 point)
         {
             float xDiff = lineB.X - lineA.X;
@@ -358,29 +472,26 @@ namespace Barotrauma
 
             return (float)(Math.Abs(xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X)) /
                 Math.Sqrt(xDiff * xDiff + yDiff * yDiff));
-        } 
+        }
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
-            float xDist = Math.Abs(circlePos.X - rect.Center.X);
-            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
-
             int halfWidth = rect.Width / 2;
+            float xDist = Math.Abs(circlePos.X - (rect.X + halfWidth));
+            if (xDist > halfWidth + radius) { return false; }
+
             int halfHeight = rect.Height / 2;
-            
-            if (xDist > (halfWidth + radius))   { return false; }
-            if (yDist > (halfHeight + radius))  { return false; }   
+            float yDist = Math.Abs(circlePos.Y - (rect.Y + halfHeight));
+            if (yDist > halfHeight + radius) { return false; }
 
-
-            if (xDist <= (halfWidth))           { return true; }         
-            if (yDist <= (halfHeight))          { return true; }
+            if (xDist <= halfWidth || yDist <= halfHeight) { return true; }
 
             float distSqX = xDist - halfWidth;
             float distSqY = yDist - halfHeight;
 
-            return (distSqX * distSqX + distSqY * distSqY <= (radius * radius));
+            return distSqX * distSqX + distSqY * distSqY <= radius * radius;
         }
-        
+
         /// <summary>
         /// divide a convex hull into triangles
         /// </summary>
@@ -575,6 +686,155 @@ namespace Barotrauma
                     rects.RemoveAt(i); i--;
                 }
             }*/
+        }
+
+        /// <summary>
+        /// Float comparison. Note that may still fail in some cases.
+        /// </summary>
+        // References: 
+        // http://floating-point-gui.de/errors/comparison/
+        // https://stackoverflow.com/questions/3874627/floating-point-comparison-functions-for-c-sharp
+        public static bool NearlyEqual(float a, float b, float epsilon = 0.0001f)
+        {
+            float diff = Math.Abs(a - b);
+            if (a == b)
+            {
+                // shortcut, handles infinities
+                return true;
+            }
+            else if (a == 0 || b == 0 || diff < float.Epsilon)
+            {
+                // a or b is zero or both are extremely close to it
+                // relative error is less meaningful here
+                return diff < epsilon;
+            }
+            else
+            {
+                // use relative error
+                return diff / (Math.Abs(a) + Math.Abs(b)) < epsilon;
+            }
+        }
+
+        /// Returns a position in a curve.
+        /// </summary>
+        public static Vector2 Bezier(Vector2 start, Vector2 control, Vector2 end, float t)
+        {
+            return Pow(1 - t, 2) * start + 2 * t * (1 - t) * control + Pow(t, 2) * end;
+        }
+
+        public static float Pow(float f, float p)
+        {
+            return (float)Math.Pow(f, p);
+        }
+
+        /// <summary>
+        /// Rotates a point in 2d space around another point.
+        /// Modified from:
+        /// http://www.gamefromscratch.com/post/2012/11/24/GameDev-math-recipes-Rotating-one-point-around-another-point.aspx
+        /// </summary>
+        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float degrees, bool clockWise = true)
+        {
+            // (Math.PI / 180) * degrees
+            var angle = MathHelper.ToRadians(degrees);
+            var sin = Math.Sin(angle);
+            var cos = Math.Cos(angle);
+            if (!clockWise)
+            {
+                sin = -sin;
+            }
+            Vector2 dir = point - target;
+            var x = (cos * dir.X) - (sin * dir.Y) + target.X;
+            var y = (sin * dir.X) + (cos * dir.Y) + target.Y;
+            return new Vector2((float)x, (float)y);
+        }
+
+        /// <summary>
+        /// Returns the corners of an imaginary rectangle.
+        /// Unlike the XNA rectangle, this can be rotated with the up parameter.
+        /// </summary>
+        public static Vector2[] GetImaginaryRect(Vector2 up, Vector2 center, Vector2 size)
+        {
+            return GetImaginaryRect(new Vector2[4], up, center, size);
+        }
+
+        /// <summary>
+        /// Returns the corners of an imaginary rectangle.
+        /// Unlike the XNA Rectangle, this can be rotated with the up parameter.
+        /// </summary>
+        public static Vector2[] GetImaginaryRect(Vector2[] corners, Vector2 up, Vector2 center, Vector2 size)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length for the corners array. Must be 4.");
+            }
+            Vector2 halfSize = size / 2;
+            Vector2 left = up.Right();
+            corners[0] = center + up * halfSize.Y + left * halfSize.X;
+            corners[1] = center + up * halfSize.Y - left * halfSize.X;
+            corners[2] = center - up * halfSize.Y - left * halfSize.X;
+            corners[3] = center - up * halfSize.Y + left * halfSize.X;
+            return corners;
+        }
+
+        /// <summary>
+        /// Check if a point is inside a rectangle.
+        /// Unlike the XNA Rectangle, this rectangle might have been rotated.
+        /// For XNA Rectangles, use the Contains instance method.
+        /// </summary>
+        public static bool RectangleContainsPoint(Vector2[] corners, Vector2 point)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length of the corners array! Must be 4");
+            }
+            return RectangleContainsPoint(corners[0], corners[1], corners[2], corners[3], point);
+        }
+
+        /// <summary>
+        /// Check if a point is inside a rectangle.
+        /// Unlike the XNA Rectangle, this rectangle might have been rotated.
+        /// For XNA Rectangles, use the Contains instance method.
+        /// </summary>
+        public static bool RectangleContainsPoint(Vector2 c1, Vector2 c2, Vector2 c3, Vector2 c4, Vector2 point)
+        {
+            return TriangleContainsPoint(c1, c2, c3, point) || TriangleContainsPoint(c1, c3, c4, point);
+        }
+
+        /// <summary>
+        /// Slightly modified from https://gamedev.stackexchange.com/questions/110229/how-do-i-efficiently-check-if-a-point-is-inside-a-rotated-rectangle
+        /// </summary>
+        public static bool TriangleContainsPoint(Vector2 c1, Vector2 c2, Vector2 c3, Vector2 point)
+        {
+            // Compute vectors        
+            Vector2 v0 = c3 - c1;
+            Vector2 v1 = c2 - c1;
+            Vector2 v2 = point - c1;
+
+            // Compute dot products
+            float dot00 = Vector2.Dot(v0, v0);
+            float dot01 = Vector2.Dot(v0, v1);
+            float dot02 = Vector2.Dot(v0, v2);
+            float dot11 = Vector2.Dot(v1, v1);
+            float dot12 = Vector2.Dot(v1, v2);
+
+            // Compute barycentric coordinates
+            float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+            float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+            float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+            // Check if the point is in triangle
+            return u >= 0 && v >= 0 && (u + v) < 1;
+        }
+
+        /// <summary>
+        /// Returns a scalar t from a value v between a range from min to max. Clamped between 0 and 1.
+        /// </summary>
+        public static float InverseLerp(float min, float max, float v)
+        {
+            float diff = max - min;
+            // Ensure that we don't get division by zero exceptions.
+            if (diff == 0) { return v >= max ? 1f : 0f; }
+            return MathHelper.Clamp((v - min) / diff, 0f, 1f);
         }
     }
 

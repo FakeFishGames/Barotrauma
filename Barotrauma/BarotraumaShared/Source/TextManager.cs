@@ -8,44 +8,73 @@ namespace Barotrauma
 {
     public static class TextManager
     {
-        private static Dictionary<string, List<string>> texts;
+        private static List<TextPack> textPacks = new List<TextPack>();
 
-        static TextManager()
+        public static string Language;
+
+        private static HashSet<string> availableLanguages = new HashSet<string>();
+        public static IEnumerable<string> AvailableLanguages
         {
-            Load(Path.Combine("Content", "Texts.xml"));            
+            get { return availableLanguages; }
         }
 
-        private static void Load(string file)
+        public static List<string> GetTextFiles()
         {
-            texts = new Dictionary<string, List<string>>();
+            var list = new List<string>();
+            GetTextFilesRecursive(Path.Combine("Content", "Texts"), ref list);
+            return list;
+        }
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;            
-
-            foreach (XElement subElement in doc.Root.Elements())
+        private static void GetTextFilesRecursive(string directory, ref List<string> list)
+        {
+            foreach (string file in Directory.GetFiles(directory))
             {
-                string infoName = subElement.Name.ToString().ToLowerInvariant();
-                List<string> infoList = null;
-                if (!texts.TryGetValue(infoName, out infoList))
+                list.Add(file);
+            }
+            foreach (string subDir in Directory.GetDirectories(directory))
+            {
+                GetTextFilesRecursive(subDir, ref list);
+            }
+        }
+       
+        public static void LoadTextPacks(string directory)
+        {
+            foreach (string file in Directory.GetFiles(directory))
+            {
+                try
                 {
-                    infoList = new List<string>();
-                    texts.Add(infoName, infoList);
+                    var textPack = new TextPack(file);
+                    availableLanguages.Add(textPack.Language);
+                    if (textPack.Language == Language) textPacks.Add(textPack);
                 }
-
-                infoList.Add(subElement.ElementInnerText());
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
+                }
+            }
+            foreach (string subDir in Directory.GetDirectories(directory))
+            {
+                LoadTextPacks(subDir);
             }
         }
 
-        public static string Get(string textTag)
+        public static string Get(string textTag, bool returnNull = false)
         {
-            if (!texts.TryGetValue(textTag.ToLowerInvariant(), out List<string> textList) || !textList.Any())
+            foreach (TextPack textPack in textPacks)
+            {
+                string text = textPack.Get(textTag);
+                if (text != null) return text;
+            }
+
+            if (returnNull)
+            {
+                return null;
+            }
+            else
             {
                 DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
                 return textTag;
             }
-
-            string text = textList[Rand.Int(textList.Count)].Replace(@"\n", "\n");
-            return text;
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)

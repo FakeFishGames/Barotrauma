@@ -71,35 +71,42 @@ namespace Barotrauma.Networking
                 else if (targetCharacter != null)
                 {
                     targetCharacter.SetOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), 
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()),
                             orderOption, senderCharacter);
                 }
 
                 if (NetIdUtils.IdMoreRecent(ID, LastID))
                 {
-                    GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                    GameMain.Client.AddChatMessage(
+                        new OrderChatMessage(order, orderOption, txt, targetEntity, targetCharacter, senderCharacter));
                     LastID = ID;
                 }
+                return;
             }
-            else
+
+            if (NetIdUtils.IdMoreRecent(ID, LastID))
             {
-                if (NetIdUtils.IdMoreRecent(ID, LastID))
+                switch (type)
                 {
-                    if (type == ChatMessageType.MessageBox)
-                    {
+                    case ChatMessageType.MessageBox:
                         new GUIMessageBox("", txt);
-                    }
-                    else if (type == ChatMessageType.Console)
-                    {
+                        break;
+                    case ChatMessageType.Console:
                         DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
-                    }
-                    else
-                    {
+                        break;
+                    case ChatMessageType.ServerLog:
+                        if (!Enum.TryParse(senderName, out ServerLog.MessageType messageType))
+                        {
+                            return;
+                        }
+                        GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
+                        break;
+                    default:
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
-                    }
-                    LastID = ID;
+                        break;
                 }
-            }
+                LastID = ID;
+            }            
         }
     }
 }

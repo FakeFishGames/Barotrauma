@@ -41,12 +41,29 @@ namespace Barotrauma
             }
         }
 
+        public override ScalableFont Font
+        {
+            get
+            {
+                return base.Font;
+            }
+            set
+            {
+                if (base.Font == value) return;
+                base.Font = value;
+                SetTextPos();
+            }
+        }
+
         public string Text
         {
             get { return text; }
             set
             {
                 if (Text == value) return;
+
+                //reset scale, it gets recalculated in SetTextPos
+                if (autoScale) textScale = 1.0f;
 
                 text = value;
                 wrappedText = value;
@@ -83,15 +100,51 @@ namespace Barotrauma
             }
         }
 
+        private bool autoScale;
+
+        /// <summary>
+        /// When enabled, the text is automatically scaled down to fit the textblock.
+        /// </summary>
+        public bool AutoScale
+        {
+            get { return autoScale; }
+            set
+            {
+                if (autoScale == value) return;
+                autoScale = value;
+                if (autoScale)
+                {
+                    SetTextPos();
+                }
+            }
+        }
+
         public Vector2 Origin
         {
             get { return origin; }
+        }
+
+        public Vector2 TextSize
+        {
+            get;
+            private set;
         }
 
         public Color TextColor
         {
             get { return textColor; }
             set { textColor = value; }
+        }
+
+        public Alignment TextAlignment
+        {
+            get { return textAlignment; }
+            set
+            {
+                if (textAlignment == value) return;
+                textAlignment = value;
+                SetTextPos();
+            }
         }
                 
         /// <summary>
@@ -116,12 +169,18 @@ namespace Barotrauma
             this.Text = text ?? "";
             if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
             {
-                rectT.Resize(new Point(rectT.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
+                CalculateHeightFromText();
             }
             SetTextPos();
 
             RectTransform.ScaleChanged += SetTextPos;
             RectTransform.SizeChanged += SetTextPos;
+        }
+
+        public void CalculateHeightFromText()
+        {
+            if (wrappedText == null) { return; }
+            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
         }
         
         public override void ApplyStyle(GUIComponentStyle style)
@@ -140,35 +199,40 @@ namespace Barotrauma
             var rect = Rect;
 
             overflowClipActive = false;
-
             wrappedText = text;
-
-            Vector2 size = MeasureText(text);           
+            
+            TextSize = MeasureText(text);           
 
             if (Wrap && rect.Width > 0)
             {
                 wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
-                size = MeasureText(wrappedText);
+                TextSize = MeasureText(wrappedText);
             }
             else if (OverflowClip)
             {
-                overflowClipActive = size.X > rect.Width - padding.X - padding.Z;
+                overflowClipActive = TextSize.X > rect.Width - padding.X - padding.Z;
             }
-                     
+
+            if (autoScale && textScale > 0.1f &&
+                (TextSize.X * textScale > rect.Width - padding.X - padding.Z || TextSize.Y * textScale > rect.Height - padding.Y - padding.W))
+            {
+                TextScale -= 0.05f;
+            }
+
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
-            origin = size * 0.5f;
+            origin = TextSize * 0.5f;
 
             if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
-                origin.X += (rect.Width / 2.0f - padding.X) - size.X / 2;
+                origin.X += (rect.Width / 2.0f - padding.X) - TextSize.X / 2 * textScale;
             
             if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
-                origin.X -= (rect.Width / 2.0f - padding.Z) - size.X / 2;
+                origin.X -= (rect.Width / 2.0f - padding.Z) - TextSize.X / 2 * textScale;
 
             if (textAlignment.HasFlag(Alignment.Top))
-                origin.Y += (rect.Height / 2.0f - padding.Y) - size.Y / 2;
+                origin.Y += (rect.Height / 2.0f - padding.Y) - TextSize.Y / 2 * textScale;
 
             if (textAlignment.HasFlag(Alignment.Bottom))
-                origin.Y -= (rect.Height / 2.0f - padding.W) - size.Y / 2;
+                origin.Y -= (rect.Height / 2.0f - padding.W) - TextSize.Y / 2 * textScale;
             
             origin.X = (int)origin.X;
             origin.Y = (int)origin.Y;
@@ -201,9 +265,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            Color currColor = color;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-            if (state == ComponentState.Selected) currColor = selectedColor;
+            Color currColor = GetCurrentColor(state);
 
             var rect = Rect;
 
@@ -214,8 +276,10 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
             {
+                spriteBatch.End();
                 Rectangle scissorRect = new Rectangle(rect.X + (int)padding.X, rect.Y, rect.Width - (int)padding.X - (int)padding.Z, rect.Height);
                 spriteBatch.GraphicsDevice.ScissorRectangle = scissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (!string.IsNullOrEmpty(text))
@@ -230,7 +294,9 @@ namespace Barotrauma
 
             if (overflowClipActive)
             {
+                spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred);
             }
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);

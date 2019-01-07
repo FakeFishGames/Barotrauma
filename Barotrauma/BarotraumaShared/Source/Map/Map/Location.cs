@@ -13,6 +13,12 @@ namespace Barotrauma
 
         public List<LocationConnection> Connections;
 
+        private HireManager hireManager;
+        public HireManager HireManager
+        {
+            get { return hireManager; }
+        }
+
         private string baseName;
         private int nameFormatIndex;
 
@@ -40,14 +46,12 @@ namespace Barotrauma
             this.type = LocationType.Random("", zone);
             this.name = RandomName(type);
             this.mapPosition = mapPosition;
-
-#if CLIENT
+            
             if (type.HasHireableCharacters)
             {
                 hireManager = new HireManager();
                 hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
             }
-#endif
 
             Connections = new List<LocationConnection>();
         }
@@ -63,14 +67,12 @@ namespace Barotrauma
 
             type = newType;
             name = type.NameFormats[nameFormatIndex % type.NameFormats.Count].Replace("[name]", baseName);
-
-#if CLIENT
+            
             if (type.HasHireableCharacters)
             {
                 hireManager = new HireManager();
                 hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
             }
-#endif
         }
 
         private string RandomName(LocationType type)

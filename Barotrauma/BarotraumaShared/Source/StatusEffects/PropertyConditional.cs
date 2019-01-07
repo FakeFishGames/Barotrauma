@@ -31,6 +31,8 @@ namespace Barotrauma
         public readonly OperatorType Operator;
         public readonly string Value;
 
+        public readonly string TargetItemComponentName;
+
         private readonly int cancelStatusEffect;
 
         public PropertyConditional(XAttribute attribute)
@@ -88,6 +90,8 @@ namespace Barotrauma
                     }
                     break;
             }
+
+            TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
 
             foreach (XElement subElement in attribute.Parent.Elements())
             {

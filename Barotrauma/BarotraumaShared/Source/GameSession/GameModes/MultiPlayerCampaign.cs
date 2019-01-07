@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Lidgren.Network;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -13,14 +14,26 @@ namespace Barotrauma
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
         {
-            get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
+            get
+            {
+#if SERVER
+                if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++;
+#endif
+                return lastUpdateID;
+            }
             set { lastUpdateID = value; }
         }
 
         private UInt16 lastSaveID;
         public UInt16 LastSaveID
         {
-            get { if (GameMain.Server != null && lastSaveID < 1) lastSaveID++; return lastSaveID; }
+            get
+            {
+#if SERVER
+                if (GameMain.Server != null && lastSaveID < 1) lastSaveID++;
+#endif
+                return lastSaveID;
+            }
             set { lastSaveID = value; }
         }
         
@@ -31,6 +44,8 @@ namespace Barotrauma
         }
 
         private static byte currentCampaignID;
+
+        private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
 
         public byte CampaignID
         {
@@ -44,40 +59,34 @@ namespace Barotrauma
             CampaignID = currentCampaignID;
         }
         
-        private void SetDelegates()
-        {
-            if (GameMain.Server != null)
-            {
-                CargoManager.OnItemsChanged += () => { LastUpdateID++; };
-                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
-            }
-        }
-
         public override void Start()
         {
             base.Start();            
-            lastUpdateID++;
+            if (GameMain.NetworkMember.IsServer) lastUpdateID++;
         }
-
 
         public override void End(string endMessage = "")
         {
             isRunning = false;
 
+#if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.GameSession.EndRound("");
-#if CLIENT
                 GameMain.GameSession.CrewManager.EndRound();
-#endif
                 return;                
             }
-            
+#endif
+
+#if SERVER
             lastUpdateID++;
 
-            bool success = 
-                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
-                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+            bool success =
+                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+
+#if CLIENT
+            success = success || (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+#endif
 
             /*if (success)
             {
@@ -92,17 +101,25 @@ namespace Barotrauma
             }*/
 
             GameMain.GameSession.EndRound("");
-
-            //TODO: save player inventories between mp campaign rounds
+            
+            foreach (Client c in GameMain.Server.ConnectedClients)
+            {
+                if (c.HasSpawned)
+                {
+                    //client has spawned this round -> remove old data (and replace with new one if the client still has an alive character)
+                    characterData.RemoveAll(cd => cd.MatchesClient(c));
+                }
+                
+                if (c.Character?.Info != null && !c.Character.IsDead)
+                {
+                    characterData.Add(new CharacterCampaignData(c));
+                }
+            }
 
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Inventory == null) continue;
-                foreach (Item item in c.Inventory.Items)
-                {
-                    if (item != null) item.Remove();
-                }
+                c.Inventory?.DeleteAllItems();
             }
 
 #if CLIENT
@@ -138,15 +155,28 @@ namespace Barotrauma
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
+#endif
         }
+
+        partial void SetDelegates();
 
         public static MultiPlayerCampaign LoadNew(XElement element)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Campaign"), null);
-            campaign.Load(element);            
+            campaign.Load(element);
             campaign.SetDelegates();
             
             return campaign;
+        }
+
+        public static string GetCharacterDataSavePath(string savePath)
+        {
+            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+        }
+
+        public string GetCharacterDataSavePath()
+        {
+            return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
 
         public void Load(XElement element)
@@ -187,6 +217,15 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            characterData.Clear();
+            string characterDataPath = GetCharacterDataSavePath();
+            var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
+            if (characterDataDoc?.Root == null) return;
+            foreach (XElement subElement in characterDataDoc.Root.Elements())
+            {
+                characterData.Add(new CharacterCampaignData(subElement));
+            }
         }
 
         public override void Save(XElement element)
@@ -197,61 +236,23 @@ namespace Barotrauma
             Map.Save(modeElement);
             element.Add(modeElement);
 
+            //save character data to a separate file
+            string characterDataPath = GetCharacterDataSavePath();
+            XDocument characterDataDoc = new XDocument(new XElement("CharacterData"));
+            foreach (CharacterCampaignData cd in characterData)
+            {
+                characterDataDoc.Root.Add(cd.Save());
+            }
+            try
+            {
+                characterDataDoc.Save(characterDataPath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving multiplayer campaign characters to \"" + characterDataPath + "\" failed!", e);
+            }
+
             lastSaveID++;
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c)
-        {
-            System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
-
-            msg.Write(CampaignID);
-            msg.Write(lastUpdateID);
-            msg.Write(lastSaveID);
-            msg.Write(map.Seed);
-            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-
-            msg.Write(Money);
-
-            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
-            {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
-                msg.Write((UInt16)pi.Quantity);
-            }
-        }
-        
-        public void ServerRead(NetBuffer msg, Client sender)
-        {
-            UInt16 selectedLocIndex = msg.ReadUInt16();
-            UInt16 purchasedItemCount = msg.ReadUInt16();
-
-            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
-            for (int i = 0; i < purchasedItemCount; i++)
-            {
-                UInt16 itemPrefabIndex = msg.ReadUInt16();
-                UInt16 itemQuantity = msg.ReadUInt16();
-                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
-            }
-
-            if (!sender.HasPermission(ClientPermissions.ManageCampaign))
-            {
-                DebugConsole.ThrowError("Client \""+sender.Name+"\" does not have a permission to manage the campaign");
-                return;
-            }
-
-            Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-
-            List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
-            foreach (PurchasedItem pi in currentItems)
-            {
-                CargoManager.SellItem(pi.ItemPrefab, pi.Quantity);
-            }
-
-            foreach (PurchasedItem pi in purchasedItems)
-            {
-                CargoManager.PurchaseItem(pi.ItemPrefab, pi.Quantity);
-            }
         }
     }
 }

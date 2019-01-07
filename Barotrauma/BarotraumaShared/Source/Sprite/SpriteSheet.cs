@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class SpriteSheet : Sprite
+    public partial class SpriteSheet : Sprite
     {
         private Rectangle[] sourceRects;
 
@@ -24,7 +24,19 @@ namespace Barotrauma
         {
             int columnCount = Math.Max(element.GetAttributeInt("columns", 1), 1);
             int rowCount = Math.Max(element.GetAttributeInt("rows", 1), 1);
-            
+            origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
+            Init(columnCount, rowCount);
+        }
+
+        public SpriteSheet(string filePath, int columnCount, int rowCount, Vector2 origin)
+            : base(filePath, origin)
+        {
+            this.origin = origin;
+            Init(columnCount, rowCount);
+        }
+
+        private void Init(int columnCount, int rowCount)
+        {
             sourceRects = new Rectangle[rowCount * columnCount];
 
             float cellWidth = SourceRect.Width / columnCount;
@@ -39,7 +51,6 @@ namespace Barotrauma
                 }
             }
 
-            origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             origin.X = origin.X * cellWidth;
             origin.Y = origin.Y * cellHeight;
         }
