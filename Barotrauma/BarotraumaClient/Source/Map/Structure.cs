@@ -207,6 +207,25 @@ namespace Barotrauma
             {
                 if (prefab.BackgroundSprite != null)
                 {
+                    bool drawDropShadow = Submarine != null && HasBody;
+                    Vector2 dropShadowOffset = Vector2.Zero;
+                    if (drawDropShadow)
+                    {
+                        dropShadowOffset = Submarine.WorldPosition - WorldPosition;
+                        if (dropShadowOffset != Vector2.Zero)
+                        {
+                            if (IsHorizontal)
+                            {
+                                dropShadowOffset = new Vector2(0.0f, Math.Sign(dropShadowOffset.Y) * 10.0f);
+                            }
+                            else
+                            {
+                                dropShadowOffset = new Vector2(Math.Sign(dropShadowOffset.X) * 10.0f, 0.0f);
+                            }
+                            dropShadowOffset.Y = -dropShadowOffset.Y;
+                        }
+                    }
+
                     if (DrawTiled)
                     {
                         SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
@@ -224,6 +243,17 @@ namespace Barotrauma
                             textureScale: TextureScale * Scale,
                             startOffset: backGroundOffset);
 
+                        if (drawDropShadow)
+                        {
+                            prefab.BackgroundSprite.DrawTiled(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                new Vector2(rect.Width, rect.Height),
+                                color: Color.Black * 0.5f,
+                                textureScale: TextureScale * Scale,
+                                startOffset: backGroundOffset);
+                        }
+
                         prefab.BackgroundSprite.effects = oldEffects;
                     }
                     else
@@ -236,6 +266,18 @@ namespace Barotrauma
                             scale: Scale,
                             rotate: 0,
                             spriteEffect: SpriteEffects);
+
+                        if (drawDropShadow)
+                        {
+                            prefab.BackgroundSprite.Draw(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                Color.Black * 0.5f,
+                                Vector2.Zero,
+                                scale: Scale,
+                                rotate: 0,
+                                spriteEffect: SpriteEffects);
+                        }
                     }
                 }
             }
