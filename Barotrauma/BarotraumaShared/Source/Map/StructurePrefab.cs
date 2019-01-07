@@ -107,6 +107,21 @@ namespace Barotrauma
             private set { size = value; }
         }
 
+        public Vector2 ScaledSize => size * Scale;
+
+        protected Vector2 textureScale = Vector2.One;
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                textureScale = new Vector2(
+                    MathHelper.Clamp(value.X, 0.01f, 10),
+                    MathHelper.Clamp(value.Y, 0.01f, 10));
+            }
+        }
+
         public Sprite BackgroundSprite
         {
             get;
@@ -203,8 +218,8 @@ namespace Barotrauma
                 sp.size = Vector2.Zero;
                 if (element.Attribute("width") == null && element.Attribute("height") == null)
                 {
-                    sp.size.X = sp.sprite.SourceRect.Width * sp.Scale;
-                    sp.size.Y = sp.sprite.SourceRect.Height * sp.Scale;
+                    sp.size.X = sp.sprite.SourceRect.Width;
+                    sp.size.Y = sp.sprite.SourceRect.Height;
                 }
                 else
                 {
@@ -234,6 +249,7 @@ namespace Barotrauma
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+            Vector2 size = ScaledSize;
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
             
             if (placePosition == Vector2.Zero)

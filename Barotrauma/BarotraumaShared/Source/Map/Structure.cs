@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -170,8 +171,7 @@ namespace Barotrauma
                         secRect.X += value.X; secRect.Y += value.Y;
                         sec.rect = secRect;
                     }
-                }
-                
+                }          
             }
         }
 
@@ -204,7 +204,6 @@ namespace Barotrauma
         {
             get
             {
-
                 Vector2 bodyOffset = prefab.BodyOffset;
                 if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
                 if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
@@ -255,7 +254,9 @@ namespace Barotrauma
 
             rect = rectangle;
             prefab = sp;
-
+#if CLIENT
+            TextureScale = sp.TextureScale;
+#endif
             spriteColor = prefab.SpriteColor;
             if (ResizeHorizontal && !ResizeVertical)
             {

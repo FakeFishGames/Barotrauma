@@ -2,8 +2,8 @@
   animationtype="SwimFast"
   flip="True"
   mirror="True"
-  waveamplitude="0.8168324"
-  wavelength="62.64811"
+  waveamplitude="0.6366303"
+  wavelength="110.5975"
   rotatetowardsmovement="True"
   torsotorque="200"
   headtorque="500"
@@ -13,6 +13,7 @@
   steertorque="75"
   movementspeed="4.792431"
   cyclespeed="1"
-  headangle="57.03106"
+  headangle="95.38663"
   torsoangle="90.76793"
-  tailangle="NaN" />
+  tailangle="NaN"
+  usesinemovement="False" />

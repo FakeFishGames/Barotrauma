@@ -44,13 +44,14 @@
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.3">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="1200"/>
-    
-    <!-- TODO: sprite and inventory icons -->
-    <Sprite texture="Content/Items/Medical/med.png" sourcerect="15,15,8,17" depth="0.6"/>
+      
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,450,64,64"/>
+    <Sprite texture="Content/Items/Medical/Medicines.png" sourcerect="435,0,62,115" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
 

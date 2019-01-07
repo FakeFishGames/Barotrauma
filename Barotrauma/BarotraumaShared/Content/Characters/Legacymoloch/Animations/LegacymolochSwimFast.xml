@@ -1,0 +1,13 @@
+﻿<LegacymolochSwimFast
+  AnimationType="SwimFast"
+  movementspeed="3"
+  waveamplitude="0"
+  mirror="True"
+  rotatetowardsmovement="False"
+  flip="True"
+  wavelength="1"
+  footangle="NaN"
+  steertorque="25"
+  headangle="-90"
+  torsoangle="NaN"
+  animationtype="SwimFast" />

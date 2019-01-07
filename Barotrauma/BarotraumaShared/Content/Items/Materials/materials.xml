@@ -41,7 +41,7 @@
     <Price locationtype="City" buyprice="23"/>
     <Price locationtype="Outpost" buyprice="23"/>
 
-    <!-- TODO: sprite and inventory icon -->
+    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
     <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -102,7 +102,8 @@
     Tags="smallitem"
     canbepicked="true"
     description="Used in the manufacture of lamps, explosives and some medical compounds."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="30"/>
@@ -112,9 +113,9 @@
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="339,196,29,58" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="29" height="58" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -171,7 +172,8 @@
     Tags="smallitem"
     canbepicked="true"
     description="Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="47"/>
@@ -179,11 +181,10 @@
     <Price locationtype="City" buyprice="47"/>
     <Price locationtype="Outpost" buyprice="47"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="81,195,29,59" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="29" height="59" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -216,7 +217,8 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="47"/>
@@ -224,11 +226,10 @@
     <Price locationtype="City" buyprice="47"/>
     <Price locationtype="Outpost" buyprice="47"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="273,196,28,58" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="28" height="58" density="15"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -261,7 +262,8 @@
     Tags="smallitem"
     canbepicked="true"
     description="Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="71"/>
@@ -269,11 +271,10 @@
     <Price locationtype="City" buyprice="71"/>
     <Price locationtype="Outpost" buyprice="71"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="836,148,58,24" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="58" height="24" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -284,7 +285,8 @@
     Tags="smallitem"
     canbepicked="true"
     description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="71"/>
@@ -294,9 +296,9 @@
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="144,195,29,58" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="29" height="58" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
@@ -319,7 +321,8 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="90"/>
@@ -329,7 +332,7 @@
 
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
 
@@ -342,7 +345,8 @@
     Tags="smallitem"
     canbepicked="true"
     description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="90"/>
@@ -350,11 +354,10 @@
     <Price locationtype="City" buyprice="90"/>
     <Price locationtype="Outpost" buyprice="90"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="209,195,29,58" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="29" height="58" density="15"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
@@ -378,7 +381,8 @@
     Tags="smallitem"
     canbepicked="true"
     description="Most commonly used in the manufacture of batteries and antipsychotic drugs."
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="119"/>
@@ -386,11 +390,10 @@
     <Price locationtype="City" buyprice="119"/>
     <Price locationtype="Outpost" buyprice="119"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="18,194,29,59" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="29" height="59" density="15"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -398,22 +401,21 @@
     name="Chlorine"
     identifier="chlorine"
     category="Material"
-    spritecolor="1.0,1.0,1.0,0.6"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
     description="Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative."
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="15"/>
     <Price locationtype="Military" buyprice="20"/>
     <Price locationtype="City" buyprice="25"/>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
-    <Sprite texture="Content/Items/Medical/med.png" sourcerect="15,15,8,17" depth="0.6"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="17,259,29,57" depth="0.6"/>
 
-    <Body width="8" height="17" density="20"/>
+    <Body width="29" height="57" density="20"/>
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
@@ -457,7 +459,8 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -470,11 +473,10 @@
       <Item identifier="iron"/>
     </Deconstruct>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,146,56,28" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="56" height="28" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>  
@@ -484,7 +486,8 @@
     category="Material"
     Tags="smallitem"
     canbepicked="true"
-    cargocontaineridentifier="metalcrate">
+    cargocontaineridentifier="metalcrate"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50"/>
@@ -497,11 +500,10 @@
       <Item identifier="titanium"/>
     </Deconstruct>
 
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="196,787,57,27" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="57" height="27" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -641,17 +643,17 @@
     identifier="incendium"
     category="Material"
     Tags="smallitem"
-    spritecolor="0.5,0.0,0.0,1.0"
     cargocontaineridentifier="metalcrate"
-    canbepicked="true">
+    canbepicked="true"
+    scal ="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,320,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="2,337,60,26" depth="0.55"/>
 
-    <Body width="24" height="12" density="60"/>
+    <Body width="60" height="26" density="60"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -673,15 +675,16 @@
     category="Material"
     Tags="smallitem"
     cargocontaineridentifier="metalcrate"
-    canbepicked="true">
+    canbepicked="true"
+    scale="0.5">
 
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200"/>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,146,60,26" depth="0.55"/>
 
-    <Body width="24" height="12" density="50"/>
+    <Body width="60" height="26" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>

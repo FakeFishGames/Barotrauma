@@ -129,15 +129,22 @@
   <WorkshopItemTitle>Title</WorkshopItemTitle>
   <WorkshopItemDescription>Description</WorkshopItemDescription>
   <WorkshopItemTags>Tags</WorkshopItemTags>
+  <WorkshopItemCreateHelpText>You can use this tab to publish new items in the Steam Workshop. You can either select an existing submarine or a content package from the "Your items" menu at the left, or create an entirely new item by clicking the "Create a new item" button.</WorkshopItemCreateHelpText>
   <WorkshopItemPreviewImage>Preview Image</WorkshopItemPreviewImage>
   <WorkshopItemBrowse>Browse...</WorkshopItemBrowse>
   <WorkshopItemCorePackage>Core package</WorkshopItemCorePackage>
   <WorkshopItemCorePackageTooltip>Core packages are special content packages that contain all the core files (executables, configuration files) the game won't run without. There must always be one (and only one) core package selected. Only select this if you wish to create a mod that replaces all the Vanilla files. Mods that only add things to the Vanilla game (or another core package) should not be marked as core packages.</WorkshopItemCorePackageTooltip>
   <WorkshopItemFiles>Files included in the item</WorkshopItemFiles>
   <WorkshopItemShowFolder>Show folder</WorkshopItemShowFolder>
+  <WorkshopItemChangenote>Change note</WorkshopItemChangenote>
+  <WorkshopItemChangenoteTooltip>You're publishing an update for an existing Workshop item. You can use the change note to explain what's new in the update.</WorkshopItemChangenoteTooltip>
   <WorkshopItemRefreshFileList>Refresh</WorkshopItemRefreshFileList>
   <WorkshopItemAddFiles>Add files...</WorkshopItemAddFiles>
-  <WorkshopItemPublish>Publish</WorkshopItemPublish>
+  <WorkshopItemPublish>Publish item</WorkshopItemPublish>
+  <WorkshopItemUpdate>Update item</WorkshopItemUpdate>
+  <WorkshopItemDelete>Delete item</WorkshopItemDelete>
+  <WorkshopItemDeleteTooltip>Deletes the item from Steam Workshop.</WorkshopItemDeleteTooltip>
+  <WorkshopItemDeleteVerification>Are you sure you want to delete the item "[itemname]" from the Steam Workshop?</WorkshopItemDeleteVerification>
   <WorkshopItemPublishTooltip>Uploads the files to the Steam Workshop.</WorkshopItemPublishTooltip>
   <WorkshopItemFilePathValid>File will be included in the Workshop item.</WorkshopItemFilePathValid>
   <WorkshopItemFileNotFound>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have - otherwise you should copy the file to the Workshop item folder.</WorkshopItemFileNotFound>
@@ -153,6 +160,8 @@
   <WorkshopErrorOverwriteOnEnable>Cannot enable workshop item "[itemname]". The file "[filename]" would be overwritten by the item.</WorkshopErrorOverwriteOnEnable>
   <WorkshopErrorIllegalPathOnEnable>Could not install the file "[filename]". Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder.</WorkshopErrorIllegalPathOnEnable>
   <WorkshopErrorEnableFailed>Enabling the workshop item "[itemname]" failed.</WorkshopErrorEnableFailed>
+  <WorkshopItemIncompatible>Incompatible</WorkshopItemIncompatible>
+  <WorkshopItemIncompatibleTooltip>This Workshop item is not compatible with your version of Barotrauma.</WorkshopItemIncompatibleTooltip>
   
   <!-- Settings menu -->
   <Settings>Settings</Settings>
@@ -192,6 +201,9 @@
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
   <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
   <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
+  <ContentPackageNotFound>Content package "[packagepath]" not found.</ContentPackageNotFound>
+  <IncompatibleContentPackage>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for the version [packageversion], your game version is [gameversion].</IncompatibleContentPackage>
+  <IncompatibleContentPackageUnknownVersion>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for an unknown version, your game version is [gameversion].</IncompatibleContentPackageUnknownVersion>
 
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
@@ -423,6 +435,11 @@
   <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
   <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
   <ServerListIncompatibleContentPackage>Content package "[contentpackage]" (MD5: [hash]) required to play on this server.</ServerListIncompatibleContentPackage>
+  <ServerListContentPackageNotEnabled>You need to enable the content package in the game's settings "[contentpackage]" to play on this server.</ServerListContentPackageNotEnabled>
+  <ServerListIncompatibleContentPackageWorkshopAvailable>Content package "[contentpackage]" required to play on this server. You can install the package from the Steam Workshop.</ServerListIncompatibleContentPackageWorkshopAvailable>
+  <ServerListSubscribeMissingPackages>Get missing packages from Workshop</ServerListSubscribeMissingPackages>
+  <ServerListSubscribeMissingPackagesTooltip>Subscribe to the missing content packages in the Steam Workshop and open the Workshop menu where you can download and enable them.</ServerListSubscribeMissingPackagesTooltip>
+  <ServerListSubscribeMissingPackagesTooltipNoSteam>The missing content packages are available in the Steam Workshop, but Steam features are not available if you don't own Barotrauma on Steam.</ServerListSubscribeMissingPackagesTooltipNoSteam>
   <FilterServers>Filter servers</FilterServers>
   <FilterPassword>No password required</FilterPassword>
   <FilterIncompatibleServers>Hide incompatible servers</FilterIncompatibleServers>

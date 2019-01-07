@@ -8,12 +8,13 @@
     focusonselected="true"
     offsetonselected="700"
     linkable="true"
-    allowedlinks="depthchargeammosource">
+    allowedlinks="depthchargeammosource"
+    scale="0.5">
     
-    <Sprite texture="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
+    <Sprite texture="DepthChargeTube.png" depth="0.01" sourcerect="0,0,85,149"/>
 
     <Turret canbeselected="false" linkable="true" characterusable="false" 
-            barrelpos="23, 76"
+            barrelpos="42, 149"
             rotationlimits="90,90"
             powerconsumption="0.0"/>
 
@@ -30,11 +31,12 @@
     tags="depthchargeammosource"
     category="Machine"
     linkable="true"
-    allowedlinks="depthchargelauncher">
+    allowedlinks="depthchargelauncher"
+    scale="0.5">
 
-    <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
+    <Sprite texture="DepthChargeLoader.png" depth="0.8" sourcerect="0,0,125,188"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected="true"
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true"
                    autointeractwithcontained="true">
       <Containable identifiers="depthchargeammo"/>      
     </ItemContainer>

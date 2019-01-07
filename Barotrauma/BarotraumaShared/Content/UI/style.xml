@@ -330,13 +330,6 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIRadioButton>
   
-  <GUIServerListCompatibleTickBox
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="389, 166, 16, 16"/>
-  </GUIServerListCompatibleTickBox>
-
   <GUIServerListPasswordTickBox
     color="0.2,0.2,0.2,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
