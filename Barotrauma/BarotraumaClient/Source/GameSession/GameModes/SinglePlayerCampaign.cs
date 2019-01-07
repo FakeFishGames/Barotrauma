@@ -77,6 +77,15 @@ namespace Barotrauma
         {
             if (Character.Controlled != null && Character.Controlled.Submarine != null)
             {
+                if (Character.Controlled.Submarine == Level.Loaded.StartOutpost)
+                {
+                    return Level.Loaded.StartOutpost.DockedTo.FirstOrDefault();
+                }
+                else if (Character.Controlled.Submarine == Level.Loaded.EndOutpost)
+                {
+                    return Level.Loaded.StartOutpost.DockedTo.FirstOrDefault();
+                }
+
                 if (Character.Controlled.Submarine.AtEndPosition || Character.Controlled.Submarine.AtStartPosition)
                 {
                     return Character.Controlled.Submarine;
@@ -84,7 +93,7 @@ namespace Barotrauma
                 return null;
             }
 
-            Submarine closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            Submarine closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter, ignoreOutposts: true);
             if (closestSub != null && (closestSub.AtEndPosition || closestSub.AtStartPosition))
             {
                 return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
