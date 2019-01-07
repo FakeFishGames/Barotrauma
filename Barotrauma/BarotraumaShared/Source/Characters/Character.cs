@@ -203,6 +203,10 @@ namespace Barotrauma
 
         public bool ResetInteract;
 
+        //text displayed when the character is highlighted if custom interact is set
+        public string customInteractHUDText;
+        private Action<Character> onCustomInteract;
+        
         private float lockHandsTimer;
         public bool LockHands
         {
@@ -1333,7 +1337,7 @@ namespace Barotrauma
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
             if (c == this || Removed || !c.Enabled || !c.CanBeSelected) return false;
-            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged) return false;
+            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && c.onCustomInteract == null) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
@@ -1448,6 +1452,15 @@ namespace Barotrauma
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Set an action that's invoked when another character interacts with this one. The hud text is displayed on the character when highlighted.
+        /// </summary>
+        public void SetCustomInteract(Action<Character> onCustomInteract, string hudText)
+        {
+            this.onCustomInteract = onCustomInteract;
+            customInteractHUDText = hudText;
         }
 
         private List<Item> debugInteractablesInRange = new List<Item>();
@@ -1705,6 +1718,10 @@ namespace Barotrauma
                     if (Controlled == this) CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
 #endif
                 }
+            }
+            else if (focusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.onCustomInteract != null)
+            {
+                FocusedCharacter.onCustomInteract(this);
             }
             else if (focusedItem != null)
             {
@@ -2283,7 +2300,7 @@ namespace Barotrauma
 
         public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
         {
-            if (IsDead) return;
+            if (IsDead || CharacterHealth.Unkillable) { return; }
 
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.Client != null)

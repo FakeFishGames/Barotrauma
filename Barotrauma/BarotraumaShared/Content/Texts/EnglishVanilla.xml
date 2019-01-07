@@ -286,6 +286,7 @@
   <UseItemButton>Use</UseItemButton>
   <GrabHint>[[key]] Grab</GrabHint>
   <HealHint>[[key]] Heal</HealHint>
+  <TalkHint>[[key]] Talk</TalkHint>
   <QuickUseAction.Equip>Equip</QuickUseAction.Equip>
   <QuickUseAction.Unequip>Unequip</QuickUseAction.Unequip>
   <QuickUseAction.Drop>Hold to drop</QuickUseAction.Drop>

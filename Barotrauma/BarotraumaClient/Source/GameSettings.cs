@@ -32,12 +32,6 @@ namespace Barotrauma
             }
         }
 
-
-        public KeyOrMouse KeyBind(InputType inputType)
-        {
-            return keyMapping[(int)inputType];
-        }
-
         private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
