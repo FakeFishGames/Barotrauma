@@ -3295,17 +3295,7 @@ namespace Barotrauma
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
                                         }
-                                        if (lockSpriteOrigin)
-                                        {
-                                            // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                                            var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
-                                            limb.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - limb.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
-                                        }
-                                        else
-                                        {
-                                            // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                                            limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
-                                        }
+                                        RecalculateOrigin(limb);
                                         TryUpdateLimbParam(limb, "sourcerect", newRect);
                                         if (limbPairEditing)
                                         {
@@ -3317,19 +3307,23 @@ namespace Barotrauma
                                                     otherLimb.DamagedSprite.SourceRect = newRect;
                                                 }
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
-                                                if (lockSpriteOrigin)
-                                                {
-                                                    // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(otherLimb));
-                                                    otherLimb.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - otherLimb.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
-                                                }
-                                                else
-                                                {
-                                                    // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                                                    otherLimb.ActiveSprite.RelativeOrigin = otherLimb.ActiveSprite.RelativeOrigin;
-                                                }
+                                                RecalculateOrigin(otherLimb);
                                             });
                                         };
+                                        void RecalculateOrigin(Limb l)
+                                        {
+                                            if (lockSpriteOrigin)
+                                            {
+                                                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                                                var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
+                                                l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                            }
+                                            else
+                                            {
+                                                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                                                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
+                                            }
+                                        }
                                     };
                                     w.PreDraw += (sb, dTime) => w.refresh();
                                 });    
@@ -3358,21 +3352,9 @@ namespace Barotrauma
                                         limb.ActiveSprite.size = new Vector2(width, height);
                                         if (recalculateCollider)
                                         {
-                                            limb.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
-                                            TryUpdateLimbParam(limb, "radius", ConvertUnits.ToDisplayUnits(limb.body.radius));
-                                            TryUpdateLimbParam(limb, "width", ConvertUnits.ToDisplayUnits(limb.body.width));
-                                            TryUpdateLimbParam(limb, "height", ConvertUnits.ToDisplayUnits(limb.body.height));
+                                            RecalculateCollider(limb);
                                         }
-                                        if (lockSpriteOrigin)
-                                        {
-                                            // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                                            limb.ActiveSprite.Origin = limb.ActiveSprite.Origin;
-                                        }
-                                        else
-                                        {
-                                            // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                                            limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
-                                        }
+                                        RecalculateOrigin(limb);
                                         // TODO: refresh the origin tooltip
                                         if (limb.DamagedSprite != null)
                                         {
@@ -3384,22 +3366,10 @@ namespace Barotrauma
                                             UpdateOtherLimbs(limb, otherLimb =>
                                             {
                                                 otherLimb.ActiveSprite.SourceRect = newRect;
-                                                if (lockSpriteOrigin)
-                                                {
-                                                    // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                                                    otherLimb.ActiveSprite.Origin = otherLimb.ActiveSprite.Origin;
-                                                }
-                                                else
-                                                {
-                                                    // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                                                    otherLimb.ActiveSprite.RelativeOrigin = otherLimb.ActiveSprite.RelativeOrigin;
-                                                }
+                                                RecalculateOrigin(otherLimb);
                                                 if (recalculateCollider)
                                                 {
-                                                    otherLimb.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
-                                                    TryUpdateLimbParam(limb, "radius", ConvertUnits.ToDisplayUnits(otherLimb.body.radius));
-                                                    TryUpdateLimbParam(limb, "width", ConvertUnits.ToDisplayUnits(otherLimb.body.width));
-                                                    TryUpdateLimbParam(limb, "height", ConvertUnits.ToDisplayUnits(otherLimb.body.height));
+                                                    RecalculateCollider(otherLimb);
                                                 }
                                                 if (otherLimb.DamagedSprite != null)
                                                 {
@@ -3408,6 +3378,26 @@ namespace Barotrauma
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
                                             });
                                         };
+                                        void RecalculateCollider(Limb l)
+                                        {
+                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
+                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius));
+                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width));
+                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height));
+                                        }
+                                        void RecalculateOrigin(Limb l)
+                                        {
+                                            if (lockSpriteOrigin)
+                                            {
+                                                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                                                l.ActiveSprite.Origin = l.ActiveSprite.Origin;
+                                            }
+                                            else
+                                            {
+                                                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                                                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
+                                            }
+                                        }
                                     };
                                     w.PreDraw += (sb, dTime) => w.refresh();
                                 });
