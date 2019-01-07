@@ -43,21 +43,21 @@ namespace Barotrauma.Networking
             }
         }
 
-        public static void Create(UInt16? storedBufferID=null)
+        public static void Create(string deviceName, UInt16? storedBufferID=null)
         {
             if (Instance != null)
             {
                 throw new Exception("Tried to instance more than one VoipCapture object");
             }
 
-            Instance = new VoipCapture();
+            Instance = new VoipCapture(deviceName);
             Instance.LatestBufferID = storedBufferID??BUFFER_COUNT-1;
         }
 
-        private VoipCapture() : base(GameMain.Client?.ID ?? 0,true,false) {
+        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0,true,false) {
             //set up capture device
-            captureDevice = Alc.CaptureOpenDevice(null, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
-            
+            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
+
             ALError alError = AL.GetError();
             AlcError alcError = Alc.GetError(captureDevice);
             if (alcError != AlcError.NoError)
