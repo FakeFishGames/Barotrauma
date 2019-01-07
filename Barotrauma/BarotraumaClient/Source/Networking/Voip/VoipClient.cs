@@ -1,9 +1,11 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Sounds;
+using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -50,8 +52,8 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (VoipCapture.Instance == null) VoipCapture.Create(null,storedBufferID);
-                if (VoipCapture.Instance.EnqueuedTotalLength == 0) return;
+                if (VoipCapture.Instance == null) VoipCapture.Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
+                if (VoipCapture.Instance.EnqueuedTotalLength <= 0) return;
             }
 
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
@@ -72,9 +74,18 @@ namespace Barotrauma.Networking
         {
             byte queueId = msg.ReadByte();
             VoipQueue queue = queues.Find(q => q.QueueID == queueId);
+            
             if (queue!=null)
             {
-                queue.Read(msg);
+                if (queue.Read(msg))
+                {
+                    Client client = gameClient.ConnectedClients.Find(c => c.VoipQueue == queue);
+                    if (client.VoipSound == null)
+                    {
+                        DebugConsole.NewMessage("recreating voipsound", Color.Lime);
+                        client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
+                    }
+                }
             }
             else
             {

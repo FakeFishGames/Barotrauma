@@ -14,8 +14,7 @@ namespace Barotrauma.Sounds
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
-        private List<string> alcCaptureDeviceNames;
-
+        
         public enum SourcePoolIndex
         {
             Default = 0,
@@ -163,16 +162,7 @@ namespace Barotrauma.Sounds
             {
                 throw new Exception("Error setting distance model: " + AL.GetErrorString(alError));
             }
-
-            if (Alc.IsExtensionPresent(IntPtr.Zero, "ALC_EXT_CAPTURE"))
-            {
-                alcCaptureDeviceNames = new List<string>(Alc.GetString(IntPtr.Zero, AlcGetStringList.CaptureDeviceSpecifier));
-            }
-            else
-            {
-                alcCaptureDeviceNames = null;
-            }
-
+            
             listenerOrientation = new float[6];
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
@@ -422,14 +412,7 @@ namespace Barotrauma.Sounds
                 Thread.Sleep(50); //TODO: use a separate thread for network audio?
             }
         }
-
-        public string GetCaptureDeviceName(int i)
-        {
-            if (alcCaptureDeviceNames == null) return "[N/A]";
-            if (i < 0 || i >= alcCaptureDeviceNames.Count) return "[N/A]";
-            return alcCaptureDeviceNames[i];
-        }
-
+        
         public void Dispose()
         {
             lock (playingChannels)

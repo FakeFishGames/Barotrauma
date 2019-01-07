@@ -54,7 +54,10 @@ namespace Barotrauma.Networking
             Instance.LatestBufferID = storedBufferID??BUFFER_COUNT-1;
         }
 
-        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0,true,false) {
+        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0,true,false)
+        {
+            VoipConfig.SetupEncoding();
+
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
 
@@ -75,8 +78,6 @@ namespace Barotrauma.Networking
             {
                 throw new Exception("Failed to start capturing: " + alcError.ToString());
             }
-
-            VoipConfig.SetupEncoding();
 
             capturing = true;
             captureThread = new Thread(UpdateCapture);
@@ -181,7 +182,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Read(NetBuffer msg)
+        public override bool Read(NetBuffer msg)
         {
             throw new Exception("Called Read on a VoipCapture object");
         }
