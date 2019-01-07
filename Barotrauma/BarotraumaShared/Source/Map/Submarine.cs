@@ -203,8 +203,12 @@ namespace Barotrauma
         {
             get 
             {
-                if (Level.Loaded == null) return false;
-                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance);
+                if (Level.Loaded == null) { return false; }
+                if (Level.Loaded.EndOutpost != null)
+                {
+                    return DockedTo.Contains(Level.Loaded.EndOutpost);
+                }
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
@@ -212,8 +216,12 @@ namespace Barotrauma
         {
             get
             {
-                if (Level.Loaded == null) return false;
-                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance);
+                if (Level.Loaded == null) { return false; }
+                if (Level.Loaded.StartOutpost != null)
+                {
+                    return DockedTo.Contains(Level.Loaded.StartOutpost);
+                }
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 

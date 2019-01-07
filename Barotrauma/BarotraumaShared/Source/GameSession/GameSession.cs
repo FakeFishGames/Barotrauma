@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -45,8 +46,7 @@ namespace Barotrauma
         {
             get
             {
-                CampaignMode mode = (GameMode as CampaignMode);
-                return (mode == null) ? null : mode.Map;
+                return (GameMode as CampaignMode)?.Map;
             }
         }
 
@@ -217,7 +217,40 @@ namespace Barotrauma
             if (level != null)
             {
                 level.Generate(mirrorLevel);
-                submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition));
+                if (level.StartOutpost != null)
+                {
+                    float closestDistance = 0.0f;
+                    DockingPort myPort = null, outPostPort = null;
+                    foreach (DockingPort port in DockingPort.List)
+                    {
+                        if (port.IsHorizontal) { continue; }
+                        if (port.Item.Submarine == level.StartOutpost)
+                        {
+                            outPostPort = port;
+                            continue;
+                        }
+                        if (port.Item.Submarine != submarine) { continue; }
+
+                        float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
+                        if (myPort == null || dist < closestDistance)
+                        {
+                            myPort = port;
+                            closestDistance = dist;
+                        }
+                    }
+
+                    if (myPort != null && outPostPort != null)
+                    {
+                        Vector2 portDiff = myPort.Item.WorldPosition - submarine.WorldPosition;
+                        submarine.SetPosition((outPostPort.Item.WorldPosition - portDiff) - Vector2.UnitY * outPostPort.DockedDistance);
+                        myPort.Dock(outPostPort);
+                        myPort.Lock(true);
+                    }
+                }
+                else
+                {
+                    submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition));
+                }
             }
 
             Entity.Spawner = new EntitySpawner();
