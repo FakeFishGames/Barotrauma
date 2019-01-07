@@ -15,8 +15,14 @@ namespace Barotrauma.Sounds
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
         private List<string> alcCaptureDeviceNames;
-        private uint[] alSources;
 
+        public enum SourcePoolIndex
+        {
+            Default = 0,
+            Voice = 1
+        }
+        private SoundSourcePool[] sourcePools;
+        
         private List<Sound> loadedSounds;
         private SoundChannel[] playingChannels;
 
@@ -146,50 +152,10 @@ namespace Barotrauma.Sounds
 
             ALError alError = ALError.NoError;
 
-            alSources = new uint[SOURCE_COUNT];
-            for (int i=0;i<SOURCE_COUNT;i++)
-            {
-                AL.GenSource(out alSources[i]);
-                alError = AL.GetError();
-                if (alError!=ALError.NoError)
-                {
-                    throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
-                }
+            sourcePools = new SoundSourcePool[2];
+            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool();
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(4);
 
-                if (!AL.IsSource(alSources[i]))
-                {
-                    throw new Exception("Generated alSource["+i.ToString()+"] is invalid!");
-                }
-                
-                AL.SourceStop(alSources[i]);
-                alError = AL.GetError();
-                if (alError!=ALError.NoError)
-                {
-                    throw new Exception("Error stopping newly generated alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
-                }
-
-                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Error setting min gain: " + AL.GetErrorString(alError));
-                }
-
-                AL.Source(alSources[i], ALSourcef.MaxGain, 1.0f);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Error setting max gain: " + AL.GetErrorString(alError));
-                }
-
-                AL.Source(alSources[i], ALSourcef.RolloffFactor, 1.0f);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Error setting rolloff factor: " + AL.GetErrorString(alError));
-                }
-            }
-            
             AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
             
             alError = AL.GetError();
@@ -253,16 +219,16 @@ namespace Barotrauma.Sounds
             return playingChannels[ind];
         }
 
-        public uint GetSourceFromIndex(int ind)
+        public uint GetSourceFromIndex(SourcePoolIndex poolIndex, int srcInd)
         {
-            if (ind < 0 || ind >= SOURCE_COUNT) return 0;
+            if (srcInd < 0 || srcInd >= sourcePools[(int)poolIndex].ALSources.Length) return 0;
 
-            if (!AL.IsSource(alSources[ind]))
+            if (!AL.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
             {
-                throw new Exception("alSources[" + ind.ToString() + "] is invalid!");
+                throw new Exception("alSources[" + srcInd.ToString() + "] is invalid!");
             }
 
-            return alSources[ind];
+            return sourcePools[(int)poolIndex].ALSources[srcInd];
         }
 
         public int AssignFreeSourceToChannel(SoundChannel newChannel)
@@ -278,7 +244,7 @@ namespace Barotrauma.Sounds
                         if (playingChannels[i]!=null) playingChannels[i].Dispose();
                         playingChannels[i] = newChannel;
 
-                        if (!AL.IsSource(alSources[i]))
+                        if (!AL.IsSource(sourcePools[(int)newChannel.Sound.SourcePoolIndex].ALSources[i]))
                         {
                             throw new Exception("alSources[" + i.ToString() + "] is invalid!");
                         }
@@ -296,8 +262,8 @@ namespace Barotrauma.Sounds
         {
             for (int i=0;i<SOURCE_COUNT;i++)
             {
-                AL.Source(alSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
-                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
+                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
+                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MinGain, 0.0f);
             }
         }
 #endif
@@ -481,15 +447,8 @@ namespace Barotrauma.Sounds
             {
                 loadedSounds[i].Dispose();
             }
-            for (int i = 0; i < SOURCE_COUNT; i++)
-            {
-                AL.DeleteSource(ref alSources[i]);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Failed to delete alSources[" + i.ToString() + "]: " + AL.GetErrorString(alError));
-                }
-            }
+            sourcePools[(int)SourcePoolIndex.Default].Dispose();
+            sourcePools[(int)SourcePoolIndex.Voice].Dispose();
             
             if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
             {
