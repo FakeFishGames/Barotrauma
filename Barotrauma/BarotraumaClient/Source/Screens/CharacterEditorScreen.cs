@@ -3259,7 +3259,23 @@ namespace Barotrauma
                                     var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
                                     w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
                                     sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
-                                    // TODO: limb pair editing
+                                    if (limb.DamagedSprite != null)
+                                    {
+                                        limb.DamagedSprite.RelativeOrigin = sprite.RelativeOrigin;
+                                    }
+                                    TryUpdateLimbParam(limb, "origin", sprite.RelativeOrigin);
+                                    if (limbPairEditing)
+                                    {
+                                        UpdateOtherLimbs(limb, otherLimb =>
+                                        {
+                                            otherLimb.ActiveSprite.RelativeOrigin = sprite.RelativeOrigin;
+                                            if (otherLimb.DamagedSprite != null)
+                                            {
+                                                otherLimb.DamagedSprite.RelativeOrigin = sprite.RelativeOrigin;
+                                            }
+                                            TryUpdateLimbParam(otherLimb, "origin", sprite.RelativeOrigin);
+                                        });
+                                    }
                                 };
                                 w.PreUpdate += dTime =>
                                 {
