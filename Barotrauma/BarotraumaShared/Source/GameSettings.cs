@@ -108,8 +108,8 @@ namespace Barotrauma
             get { return windowMode; }
             set
             {
-#if OSX
-                // Fullscreen is broken on macOS, so just force any usage of it to borderless windowed.
+#if (OSX)
+                // Fullscreen doesn't work on macOS, so just force any usage of it to borderless windowed.
                 if (value == WindowMode.Fullscreen)
                 {
                     windowMode = WindowMode.BorderlessWindowed;
