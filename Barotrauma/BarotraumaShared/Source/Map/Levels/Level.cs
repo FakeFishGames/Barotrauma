@@ -687,18 +687,40 @@ namespace Barotrauma
                     var outpost = new Submarine(outpostFile, tryLoad: false);
                     outpost.Load(unloadPrevious: false);
                     outpost.PhysicsBody.FarseerBody.IsStatic = true;
-                    foreach (MapEntity me in MapEntity.mapEntityList)
-                    {
-                        //TODO: make everything in the outpost indestructible and non-interactable (for now)
-                    }
                     outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
-                    if (i == 0)
+                    if ((i == 0) == !mirror)
                     {
                         StartOutpost = outpost;
                     }
                     else
                     {
                         EndOutpost = outpost;
+                    }
+                    
+                    foreach (MapEntity me in MapEntity.mapEntityList)
+                    {
+                        if (me.Submarine != outpost) { continue; }
+                        if (me is Item item)
+                        {
+                            foreach (ItemComponent ic in item.components)
+                            {
+                                if (ic is ConnectionPanel connectionPanel)
+                                {
+                                    //prevent rewiring
+                                    connectionPanel.Locked = true;
+                                }
+                                else if (ic is Pickable pickable)
+                                {
+                                    //prevent picking up (or deattaching) items
+                                    pickable.CanBePicked = false;
+                                    pickable.CanBeSelected = false;
+                                }
+                            }
+                        }
+                        else if (me is Structure structure)
+                        {
+                            structure.Indestructible = true;
+                        }
                     }
                 }
             }
@@ -1311,7 +1333,7 @@ namespace Barotrauma
                 if (Submarine.PickBody(
                     ConvertUnits.ToSimUnits(startPos),
                     ConvertUnits.ToSimUnits(endPos),
-                    null, Physics.CollisionLevel) != null)
+                    null, Physics.CollisionLevel | Physics.CollisionWall) != null)
                 {
                     position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.Normalize(startPos - endPos) * offsetFromWall;
                     break;
