@@ -3315,8 +3315,16 @@ namespace Barotrauma
                                         newRect.Size = new Point(width, height);
                                         limb.ActiveSprite.SourceRect = newRect;
                                         limb.ActiveSprite.size = new Vector2(width, height);
-                                        // Refresh the absolute origin, so that the relative origin will be recalculated
+
+                                        // Update collider (TODO: add an option to set the collider size to match the source rect -> auto display colliders)
+                                        limb.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)));
+                                        TryUpdateLimbParam(limb, "radius", ConvertUnits.ToDisplayUnits(limb.body.radius));
+                                        TryUpdateLimbParam(limb, "width", (float)width);
+                                        TryUpdateLimbParam(limb, "height", (float)height);
+
+                                        // Refresh the absolute origin, so that the relative origin will be recalculated (TODO: add an option to lock the origin relative to the size)
                                         limb.ActiveSprite.Origin = limb.ActiveSprite.Origin;
+                                        // TODO: refresh the origin tooltip
                                         if (limb.DamagedSprite != null)
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
@@ -3329,6 +3337,7 @@ namespace Barotrauma
                                                 otherLimb.ActiveSprite.SourceRect = newRect;
                                                 // Refresh the absolute origin, so that the relative origin will be recalculated
                                                 otherLimb.ActiveSprite.Origin = otherLimb.ActiveSprite.Origin;
+                                                // TODO: update the collider
                                                 if (otherLimb.DamagedSprite != null)
                                                 {
                                                     otherLimb.DamagedSprite.SourceRect = newRect;
