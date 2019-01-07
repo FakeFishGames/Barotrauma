@@ -3295,6 +3295,17 @@ namespace Barotrauma
                                         {
                                             limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
                                         }
+                                        if (lockSpriteOrigin)
+                                        {
+                                            // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                                            var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
+                                            limb.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - limb.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                        }
+                                        else
+                                        {
+                                            // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                                            limb.ActiveSprite.RelativeOrigin = limb.ActiveSprite.RelativeOrigin;
+                                        }
                                         TryUpdateLimbParam(limb, "sourcerect", newRect);
                                         if (limbPairEditing)
                                         {
@@ -3306,6 +3317,17 @@ namespace Barotrauma
                                                     otherLimb.DamagedSprite.SourceRect = newRect;
                                                 }
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                                                if (lockSpriteOrigin)
+                                                {
+                                                    // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(otherLimb));
+                                                    otherLimb.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - otherLimb.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                                }
+                                                else
+                                                {
+                                                    // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                                                    otherLimb.ActiveSprite.RelativeOrigin = otherLimb.ActiveSprite.RelativeOrigin;
+                                                }
                                             });
                                         };
                                     };
