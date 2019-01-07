@@ -53,6 +53,8 @@ namespace Barotrauma
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
         private List<Vector2> bodyDebugDimensions = new List<Vector2>();
 
+        public bool Indestructible;
+
         //sections of the wall that are supposed to be rendered
         public WallSection[] Sections
         {
@@ -138,7 +140,7 @@ namespace Barotrauma
         {
             get { return prefab.Tags; }
         }
-
+        
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color SpriteColor
@@ -652,7 +654,7 @@ namespace Barotrauma
 
         public void AddDamage(int sectionIndex, float damage, Character attacker = null)
         {
-            if (!prefab.Body || prefab.Platform) return;
+            if (!prefab.Body || prefab.Platform || Indestructible) return;
 
             if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) return;
 
@@ -777,7 +779,7 @@ namespace Barotrauma
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, null);
-            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, null);
+            if (!prefab.Body || prefab.Platform || Indestructible) return new AttackResult(0.0f, null);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -809,7 +811,7 @@ namespace Barotrauma
 
         private void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true)
         {
-            if (Submarine != null && Submarine.GodMode) return;
+            if (Submarine != null && Submarine.GodMode || Indestructible) return;
             if (!prefab.Body) return;
             if (!MathUtils.IsValid(damage)) return;
 
