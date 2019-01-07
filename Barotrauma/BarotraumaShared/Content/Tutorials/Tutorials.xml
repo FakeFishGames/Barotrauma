@@ -1,6 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tutorials>
-  <BasicTutorial name="Basic training" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+  <ContextualTutorial tutorialtype="additive" playablecontentpath="Content/Tutorials/ContextualTutorial/">
+    <TutorialSegment name ="ReactorTutorial" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="Video1/Sheets1.png" columns="7" rows="12"/>
+        <Sheet path="Video1/Sheets2.png" columns="7" rows="13"/>
+      </Video>
+    </TutorialSegment>
+    <TutorialSegment name="WiringTutorial" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="Video2/Sheets1.png" columns="3" rows="8"/>
+      </Video>
+    </TutorialSegment>
+  </ContextualTutorial>
+  <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
@@ -10,7 +23,7 @@
       </Job>
     </Character>
   </BasicTutorial>
-  <BasicTutorial name="Test 1" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+  <BasicTutorial name="Test 1"  tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
@@ -20,7 +33,7 @@
       </Job>
     </Character>
   </BasicTutorial>
-  <BasicTutorial name="Test 2" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+  <BasicTutorial name="Test 2"  tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>

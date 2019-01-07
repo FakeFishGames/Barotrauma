@@ -19,6 +19,9 @@ namespace Barotrauma.Tutorials
 
         private SpawnType spawnPointType;
 
+        private enum TutorialType { None, Scenario, Additive };
+        private TutorialType tutorialType = TutorialType.None;
+
         private string submarinePath;
         private string levelSeed;
 
@@ -116,11 +119,21 @@ namespace Barotrauma.Tutorials
             Completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
 
             Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
+            Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
         }
         
         public void Initialize()
         {
-            GameMain.Instance.ShowLoading(Loading());
+            switch (tutorialType)
+            {
+                case TutorialType.None:
+                    break;
+                case TutorialType.Scenario:
+                    GameMain.Instance.ShowLoading(Loading());
+                    break;
+                case TutorialType.Additive:
+                    break;
+            }
         }
 
         private IEnumerable<object> Loading()
