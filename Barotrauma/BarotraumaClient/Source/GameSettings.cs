@@ -17,10 +17,10 @@ namespace Barotrauma
             Audio,
             Controls,
         }
-        
+
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
-        
+
         private GUIFrame[] tabs;
         private GUIButton[] tabButtons;
 
@@ -49,9 +49,9 @@ namespace Barotrauma
             int index = text.Text.IndexOf("%");
             string label = text.Text;
             //if "%" is found
-            if(index > 0)
+            if (index > 0)
             {
-                while(true)
+                while (true)
                 {
                     //search for end of label
                     index -= 1;
@@ -79,12 +79,12 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), settingsFrame.RectTransform),
                 TextManager.Get("Settings"), textAlignment: Alignment.Center, font: GUI.LargeFont);
-            
+
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), settingsFrame.RectTransform, Anchor.Center)
-                { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
+            { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.05f), settingsFrame.RectTransform, Anchor.TopCenter)
-                { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
+            { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
             tabButtons = new GUIButton[tabs.Length];
@@ -102,13 +102,15 @@ namespace Barotrauma
             }
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform, Anchor.BottomCenter), style: null);
-            
+
             /// Graphics tab --------------------------------------------------------------
-            
+
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterLeft)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
+            { RelativeOffset = new Vector2(0.02f, 0.0f) })
+            { RelativeSpacing = 0.01f, Stretch = true };
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterRight)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
+            { RelativeOffset = new Vector2(0.02f, 0.0f) })
+            { RelativeSpacing = 0.01f, Stretch = true };
 
             var supportedDisplayModes = new List<DisplayMode>();
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
@@ -122,7 +124,7 @@ namespace Barotrauma
             {
                 OnSelected = SelectResolution
             };
-            
+
             foreach (DisplayMode mode in supportedDisplayModes)
             {
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
@@ -133,12 +135,17 @@ namespace Barotrauma
             {
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
-                        
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+
+
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
+#if (!OSX)
+            // Fullscreen option just sets itself to borderless on macOS.
             displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
+#endif
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
             displayModeDD.OnSelected = (guiComponent, obj) => 
             {
