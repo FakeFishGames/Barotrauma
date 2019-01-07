@@ -2842,7 +2842,7 @@ namespace Barotrauma
         private Vector2[] corners = new Vector2[4];
         private Vector2[] GetLimbPhysicRect(Limb limb)
         {
-            Vector2 size = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) * Cam.Zoom * limb.Scale;
+            Vector2 size = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) * Cam.Zoom;
             Vector2 up = VectorExtensions.Backward(limb.Rotation);
             Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
             corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size);
@@ -3317,10 +3317,10 @@ namespace Barotrauma
                                         limb.ActiveSprite.size = new Vector2(width, height);
 
                                         // Update collider (TODO: add an option to set the collider size to match the source rect -> auto display colliders)
-                                        limb.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)));
+                                        limb.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
                                         TryUpdateLimbParam(limb, "radius", ConvertUnits.ToDisplayUnits(limb.body.radius));
-                                        TryUpdateLimbParam(limb, "width", (float)width);
-                                        TryUpdateLimbParam(limb, "height", (float)height);
+                                        TryUpdateLimbParam(limb, "width", ConvertUnits.ToDisplayUnits(limb.body.width));
+                                        TryUpdateLimbParam(limb, "height", ConvertUnits.ToDisplayUnits(limb.body.height));
 
                                         // Refresh the absolute origin, so that the relative origin will be recalculated (TODO: add an option to lock the origin relative to the size)
                                         limb.ActiveSprite.Origin = limb.ActiveSprite.Origin;
