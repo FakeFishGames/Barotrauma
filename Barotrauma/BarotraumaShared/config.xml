@@ -11,7 +11,7 @@
   usesteammatchmaking="true"
   quickstartsub = "Turso" 
   requiresteamauthentication="true">
-  <graphicsmode fullscreen="true" vsync="true" />
+  <graphicsmode displaymode="BorderlessWindowed" vsync="true" />
   <graphicssettings
     particlelimit="1500"
     lightmapscale="0.5"

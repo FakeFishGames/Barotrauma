@@ -140,14 +140,22 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
 
-
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
 #if (!OSX)
             // Fullscreen option just sets itself to borderless on macOS.
             displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
-#endif
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
+#else
+            if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(GameMain.Config.WindowMode);
+            }
+#endif
             displayModeDD.OnSelected = (guiComponent, obj) => 
             {
                 UnsavedSettings = true;
