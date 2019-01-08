@@ -14,7 +14,6 @@ using System.Reflection;
 using GameAnalyticsSDK.Net;
 using System.IO;
 using System.Threading;
-using System.IO;
 
 namespace Barotrauma
 {

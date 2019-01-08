@@ -1782,7 +1782,7 @@ namespace Barotrauma.Networking
         {
             float endPreviewLength = 10.0f;
             
-            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+            var cinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
             do
             {
