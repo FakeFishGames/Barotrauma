@@ -74,6 +74,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Ragdolls\CrawlerDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdoll_old.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
