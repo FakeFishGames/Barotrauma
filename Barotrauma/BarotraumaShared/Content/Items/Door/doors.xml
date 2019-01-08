@@ -133,13 +133,13 @@
       <output name="proximity_sensor" />
     </ConnectionPanel>
   </Item>
-  <Item name="Duct Block" identifier="ductblock">
-    <Sprite texture="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5" />
+  <Item name="Duct Block" identifier="ductblock" scale="0.5">
+    <Sprite texture="duct.png" sourcerect="130,0,40,39" depth="0.01" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="3.0" autoorientgap="true">
       <RequiredItem identifier="crowbar" type="Equipped" />
-      <Sprite texture="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5" />
-      <WeldedSprite texture="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true" />
+      <Sprite texture="duct.png" sourcerect="0,0,65,65" depth="0.05" origin="-0.4,0.5" />
+      <WeldedSprite texture="duct.png" sourcerect="65,0,65,65" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="duct.png" sourcerect="0,65,107,107" depth="0.051" origin="0.2,0.5" scale="true" />
       <sound file="Content/Items/Door/duct1.ogg" type="OnUse" selectionmode="Random" range="300" />
       <sound file="Content/Items/Door/duct2.ogg" type="OnUse" range="300" />
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="500.0" />
