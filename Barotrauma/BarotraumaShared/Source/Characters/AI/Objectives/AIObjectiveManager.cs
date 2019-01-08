@@ -96,6 +96,11 @@ namespace Barotrauma
 
             CurrentObjective?.TryComplete(deltaTime);
         }
+        
+        public void SetOrder(AIObjective objective)
+        {
+            currentOrder = objective;
+        }
 
         public void SetOrder(Order order, string option, Character orderGiver)
         {

@@ -135,6 +135,8 @@ namespace Barotrauma
             spawnedCharacter.SetCustomInteract(
                 WatchmanInteract,
                 hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
+            (spawnedCharacter.AIController as HumanAIController)?.ObjectiveManager.SetOrder(
+                new AIObjectiveGoTo(watchmanSpawnpoint, spawnedCharacter, repeat: true, getDivingGearIfNeeded: false));
             if (watchmanJob != null)
             {
                 spawnedCharacter.GiveJobItems();
