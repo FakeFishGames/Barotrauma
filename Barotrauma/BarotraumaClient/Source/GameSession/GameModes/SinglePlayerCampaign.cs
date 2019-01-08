@@ -74,31 +74,40 @@ namespace Barotrauma
 
         private Submarine GetLeavingSub()
         {
-            if (Character.Controlled != null && Character.Controlled.Submarine != null)
+            if (Character.Controlled?.Submarine == null)
             {
-                if (Character.Controlled.Submarine == Level.Loaded.StartOutpost)
-                {
-                    return Level.Loaded.StartOutpost.DockedTo.FirstOrDefault();
-                }
-                else if (Character.Controlled.Submarine == Level.Loaded.EndOutpost)
-                {
-                    return Level.Loaded.EndOutpost.DockedTo.FirstOrDefault();
-                }
-
-                if (Character.Controlled.Submarine.AtEndPosition || Character.Controlled.Submarine.AtStartPosition)
-                {
-                    return Character.Controlled.Submarine;
-                }
                 return null;
             }
 
-            Submarine closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter, ignoreOutposts: true);
-            if (closestSub != null && (closestSub.AtEndPosition || closestSub.AtStartPosition))
-            {
-                return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
-            }
+            //allow leaving if inside an outpost, and the submarine is either docked to it or close enough
+            return GetLeavingSubAtOutpost(Level.Loaded.StartOutpost) ?? GetLeavingSubAtOutpost(Level.Loaded.EndOutpost);
 
-            return null;
+            Submarine GetLeavingSubAtOutpost(Submarine outpost)
+            {
+                //controlled character has to be inside the outpost
+                if (Character.Controlled.Submarine != outpost) { return null; }
+                
+                //if there's a sub docked to the outpost, we can leave the level
+                if (outpost.DockedTo.Count > 0)
+                {
+                    var dockedSub = outpost.DockedTo.FirstOrDefault();
+                    return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
+                }
+
+                //nothing docked, check if there's a sub close enough to the outpost
+                Submarine closestSub = Submarine.FindClosest(outpost.WorldPosition, ignoreOutposts: true);
+                if (closestSub == null) { return null; }
+                
+                if (outpost == Level.Loaded.StartOutpost)
+                {
+                    if (!closestSub.AtStartPosition) { return null; }
+                }
+                else if (outpost == Level.Loaded.EndOutpost)
+                {
+                    if (!closestSub.AtStartPosition) { return null; }
+                }
+                return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;                
+            }            
         }
 
         public override void Draw(SpriteBatch spriteBatch)
