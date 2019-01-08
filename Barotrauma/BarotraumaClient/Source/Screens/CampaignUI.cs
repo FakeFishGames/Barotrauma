@@ -9,23 +9,25 @@ namespace Barotrauma
 {
     class CampaignUI
     {
-        public enum Tab { Crew = 0, Map = 1, Store = 2 }
+        public enum Tab { Map, Crew, Store }
+        private Tab selectedTab;
+
+        private CampaignMode campaign;
 
         private GUIFrame[] tabs;
 
         private GUIButton startButton;
-
-        private Tab selectedTab;
+        
+        private GUIFrame topPanel, bottomPanel;
+        private GUITextBlock locationTitle;
 
         private GUIListBox characterList, hireList;
 
         private GUIListBox selectedItemList;
         private GUIListBox storeItemList;
-
-        private CampaignMode campaign;
-
-        private GUICustomComponent mapContainer;
-        private GUILayoutGroup locationInfoContainer;
+                
+        private GUIListBox missionList;
+        private GUIListBox selectedMissionInfo;
 
         private GUIFrame characterPreviewFrame;
         
@@ -48,23 +50,59 @@ namespace Barotrauma
         {
             this.campaign = campaign;
 
+            // top panel -------------------------------------------------------------------------
+
+            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform, Anchor.TopCenter));
+            var topPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.8f), topPanel.RectTransform, Anchor.Center), 
+                isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            var topPanelHeaderArea = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), topPanelContent.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            locationTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.7f), topPanelHeaderArea.RectTransform), "", Color.White, GUI.LargeFont);
+            GUITextBlock moneyText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), topPanelHeaderArea.RectTransform), "")
+            {
+                TextGetter = GetMoney
+            };
+
+            foreach (Tab tab in Enum.GetValues(typeof(Tab)))
+            {
+                new GUIButton(new RectTransform(new Vector2(0.15f, 0.5f), topPanelContent.RectTransform),
+                    TextManager.Get(tab.ToString()))
+                {
+                    UserData = tab,
+                    OnClicked = SelectTab
+                };
+            }
+
+            // bottom panel -------------------------------------------------------------------------
+
+            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.88f), container.RectTransform, Anchor.BottomCenter));
+            
+            // crew tab -------------------------------------------------------------------------
+            
             tabs = new GUIFrame[3];
-
-            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
-
-            //new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, "", bottomPanel[(int)PanelTab.Crew]);
-
-            int crewColumnWidth = Math.Min(300, (container.Rect.Width - 40) / 2);
+            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), bottomPanel.RectTransform, Anchor.Center), null);
+            
+            int crewColumnWidth = Math.Min(300, (bottomPanel.Rect.Width - 40) / 2);
 
             new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.05f), tabs[(int)Tab.Crew].RectTransform)
             {
                 RelativeOffset = new Vector2(0.01f, 0.02f)
             }, TextManager.Get("Crew") + ":", style: "");
-            characterList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterLeft, Pivot.CenterLeft)
+            characterList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterLeft)
             {
                 RelativeOffset = new Vector2(0.01f, 0.05f)
-            }, false, null, "");
-            characterList.OnSelected = SelectCharacter;
+            }, false, null, "")
+            {
+                OnSelected = SelectCharacter
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.05f), tabs[(int)Tab.Crew].RectTransform, Anchor.TopRight, Pivot.TopRight)
             {
@@ -73,31 +111,51 @@ namespace Barotrauma
             hireList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterRight, Pivot.CenterRight)
             {
                 RelativeOffset = new Vector2(0.01f, 0.05f)
-            }, false, null, "");
-            hireList.OnSelected = SelectCharacter;
+            }, false, null, "")
+            {
+                OnSelected = SelectCharacter
+            };
 
-            //---------------------------------------
+            // map tab -------------------------------------------------------------------------
 
-            tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
+            tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), bottomPanel.RectTransform, Anchor.Center, Pivot.Center), null);
 
-            mapContainer = new GUICustomComponent(new RectTransform(new Vector2(0.74f, 1.0f), tabs[(int)Tab.Map].RectTransform), DrawMap, UpdateMap);
-            locationInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), tabs[(int)Tab.Map].RectTransform, Anchor.TopRight)) { AbsoluteSpacing = 5 };
+            var mapTabContainer = new GUILayoutGroup(new RectTransform(Vector2.One, tabs[(int)Tab.Map].RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
+            var mapColumnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), mapTabContainer.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            missionList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mapColumnLeft.RectTransform));
+            selectedMissionInfo = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mapColumnLeft.RectTransform));
+
+            var mapColumnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), mapTabContainer.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.9f), mapColumnRight.RectTransform), DrawMap, UpdateMap);
+            var mapButtonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), mapColumnRight.RectTransform), 
+                isHorizontal: true, childAnchor: Anchor.CenterRight);
+            
             if (GameMain.Client == null)
             {
-                startButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.06f), tabs[(int)Tab.Map].RectTransform, Anchor.BottomRight, Pivot.BottomRight)
-                {
-                    RelativeOffset = new Vector2(0.01f, 0.03f)
-                }, TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+                startButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), mapButtonArea.RectTransform), 
+                    TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
                 {
                     OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
                     Enabled = false
                 };
             }
 
-            //---------------------------------------
-
-            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
+            // store tab -------------------------------------------------------------------------
+            
+            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), bottomPanel.RectTransform, Anchor.Center, Pivot.Center), null);
 
             int sellColumnWidth = (tabs[(int)Tab.Store].Rect.Width - 40) / 2 - 20;
 
@@ -105,13 +163,14 @@ namespace Barotrauma
             {
                 RelativeOffset = new Vector2(0.01f, 0.0f)
             }, false, null, "");
-            
+
             storeItemList = new GUIListBox(new RectTransform(new Vector2(0.45f, 0.95f), tabs[(int)Tab.Store].RectTransform, Anchor.CenterRight, Pivot.CenterRight)
             {
                 RelativeOffset = new Vector2(0.01f, 0.0f)
-            }, false, null, "");
-            storeItemList.OnSelected = BuyItem;
-
+            }, false, null, "")
+            {
+                OnSelected = BuyItem
+            };
 
             List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
             
@@ -126,9 +185,11 @@ namespace Barotrauma
                 var categoryButton = new GUIButton(new RectTransform(new Point(buttonWidth, 30), tabs[(int)Tab.Store].RectTransform, Anchor.CenterRight, Pivot.BottomRight)
                 {
                     AbsoluteOffset = new Point(x, -storeItemList.Rect.Height / 2)
-                }, category.ToString());
-                categoryButton.UserData = category;
-                categoryButton.OnClicked = SelectItemCategory;
+                }, category.ToString())
+                {
+                    UserData = category,
+                    OnClicked = SelectItemCategory
+                };
 
                 if (category == MapEntityCategory.Equipment)
                 {
@@ -139,14 +200,14 @@ namespace Barotrauma
 
             SelectTab(Tab.Map);
 
-            UpdateLocationTab(campaign.Map.CurrentLocation);
+            SetCurrentLocation(campaign.Map.CurrentLocation);
 
             campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationTab(newLocation);
+            campaign.Map.OnLocationChanged += (prevLocation, newLocation) => SetCurrentLocation(newLocation);
             campaign.CargoManager.OnItemsChanged += RefreshItemTab;
         }
 
-        private void UpdateLocationTab(Location location)
+        private void SetCurrentLocation(Location location)
         {
             if (characterPreviewFrame != null)
             {
@@ -185,6 +246,11 @@ namespace Barotrauma
             GameMain.GameSession?.Map?.Update(deltaTime, mapContainer);
         }
         
+        public void RefreshLocationTexts()
+        {
+            locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
+        }
+
         public void UpdateCharacterLists()
         {
             characterList.Content.ClearChildren();
@@ -196,29 +262,31 @@ namespace Barotrauma
 
         public void SelectLocation(Location location, LocationConnection connection)
         {
-            locationInfoContainer.ClearChildren();
+            selectedMissionInfo.ClearChildren();
             
             if (location == null) return;
 
-            var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter), location.Name, font: GUI.LargeFont);
+            var container = selectedMissionInfo.Content;
+
+            var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform, Anchor.TopCenter), location.Name, font: GUI.LargeFont);
 
             Sprite portrait = location.Type.Background;
             new GUIImage(new RectTransform(
-                new Point(locationInfoContainer.Rect.Width, (int)(portrait.size.Y * (locationInfoContainer.Rect.Width / portrait.size.X))), 
-                locationInfoContainer.RectTransform), portrait, scaleToFit: true);
+                new Point(container.Rect.Width, (int)(portrait.size.Y * (container.Rect.Width / portrait.size.X))),
+                container.RectTransform), portrait, scaleToFit: true);
 
             if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Mission != null)
             {
                 var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter),
+                    new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform, Anchor.TopCenter),
                     TextManager.Get("Mission") + ": " + mission.Name);
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter),
+                    new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform, Anchor.TopCenter),
                     TextManager.Get("Reward").Replace("[reward]", mission.Reward.ToString()));
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform, Anchor.TopCenter),
+                    new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform, Anchor.TopCenter),
                     mission.Description, wrap: true);
             }
 
@@ -352,7 +420,24 @@ namespace Barotrauma
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category));
             selectedItemList.UpdateScrollBarSize();
         }
-        
+
+
+        public bool SelectTab(GUIButton button, object selection)
+        {
+            if (button != null)
+            {
+                button.Selected = true;
+                foreach (GUIComponent child in topPanel.Children)
+                {
+                    GUIButton otherButton = child as GUIButton;
+                    if (otherButton == null || otherButton == button) continue;
+                    otherButton.Selected = false;
+                }
+            }
+            SelectTab((Tab)selection);
+            return true;
+        }
+
         public void SelectTab(Tab tab)
         {
             selectedTab = tab;
@@ -485,7 +570,7 @@ namespace Barotrauma
 
             if (spCampaign.TryHireCharacter(GameMain.GameSession.Map.CurrentLocation.HireManager, characterInfo))
             {
-                UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
+                SetCurrentLocation(GameMain.GameSession.Map.CurrentLocation);
                 SelectCharacter(null, null);
                 UpdateCharacterLists();
             }
