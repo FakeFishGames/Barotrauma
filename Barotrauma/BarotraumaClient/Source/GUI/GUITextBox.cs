@@ -190,6 +190,11 @@ namespace Barotrauma
                 OnTextChanged?.Invoke(this, Text);
             }
         }
+
+        public string WrappedText
+        {
+            get { return textBlock.WrappedText; }
+        }
         
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)

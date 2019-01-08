@@ -663,8 +663,18 @@ namespace Barotrauma
             var titleBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), topRightColumn.RectTransform), itemEditor.Title);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemDescription"));
-            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.4f), topRightColumn.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
-            descriptionBox.OnTextChanged += (textBox, text) => { itemEditor.Description = text; return true; };
+
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), topRightColumn.RectTransform));
+            var descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
+            descriptionBox.OnTextChanged += (textBox, text) => 
+            {
+                Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Rect.Height, (int)textSize.Y + 10));
+                descriptionContainer.UpdateScrollBarSize();
+                descriptionContainer.BarScroll = 1.0f;
+                itemEditor.Description = text;
+                return true;
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTags"));
             var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform) { MinSize=new Point(0,50) }, isHorizontal: true)
@@ -822,11 +832,22 @@ namespace Barotrauma
                 {
                     ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
                 };
-                var changenoteBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), createItemContent.RectTransform))
+
+
+                var changenoteContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), topRightColumn.RectTransform));
+                var changenoteBox = new GUITextBox(new RectTransform(Vector2.One, changenoteContainer.Content.RectTransform), "", textAlignment: Alignment.TopLeft, wrap: true)
                 {
                     ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
                 };
-                changenoteBox.OnTextChanged += (textbox, text) => { itemEditor.ChangeNote = text; return true; };
+                changenoteBox.OnTextChanged += (textBox, text) =>
+                {
+                    Vector2 textSize = textBox.Font.MeasureString(changenoteBox.WrappedText);
+                    textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(changenoteContainer.Rect.Height, (int)textSize.Y + 10));
+                    changenoteContainer.UpdateScrollBarSize();
+                    changenoteContainer.BarScroll = 1.0f;
+                    itemEditor.ChangeNote = text;
+                    return true;
+                };
             }
 
             var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), createItemContent.RectTransform), isHorizontal: true)
