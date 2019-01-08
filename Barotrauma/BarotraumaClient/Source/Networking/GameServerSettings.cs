@@ -89,9 +89,10 @@ namespace Barotrauma.Networking
                 {
                     Selected = i == (int)subSelectionMode,
                     OnSelected = SwitchSubSelection,
-                    UserData = (SelectionMode)i
+                    UserData = (SelectionMode)i,
                 };
             }
+            GUITickBox.CreateRadioButtonGroup(selectionFrame.Children.Select(c => c as GUITickBox));
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), isHorizontal: true)
@@ -108,7 +109,8 @@ namespace Barotrauma.Networking
                     UserData = (SelectionMode)i
                 };
             }
-            
+            GUITickBox.CreateRadioButtonGroup(selectionFrame.Children.Select(c => c as GUITickBox));
+
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundWhenDestReached"))
             {
@@ -128,9 +130,7 @@ namespace Barotrauma.Networking
                 }
             };
 
-            GUIScrollBar slider;
-            GUITextBlock sliderLabel;
-            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
+            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out GUIScrollBar slider, out GUITextBlock sliderLabel);
 
             string endRoundLabel = sliderLabel.Text;
             slider.Step = 0.2f;
@@ -546,27 +546,12 @@ namespace Barotrauma.Networking
 
         private bool SwitchSubSelection(GUITickBox tickBox)
         {
-            //can't deselect tickboxes, the mode is switched by selecting a deselected tickbox in the group
-            if (!tickBox.Selected)
-            {
-                tickBox.Selected = true;
-                return false;
-            }
             subSelectionMode = (SelectionMode)tickBox.UserData;
-
-            foreach (GUIComponent otherComponent in tickBox.Parent.Children)
-            {
-                if (!(otherComponent is GUITickBox otherTickBox)) continue;
-                otherTickBox.Selected = otherTickBox == tickBox;
-            }
-
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
-
             if (subSelectionMode == SelectionMode.Random)
             {
                 GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
             }
-
             return true;
         }
 
@@ -584,27 +569,12 @@ namespace Barotrauma.Networking
 
         private bool SwitchModeSelection(GUITickBox tickBox)
         {
-            //can't deselect tickboxes, the mode is switched by selecting a deselected tickbox in the group
-            if (!tickBox.Selected)
-            {
-                tickBox.Selected = true;
-                return false;
-            }
             modeSelectionMode = (SelectionMode)tickBox.UserData;
-
-            foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
-            {
-                if (otherTickBox == tickBox) continue;
-                ((GUITickBox)otherTickBox).Selected = false;
-            }
-
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
-
             if (modeSelectionMode == SelectionMode.Random)
             {
                 GameMain.NetLobbyScreen.ModeList.Select(Rand.Range(0, GameMain.NetLobbyScreen.ModeList.CountChildren));
             }
-
             return true;
         }
 
