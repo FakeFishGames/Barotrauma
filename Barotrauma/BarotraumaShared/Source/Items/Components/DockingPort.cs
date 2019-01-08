@@ -383,8 +383,7 @@ namespace Barotrauma.Items.Components
 
                 hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, ((int)DockedDistance / 2), hullRects[0].Height);
                 hullRects[1] = new Rectangle(hullRects[1].Center.X - ((int)DockedDistance / 2), hullRects[1].Y, ((int)DockedDistance / 2), hullRects[1].Height);
-
-
+                
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int leftSubRightSide = int.MinValue, rightSubLeftSide = int.MaxValue;
                 foreach (Hull hull in Hull.hullList)
@@ -406,11 +405,10 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-
                 //expand left hull to the rightmost hull of the sub at the left side
                 //(unless the difference is more than 100 units - if the distance is very large 
                 //there's something wrong with the positioning of the docking ports or submarine hulls)
-                int leftHullDiff = hullRects[0].X - leftSubRightSide;
+                int leftHullDiff = (hullRects[0].X - leftSubRightSide) + 5;
                 if (leftHullDiff > 0)
                 {
                     if (leftHullDiff > 100)
@@ -424,7 +422,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                int rightHullDiff = rightSubLeftSide - hullRects[1].Right;
+                int rightHullDiff = (rightSubLeftSide - hullRects[1].Right) + 5;
                 if (rightHullDiff > 0)
                 {
                     if (rightHullDiff > 100)
@@ -490,7 +488,7 @@ namespace Barotrauma.Items.Components
                 //expand lower hull to the topmost hull of the lower sub 
                 //(unless the difference is more than 100 units - if the distance is very large 
                 //there's something wrong with the positioning of the docking ports or submarine hulls)
-                int lowerHullDiff = (hullRects[0].Y - hullRects[0].Height) - lowerSubTop;
+                int lowerHullDiff = ((hullRects[0].Y - hullRects[0].Height) - lowerSubTop) + 5;
                 if (lowerHullDiff > 0)
                 {
                     if (lowerHullDiff > 100)
@@ -503,7 +501,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                int upperHullDiff = upperSubBottom - hullRects[1].Y;
+                int upperHullDiff = (upperSubBottom - hullRects[1].Y) + 5;
                 if (upperHullDiff > 0)
                 {
                     if (upperHullDiff > 100)

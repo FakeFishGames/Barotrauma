@@ -446,7 +446,7 @@ namespace Barotrauma
                     OnClicked = HireCharacter
                 };
             }
-            else if (GameMain.GameSession.CrewManager.GetCharacterInfos().Count > 1)
+            else if (GameMain.GameSession.CrewManager.GetCharacterInfos().Count() > 1)
             {
                 GUIButton hireButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
                     TextManager.Get("FireButton"))

@@ -42,6 +42,7 @@ namespace Barotrauma
 
         public override void Start()
         {
+            base.Start();
             CargoManager.CreateItems();
 
             if (!savedOnStart)
@@ -51,9 +52,7 @@ namespace Barotrauma
             }
 
             endTimer = 5.0f;
-
             isRunning = true;
-
             CrewManager.InitSinglePlayerRound();
         }
 
@@ -145,11 +144,14 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (!isRunning || GUI.DisableHUD) return;
+            if (!isRunning) { return; }
 
             base.Update(deltaTime);
 
-            endRoundButton.UpdateManually(deltaTime);
+            if (!GUI.DisableHUD)
+            {
+                endRoundButton.UpdateManually(deltaTime);
+            }
 
             if (!crewDead)
             {
@@ -158,7 +160,6 @@ namespace Barotrauma
             else
             {
                 endTimer -= deltaTime;
-
                 if (endTimer <= 0.0f) EndRound(null, null);
             }  
         }
