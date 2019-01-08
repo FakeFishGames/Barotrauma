@@ -105,7 +105,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateDialog(List<Character> speakers, string conversationTag, float minInterval)
+        protected void CreateDialog(List<Character> speakers, string conversationTag, float minInterval)
         {
             if (dialogLastSpoken.TryGetValue(conversationTag, out double lastTime))
             {
@@ -142,23 +142,8 @@ namespace Barotrauma
             return spawnedCharacter;
         }
 
-        private void WatchmanInteract(Character watchman, Character interactor)
-        {
-            bool hasPermissions = true;
-            if (GameMain.Server != null)
-            {
-                var client = GameMain.Server.ConnectedClients.Find(c => c.Character == interactor);
-                hasPermissions = client != null && 
-                    (client.HasPermission(Networking.ClientPermissions.EndRound) || client.HasPermission(Networking.ClientPermissions.ManageCampaign));
-            }
-            else if (GameMain.Client != null)
-            {
-                return;
-            }
-
-            CreateDialog(new List<Character> { watchman }, hasPermissions ? "WatchmanInteract" : "WatchmanInteractNotAllowed", 1.0f);
-        }
-
+        protected abstract void WatchmanInteract(Character watchman, Character interactor);
+        
         public abstract void Save(XElement element);
         
         public void LogState()
