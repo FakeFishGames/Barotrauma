@@ -19,8 +19,24 @@ namespace Barotrauma
 
     class WearableSprite
     {
+        public string SpritePath { get; private set; }
+        public XElement SourceElement { get; private set; }
+
         public WearableType Type { get; private set; }
-        public Sprite Sprite { get; private set; }
+        private Sprite _sprite;
+        public Sprite Sprite
+        {
+            get { return _sprite; }
+            set
+            {
+                if (value == _sprite) { return; }
+                if (_sprite != null)
+                {
+                    _sprite.Remove();
+                }
+                _sprite = value;
+            }
+        }
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
         public bool HideOtherWearables { get; private set; }
@@ -29,11 +45,40 @@ namespace Barotrauma
         public bool InheritOrigin { get; private set; }
         public bool InheritSourceRect { get; private set; }
         public LimbType DepthLimb { get; private set; }
-        public Wearable WearableComponent { get; private set; }
+        private Wearable _wearableComponent;
+        public Wearable WearableComponent
+        {
+            get { return _wearableComponent; }
+            set
+            {
+                if (value == _wearableComponent) { return; }
+                if (_wearableComponent != null)
+                {
+                    _wearableComponent.Remove();
+                }
+                _wearableComponent = value;
+            }
+        }
         public string Sound { get; private set; }
         public Point? SheetIndex { get; private set; }
 
         public LightComponent LightComponent { get; set; }
+
+        private Gender _gender;
+        /// <summary>
+        /// None = Any/Not Defined -> no effect.
+        /// Changing the gender forces re-initialization, because the textures can be different for male and female characters.
+        /// </summary>
+        public Gender Gender
+        {
+            get { return _gender; }
+            set
+            {
+                if (value == _gender) { return; }
+                _gender = value;
+                Init(SourceElement, SpritePath, _gender);
+            }
+        }
 
         public WearableSprite(XElement subElement, WearableType type)
         {
@@ -56,17 +101,23 @@ namespace Barotrauma
             }
         }
 
-        public WearableSprite(XElement subElement, Wearable item)
+        public WearableSprite(XElement subElement, Wearable item, Gender gender = Gender.None)
         {
             Type = WearableType.Item;
             WearableComponent = item;
             string texturePath = subElement.GetAttributeString("texture", string.Empty);
             string path = texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(item.Item.Prefab.ConfigFile)}/{texturePath}";
-            Init(subElement, path);
+            SpritePath = path;
+            SourceElement = subElement;
+            Init(subElement, path, gender);
         }
 
-        private void Init(XElement subElement, string spritePath)
+        private void Init(XElement subElement, string spritePath, Gender gender = Gender.None)
         {
+            // Defaults to male variants, if the gender is not specified.
+            spritePath = spritePath.Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
+            SpritePath = spritePath;
+            SourceElement = subElement;
             Sprite = new Sprite(subElement, "", spritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("limb", "Head"), true);
             HideLimb = subElement.GetAttributeBool("hidelimb", false);
@@ -101,8 +152,7 @@ namespace Barotrauma.Items.Components
             get { return damageModifiers; }
         }
         
-        public Wearable (Item item, XElement element)
-            : base(item, element)
+        public Wearable (Item item, XElement element) : base(item, element)
         {
             this.item = item;
 
@@ -152,20 +202,27 @@ namespace Barotrauma.Items.Components
             picker = character;
             for (int i = 0; i < wearableSprites.Length; i++ )
             {
+                var wearableSprite = wearableSprites[i];
+                if (picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
+                {
+                    // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
+                    wearableSprite.Gender = picker.Info.Gender;
+                }
+
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
                 
                 item.body.Enabled = false;
                 IsActive = true;
-                if (wearableSprites[i].LightComponent != null)
+                if (wearableSprite.LightComponent != null)
                 {
-                    wearableSprites[i].LightComponent.ParentBody = equipLimb.body;
+                    wearableSprite.LightComponent.ParentBody = equipLimb.body;
                 }
 
                 limb[i] = equipLimb;
-                if (!equipLimb.WearingItems.Contains(wearableSprites[i]))
+                if (!equipLimb.WearingItems.Contains(wearableSprite))
                 {
-                    equipLimb.WearingItems.Add(wearableSprites[i]);
+                    equipLimb.WearingItems.Add(wearableSprite);
                 }
             }
         }
