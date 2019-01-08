@@ -268,7 +268,10 @@ namespace Barotrauma
 
             var container = selectedMissionInfo.Content;
 
-            var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform, Anchor.TopCenter), location.Name, font: GUI.LargeFont);
+            var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform), location.Name, font: GUI.LargeFont)
+            {
+                AutoScale = true
+            };
 
             Sprite portrait = location.Type.Background;
             new GUIImage(new RectTransform(
@@ -280,13 +283,13 @@ namespace Barotrauma
                 var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform, Anchor.TopCenter),
+                    new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform),
                     TextManager.Get("Mission") + ": " + mission.Name);
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform, Anchor.TopCenter),
+                    new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform),
                     TextManager.Get("Reward").Replace("[reward]", mission.Reward.ToString()));
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform, Anchor.TopCenter),
+                    new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
                     mission.Description, wrap: true);
             }
 

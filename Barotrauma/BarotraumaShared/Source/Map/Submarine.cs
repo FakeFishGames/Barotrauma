@@ -116,6 +116,12 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public bool IsOutpost
+        {
+            get;
+            private set;
+        }
         
         public static Vector2 LastPickedPosition
         {
@@ -373,6 +379,12 @@ namespace Barotrauma
             tags &= ~tag;
         }
 
+        public void MakeOutpost()
+        {
+            IsOutpost = true;
+            PhysicsBody.FarseerBody.IsStatic = true;
+        }
+
         /// <summary>
         /// Returns a rect that contains the borders of this sub and all subs docked to it
         /// </summary>
@@ -405,8 +417,7 @@ namespace Barotrauma
         /// </summary>
         public List<Submarine> GetConnectedSubs()
         {
-            List<Submarine> connectedSubs = new List<Submarine>();
-            connectedSubs.Add(this);
+            List<Submarine> connectedSubs = new List<Submarine> { this };
             GetConnectedSubsRecursive(connectedSubs);
 
             return connectedSubs;
@@ -645,8 +656,7 @@ namespace Barotrauma
 
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
 
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
                 }
@@ -693,8 +703,7 @@ namespace Barotrauma
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
                 if (ignoreSubs && fixture.Body.UserData is Submarine) return -1;
 
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) return -1;
                     int sectionIndex = structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(point));
@@ -900,7 +909,7 @@ namespace Barotrauma
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                if (ignoreOutposts && (sub == Level.Loaded?.StartOutpost || sub == Level.Loaded?.EndOutpost))
+                if (ignoreOutposts && sub.IsOutpost)
                 {
                     continue;
                 }
