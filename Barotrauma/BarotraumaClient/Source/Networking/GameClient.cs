@@ -982,7 +982,7 @@ namespace Barotrauma.Networking
             float endPreviewLength = 10.0f;
             if (Screen.Selected == GameMain.GameScreen)
             {
-                new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+                new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
                 float secondsLeft = endPreviewLength;
                 do
                 {

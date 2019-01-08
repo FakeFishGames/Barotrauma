@@ -317,7 +317,7 @@ namespace Barotrauma
         {
             isRunning = false;
             
-            var cinematic = new TransitionCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
+            var cinematic = new RoundEndCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
@@ -327,7 +327,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> EndCinematic(TransitionCinematic cinematic)
+        private IEnumerable<object> EndCinematic(RoundEndCinematic cinematic)
         {
             while (cinematic.Running)
             {
