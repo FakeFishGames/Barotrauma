@@ -1550,14 +1550,14 @@ namespace Barotrauma
 
         public void SelectMode(int modeIndex)
         {
-            if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren || modeList.SelectedIndex == modeIndex) return;
+            if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) return;
 
             if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name != "Campaign")
             {
                 ToggleCampaignMode(false);
             }
 
-            modeList.Select(modeIndex, true);
+            if (modeList.SelectedIndex != modeIndex) modeList.Select(modeIndex, true);
             missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
         }
 

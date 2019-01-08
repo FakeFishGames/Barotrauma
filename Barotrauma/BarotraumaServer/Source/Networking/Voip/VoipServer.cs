@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,6 +32,8 @@ namespace Barotrauma.Networking
         public void SendToClients(List<Client> clients)
         {
             foreach (VoipQueue queue in queues) {
+                if (queue.LastReadTime < DateTime.Now - VoipConfig.SEND_INTERVAL) continue;
+
                 if (lastSendTime.ContainsKey(queue))
                 {
                     if ((lastSendTime[queue] + VoipConfig.SEND_INTERVAL) > DateTime.Now) continue;
@@ -41,10 +44,35 @@ namespace Barotrauma.Networking
                     lastSendTime.Add(queue, DateTime.Now);
                 }
 
+                Client currClient = clients.Find(c => c.VoipQueue == queue);
+
                 foreach (Client client in clients)
                 {
-                    if (client.VoipQueue == queue) continue;
-                    //TODO: use character states to determine whether to send or not
+                    if (client == currClient) continue;
+                    
+                    if (Screen.Selected == GameMain.GameScreen)
+                    {
+                        if (client.Character == null || client.Character.IsDead) //client is spectating
+                        {
+                            if (currClient.Character != null && !currClient.Character.IsDead) //currClient is not spectating
+                            {
+                                continue;
+                            }
+                        }
+                        else //client is not spectating
+                        {
+                            if (currClient.Character == null || client.Character.IsDead) //currClient is spectating
+                            {
+                                continue;
+                            }
+                            else if (Vector2.Distance(currClient.Character.Position,client.Character.Position)>500.0f) //clients are too far away from each other
+                            {
+                                //TODO: account for radio
+                                continue;
+                            }
+                        }
+                    }
+
                     NetOutgoingMessage msg = netServer.CreateMessage();
 
                     msg.Write((byte)ServerPacketHeader.VOICE);
