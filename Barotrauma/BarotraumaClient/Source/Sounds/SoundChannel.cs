@@ -222,6 +222,7 @@ namespace Barotrauma.Sounds
             get;
             private set;
         }
+        private int decayTimer;
         
         private bool muffled;
         public bool Muffled
@@ -338,6 +339,7 @@ namespace Barotrauma.Sounds
 
             IsStream = sound.Stream;
             FilledByNetwork = sound.FilledByNetwork;
+            decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
             startedPlaying = true;
 
@@ -568,6 +570,21 @@ namespace Barotrauma.Sounds
                                 {
                                     reachedEndSample = true;
                                 }
+                            }
+                        }
+                        else
+                        {
+                            if (readSamples <= 0)
+                            {
+                                decayTimer++;
+                                if (decayTimer > 120) //TODO: replace magic number
+                                {
+                                    reachedEndSample = true;
+                                }
+                            }
+                            else
+                            {
+                                decayTimer = 0;
                             }
                         }
                         

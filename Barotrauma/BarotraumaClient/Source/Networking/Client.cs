@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Sounds;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,16 +20,24 @@ namespace Barotrauma.Networking
         public VoipSound VoipSound
         {
             get;
-            private set;
+            set;
         }
-
+        
         public void UpdateSoundPosition()
         {
             if (VoipSound != null)
             {
+                if (!VoipSound.IsPlaying)
+                {
+                    DebugConsole.NewMessage("destroying voipsound", Color.Lime);
+                    VoipSound.Dispose();
+                    VoipSound = null;
+                    return;
+                }
+
                 if (character != null)
                 {
-                    VoipSound.SetPosition(new Microsoft.Xna.Framework.Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
+                    VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
                 }
                 else
                 {
@@ -43,7 +52,7 @@ namespace Barotrauma.Networking
             if (ID == GameMain.Client.ID) return;
             VoipQueue = new VoipQueue(ID, false, true);
             GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
-            VoipSound = new VoipSound(GameMain.SoundManager,VoipQueue);
+            VoipSound = null;
         }
 
         partial void DisposeProjSpecific()
