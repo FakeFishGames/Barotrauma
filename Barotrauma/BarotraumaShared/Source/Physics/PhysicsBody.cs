@@ -462,20 +462,23 @@ namespace Barotrauma
             {
                 case Shape.Capsule:
                     radius = Math.Max(size.X / 2, 0);
-                    width = Math.Max(size.X, 0);
                     height = Math.Max(size.Y - size.X, 0);
+                    width = 0;
                     break;
                 case Shape.HorizontalCapsule:
                     radius = Math.Max(size.Y / 2, 0);
-                    height = Math.Max(size.Y, 0);
                     width = Math.Max(size.X - size.Y, 0);
+                    height = 0;
                     break;
                 case Shape.Circle:
                     radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
+                    width = 0;
+                    height = 0;
                     break;
                 case Shape.Rectangle:
                     width = Math.Max(size.X, 0);
                     height = Math.Max(size.Y, 0);
+                    radius = 0;
                     break;
                 default:
                     throw new NotImplementedException();
