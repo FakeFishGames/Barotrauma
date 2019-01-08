@@ -272,7 +272,6 @@
     <Compile Include="Source\Screens\Screen.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Serialization\SerializableEntityEditor.cs" />
-    <Compile Include="Source\Sounds\InputPlaybackSound.cs" />
     <Compile Include="Source\Sounds\OggSound.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
     <Compile Include="Source\Sounds\SoundChannel.cs" />
