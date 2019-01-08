@@ -674,77 +674,7 @@ namespace Barotrauma
             // create (placeholder) outposts at the start and end of the level
             //----------------------------------------------------------------------------------
 
-            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost);
-            if (outpostFiles.Count() == 0)
-            {
-                DebugConsole.ThrowError("No outpost files found in the selected content packages");
-            }
-            else
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
-                    var outpost = new Submarine(outpostFile, tryLoad: false);
-                    outpost.Load(unloadPrevious: false);
-                    outpost.PhysicsBody.FarseerBody.IsStatic = true;
-                    outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
-                    if ((i == 0) == !mirror)
-                    {
-                        StartOutpost = outpost;
-                    }
-                    else
-                    {
-                        EndOutpost = outpost;
-                    }
-                    
-                    foreach (MapEntity me in MapEntity.mapEntityList)
-                    {
-                        if (me.Submarine != outpost) { continue; }
-                        if (me is Item item)
-                        {
-                            foreach (ItemComponent ic in item.components)
-                            {
-                                if (ic is ConnectionPanel connectionPanel)
-                                {
-                                    //prevent rewiring
-                                    connectionPanel.Locked = true;
-                                }
-                                else if (ic is Pickable pickable)
-                                {
-                                    //prevent picking up (or deattaching) items
-                                    pickable.CanBePicked = false;
-                                    pickable.CanBeSelected = false;
-                                }
-                            }
-                        }
-                        else if (me is Structure structure)
-                        {
-                            structure.Indestructible = true;
-                        }
-                    }
-
-                    WayPoint watchmanSpawnpoint = WayPoint.WayPointList.Find(wp => wp.Submarine == outpost);
-                    if (watchmanSpawnpoint == null)
-                    {
-                        DebugConsole.ThrowError("Failed to spawn a watchman at the outpost. No spawnpoints found inside the outpost.");
-                    }
-                    else
-                    {
-                        JobPrefab watchmanJob = JobPrefab.List.Find(jp => jp.Identifier == "watchman");
-                        CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
-                        var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition, ToolBox.RandomSeed(8));
-                        spawnedCharacter.CharacterHealth.Unkillable = true;
-                        spawnedCharacter.CharacterHealth.UseHealthWindow = false;
-                        spawnedCharacter.SetCustomInteract(
-                            (character) => { /*TODO: talk*/ }, 
-                            hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
-                        if (watchmanJob != null)
-                        {
-                            spawnedCharacter.GiveJobItems();
-                        }
-                    }
-                }
-            }
+            CreateOutposts();
 
             //----------------------------------------------------------------------------------
             // top barrier & sea floor
@@ -1525,6 +1455,58 @@ namespace Barotrauma
             }
             
             return cells;
+        }
+
+        private void CreateOutposts()
+        {
+            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost);
+            if (outpostFiles.Count() == 0)
+            {
+                DebugConsole.ThrowError("No outpost files found in the selected content packages");
+                return;
+            }
+            for (int i = 0; i < 2; i++)
+            {
+                string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
+                var outpost = new Submarine(outpostFile, tryLoad: false);
+                outpost.Load(unloadPrevious: false);
+                outpost.PhysicsBody.FarseerBody.IsStatic = true;
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
+                if ((i == 0) == !Mirrored)
+                {
+                    StartOutpost = outpost;
+                }
+                else
+                {
+                    EndOutpost = outpost;
+                }
+
+                foreach (MapEntity me in MapEntity.mapEntityList)
+                {
+                    if (me.Submarine != outpost) { continue; }
+                    if (me is Item item)
+                    {
+                        foreach (ItemComponent ic in item.components)
+                        {
+                            if (ic is ConnectionPanel connectionPanel)
+                            {
+                                //prevent rewiring
+                                connectionPanel.Locked = true;
+                            }
+                            else if (ic is Pickable pickable)
+                            {
+                                //prevent picking up (or deattaching) items
+                                pickable.CanBePicked = false;
+                                pickable.CanBeSelected = false;
+                            }
+                        }
+                    }
+                    else if (me is Structure structure)
+                    {
+                        structure.Indestructible = true;
+                    }
+                }
+            }            
         }
 
         public override void Remove()

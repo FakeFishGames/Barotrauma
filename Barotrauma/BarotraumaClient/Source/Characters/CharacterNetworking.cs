@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -262,7 +263,7 @@ namespace Barotrauma
 
                 if (configPath == HumanConfigFile)
                 {
-                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().Find(c => c.ID == info.ID);
+                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }

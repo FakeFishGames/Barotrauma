@@ -68,8 +68,6 @@ namespace Barotrauma
         
         public Job Job;
         
-        public ushort? HullID = null;
-
         public int Salary;
 
         private Vector2 headSpriteRange;
@@ -331,13 +329,10 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(personalityName))
             {
                 personalityTrait = NPCPersonalityTrait.List.Find(p => p.Name == personalityName);
-            }
-            int hullId = element.GetAttributeInt("hull", -1);
-            if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;          
+            }      
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
-
                 Job = new Job(subElement);
                 break;
             }
@@ -675,7 +670,6 @@ namespace Barotrauma
             {
                 if (Character.AnimController.CurrentHull != null)
                 {
-                    HullID = Character.AnimController.CurrentHull.ID;
                     charElement.Add(new XAttribute("hull", Character.AnimController.CurrentHull.ID));
                 }
             }

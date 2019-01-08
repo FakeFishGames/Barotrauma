@@ -205,7 +205,7 @@ namespace Barotrauma
 
         //text displayed when the character is highlighted if custom interact is set
         public string customInteractHUDText;
-        private Action<Character> onCustomInteract;
+        private Action<Character, Character> onCustomInteract;
         
         private float lockHandsTimer;
         public bool LockHands
@@ -1455,9 +1455,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Set an action that's invoked when another character interacts with this one. The hud text is displayed on the character when highlighted.
+        /// Set an action that's invoked when another character interacts with this one.
         /// </summary>
-        public void SetCustomInteract(Action<Character> onCustomInteract, string hudText)
+        /// <param name="onCustomInteract">Action invoked when another character interacts with this one. T1 = this character, T2 = the interacting character</param>
+        /// <param name="hudText">Displayed on the character when highlighted.</param>
+        public void SetCustomInteract(Action<Character, Character> onCustomInteract, string hudText)
         {
             this.onCustomInteract = onCustomInteract;
             customInteractHUDText = hudText;
@@ -1721,7 +1723,7 @@ namespace Barotrauma
             }
             else if (focusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.onCustomInteract != null)
             {
-                FocusedCharacter.onCustomInteract(this);
+                FocusedCharacter.onCustomInteract(focusedCharacter, this);
             }
             else if (focusedItem != null)
             {

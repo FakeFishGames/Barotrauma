@@ -559,7 +559,38 @@
   </Conversation>
 
   <Conversation line="I've been shot, get me some bandages!" flags="GunshotWound"/>
-  <Conversation line="Help, I've been shot!" flags="GunshotWound"/>  
-  
+  <Conversation line="Help, I've been shot!" flags="GunshotWound"/>
+
   <!-- /Afflictions -->
+
+  <!-- Watchmen -->
+  
+  <Conversation line="Hello, sailors!" flags="EnterEndOutpost" allowedjobs="watchman" speaker="0">
+    <Conversation line="The rest of the outpost is under construction, but please do check back in a few months!" speaker="0">
+      <Conversation line="I can however show you a list of supplies we have for sale and people who are looking for work." speaker="0">
+      <Conversation line="And when you're ready, I can give you navigation instructions to the nearby locations." speaker="0"/>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="Nice to see a friendly face! We don't get too many visitors around these parts." flags="EnterEndOutpost" allowedjobs="watchman" speaker="0">
+    <Conversation line="The rest of the outpost is under construction, but please do check back in a few months!" speaker="0">
+      <Conversation line="But if you need any supplies or extra crew, let me know." speaker="0">
+        <Conversation line="And when you're ready, I can give you navigation instructions to the nearby locations." speaker="0"/>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+  
+  <Conversation line="Heading back already?" flags="EnterStartOutpost" allowedjobs="watchman" speaker="0">
+    <Conversation line="If you need more supplies or crew, or just want to head back to another location, please let me know." speaker="0"/>
+  </Conversation>
+
+  <Conversation line="Alright, what can I do for you?" flags="WatchmanInteract" allowedjobs="watchman" speaker="0"/>
+  <Conversation line="What do you need?" flags="WatchmanInteract" allowedjobs="watchman" speaker="0"/>
+  <Conversation line="Okay, let's get this over with, I've got work to do." flags="WatchmanInteract" allowedjobs="watchman" speaker="0"/>
+
+  <Conversation line="Sorry, I need to talk to someone higher up. Anyone in your crew with campaign management privileges?" flags="WatchmanInteractNotAllowed" allowedjobs="watchman" speaker="0"/>
+
+  <!-- /Watchmen -->
+  
 </Conversations>
