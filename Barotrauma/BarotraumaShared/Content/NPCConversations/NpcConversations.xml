@@ -591,6 +591,9 @@
 
   <Conversation line="Sorry, I need to talk to someone higher up. Anyone in your crew with campaign management privileges?" flags="WatchmanInteractNotAllowed" allowedjobs="watchman" speaker="0"/>
 
+  <Conversation line="I cannot let you enter until your vessel is properly docked. Or at least close enough to the outpost." flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman" speaker="0"/>
+  <Conversation line="You want to leave your sub behind? Please get it closer to the outpost." flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman" speaker="0"/>
+
   <!-- /Watchmen -->
   
 </Conversations>

@@ -107,6 +107,45 @@ namespace Barotrauma
             lastUpdateID++;
         }
 
+
+        protected override void WatchmanInteract(Character watchman, Character interactor)
+        {
+            if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
+                (watchman.Submarine == Level.Loaded.EndOutpost && !Submarine.MainSub.AtEndPosition))
+            {
+                if (GameMain.Server != null)
+                {
+                    CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);
+                }
+                return;
+            }
+
+            bool hasPermissions = true;
+            if (GameMain.Server != null)
+            {
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Character == interactor);
+                hasPermissions = client != null &&
+                    (client.HasPermission(ClientPermissions.EndRound) || client.HasPermission(ClientPermissions.ManageCampaign));
+                    CreateDialog(new List<Character> { watchman }, hasPermissions ? "WatchmanInteract" : "WatchmanInteractNotAllowed", 1.0f);
+            }
+#if CLIENT
+            else if (GameMain.Client != null && interactor == Character.Controlled && hasPermissions)
+            {
+                var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
+                    .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    GameMain.Client.RequestRoundEnd();
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            
+            }
+#endif
+        }
+
         public override void End(string endMessage = "")
         {
             isRunning = false;

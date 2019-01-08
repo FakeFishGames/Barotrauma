@@ -369,7 +369,7 @@
   <NoMission>No mission</NoMission>
   <MissionReward>Reward: [reward]</MissionReward>
 
-  <!-- Campaign setup menu -->
+  <!-- Campaign -->
   <CampaignSetup>Campaign Setup</CampaignSetup>
   <NewCampaign>New campaign</NewCampaign>
   <LoadCampaign>Load campaign</LoadCampaign>
@@ -382,7 +382,8 @@
   <LastSaved>Last saved</LastSaved>
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
-
+  <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
+  
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
