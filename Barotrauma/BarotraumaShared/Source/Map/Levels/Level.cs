@@ -1467,10 +1467,16 @@ namespace Barotrauma
             }
             for (int i = 0; i < 2; i++)
             {
+                //only create a starting outpost in campaign mode
+                if (GameMain.GameSession?.GameMode as CampaignMode == null && ((i == 0) == !Mirrored))
+                {
+                    continue;
+                }
+
                 string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
                 var outpost = new Submarine(outpostFile, tryLoad: false);
                 outpost.Load(unloadPrevious: false);
-                outpost.PhysicsBody.FarseerBody.IsStatic = true;
+                outpost.MakeOutpost();
                 outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
                 if ((i == 0) == !Mirrored)
                 {
