@@ -2,8 +2,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
-namespace Barotrauma.Source.GUI
+namespace Barotrauma
 {
     class SpriteSheetPlayer
     {
@@ -33,7 +34,7 @@ namespace Barotrauma.Source.GUI
         public SpriteSheetPlayer()
         {
             sheetView = new GUICustomComponent(new RectTransform(defaultResolution, null, Anchor.Center),
-            (spriteBatch, guiCustomComponent) => { DrawTutorialView(spriteBatch, guiCustomComponent.Rect); }, UpdateTutorialView);
+            (spriteBatch, guiCustomComponent) => { DrawSheetView(spriteBatch, guiCustomComponent.Rect); }, UpdateSheetView);
         }
 
         public void Play()
@@ -46,41 +47,50 @@ namespace Barotrauma.Source.GUI
             isPlaying = false;
         }
 
+        public void AddToGUIUpdateList()
+        {
+            sheetView.AddToGUIUpdateList();
+        }
+
         public void SetContent(string contentPath, XElement videoElement, bool startPlayback)
         {
+            totalElapsed = 0.0f;
             animationSpeed = videoElement.GetAttributeFloat("animationspeed", 0.1f);
 
-            playableSheets = GetSheets(contentPath, videoElement);
+            CreateSpriteSheets(contentPath, videoElement);
             currentSheet = playableSheets[0];
             sheetView.RectTransform.RelativeSize = currentSheet.FrameSize.ToVector2();
 
-            isPlaying = startPlayback;
+            if (startPlayback) Play();
         }
 
-        private SpriteSheet[] GetSheets(string contentPath, XElement videoElement)
+        private void CreateSpriteSheets(string contentPath, XElement videoElement)
         {
-            SpriteSheet[] sheets = null;
             try
             {
-                XElement[] sheetElements = videoElement.Elements("Sheet") as XElement[];
-                sheets = new SpriteSheet[sheetElements.Length];
+                List<XElement> sheetElements = new List<XElement>();
 
-                for (int i = 0; i < sheetElements.Length; i++)
+                foreach (var sheetElement in videoElement.Elements("Sheet"))
                 {
-                    sheets[i] = new SpriteSheet(sheetElements[i], contentPath, sheetElements[i].GetAttributeString("path", ""));
+                    sheetElements.Add(sheetElement);
+                }
+
+                playableSheets = new SpriteSheet[sheetElements.Count];
+
+                for (int i = 0; i < sheetElements.Count; i++)
+                {
+                    playableSheets[i] = new SpriteSheet(sheetElements[i], contentPath, sheetElements[i].GetAttributeString("path", ""));
                 }
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error loading sprite sheet content " + contentPath + "!", e);
             }
-
-            return sheets;
         }
 
-        private void UpdateTutorialView(float deltaTime, GUICustomComponent viewContainer)
+        private void UpdateSheetView(float deltaTime, GUICustomComponent viewContainer)
         {
-            if (!isPlaying || playableSheets == null || currentSheet == null) return;
+            if (!isPlaying) return;
 
             totalElapsed += deltaTime;
             if (totalElapsed > animationSpeed)
@@ -103,9 +113,9 @@ namespace Barotrauma.Source.GUI
             }
         }
 
-        private void DrawTutorialView(SpriteBatch spriteBatch, Rectangle rect)
+        private void DrawSheetView(SpriteBatch spriteBatch, Rectangle rect)
         {
-            if (!isPlaying || playableSheets == null || currentSheet == null) return;
+            if (!isPlaying) return;
             currentSheet.Draw(spriteBatch, currentFrameIndex, rect.Center.ToVector2(), Color.White, currentSheet.Origin, 0f, Vector2.One);
         }
     }

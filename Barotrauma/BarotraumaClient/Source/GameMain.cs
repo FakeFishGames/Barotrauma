@@ -15,6 +15,7 @@ using GameAnalyticsSDK.Net;
 using System.IO;
 using System.Threading;
 using System.IO;
+using Barotrauma.Tutorials;
 
 namespace Barotrauma
 {
@@ -564,7 +565,7 @@ namespace Barotrauma
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen/* || ContextualTutorial.ContentRunning*/) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
                     Screen.Selected.AddToGUIUpdateList();
