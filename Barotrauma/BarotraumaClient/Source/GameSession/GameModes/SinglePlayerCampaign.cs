@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace Barotrauma
 
         private Submarine leavingSub;
         private bool atEndPosition;
+        private ContextualTutorial contextualTutorial;
 
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
@@ -38,6 +40,8 @@ namespace Barotrauma
                     CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
                 }
             }
+
+            contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
         }
 
         public override void Start()
@@ -132,6 +136,11 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
+
+            if (contextualTutorial != null && !contextualTutorial.Completed)
+            {
+                contextualTutorial.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
@@ -139,6 +148,11 @@ namespace Barotrauma
             if (!isRunning || GUI.DisableHUD) return;
 
             base.Update(deltaTime);
+
+            if (contextualTutorial != null && !contextualTutorial.Completed)
+            {
+                contextualTutorial.Update(deltaTime);
+            }
 
             endRoundButton.UpdateManually(deltaTime);
 

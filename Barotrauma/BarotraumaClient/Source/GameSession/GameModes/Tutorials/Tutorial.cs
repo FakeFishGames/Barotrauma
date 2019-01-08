@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -12,18 +11,10 @@ namespace Barotrauma.Tutorials
         public static List<Tutorial> Tutorials;
 
         protected GUIComponent infoBox;
+        protected XElement configElement;
 
-        private XElement configElement;
-
-        private Character character;
-
-        private SpawnType spawnPointType;
-
-        private enum TutorialType { None, Scenario, Additive };
+        private enum TutorialType { None, Scenario, Contextual };
         private TutorialType tutorialType = TutorialType.None;
-
-        private string submarinePath;
-        private string levelSeed;
 
         public string Name
         {
@@ -113,72 +104,18 @@ namespace Barotrauma.Tutorials
         {
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
-            submarinePath = element.GetAttributeString("submarinepath", "");
-            levelSeed = element.GetAttributeString("levelseed", "tuto");
-
             Completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
-
-            Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
             Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
         }
         
-        public void Initialize()
+        public virtual void Initialize()
         {
-            switch (tutorialType)
-            {
-                case TutorialType.None:
-                    break;
-                case TutorialType.Scenario:
-                    GameMain.Instance.ShowLoading(Loading());
-                    break;
-                case TutorialType.Additive:
-                    break;
-            }
-        }
 
-        private IEnumerable<object> Loading()
-        {
-            yield return CoroutineStatus.Running;
-
-            Submarine.MainSub = Submarine.Load(submarinePath, "", true);
-            yield return CoroutineStatus.Running;
-
-            GameMain.GameSession = new GameSession(Submarine.MainSub, "", GameModePreset.list.Find(gm => gm.Name.ToLowerInvariant() == "tutorial"));
-            (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
-            GameMain.GameSession.StartRound(levelSeed);
-            GameMain.GameSession.EventManager.Events.Clear();
-            GameMain.GameScreen.Select();
-
-            yield return CoroutineStatus.Success;
         }
 
         public virtual void Start()
         {
-            WayPoint wayPoint = WayPoint.GetRandom(spawnPointType, null);
-            if (wayPoint == null)
-            {
-                DebugConsole.ThrowError("A waypoint with the spawntype \"" + spawnPointType + "\" is required for the tutorial event");
-                return;
-            }
-
-            CharacterInfo charInfo = configElement.Element("Character") == null ?                
-                new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
-                new CharacterInfo(configElement.Element("Character"));
-            
-            character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
-            Character.Controlled = character;
-            character.GiveJobItems(null);
-
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            if (idCard == null)
-            {
-                DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
-                return;
-            }
-            idCard.AddTag("com");
-            idCard.AddTag("eng");
-            
-            CoroutineManager.StartCoroutine(UpdateState());
+           
         }
 
         public virtual void AddToGUIUpdateList()
@@ -188,45 +125,13 @@ namespace Barotrauma.Tutorials
 
         public virtual void Update(float deltaTime)
         {
-            if (character != null)
-            {
-                if (Character.Controlled == null)
-                {
-                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
-                    infoBox = null;
-                }
-                else if (Character.Controlled.IsDead)
-                {
-                    Character.Controlled = null;
-
-                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
-                    infoBox = null;
-                    CoroutineManager.StartCoroutine(Dead());
-                }
-            }
+           
         }
 
         public virtual IEnumerable<object> UpdateState()
         {
             yield return CoroutineStatus.Success;
         }
-
-        private IEnumerable<object> Dead()
-        {
-            yield return new WaitForSeconds(3.0f);
-
-            var messageBox = new GUIMessageBox("You have died", "Do you want to try again?", new string[] { "Yes", "No" });
-
-            messageBox.Buttons[0].OnClicked += Restart;
-            messageBox.Buttons[0].OnClicked += messageBox.Close;
-
-
-            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
-            messageBox.Buttons[1].OnClicked += messageBox.Close;
-
-            yield return CoroutineStatus.Success;
-        }
-
 
         protected bool CloseInfoFrame(GUIButton button, object userData)
         {
@@ -263,11 +168,9 @@ namespace Barotrauma.Tutorials
             return infoBlock;
         }
 
-
-        private bool Restart(GUIButton button, object obj)
+        protected bool Restart(GUIButton button, object obj)
         {
             TutorialMode.StartTutorial(this);
-
             return true;
         }
     }

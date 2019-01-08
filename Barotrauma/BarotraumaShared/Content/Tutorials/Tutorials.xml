@@ -1,17 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tutorials>
-  <ContextualTutorial tutorialtype="additive" playablecontentpath="Content/Tutorials/ContextualTutorial/">
-    <TutorialSegment name ="ReactorTutorial" istriggered="false">
+  <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
+    <Segment name="Welcome" contenttype="text" istriggered="false">
+      <Text>
+        "Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?"
+      </Text>
+    </Segment>
+    <Segment name ="ReactorTutorial" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="Video1/Sheets1.png" columns="7" rows="12"/>
         <Sheet path="Video1/Sheets2.png" columns="7" rows="13"/>
       </Video>
-    </TutorialSegment>
-    <TutorialSegment name="WiringTutorial" istriggered="false">
+    </Segment>
+    <Segment name="WiringTutorial" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="Video2/Sheets1.png" columns="3" rows="8"/>
       </Video>
-    </TutorialSegment>
+    </Segment>
   </ContextualTutorial>
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/human.xml">
