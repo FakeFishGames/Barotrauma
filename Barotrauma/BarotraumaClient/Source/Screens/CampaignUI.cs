@@ -200,14 +200,14 @@ namespace Barotrauma
 
             SelectTab(Tab.Map);
 
-            SetCurrentLocation(campaign.Map.CurrentLocation);
+            UpdateLocationView(campaign.Map.CurrentLocation);
 
             campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnLocationChanged += (prevLocation, newLocation) => SetCurrentLocation(newLocation);
+            campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationView(newLocation);
             campaign.CargoManager.OnItemsChanged += RefreshItemTab;
         }
 
-        private void SetCurrentLocation(Location location)
+        private void UpdateLocationView(Location location)
         {
             if (characterPreviewFrame != null)
             {
@@ -215,7 +215,8 @@ namespace Barotrauma
                 characterPreviewFrame = null;
             }
 
-            if (location.HireManager == null)
+            var hireableCharacters = location.GetHireableCharacters();
+            if (!hireableCharacters.Any())
             {
                 hireList.Content.ClearChildren();
                 hireList.Enabled = false;
@@ -227,7 +228,7 @@ namespace Barotrauma
             hireList.Enabled = true;
             hireList.Content.ClearChildren();
 
-            foreach (CharacterInfo c in location.HireManager.availableCharacters)
+            foreach (CharacterInfo c in hireableCharacters)
             {
                 var frame = c.CreateCharacterFrame(hireList.Content, c.Name + " (" + c.Job.Name + ")", c);
                 new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
@@ -571,9 +572,9 @@ namespace Barotrauma
                 return false;
             }
 
-            if (spCampaign.TryHireCharacter(GameMain.GameSession.Map.CurrentLocation.HireManager, characterInfo))
+            if (spCampaign.TryHireCharacter(GameMain.GameSession.Map.CurrentLocation, characterInfo))
             {
-                SetCurrentLocation(GameMain.GameSession.Map.CurrentLocation);
+                UpdateLocationView(GameMain.GameSession.Map.CurrentLocation);
                 SelectCharacter(null, null);
                 UpdateCharacterLists();
             }

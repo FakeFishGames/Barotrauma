@@ -12,89 +12,63 @@ namespace Barotrauma
         private MapGenerationParams generationParams;
         
         private List<Level> levels;
-
-        private List<Location> locations;
-
         private List<LocationConnection> connections;
-
-        private string seed;
         private int size;
-
-        private Location currentLocation;
-        private Location selectedLocation;
-
-        private LocationConnection selectedConnection;
-
         public Action<Location, LocationConnection> OnLocationSelected;
         //from -> to
         public Action<Location, Location> OnLocationChanged;
-        
-        public Location CurrentLocation
-        {
-            get { return currentLocation; }
-        }
+
+        public Location CurrentLocation { get; private set; }
 
         public int CurrentLocationIndex
         {
-            get { return locations.IndexOf(currentLocation); }
+            get { return Locations.IndexOf(CurrentLocation); }
         }
 
-        public Location SelectedLocation
-        {
-            get { return selectedLocation; }
-        }
+        public Location SelectedLocation { get; private set; }
 
         public int SelectedLocationIndex
         {
-            get { return locations.IndexOf(selectedLocation); }
+            get { return Locations.IndexOf(SelectedLocation); }
         }
 
-        public LocationConnection SelectedConnection
-        {
-            get { return selectedConnection; }
-        }
+        public LocationConnection SelectedConnection { get; private set; }
 
-        public string Seed
-        {
-            get { return seed; }
-        }
+        public string Seed { get; private set; }
 
-        public List<Location> Locations
-        {
-            get { return locations; }
-        }
+        public List<Location> Locations { get; private set; }
 
         public Map(string seed)
         {
             generationParams = MapGenerationParams.Instance;
-            this.seed = seed;
+            this.Seed = seed;
             this.size = generationParams.Size;
 
             levels = new List<Level>();
 
-            locations = new List<Location>();
+            Locations = new List<Location>();
 
             connections = new List<LocationConnection>();
 
-            Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
+            Rand.SetSyncedSeed(ToolBox.StringToInt(this.Seed));
 
             Generate();
 
             //start from the colony furthest away from the center
             float largestDist = 0.0f;
             Vector2 center = new Vector2(size, size) / 2;
-            foreach (Location location in locations)
+            foreach (Location location in Locations)
             {
                 if (location.Type.Name != "City") continue;
                 float dist = Vector2.DistanceSquared(center, location.MapPosition);
                 if (dist > largestDist)
                 {
                     largestDist = dist;
-                    currentLocation = location;
+                    CurrentLocation = location;
                 }
             }
             
-            currentLocation.Discovered = true;
+            CurrentLocation.Discovered = true;
 
             foreach (LocationConnection connection in connections)
             {
@@ -166,7 +140,7 @@ namespace Barotrauma
         private void Generate()
         {
             connections.Clear();
-            locations.Clear();
+            Locations.Clear();
 
             GenerateNoiseMap(generationParams.NoiseOctaves, generationParams.NoisePersistence);
 
@@ -202,8 +176,8 @@ namespace Barotrauma
                     Vector2.DistanceSquared(edge.Point2, mapCenter) >= locationRadius * locationRadius) continue;
 
                 Location[] newLocations = new Location[2];
-                newLocations[0] = locations.Find(l => l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2);
-                newLocations[1] = locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2));
+                newLocations[0] = Locations.Find(l => l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2);
+                newLocations[1] = Locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2));
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -217,7 +191,7 @@ namespace Barotrauma
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
                     int zone = MathHelper.Clamp(generationParams.DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, generationParams.DifficultyZones);
                     newLocations[i] = Location.CreateRandom(position, zone);
-                    locations.Add(newLocations[i]);
+                    Locations.Add(newLocations[i]);
                 }
 
                 var newConnection = new LocationConnection(newLocations[0], newLocations[1]);
@@ -259,7 +233,7 @@ namespace Barotrauma
             }
 
             //remove orphans
-            locations.RemoveAll(c => !connectedLocations.Contains(c));
+            Locations.RemoveAll(c => !connectedLocations.Contains(c));
             
             for (int i = connections.Count - 1; i >= 0; i--)
             {
@@ -338,7 +312,7 @@ namespace Barotrauma
 
         private List<LocationConnection> GetMapEdges()
         {
-            List<Vector2> verts = locations.Select(l => l.MapPosition).ToList();
+            List<Vector2> verts = Locations.Select(l => l.MapPosition).ToList();
 
             List<Vector2> giftWrappedVerts = MathUtils.GiftWrap(verts);
 
@@ -357,75 +331,75 @@ namespace Barotrauma
         
         public void MoveToNextLocation()
         {
-            Location prevLocation = currentLocation;
-            selectedConnection.Passed = true;
+            Location prevLocation = CurrentLocation;
+            SelectedConnection.Passed = true;
 
-            currentLocation = selectedLocation;
-            currentLocation.Discovered = true;
-            selectedLocation = null;
+            CurrentLocation = SelectedLocation;
+            CurrentLocation.Discovered = true;
+            SelectedLocation = null;
 
-            OnLocationChanged?.Invoke(prevLocation, currentLocation);
+            OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
         }
 
         public void SetLocation(int index)
         {
             if (index == -1)
             {
-                currentLocation = null;
+                CurrentLocation = null;
                 return;
             }
 
-            if (index < 0 || index >= locations.Count)
+            if (index < 0 || index >= Locations.Count)
             {
                 DebugConsole.ThrowError("Location index out of bounds");
                 return;
             }
 
-            Location prevLocation = currentLocation;
-            currentLocation = locations[index];
-            currentLocation.Discovered = true;
+            Location prevLocation = CurrentLocation;
+            CurrentLocation = Locations[index];
+            CurrentLocation.Discovered = true;
 
-            OnLocationChanged?.Invoke(prevLocation, currentLocation);
+            OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
         }
 
         public void SelectLocation(int index)
         {
             if (index == -1)
             {
-                selectedLocation = null;
-                selectedConnection = null;
+                SelectedLocation = null;
+                SelectedConnection = null;
 
                 OnLocationSelected?.Invoke(null, null);
                 return;
             }
 
-            if (index < 0 || index >= locations.Count)
+            if (index < 0 || index >= Locations.Count)
             {
                 DebugConsole.ThrowError("Location index out of bounds");
                 return;
             }
 
-            selectedLocation = locations[index];
-            selectedConnection = connections.Find(c => c.Locations.Contains(currentLocation) && c.Locations.Contains(selectedLocation));
-            OnLocationSelected?.Invoke(selectedLocation, selectedConnection);
+            SelectedLocation = Locations[index];
+            SelectedConnection = connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
         }
 
         public void SelectLocation(Location location)
         {
-            if (!locations.Contains(location))
+            if (!Locations.Contains(location))
             {
                 DebugConsole.ThrowError("Failed to select a location. "+location.Name+" not found in the map.");
                 return;
             }
 
-            selectedLocation = location;
-            selectedConnection = connections.Find(c => c.Locations.Contains(currentLocation) && c.Locations.Contains(selectedLocation));
-            OnLocationSelected?.Invoke(selectedLocation, selectedConnection);
+            SelectedLocation = location;
+            SelectedConnection = connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
         }
 
         public void SelectRandomLocation(bool preferUndiscovered)
         {
-            List<Location> nextLocations = currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)).ToList();            
+            List<Location> nextLocations = CurrentLocation.Connections.Select(c => c.OtherLocation(CurrentLocation)).ToList();            
             List<Location> undiscoveredLocations = nextLocations.FindAll(l => !l.Discovered);
             
             if (undiscoveredLocations.Count > 0 && preferUndiscovered)
@@ -440,7 +414,7 @@ namespace Barotrauma
 
         public void ProgressWorld()
         {
-            foreach (Location location in locations)
+            foreach (Location location in Locations)
             {
                 if (!location.Discovered) continue;
 
@@ -534,7 +508,7 @@ namespace Barotrauma
                 {
                     case "location":
                         string locationType = subElement.GetAttributeString("type", "");
-                        Location location = locations[subElement.GetAttributeInt("i", 0)];
+                        Location location = Locations[subElement.GetAttributeInt("i", 0)];
                         int typeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
 
                         string prevLocationName = location.Name;
@@ -569,9 +543,9 @@ namespace Barotrauma
             mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
             mapElement.Add(new XAttribute("seed", Seed));
 
-            for (int i = 0; i < locations.Count; i++)
+            for (int i = 0; i < Locations.Count; i++)
             {
-                var location = locations[i];
+                var location = Locations[i];
                 if (!location.Discovered) continue;
 
                 var locationElement = new XElement("location", new XAttribute("i", i));
@@ -603,5 +577,16 @@ namespace Barotrauma
             
             element.Add(mapElement);
         }
+
+        public void Remove()
+        {
+            foreach (Location location in Locations)
+            {
+                location.Remove();
+            }
+            RemoveProjSpecific();
+        }
+
+        partial void RemoveProjSpecific();
     }
 }

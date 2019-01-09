@@ -177,5 +177,12 @@ namespace Barotrauma
                 DebugConsole.NewMessage("\n" + map.SelectedConnection.Mission.Description, Color.White);
             }
         }
+
+        public override void Remove()
+        {
+            base.Remove();
+            map?.Remove();
+            map = null;
+        }
     }
 }
