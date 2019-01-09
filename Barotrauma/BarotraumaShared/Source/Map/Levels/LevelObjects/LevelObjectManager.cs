@@ -277,8 +277,8 @@ namespace Barotrauma
 
             minIndices.X = Math.Max(0, minIndices.X);
             minIndices.Y = Math.Max(0, minIndices.Y);
-            maxIndices.X = Math.Min(objectGrid.GetLength(0), maxIndices.X);
-            maxIndices.Y = Math.Min(objectGrid.GetLength(1), maxIndices.Y);
+            maxIndices.X = Math.Min(objectGrid.GetLength(0) - 1, maxIndices.X);
+            maxIndices.Y = Math.Min(objectGrid.GetLength(1) - 1, maxIndices.Y);
 
             objectsInRange.Clear();
             for (int x = minIndices.X; x <= maxIndices.X; x++)
