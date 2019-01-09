@@ -2311,7 +2311,7 @@ namespace Barotrauma
             {
                 spriteSheetMaxZoom = 1;
             }
-            else if (height < width)
+            else if (height > width)
             {
                 spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY) / height;
             }
