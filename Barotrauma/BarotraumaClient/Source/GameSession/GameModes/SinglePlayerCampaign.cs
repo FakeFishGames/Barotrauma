@@ -43,6 +43,10 @@ namespace Barotrauma
             }
 
             ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
+            if (!ContextualTutorial.Completed)
+            {
+                ContextualTutorial.Initialize();
+            }
         }
 
         public override void Start()
@@ -60,6 +64,12 @@ namespace Barotrauma
             isRunning = true;
 
             CrewManager.InitSinglePlayerRound();
+
+            if (!ContextualTutorial.Completed)
+            {
+                ContextualTutorial.Campaign = this;
+                ContextualTutorial.Start();
+            }
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -172,6 +182,11 @@ namespace Barotrauma
         public override void End(string endMessage = "")
         {
             isRunning = false;
+
+            if (!ContextualTutorial.Completed)
+            {
+                ContextualTutorial.Stop();
+            }
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
 
