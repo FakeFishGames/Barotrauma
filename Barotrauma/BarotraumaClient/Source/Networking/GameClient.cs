@@ -23,8 +23,9 @@ namespace Barotrauma.Networking
 
         private GUIMessageBox reconnectBox, waitInServerQueueBox;
 
-        private GUIButton endRoundButton;
-        private GUITickBox endVoteTickBox;
+        //TODO: move these to NetLobbyScreen
+        public GUIButton EndRoundButton;
+        public GUITickBox EndVoteTickBox;
 
         private ClientPermissions permissions = ClientPermissions.None;
         private List<string> permittedConsoleCommands = new List<string>();
@@ -107,7 +108,7 @@ namespace Barotrauma.Networking
                 CanBeFocused = false
             };
 
-            endRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+            EndRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
                 TextManager.Get("EndRound"))
             {
                 OnClicked = (btn, userdata) =>
@@ -119,14 +120,14 @@ namespace Barotrauma.Networking
                 Visible = false
             };
 
-            endVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+            EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
                 TextManager.Get("EndRound"))
             {
                 OnSelected = ToggleEndRoundVote,
                 Visible = false
             };
             
-            showLogButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+            ShowLogButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
                 TextManager.Get("ServerLog"))
             {
                 OnClicked = (GUIButton button, object userData) =>
@@ -585,7 +586,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                endVoteTickBox.Visible = serverSettings.Voting.AllowEndVoting && HasSpawned;
+                EndVoteTickBox.Visible = serverSettings.Voting.AllowEndVoting && HasSpawned;
 
                 if (respawnManager != null)
                 {
@@ -895,20 +896,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            GameMain.NetLobbyScreen.ServerName.Enabled = HasPermission(ClientPermissions.ManageSettings);
-            GameMain.NetLobbyScreen.ServerMessage.Enabled = HasPermission(ClientPermissions.ManageSettings);
-            GameMain.NetLobbyScreen.SettingsButton.Visible = HasPermission(ClientPermissions.ManageSettings);
-            GameMain.NetLobbyScreen.SettingsButton.OnClicked = ServerSettings.ToggleSettingsFrame;
-            GameMain.NetLobbyScreen.ReadyToStartBox.Visible = !HasPermission(ClientPermissions.ManageRound);
-            GameMain.NetLobbyScreen.StartButton.Visible = HasPermission(ClientPermissions.ManageRound);
-            GameMain.NetLobbyScreen.ServerName.Enabled = HasPermission(ClientPermissions.ManageSettings);
-            GameMain.NetLobbyScreen.ServerMessage.Enabled = HasPermission(ClientPermissions.ManageSettings);
-            GameMain.NetLobbyScreen.SubList.Enabled = serverSettings.Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
-            GameMain.NetLobbyScreen.ModeList.Enabled = serverSettings.Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
-            GameMain.NetLobbyScreen.ShowLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
-            showLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
-
-            endRoundButton.Visible = HasPermission(ClientPermissions.ManageRound);      
+            GameMain.NetLobbyScreen.UpdatePermissions();
         }
 
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
@@ -925,7 +913,7 @@ namespace Barotrauma.Networking
             entityEventManager.Clear();
             LastSentEntityEventID = 0;
 
-            endVoteTickBox.Selected = false;
+            EndVoteTickBox.Selected = false;
 
             int seed                = inc.ReadInt32();
             string levelSeed        = inc.ReadString();
@@ -1899,7 +1887,7 @@ namespace Barotrauma.Networking
 
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
-        protected GUIButton showLogButton;
+        public GUIButton ShowLogButton; //TODO: move to NetLobbyScreen
 
         private float myCharacterFrameOpenState;
 

@@ -49,6 +49,13 @@ namespace Barotrauma
                 return textBox;
             }
         }
+        public GUITextBox SeedBox
+        {
+            get
+            {
+                return seedBox;
+            }
+        }
 
         private GUIFrame defaultModeContainer, campaignContainer;
         private GUIButton campaignViewButton, spectateButton;
@@ -224,7 +231,7 @@ namespace Barotrauma
 
                 levelSeed = value;
                 backgroundSprite = LocationType.Random(levelSeed)?.Background;
-                seedBox.Text = levelSeed;
+                if (!seedBox.Selected) seedBox.Text = levelSeed;
 
                 //lastUpdateID++;
             }
@@ -445,26 +452,34 @@ namespace Barotrauma
             var missionTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), missionTypeContainer.RectTransform),
                 TextManager.Get("MissionType"));
             missionTypeButtons = new GUIButton[2];
-            missionTypeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), "<")
+            missionTypeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), "<");
+            missionTypeButtons[0].OnClicked = (button, obj) =>
             {
-                UserData = -1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, missionType: -1);
+
+                return true;
             };
+
             new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), missionTypeContainer.RectTransform),
-                TextManager.Get("MissionType.Random"), textAlignment: Alignment.Center)
+                TextManager.Get("MissionType.Random"), textAlignment: Alignment.Center);
+            missionTypeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), ">");
+            missionTypeButtons[1].OnClicked = (button, obj) =>
             {
-                UserData = 0
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, missionType: 1);
+
+                return true;
             };
-            missionTypeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), ">")
-            {
-                UserData = 1
-            };
+
             clientDisabledElements.AddRange(missionTypeButtons);
 
             //seed ------------------------------------------------------------------
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("LevelSeed"));
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform));
-            seedBox.OnTextChanged += SelectSeed;
+            seedBox.OnDeselected += (textBox, key) =>
+            {
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
+            };
             clientDisabledElements.Add(seedBox);
             LevelSeed = ToolBox.RandomSeed(8);
 
@@ -472,6 +487,14 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("LevelDifficulty"));
             levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), barSize: 0.1f);
+            levelDifficultyScrollBar.Range = new Vector2(0.0f, 100.0f);
+            levelDifficultyScrollBar.OnReleased = (scrollbar, value) =>
+            {
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, levelDifficulty: scrollbar.BarScrollValue);
+
+                return true;
+            };
+
             clientDisabledElements.Add(levelDifficultyScrollBar);
 
             //traitor probability ------------------------------------------------------------------
@@ -482,15 +505,23 @@ namespace Barotrauma
 
             var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
             traitorProbabilityButtons = new GUIButton[2];
-            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), "<")
+            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), "<");
+            traitorProbabilityButtons[0].OnClicked = (button, obj) =>
             {
-                UserData = -1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: -1);
+
+                return true;
             };
+            
             traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
-            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), ">")
+            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), traitorProbContainer.RectTransform), ">");
+            traitorProbabilityButtons[1].OnClicked = (button, obj) =>
             {
-                UserData = 1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: 1);
+
+                return true;
             };
+
             clientDisabledElements.AddRange(traitorProbabilityButtons);
 
             //bot count ------------------------------------------------------------------
@@ -498,39 +529,59 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("BotCount"));
             var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
             botCountButtons = new GUIButton[2];
-            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), "<")
+            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), "<");
+            botCountButtons[0].OnClicked = (button, obj) =>
             {
-                UserData = -1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: -1);
+
+                return true;
             };
+
             botCountText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
-            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), ">")
+            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botCountContainer.RectTransform), ">");
+            botCountButtons[1].OnClicked = (button, obj) =>
             {
-                UserData = 1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: 1);
+
+                return true;
             };
+
             clientDisabledElements.AddRange(botCountButtons);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("BotSpawnMode"));
             var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), isHorizontal: true);
             botSpawnModeButtons = new GUIButton[2];
-            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), "<")
+            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), "<");
+            botSpawnModeButtons[0].OnClicked = (button, obj) =>
             {
-                UserData = -1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: -1);
+
+                return true;
             };
+
             botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
-            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), ">")
+            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), botSpawnModeContainer.RectTransform), ">");
+            botSpawnModeButtons[1].OnClicked = (button, obj) =>
             {
-                UserData = 1
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: 1);
+
+                return true;
             };
+
             clientDisabledElements.AddRange(botSpawnModeButtons);
 
             //misc buttons ------------------------------------------------------------------
             
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null); //spacing
 
-            autoRestartBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("AutoRestart"))
+            autoRestartBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), TextManager.Get("AutoRestart"));
+            autoRestartBox.OnSelected = (tickBox) =>
             {
-                OnSelected = ToggleAutoRestart
+                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
+
+                return true;
             };
+
             clientDisabledElements.Add(autoRestartBox);
             var restartText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightInfoColumn.RectTransform), "", font: GUI.SmallFont)
             {
@@ -596,13 +647,7 @@ namespace Barotrauma
             clientDisabledElements.ForEach(c => c.Enabled = false);
             clientHiddenElements.ForEach(c => c.Visible = false);
 
-            ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
-
-            SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
-
-            ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            UpdatePermissions();
 
             if (GameMain.Client != null)
             {
@@ -704,6 +749,36 @@ namespace Barotrauma
             }
         }*/
         
+        public void UpdatePermissions()
+        {
+            ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            missionTypeButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            missionTypeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            traitorProbabilityButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            traitorProbabilityButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            botCountButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            botSpawnModeButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            botSpawnModeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            levelDifficultyScrollBar.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            autoRestartBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            seedBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+
+            SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
+            ReadyToStartBox.Visible = !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+            ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
+            ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
+            ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
+            GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
+
+            GameMain.Client.EndRoundButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+        }
+
         public void ShowSpectateButton()
         {
             if (GameMain.Client == null) return;
@@ -1608,8 +1683,7 @@ namespace Barotrauma
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && AllowSubSelection;
-            seedBox.Enabled = false;//!enabled && GameMain.Server != null;
-
+            
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
             
             if (enabled)

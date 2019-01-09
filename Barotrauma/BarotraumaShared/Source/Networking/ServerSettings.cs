@@ -36,7 +36,8 @@ namespace Barotrauma.Networking
             Name = 0x1,
             Message = 0x2,
             Properties = 0x4,
-            GameMode = 0x8
+            Misc = 0x8,
+            LevelSeed = 0x10
         }
 
         public string Name
