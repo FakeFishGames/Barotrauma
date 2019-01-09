@@ -1020,7 +1020,13 @@ namespace Barotrauma
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
                 // Temp: remove all items from head
-                var removables = character.Inventory.Items.Where(i => i != null && (i.AllowedSlots.Contains(InvSlotType.Head) || i.AllowedSlots.Contains(InvSlotType.Headset))).ToList();
+                var removables = character.Inventory.Items.Where(i => i != null && (i.AllowedSlots.Contains(InvSlotType.Head) || i.AllowedSlots.Contains(InvSlotType.Headset)));
+                removables.ForEach(i => i.Unequip(character));
+                // Temp?: Remove all items that don't inherit the source rect
+                removables = character.AnimController.Limbs
+                    .SelectMany(l => l.WearingItems
+                        .Where(i => !i.InheritSourceRect)
+                        .Select(i => i.WearableComponent.Item)).Distinct();
                 removables.ForEach(i => i.Unequip(character));
                 selectedJob = characterInfo.Job.Prefab.Identifier;
             }
