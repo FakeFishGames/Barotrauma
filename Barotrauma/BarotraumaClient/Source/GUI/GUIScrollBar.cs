@@ -20,6 +20,7 @@ namespace Barotrauma
         
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
+        public OnMovedHandler OnReleased;
         
         public bool IsBooleanSwitch;
 
@@ -220,7 +221,11 @@ namespace Barotrauma
             
             if (draggingBar == this)
             {
-                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    OnReleased?.Invoke(this, BarScroll);
+                    draggingBar = null;
+                }
                 if ((isHorizontal && PlayerInput.MousePosition.X > Rect.X && PlayerInput.MousePosition.X < Rect.Right) ||
                     (!isHorizontal && PlayerInput.MousePosition.Y > Rect.Y && PlayerInput.MousePosition.Y < Rect.Bottom))
                 {
@@ -231,6 +236,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
+                    draggingBar?.OnReleased?.Invoke(draggingBar, draggingBar.BarScroll);
                     MoveButton(new Vector2(
                         Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
                         Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));

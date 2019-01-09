@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
             }
         }
         private Dictionary<string, bool> tempMonsterEnabled;
-
+        
         partial void InitProjSpecific()
         {
             var properties = TypeDescriptor.GetProperties(GetType()).Cast<PropertyDescriptor>();
@@ -141,7 +141,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend)
+        public void ClientAdminWrite(NetFlags dataToSend,int missionType=0,float? levelDifficulty=null,bool? autoRestart=null,int traitorSetting=0,int botCount=0,int botSpawnMode=0)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -191,8 +191,27 @@ namespace Barotrauma.Networking
                 BanList.ClientAdminWrite(outMsg);
                 Whitelist.ClientAdminWrite(outMsg);
             }
-            
-            (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+
+            if (dataToSend.HasFlag(NetFlags.Misc))
+            {
+                outMsg.Write((byte)(missionType + 1));
+                outMsg.Write((byte)(traitorSetting + 1));
+                outMsg.Write((byte)(botCount + 1));
+                outMsg.Write((byte)(botSpawnMode + 1));
+
+                outMsg.Write(levelDifficulty ?? -1000.0f);
+
+                outMsg.Write(autoRestart != null);
+                outMsg.Write(autoRestart ?? false);
+                outMsg.WritePadBits();
+            }
+
+            if (dataToSend.HasFlag(NetFlags.LevelSeed))
+            {
+                outMsg.Write(GameMain.NetLobbyScreen.SeedBox.Text);
+            }
+
+            (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         //GUI stuff

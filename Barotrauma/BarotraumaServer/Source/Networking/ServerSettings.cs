@@ -121,7 +121,47 @@ namespace Barotrauma.Networking
                 changed |= BanList.ServerAdminRead(incMsg, c);
                 changed |= Whitelist.ServerAdminRead(incMsg, c);
             }
-            
+
+            if (flags.HasFlag(NetFlags.Misc))
+            {
+                int missionType = GameMain.NetLobbyScreen.MissionTypeIndex + incMsg.ReadByte() - 1;
+                while (missionType < 0) missionType += Enum.GetValues(typeof(MissionType)).Length;
+                while (missionType >= Enum.GetValues(typeof(MissionType)).Length) missionType -= Enum.GetValues(typeof(MissionType)).Length;
+                GameMain.NetLobbyScreen.MissionTypeIndex = missionType;
+                
+                int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
+                if (traitorSetting < 0) traitorSetting = 0;
+                if (traitorSetting > (int)YesNoMaybe.Yes) traitorSetting = (int)YesNoMaybe.Yes;
+                TraitorsEnabled = (YesNoMaybe)traitorSetting;
+
+                int botCount = BotCount + incMsg.ReadByte() - 1;
+                if (botCount < 0) botCount = 0;
+                BotCount = botCount;
+
+                int botSpawnMode = (int)BotSpawnMode + incMsg.ReadByte() - 1;
+                if (botSpawnMode < 0) botSpawnMode = 0;
+                if (botSpawnMode > (int)BotSpawnMode.Fill) botSpawnMode = (int)BotSpawnMode.Fill;
+                BotSpawnMode = (BotSpawnMode)botSpawnMode;
+
+                float levelDifficulty = incMsg.ReadFloat();
+                if (levelDifficulty >= 0.0f) SelectedLevelDifficulty = levelDifficulty;
+
+                bool changedAutoRestart = incMsg.ReadBoolean();
+                bool autoRestart = incMsg.ReadBoolean();
+                if (changedAutoRestart)
+                {
+                    AutoRestart = autoRestart;
+                }
+
+                changed |= true;
+            }
+
+            if (flags.HasFlag(NetFlags.LevelSeed))
+            {
+                GameMain.NetLobbyScreen.LevelSeed = incMsg.ReadString();
+                changed |= true;
+            }
+
             if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
         }
 
