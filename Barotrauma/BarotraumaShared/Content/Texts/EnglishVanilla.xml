@@ -158,6 +158,10 @@
   <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
   <MuteOnFocusLostToolTip>Mutes the game when its window is not in focus.</MuteOnFocusLostToolTip>
   <VoiceChat>Voice chat</VoiceChat>
+  <CurrentDevice>Current device</CurrentDevice>
+  <CurrentDeviceToolTip.OSX>This device will be used for voice chat. Unfortunately there is no way to change the input device on Mac OS X and it will instead use your system's default only.</CurrentDeviceToolTip.OSX>
+  <RefreshDefaultDevice>Refresh default device</RefreshDefaultDevice>
+  <RefreshDefaultDeviceToolTip>Refreshes the input device used for voice chat. If you swap/hotplug the default input on your system then press this to detect that change.</RefreshDefaultDeviceToolTip>
   <VoiceMode.Disabled>Disabled</VoiceMode.Disabled>
   <VoiceMode.DisabledToolTip>Voice chat is disabled.</VoiceMode.DisabledToolTip>
   <VoiceMode.PushToTalk>Push-to-talk</VoiceMode.PushToTalk>

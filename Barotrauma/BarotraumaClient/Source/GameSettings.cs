@@ -364,6 +364,9 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), voiceSettings.RectTransform), TextManager.Get("VoiceChat"));
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
+
             IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
             foreach (string name in deviceNames)
             {
@@ -371,6 +374,7 @@ namespace Barotrauma
             }
 
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
+#if (!OSX)
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.2f), voiceSettings.RectTransform), VoiceCaptureDevice, deviceNames.Count);
             foreach (string name in deviceNames)
             {
@@ -380,15 +384,33 @@ namespace Barotrauma
             {
                 string name = obj as string;
                 if (VoiceCaptureDevice == name) return true;
-                VoiceCaptureDevice = name;
-                if (VoipCapture.Instance != null)
-                {
-                    UInt16 storedBufferID = VoipCapture.Instance.LatestBufferID;
-                    VoipCapture.Instance.Dispose();
-                    VoipCapture.Create(name, storedBufferID);
-                }
+
+                VoipCapture.ChangeCaptureDevice(name);
                 return true;
             };
+#else
+            var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), voiceSettings.RectTransform), TextManager.Get("CurrentDevice") + ": " + VoiceCaptureDevice)
+            {
+                ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
+                TextAlignment = Alignment.CenterX
+            };
+
+            var test = new GUIButton(new RectTransform(new Vector2(0.5f, 0.25f), voiceSettings.RectTransform), TextManager.Get("RefreshDefaultDevice"))
+            {
+                ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
+                OnClicked = (bt, userdata) =>
+                {
+                    deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+                    if (VoiceCaptureDevice == deviceNames[0]) return true;
+
+                    VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                    suavemente.Text = TextManager.Get("CurrentDevice") + ": " + VoiceCaptureDevice;
+                    suavemente.Flash(Color.Blue);
+
+                    return true;
+                }
+            };
+#endif
 
             var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), voiceSettings.RectTransform))
             {
