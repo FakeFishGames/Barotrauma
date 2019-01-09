@@ -3,34 +3,34 @@
 <!-- Notes to modders/translators:
   - The file must be encoded using UTF-8 for special symbols (e.g. non-english alphabets) to work.
     In Notepad the encoding can be selected in the save dialog. In Notepad++ it's selected in the encoding menu.
-    
+
   - The game automatically loads all the xml files in the Texts-folder, and uses the ones that in the same
-    language that the user has selected. 
-      
+    language that the user has selected.
+
   - Text files should not be included in content package configs, but mods can include additional texts files in
     case you want to add things such as new item names/descriptions or provide translation files for your mod.
-    
+
   - There are a couple of console commands that may be helpful for translating the game:
     - dumptexts writes all of the texts in this file into Content/Texts/EnglishVanilla.txt, removing all the xml tags
     - loadtexts reads the lines from Content/Texts/EnglishVanilla.txt and inserts them back to this xml file.
     - dumpentitytexts writes all the vanilla entity names and descriptions into Content/Texts/EntityTexts.txt along with the correct xml tags.
     - updatetextfile takes a text xml file, compares it to another one, and adds all the elements that are only present in the first one into the second one.
       Can be used to update old translation text files without having to manually check what's new in the updated text file.
-    
+
   - Item/structure names and descriptions can be translated using the identifier of the item:
     <EntityName.weldingtool>Eldingway Ooltay</ItemName.weldingtool>
     <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</ItemDescription.weldingtool>
-  
+
   - Job names and descriptions can be translated using the identifier of the job:
     <JobName.captain>капитан</JobName.captain>
     <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
-    
-  - Affliction texts can be translated using the identifier of the affliction:  
+
+  - Affliction texts can be translated using the identifier of the affliction:
     <AfflictionName.internaldamage>Interizzle daizzle</AfflictionName.internaldamage>
     <AfflictionDescription.internaldamage>Dizzle to interizzle oizzle interizzle bleedizzle or broizzle boizzle.</AfflictionDescription.internaldamage>
     <AfflictionCauseOfDeath.internaldamage>Died of interizzle injurizzle</AfflictionCauseOfDeath.internaldamage>
     <AfflictionCauseOfDeathSelf.internaldamage>You have succizzle to your interizzle injurizzle </AfflictionCauseOfDeathSelf.internaldamage>
-    
+
   - Mission texts can be translated using the identifier of the mission:
     <MissionName.salvageskyholderartifactruins>Rescatar un artefacto</MissionName.salvageskyholderartifactruins>
     <MissionDescription.salvageskyholderartifactruins>Los investigadores de [location1] han captado una señal infrasónica muy similar a las emitidas por artefactos alienígenas descubiertos previamente en Europa. Investigue la señal y recupere el artefacto potencial.</MissionDescription.salvageskyholderartifactruins>
@@ -47,26 +47,26 @@
     <OrderDialog.operatereactor>[name], roperate the eactor!</OrderDialog.operatereactor>
     <OrderDialog.operatereactor.powerup>[name], rower pup the eactor!</OrderDialog.operatereactor.powerup>
     <OrderDialog.operatereactor.shutdown>[name], rutdown the sheactor!</OrderDialog.operatereactor.shutdown>
-    
+
   - AI conversation files are a bit of a special case, as they can be added/removed by content packages and replaced by translation files.
     When creating a mod with custom AI conversations, you simply configure the files in the content package the same way as in the Vanilla content package.
-    If you want to translate a conversation file, you should add the translated file to the Content/NPCConversations-folder, 
+    If you want to translate a conversation file, you should add the translated file to the Content/NPCConversations-folder,
     and use the identifier attribute to define which file it replaces.
-    
+
     If you for example are creating a russian translation of the vanilla game, you should create a conversation file that's configured as:
       <Conversations identifier="vanillaconversations" Language="Russian">
-    
+
     If you wanted to create a more comprehensive translation that also translates some common mods, you could add multiple translation files:
       <Conversations identifier="barotraumaexpandedconversations" Language="Russian">
       <Conversations identifier="mememod" Language="Russian">
-    
+
 -->
 
-<infotexts language="English">    
+<infotexts language="English">
   <!-- Loading screen -->
   <Loading>Loading...</Loading>
   <PressAnyKey>Press any key to continue</PressAnyKey>
-  
+
   <!-- Main menu buttons -->
   <TutorialButton>Training</TutorialButton>
   <NewGameButton>New Game</NewGameButton>
@@ -78,7 +78,7 @@
   <SettingsButton>Settings</SettingsButton>
   <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Quit</QuitButton>
-  
+
   <!-- Pause menu -->
   <PauseMenuResume>Resume</PauseMenuResume>
   <PauseMenuSettings>Settings</PauseMenuSettings>
@@ -107,16 +107,36 @@
   <UPnPTimedOut>UPnP discovery timed out.</UPnPTimedOut>
 
   <!-- Steam Workshop menu -->
-  <DownloadButton>Download</DownloadButton>  
-  
+  <DownloadButton>Download</DownloadButton>
+
   <!-- Settings menu -->
   <Settings>Settings</Settings>
+  <ApplySettingsButton>Apply</ApplySettingsButton>
+  <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
+  <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
+  <ApplySettingsYes>Apply</ApplySettingsYes>
+  <ApplySettingsNo>Discard</ApplySettingsNo>
+  <RestartRequiredLabel>Restart required</RestartRequiredLabel>
+  <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
+  <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
+
+  <!-- General tab -->
+  <SettingsTab.General>General</SettingsTab.General>
+  <Language>Language</Language>
+  <ContentPackage>Content package</ContentPackage>
+  <ContentPackages>Content packages</ContentPackages>
+  <CorePackageRequiredWarning>You cannot deselect the content package because it is a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
+  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
+
+  <!-- Graphics tab -->
+  <SettingsTab.Graphics>General</SettingsTab.Graphics>
   <Resolution>Resolution</Resolution>
   <DisplayMode>Display mode</DisplayMode>
   <Fullscreen>Fullscreen</Fullscreen>
   <Windowed>Windowed</Windowed>
   <BorderlessWindowed>Borderless windowed</BorderlessWindowed>
   <EnableVSync>Enable vertical sync</EnableVSync>
+  <EnableVSyncToolTip>Synchronizes the game's frame rate with your monitor's refresh rate. Helps prevent screen tearing artifacts.</EnableVSyncToolTip>
   <ParticleLimit>Particle limit</ParticleLimit>
   <LosEffect>Line of sight effect</LosEffect>
   <LosModeNone>None</LosModeNone>
@@ -130,25 +150,25 @@
   <ChromaticAberrationToolTip>Enables a subtle color distortion effect at the edges of the screen.</ChromaticAberrationToolTip>
   <HUDScale>HUD scale</HUDScale>
   <InventoryScale>Inventory scale</InventoryScale>
+
+  <!-- Audio tab -->
+  <SettingsTab.Audio>Audio</SettingsTab.Audio>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
+  <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
+  <MuteOnFocusLostToolTip>Mutes the game when it is not in focus.</MuteOnFocusLostToolTip>
+  <VoiceChat>Voice chat</VoiceChat>
+  <VoiceMode.Disabled>Disabled</VoiceMode.Disabled>
+  <VoiceMode.DisabledToolTip>Voice chat is disabled.</VoiceMode.DisabledToolTip>
+  <VoiceMode.PushToTalk>Push-to-talk</VoiceMode.PushToTalk>
+  <VoiceMode.PushToTalkToolTip>Your voice activity is only sent when a certain key is held down.</VoiceMode.PushToTalkToolTip>
+  <VoiceMode.Activity>Voice activity</VoiceMode.Activity>
+  <VoiceMode.ActivityToolTip>Voice activity is always sent whenever the sound coming through passes the noise gate threshold.</VoiceMode.ActivityToolTip>
   <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
-  <Controls>Controls</Controls>
-  <AimAssist>Aim assist</AimAssist>
-  <Language>Language</Language>  
-  <ContentPackage>Content package</ContentPackage>
-  <ContentPackages>Content packages</ContentPackages>
-  <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
-  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
-  <ApplySettingsButton>Apply</ApplySettingsButton>
-  <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
-  <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
-  <ApplySettingsYes>Apply</ApplySettingsYes>
-  <ApplySettingsNo>Discard</ApplySettingsNo>
-  <RestartRequiredLabel>Restart required</RestartRequiredLabel>
-  <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
-  <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
 
+  <!-- Controls tab -->
+  <SettingsTab.Controls>Controls</SettingsTab.Controls>
+  <AimAssist>Aim assist</AimAssist>
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
   <InputType.Aim>Aim</InputType.Aim>
@@ -168,7 +188,7 @@
   <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
   <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
   <InputType.Voice>Push-to-talk</InputType.Voice>
-  
+
   <!-- Server settings menu -->
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
   <ServerSettingsServerTab>Server</ServerSettingsServerTab>
@@ -189,7 +209,7 @@
   <ServerSettingsAdditionalCargo>Additional Cargo</ServerSettingsAdditionalCargo>
   <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
   <ServerSettingsStartWhenClientsReady>Start when players are ready</ServerSettingsStartWhenClientsReady>
-  <ServerSettingsStartWhenClientsReadyRatio>[percentage] % need to be ready</ServerSettingsStartWhenClientsReadyRatio>  
+  <ServerSettingsStartWhenClientsReadyRatio>[percentage] % need to be ready</ServerSettingsStartWhenClientsReadyRatio>
   <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
   <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
   <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
@@ -221,7 +241,7 @@
   <RoundSummaryReturn>[sub] has returned to [location].</RoundSummaryReturn>
   <RoundSummaryGameOver>The ocean has claimed [sub] and its crew.</RoundSummaryGameOver>
   <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>
-  
+
   <!-- Character HUD -->
   <OxygenHUDWarning>Oxygen low</OxygenHUDWarning>
   <PressureHUDWarning>High pressure</PressureHUDWarning>
@@ -431,7 +451,7 @@
   <DisconnectMessage.MissingContentPackages>You need the content packages [missingcontentpackages] to play on the server.</DisconnectMessage.MissingContentPackages>
   <DisconnectMessage.IncompatibleContentPackage>You must disable the content package [incompatiblecontentpackage] before joining.</DisconnectMessage.IncompatibleContentPackage>
   <DisconnectMessage.IncompatibleContentPackages>You must disable the content packages [incompatiblecontentpackages] before joining.</DisconnectMessage.IncompatibleContentPackages>
-  
+
   <!-- Server lobby -->
   <RestartingIn>Restarting in</RestartingIn>
   <Votes>Votes</Votes>
@@ -507,7 +527,7 @@
   <GameMode.Sandbox>Sandbox</GameMode.Sandbox>
   <GameMode.Mission>Mission</GameMode.Mission>
   <GameMode.Campaign>Campaign</GameMode.Campaign>
-  
+
   <!-- Mission types -->
   <MissionType.None>None</MissionType.None>
   <MissionType.Random>Random</MissionType.Random>
@@ -515,7 +535,7 @@
   <MissionType.Monster>Monster</MissionType.Monster>
   <MissionType.Cargo>Cargo</MissionType.Cargo>
   <MissionType.Combat>Combat</MissionType.Combat>
-  
+
   <!-- Ingame UI -->
   <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
   <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
@@ -570,7 +590,7 @@
   <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
   <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
   <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
-  <ItemAssemblyFileExistsWarning>There's already an item assembly with the same name. Do you want to replace the existing assembly?</ItemAssemblyFileExistsWarning>
+  <ItemAssemblyFileExistsWarning>There is already an item assembly with the same name. Do you want to replace the existing assembly?</ItemAssemblyFileExistsWarning>
   <ItemAssemblyNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
   <NoHullsWarning>No hulls found in the submarine. Hulls determine the "borders" of an individual room and are required for water and air distribution to work correctly.</NoHullsWarning>
   <DisconnectedVentsWarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</DisconnectedVentsWarning>
@@ -593,7 +613,7 @@
   <MapEntityCategory.Alien>Alien</MapEntityCategory.Alien>
   <MapEntityCategory.ItemAssembly>ItemAssembly</MapEntityCategory.ItemAssembly>
   <MapEntityCategory.Legacy>Legacy</MapEntityCategory.Legacy>
-  
+
   <!-- Particle editor -->
   <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
   <ParticleEditorCopyToClipboard>Copy to clipboard</ParticleEditorCopyToClipboard>
@@ -618,7 +638,7 @@
   <LevelEditorLevelObjNameEmpty>Please enter a name for the level object.</LevelEditorLevelObjNameEmpty>
   <LevelEditorLevelObjNameTaken>The selected name is already in use.</LevelEditorLevelObjNameTaken>
   <LevelEditorLevelObjTextureNotFound>Could not find the selected texture file.</LevelEditorLevelObjTextureNotFound>
-  
+
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
   <EngineRoom>Engine room</EngineRoom>
@@ -696,7 +716,7 @@
   <PumpIn>IN</PumpIn>
   <PumpOut>OUT</PumpOut>
   <PumpSpeed>Pumping speed</PumpSpeed>
-  
+
   <ReactorAutoTemp>Automatic Control</ReactorAutoTemp>
   <ReactorOutput>Output: [kw] kW</ReactorOutput>
   <ReactorLoad>Load: [kw] kW</ReactorLoad>
@@ -739,10 +759,10 @@
   <SonarNoSignal>No signal</SonarNoSignal>
   <SonarTipActive>When active sonar is on, the transponders send out pings that reflect from nearby obstacles. The pings may also be heard by hostile creatures or enemy submarines.</SonarTipActive>
   <SonarTipPassive>In passive mode, the sonar only listens to sources of sound and sounds reflected from nearby obstacles without actively sending out pings.</SonarTipPassive>
-  
+
   <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
   <PowerContainerRechargeRate>Recharge rate [rate] %</PowerContainerRechargeRate>
-  
+
   <PowerTransferPowered>Powered</PowerTransferPowered>
   <PowerTransferHighVoltage>Overvoltage</PowerTransferHighVoltage>
   <PowerTransferLowVoltage>Low voltage</PowerTransferLowVoltage>
@@ -751,10 +771,10 @@
   <PowerTransferLoadLabel>Load</PowerTransferLoadLabel>
   <PowerTransferLoad>[load] kW</PowerTransferLoad>
   <PowerTransferTipOvervoltage>When the electrical grid is supplied more power than what is being consumed, the voltage rises which may cause damage to electrical devices.</PowerTransferTipOvervoltage>
-  <PowerTransferTipLowvoltage>When there's not enough power available, the voltage drops which may cause some devices to shut down.</PowerTransferTipLowvoltage>
+  <PowerTransferTipLowvoltage>When there is not enough power available, the voltage drops which may cause some devices to shut down.</PowerTransferTipLowvoltage>
   <PowerTransferTipLoad>How much power is currently being consumed by the devices connected to the electrical grid.</PowerTransferTipLoad>
   <PowerTransferTipPower>How much power is currently being supplied to the electrical grid.</PowerTransferTipPower>
-  
+
   <ConnectionLocked>(Locked)</ConnectionLocked>
   <RequiredRepairSkills>Required skills:</RequiredRepairSkills>
   <RepairButton>Repair</RepairButton>
@@ -954,7 +974,7 @@
   <OrderDialog.reportbrokendevices>Need someone to repair devices in [roomname]!</OrderDialog.reportbrokendevices>
   <OrderDialog.requestfirstaid>Need a medic in [roomname]!</OrderDialog.requestfirstaid>
   <OrderDialog.requestfirstaid>Need medical assistance in [roomname]!</OrderDialog.requestfirstaid>
-  
+
   <!-- Status -->
   <Deceased>Deceased</Deceased>
   <Unconscious>Unconscious</Unconscious>
@@ -979,7 +999,7 @@
   <NotBreathing>Not breathing</NotBreathing>
 
   <NoAvailableMedicalItems>No medical items available</NoAvailableMedicalItems>
-  
+
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
   <HuskDormant>Your feel feverish</HuskDormant>
@@ -987,13 +1007,13 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
-  
+
   <SkillName.helm>Helm</SkillName.helm>
   <SkillName.weapons>Weapons</SkillName.weapons>
   <SkillName.mechanical>Mechanical Engineering</SkillName.mechanical>
   <SkillName.electrical>Electrical Engineering</SkillName.electrical>
-  <SkillName.medical>Medical</SkillName.medical>  
-  
+  <SkillName.medical>Medical</SkillName.medical>
+
   <!-- Entity names and descriptions -->
   <EntityName.hull>Hull</EntityName.hull>
   <EntityDescription.Hull>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</EntityDescription.Hull>
@@ -1030,7 +1050,7 @@
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
 
-  <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:  
+  <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
