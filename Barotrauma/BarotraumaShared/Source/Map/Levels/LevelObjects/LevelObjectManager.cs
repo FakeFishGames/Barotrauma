@@ -261,25 +261,26 @@ namespace Barotrauma
                 (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
         }
 
-        public List<LevelObject> GetAllObjects()
+        public IEnumerable<LevelObject> GetAllObjects()
         {
-            return new List<LevelObject>(objects);
+            return objects;
         }
 
-        public List<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)
+        private readonly static List<LevelObject> objectsInRange = new List<LevelObject>();
+        public IEnumerable<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)
         {
             var minIndices = GetGridIndices(worldPosition - Vector2.One * radius);
-            if (minIndices.X >= objectGrid.GetLength(0) || minIndices.Y >= objectGrid.GetLength(1)) return new List<LevelObject>();
+            if (minIndices.X >= objectGrid.GetLength(0) || minIndices.Y >= objectGrid.GetLength(1)) return Enumerable.Empty<LevelObject>();
 
             var maxIndices = GetGridIndices(worldPosition + Vector2.One * radius);
-            if (maxIndices.X < 0 || maxIndices.Y < 0) return new List<LevelObject>();
+            if (maxIndices.X < 0 || maxIndices.Y < 0) return Enumerable.Empty<LevelObject>();
 
             minIndices.X = Math.Max(0, minIndices.X);
             minIndices.Y = Math.Max(0, minIndices.Y);
-            maxIndices.X = Math.Min(objectGrid.GetLength(0), minIndices.X);
-            maxIndices.Y = Math.Min(objectGrid.GetLength(1), minIndices.Y);
+            maxIndices.X = Math.Min(objectGrid.GetLength(0), maxIndices.X);
+            maxIndices.Y = Math.Min(objectGrid.GetLength(1), maxIndices.Y);
 
-            List<LevelObject> objects = new List<LevelObject>();
+            objectsInRange.Clear();
             for (int x = minIndices.X; x <= maxIndices.X; x++)
             {
                 for (int y = minIndices.Y; y <= maxIndices.Y; y++)
@@ -287,12 +288,12 @@ namespace Barotrauma
                     if (objectGrid[x, y] == null) continue;
                     foreach (LevelObject obj in objectGrid[x, y])
                     {
-                        if (!objects.Contains(obj)) objects.Add(obj);
+                        if (!objectsInRange.Contains(obj)) objectsInRange.Add(obj);
                     }
                 }
             }
 
-            return objects;
+            return objectsInRange;
         }
 
         private List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType)
@@ -359,11 +360,6 @@ namespace Barotrauma
                     if (obj.Prefab.PhysicsBodyTriggerIndex > -1) obj.PhysicsBody.Enabled = obj.Triggers[obj.Prefab.PhysicsBodyTriggerIndex].IsTriggered;
                     obj.Position = new Vector3(obj.PhysicsBody.Position, obj.Position.Z);
                     obj.Rotation = obj.PhysicsBody.Rotation;
-                }
-
-                if (obj.ActivePrefab.SonarDisruption > 0.0f)
-                {
-                    Level.Loaded?.SetSonarDisruptionStrength(new Vector2(obj.Position.X, obj.Position.Y), obj.ActivePrefab.SonarDisruption);
                 }
             }
 

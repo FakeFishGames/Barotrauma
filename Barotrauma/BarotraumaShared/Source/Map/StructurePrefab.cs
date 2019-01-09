@@ -182,7 +182,12 @@ namespace Barotrauma
                         
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
                         sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
-
+                        
+                        if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(sp.Name))
+                        {
+                            sp.sprite.Name = sp.Name;
+                        }
+                        sp.sprite.EntityID = sp.identifier;
                         break;
                     case "backgroundsprite":
                         sp.BackgroundSprite = new Sprite(subElement);

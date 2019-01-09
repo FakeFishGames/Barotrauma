@@ -208,7 +208,7 @@ namespace Barotrauma
                             ClearWidgets();
                             ResetParamsEditor();
                             //CreateGUI();
-                            //animationResetRequiresForceLoading = true;
+                            animationResetRequiresForceLoading = true;
                         }
                     }
                     else if (PlayerInput.KeyHit(Keys.R))
@@ -229,7 +229,7 @@ namespace Barotrauma
                             ClearWidgets();
                             ResetParamsEditor();
                             //CreateGUI();
-                            //animationResetRequiresForceLoading = true;
+                            animationResetRequiresForceLoading = true;
                         }
                     }
                 }
