@@ -290,6 +290,7 @@
     <Compile Include="Source\Utils\MathUtils.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />
     <Compile Include="Source\Utils\ToolBox.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Concentus, Version=1.1.6.0, Culture=neutral, processorArchitecture=MSIL">

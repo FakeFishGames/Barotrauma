@@ -85,6 +85,18 @@ namespace Barotrauma.Networking
             captureThread.Start();
         }
 
+        public static void ChangeCaptureDevice(string deviceName)
+        {
+            GameMain.Config.VoiceCaptureDevice = deviceName;
+
+            if (VoipCapture.Instance != null)
+            {
+                UInt16 storedBufferID = VoipCapture.Instance.LatestBufferID;
+                VoipCapture.Instance.Dispose();
+                VoipCapture.Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
+            }
+        }
+
         void UpdateCapture()
         {
             short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
