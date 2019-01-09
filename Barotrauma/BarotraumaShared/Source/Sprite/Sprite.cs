@@ -93,6 +93,11 @@ namespace Barotrauma
         }
 
         public string ID { get; private set; }
+        /// <summary>
+        /// ID of the Map Entity so that we can link the sprite to it's owner.
+        /// </summary>
+        public string EntityID { get; set; }
+        public string Name { get; set; }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
@@ -114,6 +119,7 @@ namespace Barotrauma
                 if (!path.EndsWith("/")) path += "/";
             }
             this.file = path + file;
+            Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             bool shouldReturn = false;
             LoadTexture(ref sourceVector, ref shouldReturn, SourceElement.GetAttributeBool("premultiplyalpha", false));
@@ -199,22 +205,38 @@ namespace Barotrauma
         partial void DisposeTexture();
 
         /// <summary>
-        /// Works only if there is a name attribute defined for the sprite.
+        /// Works only if there is a name attribute defined for the sprite. For items and structures, the entity id or name is used if the sprite's name attribute is not defined.
         /// </summary>
         public void ReloadXML()
         {
             if (SourceElement == null) { return; }
-            var doc = XMLExtensions.TryLoadXml(SourceElement.ParseContentPathFromUri());
+            string path = SourceElement.ParseContentPathFromUri();
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                DebugConsole.NewMessage($"[Sprite] Could not parse the content path from the source element ({SourceElement}) uri: {SourceElement.BaseUri}", Color.Yellow);
+                return;
+            }
+            var doc = XMLExtensions.TryLoadXml(path);
             if (doc == null || doc.Root == null) { return; }
-            string name = SourceElement.GetAttributeString("name", string.Empty);
-            var sourceElements = doc.Descendants("sprite").Where(e => e.GetAttributeString("name", "Not found") == name);
+            if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityID)) { return; }
+            var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite")).ToList();
+            var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name).ToList();
+            if (sourceElements.None())
+            {
+                // Try parents by first comparing the entity id and then the name, if no match was found.
+                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("identifier", null) == EntityID).ToList();
+                if (sourceElements.None())
+                {
+                    sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("name", null) == Name).ToList();
+                }
+            }
             if (sourceElements.Multiple())
             {
-                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name {name}! Cannot reload the xml for element \"{SourceElement.ToString()}\"!", Color.Yellow);
+                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityID})! Cannot reload the xml for sprite element \"{SourceElement.ToString()}\"!", Color.Yellow);
             }
             else if (sourceElements.None())
             {
-                //DebugConsole.NewMessage($"[Sprite] Cannot find matching source element by comparing the name attribute ({name})! Cannot reload the xml for element \"{SourceElement.ToString()}\"!", Color.Yellow);
+                DebugConsole.NewMessage($"[Sprite] Cannot find matching source element by comparing the name attribute ({Name}) or identifier ({EntityID})! Cannot reload the xml for sprite element \"{SourceElement.ToString()}\"!", Color.Yellow);
             }
             else
             {
