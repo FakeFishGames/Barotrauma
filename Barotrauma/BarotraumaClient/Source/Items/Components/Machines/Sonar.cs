@@ -465,7 +465,7 @@ namespace Barotrauma.Items.Components
                     Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                     end.Y = -end.Y;
 
-                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength, width: 3);
+                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength * 0.5f, width: 3);
                 }
             }
         }
@@ -527,8 +527,7 @@ namespace Barotrauma.Items.Components
 
                 Color xColor = normalizedXDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedXDist - 1.0f);
                 Color yColor = normalizedYDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedYDist - 1.0f);
-
-
+                
                 if (steering.DockingSource.IsHorizontal)
                 {
                     if (yDist < steering.DockingSource.DistanceTolerance.Y)
@@ -569,7 +568,15 @@ namespace Barotrauma.Items.Components
                 if (offset.LengthSquared() > DisplayRadius * DisplayRadius) { continue; }
                 Vector2 size = dockingPort.Item.Rect.Size.ToVector2() * scale;
 
-                GUI.DrawRectangle(spriteBatch, center + offset - size / 2, size, Color.LightGreen, thickness: (int)(zoom));
+                if (dockingPort.IsHorizontal)
+                {
+                    size.X = 0.0f;
+                }
+                else
+                {
+                    size.Y = 0.0f;
+                }
+                GUI.DrawLine(spriteBatch, center + offset - size / 2, center + offset + size / 2, Color.LightGreen, width: (int)(zoom));
             }
 
         }

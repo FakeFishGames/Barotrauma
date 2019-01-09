@@ -312,13 +312,22 @@ namespace Barotrauma.Items.Components
                 if (sonar != null && controlledSub != null)
                 {
                     Vector2 displayPosToMaintain = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
-
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
-
                     displayPosToMaintain = velRect.Center.ToVector2() + displayPosToMaintain;
+
+                    float crossHairSize = 8.0f;
+                    Color crosshairColor = Color.Orange * (0.5f + ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 4.0f);
+
+                    GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitY * crossHairSize, displayPosToMaintain - Vector2.UnitY * crossHairSize, crosshairColor, width: 3);
+                    GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitX * crossHairSize, displayPosToMaintain - Vector2.UnitX * crossHairSize, crosshairColor, width: 3);
                     
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)displayPosToMaintain.X - 5, (int)displayPosToMaintain.Y - 5, 10, 10), Color.Red);
+                    Vector2 neutralPos = ((controlledSub.WorldPosition - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+
+                    neutralPos.Y = -neutralPos.Y;
+                    neutralPos = neutralPos.ClampLength(velRect.Width / 2);
+                    neutralPos = velRect.Center.ToVector2() + neutralPos;
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)neutralPos.X - 5, (int)neutralPos.Y - 5, 10, 10), Color.Orange);
                 }
             }
 
@@ -411,7 +420,6 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-
             tipContainer.Visible = AutoPilot;
             if (AutoPilot)
             {
@@ -426,6 +434,11 @@ namespace Barotrauma.Items.Components
                 else if (LevelEndSelected)
                 {
                     tipContainer.Text = autoPilotLevelEndTip;
+                }
+
+                if (DockingModeEnabled && DockingTarget != null)
+                {
+                    posToMaintain += ConvertUnits.ToDisplayUnits(DockingTarget.Item.Submarine.Velocity) * deltaTime;
                 }
             }
 
