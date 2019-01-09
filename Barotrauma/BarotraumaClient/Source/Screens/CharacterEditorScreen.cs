@@ -1185,6 +1185,7 @@ namespace Barotrauma
 
         #region GUI
         private GUIFrame rightPanel;
+        private GUIFrame leftPanel;
         private GUIFrame centerPanel;
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
@@ -1209,14 +1210,28 @@ namespace Barotrauma
 
         private void CreateCenterPanel()
         {
-            // Release the old panel
+            // Release the old panels
             if (centerPanel != null)
             {
                 centerPanel.RectTransform.Parent = null;
             }
+            if (leftPanel != null)
+            {
+                leftPanel.RectTransform.Parent = null;
+            }
+            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.96f), parent: Frame.RectTransform, anchor: Anchor.TopCenter)
+            {
+                RelativeOffset = new Vector2(0.05f, 0.02f)
+            }, style: null) { CanBeFocused = false };
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
+            {
+                AbsoluteOffset = new Point(20, 0)
+            }, style: null)
+            {
+                CanBeFocused = false
+            };
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
-            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
             // General controls
             backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.BottomRight), style: null) { CanBeFocused = false };
             var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundColorPanel.RectTransform), childAnchor: Anchor.BottomRight)
@@ -1273,10 +1288,7 @@ namespace Barotrauma
                 }
             }
             // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight)
-            {
-                AbsoluteOffset = new Point(100, 0)
-            }, style: null)
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), leftPanel.RectTransform, Anchor.TopLeft), style: null)
             {
                 CanBeFocused = false
             };
@@ -1326,10 +1338,7 @@ namespace Barotrauma
             //};
             // Limb controls
             limbControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform)) { CanBeFocused = false };
-            // Spacing
-            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), style: null) { CanBeFocused = false };
-
+            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.BottomLeft) { CanBeFocused = false };
             var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Lock Sprite Origin")
             {
                 Selected = lockSpriteOrigin,
@@ -1360,7 +1369,7 @@ namespace Barotrauma
                 }
             };
             lockSpriteSizeToggle.TextColor = Color.White;
-            var recalculateColliderToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Adjust collider")
+            var recalculateColliderToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Adjust Collider")
             {
                 Selected = recalculateCollider,
                 OnSelected = (GUITickBox box) =>
@@ -1374,7 +1383,31 @@ namespace Barotrauma
             // Ragdoll
             Point sliderSize = new Point(300, 20);
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
+            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.BottomLeft) { CanBeFocused = false };
+            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), "Uniform Scale")
+            {
+                Selected = uniformScaling,
+                OnSelected = (GUITickBox box) =>
+                {
+                    uniformScaling = box.Selected;
+                    return true;
+                }
+            };
+            uniformScalingToggle.TextColor = Color.White;
+            copyJointsToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), "Copy Joint Settings")
+            {
+                ToolTip = "Copies the currently tweaked settings to all selected joints.",
+                Selected = copyJointSettings,
+                TextColor = copyJointSettings ? Color.Red : Color.White,
+                OnSelected = (GUITickBox box) =>
+                {
+                    copyJointSettings = box.Selected;
+                    box.TextColor = copyJointSettings ? Color.Red : Color.White;
+                    return true;
+                }
+            };
+            // Spacing
+            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null) { CanBeFocused = false };
             var jointScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
@@ -1440,37 +1473,9 @@ namespace Barotrauma
                 ragdollResetRequiresForceLoading = true;
                 return true;
             };
-            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform)
-            {
-                AbsoluteOffset = new Point(0, textAreaHeight * 4 + 10)
-            }, "Uniform Scale")
-            {
-                Selected = uniformScaling,
-                OnSelected = (GUITickBox box) =>
-                {
-                    uniformScaling = box.Selected;
-                    return true;
-                }
-            };
-            uniformScalingToggle.TextColor = Color.White;
-            copyJointsToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), ragdollControls.RectTransform)
-            {
-                AbsoluteOffset = new Point(0, textAreaHeight * 5 + 10)
-            }, "Copy Joint Settings")
-            {
-                ToolTip = "Copies the currently tweaked settings to all selected joints.",
-                Selected = copyJointSettings,
-                TextColor = copyJointSettings ? Color.Red : Color.White,
-                OnSelected = (GUITickBox box) =>
-                {
-                    copyJointSettings = box.Selected;
-                    box.TextColor = copyJointSettings ? Color.Red : Color.White;
-                    return true;
-                }
-            };
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
+            var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - 5, elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
             var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), "Selected Animation:", Color.WhiteSmoke, textAlignment: Alignment.Center);
             animSelection = new GUIDropDown(new RectTransform(new Point(100, elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 4);
@@ -2308,11 +2313,11 @@ namespace Barotrauma
             }
             else if (height < width)
             {
-                spriteSheetMaxZoom = (rightPanel.Rect.Bottom - spriteSheetOffsetY) / height;
+                spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY) / height;
             }
             else
             {
-                spriteSheetMaxZoom = (rightPanel.Rect.Left - spriteSheetOffsetX) / width;
+                spriteSheetMaxZoom = (centerPanel.Rect.Left - spriteSheetOffsetX) / width;
             }
             spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
         }
@@ -3213,7 +3218,8 @@ namespace Barotrauma
 
         private void CalculateSpritesheetPosition()
         {
-            spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
+            //spriteSheetOffsetX = (int)(GameMain.GraphicsWidth * 0.6f);
+            spriteSheetOffsetX = 20;
         }
 
         private void DrawSpritesheetEditor(SpriteBatch spriteBatch, float deltaTime)
