@@ -42,6 +42,8 @@ namespace Barotrauma
 
         private GUITextBox nameBox, descriptionBox;
 
+        private List<GUIButton> entityCategoryButtons = new List<GUIButton>();
+
         private GUIFrame hullVolumeFrame;
 
         private GUIFrame saveAssemblyFrame;
@@ -55,10 +57,7 @@ namespace Barotrauma
 
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
-        
-        private bool characterMode;
 
-        private bool wiringMode;
         private GUIFrame wiringToolPanel;
 
         private Tutorials.EditorTutorial tutorial;
@@ -122,15 +121,9 @@ namespace Barotrauma
             return TextManager.Get("PhysicsBodies") + ": " + GameMain.World.BodyList.Count;
         }
 
-        public bool CharacterMode
-        {
-            get { return characterMode; }
-        }
+        public bool CharacterMode { get; private set; }
 
-        public bool WiringMode
-        {
-            get { return wiringMode; }
-        }
+        public bool WiringMode { get; private set; }
 
         public SubEditorScreen()
         {
@@ -253,8 +246,8 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) =>
                 {
                     entityMenuOpen = !entityMenuOpen;
-                    if (characterMode) SetCharacterMode(false);
-                    if (wiringMode) SetWiringMode(false);
+                    if (CharacterMode) SetCharacterMode(false);
+                    if (WiringMode) SetWiringMode(false);
                     foreach (GUIComponent child in btn.Children)
                     {
                         child.SpriteEffects = entityMenuOpen ? SpriteEffects.None : SpriteEffects.FlipVertically;
@@ -271,8 +264,8 @@ namespace Barotrauma
             };
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
-                    TextManager.Get("MapEntityCategory." + category.ToString()))
+                entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
+                    TextManager.Get("MapEntityCategory." + category.ToString()), style: "GUITabButton")
                 {
                     UserData = category,
                     OnClicked = (btn, userdata) =>
@@ -281,7 +274,7 @@ namespace Barotrauma
                         OpenEntityMenu((MapEntityCategory)userdata);
                         return true;
                     }
-                };
+                });
             }
 
             var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), EntityMenu.RectTransform, Anchor.Center), style: null);
@@ -563,8 +556,8 @@ namespace Barotrauma
 
             MapEntity.DeselectAll();
 
-            if (characterMode) SetCharacterMode(false);
-            if (wiringMode) SetWiringMode(false);
+            if (CharacterMode) SetCharacterMode(false);
+            if (WiringMode) SetWiringMode(false);
 
             SoundPlayer.OverrideMusicType = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
@@ -655,8 +648,8 @@ namespace Barotrauma
 
         private void CreateSaveScreen()
         {
-            if (characterMode) SetCharacterMode(false);
-            if (wiringMode) SetWiringMode(false);
+            if (CharacterMode) SetCharacterMode(false);
+            if (WiringMode) SetWiringMode(false);
 
             saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
@@ -859,8 +852,8 @@ namespace Barotrauma
 
         private void CreateSaveAssemblyScreen()
         {
-            if (characterMode) SetCharacterMode(false);
-            if (wiringMode) SetWiringMode(false);
+            if (CharacterMode) SetCharacterMode(false);
+            if (WiringMode) SetWiringMode(false);
 
             saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
@@ -972,8 +965,8 @@ namespace Barotrauma
 
         private bool CreateLoadScreen()
         {
-            if (characterMode) SetCharacterMode(false);
-            if (wiringMode) SetWiringMode(false);
+            if (CharacterMode) SetCharacterMode(false);
+            if (WiringMode) SetWiringMode(false);
 
             Submarine.RefreshSavedSubs();
 
@@ -1137,13 +1130,18 @@ namespace Barotrauma
         private bool OpenEntityMenu(MapEntityCategory selectedCategory)
         {
             entityFilterBox.Text = "";
-            if (characterMode) SetCharacterMode(false);
-            if (wiringMode) SetWiringMode(false);
+            if (CharacterMode) SetCharacterMode(false);
+            if (WiringMode) SetWiringMode(false);
+
 
             saveFrame = null;
             loadFrame = null;
 
             ClearFilter();
+            foreach (GUIButton button in entityCategoryButtons)
+            {
+                button.Selected = (MapEntityCategory)button.UserData == selectedCategory;
+            }
             
             foreach (GUIComponent child in toggleEntityMenuButton.Children)
             {
@@ -1162,6 +1160,11 @@ namespace Barotrauma
 
         private bool FilterEntities(string filter)
         {
+            foreach (GUIButton button in entityCategoryButtons)
+            {
+                button.Selected = false;
+            }
+
             if (string.IsNullOrWhiteSpace(filter))
             {
                 entityList.Content.Children.ForEach(c => c.Visible = true);
@@ -1192,18 +1195,18 @@ namespace Barotrauma
         public bool SetCharacterMode(bool enabled)
         {
             characterModeTickBox.Selected = enabled;
-            characterMode = enabled;
-            if (characterMode)
+            CharacterMode = enabled;
+            if (CharacterMode)
             {
                 wiringModeTickBox.Selected = false;
-                wiringMode = false;
+                WiringMode = false;
             }
 
-            if (characterMode)
+            if (CharacterMode)
             {
                 CreateDummyCharacter();
             }
-            else if (dummyCharacter != null && !wiringMode)
+            else if (dummyCharacter != null && !WiringMode)
             {
                 RemoveDummyCharacter();
             }
@@ -1221,21 +1224,21 @@ namespace Barotrauma
         public bool SetWiringMode(bool enabled)
         {
             wiringModeTickBox.Selected = enabled;
-            wiringMode = enabled;
-            if (wiringMode)
+            WiringMode = enabled;
+            if (WiringMode)
             {
                 characterModeTickBox.Selected = false;
-                characterMode = false;
+                CharacterMode = false;
             }
 
-            if (wiringMode)
+            if (WiringMode)
             {
                 CreateDummyCharacter();
                 var item = new Item(MapEntityPrefab.Find(null, "screwdriver") as ItemPrefab, Vector2.Zero, null);
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
                 wiringToolPanel = CreateWiringPanel();
             }
-            else if (dummyCharacter != null && !characterMode)
+            else if (dummyCharacter != null && !CharacterMode)
             {
                 RemoveDummyCharacter();
             }
@@ -1733,12 +1736,12 @@ namespace Barotrauma
             LeftPanel.AddToGUIUpdateList();
             TopPanel.AddToGUIUpdateList();
 
-            if (wiringMode)
+            if (WiringMode)
             {
                 wiringToolPanel.AddToGUIUpdateList();
             }
 
-            if ((characterMode || wiringMode) && dummyCharacter != null)
+            if ((CharacterMode || WiringMode) && dummyCharacter != null)
             {
                 CharacterHUD.AddToGUIUpdateList(dummyCharacter);
                 if (dummyCharacter.SelectedConstruction != null)
@@ -1786,7 +1789,7 @@ namespace Barotrauma
                 cam.Position += moveSpeed;
             }
 
-            if (characterMode || wiringMode)
+            if (CharacterMode || WiringMode)
             {
                 if (dummyCharacter == null || Entity.FindEntityByID(dummyCharacter.ID) != dummyCharacter)
                 {
@@ -1799,7 +1802,7 @@ namespace Barotrauma
                         me.IsHighlighted = false;
                     }
 
-                    if (wiringMode && dummyCharacter.SelectedConstruction==null)
+                    if (WiringMode && dummyCharacter.SelectedConstruction==null)
                     {
                         List<Wire> wires = new List<Wire>();
                         foreach (Item item in Item.ItemList)
@@ -1835,20 +1838,20 @@ namespace Barotrauma
 
             //GUIComponent.ForceMouseOn(null);
 
-            if (!characterMode && !wiringMode)
+            if (!CharacterMode && !WiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
                 
                 MapEntity.UpdateEditor(cam);
             }
 
-            entityMenuOpenState = entityMenuOpen && !characterMode & !wiringMode ? 
+            entityMenuOpenState = entityMenuOpen && !CharacterMode & !WiringMode ? 
                 (float)Math.Min(entityMenuOpenState + deltaTime * 5.0f, 1.0f) :
                 (float)Math.Max(entityMenuOpenState - deltaTime * 5.0f, 0.0f);
 
             EntityMenu.RectTransform.ScreenSpaceOffset = Vector2.Lerp(new Vector2(0.0f, EntityMenu.Rect.Height - 10), Vector2.Zero, entityMenuOpenState).ToPoint();
 
-            if (wiringMode)
+            if (WiringMode)
             {
                 if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("wire")))
                 {
@@ -1870,7 +1873,7 @@ namespace Barotrauma
                 if (PlayerInput.RightButtonClicked()) saveFrame = null;
             }            
 
-            if ((characterMode || wiringMode) && dummyCharacter != null)
+            if ((CharacterMode || WiringMode) && dummyCharacter != null)
             {
                 dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false);
 
@@ -1928,7 +1931,7 @@ namespace Barotrauma
            
             Submarine.Draw(spriteBatch, true);
 
-            if (!characterMode && !wiringMode)
+            if (!CharacterMode && !WiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.DrawPlacing(spriteBatch,cam);
                 MapEntity.DrawSelecting(spriteBatch, cam);
@@ -1954,10 +1957,10 @@ namespace Barotrauma
                     GUI.SubmarineIcon, Color.LightBlue * 0.5f);
             }
             
-            if ((characterMode || wiringMode) && dummyCharacter != null)
+            if ((CharacterMode || WiringMode) && dummyCharacter != null)
             {
                 dummyCharacter.DrawHUD(spriteBatch, cam, false);
-                if (wiringMode) wiringToolPanel.DrawManually(spriteBatch);
+                if (WiringMode) wiringToolPanel.DrawManually(spriteBatch);
             }
             else
             {
