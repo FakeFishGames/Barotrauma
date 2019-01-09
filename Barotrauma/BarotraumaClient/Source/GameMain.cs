@@ -565,7 +565,7 @@ namespace Barotrauma
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen/* || ContextualTutorial.ContentRunning*/) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || ContextualTutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
                     Screen.Selected.AddToGUIUpdateList();
@@ -583,6 +583,10 @@ namespace Barotrauma
                     if (!paused)
                     {
                         Screen.Selected.Update(Timing.Step);
+                    }
+                    else if (GameSession.GameMode is SinglePlayerCampaign && ContextualTutorial.ContentRunning)
+                    {
+                        (GameSession.GameMode as SinglePlayerCampaign).ContextualTutorial.Update((float)Timing.Step);
                     }
 
                     if (NetworkMember != null)

@@ -6,16 +6,60 @@
         "Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?"
       </Text>
     </Segment>
-    <Segment name ="ReactorTutorial" contenttype="video" istriggered="false">
+    <Segment name ="Command Reactor" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="Video1/Sheets1.png" columns="7" rows="12"/>
-        <Sheet path="Video1/Sheets2.png" columns="7" rows="13"/>
+        <Sheet path="1_CommandReactor/Sheets1.png" columns="1" rows="1"/>
       </Video>
     </Segment>
-    <Segment name="WiringTutorial" contenttype="video" istriggered="false">
+    <Segment name="Nav Console" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="Video2/Sheets1.png" columns="3" rows="8"/>
+        <Sheet path="2_NavConsole/Sheets1.png" columns="1" rows="1"/>
       </Video>
+    </Segment>
+    <Segment name="Objective" contenttype="text" istriggered="false">
+      <Text>
+        "Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to #destination name#... don't screw this up."
+      </Text>
+    </Segment>
+    <Segment name="Flood" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="3_Flood/Sheets1.png" columns="1" rows="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Reactor" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="4_Reactor/Sheets1.png" columns="1" rows="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Enemy on Sonar" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="5_EnemyOnSonar/Sheets1.png" columns="1" rows="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Degrading1" contenttype="text" istriggered="false">
+      <Text>
+        "This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this."
+      </Text>
+    </Segment>
+    <Segment name="Degrading2" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="6_Degrading2/Sheets1.png" columns="1" rows="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Medical" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="7_Medical/Sheets1.png" columns="1" rows="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Approach1" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="8_Approach1/Sheets1.png" columns="1" rows="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Approach2" contenttype="text" istriggered="false">
+      <Text>
+        "Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."
+      </Text>
     </Segment>
   </ContextualTutorial>
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
