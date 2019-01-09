@@ -17,6 +17,7 @@ namespace Barotrauma
         ItemAssembly,
         Character,
         Structure,
+        Text,
         Executable,
         ServerExecutable,
         LocationTypes,
