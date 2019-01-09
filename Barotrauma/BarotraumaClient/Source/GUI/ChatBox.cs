@@ -214,7 +214,9 @@ namespace Barotrauma
             }
             //resize the holder to match the size of the message and add some spacing
             msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
-                        
+
+            CoroutineManager.StartCoroutine(UpdateMessageAnimation(msgHolder, 0.5f));
+
             chatBox.UpdateScrollBarSize();
 
             if (!toggleOpen)
@@ -254,6 +256,21 @@ namespace Barotrauma
             }
 
             GUI.PlayUISound(soundType);
+        }
+
+        private IEnumerable<object> UpdateMessageAnimation(GUIComponent message, float animDuration)
+        {
+            float timer = 0.0f;
+            while (timer < animDuration)
+            {
+                timer += CoroutineManager.DeltaTime;
+                float wavePhase = timer / animDuration * MathHelper.TwoPi;
+                message.RectTransform.ScreenSpaceOffset = 
+                    new Point((int)(Math.Sin(wavePhase) * (1.0f - timer / animDuration) * 50.0f), 0);
+                yield return CoroutineStatus.Running;
+            }
+            message.RectTransform.ScreenSpaceOffset = Point.Zero;
+            yield return CoroutineStatus.Success;
         }
 
         private void SetUILayout()
