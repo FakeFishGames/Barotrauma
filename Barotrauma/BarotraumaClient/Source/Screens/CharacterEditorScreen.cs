@@ -3206,6 +3206,7 @@ namespace Barotrauma
             for (int i = 0; i < Textures.Count; i++)
             {
                 var texture = Textures[i];
+                // Draw the body texture
                 spriteBatch.Draw(texture, 
                     position: new Vector2(offsetX, offsetY), 
                     rotation: 0, 
@@ -3224,9 +3225,32 @@ namespace Barotrauma
                     rect.Location = rect.Location.Multiply(spriteSheetZoom);
                     rect.X += offsetX;
                     rect.Y += offsetY;
-                    GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     Vector2 origin = limb.ActiveSprite.Origin;
                     Vector2 limbScreenPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
+                    // Draw the clothes
+                    foreach (var wearable in limb.WearingItems)
+                    {
+                        Vector2 orig = limb.ActiveSprite.Origin;
+                        if (!wearable.InheritOrigin)
+                        {
+                            orig = wearable.Sprite.Origin;
+                            // If the wearable inherits the origin, flipping is already handled.
+                            if (limb.body.Dir == -1.0f)
+                            {
+                                orig.X = wearable.Sprite.SourceRect.Width - orig.X;
+                            }
+                        }
+                        spriteBatch.Draw(wearable.Sprite.Texture,
+                            position: limbScreenPos,
+                            rotation: 0,
+                            origin: orig,
+                            sourceRectangle: wearable.InheritSourceRect ? limb.ActiveSprite.SourceRect : wearable.Sprite.SourceRect,
+                            scale: (wearable.InheritTextureScale ? 1 : 1 / RagdollParams.TextureScale) * spriteSheetZoom,
+                            effects: SpriteEffects.None,
+                            color: Color.White,
+                            layerDepth: 0);
+                    }
+                    GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     // The origin is manipulated when the character is flipped. We have to undo it here.
                     if (character.AnimController.Dir < 0)
                     {
