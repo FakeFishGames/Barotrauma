@@ -219,15 +219,15 @@ namespace Barotrauma
             var doc = XMLExtensions.TryLoadXml(path);
             if (doc == null || doc.Root == null) { return; }
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityID)) { return; }
-            var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite")).ToList();
-            var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name).ToList();
+            var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite"));
+            var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name);
             if (sourceElements.None())
             {
                 // Try parents by first comparing the entity id and then the name, if no match was found.
-                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("identifier", null) == EntityID).ToList();
+                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("identifier", null) == EntityID);
                 if (sourceElements.None())
                 {
-                    sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("name", null) == Name).ToList();
+                    sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("name", null) == Name);
                 }
             }
             if (sourceElements.Multiple())
