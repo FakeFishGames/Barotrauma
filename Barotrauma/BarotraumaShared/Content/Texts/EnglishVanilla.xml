@@ -580,6 +580,7 @@
   <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
   <RespawningIn>Respawning players in [time]</RespawningIn>
   <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
+  <CamFollowSubmarine>Follow submarine</CamFollowSubmarine>
 
   <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
   <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>

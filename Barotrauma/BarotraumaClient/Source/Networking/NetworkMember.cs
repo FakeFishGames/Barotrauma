@@ -46,7 +46,11 @@ namespace Barotrauma.Networking
                 CanBeFocused = false
             };
 
-            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter), "Follow submarine");
+            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter)
+            {
+                AbsoluteOffset = new Point(0, 5),
+                MaxSize = new Point(25, 25)
+            }, TextManager.Get("CamFollowSubmarine"));
             cameraFollowsSub.OnSelected += (tbox) =>
             {
                 Camera.FollowSub = tbox.Selected;
@@ -175,19 +179,7 @@ namespace Barotrauma.Networking
 
         protected void UpdateFollowSubTickBox()
         {
-            if (Character.Controlled == null) 
-            {
-                //player is in spectating mode
-                if (cameraFollowsSub.Visible)
-                    return;
-                cameraFollowsSub.Visible = true;
-            }
-            else
-            {
-                if (!cameraFollowsSub.Visible)
-                    return;
-                cameraFollowsSub.Visible = false;
-            }
+            cameraFollowsSub.Visible = Character.Controlled == null;
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
