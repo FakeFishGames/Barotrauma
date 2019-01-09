@@ -433,6 +433,7 @@ namespace Barotrauma
                 reloadTextureButton.OnClicked += (button, data) =>
                 {
                     Sprite.ReloadTexture();
+                    Sprite.ReloadXML();
                     return true;
                 };
                 itemEditor.AddCustomContent(reloadTextureButton, itemEditor.ContentCount);

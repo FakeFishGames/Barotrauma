@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices.">
+  <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="55" fadein="true" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />

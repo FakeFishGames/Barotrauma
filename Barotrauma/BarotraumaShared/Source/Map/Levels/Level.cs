@@ -53,17 +53,13 @@ namespace Barotrauma
 
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
-
-        private float[,] sonarDisruptionStrength;
-
+        
         private List<LevelWall> extraWalls;
 
         private LevelWall seaFloor;
 
         private List<VoronoiCell> cells;
-
-        //private VertexBuffer vertexBuffer;
-
+        
         private Point startPosition, endPosition;
 
         private Rectangle borders;
@@ -725,9 +721,7 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
-
-            sonarDisruptionStrength = new float[cellGrid.GetLength(0), cellGrid.GetLength(1)];
-
+            
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + siteCoordsX.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
             Debug.WriteLine("Seed: " + seed);
@@ -1345,16 +1339,7 @@ namespace Barotrauma
         public void Update(float deltaTime, Camera cam)
         {
             levelObjectManager.Update(deltaTime);
-
-            for (int x = 0; x < sonarDisruptionStrength.GetLength(0); x++)
-            {
-                for (int y = 0; y < sonarDisruptionStrength.GetLength(1); y++)
-                {
-                    //disruption fades out over time if the entities causing it stop calling SetSonarDisruptionStrength
-                    sonarDisruptionStrength[x, y] = Math.Max(0.0f, sonarDisruptionStrength[x, y] - deltaTime);
-                }
-            }
-
+            
             foreach (LevelWall wall in ExtraWalls)
             {
                 wall.Update(deltaTime);
@@ -1392,27 +1377,7 @@ namespace Barotrauma
 
             return new Vector2(xPosition, yPos);
         }
-
-        public float GetSonarDisruptionStrength(Vector2 worldPos)
-        {
-            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
-            if (gridPosX < 0 || gridPosX >= sonarDisruptionStrength.GetLength(0)) return 0.0f;
-            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
-            if (gridPosY < 0 || gridPosY >= sonarDisruptionStrength.GetLength(1)) return 0.0f;
-
-            return sonarDisruptionStrength[gridPosX, gridPosY];
-        }
-
-        public void SetSonarDisruptionStrength(Vector2 worldPos, float strength)
-        {
-            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
-            if (gridPosX < 0 || gridPosX >= sonarDisruptionStrength.GetLength(0)) return;
-            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
-            if (gridPosY < 0 || gridPosY >= sonarDisruptionStrength.GetLength(1)) return;
-
-            sonarDisruptionStrength[gridPosX, gridPosY] = MathHelper.Clamp(strength, 0.0f, 1.0f);
-        }
-
+        
         public List<VoronoiCell> GetAllCells()
         {
             List<VoronoiCell> cells = new List<VoronoiCell>();

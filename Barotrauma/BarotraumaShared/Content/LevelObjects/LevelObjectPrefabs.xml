@@ -754,7 +754,7 @@
     <ParticleEmitter particle="hydrosmoke" particlespersecond="4" position="-50,700" anglemin="80" anglemax="100" velocitymin="500" velocitymax="2000" />
     <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
   </blacksmoker3>
-  <lavavent spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10">
+  <lavavent spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" sonardisruption="0.5">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9" />
     <Trigger randomtriggerinterval="10" randomtriggerprobability="0.5" staytriggereddelay="5" networksyncing="true">

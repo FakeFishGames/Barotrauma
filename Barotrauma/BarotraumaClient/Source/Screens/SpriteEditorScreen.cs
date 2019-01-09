@@ -571,7 +571,7 @@ namespace Barotrauma
         {
             var sourceElement = sprite.SourceElement;
             if (sourceElement == null) { return string.Empty; }
-            string name = sourceElement.GetAttributeString("name", null);
+            string name = sprite.Name;
             if (string.IsNullOrWhiteSpace(name))
             {
                 name = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
@@ -587,7 +587,6 @@ namespace Barotrauma
         {
             var sb = listBox.ScrollBar;
             sb.BarScroll = MathHelper.Clamp(MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, listBox.Content.CountChildren - 1, listBox.SelectedIndex)), sb.MinValue, sb.MaxValue);
-
         }
         #endregion
 
