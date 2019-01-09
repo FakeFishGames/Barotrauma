@@ -126,7 +126,7 @@
   <ContentPackage>Content package</ContentPackage>
   <ContentPackages>Content packages</ContentPackages>
   <CorePackageRequiredWarning>You cannot deselect the content package because it is a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
-  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
+  <IncorrectExe>The executable you have launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
 
   <!-- Graphics tab -->
   <SettingsTab.Graphics>General</SettingsTab.Graphics>
@@ -156,14 +156,14 @@
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
-  <MuteOnFocusLostToolTip>Mutes the game when it is not in focus.</MuteOnFocusLostToolTip>
+  <MuteOnFocusLostToolTip>Mutes the game when its window is not in focus.</MuteOnFocusLostToolTip>
   <VoiceChat>Voice chat</VoiceChat>
   <VoiceMode.Disabled>Disabled</VoiceMode.Disabled>
   <VoiceMode.DisabledToolTip>Voice chat is disabled.</VoiceMode.DisabledToolTip>
   <VoiceMode.PushToTalk>Push-to-talk</VoiceMode.PushToTalk>
-  <VoiceMode.PushToTalkToolTip>Your voice activity is only sent when a certain key is held down.</VoiceMode.PushToTalkToolTip>
+  <VoiceMode.PushToTalkToolTip>Voice activity is sent only when a certain key is held down.</VoiceMode.PushToTalkToolTip>
   <VoiceMode.Activity>Voice activity</VoiceMode.Activity>
-  <VoiceMode.ActivityToolTip>Voice activity is always sent whenever the sound coming through passes the noise gate threshold.</VoiceMode.ActivityToolTip>
+  <VoiceMode.ActivityToolTip>Voice activity is sent whenever the sound coming through surpasses the noise gate threshold.</VoiceMode.ActivityToolTip>
   <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
 
   <!-- Controls tab -->
