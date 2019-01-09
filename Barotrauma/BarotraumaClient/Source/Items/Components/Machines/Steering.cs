@@ -543,6 +543,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (targetPort.Docked || targetPort.Item.Submarine == null) { continue; }
                     if (targetPort.Item.Submarine == controlledSub || targetPort.IsHorizontal != sourcePort.IsHorizontal) { continue; }
+                    if (Level.Loaded != null && targetPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
                     int targetDir = targetPort.IsHorizontal ?
                         Math.Sign(targetPort.Item.WorldPosition.X - targetPort.Item.Submarine.WorldPosition.X) :
