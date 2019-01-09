@@ -581,29 +581,22 @@ namespace Barotrauma.Items.Components
 
             disruptedDirections.Clear();
 
-            float searchRadius = Math.Min(range, worldPingRadius * 2);
-            for (float x = pingSource.X - searchRadius; x < pingSource.X + searchRadius; x += Level.GridCellSize)
+            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(pingSource, range * pingState))
             {
-                for (float y = pingSource.Y - searchRadius; y < pingSource.Y + searchRadius; y += Level.GridCellSize)
+                if (levelObject.ActivePrefab?.SonarDisruption <= 0.0f) { continue; }
+
+                float disruptionStrength = levelObject.ActivePrefab.SonarDisruption;
+                Vector2 disruptionPos = new Vector2(levelObject.Position.X, levelObject.Position.Y);
+
+                float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
+                disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
+
+                if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
                 {
-                    Vector2 disruptionPos = new Vector2(
-                        MathUtils.RoundTowardsClosest(x, Level.GridCellSize) + Level.GridCellSize / 2,
-                        MathUtils.RoundTowardsClosest(y, Level.GridCellSize) + Level.GridCellSize / 2);
-
-                    float disruptionStrength = Level.Loaded.GetSonarDisruptionStrength(disruptionPos);
-                    if (disruptionStrength > 0.0f)
+                    for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
                     {
-                        float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
-                        disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
-
-                        if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
-                        {
-                            for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
-                            {
-                                var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
-                                sonarBlips.Add(blip);
-                            }
-                        }
+                        var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                        sonarBlips.Add(blip);
                     }
                 }
             }
