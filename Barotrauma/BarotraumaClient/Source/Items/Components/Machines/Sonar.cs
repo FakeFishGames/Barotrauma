@@ -563,6 +563,8 @@ namespace Barotrauma.Items.Components
 
             foreach (DockingPort dockingPort in DockingPort.List)
             {
+                if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+
                 Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
                 offset.Y = -offset.Y;
                 if (offset.LengthSquared() > DisplayRadius * DisplayRadius) { continue; }
