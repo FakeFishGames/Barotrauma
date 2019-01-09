@@ -108,18 +108,42 @@ namespace Barotrauma.Tutorials
         {
             switch (index)
             {
-                case 0: // 5 seconds after the game has started
-                    if (false)
-                    {
-                        return false;
-                    }
+                case 0: // Welcome:         Game Start [Text]
+                    return false;
                     break;
-                case 1: // Open interface X
-                    if (false)
-                    {
-                        return false;
-                    }
+                case 1: // Command Reactor: 10 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
+                    return false;
                     break;
+                case 2: // Nav Console:     20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
+                    return false;
+                    break;
+                case 3: // Objective:       Travel 200 meters and while sub is not flooding [Text]
+                    return false;
+                    break;
+                case 4: // Flood:           Hull is breached and sub is taking on water [Video]
+                    return false;
+                    break;
+                case 5: // Reactor:         Player uses reactor for the first time [Video]
+                    return false;
+                    break;
+                case 6: // Enemy on Sonar:  Player witnesses creature signal on sonar for 5 seconds [Video]
+                    return false;
+                    break;
+                case 7: // Degrading1:      Any equipment degrades to 50% health or less and player has not assigned any crew to perform maintenance [Text]
+                    return false;
+                    break;
+                case 8: // Degrading2:      5 seconds after 'Degrading1' dismissed, and only if player has not assigned any crew to perform maintenance [Video]
+                    return false;
+                    break;
+                case 9: // Medical:         Crewmember is injured but not killed [Video]
+                    return false;
+                    break;
+                case 10: // Approach1:      Destination is within 100m [Video]
+                    return false;
+                    break;
+                case 11: // Approach2:      Sub is docked [Text]
+                    return false;
+                    break;                   
             }
 
             TriggerTutorialSegment(index);

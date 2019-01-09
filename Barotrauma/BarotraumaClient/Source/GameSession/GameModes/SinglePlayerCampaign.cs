@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
+        public ContextualTutorial ContextualTutorial;
+
         private GUIButton endRoundButton;
                 
         private bool crewDead;
@@ -20,7 +22,6 @@ namespace Barotrauma
 
         private Submarine leavingSub;
         private bool atEndPosition;
-        private ContextualTutorial contextualTutorial;
 
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
@@ -41,7 +42,7 @@ namespace Barotrauma
                 }
             }
 
-            contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
+            ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
         }
 
         public override void Start()
@@ -137,9 +138,9 @@ namespace Barotrauma
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
 
-            if (contextualTutorial != null && !contextualTutorial.Completed)
+            if (ContextualTutorial != null && !ContextualTutorial.Completed)
             {
-                contextualTutorial.AddToGUIUpdateList();
+                ContextualTutorial.AddToGUIUpdateList();
             }
         }
 
@@ -149,9 +150,9 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            if (contextualTutorial != null && !contextualTutorial.Completed)
+            if (ContextualTutorial != null && !ContextualTutorial.Completed)
             {
-                contextualTutorial.Update(deltaTime);
+                ContextualTutorial.Update(deltaTime);
             }
 
             endRoundButton.UpdateManually(deltaTime);
