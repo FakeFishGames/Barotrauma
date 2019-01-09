@@ -1027,7 +1027,7 @@ namespace Barotrauma
                     .SelectMany(l => l.WearingItems
                         .Where(i => !i.InheritSourceRect)
                         .Select(i => i.WearableComponent.Item)).Distinct();
-                removables.ForEach(i => i.Unequip(character));
+                removables.ForEachMod(i => i.Unequip(character));
                 selectedJob = characterInfo.Job.Prefab.Identifier;
             }
             else
