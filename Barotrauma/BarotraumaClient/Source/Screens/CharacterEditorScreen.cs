@@ -66,6 +66,7 @@ namespace Barotrauma
         private float spriteSheetMaxZoom = 1;
         private int spriteSheetOffsetY = 100;
         private int spriteSheetOffsetX;
+        private bool hideBodySheet;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
         private List<LimbJoint> selectedJoints = new List<LimbJoint>();
@@ -1299,6 +1300,16 @@ namespace Barotrauma
                 {
                     spriteSheetZoom = Math.Min(1, spriteSheetMaxZoom);
                     spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom));
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Hide Body Sprites")
+            {
+                TextColor = Color.White,
+                Selected = hideBodySheet,
+                OnSelected = (GUITickBox box) =>
+                {
+                    hideBodySheet = box.Selected;
                     return true;
                 }
             };
@@ -3212,16 +3223,18 @@ namespace Barotrauma
             for (int i = 0; i < Textures.Count; i++)
             {
                 var texture = Textures[i];
-                // Draw the body texture
-                spriteBatch.Draw(texture, 
-                    position: new Vector2(offsetX, offsetY), 
-                    rotation: 0, 
-                    origin: Vector2.Zero,
-                    sourceRectangle: null,
-                    scale: spriteSheetZoom,
-                    effects: SpriteEffects.None,
-                    color: Color.White,
-                    layerDepth: 0);
+                if (!hideBodySheet)
+                {
+                    spriteBatch.Draw(texture,
+                        position: new Vector2(offsetX, offsetY),
+                        rotation: 0,
+                        origin: Vector2.Zero,
+                        sourceRectangle: null,
+                        scale: spriteSheetZoom,
+                        effects: SpriteEffects.None,
+                        color: Color.White,
+                        layerDepth: 0);
+                }
                 GUI.DrawRectangle(spriteBatch, new Vector2(offsetX, offsetY), texture.Bounds.Size.ToVector2() * spriteSheetZoom, Color.White);
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
