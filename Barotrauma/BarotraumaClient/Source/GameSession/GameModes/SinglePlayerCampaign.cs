@@ -56,11 +56,11 @@ namespace Barotrauma
             CrewManager.InitSinglePlayerRound();
         }
 
-        public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
+        public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
         {
-            if (Money < characterInfo.Salary) return false;
+            if (Money < characterInfo.Salary) { return false; }
 
-            hireManager.availableCharacters.Remove(characterInfo);
+            location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);
             Money -= characterInfo.Salary;
 
