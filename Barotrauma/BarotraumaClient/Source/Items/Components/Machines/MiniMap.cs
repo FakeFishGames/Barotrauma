@@ -201,22 +201,18 @@ namespace Barotrauma.Items.Components
             {
                 if (sub.HullVertices == null) { continue; }
 
+                Rectangle worldBorders = sub.GetDockedBorders();
+                worldBorders.Location += sub.WorldPosition.ToPoint();
+
                 float displayScale = ConvertUnits.ToDisplayUnits(scale);
-                Vector2 offset = Vector2.Zero;
+                Vector2 offset = ConvertUnits.ToSimUnits(sub.WorldPosition - new Vector2(worldBorders.Center.X, worldBorders.Y - worldBorders.Height / 2));
                 Vector2 center = container.Rect.Center.ToVector2();
-
-                if (sub != item.Submarine && item.Submarine != null)
-                {
-                    offset = ConvertUnits.ToSimUnits(sub.WorldPosition - item.Submarine.WorldPosition);
-                }
-
+                
                 for (int i = 0; i < sub.HullVertices.Count; i++)
                 {
                     Vector2 start = (sub.HullVertices[i] + offset) * displayScale;
-                    start += Vector2.Normalize(start) * 0;
                     start.Y = -start.Y;
                     Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] + offset) * displayScale;
-                    end += Vector2.Normalize(end) * 0;
                     end.Y = -end.Y;
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
                 }
