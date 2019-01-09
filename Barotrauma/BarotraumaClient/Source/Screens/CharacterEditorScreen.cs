@@ -1725,7 +1725,7 @@ namespace Barotrauma
             var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animations");
             resetAnimButton.OnClicked += (button, userData) =>
             {
-                AnimParams.ForEach(p => p.Reset(animationResetRequiresForceLoading));
+                AnimParams.ForEach(p => p.Reset(true));
                 ResetParamsEditor();
                 GUI.AddMessage($"All animations reset", Color.WhiteSmoke, font: GUI.Font);
                 animationResetRequiresForceLoading = false;
