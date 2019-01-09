@@ -287,20 +287,6 @@
   </Item>
   
   <Item
-    name="Fire Extinguisher Mount"
-    identifier="extinguishermount"
-    pickdistance="75">
-
-    <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true"
-                   autointeractwithcontained="true">
-      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
-      <Containable identifiers="extinguisher"/>
-    </ItemContainer>
-  </Item>
-
-  <Item
     name="Weapon Holder"
     identifier="weaponholder"
     scale="0.5">
