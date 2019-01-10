@@ -76,7 +76,7 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdoll_old.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -365,69 +365,78 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Alien\artifactholder_glow.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\SecureSteelLock.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\SecureSteelLockGreen.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\SecureSteelLockRed.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Fabricators\Fabricator.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\captain_legs_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\captain_legs_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\captain_torso_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\captain_torso_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\engineer_legs_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\engineer_legs_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\engineer_torso_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\engineer_torso_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\mechanic_legs_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\mechanic_legs_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\mechanic_torso_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\mechanic_torso_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\medic_legs_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\medic_legs_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\medic_torso_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\medic_torso_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\securityofficer_legs_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\securityofficer_legs_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\securityofficer_torso_female.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\securityofficer_torso_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    	
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\LootablePlants.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
