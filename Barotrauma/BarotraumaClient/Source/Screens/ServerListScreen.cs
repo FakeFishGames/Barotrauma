@@ -276,7 +276,7 @@ namespace Barotrauma
 
             if (client == null) yield return CoroutineStatus.Success;
 
-            var request = new RestRequest("masterserver8.php", Method.GET);
+            var request = new RestRequest("masterserver2.php", Method.GET);
             request.AddParameter("gamename", "barotrauma");
             request.AddParameter("action", "listservers");
             
