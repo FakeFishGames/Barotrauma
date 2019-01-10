@@ -18,10 +18,10 @@ namespace Barotrauma
             Audio,
             Controls,
         }
-        
+
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
-        
+
         private GUIFrame[] tabs;
         private GUIButton[] tabButtons;
 
@@ -50,9 +50,9 @@ namespace Barotrauma
             int index = text.Text.IndexOf("%");
             string label = text.Text;
             //if "%" is found
-            if(index > 0)
+            if (index > 0)
             {
-                while(true)
+                while (true)
                 {
                     //search for end of label
                     index -= 1;
@@ -80,12 +80,12 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), settingsFrame.RectTransform),
                 TextManager.Get("Settings"), textAlignment: Alignment.Center, font: GUI.LargeFont);
-            
+
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), settingsFrame.RectTransform, Anchor.Center)
-                { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
+            { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.05f), settingsFrame.RectTransform, Anchor.TopCenter)
-                { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
+            { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
             tabButtons = new GUIButton[tabs.Length];
@@ -95,7 +95,7 @@ namespace Barotrauma
                 {
                     UserData = tab
                 };
-                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), tab.ToString())
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("SettingsTab." + tab.ToString()))
                 {
                     UserData = tab,
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
@@ -103,13 +103,15 @@ namespace Barotrauma
             }
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform, Anchor.BottomCenter), style: null);
-            
+
             /// Graphics tab --------------------------------------------------------------
-            
+
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterLeft)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
+            { RelativeOffset = new Vector2(0.02f, 0.0f) })
+            { RelativeSpacing = 0.01f, Stretch = true };
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterRight)
-                { RelativeOffset = new Vector2(0.02f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
+            { RelativeOffset = new Vector2(0.02f, 0.0f) })
+            { RelativeSpacing = 0.01f, Stretch = true };
 
             var supportedDisplayModes = new List<DisplayMode>();
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
@@ -123,7 +125,7 @@ namespace Barotrauma
             {
                 OnSelected = SelectResolution
             };
-            
+
             foreach (DisplayMode mode in supportedDisplayModes)
             {
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
@@ -134,14 +136,27 @@ namespace Barotrauma
             {
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
-                        
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
+#if (!OSX)
+            // Fullscreen option just sets itself to borderless on macOS.
             displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
-            displayModeDD.OnSelected = (guiComponent, obj) => 
+#else
+            if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(GameMain.Config.WindowMode);
+            }
+#endif
+            displayModeDD.OnSelected = (guiComponent, obj) =>
             {
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
@@ -153,6 +168,7 @@ namespace Barotrauma
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
+                ToolTip = TextManager.Get("EnableVSyncToolTip"),
                 OnSelected = (GUITickBox box) =>
                 {
                     VSyncEnabled = box.Selected;
@@ -164,7 +180,7 @@ namespace Barotrauma
                 },
                 Selected = VSyncEnabled
             };
-                      
+
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform), style: null);
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
@@ -202,7 +218,7 @@ namespace Barotrauma
                 }
                 return true;
             };
-            
+
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
             GUITextBlock LightText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"))
@@ -215,7 +231,7 @@ namespace Barotrauma
                 UserData = LightText,
                 ToolTip = TextManager.Get("LightMapScaleToolTip"),
                 BarScroll = MathUtils.InverseLerp(0.2f, 1.0f, LightMapScale),
-                OnMoved = (scrollBar, barScroll) => 
+                OnMoved = (scrollBar, barScroll) =>
                 {
                     ChangeSliderText(scrollBar, barScroll);
                     LightMapScale = MathHelper.Lerp(0.2f, 1.0f, barScroll);
@@ -252,7 +268,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-                        
+
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
 
@@ -334,6 +350,7 @@ namespace Barotrauma
 
             GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.15f), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
+            muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
             muteOnFocusLostBox.OnSelected = (tickBox) =>
             {
                 MuteOnFocusLost = tickBox.Selected;
@@ -347,6 +364,9 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), voiceSettings.RectTransform), TextManager.Get("VoiceChat"));
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
+
             IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
             foreach (string name in deviceNames)
             {
@@ -354,6 +374,7 @@ namespace Barotrauma
             }
 
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
+#if (!OSX)
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.2f), voiceSettings.RectTransform), VoiceCaptureDevice, deviceNames.Count);
             foreach (string name in deviceNames)
             {
@@ -363,15 +384,33 @@ namespace Barotrauma
             {
                 string name = obj as string;
                 if (VoiceCaptureDevice == name) return true;
-                VoiceCaptureDevice = name;
-                if (VoipCapture.Instance != null)
-                {
-                    UInt16 storedBufferID = VoipCapture.Instance.LatestBufferID;
-                    VoipCapture.Instance.Dispose();
-                    VoipCapture.Create(name, storedBufferID);
-                }
+
+                VoipCapture.ChangeCaptureDevice(name);
                 return true;
             };
+#else
+            var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), voiceSettings.RectTransform), TextManager.Get("CurrentDevice") + ": " + VoiceCaptureDevice)
+            {
+                ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
+                TextAlignment = Alignment.CenterX
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), voiceSettings.RectTransform), TextManager.Get("RefreshDefaultDevice"))
+            {
+                ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
+                OnClicked = (bt, userdata) =>
+                {
+                    deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+                    if (VoiceCaptureDevice == deviceNames[0]) return true;
+
+                    VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                    suavemente.Text = TextManager.Get("CurrentDevice") + ": " + VoiceCaptureDevice;
+                    suavemente.Flash(Color.Blue);
+
+                    return true;
+                }
+            };
+#endif
 
             var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), voiceSettings.RectTransform))
             {
@@ -382,10 +421,15 @@ namespace Barotrauma
             GUIRadioButtonGroup voiceMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var tick = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.33f), radioButtonFrame.RectTransform), ((VoiceMode)i).ToString());
+                string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
+                var tick = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.33f), radioButtonFrame.RectTransform), TextManager.Get(langStr))
+                {
+                    ToolTip = TextManager.Get(langStr + "ToolTip")
+                };
+
                 voiceMode.AddRadioButton((VoiceMode)i, tick);
             }
-            
+
             var voiceInputContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.2f), voiceSettings.RectTransform, Anchor.BottomCenter));
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice") + ": ");
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight),
@@ -452,7 +496,6 @@ namespace Barotrauma
             var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.Center)
                 { RelativeOffset = new Vector2(0.0f, 0.0f) })
                 { RelativeSpacing = 0.01f, Stretch = true };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("Controls"));
 
             var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), controlsLayoutGroup.RectTransform))
             {
@@ -486,18 +529,18 @@ namespace Barotrauma
                 Step = 0.1f
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
-            
+
             /// General tab --------------------------------------------------------------
 
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.General].RectTransform, Anchor.Center)
                 { RelativeOffset = new Vector2(0.0f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
-            
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), generalLayoutGroup.RectTransform))
             {
                 CanBeFocused = false
             };
-            
+
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
                 new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
@@ -533,12 +576,12 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
-            
+
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
             {
                 IgnoreLayoutGroups = true,
-                OnClicked = (x, y) => 
+                OnClicked = (x, y) =>
                 {
                     if (GameMain.Config.UnsavedSettings) GameMain.Config.Load("config.xml");
                     if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.SelectTab(0);
@@ -590,7 +633,7 @@ namespace Barotrauma
             textBox.Text = "";
             CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
         }
-        
+
         private bool SelectResolution(GUIComponent selected, object userData)
         {
             DisplayMode mode = selected.UserData as DisplayMode;
@@ -647,13 +690,13 @@ namespace Barotrauma
         private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox)
         {
             yield return CoroutineStatus.Running;
-            
+
             while (PlayerInput.LeftButtonHeld() || PlayerInput.LeftButtonClicked())
             {
                 //wait for the mouse to be released, so that we don't interpret clicking on the textbox as the keybinding
                 yield return CoroutineStatus.Running;
             }
-            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0 && 
+            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0 &&
                 !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked() && !PlayerInput.MidButtonClicked())
             {
                 if (Screen.Selected != GameMain.MainMenuScreen && !GUI.SettingsMenuOpen) yield return CoroutineStatus.Success;
@@ -695,13 +738,13 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Success;
         }
-        
+
         private bool ApplyClicked(GUIButton button, object userData)
         {
             Save();
 
             settingsFrame.Flash(Color.Green);
-            
+
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
                 GameMain.Instance.SetWindowMode(GameMain.Config.WindowMode);
