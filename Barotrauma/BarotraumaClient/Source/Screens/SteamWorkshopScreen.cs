@@ -809,15 +809,23 @@ namespace Barotrauma
                     OpenFileDialog ofd = new OpenFileDialog()
                     {
                         InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
-                        Title = "Select the files you want to add to the Steam Workshop item"
+                        Title = "Select the files you want to add to the Steam Workshop item",
                     };
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         foreach (string file in ofd.FileNames)
                         {
-                            string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, Path.GetFileName(file));
-                            File.Copy(file, destinationPath, overwrite: true);
-                            itemContentPackage.AddFile(destinationPath, ContentType.None);
+                            string filePathRelativeToStagingFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, SteamManager.WorkshopItemStagingFolder));
+                            //file is not inside the staging folder -> copy it
+                            if (filePathRelativeToStagingFolder.StartsWith(".."))
+                            {
+                                string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
+                                itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                            }
+                            else
+                            {
+                                itemContentPackage.AddFile(filePathRelativeToStagingFolder, ContentType.None);
+                            }
                         }
                         RefreshCreateItemFileList();
                     }
