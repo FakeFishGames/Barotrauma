@@ -6,6 +6,9 @@ namespace Barotrauma
 {
     public static class TextManager
     {
+        //only used if none of the selected content packages contain any text files
+        const string VanillaTextFilePath = "Content/Texts/EnglishVanilla.xml";
+
         //key = language
         private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
 
@@ -57,6 +60,18 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
                 }
             }
+
+            if (textPacks.Count == 0)
+            {
+                DebugConsole.ThrowError("No text files available in any of the selected content packages. Attempting to find a vanilla English text file...");
+                if (!File.Exists(VanillaTextFilePath))
+                {
+                    throw new Exception("No text files found in any of the selected content packages or in the default text path!");
+                }
+                var textPack = new TextPack(VanillaTextFilePath);
+                availableLanguages.Add(textPack.Language);
+                textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
+            }
         }
 
         public static string Get(string textTag, bool returnNull = false)
@@ -65,6 +80,10 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
                 Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
             }
 
             foreach (TextPack textPack in textPacks[Language])
