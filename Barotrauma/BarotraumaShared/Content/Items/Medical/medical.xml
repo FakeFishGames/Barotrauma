@@ -551,7 +551,6 @@
     name="Calyxanide"
     identifier="calyxanide"
     category="Material"
-    spritecolor="0.0,0.0,0.0,1.0"
     containercolor="0.0,0.0,0.0,1.0"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
@@ -674,7 +673,6 @@
     identifier="morbusineantidote"
     aliases="Morbusanide"
     category="Material"
-    spritecolor="0.0,0.0,0.2,1.0"
     containercolor="0.0,0.0,0.2,1.0"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
@@ -885,7 +883,6 @@
     name="Morbusine"   
     identifier="morbusine"
     category="Material"
-    spritecolor="0.0,0.0,0.0,1.0"
     containercolor="0.1,0.1,0.1,1.0"
     cargocontaineridentifier="chemicalcrate"
     Tags="smallitem,chem,medical"
@@ -945,8 +942,131 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  
-  
+
+  <Item
+    name="Cyanide"
+    identifier="cyanide"
+    category="Material"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A highly potent neurotoxin."
+    useinhealthinterface="true"
+    scale="0.3">
+
+    <Price locationtype="Research" buyprice="450"/>
+    <Price locationtype="Military" buyprice="1000"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="63,117,62,115" depth="0.6" origin="0.5,0.5" />
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character">
+        <Affliction identifier="morbusinepoisoning" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Radiotoxin"
+    identifier="radiotoxin"
+    category="Material"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A highly potent neurotoxin."
+    useinhealthinterface="true"
+    scale="0.3">
+
+    <Price locationtype="Research" buyprice="450"/>
+    <Price locationtype="Military" buyprice="1000"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="0,115,62,115" depth="0.6" origin="0.5,0.5" />
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character">
+        <Affliction identifier="morbusinepoisoning" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Sufforin"
+    identifier="sufforin"
+    category="Material"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A highly potent neurotoxin."
+    useinhealthinterface="true"
+    scale="0.3">
+
+    <Price locationtype="Research" buyprice="450"/>
+    <Price locationtype="Military" buyprice="1000"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character">
+        <Affliction identifier="morbusinepoisoning" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Deliriumine"
+    identifier="deliriumine"
+    category="Material"
+    containercolor="0.1,0.1,0.1,1.0"
+    cargocontaineridentifier="chemicalcrate"
+    Tags="smallitem,chem,medical"
+    description="A highly potent neurotoxin."
+    useinhealthinterface="true"
+    scale="0.3">
+
+    <Price locationtype="Research" buyprice="450"/>
+    <Price locationtype="Military" buyprice="1000"/>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64"/>
+    <Sprite texture="Medicines.png" sourcerect="251,237,62,115" depth="0.6" origin="0.5,0.5" />
+
+    <Body width="8" height="16" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character">
+        <Affliction identifier="morbusinepoisoning" amount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </MeleeWeapon>
+  </Item>
+
   <!-- legacy **************************************************************************************** -->
   
   <!-- Medical items -->
