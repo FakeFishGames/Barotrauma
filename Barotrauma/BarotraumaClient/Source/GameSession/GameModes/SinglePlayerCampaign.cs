@@ -43,7 +43,8 @@ namespace Barotrauma
             }
 
             ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
-            if (!ContextualTutorial.Completed)
+
+            if(ContextualTutorial.Selected)
             {
                 ContextualTutorial.Initialize();
             }
@@ -65,9 +66,8 @@ namespace Barotrauma
 
             CrewManager.InitSinglePlayerRound();
 
-            if (!ContextualTutorial.Completed)
+            if (ContextualTutorial.Initialized)
             {
-                ContextualTutorial.Campaign = this;
                 ContextualTutorial.Start();
             }
         }
@@ -148,7 +148,7 @@ namespace Barotrauma
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
 
-            if (ContextualTutorial != null && !ContextualTutorial.Completed)
+            if (ContextualTutorial.Initialized)
             {
                 ContextualTutorial.AddToGUIUpdateList();
             }
@@ -160,7 +160,7 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            if (ContextualTutorial != null && !ContextualTutorial.Completed)
+            if (ContextualTutorial.Initialized)
             {
                 ContextualTutorial.Update(deltaTime);
             }
@@ -183,7 +183,7 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            if (!ContextualTutorial.Completed)
+            if (ContextualTutorial.Initialized)
             {
                 ContextualTutorial.Stop();
             }

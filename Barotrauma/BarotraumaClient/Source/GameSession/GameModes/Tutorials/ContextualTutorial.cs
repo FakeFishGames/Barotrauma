@@ -4,13 +4,15 @@ using System;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
+using System.Linq;
 
 namespace Barotrauma.Tutorials
 {
     class ContextualTutorial : Tutorial
     {
+        public static bool Selected = false;
         public static bool ContentRunning = false;
-        public SinglePlayerCampaign Campaign;
+        public static bool Initialized = false;
 
         private enum ContentTypes { None = 0, Video = 1, Text = 2 };
 
@@ -19,10 +21,13 @@ namespace Barotrauma.Tutorials
         private SpriteSheetPlayer spriteSheetPlayer;
         private Steering navConsole;
         private Reactor reactor;
+        private Sonar sonar;
         private Vector2 subStartingPosition;
         private List<Character> crew;
+        private List<Pair<Character, float>> characterTimeOnSonar;
+        private float requiredTimeOnSonar = 5f;
 
-        private bool active = false;
+        private bool started = false;
 
         private string playableContentPath;
         
@@ -61,7 +66,6 @@ namespace Barotrauma.Tutorials
         public ContextualTutorial(XElement element) : base(element)
         {
             playableContentPath = element.GetAttributeString("playablecontentpath", "");
-            spriteSheetPlayer = new SpriteSheetPlayer();
             segments = new List<TutorialSegment>();
 
             foreach (var segment in element.Elements("Segment"))
@@ -72,39 +76,72 @@ namespace Barotrauma.Tutorials
 
         public override void Initialize()
         {
+            if (Initialized) return;
+
+            Initialized = true;
             base.Initialize();
+            spriteSheetPlayer = new SpriteSheetPlayer();
+            characterTimeOnSonar = new List<Pair<Character, float>>();
+        }
+
+        public override void Start()
+        {
+            if (!Initialized) return;
+
+            base.Start();
 
             activeSegment = null;
             tutorialTimer = 0.0f;
             inputGracePeriodTimer = 0.0f;
             degrading2ActivationCountdown = -1;
             subStartingPosition = Vector2.Zero;
+            characterTimeOnSonar.Clear();
+
+            subStartingPosition = Submarine.MainSub.WorldPosition;
+            navConsole = Item.ItemList.Find(i => i.HasTag("command"))?.GetComponent<Steering>();
+            sonar = navConsole?.Item.GetComponent<Sonar>();
+            reactor = Item.ItemList.Find(i => i.HasTag("reactor"))?.GetComponent<Reactor>();
+
+            if(reactor == null || navConsole == null || sonar == null)
+            {
+                infoBox = CreateInfoFrame("Submarine not compatible with the tutorial:"
+                    + "\nReactor - " + (reactor != null ? "OK" : "Tag 'reactor' not found")
+                    + "\nNavigation Console - " + (navConsole != null ? "OK" : "Tag 'command' not found")
+                    + "\nSonar - " + (sonar != null ? "OK" : "Not found under Navigation Console"), true);
+                CoroutineManager.StartCoroutine(WaitForErrorClosed());
+                return;
+            }
+
+            crew = GameMain.GameSession.CrewManager.GetCharacters();
+            started = true;
         }
 
-        public override void Start()
+        private IEnumerable<object> WaitForErrorClosed()
         {
-            base.Start();
-            subStartingPosition = Submarine.MainSub.WorldPosition;
-            navConsole = Item.ItemList.Find(i => i.HasTag("steering")).GetComponent<Steering>();
-            reactor = Item.ItemList.Find(i => i.HasTag("reactor")).GetComponent<Reactor>();
-            crew = GameMain.GameSession.CrewManager.GetCharacters();
-            active = true;
+            while (infoBox != null) yield return null;
+            Stop();
         }
 
         public void Stop()
         {
-            active = ContentRunning = false;
+            started = ContentRunning = Initialized = false;
+            spriteSheetPlayer = null;
+            characterTimeOnSonar = null;
         }
 
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            spriteSheetPlayer.AddToGUIUpdateList();
+            if (spriteSheetPlayer != null)
+            {
+                spriteSheetPlayer.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
         {
-            if (!active) return;
+            if (!started) return;
+            deltaTime *= 0.5f;
 
             if (ContentRunning)
             {
@@ -157,6 +194,7 @@ namespace Barotrauma.Tutorials
                 case 1: // Command Reactor: 10 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
                     if (tutorialTimer < 10.5f)
                     {
+                        DebugConsole.NewMessage("Timer: " + tutorialTimer, Color.White);
                         tutorialTimer += deltaTime;
 
                         if (HasOrder("operatereactor"))
@@ -182,7 +220,7 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 3: // Objective:       Travel 200 meters and while sub is not flooding [Text]
-                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 200000f || IsFlooding())
+                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 20000f || IsFlooding())
                     {
                         return false;
                     }
@@ -200,14 +238,18 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 6: // Enemy on Sonar:  Player witnesses creature signal on sonar for 5 seconds [Video]
-                    return false;
+                    if (!HasEnemyOnSonarForDuration(deltaTime))
+                    {
+                        return false;
+                    }
                     break;
                 case 7: // Degrading1:      Any equipment degrades to 50% health or less and player has not assigned any crew to perform maintenance [Text]
                     bool degradedEquipmentFound = false;
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (item.Condition > 50.0f) continue;
+                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
+                        DebugConsole.NewMessage("Degraded Equiopment: " + item.Name, Color.White);
                         degradedEquipmentFound = true;
                         break;
                     }
@@ -258,7 +300,7 @@ namespace Barotrauma.Tutorials
                     if (!injuredFound) return false;
                     break;
                 case 10: // Approach1:      Destination is within 100m [Video]
-                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 100000f)
+                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 10000f)
                     {
                         return false;
                     }
@@ -279,7 +321,7 @@ namespace Barotrauma.Tutorials
         {
             for(int i = 0; i < crew.Count; i++)
             {
-                if (crew[i].CurrentOrder.AITag == aiTag) return true;
+                if (crew[i].CurrentOrder?.AITag == aiTag) return true;
             }
 
             return false;
@@ -287,13 +329,50 @@ namespace Barotrauma.Tutorials
 
         private bool IsFlooding()
         {
-            float floodingAmount = 0.0f;
-            foreach (Hull hull in Hull.hullList)
+            foreach (Gap gap in Gap.GapList)
             {
-                floodingAmount += hull.WaterVolume / hull.Volume / Hull.hullList.Count;
+                if (gap.ConnectedWall == null) continue;
+                if (gap.ConnectedDoor != null || gap.Open <= 0.0f) continue;
+                if (gap.Submarine == null) continue;
+                if (gap.Submarine != Submarine.MainSub) continue;
+                return true;
             }
 
-            return floodingAmount >= 0.1f; // Ignore ballast
+            return false;
+        }
+
+        private bool HasEnemyOnSonarForDuration(float deltaTime)
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.CurrentHull != null || !c.Enabled || !(c.AIController is EnemyAIController)) continue;
+                if (sonar.DetectSubmarineWalls && c.AnimController.CurrentHull == null && sonar.Item.CurrentHull != null) continue;
+                if (Vector2.DistanceSquared(c.WorldPosition, sonar.Item.WorldPosition) > sonar.Range * sonar.Range)
+                {
+                    for (int i = 0; i < characterTimeOnSonar.Count; i++)
+                    {
+                        if(characterTimeOnSonar[i].First == c)
+                        {
+                            characterTimeOnSonar.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    
+                    continue;
+                }
+
+                Pair<Character, float> pair = characterTimeOnSonar.Find(ct => ct.First == c);
+                if (pair != null)
+                {
+                    pair.Second += deltaTime;
+                }
+                else
+                {
+                    characterTimeOnSonar.Add(new Pair<Character, float>(c, deltaTime));
+                }
+            }
+
+            return characterTimeOnSonar.Find(ct => ct.Second >= requiredTimeOnSonar) != null;
         }
 
         private void TriggerTutorialSegment(int index)
