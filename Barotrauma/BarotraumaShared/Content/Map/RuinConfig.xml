@@ -23,7 +23,7 @@
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
     <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>
     <ChooseOne>
-      <itemassembly prefab="alienarmoryassembly1" alignment="Right" type="Prop" minroomsize="800,500" maxroomsize="10000,800"/>
+      <itemassembly prefab="alienarmoryassembly1" alignment="Right" type="Prop" minroomsize="800,550" maxroomsize="10000,800"/>
       <item prefab="aliencoil" alignment="bottom" type="Prop" minroomsize="600,0" maxroomsize="800, 800">
         <item prefab="alienmotionsensor" alignment="Top, Bottom, Left, Right, Center" type="Prop">
           <Connection targetentity="parent">
@@ -58,7 +58,7 @@
       <itemassembly prefab="aliengenericroomassembly1" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly3" alignment="Center" type="Prop" minroomsize="1000,1000" minoffset="0, 0.1" maxoffset="0, 0.5"/>
-      <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="800,800" />
+      <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="900,900" />
       <itemassembly prefab="aliengenericroomassembly5" alignment="Bottom" type="Prop" minroomsize="800,900" maxroomsize="10000, 1000"/>
       <itemassembly prefab="aliengenericroomassembly6" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3"/>
@@ -80,7 +80,7 @@
       <itemassembly prefab="aliengenericroomassembly1" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly3" alignment="Center" type="Prop" minroomsize="1000,1000" minoffset="0, 0.1" maxoffset="0, 0.5"/>
-      <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="800,800" />
+      <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="900,900" />
       <itemassembly prefab="aliengenericroomassembly5" alignment="Bottom" type="Prop" minroomsize="800,900" maxroomsize="10000, 1000"/>
       <itemassembly prefab="aliengenericroomassembly6" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3"/>

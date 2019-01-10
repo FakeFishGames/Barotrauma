@@ -1,45 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienGenericRoomAssembly6" description="" hideinmenus="true">
-  <Item name="Sulphurite Shard" identifier="sulphuriteshard" ID="31" rect="53,41,9,32" description="" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="1">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Sulphurite Shard" identifier="sulphuriteshard" ID="22" rect="53,41,9,32" description="" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="1">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygenite Shard" identifier="oxygeniteshard" ID="18" rect="53,41,9,32" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="1">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygenite Shard" identifier="oxygeniteshard" ID="16" rect="53,41,9,32" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="1">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygenite Shard" identifier="oxygeniteshard" ID="6" rect="-112,48,9,32" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="1">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Sulphurite Shard" identifier="sulphuriteshard" ID="5" rect="-80,16,9,32" description="" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,smallitem" displaysidebysidewhenlinked="False" spritedepth="0.7" scale="1">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="11" rect="128,96,54,192" texturescale="1,1" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
-  <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="10" rect="-192,128,54,224" texturescale="1,1" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
-  <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="9" rect="-64,96,54,48" texturescale="1,1" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
-  <Structure name="RuinWallHorizontalSmall" identifier="RuinWallHorizontalSmall" ID="8" rect="-144,128,336,54" texturescale="1,1" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.062" scale="1" />
-  <Structure name="RuinWallHorizontalSmall" identifier="RuinWallHorizontalSmall" ID="7" rect="32,-46,123,54" texturescale="1,1" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.062" scale="1" />
-  <Item name="Water Detector" identifier="waterdetector" ID="12" rect="36,-96,26,23" description="Sends out a signal when the detector is submerged." spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.16">
-    <WaterDetector output="1" falseoutput="0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable attached="True" holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="5" canbepicked="True" allowingameediting="True" msg="Detach [Wrench]">
-      <requireditem identifiers="wrench" type="Equipped" msg="" />
-    </Holdable>
-    <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <output name="signal_out" />
-    </ConnectionPanel>
-  </Item>
-  <Item name="Label" identifier="label" ID="13" rect="64,-96,80,16" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="" displaysidebysidewhenlinked="False" spritedepth="0.85" scale="1">
-    <ItemLabel padding="0,0,0,0" text="WATER" textcolor="0,0,0,255" textscale="1" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Supplies Cabinet" identifier="suppliescabinet" ID="14" rect="32,64,52,78" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="1">
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="16,18,22,31,0,0" />
-  </Item>
-  <Item name="Alien Hatch" identifier="alienhatch" ID="32" rect="-160,-49,208,48" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
+<ItemAssembly name="AlienGenericRoomAssembly6" description="" hideinmenus="false">
+  <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="12" rect="-192,128,54,224" texturescale="1,1" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
+  <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="6" rect="-64,96,54,48" texturescale="1,1" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
+  <Structure name="RuinWallHorizontalSmall" identifier="RuinWallHorizontalSmall" ID="5" rect="-144,128,336,54" texturescale="1,1" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.062" scale="1" />
+  <Structure name="RuinWallHorizontalSmall" identifier="RuinWallHorizontalSmall" ID="4" rect="32,-46,123,54" texturescale="1,1" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.062" scale="1" />
+  <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="3" rect="128,96,54,192" texturescale="1,1" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
+  <Item name="Alien Hatch" identifier="alienhatch" ID="13" rect="-160,-49,208,48" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="True" msg="Force open [Crowbar]">
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
     </Door>
