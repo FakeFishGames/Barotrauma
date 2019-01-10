@@ -37,8 +37,9 @@
       <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" />
     </ItemContainer>
   </Item>
+  <!-- TODO: switch to SecureSteelLockRed.png when access denied and SecureSteelLockGreen.png when access granted-->
   <Item name="Secure Steel Cabinet" identifier="securesteelcabinet" tags="cabinet" linkable="true" spritecolor="255,255,255,255" pickdistance="150" scale="0.5">
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,311,355" origin="0.5,0.5" />
+    <Sprite texture="SecureSteelLock.png" depth="0.84" sourcerect="0,0,311,355" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
       <Containable identifiers="smallitem,mediumitem" />
