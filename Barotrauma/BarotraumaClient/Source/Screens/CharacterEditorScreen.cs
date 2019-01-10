@@ -743,7 +743,17 @@ namespace Barotrauma
                 new XAttribute("limb1anchor", $"{a1.X.Format(2)}, {a1.Y.Format(2)}"),
                 new XAttribute("limb2anchor", $"{a2.X.Format(2)}, {a2.Y.Format(2)}")
                 );
-            var lastJointElement = RagdollParams.MainElement.Elements("joint").Last();
+            var lastJointElement = RagdollParams.MainElement.Elements("joint").LastOrDefault();
+            if (lastJointElement == null)
+            {
+                // If no joints exist, use the last limb element.
+                lastJointElement = RagdollParams.MainElement.Elements("limb").LastOrDefault();
+            }
+            if (lastJointElement == null)
+            {
+                DebugConsole.ThrowError("Cannot add joints, because no limb elements were found!");
+                return;
+            }
             lastJointElement.AddAfterSelf(newJointElement);
             var newJointParams = new JointParams(newJointElement, RagdollParams);
             RagdollParams.Joints.Add(newJointParams);
