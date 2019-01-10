@@ -11,7 +11,7 @@ namespace Barotrauma.SpriteDeformations
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
             ToolTip = "How fast the deformation \"oscillates\" back and forth. " +
             "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
-        public float Frequency { get; set; }
+        public override float Frequency { get; set; } = 1;
 
         [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
             ToolTip = "The \"strength\" of the deformation.")]
@@ -28,6 +28,15 @@ namespace Barotrauma.SpriteDeformations
 
         private CustomDeformationParams CustomDeformationParams => deformationParams as CustomDeformationParams;
 
+        public override float Phase
+        {
+            get { return phase; }
+            set
+            {
+                phase = value;
+                //phase %= MathHelper.TwoPi;
+            }
+        }
         private float phase;
 
         public CustomDeformation(XElement element) : base(element, new CustomDeformationParams(element))
@@ -111,8 +120,11 @@ namespace Barotrauma.SpriteDeformations
 
         public override void Update(float deltaTime)
         {
-            phase += deltaTime * CustomDeformationParams.Frequency;
-            phase %= MathHelper.TwoPi;
+            if (!deformationParams.UseMovementSine)
+            {
+                phase += deltaTime * CustomDeformationParams.Frequency;
+                phase %= MathHelper.TwoPi;
+            }
         }
 
         public override void Save(XElement element)

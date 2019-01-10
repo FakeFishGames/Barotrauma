@@ -27,6 +27,8 @@ namespace Barotrauma.Networking
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
 
+        protected GUITickBox cameraFollowsSub;
+
         private ClientPermissions permissions = ClientPermissions.None;
         private List<string> permittedConsoleCommands = new List<string>();
 
@@ -97,6 +99,18 @@ namespace Barotrauma.Networking
             {
                 CanBeFocused = false
             };
+
+            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter)
+            {
+                AbsoluteOffset = new Point(0, 5),
+                MaxSize = new Point(25, 25)
+            }, TextManager.Get("CamFollowSubmarine"));
+            cameraFollowsSub.OnSelected += (tbox) =>
+            {
+                Camera.FollowSub = tbox.Selected;
+                return true;
+            };
+            cameraFollowsSub.OnSelected(cameraFollowsSub);
 
             chatBox = new ChatBox(inGameHUD, isSinglePlayer: false);
             chatBox.OnEnterMessage += EnterChatMessage;
@@ -1613,7 +1627,12 @@ namespace Barotrauma.Networking
             if (characterInfo == null) return;
 
             msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write((byte)characterInfo.Race);
             msg.Write((byte)characterInfo.HeadSpriteId);
+            msg.Write((byte)characterInfo.HairIndex);
+            msg.Write((byte)characterInfo.BeardIndex);
+            msg.Write((byte)characterInfo.MoustacheIndex);
+            msg.Write((byte)characterInfo.FaceAttachmentIndex);
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);
@@ -1964,6 +1983,8 @@ namespace Barotrauma.Networking
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
+
+                    cameraFollowsSub.Visible = Character.Controlled == null;
 
                     if (Character.Controlled == null)
                     {

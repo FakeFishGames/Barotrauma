@@ -98,9 +98,7 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-
             Color currColor = GetCurrentColor(state);
-
             if (style != null)
             {
                 foreach (UISprite uiSprite in style.Sprites[state])

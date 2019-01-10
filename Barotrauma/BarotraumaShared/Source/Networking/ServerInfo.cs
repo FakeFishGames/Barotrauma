@@ -38,6 +38,11 @@ namespace Barotrauma.Networking
             get;
             private set;
         } = new List<string>();
+        public List<string> ContentPackageWorkshopUrls
+        {
+            get;
+            private set;
+        } = new List<string>();
 
         public bool ContentPackagesMatch(IEnumerable<ContentPackage> myContentPackages)
         {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Reflection;
 using System.Text;
 
 namespace Barotrauma
@@ -246,7 +247,7 @@ namespace Barotrauma
             return default(T);
         }
 
-        public static UInt32 StringToUInt32Hash(string str,MD5 md5)
+        public static UInt32 StringToUInt32Hash(string str, MD5 md5)
         {
             //calculate key based on MD5 hash instead of string.GetHashCode
             //to ensure consistent results across platforms
@@ -259,6 +260,46 @@ namespace Barotrauma
             key |= (UInt32)(hash[hash.Length - 1]);
 
             return key;
+        }
+        /// <summary>
+        /// Returns a new instance of the class with all properties and fields copied.
+        /// </summary>
+        public static T CreateCopy<T>(this T source, BindingFlags flags = BindingFlags.Instance | BindingFlags.Public) where T : new() => CopyValues(source, new T(), flags);
+        public static T CopyValuesTo<T>(this T source, T target, BindingFlags flags = BindingFlags.Instance | BindingFlags.Public) => CopyValues(source, target, flags);
+
+        /// <summary>
+        /// Copies the values of the source to the destination. May not work, if the source is of higher inheritance class than the destination. Does not work with virtual properties.
+        /// </summary>
+        public static T CopyValues<T>(T source, T destination, BindingFlags flags = BindingFlags.Instance | BindingFlags.Public)
+        {
+            if (source == null)
+            {
+                throw new Exception("Failed to copy object. Source is null.");
+            }
+            if (destination == null)
+            {
+                throw new Exception("Failed to copy object. Destination is null.");
+            }
+            Type type = source.GetType();
+            var properties = type.GetProperties(flags);
+            foreach (var property in properties)
+            {
+                if (property.CanWrite)
+                {
+                    property.SetValue(destination, property.GetValue(source, null), null);
+                }
+            }
+            var fields = type.GetFields(flags);
+            foreach (var field in fields)
+            {
+                field.SetValue(destination, field.GetValue(source));
+            }
+            // Check that the fields match.Uncomment to apply the test, if in doubt.
+            //if (fields.Any(f => { var value = f.GetValue(destination); return value == null || !value.Equals(f.GetValue(source)); }))
+            //{
+            //    throw new Exception("Failed to copy some of the fields.");
+            //}
+            return destination;
         }
     }
 }

@@ -32,11 +32,11 @@ namespace Barotrauma
         /// <summary>
         /// Holds the references to the input fields.
         /// </summary>
-        public Dictionary<SerializableProperty, GUIComponent[]> Fields { get; private set; } = new Dictionary<SerializableProperty, GUIComponent[]>();
+        public Dictionary<string, GUIComponent[]> Fields { get; private set; } = new Dictionary<string, GUIComponent[]>();
 
         public void UpdateValue(SerializableProperty property, object newValue, bool flash = true)
         {
-            if (!Fields.TryGetValue(property, out GUIComponent[] fields))
+            if (!Fields.TryGetValue(property.Name, out GUIComponent[] fields))
             {
                 DebugConsole.ThrowError($"No field for {property.Name} found!");
                 return;
@@ -367,7 +367,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            Fields.Add(property, new GUIComponent[] { propertyTickBox });
+            Fields.Add(property.Name, new GUIComponent[] { propertyTickBox });
             return propertyTickBox;
         }
 
@@ -395,7 +395,7 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
-            Fields.Add(property, new GUIComponent[] { numberInput });
+            Fields.Add(property.Name, new GUIComponent[] { numberInput });
             return frame;
         }
 
@@ -424,7 +424,7 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
-            Fields.Add(property, new GUIComponent[] { numberInput });
+            Fields.Add(property.Name, new GUIComponent[] { numberInput });
             return frame;
         }
 
@@ -453,7 +453,7 @@ namespace Barotrauma
                 return true;
             };
             enumDropDown.SelectItem(value);
-            Fields.Add(property, new GUIComponent[] { enumDropDown });
+            Fields.Add(property.Name, new GUIComponent[] { enumDropDown });
             return frame;
         }
 
@@ -486,7 +486,7 @@ namespace Barotrauma
                 return true;
             };
 
-            Fields.Add(property, new GUIComponent[] { enumDropDown });
+            Fields.Add(property.Name, new GUIComponent[] { enumDropDown });
             return frame;
         }
 
@@ -513,7 +513,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            Fields.Add(property, new GUIComponent[] { propertyBox });
+            Fields.Add(property.Name, new GUIComponent[] { propertyBox });
             return frame;
         }
 
@@ -562,7 +562,7 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            Fields.Add(property, fields);
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
@@ -613,7 +613,7 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            Fields.Add(property, fields);
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
@@ -668,7 +668,7 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            Fields.Add(property, fields);
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
@@ -727,7 +727,7 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            Fields.Add(property, fields);
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
@@ -794,7 +794,7 @@ namespace Barotrauma
                 colorBox.Color = (Color)property.GetValue();
                 fields[i] = numberInput;
             }
-            Fields.Add(property, fields);
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
@@ -854,7 +854,7 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            Fields.Add(property, fields);
+            Fields.Add(property.Name, fields);
             return frame;
         }
         

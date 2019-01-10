@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -378,8 +379,8 @@ namespace Barotrauma
                 characterArea.CanBeSelected = false;
             }
 
-            var characterImage = new GUIImage(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
-                character.Info.HeadSprite, scaleToFit: true)
+            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
+                onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
                 CanBeFocused = false,
                 HoverColor = Color.White,
@@ -809,6 +810,11 @@ namespace Barotrauma
                 };
                 submarine.CreateMiniMap(orderTargetFrame, matchingItems);
 
+                new GUICustomComponent(new RectTransform(Vector2.One, orderTargetFrame.RectTransform), DrawMiniMapOverlay)
+                {
+                    UserData = submarine
+                };
+
                 List<GUIComponent> optionFrames = new List<GUIComponent>();
                 foreach (Item item in matchingItems)
                 {
@@ -897,8 +903,35 @@ namespace Barotrauma
             orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
                 { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, style: "OuterGlow", color: Color.Black * 0.65f);
         }
-
+        
 #region Updating and drawing the UI
+
+        private void DrawMiniMapOverlay(SpriteBatch spriteBatch, GUICustomComponent container)
+        {
+            Submarine sub = container.UserData as Submarine;
+
+            if (sub?.HullVertices == null) { return; }
+
+            var dockedBorders = sub.GetDockedBorders();
+            dockedBorders.Location += sub.WorldPosition.ToPoint();
+
+            float scale = Math.Min(
+                container.Rect.Width / (float)dockedBorders.Width,
+                container.Rect.Height / (float)dockedBorders.Height) * 0.9f;
+
+            float displayScale = ConvertUnits.ToDisplayUnits(scale);
+            Vector2 offset = (sub.WorldPosition - new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)) * scale;
+            Vector2 center = container.Rect.Center.ToVector2();
+            
+            for (int i = 0; i < sub.HullVertices.Count; i++)
+            {
+                Vector2 start = (sub.HullVertices[i] * displayScale + offset);
+                start.Y = -start.Y;
+                Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] * displayScale + offset);
+                end.Y = -end.Y;
+                GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
+            }            
+        }
 
         public void AddToGUIUpdateList()
         {
@@ -1140,8 +1173,14 @@ namespace Barotrauma
                         RelativeSpacing = 0.05f,
                         Stretch = true
                     };
-
-                    new GUIImage(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), character.AnimController.Limbs[0].ActiveSprite, scaleToFit: true);
+                    
+                    new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform, Anchor.CenterLeft),
+                        onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
+                    {
+                        CanBeFocused = false,
+                        HoverColor = Color.White,
+                        SelectedColor = Color.White
+                    };
 
                     GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedFrame.RectTransform),
                         ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height), 

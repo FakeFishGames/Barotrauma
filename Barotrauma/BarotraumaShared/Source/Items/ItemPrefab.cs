@@ -373,6 +373,12 @@ namespace Barotrauma
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for item \"" + Name + "\"!");
                         }
                         size = sprite.size;
+
+                        if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(Name))
+                        {
+                            sprite.Name = Name;
+                        }
+                        sprite.EntityID = identifier;
                         break;
                     case "price":
                         string locationType = subElement.GetAttributeString("locationtype", "");

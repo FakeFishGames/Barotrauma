@@ -329,7 +329,21 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime)
         {
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
-            SpriteDeformations.ForEach(sd => sd.Update(deltaTime));
+            foreach (var deformation in SpriteDeformations)
+            {
+                if (deformation.DeformationParams.UseMovementSine)
+                {
+                    if (this is AnimController animator)
+                    {
+                        //deformation.Phase = MathUtils.WrapAngleTwoPi(animator.WalkPos + MathHelper.Pi);
+                        deformation.Phase = MathUtils.WrapAngleTwoPi(animator.WalkPos * deformation.DeformationParams.Frequency + MathHelper.Pi * deformation.DeformationParams.SineOffset);
+                    }
+                }
+                else
+                {
+                    deformation.Update(deltaTime);
+                }
+            }
         }
 
         partial void FlipProjSpecific()

@@ -789,8 +789,8 @@ namespace Barotrauma
                         Log("Installed: " + item.Installed);
                     }
                 }
-
-                SteamManager.GetWorkshopItems(itemsReceived);
+                
+                SteamManager.GetSubscribedWorkshopItems(itemsReceived);
             }));
 
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
@@ -868,6 +868,43 @@ namespace Barotrauma
             {
                 Submarine.MainSub?.FlipX();
             }));
+
+            commands.Add(new Command("loadhead", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No head id provided!");
+                    return;
+                }
+                if (int.TryParse(args[0], out int id))
+                {
+                    int hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex;
+                    hairIndex = beardIndex = moustacheIndex = faceAttachmentIndex = -1;
+                    if (args.Length > 1)
+                    {
+                        int.TryParse(args[1], out hairIndex);
+                    }
+                    if (args.Length > 2)
+                    {
+                        int.TryParse(args[2], out beardIndex);
+                    }
+                    if (args.Length > 3)
+                    {
+                        int.TryParse(args[3], out moustacheIndex);
+                    }
+                    if (args.Length > 4)
+                    {
+                        int.TryParse(args[4], out faceAttachmentIndex);
+                    }
+                    character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                }
+            }));
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
@@ -933,7 +970,7 @@ namespace Barotrauma
             string[] args = splitCommand.Skip(1).ToArray();
 
             //if an argument is given or the last character is a space, attempt to autocomplete the argument
-            if (args.Length > 0 || (command.Length > 0 && command.Last() == ' '))
+            if (args.Length > 0 || (splitCommand.Length > 0 && command.Last() == ' '))
             {
                 Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0]));
                 if (matchingCommand == null || matchingCommand.GetValidArgs == null) return command;
@@ -1445,7 +1482,7 @@ namespace Barotrauma
             if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
         }
 
-        public static void ThrowError(string error, Exception e = null)
+        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false)
         {
             if (e != null)
             {
@@ -1454,7 +1491,14 @@ namespace Barotrauma
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
 #if CLIENT
-            isOpen = true;
+            if (createMessageBox)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), error);
+            }
+            else
+            {
+                isOpen = true;
+            }
 #endif
         }
         

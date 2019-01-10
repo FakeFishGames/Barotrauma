@@ -391,22 +391,35 @@ namespace Barotrauma
             this.height = height;
             this.radius = radius;
         }
-        
-        public Vector2 GetFrontLocal()
+
+        /// <summary>
+        /// Returns the farthest point towards the forward of the body.
+        /// For capsules and circles, the front is at the top.
+        /// For horizontal capsules, the front is at the right-most point.
+        /// For rectangles, the front is either at the top or at the right, depending on which one of the two is greater: width or height.
+        /// The rotation is in radians.
+        /// </summary>
+        public Vector2 GetLocalFront(float spritesheetRotation = 0)
         {
+            Vector2 pos;
             switch (bodyShape)
             {
                 case Shape.Capsule:
-                    return new Vector2(0.0f, height / 2 + radius);
+                    pos = new Vector2(0.0f, height / 2 + radius);
+                    break;
                 case Shape.HorizontalCapsule:
-                    return new Vector2(width / 2 + radius, 0.0f);
+                    pos = new Vector2(width / 2 + radius, 0.0f);
+                    break;
                 case Shape.Circle:
-                    return new Vector2(0.0f, radius);
+                    pos = new Vector2(0.0f, radius);
+                    break;
                 case Shape.Rectangle:
-                    return new Vector2(0.0f, height / 2.0f);
+                    pos = new Vector2(0.0f, Math.Max(height, width) / 2.0f);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
+            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(spritesheetRotation));
         }
 
         public float GetMaxExtent()
@@ -424,6 +437,55 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        public Vector2 GetSize()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return new Vector2(radius * 2, height + radius * 2);
+                case Shape.HorizontalCapsule:
+                    return new Vector2(width + radius * 2, radius * 2);
+                case Shape.Circle:
+                    return new Vector2(radius * 2);
+                case Shape.Rectangle:
+                    return new Vector2(width, height);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public void SetSize(Vector2 size)
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    radius = Math.Max(size.X / 2, 0);
+                    height = Math.Max(size.Y - size.X, 0);
+                    width = 0;
+                    break;
+                case Shape.HorizontalCapsule:
+                    radius = Math.Max(size.Y / 2, 0);
+                    width = Math.Max(size.X - size.Y, 0);
+                    height = 0;
+                    break;
+                case Shape.Circle:
+                    radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
+                    width = 0;
+                    height = 0;
+                    break;
+                case Shape.Rectangle:
+                    width = Math.Max(size.X, 0);
+                    height = Math.Max(size.Y, 0);
+                    radius = 0;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+#if CLIENT
+            bodyShapeTexture = null;
+#endif
         }
         
         public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)

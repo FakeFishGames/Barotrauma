@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -127,11 +128,27 @@ namespace Barotrauma
                 DebugConsole.Log("Loading item assembly prefabs: ");
             }
 
-            string directoryPath = Path.Combine("Content", "Items", "Assemblies");
-            if (!Directory.Exists(directoryPath)) return;
+            List<string> itemAssemblyFiles = new List<string>();
 
-            var files = Directory.GetFiles(directoryPath);
-            foreach (string file in files)
+            //find assembly files in the item assembly folder
+            string directoryPath = Path.Combine("Content", "Items", "Assemblies");
+            if (Directory.Exists(directoryPath))
+            {
+                itemAssemblyFiles.AddRange(Directory.GetFiles(directoryPath));
+            }
+
+            //find assembly files in selected content packages
+            foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
+            {
+                foreach (string filePath in cp.GetFilesOfType(ContentType.ItemAssembly))
+                {
+                    //ignore files that have already been added (= file saved to item assembly folder)
+                    if (itemAssemblyFiles.Any(f => Path.GetFullPath(f) == Path.GetFullPath(filePath))) { continue; }
+                    itemAssemblyFiles.Add(filePath);
+                }
+            }
+
+            foreach (string file in itemAssemblyFiles)
             {
                 new ItemAssemblyPrefab(file);
             }

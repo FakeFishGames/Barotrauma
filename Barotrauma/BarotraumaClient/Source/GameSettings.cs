@@ -282,6 +282,7 @@ namespace Barotrauma
                 {
                     ChangeSliderText(scrollBar, scroll);
                     HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
+                    UnsavedSettings = true;
                     OnHUDScaleChanged?.Invoke();
                     return true;
                 },
@@ -301,6 +302,7 @@ namespace Barotrauma
                 {
                     ChangeSliderText(scrollBar, scroll);
                     InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
+                    UnsavedSettings = true;
                     return true;
                 },
                 Step = 0.05f
@@ -309,7 +311,7 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
-
+            
             /// Audio tab ----------------------------------------------------------------
 
             var audioSliders = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
@@ -540,15 +542,24 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-
+            
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
                 {
                     UserData = contentPackage,
                     OnSelected = SelectContentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage)
                 };
+                if (!contentPackage.IsCompatible())
+                {
+                    tickBox.TextColor = Color.Red;
+                    tickBox.Enabled = false;
+                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
+                                    .Replace("[gameversion]", GameMain.Version.ToString());
+                }
             }
 
             //spacing
@@ -671,6 +682,7 @@ namespace Barotrauma
                     //core packages cannot be deselected, only switched by selecting another core package
                     new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
                     tickBox.Selected = true;
+                    return true;
                 }
             }
             else
@@ -684,6 +696,7 @@ namespace Barotrauma
                     SelectedContentPackages.Remove(contentPackage);
                 }
             }
+            UnsavedSettings = true;
             return true;
         }
 

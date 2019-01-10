@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -203,9 +204,12 @@ namespace Barotrauma
             bool canBreakDoors = false;
             if (GetTargetingPriority("room")?.Priority > 0.0f)
             {
+                AttackContext currentContext = Character.GetAttackContext();
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
-                    if (limb.attack != null && limb.attack.StructureDamage > 0.0f)
+                    if (limb.attack == null) { continue; }
+                    if (!limb.attack.IsValidTarget(AttackTarget.Structure)) { continue; }
+                    if (limb.attack.IsValidContext(currentContext) && limb.attack.StructureDamage > 0.0f)
                     {
                         canBreakDoors = true;
                         break;
@@ -483,6 +487,7 @@ namespace Barotrauma
                         }
 
                         latchOntoAI?.DeattachFromBody();
+                        Character.AnimController.ReleaseStuckLimbs();
                         if (steeringManager is IndoorsSteeringManager)
                         {
                             steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
@@ -525,21 +530,40 @@ namespace Barotrauma
                 UpdateCoolDown(attackSimPosition, deltaTime);
                 return;
             }
-            
-            Limb attackLimb = attackingLimb;
-            //check if any of the limbs is close enough to attack the target
+
+            //Limb attackLimb = attackingLimb;
+            Limb steeringLimb = Character.AnimController.MainLimb;
             if (attackingLimb == null)
             {
-                foreach (Limb limb in Character.AnimController.Limbs)
+                AttackContext currentContext = Character.GetAttackContext();
+
+                if (steeringLimb != null)
                 {
-                    if (limb.attack == null) continue;
-                    attackLimb = limb;
-
-                    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
-
-                    attackingLimb = limb;
-                    break;
+                    attackingLimb = Character.AnimController.Limbs
+                        .Where(l =>
+                            l.attack != null &&
+                            !l.IsSevered &&
+                            !l.IsStuck &&
+                            l.attack.IsValidContext(currentContext) &&
+                            l.attack.IsValidTarget(selectedAiTarget.Entity) &&
+                            ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)) < l.attack.Range)
+                        .OrderByDescending(l => l.attack.Priority)
+                        .FirstOrDefault();
                 }
+
+                //foreach (Limb limb in Character.AnimController.Limbs)
+                //{
+                //    if (limb.attack == null) continue;
+                //    if (!limb.attack.IsValidContext(currentContext)) { continue; }
+                //    if (!limb.attack.IsValidTarget(selectedAiTarget.Entity)) { continue; }
+                //    if (limb.IsSevered || limb.IsStuck) { continue; }
+                //    attackLimb = limb;
+
+                //    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
+
+                //    attackingLimb = limb;
+                //    break;
+                //}
 
                 if (Character.IsRemotePlayer)
                 {
@@ -547,9 +571,9 @@ namespace Barotrauma
                 }
             }
 
-            if (attackLimb != null)
+            if (steeringLimb != null)
             {
-                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
+                steeringManager.SteeringSeek(attackSimPosition - (steeringLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
                 if (Character.CurrentHull == null)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, 1.0f);
@@ -567,7 +591,7 @@ namespace Barotrauma
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {                            
-                            steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
+                            steeringManager.SteeringManual(deltaTime, attackSimPosition - steeringLimb.SimPosition);
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                         {
@@ -679,6 +703,7 @@ namespace Barotrauma
             }
             
             latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
@@ -702,7 +727,7 @@ namespace Barotrauma
             if (limb.AttackTimer >= limb.attack.Duration)
             {
                 wallTarget = null;
-                limb.AttackTimer = 0.0f;
+                limb.ResetAttack();
                 coolDownTimer = attackCoolDown;                
             }
         }
@@ -977,6 +1002,7 @@ namespace Barotrauma
         protected override void OnStateChanged(AIState from, AIState to)
         {
             latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
         }
 
         private int GetMinimumPassableHoleCount()

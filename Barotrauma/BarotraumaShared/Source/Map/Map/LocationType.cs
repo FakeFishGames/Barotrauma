@@ -101,10 +101,20 @@ namespace Barotrauma
                 {
                     case "hireable":
                         string jobIdentifier = subElement.GetAttributeString("identifier", "");
-                        JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
+                        JobPrefab jobPrefab = null;
+                        if (jobIdentifier == "")
+                        {
+                            DebugConsole.ThrowError("Error in location type \""+ Name + "\" - hireable jobs should be configured using identifiers instead of names.");
+                            jobIdentifier = subElement.GetAttributeString("name", "");
+                            jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
+                        }
+                        else
+                        {
+                            jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
+                        }
                         if (jobPrefab == null)
                         {
-                            DebugConsole.ThrowError("Invalid job name (" + jobIdentifier + ") in location type " + Name);
+                            DebugConsole.ThrowError("Error in  in location type " + Name + " - could not find a job with the identifier \"" + jobIdentifier + "\".");
                             continue;
                         }
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);

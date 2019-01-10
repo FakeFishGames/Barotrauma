@@ -68,14 +68,19 @@ namespace Barotrauma.Items.Components
             }
             holdable.Reattachable = false;
             holdable.PickingTime = float.MaxValue;
+
+            var body = item.body ?? holdable.Body;
             
-            trigger = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
+            if (body != null)
             {
-                UserData = item
-            };
-            trigger.FarseerBody.IsSensor = true;
-            trigger.FarseerBody.IsStatic = true;
-            trigger.FarseerBody.CollisionCategories = Physics.CollisionWall;
+                trigger = new PhysicsBody(body.width, body.height, body.radius, body.Density)
+                {
+                    UserData = item
+                };
+                trigger.FarseerBody.IsSensor = true;
+                trigger.FarseerBody.IsStatic = true;
+                trigger.FarseerBody.CollisionCategories = Physics.CollisionWall;
+            }
         }
 
         protected override void RemoveComponentSpecific()

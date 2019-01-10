@@ -73,7 +73,7 @@ namespace Barotrauma
                 Config.Save();
             }
 
-            TextManager.LoadTextPacks(Path.Combine("Content", "Texts"));
+            TextManager.LoadTextPacks();
 
             SteamManager.Initialize();
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            

@@ -339,7 +339,7 @@ namespace Barotrauma.Networking
                 selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
-            
+
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundWhenDestReached"));
             GetPropertyData("EndRoundAtLevelEnd").AssignGUIComponent(endBox);
@@ -348,9 +348,7 @@ namespace Barotrauma.Networking
                 TextManager.Get("ServerSettingsEndRoundVoting"));
             GetPropertyData("AllowEndVoting").AssignGUIComponent(endVoteBox);
 
-            GUIScrollBar slider;
-            GUITextBlock sliderLabel;
-            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
+            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out GUIScrollBar slider, out GUITextBlock sliderLabel);
 
             string endRoundLabel = sliderLabel.Text;
             slider.Step = 0.2f;
@@ -721,7 +719,7 @@ namespace Barotrauma.Networking
             //slider has a reference to the label to change the text when it's used
             slider.UserData = label;
         }
-        
+
         private bool SelectSettingsTab(GUIButton button, object obj)
         {
             settingsTabIndex = (int)obj;
@@ -733,7 +731,7 @@ namespace Barotrauma.Networking
 
             return true;
         }
-        
+
         public bool ToggleSettingsFrame(GUIButton button, object obj)
         {
             if (settingsFrame == null)

@@ -199,7 +199,10 @@ namespace Barotrauma
         {
             loadGameContainer.ClearChildren();
 
-            if (saveFiles==null) saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
+            if (saveFiles == null)
+            {
+                saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
+            }
 
             saveList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform, Anchor.CenterLeft))
             {
@@ -208,21 +211,71 @@ namespace Barotrauma
 
             foreach (string saveFile in saveFiles)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), saveList.Content.RectTransform),
-                    text: Path.GetFileNameWithoutExtension(saveFile), style: "ListBoxElement")
+                XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
+                var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = saveFile
-                };     
+                };
+
+                var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform),
+                    text: Path.GetFileNameWithoutExtension(saveFile));
+                if (doc?.Root == null)
+                {
+                    DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
+                    nameText.Color = Color.Red;
+                    continue;
+                }
+
+                string submarineName = doc.Root.GetAttributeString("submarine", "");
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
+                    text: submarineName, font: GUI.SmallFont)
+                {
+                    UserData = saveFile
+                };
+
+                string saveTime = doc.Root.GetAttributeString("savetime", "");
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
+                    text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
+                {
+                    UserData = saveFile
+                };
             }
 
-            loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"), style: "GUIButtonLarge");
-            loadGameButton.OnClicked = (btn, obj) => 
+            saveList.Content.RectTransform.SortChildren((c1, c2) =>
             {
-                if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
-                LoadGame?.Invoke(saveList.SelectedData as string);
-                return true;
+                string file1 = c1.GUIComponent.UserData as string;
+                string file2 = c2.GUIComponent.UserData as string;
+                DateTime file1WriteTime = DateTime.MinValue;
+                DateTime file2WriteTime = DateTime.MinValue;
+                try
+                {
+                    file1WriteTime = File.GetLastWriteTime(file1);
+                }
+                catch
+                { 
+                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
+                };
+                try
+                {
+                    file2WriteTime = File.GetLastWriteTime(file2);
+                }
+                catch
+                {
+                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
+                };
+                return file2WriteTime.CompareTo(file1WriteTime);
+            });
+
+            loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
+                    LoadGame?.Invoke(saveList.SelectedData as string);
+                    return true;
+                },
+                Enabled = false
             };
-            loadGameButton.Enabled = false;
         }
 
         private bool SelectSaveFile(GUIComponent component, object obj)
@@ -230,7 +283,6 @@ namespace Barotrauma
             string fileName = (string)obj;
 
             XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
-
             if (doc == null)
             {
                 DebugConsole.ThrowError("Error loading save file \"" + fileName + "\". The file may be corrupted.");
