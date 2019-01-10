@@ -12,6 +12,9 @@ using System.Reflection;
 using GameAnalyticsSDK.Net;
 using System.Threading;
 using System.IO;
+using RestSharp;
+using System.Net;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -23,7 +26,13 @@ namespace Barotrauma
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        
+
+        public static string SteamVersionUrl
+        {
+            get;
+            private set;
+        }
+
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
         public static LobbyScreen           LobbyScreen;
@@ -547,6 +556,63 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, GUIComponent.MouseOn.MouseRect, Color.Lime);
                 spriteBatch.End();
             }
+        }
+
+
+        public void CheckSteamReleaseStatus()
+        {
+            CoroutineManager.StartCoroutine(WaitForVersionInfo());
+        }
+
+        IEnumerable<object> WaitForVersionInfo()
+        {
+            var client = new RestClient(Config.MasterServerUrl);
+            var request = new RestRequest("versioninfo.xml", Method.GET);
+            IRestResponse response = null;
+            client.ExecuteAsync(request,
+                (receivedResponse) =>
+                {
+                    response = receivedResponse;
+                    if (response.StatusCode != HttpStatusCode.OK) { return; }
+
+                    string xml = response.Content;
+                    XDocument doc = null;
+                    try
+                    {
+                        doc = XDocument.Parse(xml);
+                    }
+
+                    catch
+                    {
+                        int index = xml.IndexOf('<');
+                        xml = xml.Substring(index, xml.Length - index);
+                        doc = XDocument.Parse(xml);
+                    }
+                    if (doc?.Root != null)
+                    {
+                        SteamVersionUrl = doc.Root.GetAttributeString("steamversionurl", "");
+                    }
+                });
+            while (response == null)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            if (!string.IsNullOrEmpty(SteamVersionUrl))
+            {
+                var msgBox = new GUIMessageBox("", 
+                    "This version of Barotrauma is no longer supported. You can get the latest version of Barotrauma on Steam. Do you want to open Barotrauma's Steam page on your web browser?",
+                    new string[] { "Yes", "No" });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    Process.Start(SteamVersionUrl);
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            }
+
+            yield return CoroutineStatus.Success;
         }
 
         static bool waitForKeyHit = true;
