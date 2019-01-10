@@ -72,6 +72,7 @@
   <Submarine file="Submarines/The Nibbler.sub" />
   <Submarine file="Submarines/The Blind Carp.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
+  <Text file="Content/Texts/EnglishVanillaLoadingTips.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
