@@ -395,7 +395,7 @@ namespace Barotrauma
                 TextAlignment = Alignment.CenterX
             };
 
-            var test = new GUIButton(new RectTransform(new Vector2(0.5f, 0.25f), voiceSettings.RectTransform), TextManager.Get("RefreshDefaultDevice"))
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), voiceSettings.RectTransform), TextManager.Get("RefreshDefaultDevice"))
             {
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
