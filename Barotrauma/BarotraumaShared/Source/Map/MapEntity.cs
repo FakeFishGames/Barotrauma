@@ -153,6 +153,7 @@ namespace Barotrauma
         public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
         {
             this.prefab = prefab;
+            Scale = prefab != null ? prefab.Scale : 1;
         }
 
         public virtual void Move(Vector2 amount) 
@@ -351,13 +352,8 @@ namespace Barotrauma
         /// <param name="relativeToSub">Should the entity be flipped across the y-axis of the sub it's inside</param>
         public virtual void FlipX(bool relativeToSub)
         {
-            if (Submarine == null && relativeToSub)
-            {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
-                return;
-            }
             flippedX = !flippedX;
-            if (!relativeToSub) return;
+            if (!relativeToSub || Submarine == null) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.Y = 0.0f;
@@ -370,13 +366,8 @@ namespace Barotrauma
         /// <param name="relativeToSub">Should the entity be flipped across the x-axis of the sub it's inside</param>
         public virtual void FlipY(bool relativeToSub)
         {
-            if (Submarine == null)
-            {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
-                return;
-            }
             flippedY = !flippedY;
-            if (!relativeToSub) return;
+            if (!relativeToSub || Submarine == null) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.X = 0.0f;
@@ -522,8 +513,13 @@ namespace Barotrauma
             }
         }
 
-        // TODO: use for scaling the whole entity (physics, source rect etc). Turn saveable, when done.
+        // The value should always be copied from the prefab. Editing is enabled only for testing the scale in the sub editor (changes are not saved).
+
+#if DEBUG
         [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3)]
+#else
+        [Serialize(1f, false)]
+#endif
         public float Scale { get; set; } = 1;
         #endregion
     }

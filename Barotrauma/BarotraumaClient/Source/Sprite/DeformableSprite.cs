@@ -78,8 +78,12 @@ namespace Barotrauma
                     return;
                 }
             }
-            SetupVertexBuffers();
-            SetupIndexBuffer();
+
+            if (sprite.Texture != null)
+            {
+                SetupVertexBuffers();
+                SetupIndexBuffer();
+            }
             list.Add(this);
         }
 
@@ -235,6 +239,8 @@ namespace Barotrauma
 
         public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
         {
+            if (sprite.Texture == null) { return; }
+
             // If the source rect is modified, we should recalculate the vertex buffer.
             if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
             {

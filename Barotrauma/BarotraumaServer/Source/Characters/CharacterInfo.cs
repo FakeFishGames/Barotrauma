@@ -14,7 +14,14 @@ namespace Barotrauma
             msg.Write(ID);
             msg.Write(Name);
             msg.Write(Gender == Gender.Female);
+            msg.Write((byte)Race);
             msg.Write((byte)HeadSpriteId);
+            msg.Write((byte)HairIndex);
+            msg.Write((byte)BeardIndex);
+            msg.Write((byte)MoustacheIndex);
+            msg.Write((byte)FaceAttachmentIndex);
+            msg.Write(ragdollFileName);
+
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
@@ -29,6 +36,7 @@ namespace Barotrauma
             {
                 msg.Write("");
             }
+            // TODO: animations
         }
     }
 }

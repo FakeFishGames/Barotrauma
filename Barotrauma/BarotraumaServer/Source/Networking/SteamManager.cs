@@ -1,10 +1,5 @@
-﻿using Barotrauma.Networking;
-using Facepunch.Steamworks;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using Facepunch.Steamworks;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Steam
 {
@@ -56,7 +51,7 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            // These server state variables may be changed at any time.  Note that there is no lnoger a mechanism
+            // These server state variables may be changed at any time.  Note that there is no longer a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
             // creation/authentication functions to maintain your player count.
             instance.server.ServerName = server.Name;
@@ -66,6 +61,7 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("contentpackageurl", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
             Instance.server.SetKey("usingwhitelist", (server.ServerSettings.Whitelist != null && server.ServerSettings.Whitelist.Enabled).ToString());
             Instance.server.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Instance.server.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());

@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
 
         private float pingState;
 
-        private const float MinZoom = 1.0f, MaxZoom = 5.0f;
+        private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
 
         private bool useDirectionalPing = false;
@@ -77,6 +77,11 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
+        }
+
+        public float Zoom
+        {
+            get { return zoom; }
         }
 
         public override bool IsActive

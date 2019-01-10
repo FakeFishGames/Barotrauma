@@ -375,9 +375,6 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alien Projectile" identifier="alienturretammo" category="Alien">
-    <Price locationtype="Outpost" buyprice="300" />
-    <Price locationtype="Military" buyprice="200" />
-    <Price locationtype="City" buyprice="300" />
     <!-- TODO: alien projectile sprite -->
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56" origin="0.5,0.5" />
     <Body radius="25" density="10" />

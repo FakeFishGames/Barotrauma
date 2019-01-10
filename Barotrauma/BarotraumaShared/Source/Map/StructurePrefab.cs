@@ -107,6 +107,21 @@ namespace Barotrauma
             private set { size = value; }
         }
 
+        public Vector2 ScaledSize => size * Scale;
+
+        protected Vector2 textureScale = Vector2.One;
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                textureScale = new Vector2(
+                    MathHelper.Clamp(value.X, 0.01f, 10),
+                    MathHelper.Clamp(value.Y, 0.01f, 10));
+            }
+        }
+
         public Sprite BackgroundSprite
         {
             get;
@@ -167,7 +182,12 @@ namespace Barotrauma
                         
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
                         sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
-
+                        
+                        if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(sp.Name))
+                        {
+                            sp.sprite.Name = sp.Name;
+                        }
+                        sp.sprite.EntityID = sp.identifier;
                         break;
                     case "backgroundsprite":
                         sp.BackgroundSprite = new Sprite(subElement);
@@ -201,8 +221,16 @@ namespace Barotrauma
             if (element.Attribute("size") == null)
             {
                 sp.size = Vector2.Zero;
-                sp.size.X = element.GetAttributeFloat("width", 0.0f);
-                sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                if (element.Attribute("width") == null && element.Attribute("height") == null)
+                {
+                    sp.size.X = sp.sprite.SourceRect.Width;
+                    sp.size.Y = sp.sprite.SourceRect.Height;
+                }
+                else
+                {
+                    sp.size.X = element.GetAttributeFloat("width", 0.0f);
+                    sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                }
             }
 
             if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
@@ -226,6 +254,7 @@ namespace Barotrauma
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+            Vector2 size = ScaledSize;
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
             
             if (placePosition == Vector2.Zero)

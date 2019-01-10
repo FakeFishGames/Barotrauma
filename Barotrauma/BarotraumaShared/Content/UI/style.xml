@@ -123,6 +123,22 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonLarge>
 
+  <GUITabButton
+    color="0.7,0.7,0.7,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    pressedcolor="0.7,0.7,0.7,1.0">
+    
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="646,172,222,48" slice="683,196,831,207"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="4,116,222,48" slice="41,140,189,151"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="415,172,222,48" slice="452,196,600,207"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="646,172,222,48" slice="683,196,831,207"/>
+
+    <GUITextBlock
+      textcolor="0.6, 0.65, 0.7, 1.0"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUITabButton>
+  
   <GUIButtonServerListInfo
     color="0.4,0.59,0.69,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
@@ -220,11 +236,12 @@
 
   <ListBoxElement
     textcolor="0.5, 0.55, 0.6, 1.0"    
-    color="0.0,0.0,0.0,0.0"
+    color="1.0,1.0,1.0,0.2"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0"
     padding="5.0, 5.0, 5.0, 5.0">
 
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="493, 490, 227, 52" slice="494, 497, 718, 529"/>
   </ListBoxElement>
@@ -329,13 +346,6 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIRadioButton>
   
-  <GUIServerListCompatibleTickBox
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="389, 166, 16, 16"/>
-  </GUIServerListCompatibleTickBox>
-
   <GUIServerListPasswordTickBox
     color="0.2,0.2,0.2,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
@@ -352,6 +362,20 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
   </GUIServerListRoundStartedTickBox>
 
+  <GUIStarIconDark
+    color="0.5,0.5,0.5,1.0"
+    hovercolor="0.5,0.5,0.5,1.0"
+    selectedcolor="0.5,0.5,0.5,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 902, 24, 23"/>
+  </GUIStarIconDark>
+  
+  <GUIStarIconBright
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 950, 24, 23"/>
+  </GUIStarIconBright>
+  
   <GUIMessageBox    
     color="0.0, 0.0, 0.0, 0.8"
     hovercolor="0.0, 0.0, 0.0, 0.8"

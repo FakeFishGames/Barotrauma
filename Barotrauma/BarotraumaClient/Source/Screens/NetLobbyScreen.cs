@@ -64,7 +64,6 @@ namespace Barotrauma
         private GUITickBox playYourself;
         
         private GUIFrame playerInfoContainer;
-        private GUIImage playerHeadSprite;
         private GUIButton jobInfoFrame;
         private GUIButton playerFrame;
 
@@ -807,8 +806,15 @@ namespace Barotrauma
                 characterInfo =
                     new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
                     {
-                        HeadSpriteId = GameMain.Config.CharacterHeadIndex
+                        Race = GameMain.Config.CharacterRace,
+                        HeadSpriteId = GameMain.Config.CharacterHeadIndex,
+                        HairIndex = GameMain.Config.CharacterHairIndex,
+                        BeardIndex = GameMain.Config.CharacterBeardIndex,
+                        MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
+                        FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
                     };
+                // Need to reload the attachments because the indices may have changed
+                characterInfo.LoadHeadAttachments();
                 GameMain.Client.CharacterInfo = characterInfo;
             }
 
@@ -833,10 +839,8 @@ namespace Barotrauma
                 }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
             }
 
-            playerHeadSprite = new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), sprite: null, scaleToFit: true)
-            {
-                UserData = "playerhead"
-            };
+            new GUICustomComponent(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), 
+                onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
 
             if (allowEditing)
             {
@@ -956,9 +960,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
-            }
-
-            UpdatePlayerHead(characterInfo);            
+            }          
         }
         
         public bool TogglePlayYourself(GUITickBox tickBox)
@@ -1598,19 +1600,16 @@ namespace Barotrauma
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
 
-        private void UpdatePlayerHead(CharacterInfo characterInfo)
-        {
-            playerHeadSprite.Sprite = characterInfo.HeadSprite;
-        }
-
         private bool ToggleHead(GUIButton button, object userData)
         {
             if (GameMain.Client.CharacterInfo == null) return true;
 
             int dir = (int)userData;
             GameMain.Client.CharacterInfo.HeadSpriteId += dir;
-            GameMain.Config.CharacterHeadIndex = GameMain.Client.CharacterInfo.HeadSpriteId;
-            UpdatePlayerHead(GameMain.Client.CharacterInfo);
+            GameMain.Client.CharacterInfo.LoadHeadAttachments();
+            GameMain.Client.CharacterInfo.LoadHeadSprite();
+            StoreHead();
+            GameMain.Config.Save();
             return true;
         }
 
@@ -1618,9 +1617,25 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.Client.CharacterInfo.Gender = gender;
-            GameMain.Config.CharacterGender = GameMain.Client.CharacterInfo.Gender;
-            UpdatePlayerHead(GameMain.Client.CharacterInfo);
+            GameMain.Client.CharacterInfo.SetRandomHead();
+            GameMain.Client.CharacterInfo.LoadHeadAttachments();
+            GameMain.Client.CharacterInfo.LoadHeadSprite();
+            StoreHead();
+            GameMain.Config.Save();
             return true;
+        }
+
+        // TODO: switch race
+
+        private void StoreHead()
+        {
+            GameMain.Config.CharacterRace = GameMain.Client.CharacterInfo.Race;
+            GameMain.Config.CharacterGender = GameMain.Client.CharacterInfo.Gender;
+            GameMain.Config.CharacterHeadIndex = GameMain.Client.CharacterInfo.HeadSpriteId;
+            GameMain.Config.CharacterHairIndex = GameMain.Client.CharacterInfo.HairIndex;
+            GameMain.Config.CharacterBeardIndex = GameMain.Client.CharacterInfo.BeardIndex;
+            GameMain.Config.CharacterMoustacheIndex = GameMain.Client.CharacterInfo.MoustacheIndex;
+            GameMain.Config.CharacterFaceAttachmentIndex = GameMain.Client.CharacterInfo.FaceAttachmentIndex;
         }
 
         public void SelectMode(int modeIndex)

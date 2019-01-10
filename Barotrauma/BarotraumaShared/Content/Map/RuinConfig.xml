@@ -41,7 +41,7 @@
           </Connection>
         </item>        
         <item prefab="chargedaliengenerator" alignment="Bottom" type="Prop">
-          <Connection targetentity="parent">
+          <Connection sourceentity="aliengenerator" targetentity="parent">
             <Wire from="power_out" to="power_in" />
           </Connection>
         </item>

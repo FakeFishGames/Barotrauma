@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Headset" identifier="headset" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate">
+  <Item name="Headset" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate">
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Outpost" buyprice="20" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" />
-    <Sprite texture="headset.png" depth="0.6" sourcerect="0,0,15,15" origin="0.5,0.5" />
+    <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="0,96,96,96" origin="0.5,0.5" />
     <Body width="12" height="8" density="13" />
     <Deconstruct time="10">
       <Item identifier="plastic" />
@@ -21,7 +21,7 @@
     </ItemContainer>
     <Wearable limbtype="Head" slots="Any,Headset">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05" />
-      <sprite texture="headset.png" limb="Head" origin="0.5,0.5" sourcerect="0,0,15,15" />
+      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,1" sourcerect="2,3,288,288" origin="0.5,0.5" />
     </Wearable>
   </Item>
   <Item name="Clown Mask" identifier="clownmask" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother.">

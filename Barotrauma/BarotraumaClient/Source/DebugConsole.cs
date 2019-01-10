@@ -1110,27 +1110,42 @@ namespace Barotrauma
 
             commands.Add(new Command("reloadtextures|reloadtexture", "", (string[] args) =>
             {
-                var item = Character.Controlled.FocusedItem;
-                var character = Character.Controlled;
-                if (item != null)
+                if (Screen.Selected is SubEditorScreen subScreen)
                 {
-                    item.Sprite.ReloadTexture();
-                }
-                else if (character != null)
-                {
-                    foreach (var limb in character.AnimController.Limbs)
+                    if (!MapEntity.SelectedAny)
                     {
-                        limb.Sprite?.ReloadTexture();
-                        limb.DamagedSprite?.ReloadTexture();
-                        limb.DeformSprite?.Sprite.ReloadTexture();
-                        // update specular
-                        limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadTexture());
                     }
                 }
                 else
                 {
-                    ThrowError("Not controlling any character!");
-                    return;
+                    var character = Character.Controlled;
+                    var item = character?.FocusedItem;
+                    if (item != null)
+                    {
+                        item.Sprite.ReloadTexture();
+                    }
+                    else if (character != null)
+                    {
+                        foreach (var limb in character.AnimController.Limbs)
+                        {
+                            limb.Sprite?.ReloadTexture();
+                            limb.DamagedSprite?.ReloadTexture();
+                            limb.DeformSprite?.Sprite.ReloadTexture();
+                            // TODO: update specular
+                            limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                            limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
+                        }
+                    }
+                    else
+                    {
+                        ThrowError("Not controlling any character!");
+                        return;
+                    }
                 }
             }, isCheat: true));
 
@@ -1232,6 +1247,35 @@ namespace Barotrauma
                     return;
                 }
                 character.AnimController.ResetRagdoll();
+            }, isCheat: true));
+
+            commands.Add(new Command("reloadwearables|reloadxml", "In game, reloads the xml where limbs and wearable sprites (clothing) of the character is defined. In subeditor, reloads the xml definition of the selected item(s)/structure(s).", args =>
+            {
+                if (Screen.Selected is SubEditorScreen subScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadXML());
+                    }
+                }
+                else
+                {
+                    var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                    if (character == null)
+                    {
+                        ThrowError("Not controlling any character!");
+                        return;
+                    }
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        limb.WearingItems.ForEach(i => i.Sprite.ReloadXML());
+                        limb.OtherWearables.ForEach(w => w.Sprite.ReloadXML());
+                    }
+                }
             }, isCheat: true));
         }
     }

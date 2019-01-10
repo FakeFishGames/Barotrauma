@@ -92,13 +92,25 @@ namespace Barotrauma
                 WallAttachPos = null;
                 return;
             }
-
-            if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir) && attachJoints.Count > 0)
+            if (attachJoints.Count > 0)
             {
-                attachJoints[0].LocalAnchorA =
-                    new Vector2(-attachJoints[0].LocalAnchorA.X, attachJoints[0].LocalAnchorA.Y);
-                attachJoints[0].ReferenceAngle = -attachJoints[0].ReferenceAngle;
-                jointDir = attachLimb.Dir;
+                if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir))
+                {
+                    attachJoints[0].LocalAnchorA =
+                        new Vector2(-attachJoints[0].LocalAnchorA.X, attachJoints[0].LocalAnchorA.Y);
+                    attachJoints[0].ReferenceAngle = -attachJoints[0].ReferenceAngle;
+                    jointDir = attachLimb.Dir;
+                }
+                for (int i = 0; i < attachJoints.Count; i++)
+                {
+                    //something went wrong, limb body is very far from the joint anchor -> deattach
+                    if (Vector2.DistanceSquared(attachJoints[i].WorldAnchorB, attachJoints[i].BodyA.Position) > 10.0f * 10.0f)
+                    {
+                        DebugConsole.ThrowError("Limb body of the character \"" + character.Name + "\" is very far from the attach joint anchor -> deattach");
+                        DeattachFromBody();
+                        return;
+                    }
+                }
             }
 
             attachCooldown -= deltaTime;
@@ -242,7 +254,8 @@ namespace Barotrauma
                 CollideConnected = false,
             };
 
-            Vector2 colliderFront = collider.GetFrontLocal() * attachLimb.character.AnimController.RagdollParams.LimbScale;
+            // Limb scale is already taken into account when creating the collider.
+            Vector2 colliderFront = collider.GetLocalFront(MathHelper.ToRadians(attachLimb.ragdoll.RagdollParams.SpritesheetOrientation));
             if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
             collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), angle);
 

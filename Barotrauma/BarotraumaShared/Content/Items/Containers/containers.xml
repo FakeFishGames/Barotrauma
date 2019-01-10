@@ -1,317 +1,148 @@
-﻿<Items>
-
-  <Item
-    name="Supplies Cabinet"
-    identifier="suppliescabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="150"
-    scale="0.5">
-
-    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,104,156"/>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Supplies Cabinet" identifier="suppliescabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,104,144" origin="0.5,0.5" />
     <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  
-  <Item
-    name="Small Windowed Steel Cabinet"
-    identifier="smallwindowedsteelcabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="150">
-
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,99,160"/>
-
+  <Item name="Small Windowed Steel Cabinet" identifier="smallwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,106,177" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  
-  <Item
-    name="Small Steel Cabinet"
-    identifier="smallsteelcabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="150"
-    scale="0.5">
-
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,160,99,160"/>
-
+  <Item name="Small Steel Cabinet" identifier="smallsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="1,176,105,176" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Medium Steel Cabinet"
-    identifier="mediumsteelcabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="150"
-    scale="0.5">
-
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="99,0,99,320"/>
-
+  <Item name="Medium Steel Cabinet" identifier="mediumsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="99,0,108,354" origin="0.5,0.5" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Medium Windowed Steel Cabinet"
-    identifier="mediumwindowedsteelcabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="150"
-    scale="0.5">
-
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="197,0,99,320"/>
-
+  <Item name="Medium Windowed Steel Cabinet" identifier="mediumwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="198,2,110,351" origin="0.5,0.5" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Large Steel Cabinet"    
-    identifier="steelcabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="150"
-    scale="0.5">
-
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,296,320"/>
-
+  <Item name="Large Steel Cabinet" identifier="steelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,310,353" origin="0.5,0.5" />
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
-      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI"/>
+      <Containable identifiers="smallitem,mediumitem" />
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Secure Steel Cabinet"
-    identifier="securesteelcabinet"
-    tags="cabinet"
-    linkable="true"
-    spritecolor="255,255,255,255"
-    pickdistance="150"
-    scale="0.5">
-
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,296,320"/>
-
+  <Item name="Secure Steel Cabinet" identifier="securesteelcabinet" tags="cabinet" linkable="true" spritecolor="255,255,255,255" pickdistance="150" scale="0.5">
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,311,355" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
-      <Containable identifiers="smallitem,mediumitem"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Railgun Shell Rack"
-    identifier="railgunshellrack"
-    pickdistance="120"
-    scale="0.6">
-
-    <Sprite texture="Content/Items/Weapons/railgunshellrack.png" depth="0.84" sourcerect="0,0,182,176"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected = "true">
-      <Containable identifiers="railgunshell,nuclearshell"/>
+  <Item name="Railgun Shell Rack" identifier="railgunshellrack" pickdistance="120" scale="0.6">
+    <Sprite texture="Content/Items/Weapons/railgunshellrack.png" depth="0.84" sourcerect="0,0,182,176" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected="true">
+      <Containable identifiers="railgunshell,nuclearshell" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Medicine Cabinet" 
-    identifier="medcabinet"
-    linkable="true"
-    pickdistance="150"
-    waterproof="true">
-
-    <Sprite texture="FF_MedicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
-
+  <Item name="Medicine Cabinet" identifier="medcabinet" linkable="true" pickdistance="150" waterproof="true">
+    <Sprite texture="FF_MedicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,chem,medical"/>
+      <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
-  
-  <Item
-    name="Toxic Cabinet"
-    identifier="toxcabinet"
-    linkable="true"
-    pickdistance="150"
-    waterproof="true">
-
-    <Sprite texture="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
-
+  <Item name="Toxic Cabinet" identifier="toxcabinet" linkable="true" pickdistance="150" waterproof="true" scale="0.4">
+    <Sprite texture="ToxicCabinet.png" depth="0.84" sourcerect="0,0,146,231" canflipx="false" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,chem,medical"/>
+      <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
-   
-  <Item
-    name="Diving Suit Locker"
-    identifier="divingsuitlocker"
-    pickdistance="50">
-
-    <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected="true"
-                   autointeractwithcontained="true">
-      <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI"/>
-      <Containable identifiers="divingsuit"/>
+  <Item name="Diving Suit Locker" identifier="divingsuitlocker" pickdistance="50">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
+      <Containable identifiers="divingsuit" />
     </ItemContainer>
   </Item>
-  
-  <Item
-    name="Diving Gear Cabinet"
-    identifier="divingsuitcabinet"
-    tags="cabinet"
-    linkable="true"
-    pickdistance="50">
-
-    <Sprite texture="containers.png" depth="0.84" sourcerect="113,0,54,169"/>
-
+  <Item name="Diving Gear Cabinet" identifier="divingsuitcabinet" tags="cabinet" linkable="true" pickdistance="50">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="113,0,54,169" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Metal Crate"    
-    identifier="metalcrate"
-    linkable="true"
-    pickdistance="150">
-
+  <Item name="Metal Crate" identifier="metalcrate" linkable="true" pickdistance="150">
     <Deconstruct time="20">
-      <Item identifier="steel"/>
-      <Item identifier="steel"/>
-      <Item identifier="steel"/>
+      <Item identifier="steel" />
+      <Item identifier="steel" />
+      <Item identifier="steel" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
-    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39"/>
-
-    <Body width="68" height="39" density="50"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39" />
+    <Body width="68" height="39" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem"/>
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Secure Metal Crate"
-    identifier="securemetalcrate"
-    linkable="true"
-    pickdistance="150">
-
+  <Item name="Secure Metal Crate" identifier="securemetalcrate" linkable="true" pickdistance="150">
     <Deconstruct time="20">
-      <Item identifier="steel"/>
-      <Item identifier="steel"/>
-      <Item identifier="steel"/>
+      <Item identifier="steel" />
+      <Item identifier="steel" />
+      <Item identifier="steel" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64"/>
-    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39"/>
-
-    <Body width="68" height="39" density="50"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39" />
+    <Body width="68" height="39" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess"/>
-      <Containable identifiers="smallitem,mediumitem"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
+      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  
-  <Item
-   name="Explosive Crate"   
-   identifier="explosivecrate"
-   linkable="true"
-   pickdistance="150">
-
+  <Item name="Explosive Crate" identifier="explosivecrate" linkable="true" pickdistance="150">
     <Deconstruct time="20">
-      <Item identifier="steel"/>
-      <Item identifier="steel"/>
+      <Item identifier="steel" />
+      <Item identifier="steel" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
-    <Sprite texture="crates.png" depth="0.54" sourcerect="78,5,50,40"/>
-
-    <Body width="50" height="40" density="50"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="78,5,50,40" />
+    <Body width="50" height="40" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-   name="Chemical Crate"   
-   identifier="chemicalcrate"
-   linkable="true"
-   pickdistance ="150">
-
+  <Item name="Chemical Crate" identifier="chemicalcrate" linkable="true" pickdistance="150">
     <Deconstruct time="20">
-      <Item identifier="steel"/>
-      <Item identifier="steel"/>
+      <Item identifier="steel" />
+      <Item identifier="steel" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64"/>
-    <Sprite texture="crates.png" depth="0.54" sourcerect="2,39,49,39"/>
-
-    <Body width="49" height="39" density="50"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="2,39,49,39" />
+    <Body width="49" height="39" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Fire Extinguisher Bracket"
-    identifier="extinguisherbracket"
-    pickdistance="75">
-
-    <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true"
-                   autointeractwithcontained="true">
-      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
-      <Containable identifiers="extinguisher"/>
+  <Item name="Fire Extinguisher Bracket" identifier="extinguisherbracket" pickdistance="75">
+    <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
+      <Containable identifiers="extinguisher" />
     </ItemContainer>
   </Item>
-  
-  <Item
-    name="Fire Extinguisher Mount"
-    identifier="extinguishermount"
-    pickdistance="75">
-
-    <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true"
-                   autointeractwithcontained="true">
-      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
-      <Containable identifiers="extinguisher"/>
-    </ItemContainer>
-  </Item>
-
-  <Item
-    name="Weapon Holder"
-    identifier="weaponholder"
-    scale="0.5">
-
-    <Sprite texture="WeaponHolder.png" depth="0.85" sourcerect="107,86,88,88" canflipx="false"/>
-    <DecorativeSprite texture="WeaponHolder.png" depth="0.5" sourcerect="107,2,124,33" canflipx="false" origin="0.5,0.5"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true"
-                   autointeractwithcontained="true">
-      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI"/>
-      <Containable identifiers="weapon"/>
+  <Item name="Weapon Holder" identifier="weaponholder" scale="0.5">
+    <Sprite texture="WeaponHolder.png" depth="0.85" sourcerect="107,86,88,88" canflipx="false" />
+    <DecorativeSprite texture="WeaponHolder.png" depth="0.5" sourcerect="107,2,124,33" canflipx="false" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
+      <Containable identifiers="weapon" />
     </ItemContainer>
   </Item>
 </Items>
-

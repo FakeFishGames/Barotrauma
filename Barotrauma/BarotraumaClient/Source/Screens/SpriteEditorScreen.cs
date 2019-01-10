@@ -273,7 +273,7 @@ namespace Barotrauma
             {
                 string spriteFolder = "";
                 string textureElement = element.GetAttributeString("texture", "");
-                if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]")) { return; }
+                if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]")) { return; }
                 if (!textureElement.Contains("/"))
                 {
                     spriteFolder = Path.GetDirectoryName(element.ParseContentPathFromUri());
@@ -347,16 +347,6 @@ namespace Barotrauma
                 zoomBar.BarScroll = GetBarScrollValue();
             }
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
-        }
-
-        private Rectangle GetViewArea
-        {
-            get
-            {
-                int margin = 20;
-                var viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
-                return viewArea;
-            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -446,6 +436,7 @@ namespace Barotrauma
                             {
                                 w.DrawPos = PlayerInput.MousePosition;
                                 sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(w.size) - positionWidget.DrawPos) / zoom).ToPoint());
+                                // TODO: allow to lock the origin
                                 sprite.RelativeOrigin = sprite.RelativeOrigin;
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
@@ -539,7 +530,9 @@ namespace Barotrauma
                 }
             }
             // Create sprite list
-            foreach (Sprite sprite in loadedSprites.OrderBy(s => GetSpriteName(s)))
+            // TODO: allow the user to choose whether to sort by file name or by texture sheet
+            //foreach (Sprite sprite in loadedSprites.OrderBy(s => GetSpriteName(s)))
+            foreach (Sprite sprite in loadedSprites.OrderBy(s => s.SourceElement.GetAttributeString("texture", string.Empty)))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) }, GetSpriteName(sprite) + " " + sprite.SourceRect)
                 {
@@ -562,13 +555,23 @@ namespace Barotrauma
         #endregion
 
         #region Helpers
+        private Rectangle GetViewArea
+        {
+            get
+            {
+                int margin = 20;
+                var viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
+                return viewArea;
+            }
+        }
+
         private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
 
         private string GetSpriteName(Sprite sprite)
         {
             var sourceElement = sprite.SourceElement;
             if (sourceElement == null) { return string.Empty; }
-            string name = sourceElement.GetAttributeString("name", null);
+            string name = sprite.Name;
             if (string.IsNullOrWhiteSpace(name))
             {
                 name = sourceElement.Parent.GetAttributeString("identifier", string.Empty);
@@ -584,7 +587,6 @@ namespace Barotrauma
         {
             var sb = listBox.ScrollBar;
             sb.BarScroll = MathHelper.Clamp(MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, listBox.Content.CountChildren - 1, listBox.SelectedIndex)), sb.MinValue, sb.MaxValue);
-
         }
         #endregion
 
@@ -623,6 +625,7 @@ namespace Barotrauma
                         widget.size = size;
                         widget.inputAreaMargin = 5;
                     }
+                    widget.isFilled = widget.IsControlled;
                 };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);

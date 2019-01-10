@@ -1,62 +1,81 @@
-﻿using Lidgren.Network;
+using Barotrauma.Extensions;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class CharacterInfo
     {
-        public XElement InventoryData;
-
         public GUIFrame CreateInfoFrame(GUIFrame frame)
         {
-            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.7f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
 
-            new GUIImage(new RectTransform(new Point(30, 30), paddedFrame.RectTransform), HeadSprite);
-            
-            ScalableFont font = frame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedFrame.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
 
-            int x = 0, y = 0;
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) }, 
-                Name, font: font);            
-            y += 20;
+            new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1.0f), headerArea.RectTransform), 
+                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
+
+            ScalableFont font = paddedFrame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+
+            var headerTextArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), headerArea.RectTransform))
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+
+            Color? nameColor = null;
+            if (Job != null) { nameColor = Job.Prefab.UIColor; }
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
+                Name, textColor: nameColor, font: GUI.LargeFont)
+            {
+                Padding = Vector4.Zero,
+                AutoScale = true
+            };
 
             if (Job != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) }, 
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
                     Job.Name, textColor: Job.Prefab.UIColor, font: font);
-                y += 25;
             }
 
             if (personalityTrait != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x + 60, y) },
-                    "Trait: " + personalityTrait.Name, font: font);
-                y += 25;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
+                    TextManager.Get("PersonalityTrait") + ": " + personalityTrait.Name, font: font);
             }
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), style: null);
 
             if (Job != null)
             {
                 var skills = Job.Skills;
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y) },
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     TextManager.Get("Skills") + ":", font: font);
                 
-                y += 20;
                 foreach (Skill skill in skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y) },
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                         TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(x, y) },
-                        ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.TopRight);
-                    y += 20;
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform),
+                        ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
                 }
             }
-
 
             return frame;
         }
@@ -68,9 +87,12 @@ namespace Barotrauma
                 UserData = userData
             };
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, font: GUI.SmallFont);
-            new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, HeadSprite);            
+            Color? textColor = null;
+            if (Job != null) { textColor = Job.Prefab.UIColor; }
 
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, textColor: textColor, font: GUI.SmallFont);
+            new GUICustomComponent(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, 
+                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
             return frame;
         }
 
@@ -104,14 +126,115 @@ namespace Barotrauma
             }
         }
 
+        partial void LoadAttachmentSprites()
+        {
+            if (attachmentSprites == null)
+            {
+                attachmentSprites = new List<WearableSprite>();
+            }
+            if (!IsAttachmentsLoaded)
+            {
+                LoadHeadAttachments();
+            }
+            FaceAttachment?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+            BeardElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
+            MoustacheElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
+            HairElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
+            // TODO load class specific wearables
+        }
+
+        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
+        {
+            float backgroundScale = 1;
+            if (PortraitBackground != null)
+            {
+                backgroundScale = targetWidth / PortraitBackground.size.X;
+                PortraitBackground.Draw(spriteBatch, screenPos, scale: backgroundScale);
+            }
+            if (Portrait != null)
+            {
+                // Scale down the head sprite 10%
+                float scale = targetWidth * 0.9f / Portrait.size.X;
+                Vector2 offset = Portrait.size * backgroundScale / 4;
+                Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
+                if (AttachmentsSprites != null)
+                {
+                    float depthStep = 0.000001f;
+                    foreach (var attachment in AttachmentsSprites)
+                    {
+                        DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, SpriteEffects.FlipHorizontally);
+                        depthStep += 0.000001f;
+                    }
+                }
+            }
+        }
+        
+        public void DrawIcon(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 targetAreaSize)
+        {
+            if (HeadSprite != null)
+            {
+                float scale = Math.Min(targetAreaSize.X / HeadSprite.size.X, targetAreaSize.Y / HeadSprite.size.Y);
+                HeadSprite.Draw(spriteBatch, screenPos, scale: scale);
+                if (AttachmentsSprites != null)
+                {
+                    float depthStep = 0.000001f;
+                    foreach (var attachment in AttachmentsSprites)
+                    {
+                        DrawAttachmentSprite(spriteBatch, attachment, HeadSprite, screenPos, scale, depthStep);
+                        depthStep += 0.000001f;
+                    }
+                }
+            }
+        }
+        
+        private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
+        {
+            if (attachment.InheritSourceRect)
+            {
+                if (attachment.SheetIndex.HasValue)
+                {
+                    Point location = (head.SourceRect.Location + head.SourceRect.Size) * attachment.SheetIndex.Value;
+                    attachment.Sprite.SourceRect = new Rectangle(location, head.SourceRect.Size);
+                }
+                else
+                {
+                    attachment.Sprite.SourceRect = head.SourceRect;
+                }
+            }
+            Vector2 origin = attachment.Sprite.Origin;
+            if (attachment.InheritOrigin)
+            {
+                origin = head.Origin;
+                attachment.Sprite.Origin = origin;
+            }
+            else
+            {
+                origin = attachment.Sprite.Origin;
+            }
+            float depth = attachment.Sprite.Depth;
+            if (attachment.InheritLimbDepth)
+            {
+                depth = head.Depth - depthStep;
+
+            }
+            attachment.Sprite.Draw(spriteBatch, drawPos, Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
+        }
+
+
         public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
             bool isFemale = inc.ReadBoolean();
+            int race = inc.ReadByte();
             int headSpriteID = inc.ReadByte();
-            string jobIdentifier = inc.ReadString();
+            int hairIndex = inc.ReadByte();
+            int beardIndex = inc.ReadByte();
+            int moustacheIndex = inc.ReadByte();
+            int faceAttachmentIndex = inc.ReadByte();
+            string ragdollFile = inc.ReadString();
 
+            string jobIdentifier = inc.ReadString();
             JobPrefab jobPrefab = null;
             Dictionary<string, float> skillLevels = new Dictionary<string, float>();
             if (!string.IsNullOrEmpty(jobIdentifier))
@@ -126,11 +249,20 @@ namespace Barotrauma
                 }
             }
 
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab)
+            // TODO: animations
+
+            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, ragdollFile)
             {
                 ID = infoID,
-                HeadSpriteId = headSpriteID
+                race = (Race)race,
+                headSpriteId = headSpriteID,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
             };
+            ch.CalculateHeadSpriteRange();
+            ch.ReloadHeadAttachments();
 
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
             if (ch.Job != null)

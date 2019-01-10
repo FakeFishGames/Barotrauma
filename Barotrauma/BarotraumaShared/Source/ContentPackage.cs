@@ -11,10 +11,13 @@ namespace Barotrauma
     public enum ContentType
     {
         None, 
+        Submarine,
         Jobs, 
         Item, 
+        ItemAssembly,
         Character,
         Structure,
+        Text,
         Executable,
         ServerExecutable,
         LocationTypes,
@@ -39,7 +42,7 @@ namespace Barotrauma
         public static string Folder = "Data/ContentPackages/";
 
         public static List<ContentPackage> List = new List<ContentPackage>();
-
+        
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
         private static HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
@@ -56,15 +59,18 @@ namespace Barotrauma
             ContentType.RuinConfig,
             ContentType.Afflictions
         };
-        
-        private string name;
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
+
+        public string Name { get; set; }
 
         public string Path
+        {
+            get;
+            private set;
+        }
+
+        public string SteamWorkshopUrl;
+
+        public bool HideInWorkshopMenu
         {
             get;
             private set;
@@ -86,7 +92,12 @@ namespace Barotrauma
         public bool CorePackage
         {
             get;
-            private set;
+            set;
+        }
+
+        public Version GameVersion
+        {
+            get; set;
         }
 
         public List<ContentFile> Files;
@@ -114,32 +125,66 @@ namespace Barotrauma
                 return;
             }
 
-            name = doc.Root.GetAttributeString("name", "");
-
+            Name = doc.Root.GetAttributeString("name", "");
+            HideInWorkshopMenu = doc.Root.GetAttributeBool("hideinworkshopmenu", false);
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
-
+            SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
+            GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+            
+            List<string> errorMsgs = new List<string>();
             foreach (XElement subElement in doc.Root.Elements())
             {
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
-                    DebugConsole.ThrowError("Error in content package \"" + name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
-                    continue;
+                    errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
+                    type = ContentType.None;                    
                 }
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+            }
+
+            bool compatible = IsCompatible();
+            //If we know that the package is not compatible, don't display error messages.
+            if (compatible)
+            {
+                foreach (string errorMsg in errorMsgs)
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
             }
         }
 
         public override string ToString()
         {
-            return name;
+            return Name;
         }
 
-        public static ContentPackage CreatePackage(string name, string path)
+        public bool IsCompatible()
+        {
+            if (Files.All(f => f.Type == ContentType.Submarine))
+            {
+                return true;
+            }
+
+            //content package compatibility checks were added in 0.9
+            //0.9 is not compatible with older content packages
+            if (GameVersion < new Version(0, 9))
+            {
+                return false;
+            }
+
+            //do additional checks here if later versions add changes that break compatibility
+
+            return true;
+        }
+
+        public static ContentPackage CreatePackage(string name, string path, bool corePackage)
         {
             ContentPackage newPackage = new ContentPackage()
             {
-                name = name,
-                Path = path
+                Name = name,
+                Path = path,
+                CorePackage = corePackage,
+                GameVersion = GameMain.Version
             };
 
             return newPackage;
@@ -164,9 +209,17 @@ namespace Barotrauma
         {
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
-                new XAttribute("name", name),
+                new XAttribute("name", Name),
                 new XAttribute("path", Path),
                 new XAttribute("corepackage", CorePackage)));
+
+
+            doc.Root.Add(new XAttribute("gameversion", GameVersion.ToString()));
+
+            if (!string.IsNullOrEmpty(SteamWorkshopUrl))
+            {
+                doc.Root.Add(new XAttribute("steamworkshopurl", SteamWorkshopUrl));
+            }
 
             foreach (ContentFile file in Files)
             {
@@ -242,6 +295,46 @@ namespace Barotrauma
             }
             return md5.ComputeHash(data.ToArray());
         }
+        
+        public static string GetFileExtension(ContentType contentType)
+        {
+            switch (contentType)
+            {
+                case ContentType.Executable:
+                case ContentType.ServerExecutable:
+                    return ".exe";
+                default:
+                    return ".xml";
+            }
+        }
+
+        public static bool IsModFilePathAllowed(ContentFile contentFile)
+        {
+            string path = contentFile.Path;
+            while (true)
+            {
+                string temp = System.IO.Path.GetDirectoryName(path);
+                if (string.IsNullOrEmpty(temp)) { break; }
+                path = temp;
+            }
+            switch (contentFile.Type)
+            {
+                case ContentType.Submarine:
+                    return path == "Submarines";
+                default:
+                    return path == "Mods";
+            }
+        }
+        public static bool IsModFilePathAllowed(string path)
+        {
+            while (true)
+            {
+                string temp = System.IO.Path.GetDirectoryName(path);
+                if (string.IsNullOrEmpty(temp)) { break; }
+                path = temp;
+            }
+            return path == "Mods";
+        }
 
         /// <summary>
         /// Returns all xml files.
@@ -283,7 +376,7 @@ namespace Barotrauma
             foreach (string filePath in files)
             {
                 ContentPackage package = new ContentPackage(filePath);
-                List.Add(package);
+                List.Add(package);                               
             }
         }
     }
