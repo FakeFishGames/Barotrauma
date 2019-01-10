@@ -2771,6 +2771,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\TransitionCinematic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Memento.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
@@ -2896,7 +2897,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\StructurePrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Submarine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\SubmarineBody.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\TransitionCinematic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\WayPoint.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\BanList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ChatMessage.cs" />
