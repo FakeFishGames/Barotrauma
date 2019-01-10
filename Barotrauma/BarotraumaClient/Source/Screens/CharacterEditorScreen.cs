@@ -2417,7 +2417,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 100), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
@@ -2960,7 +2960,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJoints && selectedJoints.Any())
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 100), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
@@ -3455,7 +3455,9 @@ namespace Barotrauma
                                         };
                                         void RecalculateCollider(Limb l)
                                         {
-                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
+                                            // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
+                                            float multiplier = 0.75f;
+                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale * multiplier);
                                             TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius));
                                             TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width));
                                             TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height));
@@ -4549,18 +4551,18 @@ namespace Barotrauma
                         var colliderAttributes = new List<XAttribute>();
                         if (width == height)
                         {
-                            colliderAttributes.Add(new XAttribute("radius", Math.Max(width / 2, 1)));
+                            colliderAttributes.Add(new XAttribute("radius", width / 2));
                         }
                         else
                         {
                             if (height > width)
                             {
-                                colliderAttributes.Add(new XAttribute("radius", Math.Max(width / 2, 1)));
+                                colliderAttributes.Add(new XAttribute("radius", width / 2));
                                 colliderAttributes.Add(new XAttribute("height", height - width));
                             }
                             else
                             {
-                                colliderAttributes.Add(new XAttribute("radius", Math.Max(height / 2, 1)));
+                                colliderAttributes.Add(new XAttribute("radius", height / 2));
                                 colliderAttributes.Add(new XAttribute("width", width - height));
                             }
                         }
