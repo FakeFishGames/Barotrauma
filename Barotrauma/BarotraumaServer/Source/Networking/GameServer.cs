@@ -489,7 +489,8 @@ namespace Barotrauma.Networking
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
-                            ClientPacketHeader packetHeader = (ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte();
+                            var msgContent = inc.SenderConnection.RemoteHailMessage ?? inc;
+                            ClientPacketHeader packetHeader = (ClientPacketHeader)msgContent.ReadByte();
                             if (packetHeader == ClientPacketHeader.REQUEST_AUTH || packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                             {
                                 HandleOwnership(inc);

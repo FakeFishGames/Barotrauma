@@ -40,11 +40,12 @@ namespace Barotrauma.Networking
             clientSteamID = 0;
             if (!Steam.SteamManager.USE_STEAM)
             {
+                DebugConsole.Log("Received a Steam auth request from " + inc.SenderConnection.RemoteEndPoint + ". Steam authentication not required, handling auth normally.");
                 //not using steam, handle auth normally
                 HandleClientAuthRequest(inc.SenderConnection, 0);
                 return;
             }
-
+            
             if (inc.SenderConnection == OwnerConnection)
             {
                 //the client is the owner of the server, no need for authentication
@@ -153,9 +154,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        private bool IsServerOwner(NetIncomingMessage msg)
+        private bool IsServerOwner(NetIncomingMessage inc)
         {
-            string address = msg.SenderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
+            var msg = inc.SenderConnection.RemoteHailMessage ?? inc;            
+            string address = inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
+
             if (ownerKey == 0)
             {
                 return false; //ownership key has been destroyed or has never existed
@@ -164,6 +167,7 @@ namespace Barotrauma.Networking
             {
                 return false; //not localhost
             }
+
             int incKey = msg.ReadInt32();
             if (incKey != ownerKey)
             {
@@ -184,8 +188,11 @@ namespace Barotrauma.Networking
 
         private void HandleClientAuthRequest(NetConnection connection, ulong steamID = 0)
         {
-            if (GameMain.Config.RequireSteamAuthentication && steamID == 0)
+            DebugConsole.Log("Handling authentication request from " + connection.RemoteEndPoint);
+
+            if (GameMain.Config.RequireSteamAuthentication && steamID == 0 && connection != OwnerConnection)
             {
+                DebugConsole.Log("Disconnecting " + connection.RemoteEndPoint + ", Steam authentication required.");
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
                 return;
             }
