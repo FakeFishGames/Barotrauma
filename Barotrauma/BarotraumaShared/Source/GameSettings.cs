@@ -53,7 +53,7 @@ namespace Barotrauma
         public VoiceMode VoiceSetting { get; set; }
         public string VoiceCaptureDevice { get; set; }
 
-        public float NoiseGateThreshold { get; set; }
+        public float NoiseGateThreshold { get; set; } = -45;
 
         private KeyOrMouse[] keyMapping;
 
@@ -109,8 +109,8 @@ namespace Barotrauma
             get { return windowMode; }
             set
             {
-#if OSX
-                // Fullscreen is broken on macOS, so just force any usage of it to borderless windowed.
+#if (OSX)
+                // Fullscreen doesn't work on macOS, so just force any usage of it to borderless windowed.
                 if (value == WindowMode.Fullscreen)
                 {
                     windowMode = WindowMode.BorderlessWindowed;
@@ -279,7 +279,7 @@ namespace Barotrauma
         public void Load(string filePath)
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            
+
             Language = doc.Root.GetAttributeString("language", "English");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
@@ -447,7 +447,7 @@ namespace Barotrauma
                     keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 }
             }
-            
+
             UnsavedSettings = false;
 
             foreach (XElement subElement in doc.Root.Elements())
@@ -469,7 +469,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         public void Save()
         {
             UnsavedSettings = false;
@@ -575,7 +575,7 @@ namespace Barotrauma
                 new XAttribute("headindex", characterHeadIndex),
                 new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
-            
+
 #if CLIENT
             if (Tutorial.Tutorials != null)
             {
@@ -594,7 +594,7 @@ namespace Barotrauma
                 tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
             }
             doc.Root.Add(tutorialElement);
-            
+
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,

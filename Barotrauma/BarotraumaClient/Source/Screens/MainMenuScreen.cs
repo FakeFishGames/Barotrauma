@@ -428,7 +428,7 @@ namespace Barotrauma
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
-                    Arguments = arguments
+                    Arguments = arguments,
 #if !DEBUG
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
