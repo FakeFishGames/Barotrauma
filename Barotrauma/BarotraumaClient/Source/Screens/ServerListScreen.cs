@@ -276,7 +276,7 @@ namespace Barotrauma
 
             if (client == null) yield return CoroutineStatus.Success;
 
-            var request = new RestRequest("masterserver2.php", Method.GET);
+            var request = new RestRequest("masterserver8.php", Method.GET);
             request.AddParameter("gamename", "barotrauma");
             request.AddParameter("action", "listservers");
             
@@ -291,7 +291,16 @@ namespace Barotrauma
                 {
                     serverList.ClearChildren();
                     restRequestHandle.Abort();
-                    new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerTimeOutError"));
+                    if (string.IsNullOrEmpty(GameMain.SteamVersionUrl))
+                    {
+                        //Steam version is out and could not reach the master server
+                        // -> assume legacy master server has been deprecated
+                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerTimeOutError"));
+                    }
+                    else
+                    {
+                        ShowMasterServerDeprecatedMessage();
+                    }
                     yield return CoroutineStatus.Success;
                 }
                 yield return CoroutineStatus.Running;
@@ -302,6 +311,7 @@ namespace Barotrauma
                 serverList.ClearChildren();
                 new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerErrorException").Replace("[error]", masterServerResponse.ErrorException.ToString()));
             }
+
             else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 serverList.ClearChildren();
@@ -309,11 +319,20 @@ namespace Barotrauma
                 switch (masterServerResponse.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound:
-                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                           TextManager.Get("MasterServerError404")
-                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
-                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
-                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                        //Steam version is out and server file wasn't found on the legacy master server 
+                        // -> assume legacy master server has been deprecated
+                        if (string.IsNullOrEmpty(GameMain.SteamVersionUrl))
+                        {
+                            new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
+                               TextManager.Get("MasterServerError404")
+                                    .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                    .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                    .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                        }
+                        else
+                        {
+                            ShowMasterServerDeprecatedMessage();
+                        }
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
@@ -338,7 +357,18 @@ namespace Barotrauma
             }
 
             yield return CoroutineStatus.Success;
+        }
 
+        private void ShowMasterServerDeprecatedMessage()
+        {
+            serverList.ClearChildren();
+            new GUITextBlock(new Rectangle(0, 0, (int)(serverList.Rect.Width * 0.8f), (int)(serverList.Rect.Height * 0.8f)),
+                "This version of Barotrauma is no longer supported and the legacy server list is no longer available.",
+                alignment: Alignment.Center, textAlignment: Alignment.Center,
+                style: "", parent: serverList, wrap: true)
+            {
+                CanBeFocused = false
+            };
         }
 
         private void MasterServerCallBack(IRestResponse response)
