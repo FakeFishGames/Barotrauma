@@ -21,6 +21,7 @@
     combatstrength="400"
     sight="0.5"
     hearing="1.0">
+    <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="stronger" state="Escape" priority="100"/>
     <targetpriority tag="human" state="Attack" priority="90"/>
     <targetpriority tag="dead" state="Eat" priority="60"/>

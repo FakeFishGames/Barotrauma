@@ -43,6 +43,7 @@
       localattachpos="50,-10"
       attachlimbrotation="100"/>
 
+    <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>
     <targetpriority tag="stronger" state="Escape" priority="60"/>
@@ -60,6 +61,7 @@
     fleehealththreshold="10"
     aggressiveboarding="true"
     attackcooldown="3.0">
+    <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>
     <targetpriority tag="stronger" state="Escape" priority="60"/>

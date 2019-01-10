@@ -19,7 +19,8 @@
     attackpriorityhumans="100"
     sight="1.0"
     hearing="2.0"
-    attackcooldown="1">    
+    attackcooldown="1">
+    <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="100"/>
     <targetpriority tag="sonar" state="Attack" priority="50"/>
   </ai>
