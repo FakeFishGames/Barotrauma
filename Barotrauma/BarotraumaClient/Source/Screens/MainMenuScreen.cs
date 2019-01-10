@@ -507,8 +507,10 @@ namespace Barotrauma
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
 
+            ContextualTutorial.Selected = campaignSetupUI.TutorialSelected;
             GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
+
 
             GameMain.LobbyScreen.Select();
         }

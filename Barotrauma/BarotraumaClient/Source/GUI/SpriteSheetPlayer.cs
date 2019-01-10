@@ -49,6 +49,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
+            if (!isPlaying) return;
             sheetView.AddToGUIUpdateList();
         }
 

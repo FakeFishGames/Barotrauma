@@ -584,7 +584,7 @@ namespace Barotrauma
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
-                    else if (GameSession.GameMode is SinglePlayerCampaign && ContextualTutorial.ContentRunning)
+                    else if (ContextualTutorial.Initialized && ContextualTutorial.ContentRunning)
                     {
                         (GameSession.GameMode as SinglePlayerCampaign).ContextualTutorial.Update((float)Timing.Step);
                     }
