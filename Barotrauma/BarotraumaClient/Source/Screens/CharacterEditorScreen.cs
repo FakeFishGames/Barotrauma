@@ -790,10 +790,12 @@ namespace Barotrauma
                 var limb = selectedLimbs[i];
                 if (limb == character.AnimController.MainLimb)
                 {
+                    // TODO: this should be possible now -> test
                     DebugConsole.ThrowError("Can't remove the main limb, because it will crash the game.");
                     continue;
                 }
                 removedIDs.Add(limb.limbParams.ID);
+                limb.limbParams.Element.Remove();
                 RagdollParams.Limbs.Remove(limb.limbParams);
             }
             // Recreate ids
@@ -840,7 +842,11 @@ namespace Barotrauma
                     }
                 }
             }
-            jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
+            foreach (var jointParam in jointsToRemove)
+            {
+                jointParam.Element.Remove();
+                RagdollParams.Joints.Remove(jointParam);
+            }
             RecreateRagdoll();
             ragdollResetRequiresForceLoading = true;
         }
@@ -3458,9 +3464,9 @@ namespace Barotrauma
                                             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
                                             float multiplier = 0.75f;
                                             l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale * multiplier);
-                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius));
-                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width));
-                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height));
+                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / RagdollParams.LimbScale / RagdollParams.TextureScale));
                                         }
                                         void RecalculateOrigin(Limb l)
                                         {
