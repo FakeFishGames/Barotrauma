@@ -206,7 +206,9 @@
   <ContentPackageNotFound>Content package "[packagepath]" not found.</ContentPackageNotFound>
   <IncompatibleContentPackage>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for the version [packageversion], your game version is [gameversion].</IncompatibleContentPackage>
   <IncompatibleContentPackageUnknownVersion>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for an unknown version, your game version is [gameversion].</IncompatibleContentPackageUnknownVersion>
-
+  <ContentPackageMissingCoreFiles>Content package "[packagename]" is marked as a core package but does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</ContentPackageMissingCoreFiles>
+  <ContentPackageCantMakeCorePackage>Content package "[packagename]" cannot be marked as a core package because it does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</ContentPackageCantMakeCorePackage>
+  
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
   <InputType.Aim>Aim</InputType.Aim>

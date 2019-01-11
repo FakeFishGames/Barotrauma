@@ -848,7 +848,30 @@ namespace Barotrauma
             {
                 ToolTip = TextManager.Get("WorkshopItemCorePackageTooltip"),
                 Selected = itemContentPackage.CorePackage,
-                OnSelected = (tickbox) => { itemContentPackage.CorePackage = tickbox.Selected; return true; }
+                OnSelected = (tickbox) => 
+                {
+                    if (tickbox.Selected)
+                    {
+                        if (!itemContentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                        {
+                            new GUIMessageBox(
+                                TextManager.Get("Error"),
+                                TextManager.Get("ContentPackageCantMakeCorePackage")
+                                    .Replace("[packagename]", itemContentPackage.Name)
+                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes)));
+                            tickbox.Selected = false;
+                        }
+                        else
+                        {
+                            itemContentPackage.CorePackage = tickbox.Selected;
+                        }
+                    }
+                    else
+                    {
+                        itemContentPackage.CorePackage = false;
+                    }
+                    return true;
+                }
             };
 
             // file list --------------------------------------------------------------------------------------
