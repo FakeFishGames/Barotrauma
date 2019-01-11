@@ -147,8 +147,9 @@
   <WorkshopItemDeleteTooltip>Deletes the item from Steam Workshop.</WorkshopItemDeleteTooltip>
   <WorkshopItemDeleteVerification>Are you sure you want to delete the item "[itemname]" from the Steam Workshop?</WorkshopItemDeleteVerification>
   <WorkshopItemPublishTooltip>Uploads the files to the Steam Workshop.</WorkshopItemPublishTooltip>
-  <WorkshopItemFilePathValid>File will be included in the Workshop item.</WorkshopItemFilePathValid>
-  <WorkshopItemFileNotFound>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have - otherwise you should copy the file to the Workshop item folder.</WorkshopItemFileNotFound>
+  <WorkshopItemFileIncluded>File will be included in the Workshop item.</WorkshopItemFileIncluded>
+  <WorkshopItemFileNotIncluded>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have - otherwise you should copy the file to the Workshop item folder.</WorkshopItemFileNotIncluded>
+  <WorkshopItemFileNotFound>File not found.</WorkshopItemFileNotFound>
   <WorkshopItemIllegalPath>Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder. Please create a separate subfolder for the files.</WorkshopItemIllegalPath>
   <WorkshopItemRefreshFileListTooltip>Reload the configuration file of the workshop item (metadata.xml inside the item's folder) and add all new files in it to the file list.</WorkshopItemRefreshFileListTooltip>
   <WorkshopPublishPleaseWait>Please wait</WorkshopPublishPleaseWait>
