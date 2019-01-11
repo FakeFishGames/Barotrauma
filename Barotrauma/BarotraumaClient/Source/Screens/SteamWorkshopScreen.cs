@@ -1008,7 +1008,8 @@ namespace Barotrauma
             {
                 bool illegalPath = !ContentPackage.IsModFilePathAllowed(contentFile);
                 string pathInStagingFolder = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
-                bool fileExists = File.Exists(pathInStagingFolder);
+                bool fileInStagingFolder = File.Exists(pathInStagingFolder);
+                bool fileExists = illegalPath ? File.Exists(contentFile.Path) : fileInStagingFolder;
 
                 var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.12f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     style: "ListBoxElement")
@@ -1026,17 +1027,19 @@ namespace Barotrauma
                 {
                     Selected = fileExists && !illegalPath,
                     Enabled = false,
-                    ToolTip = fileExists ? 
-                        TextManager.Get("WorkshopItemFilePathValid") : 
-                        TextManager.Get("WorkshopItemFileNotFound")
+                    ToolTip = TextManager.Get(fileInStagingFolder ? "WorkshopItemFileIncluded" : "WorkshopItemFileNotIncluded")
                 };
 
                 var nameText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), content.RectTransform, Anchor.CenterLeft), contentFile.Path, font: GUI.SmallFont)
                 {
                     ToolTip = contentFile.Path
                 };
-                if (!fileExists) { nameText.TextColor *= 0.8f; }
-                if (illegalPath && !ContentPackage.List.Any(cp => cp.Files.Any(f => Path.GetFullPath(f.Path) == Path.GetFullPath(contentFile.Path))))
+                if (!fileExists)
+                {
+                    nameText.TextColor = Color.Red;
+                    tickBox.ToolTip = TextManager.Get("WorkshopItemFileNotFound");
+                }
+                else if (illegalPath && !ContentPackage.List.Any(cp => cp.Files.Any(f => Path.GetFullPath(f.Path) == Path.GetFullPath(contentFile.Path))))
                 {
                     nameText.TextColor = Color.Red;
                     tickBox.ToolTip = TextManager.Get("WorkshopItemIllegalPath");
