@@ -208,6 +208,18 @@ namespace Barotrauma
         {
             return corePackageRequiredFiles.All(fileType => Files.Any(file => file.Type == fileType));
         }
+        public bool ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes)
+        {
+            missingContentTypes = new List<ContentType>();
+            foreach (ContentType contentType in corePackageRequiredFiles)
+            {
+                if (!Files.Any(file => file.Type == contentType))
+                {
+                    missingContentTypes.Add(contentType);
+                }
+            }
+            return missingContentTypes.Count == 0;
+        }
 
         public static ContentPackage CreatePackage(string name, string path, bool corePackage)
         {
