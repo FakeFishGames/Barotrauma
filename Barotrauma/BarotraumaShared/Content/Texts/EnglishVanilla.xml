@@ -393,8 +393,9 @@
   <!-- Campaign menu -->
   <Map>Map</Map>
   <Crew>Crew</Crew>
+  <CampaignMenuCrew>Your crew</CampaignMenuCrew>
   <Store>Store</Store>
-  <Hire>Hire</Hire>
+  <CampaignMenuHireable>Hireable people</CampaignMenuHireable>
   <HireButton>Hire</HireButton>
   <FireButton>Fire</FireButton>
   <FireWarningHeader>Are you sure?</FireWarningHeader>

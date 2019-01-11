@@ -1629,32 +1629,7 @@ namespace Barotrauma
                     var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
                         TextManager.Get("Back"));
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
-
-                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.1f), campaignContainer.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
-                        isHorizontal: true)
-                    {
-                        Stretch = true,
-                        RelativeSpacing = 0.05f
-                    };
-
-
-                    List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
-                    foreach (CampaignUI.Tab tab in tabTypes)
-                    {
-                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString());
-                        tabButton.OnClicked += (btn, obj) =>
-                        {
-                            campaignUI.SelectTab(tab);
-                            return true;
-                        };
-                    }
-
-                    var moneyText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomLeft),
-                        TextManager.Get("Credit"))
-                    {
-                        TextGetter = campaignUI.GetMoney
-                    };
-
+                    
                     var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
                     {
                         TextGetter = AutoRestartText

@@ -25,7 +25,7 @@ namespace Barotrauma
 
         public LobbyScreen()
         {
-            campaignUIContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), Frame.RectTransform, Anchor.Center));
+            campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, Frame.RectTransform, Anchor.Center), style: null);
         }
 
         public override void Select()
