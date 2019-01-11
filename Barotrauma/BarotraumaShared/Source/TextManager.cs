@@ -77,6 +77,29 @@ namespace Barotrauma
             }
         }
 
+        public static string Get(string textTag, bool returnNull = false, params object[] args)
+        {
+            foreach (TextPack textPack in textPacks)
+            {
+                string text = textPack.Get(textTag);
+                if (text != null)
+                {
+                    text = string.Format(text, args);
+                    return text;
+                }
+            }
+
+            if (returnNull)
+            {
+                return null;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
+                return textTag;
+            }
+        }
+
         public static string ReplaceGenderPronouns(string text, Gender gender)
         {
             if (gender == Gender.Male)
