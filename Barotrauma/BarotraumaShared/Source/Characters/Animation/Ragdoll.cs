@@ -298,22 +298,6 @@ namespace Barotrauma
                 Flip();
             }
             dir = Direction.Right;
-            foreach (var limbParams in ragdollParams.Limbs)
-            {
-                if (!PhysicsBody.IsValidShape(limbParams.Radius, limbParams.Height, limbParams.Width))
-                {
-                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on limb: " + limbParams.Name);
-                    return;
-                }
-            }
-            foreach (var colliderParams in ragdollParams.ColliderParams)
-            {
-                if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
-                {
-                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on collider: " + colliderParams.Name);
-                    return;
-                }
-            }
             Dictionary<LimbParams, List<WearableSprite>> items = null;
             if (ragdollParams != null)
             {
@@ -322,6 +306,22 @@ namespace Barotrauma
             else
             {
                 items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
+            }
+            foreach (var limbParams in RagdollParams.Limbs)
+            {
+                if (!PhysicsBody.IsValidShape(limbParams.Radius, limbParams.Height, limbParams.Width))
+                {
+                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on limb: " + limbParams.Name);
+                    return;
+                }
+            }
+            foreach (var colliderParams in RagdollParams.ColliderParams)
+            {
+                if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
+                {
+                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on collider: " + colliderParams.Name);
+                    return;
+                }
             }
             CreateColliders();
             CreateLimbs();
