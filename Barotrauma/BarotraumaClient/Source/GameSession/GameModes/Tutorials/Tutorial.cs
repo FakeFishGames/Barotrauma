@@ -168,6 +168,37 @@ namespace Barotrauma.Tutorials
             return infoBlock;
         }
 
+        protected GUIComponent CreateInfoFrame(string text, int width, int height, string anchorStr, bool hasButton = false)
+        {
+            if (hasButton) height += 30;
+
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
+
+            height += wrappedText.Split('\n').Length * 25;
+
+            Anchor anchor = Anchor.TopRight;
+            Enum.TryParse(anchorStr, out anchor);
+
+            var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
+            infoBlock.Flash(Color.Green);
+
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.7f), infoBlock.RectTransform, Anchor.Center),
+                text, wrap: true);
+
+            if (hasButton)
+            {
+                var okButton = new GUIButton(new RectTransform(new Point(80, 25), infoBlock.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 5) },
+                    TextManager.Get("OK"))
+                {
+                    OnClicked = CloseInfoFrame
+                };
+            }
+
+            GUI.PlayUISound(GUISoundType.Message);
+
+            return infoBlock;
+        }
+
         protected bool Restart(GUIButton button, object obj)
         {
             TutorialMode.StartTutorial(this);

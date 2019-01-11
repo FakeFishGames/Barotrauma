@@ -1088,7 +1088,13 @@
 
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
-
+  
+  <!-- Contextual tutorial -->
+  <Welcome>"Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?"</Welcome>
+  <DestinationObjective>"Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up."</DestinationObjective>
+  <Degrading1>"This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this."</Degrading1>
+  <Approach2>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2>
+  
   <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:  
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>

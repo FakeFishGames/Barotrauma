@@ -18,6 +18,7 @@ namespace Barotrauma.Tutorials
 
         private TutorialSegment activeSegment;
         private List<TutorialSegment> segments;
+
         private SpriteSheetPlayer spriteSheetPlayer;
         private Steering navConsole;
         private Reactor reactor;
@@ -82,6 +83,11 @@ namespace Barotrauma.Tutorials
             base.Initialize();
             spriteSheetPlayer = new SpriteSheetPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
+
+            for(int i = 0; i < segments.Count; i++)
+            {
+                segments[i].IsTriggered = false;
+            }
         }
 
         public override void Start()
@@ -143,6 +149,8 @@ namespace Barotrauma.Tutorials
             if (!started) return;
             deltaTime *= 0.5f;
 
+            DebugConsole.NewMessage("Distance: " + Vector2.Distance(Level.Loaded.StartPosition, Submarine.MainSub.WorldPosition).ToString(), Color.White);
+
             if (ContentRunning)
             {
                 if (inputGracePeriodTimer < inputGracePeriod)
@@ -194,7 +202,6 @@ namespace Barotrauma.Tutorials
                 case 1: // Command Reactor: 10 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
                     if (tutorialTimer < 10.5f)
                     {
-                        DebugConsole.NewMessage("Timer: " + tutorialTimer, Color.White);
                         tutorialTimer += deltaTime;
 
                         if (HasOrder("operatereactor"))
@@ -220,11 +227,15 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 3: // Objective:       Travel 200 meters and while sub is not flooding [Text]
-                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 20000f || IsFlooding())
+                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 19200f || IsFlooding())
                     {
                         return false;
                     }
-                    break;
+                    else // Called earlier than others due to requiring specific args
+                    {
+                        TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
+                        return true;
+                    }
                 case 4: // Flood:           Hull is breached and sub is taking on water [Video]
                     if (!IsFlooding())
                     {
@@ -248,8 +259,7 @@ namespace Barotrauma.Tutorials
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
-                        DebugConsole.NewMessage("Degraded Equiopment: " + item.Name, Color.White);
+                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;     
                         degradedEquipmentFound = true;
                         break;
                     }
@@ -290,7 +300,7 @@ namespace Barotrauma.Tutorials
                     for (int i = 0; i < crew.Count; i++)
                     {
                         Character member = crew[i];
-                        if (member.Vitality < member.MaxVitality / 2f && !member.IsDead)
+                        if (member.Vitality < member.MaxVitality && !member.IsDead)
                         {
                             injuredFound = true;
                             break;
@@ -300,7 +310,7 @@ namespace Barotrauma.Tutorials
                     if (!injuredFound) return false;
                     break;
                 case 10: // Approach1:      Destination is within 100m [Video]
-                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 10000f)
+                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 9600f)
                     {
                         return false;
                     }
@@ -375,7 +385,7 @@ namespace Barotrauma.Tutorials
             return characterTimeOnSonar.Find(ct => ct.Second >= requiredTimeOnSonar) != null;
         }
 
-        private void TriggerTutorialSegment(int index)
+        private void TriggerTutorialSegment(int index, params object[] args)
         {
             ContentRunning = true;
             activeSegment = segments[index];
@@ -389,11 +399,19 @@ namespace Barotrauma.Tutorials
                     spriteSheetPlayer.SetContent(playableContentPath, activeSegment.Content, true);
                     break;
                 case ContentTypes.Text:
-                    infoBox = CreateInfoFrame(activeSegment.Content.Value);
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
+                                              activeSegment.Content.GetAttributeInt("width", 300),
+                                              activeSegment.Content.GetAttributeInt("height", 80),
+                                              activeSegment.Content.GetAttributeString("anchor", "Center"), false);
                     break;
             }
 
-            // TODO: Save triggered to XML
+            for(int i = 0; i < segments.Count; i++)
+            {
+                if (!segments[i].IsTriggered) return;
+            }
+
+            Completed = true;
         }
     }
 }
