@@ -360,7 +360,7 @@ namespace Barotrauma.Steam
         public const string WorkshopItemStagingFolder = "NewWorkshopItem";
         public const string WorkshopItemPreviewImageFolder = "Workshop";
         public const string PreviewImageName = "PreviewImage.png";
-        private const string MetadataFileName = "metadata.xml";
+        private const string MetadataFileName = "filelist.xml";
         private const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
 
         private Sprite defaultPreviewImage;
@@ -614,19 +614,26 @@ namespace Barotrauma.Steam
             }
 
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
-            string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
-            File.Copy(tempContentPackage.Path, newContentPackagePath, overwrite: true);
-            contentPackage = new ContentPackage(newContentPackagePath);
-
-            foreach (ContentFile contentFile in tempContentPackage.Files)
+            if (File.Exists(tempContentPackage.Path))
             {
-                string sourceFile = Path.Combine(existingItem.Directory.FullName, contentFile.Path);
-                if (!File.Exists(sourceFile)) { continue; }
-                //make sure the destination directory exists
-                string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
-                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                File.Copy(sourceFile, destinationPath, overwrite: true);
-                contentPackage.AddFile(contentFile.Path, contentFile.Type);
+                string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
+                File.Copy(tempContentPackage.Path, newContentPackagePath, overwrite: true);
+                contentPackage = new ContentPackage(newContentPackagePath);
+                foreach (ContentFile contentFile in tempContentPackage.Files)
+                {
+                    string sourceFile = Path.Combine(existingItem.Directory.FullName, contentFile.Path);
+                    if (!File.Exists(sourceFile)) { continue; }
+                    //make sure the destination directory exists
+                    string destinationPath = Path.Combine(WorkshopItemStagingFolder, contentFile.Path);
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                    File.Copy(sourceFile, destinationPath, overwrite: true);
+                    contentPackage.AddFile(contentFile.Path, contentFile.Type);
+                }
+            }
+            else
+            {
+                contentPackage = ContentPackage.CreatePackage(existingItem.Title, Path.Combine(WorkshopItemStagingFolder, MetadataFileName), false);
+                contentPackage.Save(contentPackage.Path);
             }
         }
 
@@ -917,7 +924,8 @@ namespace Barotrauma.Steam
             //make sure the contentpackage file is present 
             //(unless the package only contains submarine files, in which case we don't need a content package)
             if (contentPackage.Files.Any(f => f.Type != ContentType.Submarine) &&
-                !File.Exists(GetWorkshopItemContentPackagePath(contentPackage)))
+                !File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) &&
+                !ContentPackage.List.Any(cp => cp.Name == contentPackage.Name))
             {
                 return false;
             }

@@ -150,7 +150,7 @@ namespace Barotrauma
             if (WaterRenderer.Instance != null)
             {
                 WaterRenderer.Instance.ScrollWater(Vector2.One * 10.0f, deltaTime);
-                WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null, 0.0f);
+                WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null);
             }
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
