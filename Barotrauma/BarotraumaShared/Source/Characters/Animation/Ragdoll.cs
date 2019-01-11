@@ -298,11 +298,7 @@ namespace Barotrauma
                 Flip();
             }
             dir = Direction.Right;
-            if (ragdollParams != null)
-            {
-                RagdollParams = ragdollParams;
-            }
-            foreach (var limbParams in RagdollParams.Limbs)
+            foreach (var limbParams in ragdollParams.Limbs)
             {
                 if (!PhysicsBody.IsValidShape(limbParams.Radius, limbParams.Height, limbParams.Width))
                 {
@@ -310,7 +306,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            foreach (var colliderParams in RagdollParams.ColliderParams)
+            foreach (var colliderParams in ragdollParams.ColliderParams)
             {
                 if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
                 {
@@ -318,8 +314,16 @@ namespace Barotrauma
                     return;
                 }
             }
+            Dictionary<LimbParams, List<WearableSprite>> items = null;
+            if (ragdollParams != null)
+            {
+                RagdollParams = ragdollParams;
+            }
+            else
+            {
+                items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
+            }
             CreateColliders();
-            var items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();
