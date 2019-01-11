@@ -328,11 +328,6 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Ragdoll.LimbScale;
             float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Ragdoll.LimbScale;
-            if (!IsValidShape(radius, height, width))
-            {
-                width = ConvertUnits.ToSimUnits((float)limbParams.normalSpriteParams?.SourceRect.Width * limbParams.Ragdoll.LimbScale);
-                height = ConvertUnits.ToSimUnits((float)limbParams.normalSpriteParams?.SourceRect.Height * limbParams.Ragdoll.LimbScale);
-            }
             density = limbParams.Density;
             CreateBody(width, height, radius, density);
             body.BodyType = BodyType.Dynamic;
