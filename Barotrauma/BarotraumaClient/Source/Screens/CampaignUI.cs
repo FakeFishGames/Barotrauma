@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class CampaignUI
     {
-        public enum Tab { Map, Crew, Store }
+        public enum Tab { None, Crew, Store }
         private Tab selectedTab;
 
         private CampaignMode campaign;
@@ -18,16 +18,17 @@ namespace Barotrauma
 
         private GUIButton startButton;
         
-        private GUIFrame topPanel, bottomPanel;
+        private GUIFrame topPanel, tabContainer;
         private GUITextBlock locationTitle;
 
-        private GUIListBox characterList, hireList;
+        private GUIListBox characterList;
 
         private GUIListBox selectedItemList;
         private GUIListBox storeItemList;
-                
-        private GUIListBox missionList;
+
+        private GUIComponent missionPanel;
         private GUIListBox selectedMissionInfo;
+        private GUIListBox selectedLocationInfo;
 
         private GUIFrame characterPreviewFrame;
         
@@ -50,6 +51,8 @@ namespace Barotrauma
         {
             this.campaign = campaign;
 
+            new GUICustomComponent(new RectTransform(Vector2.One, container.RectTransform), DrawMap, UpdateMap);
+
             // top panel -------------------------------------------------------------------------
 
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform, Anchor.TopCenter));
@@ -59,18 +62,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-
-            var topPanelHeaderArea = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), topPanelContent.RectTransform))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            locationTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.7f), topPanelHeaderArea.RectTransform), "", Color.White, GUI.LargeFont);
-            GUITextBlock moneyText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), topPanelHeaderArea.RectTransform), "")
-            {
-                TextGetter = GetMoney
-            };
-
+            
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
                 new GUIButton(new RectTransform(new Vector2(0.15f, 0.5f), topPanelContent.RectTransform),
@@ -83,79 +75,41 @@ namespace Barotrauma
 
             // bottom panel -------------------------------------------------------------------------
 
-            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.88f), container.RectTransform, Anchor.BottomCenter));
+            tabContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform, Anchor.TopLeft)
+            {
+                RelativeOffset = new Vector2(0.0f, topPanel.RectTransform.RelativeSize.Y + 0.02f)
+            }, color: Color.Black * 0.7f);
             
             // crew tab -------------------------------------------------------------------------
             
-            tabs = new GUIFrame[3];
-            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), bottomPanel.RectTransform, Anchor.Center), null);
+            tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
+            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), tabContainer.RectTransform, Anchor.Center), null);
             
-            int crewColumnWidth = Math.Min(300, (bottomPanel.Rect.Width - 40) / 2);
+            int crewColumnWidth = Math.Min(300, (tabContainer.Rect.Width - 40) / 2);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.05f), tabs[(int)Tab.Crew].RectTransform)
-            {
-                RelativeOffset = new Vector2(0.01f, 0.02f)
-            }, TextManager.Get("Crew") + ":", style: "");
-            characterList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterLeft)
-            {
-                RelativeOffset = new Vector2(0.01f, 0.05f)
-            }, false, null, "")
+            characterList = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.Center))
             {
                 OnSelected = SelectCharacter
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.05f), tabs[(int)Tab.Crew].RectTransform, Anchor.TopRight, Pivot.TopRight)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), characterList.Content.RectTransform),
+                TextManager.Get("CampaignMenuCrew"), font: GUI.LargeFont)
             {
-                RelativeOffset = new Vector2(0.01f, 0.02f)
-            }, TextManager.Get("Hire") + ":", style: "");
-            hireList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterRight, Pivot.CenterRight)
-            {
-                RelativeOffset = new Vector2(0.01f, 0.05f)
-            }, false, null, "")
-            {
-                OnSelected = SelectCharacter
+                UserData = "mycrew",
+                CanBeFocused = false,
+                AutoScale = true
             };
-
-            // map tab -------------------------------------------------------------------------
-
-            tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), bottomPanel.RectTransform, Anchor.Center, Pivot.Center), null);
-
-            var mapTabContainer = new GUILayoutGroup(new RectTransform(Vector2.One, tabs[(int)Tab.Map].RectTransform), isHorizontal: true)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), characterList.Content.RectTransform),
+                TextManager.Get("CampaignMenuHireable"), font: GUI.LargeFont)
             {
-                Stretch = true,
-                RelativeSpacing = 0.02f
+                UserData = "hire",
+                CanBeFocused = false,
+                AutoScale = true
             };
-
-            var mapColumnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), mapTabContainer.RectTransform))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            missionList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mapColumnLeft.RectTransform));
-            selectedMissionInfo = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mapColumnLeft.RectTransform));
-
-            var mapColumnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), mapTabContainer.RectTransform))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.9f), mapColumnRight.RectTransform), DrawMap, UpdateMap);
-            var mapButtonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), mapColumnRight.RectTransform), 
-                isHorizontal: true, childAnchor: Anchor.CenterRight);
             
-            if (GameMain.Client == null)
-            {
-                startButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), mapButtonArea.RectTransform), 
-                    TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
-                {
-                    OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
-                    Enabled = false
-                };
-            }
-
             // store tab -------------------------------------------------------------------------
             
-            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), bottomPanel.RectTransform, Anchor.Center, Pivot.Center), null);
+            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), tabContainer.RectTransform, Anchor.Center, Pivot.Center), null);
 
             int sellColumnWidth = (tabs[(int)Tab.Store].Rect.Width - 40) / 2 - 20;
 
@@ -198,7 +152,37 @@ namespace Barotrauma
                 x += buttonWidth;
             }
 
-            SelectTab(Tab.Map);
+            // mission info -------------------------------------------------------------------------
+
+            missionPanel = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.5f), container.RectTransform, Anchor.TopRight)
+            {
+                RelativeOffset = new Vector2(0.0f, topPanel.RectTransform.RelativeSize.Y + 0.02f)
+            }, color: Color.Black * 0.7f);
+            var missionPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), missionPanel.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            selectedLocationInfo = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), missionPanelContent.RectTransform));
+            selectedMissionInfo = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), missionPanelContent.RectTransform));
+            
+            var mapButtonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), missionPanelContent.RectTransform),
+                isHorizontal: true, childAnchor: Anchor.CenterRight);
+
+            if (GameMain.Client == null)
+            {
+                startButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), mapButtonArea.RectTransform),
+                    TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+                {
+                    OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
+                    Enabled = false
+                };
+            }
+
+            // -------------------------------------------------------------------------
+            
+            SelectTab(Tab.None);
 
             UpdateLocationView(campaign.Map.CurrentLocation);
 
@@ -216,23 +200,31 @@ namespace Barotrauma
             }
 
             var hireableCharacters = location.GetHireableCharacters();
+            foreach (GUIComponent child in characterList.Children.ToList())
+            {
+                if (child.UserData is CharacterInfo character)
+                {
+                    if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                }
+                else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                {
+                    continue;
+                }
+                characterList.RemoveChild(child);
+            }
             if (!hireableCharacters.Any())
             {
-                hireList.Content.ClearChildren();
-                hireList.Enabled = false;
-
-                new GUITextBlock(new RectTransform(Vector2.One, hireList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center);
-                return;
+                new GUITextBlock(new RectTransform(Vector2.One, characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center);
             }
-
-            hireList.Enabled = true;
-            hireList.Content.ClearChildren();
-
-            foreach (CharacterInfo c in hireableCharacters)
+            else
             {
-                var frame = c.CreateCharacterFrame(hireList.Content, c.Name + " (" + c.Job.Name + ")", c);
-                new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                foreach (CharacterInfo c in hireableCharacters)
+                {
+                    var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
+                    new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                }
             }
+            characterList.UpdateScrollBarSize();
 
             RefreshItemTab();
         }
@@ -249,25 +241,40 @@ namespace Barotrauma
         
         public void RefreshLocationTexts()
         {
-            locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
+            if (locationTitle != null)
+            {
+                locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
+            }
         }
 
         public void UpdateCharacterLists()
         {
-            characterList.Content.ClearChildren();
+            foreach (GUIComponent child in characterList.Children.ToList())
+            {
+                if (child.UserData as string == "mycrew")
+                {
+                    continue;
+                }
+                else if (child.UserData as string == "hire")
+                {
+                    break;
+                }
+                characterList.RemoveChild(child);
+            }
             foreach (CharacterInfo c in GameMain.GameSession.CrewManager.GetCharacterInfos())
             {
                 c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ") ", c);
             }
+            characterList.UpdateScrollBarSize();
         }
 
         public void SelectLocation(Location location, LocationConnection connection)
         {
-            selectedMissionInfo.ClearChildren();
+            selectedLocationInfo.ClearChildren();
             
             if (location == null) return;
 
-            var container = selectedMissionInfo.Content;
+            var container = selectedLocationInfo.Content;
 
             var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform), location.Name, font: GUI.LargeFont)
             {
@@ -447,8 +454,12 @@ namespace Barotrauma
             selectedTab = tab;
             for (int i = 0; i< tabs.Length; i++)
             {
-                tabs[i].Visible = (int)selectedTab == i;
+                if (tabs[i] != null)
+                {
+                    tabs[i].Visible = (int)selectedTab == i;            
+                }
             }
+            tabContainer.Visible = tab != Tab.None;
         }
 
         private bool SelectItemCategory(GUIButton button, object selection)
@@ -498,26 +509,20 @@ namespace Barotrauma
             GUIComponent prevInfoFrame = null;
             foreach (GUIComponent child in tabs[(int)selectedTab].Children)
             {
-                if (!(child.UserData is CharacterInfo)) continue;
+                if (!(child.UserData is CharacterInfo)) { continue; }
 
                 prevInfoFrame = child;
             }
 
-            if (prevInfoFrame != null) tabs[(int)selectedTab].RemoveChild(prevInfoFrame);
-
+            if (prevInfoFrame != null) { tabs[(int)selectedTab].RemoveChild(prevInfoFrame); }
+            
             CharacterInfo characterInfo = selection as CharacterInfo;
-            if (characterInfo == null) return false;
-
-            characterList.Deselect();
-            hireList.Deselect();
-
-            if (Character.Controlled != null && characterInfo == Character.Controlled.Info) return false;
+            if (characterInfo == null) { return false; }
+            if (Character.Controlled != null && characterInfo == Character.Controlled.Info) { return false; }
 
             if (characterPreviewFrame == null || characterPreviewFrame.UserData != characterInfo)
             {
-                int width = Math.Min(300, tabs[(int)Tab.Crew].Rect.Width - hireList.Rect.Width - characterList.Rect.Width - 50);
-
-                characterPreviewFrame = new GUIFrame(new RectTransform(new Point(width, 300), tabs[(int)selectedTab].RectTransform, Anchor.Center))
+                characterPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), tabs[(int)selectedTab].RectTransform, Anchor.TopRight, Pivot.TopLeft))
                 {
                     UserData = characterInfo
                 };
@@ -525,19 +530,9 @@ namespace Barotrauma
                 characterInfo.CreateInfoFrame(characterPreviewFrame);
             }
 
-            if (component.Parent == hireList.Content)
+            if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(characterInfo))
             {
-                GUIButton hireButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
-                    TextManager.Get("HireButton"))
-                {
-                    Enabled = campaign.Money >= characterInfo.Salary,
-                    UserData = characterInfo,
-                    OnClicked = HireCharacter
-                };
-            }
-            else if (GameMain.GameSession.CrewManager.GetCharacterInfos().Count() > 1)
-            {
-                GUIButton hireButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
+                new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
                     TextManager.Get("FireButton"))
                 {
                     Color = Color.Red,
@@ -545,8 +540,8 @@ namespace Barotrauma
                     OnClicked = (btn, obj) =>
                     {
                         var confirmDialog = new GUIMessageBox(
-                            TextManager.Get("FireWarningHeader"), 
-                            TextManager.Get("FireWarningText").Replace("[charactername]", ((CharacterInfo)obj).Name), 
+                            TextManager.Get("FireWarningHeader"),
+                            TextManager.Get("FireWarningText").Replace("[charactername]", ((CharacterInfo)obj).Name),
                             new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                         confirmDialog.Buttons[0].UserData = (CharacterInfo)obj;
                         confirmDialog.Buttons[0].OnClicked = FireCharacter;
@@ -556,6 +551,16 @@ namespace Barotrauma
                     }
                 };
             }
+            else
+            {
+                new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) },
+                    TextManager.Get("HireButton"))
+                {
+                    Enabled = campaign.Money >= characterInfo.Salary,
+                    UserData = characterInfo,
+                    OnClicked = HireCharacter
+                };
+            }
 
             return true;
         }
@@ -563,7 +568,7 @@ namespace Barotrauma
         private bool HireCharacter(GUIButton button, object selection)
         {
             CharacterInfo characterInfo = selection as CharacterInfo;
-            if (characterInfo == null) return false;
+            if (characterInfo == null) { return false; }
 
             SinglePlayerCampaign spCampaign = campaign as SinglePlayerCampaign;
             if (spCampaign == null)
