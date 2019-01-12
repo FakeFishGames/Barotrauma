@@ -460,7 +460,12 @@ namespace Barotrauma
                 startOffset: new Point(Rand.Range(0,rawNoiseSprite.SourceRect.Width), Rand.Range(0, rawNoiseSprite.SourceRect.Height)),
                 color : Color.White * cameraNoiseStrength * 0.5f,
                 textureScale: Vector2.One * rawNoiseScale);
-            
+
+            rawNoiseSprite.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(),
+                startOffset: new Point(Rand.Range(0, rawNoiseSprite.SourceRect.Width), Rand.Range(0, rawNoiseSprite.SourceRect.Height)),
+                color: new Color(20,20,20,100),
+                textureScale: Vector2.One * rawNoiseScale * 2);
+
             if (generationParams.ShowLocations)
             {
                 foreach (LocationConnection connection in connections)
@@ -640,14 +645,14 @@ namespace Barotrauma
                 new Vector2(rect.Right, rect.Bottom), Color.White, frameSize, 0,
                 Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 10), frameSize));
 
-            frameSize = generationParams.DecorativeMapSprite.FrameSize.ToVector2();
+            /*frameSize = generationParams.DecorativeMapSprite.FrameSize.ToVector2();
             generationParams.DecorativeMapSprite.Draw(spriteBatch, (int)((cameraNoiseStrength + animPulsate) * hudOpenState * generationParams.DecorativeMapSprite.FrameCount),
-                new Vector2(rect.X, rect.Y), Color.White, new Vector2(0, frameSize.Y * 0.2f), 0,
+                new Vector2(rect.X, rect.Y + rect.Height * 0.17f), Color.White, new Vector2(0, frameSize.Y * 0.2f), 0,
                 Vector2.Divide(new Vector2(rect.Width / 3, rect.Height / 5), frameSize), spriteEffect: SpriteEffects.FlipVertically);
 
             GUI.DrawString(spriteBatch,
                 new Vector2(rect.X + rect.Width / 15, rect.Y + rect.Height / 11),
-                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), Color.White * hudOpenState, font: GUI.SmallFont);
+                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), Color.White * hudOpenState, font: GUI.SmallFont);*/
             GUI.DrawString(spriteBatch,
                 new Vector2(rect.X + rect.Width * 0.27f, rect.Y + rect.Height * 0.93f),
                 "LAT " + (-drawOffset.Y / 100.0f) + "   LON " + (-drawOffset.X / 100.0f), Color.White * hudOpenState, font: GUI.SmallFont);
