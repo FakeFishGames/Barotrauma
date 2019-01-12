@@ -223,19 +223,19 @@ namespace Barotrauma
             origin = TextSize * 0.5f;
 
             if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
-                origin.X += (rect.Width / 2.0f - padding.X) - TextSize.X / 2 * textScale;
+                origin.X += (rect.Width / 2.0f - padding.X) - TextSize.X / 2;
             
             if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
-                origin.X -= (rect.Width / 2.0f - padding.Z) - TextSize.X / 2 * textScale;
+                origin.X -= (rect.Width / 2.0f - padding.Z) - TextSize.X / 2;
 
             if (textAlignment.HasFlag(Alignment.Top))
-                origin.Y += (rect.Height / 2.0f - padding.Y) - TextSize.Y / 2 * textScale;
+                origin.Y += (rect.Height / 2.0f - padding.Y) - TextSize.Y / 2;
 
             if (textAlignment.HasFlag(Alignment.Bottom))
-                origin.Y -= (rect.Height / 2.0f - padding.W) - TextSize.Y / 2 * textScale;
+                origin.Y -= (rect.Height / 2.0f - padding.W) - TextSize.Y / 2;
             
-            origin.X = (int)origin.X;
-            origin.Y = (int)origin.Y;
+            origin.X = (int)(origin.X / textScale);
+            origin.Y = (int)(origin.Y / textScale);
 
             textPos.X = (int)textPos.X;
             textPos.Y = (int)textPos.Y;
