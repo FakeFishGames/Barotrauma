@@ -1,731 +1,379 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-
   <!-- Elements ************************************************************************************************ -->
-
-  <Item
-    name="Carbon"
-    identifier="carbon"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Most commonly used in the manufacture of steel and plastic."
-    cargocontaineridentifier="metalcrate">
-
+  <Item name="Carbon" identifier="carbon" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of steel and plastic." cargocontaineridentifier="metalcrate" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="19"/>
-    <Price locationtype="Military" buyprice="19"/>
-    <Price locationtype="City" buyprice="19"/>
-    <Price locationtype="Outpost" buyprice="19"/>
-
+    <Price locationtype="Research" buyprice="19" />
+    <Price locationtype="Military" buyprice="19" />
+    <Price locationtype="City" buyprice="19" />
+    <Price locationtype="Outpost" buyprice="19" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="9,105,96,83" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Iron" identifier="iron" category="Material" Tags="smallitem" canbepicked="true" description="Can be used in the manufacture of simple tools, or refined into steel by mixing it with carbon." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="23" />
+    <Price locationtype="Military" buyprice="23" />
+    <Price locationtype="City" buyprice="23" />
+    <Price locationtype="Outpost" buyprice="23" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="9,186,96,76" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Tin" identifier="tin" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of various electrical components." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="23" />
+    <Price locationtype="Military" buyprice="23" />
+    <Price locationtype="City" buyprice="23" />
+    <Price locationtype="Outpost" buyprice="23" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="298,182,98,80" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Lead" identifier="lead" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of various types of ammunition." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="26" />
+    <Price locationtype="Military" buyprice="26" />
+    <Price locationtype="City" buyprice="26" />
+    <Price locationtype="Outpost" buyprice="26" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="203,185,97,78" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Phosphorus" identifier="phosphorus" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of lamps, explosives and some medical compounds." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="30" />
+    <Price locationtype="Military" buyprice="30" />
+    <Price locationtype="City" buyprice="30" />
+    <Price locationtype="Outpost" buyprice="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="307,10,50,95" depth="0.55" origin="0.5,0.5" />
+    <Body width="29" height="58" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Copper" identifier="copper" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of electrical wiring." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="36" />
+    <Price locationtype="Military" buyprice="36" />
+    <Price locationtype="City" buyprice="36" />
+    <Price locationtype="Outpost" buyprice="36" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="103,183,99,78" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Zinc" identifier="zinc" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of batteries and tonic liquid." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="41" />
+    <Price locationtype="Military" buyprice="41" />
+    <Price locationtype="City" buyprice="41" />
+    <Price locationtype="Outpost" buyprice="41" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="203,105,96,81" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Sodium" identifier="sodium" category="Material" Tags="smallitem" canbepicked="true" description="Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="47" />
+    <Price locationtype="Military" buyprice="47" />
+    <Price locationtype="City" buyprice="47" />
+    <Price locationtype="Outpost" buyprice="47" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="58,11,50,94" depth="0.55" origin="0.5,0.5" />
+    <Body width="29" height="59" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Silicon" identifier="silicon" category="Material" Tags="smallitem" canbepicked="true" description="Used as an ingredient in aluminium alloys, plastic and various electrical components." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="47" />
+    <Price locationtype="Military" buyprice="47" />
+    <Price locationtype="City" buyprice="47" />
+    <Price locationtype="Outpost" buyprice="47" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="392,106,93,81" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Calcium" identifier="calcium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="47" />
+    <Price locationtype="Military" buyprice="47" />
+    <Price locationtype="City" buyprice="47" />
+    <Price locationtype="Outpost" buyprice="47" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="257,11,48,94" depth="0.55" origin="0.5,0.5" />
+    <Body width="28" height="58" density="15" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Aluminium" identifier="aluminium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="62" />
+    <Price locationtype="Military" buyprice="62" />
+    <Price locationtype="City" buyprice="62" />
+    <Price locationtype="Outpost" buyprice="62" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="106,106,96,80" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Uranium" identifier="uranium" category="Material" Tags="smallitem" canbepicked="true" description="Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="71" />
+    <Price locationtype="Military" buyprice="71" />
+    <Price locationtype="City" buyprice="71" />
+    <Price locationtype="Outpost" buyprice="71" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="8,260,99,83" depth="0.55" origin="0.5,0.5" />
+    <Body width="58" height="24" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Potassium" identifier="potassium" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water." cargocontaineridentifier="metalcrate" scale="0.5">
+    <!-- TODO: adjust prices -->
+    <Price locationtype="Research" buyprice="71" />
+    <Price locationtype="Military" buyprice="71" />
+    <Price locationtype="City" buyprice="71" />
+    <Price locationtype="Outpost" buyprice="71" />
     <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Iron"
-    identifier="iron"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Can be used in the manufacture of simple tools, or refined into steel by mixing it with carbon."
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="23"/>
-    <Price locationtype="Military" buyprice="23"/>
-    <Price locationtype="City" buyprice="23"/>
-    <Price locationtype="Outpost" buyprice="23"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Tin"
-    identifier="tin"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Most commonly used in the manufacture of various electrical components."
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="23"/>
-    <Price locationtype="Military" buyprice="23"/>
-    <Price locationtype="City" buyprice="23"/>
-    <Price locationtype="Outpost" buyprice="23"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Lead"
-    identifier="lead"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Most commonly used in the manufacture of various types of ammunition."
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="26"/>
-    <Price locationtype="Military" buyprice="26"/>
-    <Price locationtype="City" buyprice="26"/>
-    <Price locationtype="Outpost" buyprice="26"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Phosphorus"
-    identifier="phosphorus"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Used in the manufacture of lamps, explosives and some medical compounds."
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="30"/>
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="30"/>
-    <Price locationtype="Outpost" buyprice="30"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="339,196,29,58" depth="0.55"/>
-
-    <Body width="29" height="58" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Copper"
-    identifier="copper"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"    
-    description="Most commonly used in the manufacture of electrical wiring."
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="36"/>
-    <Price locationtype="Military" buyprice="36"/>
-    <Price locationtype="City" buyprice="36"/>
-    <Price locationtype="Outpost" buyprice="36"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Zinc"
-    identifier="zinc"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Most commonly used in the manufacture of batteries and tonic liquid."
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="41"/>
-    <Price locationtype="Military" buyprice="41"/>
-    <Price locationtype="City" buyprice="41"/>
-    <Price locationtype="Outpost" buyprice="41"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Sodium"
-    identifier="sodium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine."
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="47"/>
-    <Price locationtype="Military" buyprice="47"/>
-    <Price locationtype="City" buyprice="47"/>
-    <Price locationtype="Outpost" buyprice="47"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="81,195,29,59" depth="0.55"/>
-
-    <Body width="29" height="59" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Silicon"
-    identifier="silicon"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"    
-    description="Used as an ingredient in aluminium alloys, plastic and various electrical components."
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="47"/>
-    <Price locationtype="Military" buyprice="47"/>
-    <Price locationtype="City" buyprice="47"/>
-    <Price locationtype="Outpost" buyprice="47"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Calcium"
-    identifier="calcium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="47"/>
-    <Price locationtype="Military" buyprice="47"/>
-    <Price locationtype="City" buyprice="47"/>
-    <Price locationtype="Outpost" buyprice="47"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="273,196,28,58" depth="0.55"/>
-
-    <Body width="28" height="58" density="15"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Aluminium"
-    identifier="aluminium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="62"/>
-    <Price locationtype="Military" buyprice="62"/>
-    <Price locationtype="City" buyprice="62"/>
-    <Price locationtype="Outpost" buyprice="62"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Uranium"
-    identifier="uranium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons."
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="71"/>
-    <Price locationtype="Military" buyprice="71"/>
-    <Price locationtype="City" buyprice="71"/>
-    <Price locationtype="Outpost" buyprice="71"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,128,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="836,148,58,24" depth="0.55"/>
-
-    <Body width="58" height="24" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>
-  <Item
-    name="Potassium"
-    identifier="potassium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water."
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="71"/>
-    <Price locationtype="Military" buyprice="71"/>
-    <Price locationtype="City" buyprice="71"/>
-    <Price locationtype="Outpost" buyprice="71"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="144,195,29,58" depth="0.55"/>
-
-    <Body width="29" height="58" density="50"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="154,10,49,94" depth="0.55" origin="0.5,0.5" />
+    <Body width="29" height="58" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000" />
         <Explosion range="250.0" structuredamage="10" force="5.0">
-          <Affliction identifier="burn" amount="20"/>
-          <Affliction identifier="stun" amount="3"/>
+          <Affliction identifier="burn" amount="20" />
+          <Affliction identifier="stun" amount="3" />
         </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item
-    name="Titanium"
-    identifier="titanium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
+  <Item name="Titanium" identifier="titanium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="90"/>
-    <Price locationtype="Military" buyprice="90"/>
-    <Price locationtype="City" buyprice="90"/>
-    <Price locationtype="Outpost" buyprice="90"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="90" />
+    <Price locationtype="Military" buyprice="90" />
+    <Price locationtype="City" buyprice="90" />
+    <Price locationtype="Outpost" buyprice="90" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="301,107,92,77" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  <Item
-    name="Magnesium"
-    identifier="magnesium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water."
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
+  <Item name="Magnesium" identifier="magnesium" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water." cargocontaineridentifier="metalcrate" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="90"/>
-    <Price locationtype="Military" buyprice="90"/>
-    <Price locationtype="City" buyprice="90"/>
-    <Price locationtype="Outpost" buyprice="90"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="209,195,29,58" depth="0.55"/>
-
-    <Body width="29" height="58" density="15"/>
-
+    <Price locationtype="Research" buyprice="90" />
+    <Price locationtype="Military" buyprice="90" />
+    <Price locationtype="City" buyprice="90" />
+    <Price locationtype="Outpost" buyprice="90" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="204,9,51,95" depth="0.55" origin="0.5,0.5" />
+    <Body width="29" height="58" density="15" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000" />
         <Explosion range="250.0" structuredamage="10" force="5.0">
-          <Affliction identifier="burn" amount="20"/>
-          <Affliction identifier="stun" amount="3"/>
+          <Affliction identifier="burn" amount="20" />
+          <Affliction identifier="stun" amount="3" />
         </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item
-    name="Lithium"
-    identifier="lithium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    description="Most commonly used in the manufacture of batteries and antipsychotic drugs."
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
+  <Item name="Lithium" identifier="lithium" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of batteries and antipsychotic drugs." cargocontaineridentifier="metalcrate" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="119"/>
-    <Price locationtype="Military" buyprice="119"/>
-    <Price locationtype="City" buyprice="119"/>
-    <Price locationtype="Outpost" buyprice="119"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="18,194,29,59" depth="0.55"/>
-
-    <Body width="29" height="59" density="15"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="119" />
+    <Price locationtype="Military" buyprice="119" />
+    <Price locationtype="City" buyprice="119" />
+    <Price locationtype="Outpost" buyprice="119" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="6,11,51,91" depth="0.55" origin="0.5,0.5" />
+    <Body width="29" height="59" density="15" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  <Item
-    name="Chlorine"
-    identifier="chlorine"
-    category="Material"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,medical"
-    description="Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative."
-    useinhealthinterface="true"
-    scale="0.5">
-
+  <Item name="Chlorine" identifier="chlorine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative." useinhealthinterface="true" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="15"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="City" buyprice="25"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="17,259,29,57" depth="0.6"/>
-
-    <Body width="29" height="57" density="20"/>
-
+    <Price locationtype="Research" buyprice="15" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="City" buyprice="25" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="110,14,46,90" depth="0.6" origin="0.5,0.5" />
+    <Body width="29" height="57" density="20" />
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
-        <Affliction identifier="internaldamage" amount="0.5"/>
+        <RequiredItem identifier="medicalsyringe" type="Container" />
+        <Affliction identifier="internaldamage" amount="0.5" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item
-    name="Thorium"
-    identifier="thorium"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
+  <Item name="Thorium" identifier="thorium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="167"/>
-    <Price locationtype="Military" buyprice="167"/>
-    <Price locationtype="City" buyprice="167"/>
-    <Price locationtype="Outpost" buyprice="167"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="167" />
+    <Price locationtype="Military" buyprice="167" />
+    <Price locationtype="City" buyprice="167" />
+    <Price locationtype="Outpost" buyprice="167" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="107,259,95,84" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-
   <!-- Compounds ************************************************************************************************ -->
-
-  <Item
-    name="Steel Bar"
-    identifier="steel"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
+  <Item name="Steel Bar" identifier="steel" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="5">
-      <Item identifier="carbon"/>
-      <Item identifier="iron"/>
+      <Item identifier="carbon" />
+      <Item identifier="iron" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,146,56,28" depth="0.55"/>
-
-    <Body width="56" height="28" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
-  </Item>  
-  <Item
-    name="Titanium-Aluminium Alloy"
-    identifier="titaniumaluminiumalloy"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="6,343,115,58" depth="0.55" origin="0.5,0.5" />
+    <Body width="56" height="28" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+  </Item>
+  <Item name="Titanium-Aluminium Alloy" identifier="titaniumaluminiumalloy" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="5">
-      <Item identifier="aluminium"/>
-      <Item identifier="titanium"/>
+      <Item identifier="aluminium" />
+      <Item identifier="titanium" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="196,787,57,27" depth="0.55"/>
-
-    <Body width="57" height="27" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="123,405,116,60" depth="0.55" origin="0.5,0.5" />
+    <Body width="57" height="27" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-
-  <Item
-    name="Plastic"
-    identifier="plastic"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
+  <Item name="Plastic" identifier="plastic" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="60"/>
-
+    <Price locationtype="Research" buyprice="40" />
+    <Price locationtype="Military" buyprice="40" />
+    <Price locationtype="City" buyprice="40" />
+    <Price locationtype="Outpost" buyprice="60" />
     <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="20"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
+    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55" />
+    <Body width="24" height="12" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-
-  <Item
-    name="Ballistic Fiber"
-    identifier="ballisticfiber"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
+  <Item name="Ballistic Fiber" identifier="ballisticfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="60"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="20"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="40" />
+    <Price locationtype="Military" buyprice="40" />
+    <Price locationtype="City" buyprice="40" />
+    <Price locationtype="Outpost" buyprice="60" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="700,768,64,64" />
+    <Sprite texture="CraftingElements2.png" sourcerect="0,140,89,134" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-
-  <Item
-    name="Organic Fiber"
-    identifier="organicfiber"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
+  <Item name="Organic Fiber" identifier="organicfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="60"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="20"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="40" />
+    <Price locationtype="Military" buyprice="40" />
+    <Price locationtype="City" buyprice="40" />
+    <Price locationtype="Outpost" buyprice="60" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64" />
+    <Sprite texture="CraftingElements2.png" sourcerect="102,157,113,122" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  
-  <Item
-    name="Rubber"
-    identifier="rubber"
-    category="Material"
-    Tags="smallitem"
-    canbepicked="true"
-    cargocontaineridentifier="metalcrate">
-
+  <Item name="Rubber" identifier="rubber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="40"/>
-    <Price locationtype="Military" buyprice="40"/>
-    <Price locationtype="City" buyprice="40"/>
-    <Price locationtype="Outpost" buyprice="60"/>
-
-    <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="20"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="40" />
+    <Price locationtype="Military" buyprice="40" />
+    <Price locationtype="City" buyprice="40" />
+    <Price locationtype="Outpost" buyprice="60" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" />
+    <Sprite texture="CraftingElements1.png" sourcerect="265,441,74,71" depth="0.55" origin="1,1" />
+    <Body width="24" height="12" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-
-  <Item
-    name="Flash Powder"
-    identifier="flashpowder"
-    category="Material"
-    spritecolor="0.1,0.1,0.1,1.0"
-    containercolor="0.1,0.1,0.1,1.0"
-    cargocontaineridentifier="chemicalcrate"
-    Tags="smallitem,chem,explosive"
-    impacttolerance="8"
-    useinhealthinterface="true">
-
+  <Item name="Flash Powder" identifier="flashpowder" category="Material" spritecolor="0.1,0.1,0.1,1.0" containercolor="0.1,0.1,0.1,1.0" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" impacttolerance="8" useinhealthinterface="true">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50"/>
-    <Price locationtype="Military" buyprice="50"/>
-
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64"/>
-    <Sprite texture="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
-
-    <Body width="8" height="16" density="20"/>
-
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,255,64,64" />
+    <Sprite texture="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Body width="8" height="16" density="20" />
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
-      <StatusEffect type="OnFire" target="this" condition="-50"/>
-      <StatusEffect type="OnUse" target="This" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
+      <StatusEffect type="OnFire" target="this" condition="-50" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" />
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" selectionmode="All" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" selectionmode="All" range="5000" />
         <Explosion range="500" force="0.1">
-          <Affliction identifier="burn" amount="5"/>
-          <Affliction identifier="stun" amount="3"/>
+          <Affliction identifier="burn" amount="5" />
+          <Affliction identifier="stun" amount="3" />
         </Explosion>
-        <Remove/>
+        <Remove />
       </StatusEffect>
     </Throwable>
   </Item>
-
-  <Item
-    name="Incendium Bar"
-    identifier="incendium"
-    category="Material"
-    Tags="smallitem"
-    cargocontaineridentifier="metalcrate"
-    canbepicked="true"
-    scal ="0.5">
-
+  <Item name="Incendium Bar" identifier="incendium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scal="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="200"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,320,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="2,337,60,26" depth="0.55"/>
-
-    <Body width="60" height="26" density="60"/>
-
+    <Price locationtype="Research" buyprice="200" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" />
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="105,439,52,61" depth="0.55" origin="0.5,0.5" />
+    <Body width="60" height="26" density="60" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000"/>
-        <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" />
+        <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000" />
         <Explosion range="500.0" structuredamage="2" force="20.0">
-          <Affliction identifier="burn" strength="50"/>
-          <Affliction identifier="stun" strength="3"/>
+          <Affliction identifier="burn" strength="50" />
+          <Affliction identifier="stun" strength="3" />
         </Explosion>
-        <Remove/>
-        <Fire size="100.0"/>
+        <Remove />
+        <Fire size="100.0" />
       </StatusEffect>
     </Holdable>
   </Item>
-
-  <Item
-    name="Fulgurium Bar"
-    identifier="fulgurium"
-    category="Material"
-    Tags="smallitem"
-    cargocontaineridentifier="metalcrate"
-    canbepicked="true"
-    scale="0.5">
-
+  <Item name="Fulgurium Bar" identifier="fulgurium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="200"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,128,64,64"/>
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,146,60,26" depth="0.55"/>
-
-    <Body width="60" height="26" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="200" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" />
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5" />
+    <Body width="60" height="26" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-
-  <Item
-    name="Physicorium Bar"
-    identifier="physicorium"
-    category="Material"
-    Tags="smallitem"
-    cargocontaineridentifier="metalcrate"
-    canbepicked="true">
-
+  <Item name="Physicorium Bar" identifier="physicorium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="200"/>
-
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="200" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" />
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  
-  <Item
-    name="Dementonite Bar"
-    identifier="dementonite"
-    category="Material"
-    Tags="smallitem"
-    cargocontaineridentifier="metalcrate"
-    canbepicked="true">
-
+  <Item name="Dementonite Bar" identifier="dementonite" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="200"/>
-
-    <!-- TODO: sprite and inventory icon -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,128,64,64"/>
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
-
-    <Body width="24" height="12" density="50"/>
-
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Price locationtype="Research" buyprice="200" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" />
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="15,356,60,54" depth="0.55" origin="0.5,0.5" />
+    <Body width="24" height="12" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
 </Items>
