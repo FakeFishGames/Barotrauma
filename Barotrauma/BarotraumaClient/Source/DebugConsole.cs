@@ -371,6 +371,98 @@ namespace Barotrauma
                 }
             }, isCheat: false));
 
+            commands.Add(new Command("color | colour | spritecolor | spritecolour", "Change color (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        if (args.Length < 3)
+                        {
+                            ThrowError("Not enough arguments provided! At least three required.");
+                        }
+                        if (!byte.TryParse(args[0], out byte r))
+                        {
+                            ThrowError($"Failed to parse value for RED from {args[0]}");
+                        }
+                        if (!byte.TryParse(args[1], out byte g))
+                        {
+                            ThrowError($"Failed to parse value for GREEN from {args[1]}");
+                        }
+                        if (!byte.TryParse(args[2], out byte b))
+                        {
+                            ThrowError($"Failed to parse value for BLUE from {args[2]}");
+                        }
+                        Color color = new Color(r, g, b);
+                        if (args.Length > 3)
+                        {
+                            if (!byte.TryParse(args[3], out byte a))
+                            {
+                                ThrowError($"Failed to parse value for ALPHA from {args[3]}");
+                            }
+                            else
+                            {
+                                color.A = a;
+                            }
+                        }
+                        foreach (var mapEntity in MapEntity.SelectedList)
+                        {
+                            if (mapEntity is Structure s)
+                            {
+                                s.SpriteColor = color;
+                            }
+                            else if (mapEntity is Item i)
+                            {
+                                i.SpriteColor = color;
+                            }
+                        }
+                    }
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        if (args.Length > 0)
+                        {
+                            if (!byte.TryParse(args[0], out byte a))
+                            {
+                                ThrowError($"Failed to parse value for ALPHA from {args[0]}");
+                            }
+                            else
+                            {
+                                foreach (var mapEntity in MapEntity.SelectedList)
+                                {
+                                    if (mapEntity is Structure s)
+                                    {
+                                        s.SpriteColor = new Color(s.SpriteColor.R, s.SpriteColor.G, s.SpriteColor.G, a);
+                                    }
+                                    else if (mapEntity is Item i)
+                                    {
+                                        i.SpriteColor = new Color(i.SpriteColor.R, i.SpriteColor.G, i.SpriteColor.G, a);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowError("Not enough arguments provided! One required!");
+                        }
+                    }
+                }
+            }, isCheat: true));
+
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
                 TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
