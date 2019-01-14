@@ -410,7 +410,7 @@ namespace Barotrauma
         {
             if (headSpriteRange != Vector2.Zero)
             {
-                headSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
+                headSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1, Rand.RandSync.Server);
             }
             else
             {

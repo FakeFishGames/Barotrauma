@@ -25,6 +25,7 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
         protected GUIButton showLogButton;
+        protected GUITickBox cameraFollowsSub;
 
         private float myCharacterFrameOpenState;
         
@@ -44,6 +45,18 @@ namespace Barotrauma.Networking
             {
                 CanBeFocused = false
             };
+
+            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter)
+            {
+                AbsoluteOffset = new Point(0, 5),
+                MaxSize = new Point(25, 25)
+            }, TextManager.Get("CamFollowSubmarine"));
+            cameraFollowsSub.OnSelected += (tbox) =>
+            {
+                Camera.FollowSub = tbox.Selected;
+                return true;
+            };
+            cameraFollowsSub.OnSelected(cameraFollowsSub);
 
             chatBox = new ChatBox(inGameHUD, isSinglePlayer: false);
             chatBox.OnEnterMessage += EnterChatMessage;
@@ -120,6 +133,7 @@ namespace Barotrauma.Networking
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
+                    UpdateFollowSubTickBox();
 
                     if (Character.Controlled == null)
                     {
@@ -161,6 +175,11 @@ namespace Barotrauma.Networking
                 }
             }
             if (ServerLog.LogFrame != null) ServerLog.LogFrame.AddToGUIUpdateList();
+        }
+
+        protected void UpdateFollowSubTickBox()
+        {
+            cameraFollowsSub.Visible = Character.Controlled == null;
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

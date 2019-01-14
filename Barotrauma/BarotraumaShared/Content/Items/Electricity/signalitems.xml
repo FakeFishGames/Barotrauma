@@ -285,7 +285,7 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="phosphorus" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,128,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,385,64,64" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16" origin="0.5,0.5" />
     <LightComponent canbeselected="true" color="1.0,0.0,0.0,0.5" castshadows="false">
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>

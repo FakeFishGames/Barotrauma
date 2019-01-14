@@ -298,32 +298,32 @@ namespace Barotrauma
                 Flip();
             }
             dir = Direction.Right;
+            Dictionary<LimbParams, List<WearableSprite>> items = null;
             if (ragdollParams != null)
             {
                 RagdollParams = ragdollParams;
+            }
+            else
+            {
+                items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
             }
             foreach (var limbParams in RagdollParams.Limbs)
             {
                 if (!PhysicsBody.IsValidShape(limbParams.Radius, limbParams.Height, limbParams.Width))
                 {
-                    {
-                        DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on limb: " + limbParams.Name);
-                        return;
-                    }
+                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on limb: " + limbParams.Name);
+                    return;
                 }
             }
             foreach (var colliderParams in RagdollParams.ColliderParams)
             {
                 if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
                 {
-                    {
-                        DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on collider: " + colliderParams.Name);
-                        return;
-                    }
+                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on collider: " + colliderParams.Name);
+                    return;
                 }
             }
             CreateColliders();
-            var items = limbs?.ToDictionary(l => l.limbParams.ID, l => l.WearingItems);
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();
@@ -332,7 +332,7 @@ namespace Barotrauma
             {
                 foreach (var kvp in items)
                 {
-                    var limb = limbs[kvp.Key];
+                    var limb = limbs[kvp.Key.ID];
                     var itemList = kvp.Value;
                     limb.WearingItems.AddRange(itemList);
                 }

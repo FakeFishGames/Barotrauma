@@ -1799,7 +1799,7 @@ namespace Barotrauma
             }, isCheat: true));
 
 #if DEBUG
-            commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
+            commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;

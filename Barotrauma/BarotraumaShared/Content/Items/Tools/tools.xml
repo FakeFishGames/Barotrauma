@@ -160,7 +160,7 @@
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,0,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,0,64,64" />
     <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" />
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">

@@ -123,6 +123,22 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonLarge>
 
+  <GUITabButton
+    color="0.7,0.7,0.7,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    pressedcolor="0.7,0.7,0.7,1.0">
+    
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="646,172,222,48" slice="683,196,831,207"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="4,116,222,48" slice="41,140,189,151"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="415,172,222,48" slice="452,196,600,207"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="646,172,222,48" slice="683,196,831,207"/>
+
+    <GUITextBlock
+      textcolor="0.6, 0.65, 0.7, 1.0"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUITabButton>
+  
   <GUIButtonServerListInfo
     color="0.4,0.59,0.69,1.0"
     hovercolor="1.0,1.0,1.0,1.0"

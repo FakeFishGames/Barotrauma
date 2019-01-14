@@ -2420,7 +2420,10 @@ namespace Barotrauma
             {
                 foreach (Item item in Inventory.Items)
                 {
-                    if (item != null) { Spawner.AddToRemoveQueue(item); }
+                    if (item != null)
+                    {
+                        Spawner?.AddToRemoveQueue(item);
+                    }
                 }
             }
 

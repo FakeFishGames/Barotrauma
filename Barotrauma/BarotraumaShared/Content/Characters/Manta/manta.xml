@@ -21,6 +21,7 @@
     <latchonto
       attachtowalls="true"/>
 
+    <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="stronger" state="Escape" priority="100"/> 
     <targetpriority tag="dead" state="Eat" priority="90"/> 
     <targetpriority tag="human" state="Attack" priority="80"/>

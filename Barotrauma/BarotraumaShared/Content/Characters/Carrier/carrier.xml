@@ -23,6 +23,7 @@
     attackcooldown="15.0"
     sight="0.5"
     hearing="1.0">
+    <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="100"/>
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="stronger" state="Escape" priority="50"/>

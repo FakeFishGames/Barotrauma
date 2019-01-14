@@ -137,10 +137,11 @@
     cargocontaineridentifier="explosivecrate"
     Tags="smallitem,chem,medical"
     impacttolerance="4"
-    useinhealthinterface="true">
+    useinhealthinterface="true"
+    scale="0.2">
 
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,256,64,64"/>
-    <Sprite texture="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,770,64,64"/>
+    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="171,0,77,152" depth="0.6" origin="0.5,0.5" />
 
     <Body width="25" height="5" density="20"/>
 
