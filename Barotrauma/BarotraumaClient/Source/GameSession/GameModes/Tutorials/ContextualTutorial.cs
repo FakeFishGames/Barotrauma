@@ -31,7 +31,7 @@ namespace Barotrauma.Tutorials
         private bool started = false;
 
         private string playableContentPath;
-        
+
         private float inputGracePeriodTimer;
         private const float inputGracePeriod = 1f;
         private float tutorialTimer;
@@ -101,7 +101,7 @@ namespace Barotrauma.Tutorials
         {
             string completedSegments = string.Empty;
 
-            for(int i = 0; i < segments.Count; i++)
+            for (int i = 0; i < segments.Count; i++)
             {
                 if (segments[i].IsTriggered)
                 {
@@ -126,7 +126,7 @@ namespace Barotrauma.Tutorials
             spriteSheetPlayer = new SpriteSheetPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
 
-            for(int i = 0; i < segments.Count; i++)
+            for (int i = 0; i < segments.Count; i++)
             {
                 segments[i].IsTriggered = false;
             }
@@ -150,7 +150,7 @@ namespace Barotrauma.Tutorials
             sonar = navConsole?.Item.GetComponent<Sonar>();
             reactor = Item.ItemList.Find(i => i.HasTag("reactor"))?.GetComponent<Reactor>();
 
-            if(reactor == null || navConsole == null || sonar == null)
+            if (reactor == null || navConsole == null || sonar == null)
             {
                 infoBox = CreateInfoFrame("Submarine not compatible with the tutorial:"
                     + "\nReactor - " + (reactor != null ? "OK" : "Tag 'reactor' not found")
@@ -191,7 +191,7 @@ namespace Barotrauma.Tutorials
             if (!started) return;
             deltaTime *= 0.5f;
 
-            if (ContentRunning)
+            if (ContentRunning) // Content is running, wait until dismissed
             {
                 if (inputGracePeriodTimer < inputGracePeriod)
                 {
@@ -266,7 +266,7 @@ namespace Barotrauma.Tutorials
                         tutorialTimer = 30.5f;
                     }
                     break;
-                case 3: // Objective: Travel ~200 meters and while sub is not flooding [Text]
+                case 3: // Objective: Travel ~150 meters and while sub is not flooding [Text]
                     if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 12000f || IsFlooding())
                     {
                         return false;
@@ -299,7 +299,7 @@ namespace Barotrauma.Tutorials
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;     
+                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
                         degradedEquipmentFound = true;
                         break;
                     }
@@ -345,7 +345,7 @@ namespace Barotrauma.Tutorials
                             break;
                         }
                     }
-                    
+
                     if (!injuredFound) return false;
                     break;
                 case 10: // Approach1: Destination is within ~100m [Video]
@@ -359,7 +359,7 @@ namespace Barotrauma.Tutorials
                     {
                         return false;
                     }
-                    break;                   
+                    break;
             }
 
             TriggerTutorialSegment(index);
@@ -368,7 +368,7 @@ namespace Barotrauma.Tutorials
 
         private bool HasOrder(string aiTag)
         {
-            for(int i = 0; i < crew.Count; i++)
+            for (int i = 0; i < crew.Count; i++)
             {
                 if (crew[i].CurrentOrder?.AITag == aiTag) return true;
             }
@@ -400,13 +400,13 @@ namespace Barotrauma.Tutorials
                 {
                     for (int i = 0; i < characterTimeOnSonar.Count; i++)
                     {
-                        if(characterTimeOnSonar[i].First == c)
+                        if (characterTimeOnSonar[i].First == c)
                         {
                             characterTimeOnSonar.RemoveAt(i);
                             break;
                         }
                     }
-                    
+
                     continue;
                 }
 
@@ -445,7 +445,7 @@ namespace Barotrauma.Tutorials
                     break;
             }
 
-            for(int i = 0; i < segments.Count; i++)
+            for (int i = 0; i < segments.Count; i++)
             {
                 if (!segments[i].IsTriggered) return;
             }
