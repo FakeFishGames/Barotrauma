@@ -820,6 +820,7 @@ namespace Barotrauma
 
                 new GUICustomComponent(new RectTransform(Vector2.One, orderTargetFrame.RectTransform), DrawMiniMapOverlay)
                 {
+                    CanBeFocused = false,
                     UserData = submarine
                 };
 
