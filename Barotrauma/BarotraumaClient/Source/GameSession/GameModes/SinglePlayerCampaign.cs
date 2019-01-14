@@ -183,11 +183,6 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            if (ContextualTutorial.Initialized)
-            {
-                ContextualTutorial.Stop();
-            }
-
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
 
             if (success)
@@ -270,6 +265,7 @@ namespace Barotrauma
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) => { if (ContextualTutorial.Initialized) ContextualTutorial.Stop(); return true; };
                 }
             }
 
@@ -358,6 +354,9 @@ namespace Barotrauma
                     case "map":
                         campaign.map = Map.LoadNew(subElement);
                         break;
+                    case "contextualtutorial":
+                        campaign.ContextualTutorial.LoadPartiallyComplete(subElement);
+                        break;
                 }
             }
 
@@ -393,6 +392,7 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
+            ContextualTutorial.SavePartiallyComplete(modeElement);
 
             element.Add(modeElement);
         }

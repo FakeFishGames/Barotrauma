@@ -1,5 +1,6 @@
 using Barotrauma.Extensions;
 using Barotrauma.Sounds;
+using Barotrauma.Tutorials;
 using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -1526,6 +1527,11 @@ namespace Barotrauma
             
             if (GameMain.GameSession != null)
             {
+                if (ContextualTutorial.Initialized && GameMain.GameSession.GameMode is SinglePlayerCampaign)
+                {
+                    ((SinglePlayerCampaign)GameMain.GameSession.GameMode).ContextualTutorial.Stop();
+                }
+
                 if (GameSettings.SendUserStatistics)
                 {
                     Mission mission = GameMain.GameSession.Mission;

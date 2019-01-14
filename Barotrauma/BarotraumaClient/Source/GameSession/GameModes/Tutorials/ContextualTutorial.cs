@@ -75,6 +75,48 @@ namespace Barotrauma.Tutorials
             }
         }
 
+        public void LoadPartiallyComplete(XElement element)
+        {
+            int[] completedSegments = element.GetAttributeIntArray("completedsegments", null);
+
+            if (completedSegments == null || completedSegments.Length == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < completedSegments.Length; i++)
+            {
+                segments[completedSegments[i]].IsTriggered = true;
+            }
+        }
+
+        public void SavePartiallyComplete(XElement element)
+        {
+            XElement tutorialElement = new XElement("contextualtutorial");
+            tutorialElement.Add(new XAttribute("completedsegments", GetCompletedSegments()));
+            element.Add(tutorialElement);
+        }
+
+        private string GetCompletedSegments()
+        {
+            string completedSegments = string.Empty;
+
+            for(int i = 0; i < segments.Count; i++)
+            {
+                if (segments[i].IsTriggered)
+                {
+                    completedSegments += i + ",";
+                }
+            }
+
+            if (completedSegments.Length > 0)
+            {
+                completedSegments = completedSegments.TrimEnd(',');
+            }
+
+            return completedSegments;
+        }
+
         public override void Initialize()
         {
             if (Initialized) return;
@@ -149,8 +191,6 @@ namespace Barotrauma.Tutorials
             if (!started) return;
             deltaTime *= 0.5f;
 
-            DebugConsole.NewMessage("Distance: " + Vector2.Distance(Level.Loaded.StartPosition, Submarine.MainSub.WorldPosition).ToString(), Color.White);
-
             if (ContentRunning)
             {
                 if (inputGracePeriodTimer < inputGracePeriod)
@@ -192,7 +232,7 @@ namespace Barotrauma.Tutorials
         {
             switch (index)
             {
-                case 0: // Welcome:         Game Start [Text]
+                case 0: // Welcome: Game Start [Text]
                     if (tutorialTimer < 0.5f)
                     {
                         tutorialTimer += deltaTime;
@@ -212,7 +252,7 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 2: // Nav Console:     20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
+                case 2: // Nav Console: 20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
                     if (Character.Controlled.SelectedConstruction != navConsole.Item)
                     {
                         if (tutorialTimer < 30.5f)
@@ -226,8 +266,8 @@ namespace Barotrauma.Tutorials
                         tutorialTimer = 30.5f;
                     }
                     break;
-                case 3: // Objective:       Travel 200 meters and while sub is not flooding [Text]
-                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 19200f || IsFlooding())
+                case 3: // Objective: Travel ~200 meters and while sub is not flooding [Text]
+                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 12000f || IsFlooding())
                     {
                         return false;
                     }
@@ -236,13 +276,13 @@ namespace Barotrauma.Tutorials
                         TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
                         return true;
                     }
-                case 4: // Flood:           Hull is breached and sub is taking on water [Video]
+                case 4: // Flood: Hull is breached and sub is taking on water [Video]
                     if (!IsFlooding())
                     {
                         return false;
                     }
                     break;
-                case 5: // Reactor:         Player uses reactor for the first time [Video]
+                case 5: // Reactor: Player uses reactor for the first time [Video]
                     if (Character.Controlled.SelectedConstruction != reactor.Item)
                     {
                         return false;
@@ -254,7 +294,7 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 7: // Degrading1:      Any equipment degrades to 50% health or less and player has not assigned any crew to perform maintenance [Text]
+                case 7: // Degrading1: Any equipment degrades to 50% health or less and player has not assigned any crew to perform maintenance [Text]
                     bool degradedEquipmentFound = false;
 
                     foreach (Item item in Item.ItemList)
@@ -278,7 +318,7 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 8: // Degrading2:      5 seconds after 'Degrading1' dismissed, and only if player has not assigned any crew to perform maintenance [Video]
+                case 8: // Degrading2: 5 seconds after 'Degrading1' dismissed, and only if player has not assigned any crew to perform maintenance [Video]
                     if (degrading2ActivationCountdown == -1f)
                     {
                         return false;
@@ -294,8 +334,7 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 9: // Medical:         Crewmember is injured but not killed [Video]
-
+                case 9: // Medical: Crewmember is injured but not killed [Video]
                     bool injuredFound = false;
                     for (int i = 0; i < crew.Count; i++)
                     {
@@ -309,13 +348,13 @@ namespace Barotrauma.Tutorials
                     
                     if (!injuredFound) return false;
                     break;
-                case 10: // Approach1:      Destination is within 100m [Video]
-                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 9600f)
+                case 10: // Approach1: Destination is within ~100m [Video]
+                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 7500f)
                     {
                         return false;
                     }
                     break;
-                case 11: // Approach2:      Sub is docked [Text]
+                case 11: // Approach2: Sub is docked [Text]
                     if (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0)
                     {
                         return false;
