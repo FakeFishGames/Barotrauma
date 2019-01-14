@@ -309,30 +309,34 @@ namespace Barotrauma
             
             float closestDist = 0.0f;
             highlightedLocation = null;
-            for (int i = 0; i < Locations.Count; i++)
+            if (GUI.MouseOn == null || GUI.MouseOn == mapContainer)
             {
-                Location location = Locations[i];
-                Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
-
-                if (!rect.Contains(pos)) continue;
-
-                float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
-
-                Rectangle drawRect = location.Type.Sprite.SourceRect;
-                drawRect.Width = (int)(drawRect.Width * iconScale * zoom);
-                drawRect.Height = (int)(drawRect.Height * iconScale * zoom);
-                drawRect.X = (int)pos.X - drawRect.Width / 2;
-                drawRect.Y = (int)pos.Y - drawRect.Width / 2;
-
-                if (!drawRect.Contains(PlayerInput.MousePosition)) continue;
-
-                float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
-                if (highlightedLocation == null || dist < closestDist)
+                for (int i = 0; i < Locations.Count; i++)
                 {
-                    closestDist = dist;
-                    highlightedLocation = location;
+                    Location location = Locations[i];
+                    Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
+
+                    if (!rect.Contains(pos)) continue;
+
+                    float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
+
+                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom);
+                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom);
+                    drawRect.X = (int)pos.X - drawRect.Width / 2;
+                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
+
+                    if (!drawRect.Contains(PlayerInput.MousePosition)) continue;
+
+                    float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
+                    if (highlightedLocation == null || dist < closestDist)
+                    {
+                        closestDist = dist;
+                        highlightedLocation = location;
+                    }
                 }
             }
+
 
             foreach (LocationConnection connection in connections)
             {
@@ -562,50 +566,54 @@ namespace Barotrauma
                 {
                     Location location = Locations[i];
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-
-                    float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
-
+                    
                     Rectangle drawRect = location.Type.Sprite.SourceRect;
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
-                    if (!rect.Intersects(drawRect)) continue;
+                    if (!rect.Intersects(drawRect)) { continue; }
 
-                    Color color = location.Type.SpriteColor;
-                    
+                    Color color = location.Type.SpriteColor;                    
                     if (location.Connections.Find(c => c.Locations.Contains(CurrentLocation)) == null)
                     {
                         color *= 0.5f;
                     }
-                    //color *= (location.Discovered) ? 0.8f : 0.5f;
-                    //if (location != currentLocation) color *= 1.0f;
+
+                    float iconScale = 1.0f;
                     if (location == highlightedLocation)
                     {
                         iconScale *= 1.1f;
                         color = Color.Lerp(color, Color.White, 0.5f);
                     }
+                    
+                    float distFromPlayer = Vector2.Distance(CurrentLocation.MapPosition, location.MapPosition);
+                    color *= MathHelper.Clamp((1000.0f - distFromPlayer) / 500.0f, 0.1f, 1.0f);
 
-                    location.Type.Sprite.Draw(spriteBatch, pos, color, scale: iconScale * zoom);                    
+                    location.Type.Sprite.Draw(spriteBatch, pos, color, 
+                        scale: MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X * iconScale * zoom);
+                    MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, pos, color, 
+                        scale: MapGenerationParams.Instance.LocationIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * iconScale * zoom * 1.2f);            
                 }
 
             }
             
             DrawDecorativeHUD(spriteBatch, rect);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++)
             {
-                Location location = (i == 0) ? highlightedLocation : SelectedLocation;
-                if (i == 2) location = CurrentLocation;
-
+                Location location = (i == 0) ? highlightedLocation : CurrentLocation;
                 if (location == null) continue;
 
                 Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-                //pos.X = (int)(pos.X + location.Type.Sprite.SourceRect.Width * 0.6f);
-                pos.Y = (int)(pos.Y + 15 * zoom);
-                GUI.DrawString(spriteBatch, pos - GUI.Font.MeasureString(location.Name) * 0.5f, 
-                    location.Name, Color.White * hudOpenState, Color.Black * 0.8f * hudOpenState, 3);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 - GUI.Font.MeasureString(location.Type.DisplayName) * 0.5f, 
-                    location.Type.DisplayName, Color.White * hudOpenState, Color.Black * 0.8f * hudOpenState, 3);
+                pos.X += 25 * zoom;
+                pos.Y -= 5 * zoom;
+                Vector2 size = GUI.LargeFont.MeasureString(location.Name);
+                GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
+                    spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)size.Y + 25), Color.Black * 0.7f);
+                GUI.DrawString(spriteBatch, pos, 
+                    location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, 
+                    location.Type.DisplayName, Color.White * hudOpenState * 1.5f);
             }
                         
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
