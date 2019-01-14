@@ -53,6 +53,7 @@ namespace Barotrauma
             {
                 CargoManager.OnItemsChanged += () => { LastUpdateID++; };
                 Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
+                Map.OnMissionSelected += (loc, mission) => { LastUpdateID++; };
             }
         }
 
@@ -366,6 +367,7 @@ namespace Barotrauma
             msg.Write(map.Seed);
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
             msg.Write(Money);
 
@@ -391,6 +393,7 @@ namespace Barotrauma
         public void ServerRead(NetBuffer msg, Client sender)
         {
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            byte selectedMissionIndex = msg.ReadByte();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
@@ -408,6 +411,10 @@ namespace Barotrauma
             }
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+            if (Map.SelectedConnection != null)
+            {
+                map.SelectedConnection.SelectedMissionIndex = selectedMissionIndex;
+            }
 
             List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
             foreach (PurchasedItem pi in currentItems)

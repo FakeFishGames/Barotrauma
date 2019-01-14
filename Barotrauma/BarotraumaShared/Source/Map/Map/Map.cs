@@ -17,6 +17,7 @@ namespace Barotrauma
         public Action<Location, LocationConnection> OnLocationSelected;
         //from -> to
         public Action<Location, Location> OnLocationChanged;
+        public Action<LocationConnection, Mission> OnMissionSelected;
 
         public Location CurrentLocation { get; private set; }
 
@@ -30,6 +31,11 @@ namespace Barotrauma
         public int SelectedLocationIndex
         {
             get { return Locations.IndexOf(SelectedLocation); }
+        }
+
+        public int SelectedMissionIndex
+        {
+            get { return SelectedConnection == null ? -1 : SelectedConnection.SelectedMissionIndex; }
         }
 
         public LocationConnection SelectedConnection { get; private set; }
@@ -395,6 +401,13 @@ namespace Barotrauma
             SelectedLocation = location;
             SelectedConnection = connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
+        }
+
+        public void SelectMission(int missionIndex)
+        {
+            if (SelectedConnection == null) { return; }
+            SelectedConnection.SelectedMissionIndex = missionIndex;
+            OnMissionSelected?.Invoke(SelectedConnection, SelectedConnection.SelectedMission);
         }
 
         public void SelectRandomLocation(bool preferUndiscovered)
