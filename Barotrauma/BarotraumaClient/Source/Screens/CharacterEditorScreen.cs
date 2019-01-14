@@ -51,6 +51,7 @@ namespace Barotrauma
         private bool recalculateCollider;
         private bool copyJointSettings;
         private bool displayColliders;
+        private bool displayWearables = true;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
         private bool animationResetRequiresForceLoading;
@@ -1036,15 +1037,11 @@ namespace Barotrauma
                 var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List.First(job => job.Identifier == selectedJob));
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
-                // Temp: remove all items from head
-                var removables = character.Inventory.Items.Where(i => i != null && (i.AllowedSlots.Contains(InvSlotType.Head) || i.AllowedSlots.Contains(InvSlotType.Headset)));
-                removables.ForEach(i => i.Unequip(character));
-                // Temp?: Remove all items that don't inherit the source rect
-                removables = character.AnimController.Limbs
-                    .SelectMany(l => l.WearingItems
-                        .Where(i => !i.InheritSourceRect)
-                        .Select(i => i.WearableComponent.Item)).Distinct();
-                removables.ForEachMod(i => i.Unequip(character));
+                HideWearables();
+                if (displayWearables)
+                {
+                    ShowWearables();
+                }
                 selectedJob = characterInfo.Job.Prefab.Identifier;
             }
             else
@@ -1197,6 +1194,22 @@ namespace Barotrauma
             }
             SpawnCharacter(configFilePath, ragdollParams);
         }
+
+        private void ShowWearables()
+        {
+            foreach (var item in character.Inventory.Items)
+            {
+                if (item == null) { continue; }
+                // Temp condition, todo: remove
+                if (item.AllowedSlots.Contains(InvSlotType.Head) || item.AllowedSlots.Contains(InvSlotType.Headset)) { continue; }
+                item.Equip(character);
+            }
+        }
+
+        private void HideWearables()
+        {
+            character.Inventory.Items.ForEachMod(i => i?.Unequip(character));
+        }
         #endregion
 
         #region GUI
@@ -1338,6 +1351,24 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     hideBodySheet = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Show wearables")
+            {
+                TextColor = Color.White,
+                Selected = displayWearables,
+                OnSelected = (GUITickBox box) =>
+                {
+                    displayWearables = box.Selected;
+                    if (displayWearables)
+                    {
+                        ShowWearables();
+                    }
+                    else
+                    {
+                        HideWearables();
+                    }
                     return true;
                 }
             };
