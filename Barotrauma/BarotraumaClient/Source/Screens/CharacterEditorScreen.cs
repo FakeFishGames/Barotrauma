@@ -2351,18 +2351,20 @@ namespace Barotrauma
         {
             float width = textures.OrderByDescending(t => t.Width).First().Width;
             float height = textures.Sum(t => t.Height);
+            float margin = 20;
             if (textures == null || textures.None())
             {
                 spriteSheetMaxZoom = 1;
             }
             else if (height > width)
             {
-                spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY) / height;
+                spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY - margin) / height;
             }
             else
             {
-                spriteSheetMaxZoom = (centerPanel.Rect.Left - spriteSheetOffsetX) / width;
+                spriteSheetMaxZoom = (centerPanel.Rect.Left - spriteSheetOffsetX - margin) / width;
             }
+            spriteSheetMinZoom = spriteSheetMinZoom > spriteSheetMaxZoom ? spriteSheetMaxZoom : 0.25f;
             spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
         }
 
