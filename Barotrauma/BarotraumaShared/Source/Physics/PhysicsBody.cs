@@ -340,7 +340,7 @@ namespace Barotrauma
             LastSentPosition = position;
             list.Add(this);
         }
-
+        
         public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
@@ -362,31 +362,31 @@ namespace Barotrauma
 
         private void CreateBody(float width, float height, float radius, float density)
         {
-            if (width != 0.0f && height != 0.0f)
+            if (IsValidShape(radius, height, width))
             {
-                body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
-                bodyShape = Shape.Rectangle;
-            }
-            else if (radius != 0.0f && width != 0.0f)
-            {
-                body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
-                bodyShape = Shape.HorizontalCapsule;
-            }
-            else if (radius != 0.0f && height != 0.0f)
-            {
-                body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
-                bodyShape = Shape.Capsule;
-            }
-            else if (radius != 0.0f)
-            {
-                body = BodyFactory.CreateCircle(GameMain.World, radius, density);
-                bodyShape = Shape.Circle;
+                bodyShape = DefineBodyShape(radius, width, height);
+                switch (bodyShape)
+                {
+                    case Shape.Capsule:
+                        body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
+                        break;
+                    case Shape.HorizontalCapsule:
+                        body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
+                        break;
+                    case Shape.Circle:
+                        body = BodyFactory.CreateCircle(GameMain.World, radius, density);
+                        break;
+                    case Shape.Rectangle:
+                        body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
+                        break;
+                    default:
+                        throw new NotImplementedException(bodyShape.ToString());
+                }
             }
             else
             {
                 DebugConsole.ThrowError("Invalid physics body dimensions (width: " + width + ", height: " + height + ", radius: " + radius + ")");
             }
-
             this.width = width;
             this.height = height;
             this.radius = radius;
@@ -462,20 +462,23 @@ namespace Barotrauma
             {
                 case Shape.Capsule:
                     radius = Math.Max(size.X / 2, 0);
-                    width = Math.Max(size.X, 0);
                     height = Math.Max(size.Y - size.X, 0);
+                    width = 0;
                     break;
                 case Shape.HorizontalCapsule:
                     radius = Math.Max(size.Y / 2, 0);
-                    height = Math.Max(size.Y, 0);
                     width = Math.Max(size.X - size.Y, 0);
+                    height = 0;
                     break;
                 case Shape.Circle:
                     radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
+                    width = 0;
+                    height = 0;
                     break;
                 case Shape.Rectangle:
                     width = Math.Max(size.X, 0);
                     height = Math.Max(size.Y, 0);
+                    radius = 0;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -796,6 +799,31 @@ namespace Barotrauma
         }
 
         public static bool IsValidShape(float radius, float height, float width) => radius > 0 || (height > 0 && width > 0);
+
+        public static Shape DefineBodyShape(float radius, float width, float height)
+        {
+            Shape bodyShape;
+            if (width <= 0 && height <= 0 && radius > 0)
+            {
+                bodyShape = Shape.Circle;
+            }
+            else if (radius > 0)
+            {
+                if (width > height)
+                {
+                    bodyShape = Shape.HorizontalCapsule;
+                }
+                else
+                {
+                    bodyShape = Shape.Capsule;
+                }
+            }
+            else
+            {
+                bodyShape = Shape.Rectangle;
+            }
+            return bodyShape;
+        }
 
         partial void DisposeProjSpecific();
     }

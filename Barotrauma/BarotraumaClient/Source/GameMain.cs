@@ -152,7 +152,7 @@ namespace Barotrauma
                 Config.Save();
             }
 
-            TextManager.LoadTextPacks(Path.Combine("Content", "Texts"));
+            TextManager.LoadTextPacks();
             
             ApplyGraphicsSettings();
 

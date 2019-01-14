@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -817,6 +818,12 @@ namespace Barotrauma
                 };
                 submarine.CreateMiniMap(orderTargetFrame, matchingItems);
 
+                new GUICustomComponent(new RectTransform(Vector2.One, orderTargetFrame.RectTransform), DrawMiniMapOverlay)
+                {
+                    CanBeFocused = false,
+                    UserData = submarine
+                };
+
                 List<GUIComponent> optionFrames = new List<GUIComponent>();
                 foreach (Item item in matchingItems)
                 {
@@ -904,6 +911,33 @@ namespace Barotrauma
             int shadowSize = (int)(200 * GUI.Scale);
             orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
                 { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, style: "OuterGlow", color: Color.Black * 0.65f);
+        }
+
+        private void DrawMiniMapOverlay(SpriteBatch spriteBatch, GUICustomComponent container)
+        {
+            Submarine sub = container.UserData as Submarine;
+
+            if (sub?.HullVertices == null) { return; }
+
+            var dockedBorders = sub.GetDockedBorders();
+            dockedBorders.Location += sub.WorldPosition.ToPoint();
+
+            float scale = Math.Min(
+                container.Rect.Width / (float)dockedBorders.Width,
+                container.Rect.Height / (float)dockedBorders.Height) * 0.9f;
+
+            float displayScale = ConvertUnits.ToDisplayUnits(scale);
+            Vector2 offset = (sub.WorldPosition - new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)) * scale;
+            Vector2 center = container.Rect.Center.ToVector2();
+            
+            for (int i = 0; i < sub.HullVertices.Count; i++)
+            {
+                Vector2 start = (sub.HullVertices[i] * displayScale + offset);
+                start.Y = -start.Y;
+                Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] * displayScale + offset);
+                end.Y = -end.Y;
+                GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
+            }            
         }
 
         #region Updating and drawing the UI

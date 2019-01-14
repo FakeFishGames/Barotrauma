@@ -636,6 +636,22 @@ namespace Barotrauma
                 Screen.Selected.Cam.MinZoom = minZoom;
                 Screen.Selected.Cam.MaxZoom = maxZoom;
             }));
+            
+            commands.Add(new Command("waterparams", "waterparams [distortionscalex] [distortionscaley] [distortionstrengthx] [distortionstrengthy] [bluramount]: default 0.5 0.5 0.5 0.5 1", (string[] args) =>
+            {
+                float distortScaleX = 0.5f, distortScaleY = 0.5f;
+                float distortStrengthX = 0.5f, distortStrengthY = 0.5f;
+                float blurAmount = 0.0f;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleX);
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleY);
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthX);
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthY);
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out blurAmount);
+                WaterRenderer.DistortionScale = new Vector2(distortScaleX, distortScaleY);
+                WaterRenderer.DistortionStrength = new Vector2(distortStrengthX, distortStrengthY);
+                WaterRenderer.BlurAmount = blurAmount;
+            },
+            null, null));
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
@@ -837,28 +853,42 @@ namespace Barotrauma
 
             commands.Add(new Command("reloadtextures|reloadtexture", "", (string[] args) =>
             {
-                var item = Character.Controlled.FocusedItem;
-                var character = Character.Controlled;
-                if (item != null)
+                if (Screen.Selected is SubEditorScreen subScreen)
                 {
-                    item.Sprite.ReloadTexture();
-                }
-                else if (character != null)
-                {
-                    foreach (var limb in character.AnimController.Limbs)
+                    if (!MapEntity.SelectedAny)
                     {
-                        limb.Sprite?.ReloadTexture();
-                        limb.DamagedSprite?.ReloadTexture();
-                        limb.DeformSprite?.Sprite.ReloadTexture();
-                        // TODO: update specular
-                        limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
-                        limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadTexture());
                     }
                 }
                 else
                 {
-                    ThrowError("Not controlling any character!");
-                    return;
+                    var character = Character.Controlled;
+                    var item = character?.FocusedItem;
+                    if (item != null)
+                    {
+                        item.Sprite.ReloadTexture();
+                    }
+                    else if (character != null)
+                    {
+                        foreach (var limb in character.AnimController.Limbs)
+                        {
+                            limb.Sprite?.ReloadTexture();
+                            limb.DamagedSprite?.ReloadTexture();
+                            limb.DeformSprite?.Sprite.ReloadTexture();
+                            // TODO: update specular
+                            limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                            limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
+                        }
+                    }
+                    else
+                    {
+                        ThrowError("Not controlling any character!");
+                        return;
+                    }
                 }
             }, isCheat: true));
 
@@ -962,18 +992,32 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
             }, isCheat: true));
 
-            commands.Add(new Command("reloadwearables|reloadxml", "Reload the wearable sprites (clothing) of a character.", args =>
+            commands.Add(new Command("reloadwearables|reloadxml", "In game, reloads the xml where limbs and wearable sprites (clothing) of the character is defined. In subeditor, reloads the xml definition of the selected item(s)/structure(s).", args =>
             {
-                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
-                if (character == null)
+                if (Screen.Selected is SubEditorScreen subScreen)
                 {
-                    ThrowError("Not controlling any character!");
-                    return;
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadXML());
+                    }
                 }
-                foreach (var limb in character.AnimController.Limbs)
+                else
                 {
-                    limb.WearingItems.ForEach(i => i.Sprite.ReloadXML());
-                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadXML());
+                    var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                    if (character == null)
+                    {
+                        ThrowError("Not controlling any character!");
+                        return;
+                    }
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        limb.WearingItems.ForEach(i => i.Sprite.ReloadXML());
+                        limb.OtherWearables.ForEach(w => w.Sprite.ReloadXML());
+                    }
                 }
             }, isCheat: true));
         }

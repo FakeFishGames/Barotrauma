@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     public static class TextManager
     {
-        private static List<TextPack> textPacks = new List<TextPack>();
+        //only used if none of the selected content packages contain any text files
+        const string VanillaTextFilePath = "Content/Texts/EnglishVanilla.xml";
+
+        //key = language
+        private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
 
         public static string Language;
-
+        
         private static HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
@@ -36,34 +38,69 @@ namespace Barotrauma
                 GetTextFilesRecursive(subDir, ref list);
             }
         }
-       
-        public static void LoadTextPacks(string directory)
+        
+        public static void LoadTextPacks()
         {
-            foreach (string file in Directory.GetFiles(directory))
+            var textFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Text);
+
+            foreach (string file in textFiles)
             {
                 try
                 {
                     var textPack = new TextPack(file);
                     availableLanguages.Add(textPack.Language);
-                    if (textPack.Language == Language) textPacks.Add(textPack);
+                    if (!textPacks.ContainsKey(textPack.Language))
+                    {
+                        textPacks.Add(textPack.Language, new List<TextPack>());
+                    }
+                    textPacks[textPack.Language].Add(textPack);
                 }
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
                 }
             }
-            foreach (string subDir in Directory.GetDirectories(directory))
+
+            if (textPacks.Count == 0)
             {
-                LoadTextPacks(subDir);
+                DebugConsole.ThrowError("No text files available in any of the selected content packages. Attempting to find a vanilla English text file...");
+                if (!File.Exists(VanillaTextFilePath))
+                {
+                    throw new Exception("No text files found in any of the selected content packages or in the default text path!");
+                }
+                var textPack = new TextPack(VanillaTextFilePath);
+                availableLanguages.Add(textPack.Language);
+                textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
         }
 
         public static string Get(string textTag, bool returnNull = false)
         {
-            foreach (TextPack textPack in textPacks)
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
                 if (text != null) return text;
+            }
+
+            //if text was not found and we're using a language other than English, see if we can find an English version
+            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
+            if (Language != "English" && textPacks.ContainsKey("English"))
+            {
+                foreach (TextPack textPack in textPacks["English"])
+                {
+                    string text = textPack.Get(textTag);
+                    if (text != null) return text;
+                }
             }
 
             if (returnNull)
@@ -72,7 +109,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
+                DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
                 return textTag;
             }
         }
