@@ -116,6 +116,7 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -134,6 +135,7 @@ namespace Barotrauma
             string mapSeed = msg.ReadString();
             UInt16 currentLocIndex = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            byte selectedMissionIndex = msg.ReadByte();
 
             int money = msg.ReadInt32();
 
@@ -188,6 +190,7 @@ namespace Barotrauma
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                campaign.Map.SelectMission(selectedMissionIndex);
 
                 campaign.Money = money;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);

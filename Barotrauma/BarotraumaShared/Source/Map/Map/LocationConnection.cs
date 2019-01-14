@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -18,28 +19,48 @@ namespace Barotrauma
 
         public int MissionsCompleted;
 
-        private Mission mission;
-        public Mission Mission
+        private List<Mission> availableMissions = new List<Mission>();
+        public IEnumerable<Mission> AvailableMissions
         {
             get
             {
-                if (mission == null || mission.Completed)
+                CheckMissionCompleted();
+
+                for (int i = availableMissions.Count; i < 3; i++)
                 {
-                    if (mission != null && mission.Completed) MissionsCompleted++;
+                    string seed = locations[0].Name + locations[1].Name;
+                    MTRandom rand = new MTRandom((ToolBox.StringToInt(seed) + MissionsCompleted * 10 + i) % int.MaxValue);
 
-                    long seed = (long)locations[0].MapPosition.X + (long)locations[0].MapPosition.Y * 100;
-                    seed += (long)locations[1].MapPosition.X * 10000 + (long)locations[1].MapPosition.Y * 1000000;
-
-                    MTRandom rand = new MTRandom((int)((seed + MissionsCompleted) % int.MaxValue));
-
-                    mission = Mission.LoadRandom(locations, rand, true, MissionType.Random, true);
+                    var mission = Mission.LoadRandom(locations, rand, true, MissionType.Random, true);
+                    if (mission == null) { break; }
+                    if (availableMissions.Any(m => m.Prefab == mission.Prefab)) { continue; }
                     if (GameSettings.VerboseLogging && mission != null)
                     {
                         DebugConsole.NewMessage("Generated a new mission for a location connection (seed: " + seed + ", type: " + mission.Name + ")", Color.White);
                     }
+                    availableMissions.Add(mission);
                 }
 
-                return mission;
+                return availableMissions;
+            }
+        }
+
+        public Mission SelectedMission
+        {
+            get;
+            set;
+        }
+
+        public int SelectedMissionIndex
+        {
+            get { return availableMissions.IndexOf(SelectedMission); }
+            set
+            {
+                if (value < 0 || value >= AvailableMissions.Count() )
+                {
+                    SelectedMission = null;
+                }
+                SelectedMission = availableMissions[value];
             }
         }
 
@@ -79,11 +100,15 @@ namespace Barotrauma
 
         public void CheckMissionCompleted()
         {
-            if (mission != null && mission.Completed)
+            foreach (Mission mission in availableMissions)
             {
-                MissionsCompleted++;
-                mission = null;
+                if (mission.Completed)
+                {
+                    MissionsCompleted++;
+                }
             }
+
+            availableMissions.RemoveAll(m => m.Completed);
         }
 
         public Location OtherLocation(Location location)

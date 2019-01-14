@@ -129,9 +129,16 @@ namespace Barotrauma
 
             var storeContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), tabs[(int)Tab.Store].RectTransform, Anchor.Center))
             {
+                Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.7f), storeContent.RectTransform), isHorizontal: true)
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform), "", font: GUI.LargeFont)
+            {
+                TextGetter = GetMoney
+            };
+
+            var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -338,9 +345,11 @@ namespace Barotrauma
             if (connection != null)
             {
                 Point maxTickBoxSize = new Point(int.MaxValue, missionContent.Rect.Height / 4) ;
-                List<Mission> availableMissions = new List<Mission>() { connection.Mission };
+                List<Mission> availableMissions = connection.AvailableMissions.ToList();
                 if (!availableMissions.Contains(null)) { availableMissions.Add(null); }
 
+                Mission selectedMission = connection.SelectedMission != null && connection.AvailableMissions.Contains(connection.SelectedMission) ?
+                    connection.SelectedMission : null;
                 List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
                 foreach (Mission mission in availableMissions)
                 {
@@ -348,11 +357,17 @@ namespace Barotrauma
                        mission?.Name ?? "No mission")
                     {
                         UserData = mission,
-                        OnSelected = (tb) => { if (tb.Selected) SelectMission(tb.UserData as Mission); return true; }
+                        Selected = mission == selectedMission,
+                        OnSelected = (tb) => 
+                        {
+                            if (tb.Selected) { SelectMission(tb.UserData as Mission); }
+                            Campaign.Map.OnMissionSelected?.Invoke(connection, mission);
+                            return true;
+                        }
                     };
                     missionTickBoxes.Add(tickBox);
                 }
-                GUITickBox.CreateRadioButtonGroup(missionTickBoxes);
+                SelectMission(selectedMission);
 
                 startButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
                     TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
@@ -369,7 +384,12 @@ namespace Barotrauma
 
         public void SelectMission(Mission mission)
         {
-            System.Diagnostics.Debug.Assert(mission == null || GameMain.GameSession.Map?.SelectedConnection?.Mission == mission);
+            System.Diagnostics.Debug.Assert(
+                mission == null ||
+                (GameMain.GameSession.Map?.SelectedConnection != null &&
+                GameMain.GameSession.Map.SelectedConnection.AvailableMissions.Contains(mission)));
+
+            GameMain.GameSession.Map.SelectedConnection.SelectedMission = mission;
 
             selectedMissionInfo.ClearChildren();
             var container = selectedMissionInfo.Content;
@@ -391,7 +411,6 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-
 
             if (startButton != null) { startButton.Enabled = true; }
         }
@@ -512,22 +531,16 @@ namespace Barotrauma
         {
             myItemList.Content.ClearChildren();
 
-            new GUITextBlock(new RectTransform(Vector2.One, myItemList.Content.RectTransform), "You cannot sell supplies in this version of Barotrauma - wait for future updates!", wrap: true)
+            foreach (PurchasedItem ip in Campaign.CargoManager.PurchasedItems)
             {
-                CanBeFocused = false
-            };
-
-            /*foreach (PurchasedItem ip in Campaign.CargoManager.PurchasedItems)
-            {
-                CreateItemFrame(ip, ip.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), selectedItemList, selectedItemList.Rect.Width);
+                CreateItemFrame(ip, ip.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
             }
-            selectedItemList.Content.RectTransform.SortChildren((x, y) => 
+            myItemList.Content.RectTransform.SortChildren((x, y) =>
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
-            selectedItemList.Content.RectTransform.SortChildren((x, y) => 
+            myItemList.Content.RectTransform.SortChildren((x, y) =>
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category));
-            selectedItemList.UpdateScrollBarSize();*/
+            myItemList.UpdateScrollBarSize();
         }
-
 
         public bool SelectTab(GUIButton button, object selection)
         {
