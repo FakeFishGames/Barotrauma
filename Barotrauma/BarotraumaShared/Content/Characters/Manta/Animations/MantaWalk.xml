@@ -9,14 +9,14 @@
   foottorque="5"
   legtorque="10"
   colliderstandangle="0"
-  footangles="17: 4.845266,26: 4.838658"
+  footangles="17: 1.528637,26: 4.838658,22: 0.8092585"
   stepsize="0.7948844,0.626456"
   headposition="5.579515"
-  torsoposition="4.986099"
+  torsoposition="5.134964"
   backwardsmovementmultiplier="0.75"
   movementspeed="2.588267"
   cyclespeed="0.4639686"
   headangle="-5"
   torsoangle="0"
   tailtorque="50"
-  tailangle="162.9287" />
+  tailangle="150.6038" />

@@ -34,7 +34,9 @@ namespace Barotrauma
         public const int DefaultBufferSize = 1500;
         public const int DefaultIndoorsBufferSize = 3000;
 
-        const float DistortionScale = 0.5f;
+        public static Vector2 DistortionScale = new Vector2(0.5f, 0.5f);
+        public static Vector2 DistortionStrength = new Vector2(0.5f, 0.5f);
+        public static float BlurAmount = 0.0f;
 
         public Vector2 WavePos
         {
@@ -86,22 +88,22 @@ namespace Barotrauma
             }
         }
 
-        public void RenderWater(SpriteBatch spriteBatch, RenderTarget2D texture, Camera cam, float blurAmount = 0.0f)
+        public void RenderWater(SpriteBatch spriteBatch, RenderTarget2D texture, Camera cam)
         {
             spriteBatch.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             
             WaterEffect.Parameters["xTexture"].SetValue(texture);
-            float waveStrength = cam == null ? 0.5f : 0.5f * cam.Zoom;
-            WaterEffect.Parameters["xWaveWidth"].SetValue(waveStrength);
-            WaterEffect.Parameters["xWaveHeight"].SetValue(waveStrength);
-            if (blurAmount > 0.0f)
+            Vector2 distortionStrength = cam == null ? DistortionStrength : DistortionStrength * cam.Zoom;
+            WaterEffect.Parameters["xWaveWidth"].SetValue(DistortionStrength.X);
+            WaterEffect.Parameters["xWaveHeight"].SetValue(DistortionStrength.Y);
+            if (BlurAmount > 0.0f)
             {
                 WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShaderBlurred"];
-                WaterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+                WaterEffect.Parameters["xBlurDistance"].SetValue(BlurAmount / 100.0f);
             }
             else
             {   WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShader"];
-                WaterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+                WaterEffect.Parameters["xBlurDistance"].SetValue(BlurAmount / 100.0f);
             }
 
             Vector2 offset = WavePos;
@@ -119,8 +121,8 @@ namespace Barotrauma
             if (cam != null)
             {
                 WaterEffect.Parameters["xBumpScale"].SetValue(new Vector2(
-                        (float)cam.WorldView.Width / GameMain.GraphicsWidth,
-                        (float)cam.WorldView.Height / GameMain.GraphicsHeight) * DistortionScale);
+                        (float)cam.WorldView.Width / GameMain.GraphicsWidth * DistortionScale.X,
+                        (float)cam.WorldView.Height / GameMain.GraphicsHeight * DistortionScale.Y));
                 WaterEffect.Parameters["xTransform"].SetValue(cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
                 WaterEffect.Parameters["xUvTransform"].SetValue(cam.ShaderTransform

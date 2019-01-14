@@ -127,5 +127,93 @@
       <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
+
+  <Item
+    name="Depth Decoy Shell"
+    identifier="depthdecoyshell"
+    tags="depthchargeammo,decoy"
+    category="Misc"
+    sonarsize="5"
+    scale="0.25">
+
+    <Price locationtype="Military" buyprice="140"/>
+    <Price locationtype="City" buyprice="150"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+
+    <Deconstruct time="10">
+      <Item identifier="steel"/>
+      <Item identifier="aluminium"/>
+    </Deconstruct>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
+    <Sprite texture="DepthChargeShell.png" sourcerect="0,0,253,172" depth="0.55"/>
+
+    <Body width="253" height="172" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
+
+    <Projectile characterusable="false" launchimpulse="5.0">
+      <AiTarget soundrange="20000" />
+      <Attack structuredamage="1" damagetype="Blunt">
+        <Affliction identifier="internaldamage" strength="10"/>
+      </Attack>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
+    </Projectile>
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable identifiers="smallitem,explosive"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Nuclear Depth Decoy"
+    identifier="nucleardepthdecoy"
+    tags="depthchargeammo,decoy"
+    category="Misc"
+    sonarsize="5"
+    scale="0.25">
+
+    <Price locationtype="Military" buyprice="300"/>
+    <Price locationtype="City" buyprice="400"/>
+    <Price locationtype="Outpost" buyprice="500"/>
+
+    <Deconstruct time="20">
+      <Item identifier="steel"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uex"/>
+    </Deconstruct>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64"/>
+    <Sprite texture="NuclearDepthCharge.png" sourcerect="0,0,253,172" depth="0.55"/>
+
+    <Body width="253" height="172" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
+
+    <Projectile characterusable="false" launchimpulse="5.0">
+      <AiTarget soundrange="20000" />
+      <Attack structuredamage="1" damagetype="Blunt">
+        <Affliction identifier="internaldamage" strength="10"/>
+      </Attack>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
+      <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
+        <Explosion range="1000.0" structuredamage="500" force="30.0">
+          <Affliction identifier="burn" strength="300"/>
+          <Affliction identifier="internaldamage" strength="300"/>
+          <Affliction identifier="stun" strength="5"/>
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
+    </Projectile>
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable identifiers="smallitem,explosive"/>
+    </ItemContainer>
+  </Item>
   
 </Items>

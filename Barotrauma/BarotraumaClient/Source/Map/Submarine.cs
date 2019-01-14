@@ -268,8 +268,8 @@ namespace Barotrauma
                 if (hull.Submarine != this && !DockedTo.Contains(hull.Submarine)) continue;
 
                 Vector2 relativeHullPos = new Vector2(
-                    (hull.WorldRect.X - worldBorders.X) / (float)Borders.Width, 
-                    (worldBorders.Y - hull.WorldRect.Y) / (float)Borders.Height);
+                    (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width, 
+                    (worldBorders.Y - hull.WorldRect.Y) / (float)worldBorders.Height);
                 Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
 
                 var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: Color.DarkCyan * 0.8f)

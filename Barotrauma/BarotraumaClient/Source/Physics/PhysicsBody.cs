@@ -71,7 +71,7 @@ namespace Barotrauma
                     new Vector2(DrawPosition.X, -DrawPosition.Y),
                     Color.Cyan, 0, 5);
             }
-            if (bodyShapeTexture == null)
+            if (bodyShapeTexture == null && IsValidShape(radius, height, width))
             {
                 switch (BodyShape)
                 {

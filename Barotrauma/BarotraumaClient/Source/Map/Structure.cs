@@ -115,6 +115,7 @@ namespace Barotrauma
         {
             if (!mergedSections.Any()) return;
             Rectangle mergedRect = GenerateMergedRect(mergedSections);
+            mergedRect.Location += BodyOffset.ToPoint();
 
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
 
