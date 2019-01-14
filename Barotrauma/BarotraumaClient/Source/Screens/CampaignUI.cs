@@ -113,19 +113,22 @@ namespace Barotrauma
             
             // store tab -------------------------------------------------------------------------
             
-            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), container.RectTransform, Anchor.TopLeft)
+            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform, Anchor.TopLeft)
             {
-                RelativeOffset = new Vector2(0.0f, topPanel.RectTransform.RelativeSize.Y)
+                RelativeOffset = new Vector2(0.1f, topPanel.RectTransform.RelativeSize.Y)
             }, color: Color.Black * 0.7f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Store].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
                 CanBeFocused = false
             };
 
+            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
+            //don't show categories with no buyable items
+            itemCategories.RemoveAll(c =>
+                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
 
             var storeContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), tabs[(int)Tab.Store].RectTransform, Anchor.Center))
             {
-                Stretch = true,
                 RelativeSpacing = 0.02f
             };
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.7f), storeContent.RectTransform), isHorizontal: true)
@@ -133,38 +136,39 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-
             myItemList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), storeItemLists.RectTransform));
-
             storeItemList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), storeItemLists.RectTransform))
             {
                 OnSelected = BuyItem
             };
 
-            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
-            
-            //don't show categories with no buyable items
-            itemCategories.RemoveAll(c => 
-                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
-
-            int x = 0;
-            int buttonWidth = storeItemList.Rect.Width / itemCategories.Count;
+            var categoryButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.1f, 0.9f), tabs[(int)Tab.Store].RectTransform, Anchor.CenterLeft, Pivot.CenterRight))
+            {
+                RelativeSpacing = 0.02f
+            };
             foreach (MapEntityCategory category in itemCategories)
             {
-                var categoryButton = new GUIButton(new RectTransform(new Point(buttonWidth, 30), tabs[(int)Tab.Store].RectTransform, Anchor.CenterRight, Pivot.BottomRight)
-                {
-                    AbsoluteOffset = new Point(x, -storeItemList.Rect.Height / 2)
-                }, category.ToString())
+                var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
+                    "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
                     OnClicked = SelectItemCategory
                 };
-
                 if (category == MapEntityCategory.Equipment)
                 {
                     SelectItemCategory(categoryButton, category);
                 }
-                x += buttonWidth;
+
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter),
+                    category.ToString(), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
+                {
+                    AutoScale = true,
+                    Color = Color.Transparent,
+                    HoverColor = Color.Transparent,
+                    PressedColor = Color.Transparent,
+                    SelectedColor = Color.Transparent,
+                    CanBeFocused = false
+                };
             }
 
             // mission info -------------------------------------------------------------------------

@@ -183,11 +183,55 @@
     hovercolor="136,153,150,240"
     selectedcolor="117,157,153,255"
     pressedcolor="80,90,88,255">
-    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="475,380,207,68" tile="false"  maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="475,380,207,68" tile="false" maintainaspectratio="true"/>
     <GUITextBlock
       textcolor="16,34,33,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUISlopedTabButtonRight>
+
+  <ItemCategoryEquipment
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="2,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryEquipment>
+
+  <ItemCategoryElectrical
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="156,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryElectrical>
+  
+  <ItemCategoryMaterial
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="314,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryMaterial>
+
+  <ItemCategoryMisc
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="472,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryMisc> 
   
   <GUIButtonServerListInfo
     color="102,150,175,255"
