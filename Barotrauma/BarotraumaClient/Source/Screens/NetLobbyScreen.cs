@@ -10,8 +10,7 @@ namespace Barotrauma
 {
     partial class NetLobbyScreen : Screen
     {
-        private GUIFrame menu;
-        private GUIFrame infoFrame;
+        private GUIFrame infoFrame, chatFrame, playerListFrame;
         private GUIFrame myCharacterFrame;
         private GUIListBox playerList;
 
@@ -247,27 +246,21 @@ namespace Barotrauma
 
         public NetLobbyScreen()
         {
-            int width = Math.Min(GameMain.GraphicsWidth - 80, 1500);
-            int height = Math.Min(GameMain.GraphicsHeight - 80, 800);
-
-            Rectangle panelRect = new Rectangle(0, 0, width, height);
-
-            menu = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), GUI.Canvas, Anchor.Center), style: null);
+            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center), style: null);
+            campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.75f), Frame.RectTransform, Anchor.TopCenter), style: null)
+            {
+                Visible = false
+            };
 
             float panelSpacing = 0.02f;
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.6f), menu.RectTransform));
-
-            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null);
-            campaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null)
-            {
-                Visible = false
-            };
+            infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.6f), defaultModeContainer.RectTransform));
+            var infoFrameContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null);
 
             //chatbox ----------------------------------------------------------------------
-            GUIFrame chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.4f - panelSpacing), menu.RectTransform, Anchor.BottomLeft));
+            chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.4f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomLeft));
             GUIFrame paddedChatFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), chatFrame.RectTransform, Anchor.Center), style: null);
 
             chatBox = new GUIListBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, paddedChatFrame.Rect.Height - 30), paddedChatFrame.RectTransform) { IsFixedSize = false });
@@ -277,13 +270,12 @@ namespace Barotrauma
                 Font = GUI.SmallFont
             };
 
-
             textBox.OnEnterPressed = (tb, userdata) => { GameMain.NetworkMember?.EnterChatMessage(tb, userdata); return true; };
             textBox.OnTextChanged += (tb, userdata) => { GameMain.NetworkMember?.TypingChatMessage(tb, userdata); return true; };
 
             //player info panel ------------------------------------------------------------
 
-            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), defaultModeContainer.RectTransform, Anchor.TopRight));
             playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
             playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
@@ -306,7 +298,7 @@ namespace Barotrauma
 
             //player list ------------------------------------------------------------------
 
-            GUIFrame playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.4f - panelSpacing), menu.RectTransform, Anchor.BottomRight));
+            playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.4f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomRight));
             GUIFrame paddedPlayerListFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), playerListFrame.RectTransform, Anchor.Center), style: null);
 
             playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
@@ -318,7 +310,7 @@ namespace Barotrauma
             //infoframe contents
             //--------------------------------------------------------------------------------------------------------------------------------
 
-            var infoColumnContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f - 0.02f, 0.75f), defaultModeContainer.RectTransform, Anchor.BottomLeft), 
+            var infoColumnContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f - 0.02f, 0.75f), infoFrameContent.RectTransform, Anchor.BottomLeft), 
                 isHorizontal: true, childAnchor: Anchor.BottomLeft)
                 { RelativeSpacing = 0.02f, Stretch = true };
             var leftInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
@@ -326,7 +318,7 @@ namespace Barotrauma
             var midInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
                 { RelativeSpacing = 0.02f, Stretch = true };
 
-            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), defaultModeContainer.RectTransform, Anchor.TopRight))
+            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), infoFrameContent.RectTransform, Anchor.TopRight))
                 { RelativeSpacing = 0.02f, Stretch = true };
             
             var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), rightInfoColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -340,7 +332,7 @@ namespace Barotrauma
 
             //server info ------------------------------------------------------------------
 
-            var serverName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), defaultModeContainer.RectTransform))
+            var serverName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), infoFrameContent.RectTransform))
             {
                 TextGetter = GetServerName,
                 Enabled = GameMain.Server != null,
@@ -348,7 +340,7 @@ namespace Barotrauma
             serverName.OnTextChanged += ChangeServerName;
             clientDisabledElements.Add(serverName);
 
-            serverMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), defaultModeContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+            serverMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
             {
                 Wrap = true
             };
@@ -538,24 +530,24 @@ namespace Barotrauma
                 TextGetter = AutoRestartText
             };
 
-            StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+            StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge");
             clientHiddenElements.Add(StartButton);
 
-            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("ReadyToStartTickBox"), GUI.SmallFont)
             {
                 Visible = false
             };
 
-            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                 TextManager.Get("CampaignView"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
                 Visible = false
             };
 
-            spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), defaultModeContainer.RectTransform, Anchor.BottomRight),
+            spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
         }
 
@@ -1438,11 +1430,16 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-              
-            menu.AddToGUIUpdateList();              
+
             playerFrame?.AddToGUIUpdateList();  
             campaignSetupUI?.AddToGUIUpdateList();
             jobInfoFrame?.AddToGUIUpdateList();
+
+            if (campaignContainer.Visible)
+            {
+                chatFrame.AddToGUIUpdateList();
+                playerListFrame.AddToGUIUpdateList();
+            }
         }
         
         public List<Submarine> GetSubList()
@@ -1499,7 +1496,6 @@ namespace Barotrauma
                 UserData = message,
                 CanBeFocused = false,
             };
-            //chatBox.AddChild(msg);
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
