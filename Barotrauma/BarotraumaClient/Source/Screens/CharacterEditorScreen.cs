@@ -65,7 +65,7 @@ namespace Barotrauma
         private float spriteSheetZoom = 1;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
-        private int spriteSheetOffsetY = 100;
+        private int spriteSheetOffsetY = 20;
         private int spriteSheetOffsetX;
         private bool hideBodySheet;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
@@ -549,8 +549,8 @@ namespace Barotrauma
             if (showSpritesheet)
             {
                 var topLeft = spriteSheetControls.RectTransform.TopLeft;
-                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
+                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
                     angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
 
@@ -1248,9 +1248,10 @@ namespace Barotrauma
             {
                 leftPanel.RectTransform.Parent = null;
             }
-            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.96f), parent: Frame.RectTransform, anchor: Anchor.TopCenter)
+            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
-                RelativeOffset = new Vector2(0.05f, 0.02f)
+                AbsoluteOffset = new Point((int)(rightPanel.RectTransform.ScaledSize.X + rightPanel.RectTransform.RelativeOffset.X * rightPanel.RectTransform.Parent.ScaledSize.X + 20), 20)
+
             }, style: null) { CanBeFocused = false };
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
             {
@@ -1262,14 +1263,10 @@ namespace Barotrauma
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             // General controls
-            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.BottomRight), style: null) { CanBeFocused = false };
-            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundColorPanel.RectTransform), childAnchor: Anchor.BottomRight)
-            {
-                AbsoluteSpacing = 5, CanBeFocused = false
-            };
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
             // Background color
-            var frame = new GUIFrame(new RectTransform(new Point(500, 80), layoutGroupGeneral.RectTransform), style: null, color: Color.Black * 0.4f);
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, "Background Color:", textColor: Color.WhiteSmoke);
+            var frame = new GUIFrame(new RectTransform(new Point(400, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, "Background \nColor:", textColor: Color.WhiteSmoke);
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight)
             {
                 AbsoluteOffset = new Point(20, 0)
@@ -1317,7 +1314,7 @@ namespace Barotrauma
                 }
             }
             // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), leftPanel.RectTransform, Anchor.TopLeft), style: null)
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.BottomLeft), style: null)
             {
                 CanBeFocused = false
             };
@@ -1385,7 +1382,7 @@ namespace Barotrauma
             //};
             // Limb controls
             limbControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.BottomLeft) { CanBeFocused = false };
+            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Lock Sprite Origin")
             {
                 Selected = lockSpriteOrigin,
@@ -1430,7 +1427,7 @@ namespace Barotrauma
             // Ragdoll
             Point sliderSize = new Point(300, 20);
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.BottomLeft) { CanBeFocused = false };
+            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), "Uniform Scale")
             {
                 Selected = uniformScaling,
