@@ -455,6 +455,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\securityofficer_torso_male.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\SecurityVest.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    	
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\CraftingElements1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
