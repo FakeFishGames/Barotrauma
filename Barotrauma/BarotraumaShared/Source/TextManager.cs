@@ -116,13 +116,36 @@ namespace Barotrauma
 
         public static string Get(string textTag, bool returnNull = false, params object[] args)
         {
-            foreach (TextPack textPack in textPacks)
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
                 if (text != null)
                 {
                     text = string.Format(text, args);
                     return text;
+                }
+            }
+
+            if (Language != "English" && textPacks.ContainsKey("English"))
+            {
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    string text = textPack.Get(textTag);
+                    if (text != null)
+                    {
+                        text = string.Format(text, args);
+                        return text;
+                    }
                 }
             }
 
