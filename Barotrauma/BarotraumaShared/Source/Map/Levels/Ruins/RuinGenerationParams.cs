@@ -412,6 +412,7 @@ namespace Barotrauma.RuinGeneration
 
         public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
+
         public int SingleGroupIndex;
 
         private readonly List<RuinEntityConfig> childEntities = new List<RuinEntityConfig>();        
@@ -441,18 +442,28 @@ namespace Barotrauma.RuinGeneration
             }
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            
+            int gIndex = 0;
+            LoadChildren(element, ref gIndex);
 
-            foreach (XElement subElement in element.Elements())
+            void LoadChildren(XElement element2, ref int groupIndex)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                foreach (XElement subElement in element2.Elements())
                 {
-                    case "connection":
-                    case "entityconnection":
-                        EntityConnections.Add(new EntityConnection(subElement));
-                        break;
-                    default:
-                        childEntities.Add(new RuinEntityConfig(subElement));
-                        break;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "connection":
+                        case "entityconnection":
+                            EntityConnections.Add(new EntityConnection(subElement));
+                            break;
+                        case "chooseone":
+                            groupIndex++;
+                            LoadChildren(subElement, ref groupIndex);
+                            break;
+                        default:
+                            childEntities.Add(new RuinEntityConfig(subElement) { SingleGroupIndex = groupIndex });
+                            break;
+                    }
                 }
             }
         }
