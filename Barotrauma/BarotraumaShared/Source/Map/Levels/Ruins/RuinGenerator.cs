@@ -874,9 +874,32 @@ namespace Barotrauma.RuinGeneration
             }            
         }
 
-        private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
+        private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room, Rand.RandSync randSync = Rand.RandSync.Server)
         {
-            foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
+            Dictionary<int, List<RuinEntityConfig>> propGroups = new Dictionary<int, List<RuinEntityConfig>>();
+            foreach (RuinEntityConfig entityConfig in parentEntityConfig.ChildEntities)
+            {
+                if (!propGroups.ContainsKey(entityConfig.SingleGroupIndex))
+                {
+                    propGroups[entityConfig.SingleGroupIndex] = new List<RuinEntityConfig>();
+                }
+                propGroups[entityConfig.SingleGroupIndex].Add(entityConfig);
+            }
+
+            List<RuinEntityConfig> props = new List<RuinEntityConfig>();
+            foreach (KeyValuePair<int, List<RuinEntityConfig>> propGroup in propGroups)
+            {
+                if (propGroup.Key == 0)
+                {
+                    props.AddRange(propGroup.Value);
+                }
+                else
+                {
+                    props.Add(propGroup.Value[Rand.Int(propGroup.Value.Count, randSync)]);
+                }
+            }
+
+            foreach (RuinEntityConfig childEntity in props)
             {
                 var childRoom = FindRoom(childEntity.PlacementRelativeToParent, room);
                 if (childRoom != null)
