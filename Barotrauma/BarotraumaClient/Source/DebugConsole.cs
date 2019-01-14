@@ -371,7 +371,7 @@ namespace Barotrauma
                 }
             }, isCheat: false));
 
-            commands.Add(new Command("color|colour|spritecolor|spritecolour", "Change color (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
+            commands.Add(new Command("color|colour", "Change color (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
