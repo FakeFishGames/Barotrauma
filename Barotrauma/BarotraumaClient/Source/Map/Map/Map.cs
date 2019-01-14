@@ -382,6 +382,7 @@ namespace Barotrauma
                     CurrentLocation = highlightedLocation;
                     CurrentLocation.Discovered = true;
                     OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+                    SelectLocation(-1);
                     ProgressWorld();
                 }
 #endif
@@ -609,7 +610,7 @@ namespace Barotrauma
                 pos.Y -= 5 * zoom;
                 Vector2 size = GUI.LargeFont.MeasureString(location.Name);
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)size.Y + 25), Color.Black * 0.7f);
+                    spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)size.Y + 25), Color.Black * hudOpenState * 0.7f);
                 GUI.DrawString(spriteBatch, pos, 
                     location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
                 GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, 

@@ -16,7 +16,6 @@ namespace Barotrauma
         private GUIButton startButton;
         
         private GUIFrame topPanel;
-        private GUITextBlock locationTitle;
 
         private GUIListBox characterList;
 
@@ -29,10 +28,15 @@ namespace Barotrauma
 
         private GUIFrame characterPreviewFrame;
 
+        private List<GUIButton> tabButtons = new List<GUIButton>();
+        private List<GUIButton> itemCategoryButtons = new List<GUIButton>();
+
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
 
         public Level SelectedLevel { get; private set; }
+
+        public GUIComponent MapContainer { get; private set; }
 
         public CampaignMode Campaign { get; }
 
@@ -40,8 +44,8 @@ namespace Barotrauma
         {
             this.Campaign = campaign;
 
-            var map = new GUICustomComponent(new RectTransform(Vector2.One, container.RectTransform), DrawMap, UpdateMap);
-            new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), style: "InnerGlow", color: Color.Black * 0.9f)
+            MapContainer = new GUICustomComponent(new RectTransform(Vector2.One, container.RectTransform), DrawMap, UpdateMap);
+            new GUIFrame(new RectTransform(Vector2.One, MapContainer.RectTransform), style: "InnerGlow", color: Color.Black * 0.9f)
             {
                 CanBeFocused = false
             };
@@ -52,40 +56,46 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            var topPanelContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), topPanel.RectTransform, Anchor.BottomCenter), style: null);
-
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), "Outpost",
-                textAlignment: Alignment.Center, font: GUI.LargeFont, style: "GUISlopedHeader")
+            var topPanelContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), topPanel.RectTransform, Anchor.BottomCenter), style: null)
             {
-                AutoScale = true
+                CanBeFocused = false
             };
 
-            var tabButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.3f), topPanelContent.RectTransform, Anchor.BottomLeft), isHorizontal: true)
+            var outpostBtn = new GUIButton(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), 
+                TextManager.Get("Outpost"), textAlignment: Alignment.Center, style: "GUISlopedHeader")
             {
-                RelativeSpacing = -0.05f
+             OnClicked = (btn, userdata) => { SelectTab(Tab.None); return true; }   
             };
+            outpostBtn.TextBlock.Font = GUI.LargeFont;
+            outpostBtn.TextBlock.AutoScale = true;
+
+            var tabButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.3f), topPanelContent.RectTransform, Anchor.BottomLeft), isHorizontal: true);
 
             int i = 0;
             var tabValues = Enum.GetValues(typeof(Tab));
             foreach (Tab tab in tabValues)
             {
-                var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonContainer.RectTransform),
+                var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonContainer.RectTransform),
                     TextManager.Get(tab.ToString()),
                     textAlignment: Alignment.Center,
                     style: i == 0 ? "GUISlopedTabButtonLeft" : (i == tabValues.Length - 1 ? "GUISlopedTabButtonRight" : "GUISlopedTabButtonMid"))
                 {
                     UserData = tab,
-                    OnClicked = SelectTab,
+                    OnClicked = (btn, userdata) => { SelectTab((Tab)userdata); return true; },
                     Selected = tab == Tab.None
                 };
-                btn.Font = GUI.LargeFont;
+                var buttonSprite = tabButton.Style.Sprites[GUIComponent.ComponentState.None][0];
+                tabButton.RectTransform.MaxSize = new Point(
+                    (int)(tabButton.Rect.Height * (buttonSprite.Sprite.size.X / buttonSprite.Sprite.size.Y)), int.MaxValue);
+                tabButtons.Add(tabButton);
+                tabButton.Font = GUI.LargeFont;
                 i++;
             }
 
             // crew tab -------------------------------------------------------------------------
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
-            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform, Anchor.TopLeft)
+            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.7f), container.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.0f, topPanel.RectTransform.RelativeSize.Y)
             }, color: Color.Black * 0.7f);
@@ -106,17 +116,20 @@ namespace Barotrauma
                 CanBeFocused = false,
                 AutoScale = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), characterList.Content.RectTransform),
-                TextManager.Get("CampaignMenuHireable"), font: GUI.LargeFont)
+            if (campaign is SinglePlayerCampaign)
             {
-                UserData = "hire",
-                CanBeFocused = false,
-                AutoScale = true
-            };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), characterList.Content.RectTransform),
+                    TextManager.Get("CampaignMenuHireable"), font: GUI.LargeFont)
+                {
+                    UserData = "hire",
+                    CanBeFocused = false,
+                    AutoScale = true
+                };
+            }
             
             // store tab -------------------------------------------------------------------------
             
-            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform, Anchor.TopLeft)
+            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), container.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.1f, topPanel.RectTransform.RelativeSize.Y)
             }, color: Color.Black * 0.7f);
@@ -162,15 +175,12 @@ namespace Barotrauma
                     "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
-                    OnClicked = SelectItemCategory
+                    OnClicked = (btn, userdata) => { SelectItemCategory((MapEntityCategory)userdata); return true; }
                 };
-                if (category == MapEntityCategory.Equipment)
-                {
-                    SelectItemCategory(categoryButton, category);
-                }
+                itemCategoryButtons.Add(categoryButton);
 
                 new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter),
-                    category.ToString(), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
+                   TextManager.Get("MapEntityCategory." + category), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
                 {
                     AutoScale = true,
                     Color = Color.Transparent,
@@ -180,6 +190,7 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
+            SelectItemCategory(MapEntityCategory.Equipment);
 
             // mission info -------------------------------------------------------------------------
 
@@ -197,7 +208,7 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.15f), missionPanel.RectTransform, Anchor.TopRight, Pivot.BottomRight)
-            { RelativeOffset = new Vector2(0.1f, -0.05f) }, "Mission",
+            { RelativeOffset = new Vector2(0.1f, -0.05f) }, TextManager.Get("Mission"),
                 textAlignment: Alignment.Center, font: GUI.LargeFont, style: "GUISlopedHeader")
             {
                 AutoScale = true
@@ -238,38 +249,66 @@ namespace Barotrauma
                 characterPreviewFrame.Parent.RemoveChild(characterPreviewFrame);
                 characterPreviewFrame = null;
             }
-
-            var hireableCharacters = location.GetHireableCharacters();
-            foreach (GUIComponent child in characterList.Content.Children.ToList())
+            
+            if (Campaign is SinglePlayerCampaign)
             {
-                if (child.UserData is CharacterInfo character)
+                var hireableCharacters = location.GetHireableCharacters();
+                foreach (GUIComponent child in characterList.Content.Children.ToList())
                 {
-                    if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                    if (child.UserData is CharacterInfo character)
+                    {
+                        if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                    }
+                    else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                    {
+                        continue;
+                    }
+                    characterList.RemoveChild(child);
                 }
-                else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                if (!hireableCharacters.Any())
                 {
-                    continue;
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
+                    {
+                        CanBeFocused = false
+                    };
                 }
-                characterList.RemoveChild(child);
-            }
-            if (!hireableCharacters.Any())
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
+                else
                 {
-                    CanBeFocused = false
-                };
-            }
-            else
-            {
-                foreach (CharacterInfo c in hireableCharacters)
-                {
-                    var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
-                    new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                    foreach (CharacterInfo c in hireableCharacters)
+                    {
+                        var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
+                        new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                    }
                 }
             }
             characterList.UpdateScrollBarSize();
 
             RefreshItemTab();
+
+            bool purchaseableItemsFound = false;
+            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            {
+                var itemPrefab = mapEntityPrefab as ItemPrefab;
+                if (itemPrefab == null) { continue; }
+
+                PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
+                if (priceInfo != null) { purchaseableItemsFound = true; break; }
+            }
+
+            //disable store tab if there's nothing to buy
+            tabButtons.Find(btn => (Tab)btn.UserData == Tab.Store).Enabled = purchaseableItemsFound;
+
+            if (selectedTab == Tab.Store && !purchaseableItemsFound)
+            {
+                //switch out from store tab if there's nothing to buy
+                SelectTab(Tab.None);
+            }
+            else
+            {
+                //refresh store view
+                SelectItemCategory(MapEntityCategory.Equipment);
+            }
+            
         }
         
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
@@ -282,14 +321,6 @@ namespace Barotrauma
             GameMain.GameSession?.Map?.Update(deltaTime, mapContainer);
         }
         
-        public void RefreshLocationTexts()
-        {
-            if (locationTitle != null)
-            {
-                locationTitle.Text = TextManager.Get("Location") + ": " + Campaign.Map.CurrentLocation.Name;
-            }
-        }
-
         public void UpdateCharacterLists()
         {
             int placeIndex = 1;
@@ -320,7 +351,7 @@ namespace Barotrauma
             missionPanel.Visible = location != null;
             
             if (location == null) { return; }
-
+            
             var container = selectedLocationInfo;
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Name, font: GUI.LargeFont)
             {
@@ -546,44 +577,30 @@ namespace Barotrauma
             myItemList.Content.RectTransform.SortChildren((x, y) =>
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category));
             myItemList.UpdateScrollBarSize();
-        }
 
-        public bool SelectTab(GUIButton button, object selection)
-        {
-            if (button != null)
-            {
-                button.Selected = true;
-                foreach (GUIComponent child in button.Parent.Children)
-                {
-                    GUIButton otherButton = child as GUIButton;
-                    if (otherButton == null || otherButton == button) { continue; }
-                    otherButton.Selected = false;
-                }
-            }
-            SelectTab((Tab)selection);
-            return true;
+            storeItemList.Content.ClearChildren();
         }
-
+        
         public void SelectTab(Tab tab)
         {
             selectedTab = tab;
-            for (int i = 0; i< tabs.Length; i++)
+            for (int i = 0; i < tabs.Length; i++)
             {
                 if (tabs[i] != null)
                 {
-                    tabs[i].Visible = (int)selectedTab == i;            
+                    tabs[i].Visible = (int)selectedTab == i;
                 }
+            }
+            foreach (GUIButton button in tabButtons)
+            {
+                button.Selected = (Tab)button.UserData == tab;
             }
         }
 
-        private bool SelectItemCategory(GUIButton button, object selection)
+        private bool SelectItemCategory(MapEntityCategory category)
         {
-            if (!(selection is MapEntityCategory)) return false;
-
             storeItemList.ClearChildren();
-            storeItemList.BarScroll = 0.0f;
-                        
-            MapEntityCategory category = (MapEntityCategory)selection;
+
             int width = storeItemList.Rect.Width;
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
@@ -599,16 +616,13 @@ namespace Barotrauma
             storeItemList.Content.RectTransform.SortChildren(
                 (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
 
-            foreach (GUIComponent child in button.Parent.Children)
+            foreach (GUIButton btn in itemCategoryButtons)
             {
-                var otherButton = child as GUIButton;
-                if (child.UserData is MapEntityCategory && otherButton != button)
-                {
-                    otherButton.Selected = false;
-                }
+                btn.Selected = (MapEntityCategory)btn.UserData == category;
             }
 
-            button.Selected = true;
+            storeItemList.BarScroll = 0.0f;
+
             return true;
         }
 

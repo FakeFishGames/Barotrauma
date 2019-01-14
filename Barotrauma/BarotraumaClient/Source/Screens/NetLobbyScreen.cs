@@ -256,11 +256,11 @@ namespace Barotrauma
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.6f), defaultModeContainer.RectTransform));
+            infoFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.65f), defaultModeContainer.RectTransform));
             var infoFrameContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center), style: null);
 
             //chatbox ----------------------------------------------------------------------
-            chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.4f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomLeft));
+            chatFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.35f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomLeft));
             GUIFrame paddedChatFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), chatFrame.RectTransform, Anchor.Center), style: null);
 
             chatBox = new GUIListBox(new RectTransform(new Point(paddedChatFrame.Rect.Width, paddedChatFrame.Rect.Height - 30), paddedChatFrame.RectTransform) { IsFixedSize = false });
@@ -275,7 +275,7 @@ namespace Barotrauma
 
             //player info panel ------------------------------------------------------------
 
-            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), defaultModeContainer.RectTransform, Anchor.TopRight));
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.65f), defaultModeContainer.RectTransform, Anchor.TopRight));
             playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
             playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
@@ -298,7 +298,7 @@ namespace Barotrauma
 
             //player list ------------------------------------------------------------------
 
-            playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.4f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomRight));
+            playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.35f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomRight));
             GUIFrame paddedPlayerListFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), playerListFrame.RectTransform, Anchor.Center), style: null);
 
             playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
@@ -1474,6 +1474,10 @@ namespace Barotrauma
             GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            if (campaignUI != null)
+            {
+                campaignUI.MapContainer.DrawAuto(spriteBatch);
+            }
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
@@ -1542,6 +1546,7 @@ namespace Barotrauma
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren || modeList.SelectedIndex == modeIndex) return;
 
+            //TODO: don't use the name of the game mode to determine its type
             if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name == "Campaign")
             {
                 if (GameMain.Server != null)
@@ -1556,6 +1561,7 @@ namespace Barotrauma
             }
 
             modeList.Select(modeIndex, true);
+            //TODO: don't use the name of the game mode to determine its type
             missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
         }
 
@@ -1566,6 +1572,7 @@ namespace Barotrauma
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
 
+            //TODO: don't use the name of the game mode to determine its type
             missionTypeContainer.Visible = modePreset.Name == "Mission";
 
             if (modePreset.Name == "Campaign")
@@ -1621,9 +1628,10 @@ namespace Barotrauma
                     {
                         StartRound = () => { GameMain.Server.StartGame(); }
                     };
+                    campaignUI.MapContainer.RectTransform.NonScaledSize = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
-                    var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
-                        TextManager.Get("Back"));
+                    var backButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.08f), campaignContainer.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) },
+                        TextManager.Get("Back"), style: "GUIButtonLarge");
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
                     
                     var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
@@ -1632,6 +1640,10 @@ namespace Barotrauma
                     };
                 }
                 modeList.Select(2, true);
+            }
+            else
+            {
+                campaignUI = null;
             }
 
             if (GameMain.Server != null)

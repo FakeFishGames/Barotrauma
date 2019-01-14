@@ -44,7 +44,6 @@ namespace Barotrauma
                 OnLocationSelected = SelectLocation
             };
             campaignUI.UpdateCharacterLists();
-            campaignUI.RefreshLocationTexts();
 
             GameAnalyticsManager.SetCustomDimension01("singleplayer");
         }

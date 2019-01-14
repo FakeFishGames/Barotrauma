@@ -217,25 +217,26 @@ namespace Barotrauma
                 (TextSize.X * textScale > rect.Width - padding.X - padding.Z || TextSize.Y * textScale > rect.Height - padding.Y - padding.W))
             {
                 TextScale -= 0.05f;
+                return;
             }
 
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
-            origin = TextSize * 0.5f;
+            origin = TextSize / textScale * 0.5f;
 
             if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
-                origin.X += (rect.Width / 2.0f - padding.X) - TextSize.X / 2;
+                origin.X += (rect.Width / 2.0f - TextSize.X / 2) / textScale - padding.X;
             
             if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
-                origin.X -= (rect.Width / 2.0f - padding.Z) - TextSize.X / 2;
+                origin.X -= (rect.Width / 2.0f - TextSize.X / 2) / textScale - padding.Z;
 
             if (textAlignment.HasFlag(Alignment.Top))
-                origin.Y += (rect.Height / 2.0f - padding.Y) - TextSize.Y / 2;
+                origin.Y += (rect.Height / 2.0f - TextSize.Y / 2) / textScale - padding.Y;
 
             if (textAlignment.HasFlag(Alignment.Bottom))
-                origin.Y -= (rect.Height / 2.0f - padding.W) - TextSize.Y / 2;
+                origin.Y -= (rect.Height / 2.0f - TextSize.Y / 2) / textScale - padding.W;
             
-            origin.X = (int)(origin.X / textScale);
-            origin.Y = (int)(origin.Y / textScale);
+            origin.X = (int)(origin.X);
+            origin.Y = (int)(origin.Y);
 
             textPos.X = (int)textPos.X;
             textPos.Y = (int)textPos.Y;
