@@ -48,10 +48,13 @@ namespace Barotrauma
 
             // top panel -------------------------------------------------------------------------
 
-            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), container.RectTransform, Anchor.TopCenter), style: null);
+            topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), container.RectTransform, Anchor.TopCenter), style: null)
+            {
+                CanBeFocused = false
+            };
             var topPanelContent = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), topPanel.RectTransform, Anchor.BottomCenter), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), "Outpost", 
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), "Outpost",
                 textAlignment: Alignment.Center, font: GUI.LargeFont, style: "GUISlopedHeader")
             {
                 AutoScale = true
@@ -72,12 +75,12 @@ namespace Barotrauma
                     style: i == 0 ? "GUISlopedTabButtonLeft" : (i == tabValues.Length - 1 ? "GUISlopedTabButtonRight" : "GUISlopedTabButtonMid"))
                 {
                     UserData = tab,
-                    OnClicked = SelectTab                    
+                    OnClicked = SelectTab,
+                    Selected = tab == Tab.None
                 };
                 btn.Font = GUI.LargeFont;
                 i++;
             }
-
 
             // crew tab -------------------------------------------------------------------------
 
@@ -367,6 +370,7 @@ namespace Barotrauma
                     };
                     missionTickBoxes.Add(tickBox);
                 }
+                GUITickBox.CreateRadioButtonGroup(missionTickBoxes);
                 SelectMission(selectedMission);
 
                 startButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
@@ -394,11 +398,13 @@ namespace Barotrauma
             selectedMissionInfo.ClearChildren();
             var container = selectedMissionInfo.Content;
             selectedMissionInfo.Visible = mission != null;
+            selectedMissionInfo.Spacing = 10;
             if (mission == null) { return; }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
-                TextManager.Get("Mission") + ": " + mission.Name)
+                mission.Name, font: GUI.LargeFont)
             {
+                AutoScale = true,
                 CanBeFocused = false
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),

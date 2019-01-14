@@ -146,6 +146,7 @@ namespace Barotrauma
         public SpriteSheet ReticleSmall { get; private set; }
 
         public Sprite MapCircle { get; private set; }
+        public Sprite LocationIndicator { get; private set; }
 #endif
 
         public List<Sprite> BackgroundTileSprites { get; private set; }
@@ -197,6 +198,9 @@ namespace Barotrauma
 #if CLIENT
                     case "mapcircle":
                         MapCircle = new Sprite(subElement);
+                        break;
+                    case "locationindicator":
+                        LocationIndicator = new Sprite(subElement);
                         break;
                     case "decorativemapsprite":
                         DecorativeMapSprite = new SpriteSheet(subElement);
