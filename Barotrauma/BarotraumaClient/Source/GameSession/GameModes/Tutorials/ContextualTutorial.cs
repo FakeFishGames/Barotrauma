@@ -197,7 +197,7 @@ namespace Barotrauma.Tutorials
                 {
                     inputGracePeriodTimer += deltaTime;
                 }
-                else if (Keyboard.GetState().GetPressedKeys().Length > 0)
+                else if (Keyboard.GetState().GetPressedKeys().Length > 0 || Mouse.GetState().LeftButton == ButtonState.Pressed || Mouse.GetState().RightButton == ButtonState.Pressed)
                 {
                     switch (activeSegment.ContentType)
                     {
