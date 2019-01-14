@@ -110,8 +110,9 @@ namespace Barotrauma
             if (cam != null)
             {
                 offset += (cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f));
-                offset.Y += cam.WorldView.Height * DistortionScale.X;
-                offset.X += cam.WorldView.Width * DistortionScale.Y;
+                offset.Y += cam.WorldView.Height;
+                offset.X += cam.WorldView.Width;
+                offset *= DistortionScale;
             }
             offset.Y = -offset.Y;
             WaterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
@@ -165,8 +166,9 @@ namespace Barotrauma
                 if (cam != null)
                 {
                     offset += cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f);
-                    offset.Y += cam.WorldView.Height * DistortionScale.X;
-                    offset.X += cam.WorldView.Width * DistortionScale.Y;
+                    offset.Y += cam.WorldView.Height;
+                    offset.X += cam.WorldView.Width;
+                    offset *= DistortionScale;
                 }
                 offset.Y = -offset.Y;
                 WaterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
