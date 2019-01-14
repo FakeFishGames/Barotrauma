@@ -149,11 +149,15 @@
 
   <GUISlopedHeader
     color="73,157,148,240"
-    hovercolor="73,157,148,240"
+    hovercolor="145,204,198,240"
     selectedcolor="73,157,148,240"
+    pressedcolor="50,109,103,240"
     textcolor="14,35,33,255"
     padding="10.0, 0.0, 10.0, 0.0">
     <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="10,461,404,101" tile="false"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="20.0, 0.0, 20.0, 0.0"/>
   </GUISlopedHeader>
 
   <GUISlopedTabButtonLeft
@@ -164,7 +168,7 @@
     <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="11,380,207,68" tile="false" maintainaspectratio="true"/>
     <GUITextBlock
       textcolor="16,34,33,255"
-      padding="10.0, 0.0, 10.0, 0.0"/>
+      padding="20.0, 0.0, 20.0, 0.0"/>
   </GUISlopedTabButtonLeft>
 
   <GUISlopedTabButtonMid
@@ -175,7 +179,7 @@
     <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="218,380,257,68" tile="false" maintainaspectratio="true"/>
     <GUITextBlock
       textcolor="16,34,33,255"
-      padding="10.0, 0.0, 10.0, 0.0"/>
+      padding="20.0, 0.0, 20.0, 0.0"/>
   </GUISlopedTabButtonMid>
 
   <GUISlopedTabButtonRight
@@ -186,7 +190,7 @@
     <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="475,380,207,68" tile="false" maintainaspectratio="true"/>
     <GUITextBlock
       textcolor="16,34,33,255"
-      padding="10.0, 0.0, 10.0, 0.0"/>
+      padding="20.0, 0.0, 20.0, 0.0"/>
   </GUISlopedTabButtonRight>
 
   <ItemCategoryEquipment
