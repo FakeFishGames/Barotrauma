@@ -516,7 +516,7 @@ namespace Barotrauma
         // The value should always be copied from the prefab. Editing is enabled only for testing the scale in the sub editor (changes are not saved).
 
 #if DEBUG
-        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3)]
+        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
 #else
         [Serialize(1f, false)]
 #endif
