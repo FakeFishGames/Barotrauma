@@ -101,6 +101,8 @@ namespace Barotrauma
             }
         }
 
+        public float valueStep;
+
         private float pressedTimer;
         private float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
@@ -128,28 +130,14 @@ namespace Barotrauma
             };
             PlusButton.OnClicked += (button, data) =>
             {
-                if (inputType == NumberType.Int)
-                {
-                    IntValue++;
-                }
-                else if (inputType == NumberType.Float)
-                {
-                    FloatValue += Round();
-                }
+                IncreaseValue();
                 return true;
             };
             PlusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
-                    if (inputType == NumberType.Int)
-                    {
-                        IntValue++;
-                    }
-                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
-                    {
-                        FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
-                    }
+                    IncreaseValue();
                 }
                 return true;
             };
@@ -163,28 +151,14 @@ namespace Barotrauma
             };
             MinusButton.OnClicked += (button, data) =>
             {
-                if (inputType == NumberType.Int)
-                {
-                    IntValue--;
-                }
-                else if (inputType == NumberType.Float)
-                {
-                    FloatValue -= Round();
-                }
+                ReduceValue();
                 return true;
             };
             MinusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
-                    if (inputType == NumberType.Int)
-                    {
-                        IntValue--;
-                    }
-                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
-                    {
-                        FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
-                    }
+                    ReduceValue();
                 }
                 return true;
             };
@@ -221,6 +195,30 @@ namespace Barotrauma
                 case NumberType.Float:
                     TextBox.textFilterFunction = text => new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
                     break;
+            }
+        }
+
+        private void ReduceValue()
+        {
+            if (inputType == NumberType.Int)
+            {
+                IntValue -= valueStep > 0 ? (int)valueStep : 1;
+            }
+            else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+            {
+                FloatValue -= valueStep > 0 ? valueStep : Round();
+            }
+        }
+
+        private void IncreaseValue()
+        {
+            if (inputType == NumberType.Int)
+            {
+                IntValue += valueStep > 0 ? (int)valueStep : 1;
+            }
+            else if (inputType == NumberType.Float)
+            {
+                FloatValue += valueStep > 0 ? valueStep : Round();
             }
         }
 
