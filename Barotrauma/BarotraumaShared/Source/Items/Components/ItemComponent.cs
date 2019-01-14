@@ -300,7 +300,10 @@ namespace Barotrauma.Items.Components
 
                         break;
                     case "aitarget":
-                        AITarget = new AITarget(item, subElement);
+                        AITarget = new AITarget(item, subElement)
+                        {
+                            Enabled = isActive
+                        };
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
