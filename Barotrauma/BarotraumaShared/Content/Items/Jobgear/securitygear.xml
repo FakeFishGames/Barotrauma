@@ -54,8 +54,7 @@
       <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48" />
-      <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1.1" />
+      <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
     </Wearable>
   </Item>
   <Item name="Ballistic Helmet" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
