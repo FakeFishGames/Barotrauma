@@ -855,6 +855,7 @@ namespace Barotrauma.RuinGeneration
                 {
                     ExpandEntities(entities);
                 }
+                CreateChildEntities(entityConfig, entity, room);
             }
             else
             {
