@@ -438,6 +438,15 @@ namespace Barotrauma
                         break;
                 }
             }
+            
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
 
             //save to get rid of the invalid selected packages in the config file
             if (invalidPackagesFound) { Save(); }

@@ -18,6 +18,7 @@ namespace Barotrauma
         Character,
         Structure,
         Outpost,
+        Text,
         Executable,
         ServerExecutable,
         LocationTypes,
@@ -57,8 +58,37 @@ namespace Barotrauma
             ContentType.Missions,
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
+            ContentType.Outpost,
             ContentType.Afflictions
         };
+
+        //at least one file of each these types is required in core content packages
+        private static HashSet<ContentType> corePackageRequiredFiles = new HashSet<ContentType>
+        {
+            ContentType.Jobs,
+            ContentType.Item,
+            ContentType.Character,
+            ContentType.Structure,
+            ContentType.Outpost,
+            ContentType.Text,
+            ContentType.Executable,
+            ContentType.ServerExecutable,
+            ContentType.LocationTypes,
+            ContentType.MapGenerationParameters,
+            ContentType.LevelGenerationParameters,
+            ContentType.RandomEvents,
+            ContentType.Missions,
+            ContentType.BackgroundCreaturePrefabs,
+            ContentType.RuinConfig,
+            ContentType.NPCConversations,
+            ContentType.Afflictions,
+            ContentType.UIStyle
+        };
+
+        public static IEnumerable<ContentType> CorePackageRequiredFiles
+        {
+            get { return corePackageRequiredFiles; }
+        }
 
         public string Name { get; set; }
 
@@ -175,6 +205,23 @@ namespace Barotrauma
             //do additional checks here if later versions add changes that break compatibility
 
             return true;
+        }
+
+        public bool ContainsRequiredCorePackageFiles()
+        {
+            return corePackageRequiredFiles.All(fileType => Files.Any(file => file.Type == fileType));
+        }
+        public bool ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes)
+        {
+            missingContentTypes = new List<ContentType>();
+            foreach (ContentType contentType in corePackageRequiredFiles)
+            {
+                if (!Files.Any(file => file.Type == contentType))
+                {
+                    missingContentTypes.Add(contentType);
+                }
+            }
+            return missingContentTypes.Count == 0;
         }
 
         public static ContentPackage CreatePackage(string name, string path, bool corePackage)

@@ -636,6 +636,22 @@ namespace Barotrauma
                 Screen.Selected.Cam.MinZoom = minZoom;
                 Screen.Selected.Cam.MaxZoom = maxZoom;
             }));
+            
+            commands.Add(new Command("waterparams", "waterparams [distortionscalex] [distortionscaley] [distortionstrengthx] [distortionstrengthy] [bluramount]: default 0.5 0.5 0.5 0.5 1", (string[] args) =>
+            {
+                float distortScaleX = 0.5f, distortScaleY = 0.5f;
+                float distortStrengthX = 0.5f, distortStrengthY = 0.5f;
+                float blurAmount = 0.0f;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleX);
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleY);
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthX);
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthY);
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out blurAmount);
+                WaterRenderer.DistortionScale = new Vector2(distortScaleX, distortScaleY);
+                WaterRenderer.DistortionStrength = new Vector2(distortStrengthX, distortStrengthY);
+                WaterRenderer.BlurAmount = blurAmount;
+            },
+            null, null));
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>

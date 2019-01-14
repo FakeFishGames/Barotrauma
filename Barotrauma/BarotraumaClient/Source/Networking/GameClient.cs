@@ -271,12 +271,7 @@ namespace Barotrauma.Networking
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                int seconds = DateTime.Now.Second;
-                reconnectBox.Text.Text = connectingText;
-                for (int i = 0; i < 1 + (seconds % 3); i++)
-                {
-                    reconnectBox.Text.Text += ".";
-                }
+                reconnectBox.Text.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
 
                 if (DateTime.Now > reqAuthTime)
                 {
