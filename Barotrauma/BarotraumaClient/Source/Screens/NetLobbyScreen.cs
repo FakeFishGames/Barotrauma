@@ -1431,15 +1431,15 @@ namespace Barotrauma
         {
             base.AddToGUIUpdateList();
 
-            playerFrame?.AddToGUIUpdateList();  
-            campaignSetupUI?.AddToGUIUpdateList();
-            jobInfoFrame?.AddToGUIUpdateList();
-
             if (campaignContainer.Visible)
             {
                 chatFrame.AddToGUIUpdateList();
                 playerListFrame.AddToGUIUpdateList();
             }
+
+            playerFrame?.AddToGUIUpdateList();  
+            campaignSetupUI?.AddToGUIUpdateList();
+            jobInfoFrame?.AddToGUIUpdateList();
         }
         
         public List<Submarine> GetSubList()

@@ -273,6 +273,11 @@ namespace Barotrauma
             });            
         }
 
+        partial void ClearAnimQueue()
+        {
+            mapAnimQueue.Clear();
+        }
+
         public void Update(float deltaTime, GUICustomComponent mapContainer)
         {
             Rectangle rect = mapContainer.Rect;
@@ -346,13 +351,13 @@ namespace Barotrauma
                     if (PlayerInput.LeftButtonClicked() &&
                         SelectedLocation != highlightedLocation && highlightedLocation != null)
                     {
-                        SelectedConnection = connection;
-                        SelectedLocation = highlightedLocation;
-                        targetReticleAnimState = 0.0f;
-
                         //clients aren't allowed to select the location without a permission
                         if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
                         {
+                            SelectedConnection = connection;
+                            SelectedLocation = highlightedLocation;
+                            targetReticleAnimState = 0.0f;
+
                             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
                             GameMain.Client?.SendCampaignState();
                         }

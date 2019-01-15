@@ -413,7 +413,7 @@ namespace Barotrauma
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
             if (Map.SelectedConnection != null)
             {
-                map.SelectedConnection.SelectedMissionIndex = selectedMissionIndex;
+                Map.SelectMission(selectedMissionIndex);
             }
 
             List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);

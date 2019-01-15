@@ -30,6 +30,7 @@ namespace Barotrauma
 
         private List<GUIButton> tabButtons = new List<GUIButton>();
         private List<GUIButton> itemCategoryButtons = new List<GUIButton>();
+        private List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
 
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
@@ -239,7 +240,15 @@ namespace Barotrauma
 
             campaign.Map.OnLocationSelected += SelectLocation;
             campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationView(newLocation);
-            campaign.CargoManager.OnItemsChanged += RefreshItemTab;
+            campaign.Map.OnMissionSelected += (connection, mission) => 
+            {
+                var selectedTickBox = missionTickBoxes.Find(tb => tb.UserData == mission);
+                if (selectedTickBox != null)
+                {
+                    selectedTickBox.Selected = true;
+                }
+            };
+            campaign.CargoManager.OnItemsChanged += RefreshMyItems;
         }
 
         private void UpdateLocationView(Location location)
@@ -283,7 +292,7 @@ namespace Barotrauma
             }
             characterList.UpdateScrollBarSize();
 
-            RefreshItemTab();
+            RefreshMyItems();
 
             bool purchaseableItemsFound = false;
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
@@ -384,25 +393,31 @@ namespace Barotrauma
 
                 Mission selectedMission = connection.SelectedMission != null && connection.AvailableMissions.Contains(connection.SelectedMission) ?
                     connection.SelectedMission : null;
-                List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
+                missionTickBoxes.Clear();
                 foreach (Mission mission in availableMissions)
                 {
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform) { MaxSize = maxTickBoxSize },
                        mission?.Name ?? "No mission")
                     {
                         UserData = mission,
+                        Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign),
                         Selected = mission == selectedMission,
                         OnSelected = (tb) => 
                         {
-                            if (tb.Selected) { SelectMission(tb.UserData as Mission); }
+                            if (!tb.Selected) { return false; }
+                            RefreshMissionTab(tb.UserData as Mission); 
                             Campaign.Map.OnMissionSelected?.Invoke(connection, mission);
+                            if (GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                            {
+                                GameMain.Client?.SendCampaignState();
+                            }
                             return true;
                         }
                     };
                     missionTickBoxes.Add(tickBox);
                 }
                 GUITickBox.CreateRadioButtonGroup(missionTickBoxes);
-                SelectMission(selectedMission);
+                RefreshMissionTab(selectedMission);
 
                 startButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
                     TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
@@ -417,13 +432,13 @@ namespace Barotrauma
         }
 
 
-        public void SelectMission(Mission mission)
+        public void RefreshMissionTab(Mission mission)
         {
             System.Diagnostics.Debug.Assert(
                 mission == null ||
                 (GameMain.GameSession.Map?.SelectedConnection != null &&
                 GameMain.GameSession.Map.SelectedConnection.AvailableMissions.Contains(mission)));
-
+            
             GameMain.GameSession.Map.SelectedConnection.SelectedMission = mission;
 
             selectedMissionInfo.ClearChildren();
@@ -564,7 +579,7 @@ namespace Barotrauma
             return false;
         }
 
-        private void RefreshItemTab()
+        private void RefreshMyItems()
         {
             myItemList.Content.ClearChildren();
 
@@ -577,8 +592,6 @@ namespace Barotrauma
             myItemList.Content.RectTransform.SortChildren((x, y) =>
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category));
             myItemList.UpdateScrollBarSize();
-
-            storeItemList.Content.ClearChildren();
         }
         
         public void SelectTab(Tab tab)
