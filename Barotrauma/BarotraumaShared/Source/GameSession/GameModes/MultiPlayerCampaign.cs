@@ -162,7 +162,7 @@ namespace Barotrauma
 
         public static MultiPlayerCampaign LoadNew(XElement element)
         {
-            MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Campaign"), null);
+            MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.List.Find(gm => gm.Identifier == "multiplayercampaign"), null);
             campaign.Load(element);
             campaign.SetDelegates();
             

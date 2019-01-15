@@ -939,7 +939,7 @@ namespace Barotrauma.Networking
             string shuttleName      = inc.ReadString();
             string shuttleHash      = inc.ReadString();
 
-            string modeName         = inc.ReadString();
+            string modeIdentifier   = inc.ReadString();
             int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
@@ -951,13 +951,13 @@ namespace Barotrauma.Networking
 
             serverSettings.ReadMonsterEnabled(inc);
 
-            GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
+            GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
             MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
             if (gameMode == null)
             {
-                DebugConsole.ThrowError("Game mode \"" + modeName + "\" not found!");
+                DebugConsole.ThrowError("Game mode \"" + modeIdentifier + "\" not found!");
                 yield return CoroutineStatus.Success;
             }
 

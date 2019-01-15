@@ -106,6 +106,14 @@
   <UPnPUnavailable>UPnP not available.</UPnPUnavailable>
   <UPnPTimedOut>UPnP discovery timed out.</UPnPTimedOut>
 
+  <!-- Game modes -->
+  <GameMode.singleplayercampaign>Single Player</GameMode.singleplayercampaign>
+  <GameMode.tutorial>Tutorial</GameMode.tutorial>
+  <GameMode.devsandbox>Dev Sandbox</GameMode.devsandbox>
+  <GameMode.sandbox>Sandbox</GameMode.sandbox>
+  <GameMode.mission>Mission</GameMode.mission>
+  <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
+  
   <!-- Steam Workshop menu -->
   <DownloadButton>Download</DownloadButton>
   <SubscribedMods>Mods</SubscribedMods>
@@ -447,6 +455,7 @@
   <Location>Location</Location>
   <HireUnavailable>No-one available for hire.</HireUnavailable>
   <Mission>Mission</Mission>
+  <NoMission>No mission</NoMission>
   <Reward>Reward: [reward] credits</Reward>
   <Credit>Credit</Credit>
   <PlayerCredits>Credits: [credits]</PlayerCredits>
@@ -610,11 +619,6 @@
   <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
   <ClientPermission.ManageSettings>Manage server settings</ClientPermission.ManageSettings>
   <ClientPermission.All>All</ClientPermission.All>
-
-  <!-- Game modes -->
-  <GameMode.Sandbox>Sandbox</GameMode.Sandbox>
-  <GameMode.Mission>Mission</GameMode.Mission>
-  <GameMode.Campaign>Campaign</GameMode.Campaign>
 
   <!-- Mission types -->
   <MissionType.None>None</MissionType.None>

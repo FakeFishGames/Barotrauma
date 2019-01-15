@@ -1,9 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using Barotrauma.Networking;
-using System;
-using System.Linq;
-using System.Xml.Linq;
+﻿using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -14,7 +12,8 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(savePath)) return;
 
-            GameMain.GameSession = new GameSession(new Submarine(subName, ""), savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+            GameMain.GameSession = new GameSession(new Submarine(subName, ""), savePath, 
+                GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
             var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
             campaign.GenerateMap(seed);
             campaign.SetDelegates();

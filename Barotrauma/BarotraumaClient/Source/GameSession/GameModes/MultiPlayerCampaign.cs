@@ -56,9 +56,8 @@ namespace Barotrauma
             };
 
             loadCampaignContainer.Visible = false;
-
+            
             campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
-
             campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
 
             var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), paddedFrame.RectTransform, Anchor.BottomLeft), TextManager.Get("Cancel"))
@@ -149,7 +148,8 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(null, savePath,
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
 
                 campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.CampaignID = campaignID;

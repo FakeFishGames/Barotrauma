@@ -31,6 +31,9 @@ namespace Barotrauma
 
         private static List<MapEntity> highlightedList = new List<MapEntity>();
 
+        // Test feature. Not yet saved.
+        public static Dictionary<MapEntity, List<MapEntity>> SelectionGroups { get; private set; } = new Dictionary<MapEntity, List<MapEntity>>();
+
         private static float highlightTimer;
 
         private static GUIListBox highlightedListBox;
@@ -133,22 +136,18 @@ namespace Barotrauma
 
             if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
             {
-                if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.C) &&
-                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.C))
+                if (PlayerInput.KeyHit(Keys.C))
                 {
                     CopyEntities(selectedList);
                 }
-                else if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.X) &&
-                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.X))
+                else if (PlayerInput.KeyHit(Keys.X))
                 {
                     CopyEntities(selectedList);
 
                     selectedList.ForEach(e => e.Remove());
                     selectedList.Clear();
                 }
-                else if (copiedList.Count > 0 &&
-                    PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
-                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
+                else if (copiedList.Count > 0 && PlayerInput.KeyHit(Keys.V))
                 {
                     List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
                     Clone(copiedList);
@@ -166,6 +165,27 @@ namespace Barotrauma
                     {
                         clone.Move(moveAmount);
                         clone.Submarine = Submarine.MainSub;
+                    }
+                }
+                else if (PlayerInput.KeyHit(Keys.G))
+                {
+                    if (selectedList.Any())
+                    {
+                        if (SelectionGroups.ContainsKey(selectedList.Last()))
+                        {
+                            // Ungroup all selected
+                            selectedList.ForEach(e => SelectionGroups.Remove(e));
+                        }
+                        else
+                        {
+                            foreach (var entity in selectedList)
+                            {
+                                // Remove the old group, if any
+                                SelectionGroups.Remove(entity);
+                                // Create a group that can be accessed with any member
+                                SelectionGroups.Add(entity, selectedList);
+                            }
+                        }
                     }
                 }
             }
@@ -289,7 +309,17 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (highLightedEntity != null) newSelection.Add(highLightedEntity);
+                    if (highLightedEntity != null)
+                    {
+                        if (SelectionGroups.TryGetValue(highLightedEntity, out List<MapEntity> group))
+                        {
+                            newSelection.AddRange(group);
+                        }
+                        else
+                        {
+                            newSelection.Add(highLightedEntity);
+                        }
+                    }
                 }
 
                 if (PlayerInput.LeftButtonReleased())

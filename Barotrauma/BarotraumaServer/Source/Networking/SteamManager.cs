@@ -69,7 +69,7 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
             Instance.server.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
             Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
-            Instance.server.SetKey("gamemode", server.ServerSettings.GameMode);
+            Instance.server.SetKey("gamemode", server.ServerSettings.GameModeIdentifier);
             
             //TODO: remove if hosting through client?
             instance.server.DedicatedServer = true;
