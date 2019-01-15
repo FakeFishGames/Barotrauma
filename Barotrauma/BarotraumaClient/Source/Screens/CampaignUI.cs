@@ -573,7 +573,7 @@ namespace Barotrauma
                 return false;
             }
             
-            Campaign.CargoManager.SellItem(pi.ItemPrefab,1);
+            Campaign.CargoManager.SellItem(pi, 1);
             GameMain.Client?.SendCampaignState();
 
             return false;
