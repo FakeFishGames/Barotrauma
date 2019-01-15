@@ -217,14 +217,15 @@ namespace Barotrauma.Networking
                     shuttleSteering.SetDestinationLevelStart();
                 }
 
-                foreach (Door door in shuttleDoors)
-                {
-                    if (door.IsOpen) door.SetState(false,false,true);
-                }
 
 #if SERVER
                 var server = networkMember as GameServer;
                 if (server == null) return;
+
+                foreach (Door door in shuttleDoors)
+                {
+                    if (door.IsOpen) door.TrySetState(false, false, true);
+                }
                 
                 var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
                 shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));

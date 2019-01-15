@@ -163,6 +163,37 @@ namespace Barotrauma.Items.Components
         }
 
 
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
+        {
+            if (isStuck ||
+                (predictedState == null && isOpen == open) ||
+                (predictedState != null && isOpen == predictedState.Value && isOpen == open))
+            {
+                return;
+            }
+
+            if (GameMain.Client != null && !isNetworkMessage)
+            {
+                bool stateChanged = open != predictedState;
+
+                //clients can "predict" that the door opens/closes when a signal is received
+                //the prediction will be reset after 1 second, setting the door to a state
+                //sent by the server, or reverting it back to its old state if no msg from server was received
+                predictedState = open;
+                resetPredictionTimer = CorrectionDelay;
+                if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
+            }
+            else
+            {
+                isOpen = open;
+                if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
+            }
+
+            //opening a partially stuck door makes it less stuck
+            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
+            
+        }
+
         public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);

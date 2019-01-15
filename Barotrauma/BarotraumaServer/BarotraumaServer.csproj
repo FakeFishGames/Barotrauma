@@ -121,6 +121,7 @@
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiplayerCampaign.cs" />
+    <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
