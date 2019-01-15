@@ -169,15 +169,23 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.KeyHit(Keys.G))
                 {
-                    if (selectedList.Any(e => SelectionGroups.ContainsKey(e)))
+                    if (selectedList.Any())
                     {
-                        // remove the group
-                        selectedList.ForEach(e => SelectionGroups.Remove(e));
-                    }
-                    else
-                    {
-                        // Create a group that can be accessed with any member
-                        selectedList.ForEach(e => SelectionGroups.Add(e, selectedList));
+                        if (SelectionGroups.ContainsKey(selectedList.Last()))
+                        {
+                            // Ungroup all selected
+                            selectedList.ForEach(e => SelectionGroups.Remove(e));
+                        }
+                        else
+                        {
+                            foreach (var entity in selectedList)
+                            {
+                                // Remove the old group, if any
+                                SelectionGroups.Remove(entity);
+                                // Create a group that can be accessed with any member
+                                SelectionGroups.Add(entity, selectedList);
+                            }
+                        }
                     }
                 }
             }
