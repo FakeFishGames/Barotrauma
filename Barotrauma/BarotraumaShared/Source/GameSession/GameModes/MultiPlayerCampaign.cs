@@ -419,7 +419,7 @@ namespace Barotrauma
             List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
             foreach (PurchasedItem pi in currentItems)
             {
-                CargoManager.SellItem(pi.ItemPrefab, pi.Quantity);
+                CargoManager.SellItem(pi, pi.Quantity);
             }
 
             foreach (PurchasedItem pi in purchasedItems)
