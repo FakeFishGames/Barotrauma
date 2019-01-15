@@ -493,11 +493,13 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
+            if (isStuck ||
+                (predictedState == null && isOpen == open) ||
+                (predictedState != null && isOpen == predictedState.Value && isOpen == open))
+            {
+                return;
+            }
 #if CLIENT
-            if (isStuck || 
-                (predictedState == null && isOpen == open) || 
-                (predictedState != null && isOpen == predictedState.Value && isOpen == open)) return;
-
             if (GameMain.Client != null && !isNetworkMessage)
             {
                 bool stateChanged = open != predictedState;
@@ -536,16 +538,6 @@ namespace Barotrauma.Items.Components
 
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
-        }
-
-        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
-        {
-            base.ClientRead(type, msg, sendingTime);
-
-            SetState(msg.ReadBoolean(), true);
-            Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            
-            predictedState = null;
         }
     }
 }
