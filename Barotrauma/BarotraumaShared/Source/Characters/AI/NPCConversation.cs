@@ -163,7 +163,19 @@ namespace Barotrauma
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
             List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
 
-            CreateConversation(availableSpeakers, assignedSpeakers, null, lines);
+            CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: list);
+            return lines;
+        }
+
+        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers, List<string> requiredFlags)
+        {
+            Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
+            List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
+            var availableConversations = list.FindAll(conversation => requiredFlags.All(f => conversation.Flags.Contains(f)));
+            if (availableConversations.Count > 0)
+            {
+                CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: availableConversations, ignoreFlags: true);
+            }
             return lines;
         }
 
@@ -171,9 +183,11 @@ namespace Barotrauma
             List<Character> availableSpeakers, 
             Dictionary<int, Character> assignedSpeakers, 
             NPCConversation baseConversation, 
-            List<Pair<Character, string>> lineList)
+            List<Pair<Character, string>> lineList,
+            List<NPCConversation> availableConversations,
+            bool ignoreFlags = false)
         {
-            List<NPCConversation> conversations = baseConversation == null ? list : baseConversation.Responses;
+            List<NPCConversation> conversations = baseConversation == null ? availableConversations : baseConversation.Responses;
             if (conversations.Count == 0) return;
 
             int conversationIndex = Rand.Int(conversations.Count);
@@ -225,8 +239,11 @@ namespace Barotrauma
                         if (selectedConversation.AllowedJobs.Count > 0 && !selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
 
                         //check if the character has all required flags to say the line
-                        var characterFlags = GetCurrentFlags(potentialSpeaker);
-                        if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) continue;
+                        if (!ignoreFlags)
+                        {
+                            var characterFlags = GetCurrentFlags(potentialSpeaker);
+                            if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) continue;
+                        }
 
                         //check if the character has an appropriate personality
                         if (selectedConversation.allowedSpeakerTags.Count > 0)
@@ -268,7 +285,7 @@ namespace Barotrauma
                 if (previousConversations.Count > MaxPreviousConversations) previousConversations.RemoveAt(MaxPreviousConversations);
             }
             lineList.Add(new Pair<Character, string>(speaker, selectedConversation.Line));
-            CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList);
+            CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList, availableConversations);
         }
 
         private static NPCConversation GetRandomConversation(List<NPCConversation> conversations, bool avoidPreviouslyUsed)

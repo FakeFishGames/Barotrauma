@@ -14,7 +14,6 @@ using System.Reflection;
 using GameAnalyticsSDK.Net;
 using System.IO;
 using System.Threading;
-using System.IO;
 
 namespace Barotrauma
 {
@@ -52,7 +51,21 @@ namespace Barotrauma
             get { return Config?.SelectedContentPackages; }
         }
 
-        public static GameSession GameSession;
+
+        private static GameSession gameSession;
+        public static GameSession GameSession
+        {
+            get { return gameSession; }
+            set
+            {
+                if (gameSession == value) { return; }
+                if (gameSession?.GameMode != null && gameSession.GameMode != value?.GameMode)
+                {
+                    gameSession.GameMode.Remove();
+                }
+                gameSession = value;
+            }
+        }
 
         public static NetworkMember NetworkMember;
 

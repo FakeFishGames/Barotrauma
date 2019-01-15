@@ -135,6 +135,9 @@ namespace Barotrauma
             get { return positionsOfInterest; }
         }
 
+        public Submarine StartOutpost { get; private set; }
+        public Submarine EndOutpost { get; private set; }
+
         public string Seed
         {
             get { return seed; }
@@ -589,6 +592,7 @@ namespace Barotrauma
                 GenerateRuin(mainPath, this, mirror);
             }
 
+
             //----------------------------------------------------------------------------------
             // create floating ice chunks
             //----------------------------------------------------------------------------------
@@ -660,6 +664,17 @@ namespace Barotrauma
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cellsWithBody, this), generationParams.WallColor);
 #endif
+
+
+            //----------------------------------------------------------------------------------
+            // create (placeholder) outposts at the start and end of the level
+            //----------------------------------------------------------------------------------
+
+            CreateOutposts();
+
+            //----------------------------------------------------------------------------------
+            // top barrier & sea floor
+            //----------------------------------------------------------------------------------
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
@@ -1263,7 +1278,7 @@ namespace Barotrauma
                 if (Submarine.PickBody(
                     ConvertUnits.ToSimUnits(startPos),
                     ConvertUnits.ToSimUnits(endPos),
-                    null, Physics.CollisionLevel) != null)
+                    null, Physics.CollisionLevel | Physics.CollisionWall) != null)
                 {
                     position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.Normalize(startPos - endPos) * offsetFromWall;
                     break;
@@ -1405,6 +1420,64 @@ namespace Barotrauma
             }
             
             return cells;
+        }
+
+        private void CreateOutposts()
+        {
+            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost);
+            if (outpostFiles.Count() == 0)
+            {
+                DebugConsole.ThrowError("No outpost files found in the selected content packages");
+                return;
+            }
+            for (int i = 0; i < 2; i++)
+            {
+                //only create a starting outpost in campaign mode
+                if (GameMain.GameSession?.GameMode as CampaignMode == null && ((i == 0) == !Mirrored))
+                {
+                    continue;
+                }
+
+                string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
+                var outpost = new Submarine(outpostFile, tryLoad: false);
+                outpost.Load(unloadPrevious: false);
+                outpost.MakeOutpost();
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
+                if ((i == 0) == !Mirrored)
+                {
+                    StartOutpost = outpost;
+                }
+                else
+                {
+                    EndOutpost = outpost;
+                }
+
+                foreach (MapEntity me in MapEntity.mapEntityList)
+                {
+                    if (me.Submarine != outpost) { continue; }
+                    if (me is Item item)
+                    {
+                        foreach (ItemComponent ic in item.components)
+                        {
+                            if (ic is ConnectionPanel connectionPanel)
+                            {
+                                //prevent rewiring
+                                connectionPanel.Locked = true;
+                            }
+                            else if (ic is Pickable pickable)
+                            {
+                                //prevent picking up (or deattaching) items
+                                pickable.CanBePicked = false;
+                                pickable.CanBeSelected = false;
+                            }
+                        }
+                    }
+                    else if (me is Structure structure)
+                    {
+                        structure.Indestructible = true;
+                    }
+                }
+            }            
         }
 
         public override void Remove()

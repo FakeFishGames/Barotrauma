@@ -5,12 +5,6 @@ namespace Barotrauma
 {
     partial class Location
     {
-        private string name;
-
-        private Vector2 mapPosition;
-
-        private LocationType type;
-
         public List<LocationConnection> Connections;
 
         private string baseName;
@@ -20,34 +14,17 @@ namespace Barotrauma
 
         public int TypeChangeTimer;
 
-        public string Name
-        {
-            get { return name; }
-        }
+        public string Name { get; private set; }
 
-        public Vector2 MapPosition
-        {
-            get { return mapPosition; }
-        }
-        
-        public LocationType Type
-        {
-            get { return type; }
-        }
+        public Vector2 MapPosition { get; private set; }
+
+        public LocationType Type { get; private set; }
 
         public Location(Vector2 mapPosition, int? zone)
         {
-            this.type = LocationType.Random("", zone);
-            this.name = RandomName(type);
-            this.mapPosition = mapPosition;
-
-#if CLIENT
-            if (type.HasHireableCharacters)
-            {
-                hireManager = new HireManager();
-                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
-            }
-#endif
+            this.Type = LocationType.Random("", zone);
+            this.Name = RandomName(Type);
+            this.MapPosition = mapPosition;
 
             Connections = new List<LocationConnection>();
         }
@@ -59,18 +36,10 @@ namespace Barotrauma
 
         public void ChangeType(LocationType newType)
         {
-            if (newType == type) return;
+            if (newType == Type) return;
 
-            type = newType;
-            name = type.NameFormats[nameFormatIndex % type.NameFormats.Count].Replace("[name]", baseName);
-
-#if CLIENT
-            if (type.HasHireableCharacters)
-            {
-                hireManager = new HireManager();
-                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
-            }
-#endif
+            Type = newType;
+            Name = Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
         }
 
         private string RandomName(LocationType type)
@@ -79,5 +48,12 @@ namespace Barotrauma
             nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
             return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }
+
+        public void Remove()
+        {
+            RemoveProjSpecific();
+        }
+
+        partial void RemoveProjSpecific();
     }
 }

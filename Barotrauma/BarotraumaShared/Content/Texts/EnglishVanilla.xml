@@ -290,6 +290,7 @@
   <UseItemButton>Use</UseItemButton>
   <GrabHint>[[key]] Grab</GrabHint>
   <HealHint>[[key]] Heal</HealHint>
+  <TalkHint>[[key]] Talk</TalkHint>
   <QuickUseAction.Equip>Equip</QuickUseAction.Equip>
   <QuickUseAction.Unequip>Unequip</QuickUseAction.Unequip>
   <QuickUseAction.Drop>Hold to drop</QuickUseAction.Drop>
@@ -372,7 +373,7 @@
   <NoMission>No mission</NoMission>
   <MissionReward>Reward: [reward]</MissionReward>
 
-  <!-- Campaign setup menu -->
+  <!-- Campaign -->
   <CampaignSetup>Campaign Setup</CampaignSetup>
   <NewCampaign>New campaign</NewCampaign>
   <LoadCampaign>Load campaign</LoadCampaign>
@@ -385,7 +386,8 @@
   <LastSaved>Last saved</LastSaved>
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
-
+  <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
+  
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
@@ -395,8 +397,10 @@
   <!-- Campaign menu -->
   <Map>Map</Map>
   <Crew>Crew</Crew>
+  <CampaignMenuCrew>Your crew</CampaignMenuCrew>
   <Store>Store</Store>
-  <Hire>Hire</Hire>
+  <Outpost>Outpost</Outpost>
+  <CampaignMenuHireable>Hireable people</CampaignMenuHireable>
   <HireButton>Hire</HireButton>
   <FireButton>Fire</FireButton>
   <FireWarningHeader>Are you sure?</FireWarningHeader>

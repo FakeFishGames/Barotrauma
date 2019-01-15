@@ -4,7 +4,11 @@ namespace Barotrauma
 {
     class HireManager
     {
-        public List<CharacterInfo> availableCharacters;
+        private List<CharacterInfo> availableCharacters;
+        public IEnumerable<CharacterInfo> AvailableCharacters
+        {
+            get { return availableCharacters; }
+        }
 
         public const int MaxAvailableCharacters = 10;
 
@@ -13,15 +17,28 @@ namespace Barotrauma
             availableCharacters = new List<CharacterInfo>();
         }
 
+        public void RemoveCharacter(CharacterInfo character)
+        {
+            availableCharacters.Remove(character);
+        }
+
         public void GenerateCharacters(Location location, int amount)
         {
+            availableCharacters.ForEach(c => c.Remove());
+            availableCharacters.Clear();
             for (int i = 0; i < amount; i++)
             {
                 JobPrefab job = location.Type.GetRandomHireable();
-                if (job == null) return;
+                if (job == null) { return; }
 
                 availableCharacters.Add(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, job));
             }
+        }
+
+        public void Remove()
+        {
+            availableCharacters.ForEach(c => c.Remove());
+            availableCharacters.Clear();
         }
     }
 }

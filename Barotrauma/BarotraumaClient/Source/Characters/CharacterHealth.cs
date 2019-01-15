@@ -111,7 +111,7 @@ namespace Barotrauma
                 Character.Controlled.ResetInteract = true;
                 if (openHealthWindow != null)
                 {
-                    OpenHealthWindow.healthWindow.GetChild(0).GetChild<GUITextBlock>().Text = value.character.Name;
+                    OpenHealthWindow.healthWindow.GetChild(0).GetChild<GUITextBlock>().Text = value.Character.Name;
                     Character.Controlled.SelectedConstruction = null;
                 }
             }
@@ -381,7 +381,7 @@ namespace Barotrauma
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
         {
-            if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && Character.Controlled == character)
+            if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && Character.Controlled == Character)
             {
                 SoundPlayer.PlaySound("drown");
             }
@@ -393,10 +393,10 @@ namespace Barotrauma
             if (bloodParticleTimer <= 0.0f)
             {
                 float bloodParticleSize = MathHelper.Lerp(0.5f, 1.0f, affliction.Strength / 100.0f);
-                if (!character.AnimController.InWater) bloodParticleSize *= 2.0f;
+                if (!Character.AnimController.InWater) bloodParticleSize *= 2.0f;
                 var blood = GameMain.ParticleManager.CreateParticle(
-                    character.AnimController.InWater ? "waterblood" : "blooddrop",
-                    targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, character.AnimController.CurrentHull);
+                    Character.AnimController.InWater ? "waterblood" : "blooddrop",
+                    targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
 
                 if (blood != null)
                 {
@@ -442,7 +442,7 @@ namespace Barotrauma
                     Math.Max(healthShadowSize - deltaTime, healthBar.BarSize);
             }
 
-            dropItemArea.Visible = !character.IsDead;
+            dropItemArea.Visible = !Character.IsDead;
             
             float blurStrength = 0.0f;
             float distortStrength = 0.0f;
@@ -450,14 +450,14 @@ namespace Barotrauma
             float radialDistortStrength = 0.0f;
             float chromaticAberrationStrength = 0.0f;
             
-            if (character.IsUnconscious)
+            if (Character.IsUnconscious)
             {
                 blurStrength = 1.0f;
                 distortSpeed = 1.0f;
             }
             else if (OxygenAmount < 100.0f)
             {
-                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - vitality / MaxVitality);
+                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - Vitality / MaxVitality);
                 distortStrength = blurStrength;
                 distortSpeed = (blurStrength + 1.0f);
                 distortSpeed *= distortSpeed * distortSpeed * distortSpeed;
@@ -481,23 +481,23 @@ namespace Barotrauma
                 }
             }
 
-            character.RadialDistortStrength = radialDistortStrength;
-            character.ChromaticAberrationStrength = chromaticAberrationStrength;
+            Character.RadialDistortStrength = radialDistortStrength;
+            Character.ChromaticAberrationStrength = chromaticAberrationStrength;
             if (blurStrength > 0.0f)
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;
-                character.BlurStrength = (float)(Math.Sin(distortTimer) + 1.5f) * 0.25f * blurStrength;
-                character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.1f * distortStrength;
+                Character.BlurStrength = (float)(Math.Sin(distortTimer) + 1.5f) * 0.25f * blurStrength;
+                Character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.1f * distortStrength;
             }
             else
             {
-                character.BlurStrength = 0.0f;
-                character.DistortStrength = 0.0f;
+                Character.BlurStrength = 0.0f;
+                Character.DistortStrength = 0.0f;
                 distortTimer = 0.0f;
             }
 
             if (PlayerInput.KeyHit(InputType.Health) && GUI.KeyboardDispatcher.Subscriber == null && 
-                character.AllowInput && character.FocusedCharacter == null && !toggledThisFrame)
+                Character.AllowInput && Character.FocusedCharacter == null && !toggledThisFrame)
             {
                 if (openHealthWindow != null)
                     OpenHealthWindow = null;
@@ -511,23 +511,23 @@ namespace Barotrauma
                     HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaLeft))
                 {
                     //emulate a Health input to get the character to deselect the item server-side
-                    character.Keys[(int)InputType.Health].Hit = true;
+                    Character.Keys[(int)InputType.Health].Hit = true;
                     OpenHealthWindow = null;
                 }
             }
             toggledThisFrame = false;
             
             
-            if (character.IsDead)
+            if (Character.IsDead)
             {
                 healthBar.Color = healthWindowHealthBar.Color = Color.Black;
                 healthBar.BarSize = healthWindowHealthBar.BarSize = 1.0f;
             }
             else
             {
-                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(vitality / MaxVitality, Color.Red, Color.Orange, Color.Green );
+                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(Vitality / MaxVitality, Color.Red, Color.Orange, Color.Green );
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
-                healthBar.BarSize = healthWindowHealthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / MinVitality;
+                healthBar.BarSize = healthWindowHealthBar.BarSize = (Vitality > 0.0f) ? Vitality / MaxVitality : 1.0f - Vitality / MinVitality;
 
                 if (healthBarPulsateTimer > 0.0f)
                 {
@@ -546,7 +546,7 @@ namespace Barotrauma
             
             if (OpenHealthWindow == this)
             {
-                if (character == Character.Controlled && !character.AllowInput)
+                if (Character == Character.Controlled && !Character.AllowInput)
                 {
                     openHealthWindow = null;
                 }
@@ -564,7 +564,7 @@ namespace Barotrauma
 
                     byte alpha = img.Color.A;
                     byte hoverAlpha = img.HoverColor.A;
-                    img.Color = ToolBox.GradientLerp(vitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
+                    img.Color = ToolBox.GradientLerp(Vitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
                     img.Color = new Color(img.Color.R, img.Color.G, img.Color.B, alpha);
                     img.HoverColor = new Color(img.Color.R, img.Color.G, img.Color.B, hoverAlpha);
                     img.HoverColor = Color.Lerp(img.HoverColor, Color.White, 0.5f);
@@ -620,7 +620,7 @@ namespace Barotrauma
             }
             else
             {
-                if (openHealthWindow != null && character != Character.Controlled && character != Character.Controlled?.SelectedCharacter)
+                if (openHealthWindow != null && Character != Character.Controlled && Character != Character.Controlled?.SelectedCharacter)
                 {
                     openHealthWindow = null;
                 }
@@ -631,7 +631,7 @@ namespace Barotrauma
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft) :
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaRight, HUDLayoutSettings.HealthBarAreaRight);
 
-            if (character.AllowInput && UseHealthWindow && hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
+            if (Character.AllowInput && UseHealthWindow && hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())
@@ -644,15 +644,15 @@ namespace Barotrauma
                 healthBar.State = GUIComponent.ComponentState.None;
             }
 
-            suicideButton.Visible = character == Character.Controlled && character.IsUnconscious && !character.IsDead;
+            suicideButton.Visible = Character == Character.Controlled && Character.IsUnconscious && !Character.IsDead;
 
             cprButton.Visible =
-                character == Character.Controlled?.SelectedCharacter
-                && (character.IsUnconscious || character.Stun > 0.0f)
-                && !character.IsDead
+                Character == Character.Controlled?.SelectedCharacter
+                && (Character.IsUnconscious || Character.Stun > 0.0f)
+                && !Character.IsDead
                 && openHealthWindow == this;
 
-            deadIndicator.Visible = character.IsDead;
+            deadIndicator.Visible = Character.IsDead;
         }
 
         public void AddToGUIUpdateList()
@@ -666,12 +666,12 @@ namespace Barotrauma
                 healthWindowHealthBarShadow.AddToGUIUpdateList();
                 healthWindowHealthBar.AddToGUIUpdateList();
             }
-            else if (Character.Controlled == character)
+            else if (Character.Controlled == Character)
             {
                 healthBarShadow.AddToGUIUpdateList();
                 healthBar.AddToGUIUpdateList();
             }
-            if (suicideButton.Visible && character == Character.Controlled) suicideButton.AddToGUIUpdateList();
+            if (suicideButton.Visible && Character == Character.Controlled) suicideButton.AddToGUIUpdateList();
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
         }
 
@@ -687,9 +687,9 @@ namespace Barotrauma
             }
 
             float damageOverlayAlpha = DamageOverlayTimer;
-            if (vitality < MaxVitality * 0.1f)
+            if (Vitality < MaxVitality * 0.1f)
             {
-                damageOverlayAlpha = Math.Max(1.0f - (vitality / maxVitality * 10.0f), damageOverlayAlpha);
+                damageOverlayAlpha = Math.Max(1.0f - (Vitality / maxVitality * 10.0f), damageOverlayAlpha);
             }
             else
             {
@@ -703,14 +703,14 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
-            if (character.Inventory != null)
+            if (Character.Inventory != null)
             {
-                if (character.Inventory.CurrentLayout == CharacterInventory.Layout.Right)
+                if (Character.Inventory.CurrentLayout == CharacterInventory.Layout.Right)
                 {
                     //move the healthbar on top of the inventory slots
                     healthBar.RectTransform.ScreenSpaceOffset = new Point(
                         (GameMain.GraphicsWidth - HUDLayoutSettings.Padding) - HUDLayoutSettings.HealthBarAreaRight.Right,
-                        HUDLayoutSettings.HealthBarAreaRight.Y - (int)(character.Inventory.SlotPositions.Max(s => s.Y) + Inventory.EquipIndicator.size.Y * Inventory.UIScale * 2) - HUDLayoutSettings.HealthBarAreaRight.Height);
+                        HUDLayoutSettings.HealthBarAreaRight.Y - (int)(Character.Inventory.SlotPositions.Max(s => s.Y) + Inventory.EquipIndicator.size.Y * Inventory.UIScale * 2) - HUDLayoutSettings.HealthBarAreaRight.Height);
                     healthBarShadow.RectTransform.ScreenSpaceOffset = healthBar.RectTransform.ScreenSpaceOffset;
                 }
                 else
@@ -728,9 +728,9 @@ namespace Barotrauma
             if (openHealthWindow != this)
             {
                 List<Pair<Affliction, string>> statusIcons = new List<Pair<Affliction, string>>();
-                if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f)
+                if (Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 5.0f)
                     statusIcons.Add(new Pair<Affliction, string>(pressureAffliction, TextManager.Get("PressureHUDWarning")));
-                if (character.CurrentHull != null && character.OxygenAvailable < LowOxygenThreshold && oxygenLowAffliction.Strength < oxygenLowAffliction.Prefab.ShowIconThreshold)
+                if (Character.CurrentHull != null && Character.OxygenAvailable < LowOxygenThreshold && oxygenLowAffliction.Strength < oxygenLowAffliction.Prefab.ShowIconThreshold)
                     statusIcons.Add(new Pair<Affliction, string>(oxygenLowAffliction, TextManager.Get("OxygenHUDWarning")));
 
                 var allAfflictions = GetAllAfflictions(true);
@@ -793,7 +793,7 @@ namespace Barotrauma
                         Color.White * 0.8f, Color.Black * 0.5f);
                 }
                 
-                if (vitality > 0.0f)
+                if (Vitality > 0.0f)
                 {
                     float currHealth = healthBar.BarSize;
                     Color prevColor = healthBar.Color;
@@ -810,7 +810,7 @@ namespace Barotrauma
             }
             else
             {
-                if (vitality > 0.0f)
+                if (Vitality > 0.0f)
                 {
                     float currHealth = healthWindowHealthBar.BarSize;
                     Color prevColor = healthWindowHealthBar.Color;
@@ -840,7 +840,7 @@ namespace Barotrauma
             var currentAfflictions = selectedLimb.Afflictions.Where(a => a.Strength >= a.Prefab.ShowIconThreshold).ToList();
             currentAfflictions.AddRange(afflictions.Where(a => a.Strength >= 
                 a.Prefab.ShowIconThreshold &&
-                limbHealths[character.AnimController.GetLimb(a.Prefab.IndicatorLimb).HealthIndex] == selectedLimb));
+                limbHealths[Character.AnimController.GetLimb(a.Prefab.IndicatorLimb).HealthIndex] == selectedLimb));
 
             var displayedAfflictions = afflictionInfoContainer.Content.Children.Select(c => c.UserData as Affliction);
             if (currentAfflictions.Any(a => !displayedAfflictions.Contains(a)) || 
@@ -1020,7 +1020,7 @@ namespace Barotrauma
             }
 
             //can't apply treatment to dead characters
-            if (character.IsDead) return true;
+            if (Character.IsDead) return true;
             if (item == null || !item.UseInHealthInterface) return true;
             if (!ignoreMousePos)
             {
@@ -1034,9 +1034,9 @@ namespace Barotrauma
                 }
             }
 
-            Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
+            Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 
-            item.ApplyTreatment(Character.Controlled, character, targetLimb);
+            item.ApplyTreatment(Character.Controlled, Character, targetLimb);
 
             dropItemAnimTimer = dropItemAnimDuration;
             droppedItem = item;
@@ -1046,14 +1046,14 @@ namespace Barotrauma
         private List<Item> GetAvailableMedicalItems()
         {
             List<Item> allInventoryItems = new List<Item>();
-            allInventoryItems.AddRange(character.Inventory.Items);
-            if (character.SelectedCharacter?.Inventory != null && character.CanAccessInventory(character.SelectedCharacter.Inventory))
+            allInventoryItems.AddRange(Character.Inventory.Items);
+            if (Character.SelectedCharacter?.Inventory != null && Character.CanAccessInventory(Character.SelectedCharacter.Inventory))
             {
-                allInventoryItems.AddRange(character.SelectedCharacter.Inventory.Items);
+                allInventoryItems.AddRange(Character.SelectedCharacter.Inventory.Items);
             }
-            if (character.SelectedBy?.Inventory != null)
+            if (Character.SelectedBy?.Inventory != null)
             {
-                allInventoryItems.AddRange(character.SelectedBy.Inventory.Items);
+                allInventoryItems.AddRange(Character.SelectedBy.Inventory.Items);
             }
 
             List<Item> medicalItems = new List<Item>();
@@ -1116,7 +1116,7 @@ namespace Barotrauma
                 if (limbHealth.IndicatorSprite == null) continue;
 
                 float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
-                Color color = character.IsDead ?
+                Color color = Character.IsDead ?
                     Color.Lerp(Color.Black, new Color(150, 100, 100), damageLerp) :
                     ToolBox.GradientLerp(damageLerp, Color.Green, Color.Orange, Color.Red);
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
@@ -1199,7 +1199,7 @@ namespace Barotrauma
 
                 foreach (Affliction affliction in afflictions)
                 {
-                    Limb indicatorLimb = character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
+                    Limb indicatorLimb = Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
                     if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
                     {
                         DrawLimbAfflictionIcon(spriteBatch, affliction, slot, iconScale, ref iconPos);
@@ -1284,7 +1284,7 @@ namespace Barotrauma
                 else
                 {
                     existingAffliction.Strength = newAffliction.Second;
-                    if (existingAffliction == stunAffliction) character.SetStun(existingAffliction.Strength, true, true);
+                    if (existingAffliction == stunAffliction) Character.SetStun(existingAffliction.Strength, true, true);
                 }
             }
 

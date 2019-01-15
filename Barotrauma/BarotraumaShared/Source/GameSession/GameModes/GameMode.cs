@@ -89,6 +89,6 @@ namespace Barotrauma
             GameMain.GameSession.EndRound(endMessage);
         }
         
-
+        public virtual void Remove() { }
     }
 }
