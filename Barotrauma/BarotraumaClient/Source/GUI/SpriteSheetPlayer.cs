@@ -11,6 +11,8 @@ namespace Barotrauma
         private SpriteSheet[] playableSheets;
         private SpriteSheet currentSheet;
 
+        private GUIFrame frame;
+        private GUITextBlock title;
         private GUICustomComponent sheetView;
         private float totalElapsed = 0;
         private float animationSpeed = 0.1f;
@@ -30,11 +32,19 @@ namespace Barotrauma
         }
 
         private readonly Vector2 defaultResolution = new Vector2(520, 300);
+        private readonly int borderSize = 20;
 
         public SpriteSheetPlayer()
         {
-            sheetView = new GUICustomComponent(new RectTransform(defaultResolution, null, Anchor.Center),
+            int width = (int)defaultResolution.X;
+            int height = (int)defaultResolution.Y;
+
+            frame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), GUI.Canvas, Anchor.Center), "SonarFrame");
+
+            sheetView = new GUICustomComponent(new RectTransform(new Point(width, height), frame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawSheetView(spriteBatch, guiCustomComponent.Rect); }, UpdateSheetView);
+
+            title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), frame.RectTransform, Anchor.TopCenter), string.Empty);
         }
 
         public void Play()
@@ -50,16 +60,19 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             if (!isPlaying) return;
-            sheetView.AddToGUIUpdateList();
+            frame.AddToGUIUpdateList();
         }
 
-        public void SetContent(string contentPath, XElement videoElement, bool startPlayback)
+        public void SetContent(string contentPath, XElement videoElement, string titleText, bool startPlayback)
         {
             totalElapsed = 0.0f;
             animationSpeed = videoElement.GetAttributeFloat("animationspeed", 0.1f);
 
             CreateSpriteSheets(contentPath, videoElement);
             currentSheet = playableSheets[0];
+
+            title.Text = titleText;
+            frame.RectTransform.RelativeSize = currentSheet.FrameSize.ToVector2() + new Vector2(borderSize, borderSize);
             sheetView.RectTransform.RelativeSize = currentSheet.FrameSize.ToVector2();
 
             if (startPlayback) Play();
