@@ -303,10 +303,13 @@ namespace Barotrauma
                 {
                     if (highLightedEntity != null)
                     {
-                        newSelection.Add(highLightedEntity);
                         if (SelectionGroups.TryGetValue(highLightedEntity, out List<MapEntity> group))
                         {
                             newSelection.AddRange(group);
+                        }
+                        else
+                        {
+                            newSelection.Add(highLightedEntity);
                         }
                     }
                 }
