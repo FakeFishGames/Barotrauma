@@ -59,6 +59,7 @@ namespace Barotrauma
                 if (value < 0 || value >= AvailableMissions.Count() )
                 {
                     SelectedMission = null;
+                    return;
                 }
                 SelectedMission = availableMissions[value];
             }

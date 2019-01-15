@@ -495,6 +495,7 @@ namespace Barotrauma
         }
 
         partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change);
+        partial void ClearAnimQueue();
 
         public static Map LoadNew(XElement element)
         {
@@ -507,6 +508,7 @@ namespace Barotrauma
 
         public void Load(XElement element, bool showNotifications)
         {
+            ClearAnimQueue();
             SetLocation(element.GetAttributeInt("currentlocation", 0));
 
             if (!Version.TryParse(element.GetAttributeString("version", ""), out _))
