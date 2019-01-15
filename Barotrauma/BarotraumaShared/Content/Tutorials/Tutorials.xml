@@ -4,9 +4,9 @@
     <Segment name="Welcome" contenttype="text" istriggered="false">
       <Text tag="Welcome" width="900" height="80" anchor="Center"/>
     </Segment>
-    <Segment name="Command Reactor" contenttype="video" istriggered="false">
+    <Segment name="Command a crewmember to operate the reactor" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="1_CommandReactor/Sheets1.png" columns="3" rows="9"/>
+        <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="5" empty="1"/>
       </Video>
     </Segment>
     <Segment name="Nav Console" contenttype="video" istriggered="false">

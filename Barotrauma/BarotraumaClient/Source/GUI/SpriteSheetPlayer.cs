@@ -14,8 +14,11 @@ namespace Barotrauma
         private GUIFrame frame;
         private GUITextBlock title;
         private GUICustomComponent sheetView;
+
         private float totalElapsed = 0;
         private float animationSpeed = 0.1f;
+        private float loopTimer = 0.0f;
+        private float loopDelay = 0.0f;
 
         private int currentSheetIndex = 0;
         private int currentFrameIndex = 0;
@@ -39,12 +42,12 @@ namespace Barotrauma
             int width = (int)defaultResolution.X;
             int height = (int)defaultResolution.Y;
 
-            frame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), GUI.Canvas, Anchor.Center), "SonarFrame");
+            frame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), null, Anchor.Center), "SonarFrame");
 
             sheetView = new GUICustomComponent(new RectTransform(new Point(width, height), frame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawSheetView(spriteBatch, guiCustomComponent.Rect); }, UpdateSheetView);
 
-            title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), frame.RectTransform, Anchor.TopCenter), string.Empty);
+            title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), frame.RectTransform, Anchor.TopCenter, Pivot.BottomCenter), string.Empty, font: GUI.LargeFont, textAlignment: Alignment.Center);
         }
 
         public void Play()
@@ -65,15 +68,18 @@ namespace Barotrauma
 
         public void SetContent(string contentPath, XElement videoElement, string titleText, bool startPlayback)
         {
-            totalElapsed = 0.0f;
+            totalElapsed = loopTimer = 0.0f;
             animationSpeed = videoElement.GetAttributeFloat("animationspeed", 0.1f);
+            loopDelay = videoElement.GetAttributeFloat("loopdelay", 0.0f); ;
 
             CreateSpriteSheets(contentPath, videoElement);
             currentSheet = playableSheets[0];
 
+            frame.RectTransform.NonScaledSize = currentSheet.FrameSize + new Point(borderSize, borderSize);
+            sheetView.RectTransform.NonScaledSize = currentSheet.FrameSize;
+
             title.Text = titleText;
-            frame.RectTransform.RelativeSize = currentSheet.FrameSize.ToVector2() + new Vector2(borderSize, borderSize);
-            sheetView.RectTransform.RelativeSize = currentSheet.FrameSize.ToVector2();
+            title.RectTransform.NonScaledSize = new Point(currentSheet.FrameSize.X, 30);
 
             if (startPlayback) Play();
         }
@@ -93,7 +99,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < sheetElements.Count; i++)
                 {
-                    playableSheets[i] = new SpriteSheet(sheetElements[i], contentPath, sheetElements[i].GetAttributeString("path", ""));
+                    playableSheets[i] = new SpriteSheet(sheetElements[i], contentPath, sheetElements[i].GetAttributeString("path", ""), sheetElements[i].GetAttributeInt("empty", 0));
                 }
             }
             catch (Exception e)
@@ -105,6 +111,21 @@ namespace Barotrauma
         private void UpdateSheetView(float deltaTime, GUICustomComponent viewContainer)
         {
             if (!isPlaying) return;
+            if (loopTimer > 0.0f)
+            {
+                loopTimer -= deltaTime;
+
+                if (loopTimer <= 0.0f)
+                {
+                    currentSheetIndex = 0;
+                    currentFrameIndex = 0;
+                    currentSheet = playableSheets[currentSheetIndex];
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             totalElapsed += deltaTime;
             if (totalElapsed > animationSpeed)
@@ -114,14 +135,20 @@ namespace Barotrauma
 
                 if (currentFrameIndex >= currentSheet.FrameCount - 1)
                 {
-                    currentFrameIndex = 0;
                     currentSheetIndex++;
 
                     if (currentSheetIndex >= playableSheets.Length - 1)
                     {
+                        if (loopDelay > 0.0f)
+                        {
+                            loopTimer = loopDelay;
+                            return;
+                        }
+
                         currentSheetIndex = 0;
                     }
 
+                    currentFrameIndex = 0;
                     currentSheet = playableSheets[currentSheetIndex];
                 }
             }
