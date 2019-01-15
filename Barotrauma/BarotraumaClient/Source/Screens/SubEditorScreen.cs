@@ -555,6 +555,7 @@ namespace Barotrauma
             MapEntityPrefab.Selected = null;
 
             MapEntity.DeselectAll();
+            MapEntity.SelectionGroups.Clear();
 
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
