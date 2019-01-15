@@ -35,22 +35,22 @@ namespace Barotrauma.Networking
 
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
-        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, out ulong clientSteamID)
+        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, NetConnection senderConnection, out ulong clientSteamID)
         {
             clientSteamID = 0;
             if (!Steam.SteamManager.USE_STEAM)
             {
-                DebugConsole.Log("Received a Steam auth request from " + inc.SenderConnection.RemoteEndPoint + ". Steam authentication not required, handling auth normally.");
+                DebugConsole.Log("Received a Steam auth request from " + senderConnection.RemoteEndPoint + ". Steam authentication not required, handling auth normally.");
                 //not using steam, handle auth normally
-                HandleClientAuthRequest(inc.SenderConnection, 0);
+                HandleClientAuthRequest(senderConnection, 0);
                 return;
             }
             
-            if (inc.SenderConnection == OwnerConnection)
+            if (senderConnection == OwnerConnection)
             {
                 //the client is the owner of the server, no need for authentication
                 //(it would fail with a "duplicate request" error anyway)
-                HandleClientAuthRequest(inc.SenderConnection, 0);
+                HandleClientAuthRequest(senderConnection, 0);
                 return;
             }
 
@@ -64,18 +64,16 @@ namespace Barotrauma.Networking
 
             DebugConsole.Log("  Auth ticket data: " + ((authTicketData == null) ? "null" : authTicketData.Length.ToString()));
 
-            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
+            if (senderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
             {
                 return;
             }
 
-            if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection && uc.WaitingSteamAuth))
+            if (unauthenticatedClients.Any(uc => uc.Connection == senderConnection && uc.WaitingSteamAuth))
             {
                 DebugConsole.Log("Duplicate request");
                 return;
-            }
-            
-
+            }     
 
             if (authTicketData == null)
             {
@@ -83,8 +81,8 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            unauthenticatedClients.RemoveAll(uc => uc.Connection == inc.SenderConnection);
-            var unauthClient = new UnauthenticatedClient(inc.SenderConnection, 0, clientSteamID)
+            unauthenticatedClients.RemoveAll(uc => uc.Connection == senderConnection);
+            var unauthClient = new UnauthenticatedClient(senderConnection, 0, clientSteamID)
             {
                 AuthTimer = 100,
                 WaitingSteamAuth = true
@@ -101,7 +99,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     DebugConsole.Log("Steam authentication failed, skipping to basic auth...");
-                    HandleClientAuthRequest(inc.SenderConnection);
+                    HandleClientAuthRequest(senderConnection);
                     return;
                 }
             }
@@ -154,10 +152,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        private bool IsServerOwner(NetIncomingMessage inc)
+        private bool IsServerOwner(NetIncomingMessage inc, NetConnection senderConnection)
         {
-            var msg = inc.SenderConnection.RemoteHailMessage ?? inc;            
-            string address = inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
+            string address = senderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
+            int incKey = inc.ReadInt32();
 
             if (ownerKey == 0)
             {
@@ -168,7 +166,6 @@ namespace Barotrauma.Networking
                 return false; //not localhost
             }
 
-            int incKey = msg.ReadInt32();
             if (incKey != ownerKey)
             {
                 return false; //incorrect owner key, how did this even happen
@@ -176,12 +173,13 @@ namespace Barotrauma.Networking
             return true;
         }
         
-        private void HandleOwnership(NetIncomingMessage inc)
+        private void HandleOwnership(NetIncomingMessage inc, NetConnection senderConnection)
         {
-            if (IsServerOwner(inc))
+            DebugConsole.Log("HandleOwnership (" + senderConnection.RemoteEndPoint.Address + ")");
+            if (IsServerOwner(inc, senderConnection))
             {
                 ownerKey = 0; //destroy owner key so nobody else can take ownership of the server
-                OwnerConnection = inc.SenderConnection;
+                OwnerConnection = senderConnection;
                 DebugConsole.NewMessage("Successfully set up server owner", Color.Lime);
             }
         }
