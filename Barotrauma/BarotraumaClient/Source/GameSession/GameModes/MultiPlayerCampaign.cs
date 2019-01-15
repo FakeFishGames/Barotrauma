@@ -59,7 +59,8 @@ namespace Barotrauma
 
             campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
             {
-                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, 
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
                 var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.GenerateMap(mapSeed);
                 campaign.SetDelegates();
@@ -160,7 +161,8 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(null, savePath,
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
 
                 campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.CampaignID = campaignID;

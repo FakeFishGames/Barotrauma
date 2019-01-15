@@ -414,12 +414,12 @@ namespace Barotrauma
                 Visible = false
             };
 
-            foreach (GameModePreset mode in GameModePreset.list)
+            foreach (GameModePreset mode in GameModePreset.List)
             {
                 if (mode.IsSinglePlayer) continue;
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
-                    TextManager.Get("GameMode." + mode.Name), style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
+                    mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
                     ToolTip = mode.Description,
                     UserData = mode
@@ -648,7 +648,7 @@ namespace Barotrauma
 
                 GameAnalyticsManager.SetCustomDimension01("multiplayer");
                 
-                if (GameModePreset.list.Count > 0 && modeList.SelectedComponent == null) modeList.Select(0);
+                if (GameModePreset.List.Count > 0 && modeList.SelectedComponent == null) modeList.Select(0);
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             }
             else if (GameMain.Client != null)
@@ -677,7 +677,7 @@ namespace Barotrauma
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
             {
-                var allowedGameModes = GameModePreset.list.FindAll(m => !m.IsSinglePlayer && m.Name != "Campaign");
+                var allowedGameModes = GameModePreset.List.FindAll(m => !m.IsSinglePlayer && m.Identifier != "multiplayercampaign");
                 modeList.Select(allowedGameModes[Rand.Range(0, allowedGameModes.Count)]);
             }
         }
@@ -1545,9 +1545,8 @@ namespace Barotrauma
         public void SelectMode(int modeIndex)
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren || modeList.SelectedIndex == modeIndex) return;
-
-            //TODO: don't use the name of the game mode to determine its type
-            if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Name == "Campaign")
+            
+            if (((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Identifier == "multiplayercampaign")
             {
                 if (GameMain.Server != null)
                 {
@@ -1561,8 +1560,7 @@ namespace Barotrauma
             }
 
             modeList.Select(modeIndex, true);
-            //TODO: don't use the name of the game mode to determine its type
-            missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
+            missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Identifier == "mission";
         }
 
         private bool SelectMode(GUIComponent component, object obj)
@@ -1573,9 +1571,9 @@ namespace Barotrauma
             if (modePreset == null) return false;
 
             //TODO: don't use the name of the game mode to determine its type
-            missionTypeContainer.Visible = modePreset.Name == "Mission";
+            missionTypeContainer.Visible = modePreset.Identifier == "mission";
 
-            if (modePreset.Name == "Campaign")
+            if (modePreset.Identifier == "multiplayercampaign")
             {
                 //campaign selected and the campaign view has not been set up yet
                 // -> don't select the mode yet and start campaign setup

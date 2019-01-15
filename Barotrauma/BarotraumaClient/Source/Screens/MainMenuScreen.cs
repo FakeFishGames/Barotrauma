@@ -71,7 +71,7 @@ namespace Barotrauma
                     var gamesession = new GameSession(
                         selectedSub,
                         "Data/Saves/test.xml",
-                        GameModePreset.list.Find(gm => gm.Name == "SPSandbox"),
+                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
                         missionPrefab: null);
                     //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
                     gamesession.StartRound(ToolBox.RandomSeed(8));
@@ -507,7 +507,8 @@ namespace Barotrauma
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
 
-            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            GameMain.GameSession = new GameSession(selectedSub, saveName,
+                GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
 
             GameMain.LobbyScreen.Select();
