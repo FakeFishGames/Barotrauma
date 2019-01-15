@@ -1737,6 +1737,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\Tutorials.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\CampaignUIAtlas.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\ContainerIndicators.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2252,6 +2255,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Effects\losshader_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Map\Outposts\Outpost.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\GlassBreak4.ogg">
@@ -2798,7 +2804,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\TransitionCinematic.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\RoundEndCinematic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Memento.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />

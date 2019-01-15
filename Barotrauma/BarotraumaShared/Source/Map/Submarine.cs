@@ -116,6 +116,12 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public bool IsOutpost
+        {
+            get;
+            private set;
+        }
         
         public static Vector2 LastPickedPosition
         {
@@ -203,8 +209,12 @@ namespace Barotrauma
         {
             get 
             {
-                if (Level.Loaded == null) return false;
-                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance);
+                if (Level.Loaded == null) { return false; }
+                if (Level.Loaded.EndOutpost != null && DockedTo.Contains(Level.Loaded.EndOutpost))
+                {
+                    return true;
+                }
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
@@ -212,8 +222,12 @@ namespace Barotrauma
         {
             get
             {
-                if (Level.Loaded == null) return false;
-                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance);
+                if (Level.Loaded == null) { return false; }
+                if (Level.Loaded.StartOutpost != null && DockedTo.Contains(Level.Loaded.StartOutpost))
+                {
+                    return true;
+                }
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
@@ -365,6 +379,12 @@ namespace Barotrauma
             tags &= ~tag;
         }
 
+        public void MakeOutpost()
+        {
+            IsOutpost = true;
+            PhysicsBody.FarseerBody.IsStatic = true;
+        }
+
         /// <summary>
         /// Returns a rect that contains the borders of this sub and all subs docked to it
         /// </summary>
@@ -397,8 +417,7 @@ namespace Barotrauma
         /// </summary>
         public List<Submarine> GetConnectedSubs()
         {
-            List<Submarine> connectedSubs = new List<Submarine>();
-            connectedSubs.Add(this);
+            List<Submarine> connectedSubs = new List<Submarine> { this };
             GetConnectedSubsRecursive(connectedSubs);
 
             return connectedSubs;
@@ -637,8 +656,7 @@ namespace Barotrauma
 
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
 
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
                 }
@@ -685,8 +703,7 @@ namespace Barotrauma
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
                 if (ignoreSubs && fixture.Body.UserData is Submarine) return -1;
 
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) return -1;
                     int sectionIndex = structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(point));
@@ -886,13 +903,17 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition)
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
+                if (ignoreOutposts && sub.IsOutpost)
+                {
+                    continue;
+                }
+                float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
                     closest = sub;
