@@ -435,7 +435,7 @@ namespace Barotrauma.Tutorials
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    spriteSheetPlayer.SetContent(playableContentPath, activeSegment.Content, true);
+                    spriteSheetPlayer.SetContent(playableContentPath, activeSegment.Content, activeSegment.Name, true);
                     break;
                 case ContentTypes.Text:
                     infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
