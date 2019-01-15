@@ -491,53 +491,11 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
+        public void TrySetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (isStuck ||
-                (predictedState == null && isOpen == open) ||
-                (predictedState != null && isOpen == predictedState.Value && isOpen == open))
-            {
-                return;
-            }
-#if CLIENT
-            if (GameMain.Client != null && !isNetworkMessage)
-            {
-                bool stateChanged = open != predictedState;
-
-                //clients can "predict" that the door opens/closes when a signal is received
-                //the prediction will be reset after 1 second, setting the door to a state
-                //sent by the server, or reverting it back to its old state if no msg from server was received
-                predictedState = open;
-                resetPredictionTimer = CorrectionDelay;
-                if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
-            }
-            else
-            {
-#endif
-                isOpen = open;
-#if CLIENT
-                if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
-            }
-#endif
-
-
-            //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
-
-#if SERVER
-            if (sendNetworkMessage)
-            {
-                item.CreateServerEvent(this);
-            }
-#endif
+            SetState(open, isNetworkMessage, sendNetworkMessage);
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
-        {
-            base.ServerWrite(msg, c, extraData);
-
-            msg.Write(isOpen);
-            msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
-        }
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false);
     }
 }
