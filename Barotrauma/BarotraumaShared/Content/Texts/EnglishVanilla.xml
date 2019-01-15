@@ -112,6 +112,7 @@
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
   <PopularMods>Popular mods</PopularMods>
   <FindModsButton>Find more mods...</FindModsButton>
+  <WorkshopItemUnsubscribe>Unsubscribe</WorkshopItemUnsubscribe>
   <PublishedWorkshopItems>Published items</PublishedWorkshopItems>
   <YourWorkshopItems>Your items</YourWorkshopItems>
   <CreateWorkshopItem>Create a new item</CreateWorkshopItem>
@@ -146,11 +147,12 @@
   <WorkshopItemDeleteTooltip>Deletes the item from Steam Workshop.</WorkshopItemDeleteTooltip>
   <WorkshopItemDeleteVerification>Are you sure you want to delete the item "[itemname]" from the Steam Workshop?</WorkshopItemDeleteVerification>
   <WorkshopItemPublishTooltip>Uploads the files to the Steam Workshop.</WorkshopItemPublishTooltip>
-  <WorkshopItemFilePathValid>File will be included in the Workshop item.</WorkshopItemFilePathValid>
-  <WorkshopItemFileNotFound>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have - otherwise you should copy the file to the Workshop item folder.</WorkshopItemFileNotFound>
+  <WorkshopItemFileIncluded>File will be included in the Workshop item.</WorkshopItemFileIncluded>
+  <WorkshopItemFileNotIncluded>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have - otherwise you should copy the file to the Workshop item folder.</WorkshopItemFileNotIncluded>
+  <WorkshopItemFileNotFound>File not found.</WorkshopItemFileNotFound>
   <WorkshopItemIllegalPath>Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder. Please create a separate subfolder for the files.</WorkshopItemIllegalPath>
   <WorkshopItemRefreshFileListTooltip>Reload the configuration file of the workshop item (metadata.xml inside the item's folder) and add all new files in it to the file list.</WorkshopItemRefreshFileListTooltip>
-  <WorkshopPublishPleaseWait>Please wait...</WorkshopPublishPleaseWait>
+  <WorkshopPublishPleaseWait>Please wait</WorkshopPublishPleaseWait>
   <WorkshopPublishInProgress>Publishing "[itemname]" in the Steam Workshop.</WorkshopPublishInProgress>
   <WorkshopItemPublished>"[itemname]" is now available in the Steam Workshop!</WorkshopItemPublished>
   <WorkshopItemPublishFailed>Publishing "[itemname]" in the Steam Workshop failed.</WorkshopItemPublishFailed>
@@ -197,9 +199,11 @@
   <ContentPackageNotFound>Content package "[packagepath]" not found.</ContentPackageNotFound>
   <IncompatibleContentPackage>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for the version [packageversion], your game version is [gameversion].</IncompatibleContentPackage>
   <IncompatibleContentPackageUnknownVersion>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for an unknown version, your game version is [gameversion].</IncompatibleContentPackageUnknownVersion>
+  <ContentPackageMissingCoreFiles>Content package "[packagename]" is marked as a core package but does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</ContentPackageMissingCoreFiles>
+  <ContentPackageCantMakeCorePackage>Content package "[packagename]" cannot be marked as a core package because it does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</ContentPackageCantMakeCorePackage>
 
   <!-- Graphics tab -->
-  <SettingsTab.Graphics>General</SettingsTab.Graphics>
+  <SettingsTab.Graphics>Graphics</SettingsTab.Graphics>
   <Resolution>Resolution</Resolution>
   <DisplayMode>Display mode</DisplayMode>
   <Fullscreen>Fullscreen</Fullscreen>
@@ -243,7 +247,6 @@
   <!-- Controls tab -->
   <SettingsTab.Controls>Controls</SettingsTab.Controls>
   <AimAssist>Aim assist</AimAssist>
-
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
   <InputType.Aim>Aim</InputType.Aim>
@@ -326,6 +329,7 @@
   <UseItemButton>Use</UseItemButton>
   <GrabHint>[[key]] Grab</GrabHint>
   <HealHint>[[key]] Heal</HealHint>
+  <TalkHint>[[key]] Talk</TalkHint>
   <QuickUseAction.Equip>Equip</QuickUseAction.Equip>
   <QuickUseAction.Unequip>Unequip</QuickUseAction.Unequip>
   <QuickUseAction.Drop>Hold to drop</QuickUseAction.Drop>
@@ -408,7 +412,7 @@
   <NoMission>No mission</NoMission>
   <MissionReward>Reward: [reward]</MissionReward>
 
-  <!-- Campaign setup menu -->
+  <!-- Campaign -->
   <CampaignSetup>Campaign Setup</CampaignSetup>
   <NewCampaign>New campaign</NewCampaign>
   <LoadCampaign>Load campaign</LoadCampaign>
@@ -421,7 +425,8 @@
   <LastSaved>Last saved</LastSaved>
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
-
+  <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
+  
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
@@ -431,8 +436,10 @@
   <!-- Campaign menu -->
   <Map>Map</Map>
   <Crew>Crew</Crew>
+  <CampaignMenuCrew>Your crew</CampaignMenuCrew>
   <Store>Store</Store>
-  <Hire>Hire</Hire>
+  <Outpost>Outpost</Outpost>
+  <CampaignMenuHireable>Hireable people</CampaignMenuHireable>
   <HireButton>Hire</HireButton>
   <FireButton>Fire</FireButton>
   <FireWarningHeader>Are you sure?</FireWarningHeader>

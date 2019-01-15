@@ -116,6 +116,12 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public bool IsOutpost
+        {
+            get;
+            private set;
+        }
         
         public static Vector2 LastPickedPosition
         {
@@ -203,8 +209,12 @@ namespace Barotrauma
         {
             get 
             {
-                if (Level.Loaded == null) return false;
-                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance);
+                if (Level.Loaded == null) { return false; }
+                if (Level.Loaded.EndOutpost != null && DockedTo.Contains(Level.Loaded.EndOutpost))
+                {
+                    return true;
+                }
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
@@ -212,8 +222,12 @@ namespace Barotrauma
         {
             get
             {
-                if (Level.Loaded == null) return false;
-                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance);
+                if (Level.Loaded == null) { return false; }
+                if (Level.Loaded.StartOutpost != null && DockedTo.Contains(Level.Loaded.StartOutpost))
+                {
+                    return true;
+                }
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
@@ -365,6 +379,12 @@ namespace Barotrauma
             tags &= ~tag;
         }
 
+        public void MakeOutpost()
+        {
+            IsOutpost = true;
+            PhysicsBody.FarseerBody.IsStatic = true;
+        }
+
         /// <summary>
         /// Returns a rect that contains the borders of this sub and all subs docked to it
         /// </summary>
@@ -397,8 +417,7 @@ namespace Barotrauma
         /// </summary>
         public List<Submarine> GetConnectedSubs()
         {
-            List<Submarine> connectedSubs = new List<Submarine>();
-            connectedSubs.Add(this);
+            List<Submarine> connectedSubs = new List<Submarine> { this };
             GetConnectedSubsRecursive(connectedSubs);
 
             return connectedSubs;
@@ -418,63 +437,35 @@ namespace Barotrauma
         public Vector2 FindSpawnPos(Vector2 spawnPos)
         {
             Rectangle dockedBorders = GetDockedBorders();
-
             Vector2 diffFromDockedBorders = 
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
                 - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
-
-            int iterations = 0;
-            int margin = 500;
-            bool wallTooClose = false;
-            do
+            
+            float minX = float.MinValue, maxX = float.MaxValue;
+            foreach (VoronoiCell cell in Level.Loaded.GetAllCells())
             {
-                Rectangle worldBorders = new Rectangle(
-                    dockedBorders.X + (int)spawnPos.X - margin,
-                    dockedBorders.Y + (int)spawnPos.Y,
-                    dockedBorders.Width + margin * 2,
-                    dockedBorders.Height);
-                spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+                if (cell.Edges.All(e => e.Point1.Y < Level.Loaded.Size.Y - 1000.0f && e.Point2.Y < Level.Loaded.Size.Y - 1000.0f)) { continue; }
 
-                wallTooClose = false;
-
-                var nearbyCells = Level.Loaded.GetCells(
-                    spawnPos, (int)Math.Ceiling(Math.Max(dockedBorders.Width, dockedBorders.Height) / (float)Level.GridCellSize));
-
-                foreach (VoronoiCell cell in nearbyCells)
+                //find the closest wall at the left and right side of the spawnpos
+                if (cell.Site.Coord.X < spawnPos.X)
                 {
-                    if (cell.CellType == CellType.Empty) { continue; }
-                    
-                    foreach (GraphEdge e in cell.Edges)
-                    {
-                        List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.Point1, e.Point2, worldBorders);
-                        if (intersections.Count == 0) { continue; }
-
-                        wallTooClose = true;
-                                                        
-                        if (intersections[0].X < spawnPos.X)
-                        {
-                            spawnPos.X += Math.Max(e.Point1.X, e.Point2.X) - worldBorders.X + margin;
-                        }
-                        else
-                        {
-                            spawnPos.X -= worldBorders.Right - Math.Min(e.Point1.X, e.Point2.X) + margin;
-                        }
-
-                        spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
-                        worldBorders = new Rectangle(
-                            dockedBorders.X + (int)spawnPos.X - margin,
-                            dockedBorders.Y + (int)spawnPos.Y,
-                            dockedBorders.Width + margin * 2,
-                            dockedBorders.Height);                        
-                    }
+                    minX = Math.Max(minX, cell.Edges.Max(e => Math.Max(e.Point1.X, e.Point2.X)));
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, cell.Edges.Min(e => Math.Min(e.Point1.X, e.Point2.X)));
+                }
+            }
 
-                iterations++;
-            } while (wallTooClose && iterations < 10);
+            if (minX < 0.0f) { minX = spawnPos.X; }
+            if (maxX > Level.Loaded.Size.X) { maxX = spawnPos.X; }
 
-            return spawnPos - diffFromDockedBorders;        
+            //use the midpoint between the closest walls as the spawnpos
+            spawnPos.X = (minX + maxX) / 2;
+            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+            return spawnPos - diffFromDockedBorders;
         }
-        
+
         //drawing ----------------------------------------------------
 
         public static void CullEntities(Camera cam)
@@ -637,8 +628,7 @@ namespace Barotrauma
 
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
 
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
                 }
@@ -685,8 +675,7 @@ namespace Barotrauma
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
                 if (ignoreSubs && fixture.Body.UserData is Submarine) return -1;
 
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) return -1;
                     int sectionIndex = structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(point));
@@ -886,13 +875,17 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition)
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
+                if (ignoreOutposts && sub.IsOutpost)
+                {
+                    continue;
+                }
+                float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
                     closest = sub;

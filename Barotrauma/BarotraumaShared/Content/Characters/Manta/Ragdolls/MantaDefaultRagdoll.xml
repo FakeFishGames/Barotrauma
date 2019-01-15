@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Manta" limbscale="0.2197" jointscale="0.2197" texturescale="1" colliderheightfromfloor="150" impacttolerance="50" canentersubmarine="True" draggable="True" spritesheetorientation="0">
+﻿<Ragdoll type="Manta" limbscale="0.2197" jointscale="0.2197" texturescale="1" colliderheightfromfloor="150" impacttolerance="50" canentersubmarine="True" draggable="True" spritesheetorientation="90">
   <collider radius="200" height="250" name="Main Collider" width="0" />
   <limb id="0" name="Head" type="Head" width="268" height="200" notes="111cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="20" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" mouthpos="97,-76">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="0,0,331,243" origin="0.4839342,0.4924676" depth="0.1" />
@@ -14,32 +14,32 @@
   <limb id="2" name="HeadArmor" type="None" width="336" height="150" notes="1111tr_HeadArmor" flip="True" healthindex="0" attackpriority="0" steerforce="10" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="557,0,418,263" origin="0.5009799,0.5003958" depth="0.08" />
   </limb>
-  <limb id="3" name="TentacleMouthTop1" type="None" width="136" height="74" notes="1113tr_TentacleMouthTop1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,0,171,93" origin="0.5015433,0.4664803" depth="0.1" />
+  <limb id="3" name="TentacleMouthTop1" type="None" width="75" height="42" notes="1113tr_TentacleMouthTop1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1007,31,100,56" origin="0.5015433,0.4664803" depth="0.1" />
   </limb>
-  <limb id="4" name="TentacleMouthCenter1" type="None" width="136" height="74" notes="1114cr_TentacleMouthCenter1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,0,171,93" origin="0.5,0.5" depth="0.1" />
+  <limb id="4" name="TentacleMouthCenter1" type="None" width="71.25" height="45" notes="1114cr_TentacleMouthCenter1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1012,27,95,60" origin="0.5,0.5" depth="0.1" />
   </limb>
-  <limb id="5" name="TentacleJaw1" type="None" width="136" height="74" notes="11121cr_TentacleJaw1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,0,171,93" origin="0.2303855,0.5899117" depth="0.1" />
+  <limb id="5" name="TentacleJaw1" type="None" width="72.75" height="36.75" notes="11121cr_TentacleJaw1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1010,31,97,49" origin="0.4263428,0.5043318" depth="0.1" />
   </limb>
-  <limb id="6" name="TentacleMouthTop2" type="None" width="136" height="59" notes="11131cr_TentacleMouthTop2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,93,171,74" origin="0.3059417,0.6211965" depth="0.1" />
+  <limb id="6" name="TentacleMouthTop2" type="None" width="76.5" height="37.5" notes="11131cr_TentacleMouthTop2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1012,103,102,50" origin="0.4668974,0.5069979" depth="0.1" />
   </limb>
-  <limb id="7" name="TentacleMouthCenter2" type="None" width="136" height="59" notes="11141cr_TentacleMouthCenter2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,93,171,74" origin="0.5,0.5" depth="0.1" />
+  <limb id="7" name="TentacleMouthCenter2" type="None" width="72" height="39.75" notes="11141cr_TentacleMouthCenter2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1008,103,96,53" origin="0.5,0.5" depth="0.1" />
   </limb>
-  <limb id="8" name="TentacleJaw2" type="None" width="136" height="59" notes="111211cr_TentacleJaw2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,93,171,74" origin="0.2525385,0.7232351" depth="0.1" />
+  <limb id="8" name="TentacleJaw2" type="None" width="68.99999" height="37.5" notes="111211cr_TentacleJaw2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1010,103,92,50" origin="0.4445113,0.5389961" depth="0.1" />
   </limb>
-  <limb id="9" name="TentacleMouthTop3" type="None" width="136" height="66" notes="111311cr_TentacleMouthTop3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,167,171,83" origin="0.2413309,0.6709112" depth="0.1" />
+  <limb id="9" name="TentacleMouthTop3" type="None" width="83.25001" height="33" notes="111311cr_TentacleMouthTop3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1036,184,111,44" origin="0.5970114,0.4225785" depth="0.1" />
   </limb>
-  <limb id="10" name="TentacleMouthCenter3" type="None" width="136" height="66" notes="111411cr_TentacleMouthCenter3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,167,171,83" origin="0.5,0.5" depth="0.1" />
+  <limb id="10" name="TentacleMouthCenter3" type="None" width="86.25" height="42" notes="111411cr_TentacleMouthCenter3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1038,177,115,56" origin="0.5,0.5" depth="0.1" />
   </limb>
-  <limb id="11" name="TentacleJaw3" type="None" width="136" height="40" notes="1112111cr_TentacleJaw3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="981,167,171,83" origin="0.4070467,1" depth="0.1" />
+  <limb id="11" name="TentacleJaw3" type="None" width="86.25" height="33" notes="1112111cr_TentacleJaw3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1030,185,115,44" origin="0.4829268,0.3556231" depth="0.1" />
   </limb>
   <limb id="12" name="Hips" type="None" width="0" height="0" notes="0_Hips" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="130" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="817,282,334,484" origin="0.5,0.5" depth="0.45" />
@@ -56,23 +56,23 @@
   <limb id="16" name="ArmPalm" type="None" width="60" height="200" notes="1121rm_ArmPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="662,324,140,285" origin="0.5482009,0.4" depth="0.07" />
   </limb>
-  <limb id="17" name="FrontLegPalm" type="RightFoot" width="30" height="0" notes="311cr_FrontLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="100,0" radius="40" mass="0" density="10" pullpos="39.07472,-35.74048" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="617,627,202,137" origin="0.25,0.3470137" depth="0.1" />
+  <limb id="17" name="FrontLegPalm" type="RightFoot" width="50.25001" height="0" notes="311cr_FrontLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="100,0" radius="49.875" mass="0" density="10" pullpos="39.07472,-35.74048" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="620,628,200,133" origin="0.25,0.3470137" depth="0.1" />
   </limb>
   <limb id="18" name="ArmLower" type="None" width="180" height="80" notes="112bc_ArmLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="870,1042,173,86" origin="0.4531075,0.5604911" depth="0.08" />
   </limb>
-  <limb id="19" name="FrontLegLower" type="None" width="180" height="50" notes="31cr_FrontLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="409,637,193,122" origin="0.5130212,0.3" depth="0.1" />
+  <limb id="19" name="FrontLegLower" type="None" width="144.75" height="90.75" notes="31cr_FrontLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="409,637,193,121" origin="0.5130212,0.3" depth="0.1" />
   </limb>
   <limb id="20" name="BackUpper" type="None" width="240" height="0" notes="4bl_BackLegUpper" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="80" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="399,759,407,215" origin="0.4387648,0.3883015" depth="0.1" />
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="399,759,407,215" origin="0.4387648,0.3883015" depth="0.51" />
   </limb>
-  <limb id="21" name="BackLegLower" type="None" width="120" height="0" notes="41cr_BackLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="824,832,179,147" origin="0.4280843,0.4588513" depth="0.1" />
+  <limb id="21" name="BackLegLower" type="None" width="23.25" height="0" notes="41cr_BackLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="55.125" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="824,832,178,147" origin="0.4280843,0.4588513" depth="0.52" />
   </limb>
   <limb id="22" name="BackLegPalm" type="LeftFoot" width="80" height="0" notes="411cr_backLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="-250,0" radius="40" mass="0" density="10" pullpos="68.81641,-29.82208" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="617,627,207,135" origin="0.25,0.3470137" depth="0.09" />
+    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="617,625,207,135" origin="0.25,0.3470137" depth="0.53" />
   </limb>
   <limb id="23" name="Tail1" type="Tail" width="324" height="204" notes="5cl_Tail1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="0,897,397,259" origin="0.5147893,0.5160481" depth="0.5" />
@@ -87,29 +87,29 @@
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="870,1042,173,86" origin="0.4983816,0.3793208" depth="0.1" />
   </limb>
   <joint name="Joint Chest - Head" limb1="14" limb2="0" limb1anchor="138.932,-0.8007008" limb2anchor="-87.97721,56.0832" canbesevered="True" limitenabled="True" upperlimit="10.42033" lowerlimit="-39.29678" stiffness="0.25" />
-  <joint name="Joint Head - Jaw" limb1="0" limb2="1" limb1anchor="-7.063386,-68.52197" limb2anchor="-27.54456,59.59686" canbesevered="True" limitenabled="True" upperlimit="31.82792" lowerlimit="-15.10627" stiffness="0.25" />
+  <joint name="Joint Head - Jaw" limb1="0" limb2="1" limb1anchor="-1.624528,-60.53897" limb2anchor="-27.54456,59.59686" canbesevered="True" limitenabled="True" upperlimit="44.2667" lowerlimit="-50.7435" stiffness="0.25" />
   <joint name="Joint Head - HeadArmor" limb1="0" limb2="2" limb1anchor="-20.88369,93.07845" limb2anchor="-123.7834,53.26749" canbesevered="True" limitenabled="True" upperlimit="36.28366" lowerlimit="-0.0929179" stiffness="0.25" />
-  <joint name="Joint Head - TentacleMouthTop1" limb1="0" limb2="3" limb1anchor="53.11343,-91.62417" limb2anchor="-38.70926,-15.62542" canbesevered="True" limitenabled="True" upperlimit="-11.87549" lowerlimit="-31.1853" stiffness="0.25" />
-  <joint name="Joint Head - TentacleMouthCenter1" limb1="0" limb2="4" limb1anchor="109.9096,-58.1611" limb2anchor="-38.16239,-21.66187" canbesevered="True" limitenabled="True" upperlimit="358.7968" lowerlimit="312.3983" stiffness="0.25" />
-  <joint name="Joint Jaw - TentacleJaw1" limb1="1" limb2="5" limb1anchor="52.56726,6.366279" limb2anchor="-1.515957,-1.106182" canbesevered="True" limitenabled="True" upperlimit="347.0119" lowerlimit="309.028" stiffness="0.25" />
-  <joint name="Joint TentacleMouthTop1 - TentacleMouthTop2" limb1="3" limb2="6" limb1anchor="31.05784,-33.01373" limb2anchor="14.21211,3.070243" canbesevered="True" limitenabled="True" upperlimit="17.2374" lowerlimit="328.3843" stiffness="0.25" />
-  <joint name="Joint TentacleMouthCenter1 - TentacleMouthCenter2" limb1="4" limb2="7" limb1anchor="16.81847,-14.24254" limb2anchor="-35.5571,8.027298" canbesevered="True" limitenabled="True" upperlimit="-360" lowerlimit="-360" stiffness="0.25" />
-  <joint name="Joint TentacleJaw1 - TentacleJaw2" limb1="5" limb2="8" limb1anchor="50.92203,-8.359624" limb2anchor="-10.4255,9.57134" canbesevered="True" limitenabled="True" upperlimit="39.33155" lowerlimit="-11.97442" stiffness="0.25" />
-  <joint name="Joint TentacleMouthTop2 - TentacleMouthTop3" limb1="6" limb2="9" limb1anchor="65.1003,-0.2869385" limb2anchor="44.35838,9.416115" canbesevered="True" limitenabled="True" upperlimit="15.02084" lowerlimit="331.7955" stiffness="0.25" />
-  <joint name="Joint TentacleMouthCenter2 - TentacleMouthCenter3" limb1="7" limb2="10" limb1anchor="26.81111,-5.38483" limb2anchor="3.595512,1.72166" canbesevered="True" limitenabled="True" upperlimit="-378.43" lowerlimit="-418.4136" stiffness="0.25" />
-  <joint name="Joint TentacleJaw2 - TentacleJaw3" limb1="8" limb2="11" limb1anchor="54.53298,16.51482" limb2anchor="-2.368938,34.60459" canbesevered="True" limitenabled="True" upperlimit="5.177994" lowerlimit="330.9788" stiffness="0.25" />
+  <joint name="Joint Head - TentacleMouthTop1" limb1="0" limb2="3" limb1anchor="68.67088,-79.53261" limb2anchor="-32.95366,-6.455211" canbesevered="True" limitenabled="True" upperlimit="42.08156" lowerlimit="-50.60796" stiffness="0.25" />
+  <joint name="Joint Head - TentacleMouthCenter1" limb1="0" limb2="4" limb1anchor="108.3326,-46.59935" limb2anchor="-38.3434,-1.914418" canbesevered="True" limitenabled="True" upperlimit="44.4156" lowerlimit="-44.543" stiffness="0.25" />
+  <joint name="Joint Jaw - TentacleJaw1" limb1="1" limb2="5" limb1anchor="44.15015,38.00616" limb2anchor="-32.95366,-6.455211" canbesevered="True" limitenabled="True" upperlimit="31.24853" lowerlimit="-49.41855" stiffness="0.25" />
+  <joint name="Joint TentacleMouthTop1 - TentacleMouthTop2" limb1="3" limb2="6" limb1anchor="36.48199,-9.312155" limb2anchor="-13.95672,-2.960463" canbesevered="True" limitenabled="True" upperlimit="43.55199" lowerlimit="-46.23257" stiffness="0.25" />
+  <joint name="Joint TentacleMouthCenter1 - TentacleMouthCenter2" limb1="4" limb2="7" limb1anchor="36.57039,-11.57644" limb2anchor="-24.01854,-2.436953" canbesevered="True" limitenabled="True" upperlimit="45.15474" lowerlimit="-45.15799" stiffness="0.25" />
+  <joint name="Joint TentacleJaw1 - TentacleJaw2" limb1="5" limb2="8" limb1anchor="41.12104,-10.49723" limb2anchor="-20.2,-5.732994" canbesevered="True" limitenabled="True" upperlimit="44.19941" lowerlimit="-52.66581" stiffness="0.25" />
+  <joint name="Joint TentacleMouthTop2 - TentacleMouthTop3" limb1="6" limb2="9" limb1anchor="37.04655,-4.995063" limb2anchor="-32.18889,-9.295623" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />
+  <joint name="Joint TentacleMouthCenter2 - TentacleMouthCenter3" limb1="7" limb2="10" limb1anchor="34.47034,-0.5712692" limb2anchor="-25.41566,-7.775526" canbesevered="True" limitenabled="True" upperlimit="53.65089" lowerlimit="-26.89778" stiffness="0.25" />
+  <joint name="Joint TentacleJaw2 - TentacleJaw3" limb1="8" limb2="11" limb1anchor="36.35999,-1.466562" limb2anchor="-24.33808,-12.14955" canbesevered="True" limitenabled="True" upperlimit="44.67299" lowerlimit="-50.31516" stiffness="0.25" />
   <joint name="Joint Hips - Spine" limb1="12" limb2="13" limb1anchor="76.92551,-68.68565" limb2anchor="-54.39165,47.2747" canbesevered="True" limitenabled="True" upperlimit="-39.008" lowerlimit="-94.54315" stiffness="0.25" />
   <joint name="Joint Spine - Chest" limb1="13" limb2="14" limb1anchor="89.90504,63.35671" limb2anchor="-67.17089,15.59432" canbesevered="True" limitenabled="True" upperlimit="43.63014" lowerlimit="-17.56277" stiffness="5" />
   <joint name="Joint Hips - FrontUpperLeg" limb1="12" limb2="15" limb1anchor="-44.35622,-88.17751" limb2anchor="-95.68499,-47.15229" canbesevered="True" limitenabled="True" upperlimit="249.7254" lowerlimit="155.617" stiffness="0.25" />
   <joint name="Joint ArmLower - ArmPalm" limb1="18" limb2="16" limb1anchor="78.08107,18.77836" limb2anchor="14.26053,58.34429" canbesevered="True" limitenabled="True" upperlimit="96.65473" lowerlimit="-20.6231" stiffness="5" />
-  <joint name="Joint FrontLegLower - FrontLegPalm" limb1="19" limb2="17" limb1anchor="71.98766,-3.083339" limb2anchor="-31.57386,-16.3619" canbesevered="True" limitenabled="True" upperlimit="2.136531" lowerlimit="-93.62492" stiffness="2" />
+  <joint name="Joint FrontLegLower - FrontLegPalm" limb1="19" limb2="17" limb1anchor="71.98766,-3.083339" limb2anchor="-31.57386,-16.3619" canbesevered="True" limitenabled="True" upperlimit="11.01659" lowerlimit="-93.62492" stiffness="2" />
   <joint name="Joint Chest - ArmLower" limb1="14" limb2="18" limb1anchor="-37.91945,-65.71705" limb2anchor="-54.58921,2.952353" canbesevered="True" limitenabled="True" upperlimit="298.0002" lowerlimit="216.261" stiffness="5" />
   <joint name="Joint FrontUpperLeg - FrontLegLower" limb1="15" limb2="19" limb1anchor="185.0289,-20.50657" limb2anchor="-68.25571,1.350396" canbesevered="True" limitenabled="True" upperlimit="88.57513" lowerlimit="15.89218" stiffness="0.25" />
-  <joint name="Joint 12 - 20" limb1="12" limb2="20" limb1anchor="-124.7799,82.02393" limb2anchor="-115.828,-2.164719" canbesevered="True" limitenabled="True" upperlimit="221.491" lowerlimit="160.9005" stiffness="0.25" />
-  <joint name="Joint 20 - 21" limb1="20" limb2="21" limb1anchor="191.4023,-27.55254" limb2anchor="-61.95765,18.00717" canbesevered="True" limitenabled="True" upperlimit="107.8238" lowerlimit="-14.65685" stiffness="0.25" />
-  <joint name="Joint 21 - 22" limb1="21" limb2="22" limb1anchor="59.14633,-47.84672" limb2anchor="-44.98278,-23.95288" canbesevered="True" limitenabled="True" upperlimit="-38.16499" lowerlimit="-128.7182" stiffness="2" />
-  <joint name="Joint 12 - 23" limb1="12" limb2="23" limb1anchor="-38.96086,32.14551" limb2anchor="-106.6516,13.22071" canbesevered="True" limitenabled="True" upperlimit="176.5732" lowerlimit="140.6337" stiffness="50" />
-  <joint name="Joint 23 - 24" limb1="23" limb2="24" limb1anchor="173.2616,-14.95577" limb2anchor="-65.3475,-5.415449" canbesevered="True" limitenabled="True" upperlimit="10.62663" lowerlimit="-38.55453" stiffness="5" />
-  <joint name="Joint 24 - 25" limb1="24" limb2="25" limb1anchor="73.43388,-9.361113" limb2anchor="-39.79012,-10.555" canbesevered="True" limitenabled="True" upperlimit="13.56779" lowerlimit="-25.41426" stiffness="5" />
-  <joint name="Joint 25 - 26" limb1="25" limb2="26" limb1anchor="77.03654,-17.62606" limb2anchor="-65.42055,-12.81483" canbesevered="True" limitenabled="True" upperlimit="20.5742" lowerlimit="-33.90487" stiffness="5" />
+  <joint name="Joint 12 - 20" limb1="12" limb2="20" limb1anchor="-99.20753,0.6743817" limb2anchor="-115.828,-2.164719" canbesevered="True" limitenabled="True" upperlimit="221.491" lowerlimit="160.9005" stiffness="0.25" />
+  <joint name="Joint 20 - 21" limb1="20" limb2="21" limb1anchor="201.8046,-46.83585" limb2anchor="-61.95765,18.00717" canbesevered="True" limitenabled="True" upperlimit="107.8238" lowerlimit="46.30739" stiffness="0.25" />
+  <joint name="Joint 21 - 22" limb1="21" limb2="22" limb1anchor="67.13286,-49.18624" limb2anchor="-44.98278,-23.95288" canbesevered="True" limitenabled="True" upperlimit="12.21289" lowerlimit="-35.97469" stiffness="2" />
+  <joint name="Joint 12 - 23" limb1="12" limb2="23" limb1anchor="-38.96086,32.14551" limb2anchor="-106.6516,13.22071" canbesevered="True" limitenabled="True" upperlimit="127.0314" lowerlimit="60.28888" stiffness="50" />
+  <joint name="Joint 23 - 24" limb1="23" limb2="24" limb1anchor="173.2616,-14.95577" limb2anchor="-65.3475,-5.415449" canbesevered="True" limitenabled="True" upperlimit="23.2188" lowerlimit="-39.97002" stiffness="5" />
+  <joint name="Joint 24 - 25" limb1="24" limb2="25" limb1anchor="73.14061,-10.73914" limb2anchor="-39.79012,-10.555" canbesevered="True" limitenabled="True" upperlimit="11.5727" lowerlimit="-37.02826" stiffness="5" />
+  <joint name="Joint 25 - 26" limb1="25" limb2="26" limb1anchor="73.21416,-7.531944" limb2anchor="-81.08505,-0.2206997" canbesevered="True" limitenabled="True" upperlimit="4.951983" lowerlimit="-51.46862" stiffness="5" />
 </Ragdoll>

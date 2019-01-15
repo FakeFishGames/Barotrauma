@@ -244,6 +244,8 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            if (Body.FarseerBody.IsStatic) { return; }
+
 #if CLIENT
             if (GameMain.Client != null)
             {

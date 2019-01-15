@@ -298,9 +298,14 @@ namespace Barotrauma
                 Flip();
             }
             dir = Direction.Right;
+            Dictionary<LimbParams, List<WearableSprite>> items = null;
             if (ragdollParams != null)
             {
                 RagdollParams = ragdollParams;
+            }
+            else
+            {
+                items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
             }
             foreach (var limbParams in RagdollParams.Limbs)
             {
@@ -319,7 +324,6 @@ namespace Barotrauma
                 }
             }
             CreateColliders();
-            var items = limbs?.ToDictionary(l => l.limbParams, l => l.WearingItems);
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();

@@ -15,8 +15,9 @@
     <CustomInterface canbeselected="true">
       <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI"/>
       <Button text="Signal out #1" connection="signal_out1"/>
-      <TickBox text="Signal out #2" connection="signal_out2"/>
-      <TickBox text="Signal out #3" connection="signal_out3"/>
+      <Button text="Signal out #2" connection="signal_out2"/>
+	  <Button text="Signal out #3" connection="signal_out3"/>
+      <TickBox text="Signal out #4" connection="signal_out4"/>
     </CustomInterface>
     
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="4">

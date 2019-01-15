@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Orders>
-  <Order name="Dismissed" aitag="dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,1.0"/>
+  <Order name="Dismissed" aitag="dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,0.85"/>
   
-  <Order name="Follow" aitag="follow" doingtext="Following" color="1.0,0.5,0.1,1.0">
+  <Order name="Follow" aitag="follow" doingtext="Following" color="1.0,0.7,0.7,0.85">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="0,128,128,128"/>
   </Order>
 
-  <Order name="Wait" aitag="wait" doingtext="Waiting" color="1.0,0.0,0.0,1.0">
+  <Order name="Wait" aitag="wait" doingtext="Waiting" color="1.0,0.7,0.7,0.85">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,0,128,128"/>
   </Order>
 
   <Order name="Operate Reactor" aitag="operatereactor" doingtext="Operating Reactor"
          targetitemtype="Reactor"
          options="powerup, shutdown" optionnames="Power up, Shutdown"
-         color="1.0,0.78,0.05,1.0"
+         color="1.0,0.78,0.7,0.85"
          appropriatejobs="mechanic">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="384,0,128,128"/>
   </Order>
@@ -22,7 +22,7 @@
          targetitemidentifiers="turret,railgun,coilgun" targetitemtype="Turret"
          options="fireatwill,holdfire" optionnames="Fire at will, Hold fire"
          usecontroller="true"
-         color="0.12,0.3,0.5,1.0"
+         color="0.7,0.7,1,0.85"
          appropriatejobs="securityofficer">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,128,128,128"/>
   </Order>
@@ -30,62 +30,62 @@
   <Order name="Steer" aitag="steer" doingtext="Steering"
          targetitemtype="Steering"
          options="maintainposition,navigateback,navigatetodestination" optionnames="Maintain position, Navigate back, Navigate to destination"
-         color="0.0,0.0,1.0,1.0"
+         color="0.7,0.7,1.0,0.85"
          appropriatejobs="captain">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="128,0,128,128"/>
   </Order>
 
-  <Order name="Fix Leaks" aitag="fixleaks" doingtext="Fixing Leaks" color="0.6,0.85,1.0,1.0"
+  <Order name="Fix Leaks" aitag="fixleaks" doingtext="Fixing Leaks" color="0.7,0.9,1.0,0.85"
          appropriatejobs="mechanic">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="896,0,128,128"/>
   </Order>
 
-  <Order name="Extinguish Fires" aitag="extinguishfires" doingtext="Extinguishing Fires" color="1.0,0.0,0.0,1.0">
+  <Order name="Extinguish Fires" aitag="extinguishfires" doingtext="Extinguishing Fires" color="1.0,0.7,0.7,0.85">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="768,0,128,128"/>
   </Order>
 
   <Order name="Charge Batteries" aitag="chargebatteries" doingtext="Charging Batteries"
          options="charge,stopcharging" optionnames="Charge, Stop charging"
-         color="0.6,0.85,1.0,1.0"
+         color="0.7,0.9,1.0,0.85"
          appropriatejobs="engineer">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="512,0,128,128"/>
   </Order>
 
   <Order name="Pump Water" aitag="pumpwater" doingtext="Operating pumps"
          options="pumpout,stoppumping" optionnames="Pump out, Stop pumping"
-         color="0.2,0.4,1.0,1.0"
+         color="0.5,0.5,1.0,0.85"
          appropriatejobs="mechanic">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="128,128,128,128"/>
   </Order>
 
-  <Order name="Rescue" aitag="rescue" doingtext="Rescuing Characters" color="0.6,0.5,1.0,1.0"
+  <Order name="Rescue" aitag="rescue" doingtext="Rescuing Characters" color="0.7,0.7,1.0,0.85"
          appropriatejobs="medicaldoctor">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="0,0,128,128"/>
   </Order>
 
-  <Order name="Repair Damaged Systems" aitag="repairsystems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0"
+  <Order name="Repair Damaged Systems" aitag="repairsystems" doingtext="Repairing damaged systems" color="0.7,0.7,1.0,0.85"
          appropriatejobs="mechanic,engineer" options="jobspecific,all" optionnames="Repair job-specific, Repair everything">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="640,0,128,128"/>
   </Order>
 
-  <Order name="Report Fire" aitag="reportfire" color="178,143,94,255" targetallcharacters="true" fadeouttime="20">
+  <Order name="Report Fire" aitag="reportfire" color="200,200,128,200" targetallcharacters="true" fadeouttime="20">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="256,512,128,128"/>
   </Order>
 
-  <Order name="Report Breach" aitag="reportbreach" color="94,143,178,255" targetallcharacters="true" fadeouttime="20">
+  <Order name="Report Breach" aitag="reportbreach" color="150,200,255,200" targetallcharacters="true" fadeouttime="20">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="384,512,128,128"/>
   </Order>
 
-  <Order name="Report Intruders" aitag="reportintruders" color="89,115,64,255" targetallcharacters="true" fadeouttime="20">
+  <Order name="Report Intruders" aitag="reportintruders" color="128,115,64,255" targetallcharacters="true" fadeouttime="20">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="640,512,128,128"/>
   </Order>
 
-  <Order name="Report Broken Devices" aitag="reportbrokendevices" color="111,64,115,255" targetallcharacters="true" 
+  <Order name="Report Broken Devices" aitag="reportbrokendevices" color="200,128,200,200" targetallcharacters="true" 
          appropriatejobs="engineer,mechanic" fadeouttime="20">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="512,512,128,128"/>
   </Order>
   
-  <Order name="Request First Aid" aitag="requestfirstaid" color="178,104,94,255" targetallcharacters="true"
+  <Order name="Request First Aid" aitag="requestfirstaid" color="128,128,200,200" targetallcharacters="true"
          appropriatejobs="medicaldoctor" fadeouttime="20">
     <Sprite texture="Content/UI/IconAtlas.png" sourcerect="128,512,128,128"/>
   </Order>

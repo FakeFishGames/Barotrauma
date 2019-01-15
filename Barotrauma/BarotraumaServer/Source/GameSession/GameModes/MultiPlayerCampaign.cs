@@ -70,6 +70,24 @@ namespace Barotrauma
             });
         }
 
+        protected override void WatchmanInteract(Character watchman, Character interactor)
+        {
+            if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
+                (watchman.Submarine == Level.Loaded.EndOutpost && !Submarine.MainSub.AtEndPosition))
+            {
+                CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);                
+                return;
+            }
+
+            bool hasPermissions = true;
+            if (GameMain.Server != null)
+            {
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Character == interactor);
+                hasPermissions = client != null &&
+                    (client.HasPermission(ClientPermissions.ManageRound) || client.HasPermission(ClientPermissions.ManageCampaign));
+                CreateDialog(new List<Character> { watchman }, hasPermissions ? "WatchmanInteract" : "WatchmanInteractNotAllowed", 1.0f);
+            }
+        }
 
         partial void SetDelegates()
         {
@@ -77,6 +95,7 @@ namespace Barotrauma
             {
                 CargoManager.OnItemsChanged += () => { LastUpdateID++; };
                 Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
+                Map.OnMissionSelected += (loc, mission) => { LastUpdateID++; };
             }
         }
 
@@ -89,11 +108,12 @@ namespace Barotrauma
         {
             return characterData.Find(cd => cd.MatchesClient(client));
         }
-
+        
         public void AssignClientCharacterInfos(IEnumerable<Client> connectedClients)
         {
             foreach (Client client in connectedClients)
             {
+                if (client.SpectateOnly && GameMain.Server.ServerSettings.AllowSpectating) { continue; }
                 var matchingData = GetClientCharacterData(client);
                 if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
             }
@@ -110,7 +130,6 @@ namespace Barotrauma
             return assignedJobs;
         }
 
-
         public void ServerWrite(NetBuffer msg, Client c)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
@@ -121,6 +140,7 @@ namespace Barotrauma
             msg.Write(map.Seed);
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
             msg.Write(Money);
 
@@ -146,6 +166,7 @@ namespace Barotrauma
         public void ServerRead(NetBuffer msg, Client sender)
         {
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            byte selectedMissionIndex = msg.ReadByte();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
@@ -163,6 +184,10 @@ namespace Barotrauma
             }
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+            if (Map.SelectedConnection != null)
+            {
+                Map.SelectMission(selectedMissionIndex);
+            }
 
             List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
             foreach (PurchasedItem pi in currentItems)

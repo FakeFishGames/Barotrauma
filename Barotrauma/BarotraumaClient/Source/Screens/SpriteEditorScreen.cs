@@ -25,6 +25,7 @@ namespace Barotrauma
         private List<Sprite> selectedSprites = new List<Sprite>();
         private List<Sprite> dirtySprites = new List<Sprite>();
         private Texture2D selectedTexture;
+        private Sprite lastSelected;
         private Rectangle textureRect;
         private float zoom = 1;
         private float minZoom = 0.25f;
@@ -139,10 +140,8 @@ namespace Barotrauma
                 }
             };
 
-            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter)
-            { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
-            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter)
-            { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
+            texturePathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
+            xmlPathText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.4f), topPanelContents.RectTransform, Anchor.Center, Pivot.TopCenter) { RelativeOffset = new Vector2(0.4f, 0) }, "", Color.LightGray);
 
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomLeft)
             { MinSize = new Point(150, 0) }, style: "GUIFrameLeft");
@@ -167,7 +166,7 @@ namespace Barotrauma
                     }
                     if (selectedSprites.None(s => s.Texture == selectedTexture))
                     {
-                        spriteList.Select(loadedSprites.First(s => s.Texture == selectedTexture), false);
+                        spriteList.Select(loadedSprites.First(s => s.Texture == selectedTexture), autoScroll: false);
                         UpdateScrollBar(spriteList);
                     }
                     texturePathText.TextColor = Color.LightGray;
@@ -176,9 +175,7 @@ namespace Barotrauma
                 }
             };
 
-            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight)
-            { MinSize = new Point(150, 0) },
-                style: "GUIFrameRight");
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f - topPanel.RectTransform.RelativeSize.Y), Frame.RectTransform, Anchor.BottomRight) { MinSize = new Point(150, 0) }, style: "GUIFrameRight");
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
                 Stretch = true,
@@ -204,6 +201,7 @@ namespace Barotrauma
                         {
                             selectedSprites.Add(sprite);
                             dirtySprites.Add(sprite);
+                            lastSelected = sprite;
                         }
                     }
                     else
@@ -211,6 +209,7 @@ namespace Barotrauma
                         selectedSprites.Clear();
                         selectedSprites.Add(sprite);
                         dirtySprites.Add(sprite);
+                        lastSelected = sprite;
                     }
                     if (selectedTexture != sprite.Texture)
                     {
@@ -273,6 +272,7 @@ namespace Barotrauma
             {
                 string spriteFolder = "";
                 string textureElement = element.GetAttributeString("texture", "");
+                // TODO: parse and create
                 if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]")) { return; }
                 if (!textureElement.Contains("/"))
                 {
@@ -469,7 +469,25 @@ namespace Barotrauma
             base.Select();
             LoadSprites();
             RefreshLists();
-            textureList.Select(0, autoScroll: false);
+            // Store the reference, because lastSelected is reassigned when the texture is selected.
+            Sprite lastSprite = lastSelected;
+            // Select the last selected texture if any.
+            // TODO: Does not work if the texture has been disposed. This happens when it's not used by any sprite -> is there a better way to identify the textures? id or something?
+            if (selectedTexture != null && textureList.Content.Children.Any(c => c.UserData as Texture2D == selectedTexture))
+            {
+                textureList.Select(selectedTexture, autoScroll: false);
+                UpdateScrollBar(textureList);
+                // Select the last selected sprite if any
+                if (lastSprite != null && spriteList.Content.Children.FirstOrDefault(c => c.UserData is Sprite s && s.ID == lastSprite.ID)?.UserData is Sprite sprite)
+                {
+                    spriteList.Select(sprite, autoScroll: false);
+                    UpdateScrollBar(spriteList);
+                }
+            }
+            else
+            {
+                spriteList.Select(0, autoScroll: false);
+            }
         }
 
         public override void Deselect()
@@ -505,7 +523,7 @@ namespace Barotrauma
 
         public void RefreshLists()
         {
-            selectedTexture = null;
+            //selectedTexture = null;
             selectedSprites.Clear();
             textureList.ClearChildren();
             spriteList.ClearChildren();

@@ -18,7 +18,7 @@
   VoronoiSiteInterval="20"
   VoronoiSitePlacementProbability="0.3"
   VoronoiSitePlacementMinVal="0.1"
-  MinConnectionDistance="10"
+  MinConnectionDistance="50"
   ConnectionIterationMultiplier="0.2"
   ConnectionDisplacementMultiplier="0.5"
   ConnectionIndicatorIterationMultiplier="0.1"
@@ -49,5 +49,6 @@
   <DecorativeLineCorner texture="Content/Map/MapHUD.png" sourcerect="1025,1259,1024,732" columns="4" rows="10"/>
   <ReticleLarge texture="Content/Map/Reticles.png" sourcerect="0,0,2043,1024" columns="9" rows="4" origin="0.5,0.5"/>
   <ReticleMedium texture="Content/Map/Reticles.png" sourcerect="0,1024,2040,256" columns="12" rows="1" origin="0.5,0.5"/>
-  <ReticleSmall texture="Content/Map/Reticles.png" sourcerect="0,1280,2048,768" columns="10" rows="4" origin="0.5,0.65"/>  
+  <ReticleSmall texture="Content/Map/Reticles.png" sourcerect="0,1280,2048,768" columns="10" rows="4" origin="0.5,0.65"/>
+  <LocationIndicator texture="Content/UI/CampaignUIAtlas.png" sourcerect="436,738,165,198" origin="0.5,0.5"/>
 </MapGenerationParameters>

@@ -10,92 +10,100 @@
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
 
+  <InnerGlow
+    color="255,255,255,204"
+    hovercolor="255,255,255,204"
+    selectedcolor="255,255,255,204">
+
+    <Sprite texture="Content/UI/InnerGlow.png"  sourcerect ="0,0,512,384" slice="128,128,384,256"/>
+  </InnerGlow>
+  
   <OuterGlow
-    color="1.0,1.0,1.0,0.8"
-    hovercolor="1.0,1.0,1.0,0.8"
-    selectedcolor="1.0,1.0,1.0,0.8">
+    color="255,255,255,204"
+    hovercolor="255,255,255,204"
+    selectedcolor="255,255,255,204">
 
     <Sprite texture="Content/UI/OuterGlow.png" size="0.0, 0.0" sourcerect ="0, 0, 256, 256" slice="96,96,160,160"/>
   </OuterGlow>
   
   <GUIFrame
     padding="40.0, 50.0, 40.0, 50.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"  
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
   </GUIFrame>
 
   <GUIFrameHeader
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
   
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 780, 420, 220" slice="87,853,430,929"/>
   </GUIFrameHeader>
 
   <GUIFrameTop
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"  
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 705, 420, 55" slice="87,706,430,739"/>
   </GUIFrameTop>
 
   <GUIFrameBottom
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 55" slice="87,576,430,593"/>
   </GUIFrameBottom>
   
   <GUIFrameLeft
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"  
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="87, 541, 365, 220" slice="88,576,430,687"/>
   </GUIFrameLeft>
 
   <GUIFrameRight
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
   
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 395, 220" slice="87,576,430,687"/>
   </GUIFrameRight>
 
   <InnerFrame
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
   
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="466, 660, 275, 166" slice="472,666,737,820"/>
   </InnerFrame>
 
   <GUIButton
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    pressedcolor="0.9,0.9,0.9,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="230,230,230,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="683, 74, 129, 41" slice="687, 78, 808, 109"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="888, 91, 129, 41" slice="893, 98, 1013, 125"/>
@@ -103,15 +111,15 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="553, 74, 129, 41" slice="557, 78, 676, 109"/>
 
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 1.0"
+      textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButton>
 
   <GUIButtonLarge
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    pressedcolor="0.9,0.9,0.9,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="230,230,230,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="4,116,222,59" slice="41,140,189,151"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="415,172,222,59" slice="452,196,600,207"/>
@@ -119,15 +127,15 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="646,172,222,59" slice="683,196,831,207"/>
 
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 1.0"
+      textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonLarge>
 
   <GUITabButton
-    color="0.7,0.7,0.7,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    pressedcolor="0.7,0.7,0.7,1.0">
+    color="179,179,179,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="179,179,179,255">
     
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="646,172,222,48" slice="683,196,831,207"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="4,116,222,48" slice="41,140,189,151"/>
@@ -135,14 +143,104 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="646,172,222,48" slice="683,196,831,207"/>
 
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 1.0"
+      textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUITabButton>
+
+  <GUISlopedHeader
+    color="73,157,148,240"
+    hovercolor="145,204,198,240"
+    selectedcolor="73,157,148,240"
+    pressedcolor="50,109,103,240"
+    textcolor="14,35,33,255"
+    padding="10.0, 0.0, 10.0, 0.0">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="10,461,404,101" tile="false"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="20.0, 0.0, 20.0, 0.0"/>
+  </GUISlopedHeader>
+
+  <GUISlopedTabButtonLeft
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="11,380,207,68" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="20.0, 0.0, 20.0, 0.0"/>
+  </GUISlopedTabButtonLeft>
+
+  <GUISlopedTabButtonMid
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="218,380,257,68" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="20.0, 0.0, 20.0, 0.0"/>
+  </GUISlopedTabButtonMid>
+
+  <GUISlopedTabButtonRight
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="475,380,207,68" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="20.0, 0.0, 20.0, 0.0"/>
+  </GUISlopedTabButtonRight>
+
+  <ItemCategoryEquipment
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="2,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryEquipment>
+
+  <ItemCategoryElectrical
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="156,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryElectrical>
+  
+  <ItemCategoryMaterial
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="314,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryMaterial>
+
+  <ItemCategoryMisc
+    color="105,118,116,240"
+    hovercolor="136,153,150,240"
+    selectedcolor="117,157,153,255"
+    pressedcolor="80,90,88,255">
+    <Sprite texture="Content/UI/CampaignUIAtlas.png" sourcerect="472,10,151,145" tile="false" maintainaspectratio="true"/>
+    <GUITextBlock
+      textcolor="16,34,33,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </ItemCategoryMisc> 
   
   <GUIButtonServerListInfo
-    color="0.4,0.59,0.69,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="102,150,175,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
@@ -151,9 +249,9 @@
   </GUIButtonServerListInfo>
 
   <GUIButtonRefresh
-    color="0.8,0.8,0.8,1.0"
-    hovercolor="0.3,0.3,0.8,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="204,204,204,255"
+    hovercolor="77,77,204,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
@@ -162,18 +260,18 @@
   </GUIButtonRefresh>
 
   <UIToggleButton
-    color="0.9,0.9,0.9,0.8"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,0.9"
-    textcolor="0.0,0.0,0.0,1.0">
+    color="204,204,204,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,230"
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect ="96,366,32,352" slice="101,371,123,713"/>
     <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" maintainaspectratio="true" sourcerect="128,399,32,37"/>
   </UIToggleButton>
 
   <GUIButtonHorizontalArrow
-    color="0.8,0.8,0.8,0.8"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="0.8,0.8,0.8,0.8">
+    color="204,204,204,204"
+    hovercolor="255,255,255,255"
+    selectedcolor="204,204,204,204">
 
     <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="471,947,24,69"/>
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="471,947,24,69"/>
@@ -181,14 +279,14 @@
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="471,947,24,69"/>
 
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 1.0"
+      textcolor="153,166,179,255"
       padding="0.0, 0.0, 0.0, 0.0"/>
   </GUIButtonHorizontalArrow>
 
   <GUIButtonVerticalArrow
-    color="0.8,0.8,0.8,0.8"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="0.8,0.8,0.8,0.8">
+    color="204,204,204,204"
+    hovercolor="255,255,255,255"
+    selectedcolor="204,204,204,204">
 
     <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="584,972,69,24"/>
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="584,972,69,24"/>
@@ -196,14 +294,14 @@
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="584,972,69,24"/>
 
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 1.0"
+      textcolor="153,166,179,255"
       padding="0.0, 0.0, 0.0, 0.0"/>
   </GUIButtonVerticalArrow>
   
   <GUITextBlock
-    textcolor="0.5, 0.55, 0.6, 1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
+    textcolor="127,140,153,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
     padding="10.0, 0.0, 10.0, 0.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="474, 544, 266, 52" slice="480, 552, 731, 584"/>
@@ -211,8 +309,8 @@
   </GUITextBlock>
 
   <GUIToolTip
-    textcolor="0.5, 0.55, 0.6, 1.0"
-    color="1.0,1.0,1.0,1.0"
+    textcolor="127,140,153,255"
+    color="255,255,255,255"
     hovercolor="0.3, 0.3, 0.3, 1.0"
     selectedcolor="1.0, 0.6, 0.0, 1.0"
     padding="10.0, 0.0, 0.0, 0.0">
@@ -223,11 +321,11 @@
   <GUIListBox
     color="1.0, 1.0, 1.0, 1.0"
     textcolor="1.0, 1.0, 1.0, 1.0"
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    outlinecolor="127,145,153,255">
     <GUIFrame
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
     
       textcolor="1.0, 1.0, 1.0, 1.0">
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="466, 660, 275, 166" slice="472,666,737,820"/>
@@ -235,10 +333,10 @@
   </GUIListBox>
 
   <ListBoxElement
-    textcolor="0.5, 0.55, 0.6, 1.0"    
-    color="1.0,1.0,1.0,0.2"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
+    textcolor="127,140,153,255"    
+    color="255,255,255,51"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
     padding="5.0, 5.0, 5.0, 5.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
@@ -248,54 +346,54 @@
 
   <GUIScrollBar>
     <GUIFrameHorizontal
-      color="1.0,1.0,1.0,1.0"
-      textcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      textcolor="255,255,255,255"
       padding="7.0, 1.0, 7.0, 1.0">
         <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="0, 11, 307, 11" slice="7, 13, 299, 20"/>
     </GUIFrameHorizontal>
 
     <GUIFrameVertical
-      color="1.0,1.0,1.0,1.0"
-      textcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      textcolor="255,255,255,255"
       padding="1.0, 7.0, 1.0, 7.0">
         <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="986, 874, 11, 148" slice="988, 881, 995, 1014"/>
     </GUIFrameVertical>
   </GUIScrollBar>
 
   <GUIDropDown
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"    
-    textcolor="0.5, 0.55, 0.6, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"    
+    textcolor="127,140,153,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="469, 599, 276, 52" slice="480, 610, 731, 640"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="469, 544, 276, 52" slice="480, 552, 731, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="469, 544, 276, 52" slice="480, 552, 731, 584"/>
     <GUITextBlock
-      textcolor="0.5, 0.55, 0.6, 1.0"
+      textcolor="127,140,153,255"
       padding="10.0, 0.0, 10.0, 0.0">
     </GUITextBlock>
   </GUIDropDown>
 
   <GUITextBox
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"    
-    textcolor="0.5, 0.55, 0.6, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"    
+    textcolor="127,140,153,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="469, 599, 276, 52" slice="480, 610, 731, 640"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="469, 544, 276, 52" slice="480, 552, 731, 584"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="469, 490, 276, 52" slice="480, 497, 731, 529"/>    
     
     <GUITextBlock
-      textcolor="0.5, 0.55, 0.6, 1.0"
+      textcolor="127,140,153,255"
       padding="10.0, 0.0, 10.0, 0.0">
     </GUITextBlock>
   </GUITextBox>
 
   <GUIServerListTextBox
-  color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="0.0,0.5,0.0,1.0"
-    textcolor="0.5, 0.55, 0.6, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="0,128,0,255"
+    textcolor="127,140,153,255">
     <!--
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="469, 599, 276, 52" slice="480, 610, 731, 640"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="469, 544, 276, 52" slice="480, 552, 731, 584"/>
@@ -305,11 +403,10 @@
 
   <GUINumberInput>
     <GUITextBox
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"
-    
-      textcolor="0.5, 0.55, 0.6, 1.0">
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"    
+      textcolor="127,140,153,255">
       <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="470, 599, 274, 52" slice="480, 610, 731, 640"/>
       <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="470, 544, 274, 52" slice="480, 552, 731, 584"/>
       <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="470, 490, 274, 52" slice="480, 497, 731, 529"/>
@@ -317,80 +414,80 @@
   </GUINumberInput>
 
   <GUITickBox
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0" >
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255" >
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="991, 846, 23, 23" slice="997, 852, 1006, 862"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="991, 846, 23, 23" slice="997, 852, 1006, 862"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="991, 813, 23, 23" slice="997, 818, 1006, 828"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="489, 943, 23, 23" slice="494, 947, 506, 960"/>
     <GUITextBlock
-      textcolor="0.5, 0.55, 0.6, 1.0"
-      hovercolor="0.3, 0.3, 0.3, 0.5"
-      selectedcolor="1.0, 0.6, 0.0, 0.3"
+      textcolor="127,140,153,255"
+      hovercolor="76,76,76,127"
+      selectedcolor="255,153,0,76"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUITickBox>
 
   <GUIRadioButton
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0" >
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255" >
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="976, 431, 23, 24" tile="false"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="857, 88, 23, 24" tile="false"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="857, 88, 23, 24" tile="false"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="517, 943, 23, 24" tile="false"/>
     <GUITextBlock
-      textcolor="0.5, 0.55, 0.6, 1.0"
-      hovercolor="0.3, 0.3, 0.3, 0.5"
-      selectedcolor="1.0, 0.6, 0.0, 0.3"
+      textcolor="127,140,153,255"
+      hovercolor="76,76,76,127"
+      selectedcolor="255,153,0,76"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIRadioButton>
   
   <GUIServerListPasswordTickBox
-    color="0.2,0.2,0.2,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0" >
+    color="51,51,51,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255" >
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="1001, 639, 10, 14"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 639, 10, 14"/>
   </GUIServerListPasswordTickBox>
 
   <GUIServerListRoundStartedTickBox
-    color="0.2,0.2,0.2,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="51,51,51,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" maintainaspectratio="true" sourcerect ="1001, 627, 10, 12"/>
   </GUIServerListRoundStartedTickBox>
 
   <GUIStarIconDark
-    color="0.5,0.5,0.5,1.0"
-    hovercolor="0.5,0.5,0.5,1.0"
-    selectedcolor="0.5,0.5,0.5,1.0">
+    color="127,127,127,255"
+    hovercolor="127,127,127,255"
+    selectedcolor="127,127,127,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 902, 24, 23"/>
   </GUIStarIconDark>
   
   <GUIStarIconBright
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 950, 24, 23"/>
   </GUIStarIconBright>
   
   <GUIMessageBox    
-    color="0.0, 0.0, 0.0, 0.8"
-    hovercolor="0.0, 0.0, 0.0, 0.8"
-    selectedcolor="0.0, 0.0, 0.0, 0.8"
-    pressedcolor="0.0, 0.0, 0.0, 0.8"
-    textcolor="0.0, 0.0, 0.0, 0.0">
+    color="0,0,0,204"
+    hovercolor="0,0,0,204"
+    selectedcolor="0,0,0,204"
+    pressedcolor="0,0,0,204"
+    textcolor="0,0,0,0">
 
     <Sprite texture="Content/UI/InnerShadow.png" sourcerect="0,0,512,512" slice="170,170,342,342"/>
     
     <GUIFrame
       padding="40.0, 20.0, 40.0, 20.0"
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"  
-      textcolor="0.0, 0.0, 0.0, 1.0">
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"  
+      textcolor="0,0,0,255">
 
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
     </GUIFrame>
@@ -398,25 +495,23 @@
 
   <GUIProgressBar
     padding="0.0, 0.0, 0.0, 0.0"
-    color="0.0, 0.0, 0.0, 0.5"
-  
-    hovercolor="0.0, 0.0, 0.0, 0.5"
-    selectedcolor="0.0, 0.0, 0.0, 0.5"
-    
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    color="0,0,0,127"  
+    hovercolor="0,0,0,127"
+    selectedcolor="0,0,0,127"    
+    outlinecolor="127,145,153,255">
 
     <GUIFrame
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0">
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255">
 
       <Sprite texture="Content/UI/UI_Atlas.png" tile="false" sourcerect ="28, 430, 875, 49"/>
     </GUIFrame>
 
     <Slider
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0">
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255">
 
       <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" sourcerect ="0, 276, 859, 37"/>
       <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" sourcerect ="0, 276, 859, 37"/>
@@ -425,57 +520,56 @@
 
   <GUIProgressBarVertical
     padding="0.0, 0.0, 0.0, 0.0"
-    color="0.0, 0.0, 0.0, 0.5"  
-    hovercolor="0.0, 0.0, 0.0, 0.5"
-    selectedcolor="0.0, 0.0, 0.0, 0.5"    
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    color="0,0,0,127"  
+    hovercolor="0,0,0,127"
+    selectedcolor="0,0,0,127"  
+    outlinecolor="127,145,153,255">
 
     <GUIFrame
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0">
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255">
 
       <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" sourcerect ="2, 2, 47, 859"/>
     </GUIFrame>
 
     <Slider
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0">
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255">
 
       <Sprite texture="Content/UI/UI_Atlas2.png" state="None" tile="false" sourcerect ="56, 7, 31, 847"/>
       <Sprite texture="Content/UI/UI_Atlas2.png" state="Hover" tile="false" sourcerect ="56, 7, 31, 847"/>
     </Slider>
   </GUIProgressBarVertical>
 
-
   <GUIBackgroundBlocker
-    color="0.0, 0.0, 0.0, 0.8"
-    hovercolor="0.0, 0.0, 0.0, 0.8"
-    selectedcolor="0.0, 0.0, 0.0, 0.8"
-    pressedcolor="0.0, 0.0, 0.0, 0.8"
-    textcolor="0.0, 0.0, 0.0, 0.0">
+    color="0,0,0,204"
+    hovercolor="0,0,0,204"
+    selectedcolor="0,0,0,204"
+    pressedcolor="0,0,0,204"
+    textcolor="0,0,0,0">
 
     <Sprite texture="Content/UI/InnerShadow.png" sourcerect="0,0,512,512" slice="170,170,342,342"/>
     <GUITextBlock
-      textcolor="0.0, 0.0, 0.0, 0.0"/>
+      textcolor="0,0,0,0"/>
   </GUIBackgroundBlocker>
   
   <ItemUI
     padding="40.0,40.0,40.0,40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
   </ItemUI>
 
   <SerializableEntityEditor
     padding="10.0, 0.0, 0.0, 10.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"  
+    textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
@@ -483,23 +577,23 @@
   </SerializableEntityEditor>
 
   <ChatBox
-    color="1.0,1.0,1.0,1.0"
-    textcolor="1.0,1.0,1.0,1.0"
-    outlinecolor="0.0,0.0,0.0,0.0">
+    color="255,255,255,255"
+    textcolor="255,255,255,255"
+    outlinecolor="0,0,0,0">
     <GUIFrame
       padding="5.0,10.0,5.0,10.0"
       color="1.0,1.0,1.0,0.95"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0">
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255">
       <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
     </GUIFrame>
   </ChatBox>
 
   <ChatTextBox
-    color="1.0,1.0,1.0,0.9"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="0.5,0.5,1.0,1.0"
-    textcolor="0.5, 0.55, 0.6, 1.0">
+    color="255,255,255,230"
+    hovercolor="255,255,255,255"
+    selectedcolor="127,127,127,255"
+    textcolor="127,140,153,255">
     <Sprite texture="Content/UI/inventoryAtlas.png" state="None" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
@@ -508,9 +602,9 @@
   <!-- Health interface -->
   
   <CPRButton
-    color="0.9,0.9,0.9,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="0.9,0.9,0.9,1.0">
+    color="230,230,230,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="230,230,230,255">
 
     <Sprite texture="Content/UI/Health/cprButton.png" state="None" tile="false" sourcerect ="0, 0, 64, 64"/>
     <Sprite texture="Content/UI/Health/cprButton.png" state="Hover" tile="false" sourcerect ="0, 0, 64, 64"/>
@@ -518,129 +612,129 @@
     <Sprite texture="Content/UI/Health/cprButton.png" state="Pressed" tile="false" sourcerect ="0, 0, 64, 64"/>
     
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 1.0"
+      textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </CPRButton>
 
   <AfflictionIconSlot
-    color="1.0,1.0,1.0,0.7"
-    hovercolor="1.0,1.0,1.0,0.9"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,178"
+    hovercolor="255,255,255,230"
+    selectedcolor="255,255,255,255">
     <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
   </AfflictionIconSlot>
 
   <HealthCross
-    color="1,1,1,0.6"
-    hovercolor="1,1,1,0.8">
+    color="255,255,255,153"
+    hovercolor="255,255,255,204">
     <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" sourcerect="179,370,26,27"/>
   </HealthCross>
   
   <!--
   <HealthCircleInner1
-    color="1,1,1,0.6"
-    hovercolor="1,1,1,0.8">
+    color="255,255,255,153"
+    hovercolor="255,255,255,204">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="0,0,683,683"/>
   </HealthCircleInner1>
 
   <HealthCircleInner2
-    color="1,1,1,0.6"
-    hovercolor="1,1,1,0.8">
+    color="255,255,255,153"
+    hovercolor="255,255,255,204">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 1366, 682, 682"/>
   </HealthCircleInner2>
   -->
   <HealthCircleInner3
-    color="1,1,1,0.8"
-    hovercolor="1,1,1,0.8">
+    color="255,255,255,204"
+    hovercolor="255,255,255,204">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect ="783, 1466, 483, 482"/>
   </HealthCircleInner3>
 
 
   <HealthCircleMid1
-    color="1,1,1,0.4"
-    hovercolor="1,1,1,0.6">
+    color="255,255,255,102"
+    hovercolor="255,255,255,153">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="683, 0, 683, 683"/>
   </HealthCircleMid1>
 
   <HealthCircleMid2
-    color="1,1,1,0.6"
-    hovercolor="1,1,1,0.8">
+    color="255,255,255,153"
+    hovercolor="255,255,255,204">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 0, 682, 683"/>
   </HealthCircleMid2>
 
   <HealthCircleOuter1
-    color="1,1,1,0.3"
-    hovercolor="1,1,1,0.3">
+    color="255,255,255,76"
+    hovercolor="255,255,255,76">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="683, 683, 683, 683"/>
   </HealthCircleOuter1>
 
   <HealthCircleOuter2
-    color="1,1,1,0.8"
-    hovercolor="1,1,1,0.8">
+    color="255,255,255,204"
+    hovercolor="255,255,255,204">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="1366, 683, 683, 683"/>
   </HealthCircleOuter2>
 
   <HealthCircleOuter3
-    color="1,1,1,0.3"
-    hovercolor="1,1,1,0.3">
+    color="255,255,255,76"
+    hovercolor="255,255,255,76">
     <Sprite texture="Content/UI/Health/MedicalDropArea.png" tile="false" sourcerect="0, 1366, 683, 682"/>
   </HealthCircleOuter3>
   <!-- /health interface -->
   
   <IndicatorLightRed
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    textcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="255,255,255,255">
     <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect="0,143,47,47" tile="false"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect="0,143,47,47" tile="false"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect="0,143,47,47" tile="false"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Selected"  sourcerect="47,143,47,47" tile="false"/>
     <GUITextBlock
-      textcolor="0.5, 0.55, 0.6, 1.0"
-      hovercolor="0.3, 0.3, 0.3, 0.5"
-      selectedcolor="1.0, 0.6, 0.0, 0.3"
+      textcolor="127,140,153,255"
+      hovercolor="76,76,76,127"
+      selectedcolor="255,153,0,76"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </IndicatorLightRed>
   
   <IndicatorLightGreen
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    textcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="255,255,255,255">
     <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect="0,143,47,47" tile="false"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect="0,143,47,47" tile="false"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect="0,143,47,47" tile="false"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Selected"  sourcerect="140,143,47,47" tile="false"/>
     <GUITextBlock
-      textcolor="0.5, 0.55, 0.6, 1.0"
-      hovercolor="0.3, 0.3, 0.3, 0.5"
-      selectedcolor="1.0, 0.6, 0.0, 0.3"
+      textcolor="127,140,153,255"
+      hovercolor="76,76,76,127"
+      selectedcolor="255,153,0,76"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </IndicatorLightGreen>
 
   <OnOffSlider>
     <GUIFrameHorizontal
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"
-      textcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
+      textcolor="255,255,255,255"
       padding="0.0, 0.0, 0.0, 0.0">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="0,229,119,39" tile="false"/>
     </GUIFrameHorizontal>
 
     <GUIButtonHorizontal
-      color="0.9,0.9,0.9,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="0.9,0.9,0.9,1.0"
-      textcolor="1.0,1.0,1.0,1.0">
+      color="230,230,230,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="230,230,230,255"
+      textcolor="255,255,255,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="122,229,55,38" tile="false"/>
     </GUIButtonHorizontal>
   </OnOffSlider>
 
   <IndicatorButton
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
     <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
@@ -648,147 +742,147 @@
     <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
 
     <GUITextBlock
-      textcolor="0.0, 0.0, 0.0, 1.0"
+      textcolor="0,0,0,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </IndicatorButton>
 
   <OnOffLever>
     <GUIFrameVertical
-      color="1.0,1.0,1.0,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="1.0,1.0,1.0,1.0"
-      textcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
+      textcolor="255,255,255,255"
       padding="0.0, 0.0, 0.0, 0.0">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="230,197,63,132" tile="false"/>
     </GUIFrameVertical>
 
     <GUIButtonVertical
-      color="0.9,0.9,0.9,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="0.9,0.9,0.9,1.0"
-      textcolor="1.0,1.0,1.0,1.0">
+      color="230,230,230,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="230,230,230,255"
+      textcolor="255,255,255,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="0,268,104,24" tile="false"/>
     </GUIButtonVertical>
   </OnOffLever>
 
   <GUISlider>
     <GUIFrameHorizontal
-      color="1.0,1.0,1.0,1.0"
-      textcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      textcolor="255,255,255,255"
       padding="9.0, 2.0, 9.0, 2.0">
       <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="0,11,307,11" slice="7,13,299,20"/>
     </GUIFrameHorizontal>
 
     <GUIFrameVertical
-      color="1.0,1.0,1.0,1.0"
-      textcolor="1.0,1.0,1.0,1.0"
+      color="255,255,255,255"
+      textcolor="255,255,255,255"
       padding="2.0, 6.0, 2.0, 6.0">
       <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="986,874,11,148" slice="988,881,995,1014"/>
     </GUIFrameVertical>
 
     <GUIButtonHorizontal
-      color="0.9,0.9,0.9,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="0.9,0.9,0.9,1.0">
+      color="230,230,230,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="230,230,230,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="123,230,53,36" slice="132,235,165,260"/>
       <GUITextBlock
-        textcolor="0.6, 0.65, 0.7, 1.0"
+        textcolor="153,166,179,255"
         padding="10.0, 0.0, 10.0, 0.0"/>
     </GUIButtonHorizontal>
 
     <GUIButtonVertical
-      color="0.9,0.9,0.9,1.0"
-      hovercolor="1.0,1.0,1.0,1.0"
-      selectedcolor="0.9,0.9,0.9,1.0">
+      color="230,230,230,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="230,230,230,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="473,2,37,54" slice="479,10,505,47"/>
       <GUITextBlock
-        textcolor="0.6, 0.65, 0.7, 1.0"
+        textcolor="153,166,179,255"
         padding="10.0, 0.0, 10.0, 0.0"/>
     </GUIButtonVertical>
   </GUISlider>
 
   <SonarFrame
     padding="40.0, 40.0, 40.0, 40.0"
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"  
-    textcolor="0.0, 0.0, 0.0, 1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"  
+    textcolor="0,0,0,255">
     <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect="96,199,273,166" slice="136,219,326,350"/>
   </SonarFrame>
 
   <InventorySlotSmall
-    color="0.9,0.9,0.9,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="230,230,230,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect="532,395,75,71" tile="false"/>
   </InventorySlotSmall>
 
   <ConnectionPanel
-    color="1.0,1.0,1.0,0.75"
-    hovercolor="1.0,1.0,1.0,0.75"
-    selectedcolor="1.0,1.0,1.0,0.75">
+    color="255,255,255,191"
+    hovercolor="255,255,255,191"
+    selectedcolor="255,255,255,191">
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,312,400,200" tile="false"/>
   </ConnectionPanel>
 
   <ConnectionPanelFront
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,0,400,200" tile="false"/>
   </ConnectionPanelFront>
 
   <ConnectionPanelConnector
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="470,102,19,43" origin="0.5,0.25" tile="false"/>
   </ConnectionPanelConnector>
 
   <ConnectionPanelWire
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="408,1,11,102" tile="false"/>
   </ConnectionPanelWire>
 
   <ConnectionPanelConnection
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/Items/connectionpanel.png" state="None" sourcerect="64,256,32,32" origin="0.5,0.5" tile="false"/>
     <Sprite texture="Content/Items/connectionpanel.png" state="Hover" sourcerect="106,250,43,43" origin="0.5,0.5" tile="false"/>
   </ConnectionPanelConnection>
 
   <ConnectionPanelScrew
-    color="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0">
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,256,32,32" origin="0.5,0.5" tile="false"/>
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="32,256,32,32" origin="0.5,0.5" tile="false"/>
   </ConnectionPanelScrew>
 
   <MiniMapRoom
-    color="1.0,1.0,1.0,1.0"
-    textcolor="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    outlinecolor="0.0,0.0,0.0,0.0">
+    color="255,255,255,255"
+    textcolor="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    outlinecolor="0,0,0,0">
     <Sprite texture="Content/UI/UI_Atlas2.png" sourcerect="96,0,32,32" slice="106,10,118,22"/>
   </MiniMapRoom>
 
   <ScanLines
-    color="1.0,1.0,1.0,1.0"
-    textcolor="1.0,1.0,1.0,1.0"
-    hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    outlinecolor="0.0,0.0,0.0,0.0">
+    color="255,255,255,255"
+    textcolor="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    outlinecolor="0,0,0,0">
     <Sprite texture="Content/UI/UI_Atlas2.png" tile="true" sourcerect="96,64,128,128"/>
   </ScanLines>
 </style>

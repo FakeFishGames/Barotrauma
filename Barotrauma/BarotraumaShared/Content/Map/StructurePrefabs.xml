@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
   <!-- INTERIOR WALLS FF -->
   <ff_x_wall identifier="ff_x_wall" description="A vertical wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
@@ -11,59 +11,78 @@
     <sprite texture="Content/Map/FF_inWall_Y.png" depth="0.06" sourcerect="0,0,48,512" />
   </ff_y_wall>
   <!-- BACK WALLS START -->
-  <FF_Wall_B identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="1.0" />
   </FF_Wall_B>
-  <FF_Wall_BP identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="1.0" />
   </FF_Wall_BP>
-  <FF_Wall_C2 identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,256,512,256" depth="1.0" />
+  <FF_Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/FF_Wall_Ballast_C.png" sourcerect="0,0,512,256" depth="1.0" />
+  </FF_Wall_BC>
+  <FF_Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="1.0" />
+  </FF_Wall_C1>
+  <FF_Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="1.0" />
   </FF_Wall_C2>
-  <FF_Wall_C3 identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,512" depth="1.0" />
+  <FF_Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="1.0" />
   </FF_Wall_C3>
-  <FF_Wall_D1 identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="1.0" />
   </FF_Wall_D1>
-  <FF_Wall_D2 identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="1.0" />
   </FF_Wall_D2>
-  <FF_Wall_D3 identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="1.0" />
   </FF_Wall_D3>
-  <FF_Wall_E identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="1.0" />
   </FF_Wall_E>
-  <FF_Wall_F identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="1.0" />
   </FF_Wall_F>
-  <FF_Wall_G1 identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="1.0" />
   </FF_Wall_G1>
-  <FF_Wall_G2 identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="1.0" />
   </FF_Wall_G2>
-  <FF_Wall_G3 identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <FF_Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="1.0" />
   </FF_Wall_G3>
+  <FF_Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="1.0" />
+  </FF_Wall_H1>
   <!-- BACK WALLS ENDS -->
   <!-- TAIL -->
-  <extA_Tail identifier="extA_Tail" description="Submarine tail temp" width="683" height="796" resizehorizontal="false">
-    <sprite texture="Content/Map/SubRearBow.png" sourcerect="1,0,683,796" depth="0.01" />
+  <extA_Tail Name="TailFin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="40" bodyheight="300"  castshadows="false"> <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="309,234,128,339" depth="0.01" origin="0.5,0.5" />
   </extA_Tail>
-  <extA_Front identifier="extA_Front" description="Submarine front temp" width="367" height="730" resizehorizontal="false">
-    <sprite texture="Content/Map/SubRearBow.png" sourcerect="676,125,308,522" depth="0.01" />
+  <TailFin Name="TailFin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadows="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.01" origin="0.5,0.5" />
+  </TailFin>
+  <TailFin Name="TailFinB" identifier="tailfinb" description="Submarine tail temp" scale="0.5" body="false" castshadows="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="1064,2,988,514" depth="0.01" origin="0.5,0.5" />
+  </TailFin>
+  <TailFin Name="TailFinC" identifier="tailfinc" description="Submarine tail temp" scale="0.5" body="false" castshadows="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="0,1524,1033,180" depth="0.01" origin="0.5,0.5" />
+  </TailFin>
+  <TailFin Name="TailFinD" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadows="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.01" origin="0.5,0.5" />
+  </TailFin>
+  <extA_Front identifier="extA_Front" description="Submarine front temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="300"  castshadows="false">
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="675,147,306,500" depth="0.01" origin="0.5,0.5" />
   </extA_Front>
   <!-- TAIL ENDS-->
   <shellA name="Shell A 90 deg" identifier="shella90deg" description="Submarine wall" body="true" castshadow="true" width="96" height="512" bodywidth="72" bodyoffset="12,0" resizevertical="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,0,96,512" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="0,0,96,512" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" width="256" height="160" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">>
-    <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="96,0,256,160" depth="0.1" />
-    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="96,0,256,160" depth="0.85" />
-  </shellA>
+  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" width="256" height="160" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">&gt;
+    <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="96,0,256,160" depth="0.1" /><backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="96,0,256,160" depth="0.85" /></shellA>
   <shellA name="Shell A 34 deg" identifier="shella34deg" description="Submarine wall" body="true" castshadow="true" width="96" height="160" bodywidth="116" bodyheight="60" bodyrotation="-34">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="384,0,96,160" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="384,0,95,160" depth="0.85" />
@@ -98,7 +117,7 @@
   </shellA>
   <shellA name="Shell A 32 deg" identifier="shella32deg" description="Submarine wall" body="true" castshadow="true" width="160" height="128" bodywidth="150" bodyheight="60" bodyrotation="-32">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="864,128,160,128" depth="0.1" />
-    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="864,128,160,128" depth="0.85"  />
+    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="864,128,160,128" depth="0.85" />
   </shellA>
   <shellA name="Shell A 14 deg B" identifier="shella14degb" description="Submarine wall" body="true" castshadow="true" width="512" height="224" bodywidth="514" bodyheight="60" bodyoffset="0,-12" bodyrotation="-14">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1024,128,512,224" depth="0.1" />
@@ -176,8 +195,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="1488,1312,560,338" depth="0.85" />
   </shellA>
-  
-    <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
+  <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
   <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="219" bodyheight="40" bodyrotation="90" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,0,47,219" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,0,47,219" depth="0.85" />
@@ -298,7 +316,6 @@
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="302,381,50,200" depth="0.1" origin="0.391928,0.4112628" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="302,381,50,200" depth="0.85" />
   </sshellA>
-
   <sshellA name="Shuttle Shell A32b" identifier="sshella32b" description="Shuttle wall" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="636,397,196,44" depth="0.1" origin="0.5390056,0.5045244" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="636,397,196,44" depth="0.85" />
@@ -417,7 +434,6 @@
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="965,157,18,15" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="965,157,18,15" depth="0.85" />
   </sshellA>
-  
   <!-- OLD PIECES -->
   <largehorizontalback identifier="largehorizontalback" allowattachitems="true" description="A decorative structure with no collision detection" width="128" height="64" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,0,896,64" depth="0.9" />

@@ -74,11 +74,38 @@ namespace Barotrauma
             return background;
         }
 
+        
+        protected override void WatchmanInteract(Character watchman, Character interactor)
+        {
+            if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
+                (watchman.Submarine == Level.Loaded.EndOutpost && !Submarine.MainSub.AtEndPosition))
+            {
+                return;
+            }
+
+            if (GameMain.Client != null && interactor == Character.Controlled && 
+                    (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || GameMain.Client.HasPermission(ClientPermissions.ManageCampaign)))
+            {
+                var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
+                    .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    GameMain.Client.RequestRoundEnd();
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            
+            }
+        }
+
         public void ClientWrite(NetBuffer msg)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -97,6 +124,7 @@ namespace Barotrauma
             string mapSeed = msg.ReadString();
             UInt16 currentLocIndex = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            byte selectedMissionIndex = msg.ReadByte();
 
             int money = msg.ReadInt32();
 
@@ -150,6 +178,7 @@ namespace Barotrauma
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                campaign.Map.SelectMission(selectedMissionIndex);
 
                 campaign.Money = money;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);

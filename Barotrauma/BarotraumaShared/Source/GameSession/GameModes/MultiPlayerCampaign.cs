@@ -64,7 +64,7 @@ namespace Barotrauma
             base.Start();            
             if (GameMain.NetworkMember.IsServer) lastUpdateID++;
         }
-
+        
         public override void End(string endMessage = "")
         {
             isRunning = false;
