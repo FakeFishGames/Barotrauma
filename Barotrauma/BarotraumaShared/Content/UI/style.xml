@@ -30,7 +30,8 @@
     padding="40.0, 50.0, 40.0, 50.0"
     color="255,255,255,255"
     hovercolor="255,255,255,255"
-    selectedcolor="255,255,255,255"  
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
@@ -41,7 +42,7 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
-  
+    pressedcolor="255,255,255,255"  
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 780, 420, 220" slice="87,853,430,929"/>
@@ -51,7 +52,8 @@
     padding="40.0, 40.0, 40.0, 40.0"
     color="255,255,255,255"
     hovercolor="255,255,255,255"
-    selectedcolor="255,255,255,255"  
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 705, 420, 55" slice="87,706,430,739"/>
@@ -62,6 +64,7 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255"
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 55" slice="87,576,430,593"/>
@@ -72,6 +75,7 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"  
+    pressedcolor="255,255,255,255"
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="87, 541, 365, 220" slice="88,576,430,687"/>
@@ -82,7 +86,7 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
-  
+    pressedcolor="255,255,255,255"  
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 395, 220" slice="87,576,430,687"/>
@@ -93,7 +97,7 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
-  
+    pressedcolor="255,255,255,255"  
     textcolor="0,0,0,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="466, 660, 275, 166" slice="472,666,737,820"/>

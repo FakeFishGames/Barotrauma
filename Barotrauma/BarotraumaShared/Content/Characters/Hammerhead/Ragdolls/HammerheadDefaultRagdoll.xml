@@ -10,9 +10,9 @@
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="264,0,329,191" origin="0.5,0.5" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
-    <attack targettype="Structure" duration="0.2" structuredamage="50" force="15" targetforce="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" priority="0.1" stickchance="0" applyforcesonlyonce="False" range="300" damagerange="250">
-      <Affliction identifier="internaldamage" strength="30" />
-      <Affliction identifier="stun" strength="5" />
+    <attack priority="0" range="300" damagerange="250" duration="0.05" structuredamage="50" force="30" targetimpulse="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" targettype="Any" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0">
+      <Affliction identifier="internaldamage" strength="10" />
+      <Affliction identifier="stun" strength="2" />
     </attack>
   </limb>
   <limb id="2" name="22CL_FinFront" type="None" radius="95" width="77" notes="7cl_22CL_FinFront" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
@@ -31,18 +31,18 @@
     </deformablesprite>
   </limb>
   <limb id="5" name="Tail3" type="Tail" radius="0" width="150" notes="211cl_Tail3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="50" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="412,191,152,148" origin="0.5,0.5" subdivisions="10,5" depth="0">
+    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="412,191,152,148" origin="0.4611106,0.5605036" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
   </limb>
   <limb id="6" name="Tail4" type="Tail" radius="0" width="150" notes="2111cl_Tail4" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="50" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="564,191,153,148" origin="0.5,0.5" subdivisions="10,5" depth="0">
+    <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="564,191,153,148" origin="0.4878056,0.5725234" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
   </limb>
   <limb id="7" name="TailFinUpper" type="Tail" radius="0" height="20" notes="21111cl_TailFinUpper" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="140" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="718,191,143,148" origin="0.5,0.5" subdivisions="3,3" depth="0.1">
-      <spritedeformation type="noise" resolution="3,3" frequency="5" amplitude="0.25" changespeed="0.5" blendmode="add" />
+      <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
   </limb>
   <limb id="10" name="FinBack" type="None" radius="61" width="81" notes="22CL_FinBack" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
@@ -74,52 +74,52 @@
   </limb>
   <limb id="13" name="ClawTL2" type="LeftFoot" radius="0" width="255" notes="31cl_ClawTL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="1,462,333,78" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Character" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" priority="0" applyforcesonlyonce="True" damagerange="128.3793">
+    <attack targettype="Character" priority="0.5" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" damagerange="128.3793">
       <Affliction identifier="bleeding" strength="50" />
-      <Affliction identifier="stun" strength="1" />
+      <Affliction identifier="stun" strength="0.1" />
       <Affliction identifier="internaldamage" strength="20" />
     </attack>
   </limb>
   <limb id="17" name="ClawBL2" type="RightFoot" radius="0" width="262" notes="51cl_ClawBL2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Character" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" priority="0" applyforcesonlyonce="True" damagerange="131.856">
+    <attack targettype="Character" priority="0.5" range="150" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" damagerange="131.856">
       <Affliction identifier="bleeding" strength="50" />
-      <Affliction identifier="stun" strength="1" />
+      <Affliction identifier="stun" strength="0.1" />
       <Affliction identifier="internaldamage" strength="20" />
     </attack>
   </limb>
   <limb id="18" name="ClawBR2" type="RightHand" radius="0" width="262" notes="61cl_ClawBR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,653,334,72" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Any" range="300" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="1" priority="1" applyforcesonlyonce="True" damagerange="131.856">
+    <attack targettype="Character" priority="1" range="250" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" damagerange="131.856">
       <Affliction identifier="bleeding" strength="50" />
-      <Affliction identifier="stun" strength="1" />
+      <Affliction identifier="stun" strength="0.1" />
       <Affliction identifier="internaldamage" strength="20" />
     </attack>
   </limb>
   <limb id="14" name="ClawTR2" type="LeftHand" radius="0" width="256" notes="41br_ClawTR2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="334,462,334,78" origin="0.5,0.5439222" subdivisions="2,2" depth="0.06" />
-    <attack targettype="Any" range="300" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="1" priority="1" applyforcesonlyonce="True" damagerange="128.8759">
+    <attack targettype="Character" priority="1" range="250" duration="0.1" structuredamage="10" itemdamage="10" force="125" torque="0" targetimpulse="20" targetforce="0" structuresoundtype="StructureSlash" context="NotDefined" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforceonlimbs="" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0.5" stickchance="0" applyforcesonlyonce="True" damagerange="128.8759">
       <Affliction identifier="bleeding" strength="50" />
-      <Affliction identifier="stun" strength="1" />
+      <Affliction identifier="stun" strength="0.1" />
       <Affliction identifier="internaldamage" strength="20" />
     </attack>
   </limb>
-  <joint name="Joint Torso - Head" limb1="0" limb2="1" limb1anchor="81.01968,-0.005905516" limb2anchor="-119.9188,-1.121672" canbesevered="True" limitenabled="True" upperlimit="357.9161" lowerlimit="338.2947" stiffness="0.25" />
+  <joint name="Joint Torso - Head" limb1="0" limb2="1" limb1anchor="81.01968,-0.005905516" limb2anchor="-119.9188,-1.121672" canbesevered="True" limitenabled="True" upperlimit="9.449703" lowerlimit="-9.196631" stiffness="0.25" />
   <joint name="Joint Torso - 22CL_FinFront" limb1="0" limb2="2" limb1anchor="-39.58816,-12.7004" limb2anchor="-85.75584,-8.413865" canbesevered="True" limitenabled="True" upperlimit="279.4552" lowerlimit="246.7131" stiffness="0.25" />
-  <joint name="Joint Torso - Tail1" limb1="0" limb2="3" limb1anchor="-87.96368,5.596019" limb2anchor="-52.0942,1.604668" canbesevered="True" limitenabled="True" upperlimit="192.2323" lowerlimit="156.6585" stiffness="0.25" />
-  <joint name="Joint Tail1 - Tail2" limb1="3" limb2="4" limb1anchor="61.51335,5.383524" limb2anchor="-48.88821,-13.742" canbesevered="True" limitenabled="True" upperlimit="23.20893" lowerlimit="-29.84426" stiffness="0.25" />
-  <joint name="Joint Tail2 - Tail3" limb1="4" limb2="5" limb1anchor="79.60134,10.68245" limb2anchor="-47.89211,-0.1858205" canbesevered="True" limitenabled="True" upperlimit="9.528852" lowerlimit="-62.46804" stiffness="0.25" />
-  <joint name="Joint Tail3 - Tail4" limb1="5" limb2="6" limb1anchor="58.8436,-17.926" limb2anchor="-44.55386,-8.5864" canbesevered="True" limitenabled="True" upperlimit="14.85826" lowerlimit="-27.93105" stiffness="0.25" />
-  <joint name="Joint Tail4 - TailFinUpper" limb1="6" limb2="7" limb1anchor="60.97314,-16.16336" limb2anchor="-53.15003,-15.63455" canbesevered="True" limitenabled="True" upperlimit="25.22725" lowerlimit="-29.80602" stiffness="0.25" />
-  <joint name="Joint Torso - ClawTL1" limb1="0" limb2="8" limb1anchor="-16.51882,66.80719" limb2anchor="-84.58632,-2.587214" canbesevered="True" limitenabled="True" upperlimit="165.2173" lowerlimit="45.03423" stiffness="0.25" />
-  <joint name="Joint Torso - ClawTR1" limb1="0" limb2="9" limb1anchor="171.2932,50.76964" limb2anchor="-83.4224,13.38599" canbesevered="True" limitenabled="True" upperlimit="160.4675" lowerlimit="89.9981" stiffness="0.25" />
-  <joint name="Joint Tail1 - FinBack" limb1="3" limb2="10" limb1anchor="23.61253,54.00113" limb2anchor="-64.30891,16.72764" canbesevered="True" limitenabled="True" upperlimit="34.80137" lowerlimit="13.33343" stiffness="0.25" />
+  <joint name="Joint Torso - Tail1" limb1="0" limb2="3" limb1anchor="-87.96368,5.596019" limb2anchor="-52.0942,1.604668" canbesevered="True" limitenabled="True" upperlimit="210" lowerlimit="150" stiffness="0.25" />
+  <joint name="Joint Tail1 - Tail2" limb1="3" limb2="4" limb1anchor="89.10211,-5.012409" limb2anchor="-48.88821,-13.742" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint name="Joint Tail2 - Tail3" limb1="4" limb2="5" limb1anchor="79.60134,10.68245" limb2anchor="-47.89211,-0.1858205" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint name="Joint Tail3 - Tail4" limb1="5" limb2="6" limb1anchor="58.8436,-17.926" limb2anchor="-44.55386,-8.5864" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint name="Joint Tail4 - TailFinUpper" limb1="6" limb2="7" limb1anchor="54.29984,-7.301076" limb2anchor="-65.50785,-15.63507" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-30" stiffness="0.25" />
+  <joint name="Joint Torso - ClawTL1" limb1="0" limb2="8" limb1anchor="-16.51882,66.80719" limb2anchor="-84.58632,-2.587214" canbesevered="True" limitenabled="True" upperlimit="160" lowerlimit="90" stiffness="0.25" />
+  <joint name="Joint Torso - ClawTR1" limb1="0" limb2="9" limb1anchor="133.8089,59.48099" limb2anchor="-83.4224,13.38599" canbesevered="True" limitenabled="True" upperlimit="160" lowerlimit="89.9981" stiffness="0.25" />
+  <joint name="Joint Tail1 - FinBack" limb1="3" limb2="10" limb1anchor="5.909824,51.71552" limb2anchor="-64.30891,16.72764" canbesevered="True" limitenabled="True" upperlimit="59.41666" lowerlimit="43.45236" stiffness="0.25" />
   <joint name="Joint Tail3 - TailFinLower" limb1="5" limb2="11" limb1anchor="-16.15269,24.62445" limb2anchor="-54.60117,5.594362" canbesevered="True" limitenabled="True" upperlimit="56.3613" lowerlimit="20.23873" stiffness="0.25" />
-  <joint name="Joint Tail2 - FinTail1" limb1="4" limb2="12" limb1anchor="6.404477,-32.14788" limb2anchor="-60.08483,-7.495843" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint name="Joint Tail2 - FinTail1" limb1="4" limb2="12" limb1anchor="6.404477,-32.14788" limb2anchor="-60.08483,-7.495843" canbesevered="True" limitenabled="True" upperlimit="1.9704" lowerlimit="-20.71293" stiffness="0.25" />
   <joint name="Joint ClawTL1 - ClawTL2" limb1="8" limb2="13" limb1anchor="81.70031,-5.731925" limb2anchor="-143.2028,-20.99047" canbesevered="True" limitenabled="True" upperlimit="33.47186" lowerlimit="-91.47741" stiffness="0.25" />
   <joint name="Joint ClawTR1 - ClawTR2" limb1="9" limb2="14" limb1anchor="77.72355,12.42766" limb2anchor="-139.7024,-16.9335" canbesevered="True" limitenabled="True" upperlimit="0.3517274" lowerlimit="-55.80795" stiffness="0.25" />
-  <joint name="Joint Torso - ClawBL1" limb1="0" limb2="15" limb1anchor="-14.41944,-58.10474" limb2anchor="-81.75753,-12.58581" canbesevered="True" limitenabled="True" upperlimit="-57.1077" lowerlimit="-160.4753" stiffness="0.25" />
-  <joint name="Joint Torso - ClawBR1" limb1="0" limb2="16" limb1anchor="172.9727,-55.24975" limb2anchor="-80.4768,-10.42958" canbesevered="True" limitenabled="True" upperlimit="-89.61891" lowerlimit="-173.5003" stiffness="0.25" />
+  <joint name="Joint Torso - ClawBL1" limb1="0" limb2="15" limb1anchor="-14.41944,-58.10474" limb2anchor="-81.75753,-12.58581" canbesevered="True" limitenabled="True" upperlimit="-90" lowerlimit="-160" stiffness="0.25" />
+  <joint name="Joint Torso - ClawBR1" limb1="0" limb2="16" limb1anchor="127.8365,-56.08069" limb2anchor="-80.4768,-10.42958" canbesevered="True" limitenabled="True" upperlimit="-90" lowerlimit="-160" stiffness="0.25" />
   <joint name="Joint ClawBL1 - ClawBL2" limb1="15" limb2="17" limb1anchor="75.71279,-19.36485" limb2anchor="-147.658,7.978816" canbesevered="True" limitenabled="True" upperlimit="89.61279" lowerlimit="-27.1865" stiffness="0.25" />
   <joint name="Joint ClawBR1 - ClawBR2" limb1="16" limb2="18" limb1anchor="79.19994,-16.06616" limb2anchor="-142.802,5.483936" canbesevered="True" limitenabled="True" upperlimit="49.78033" lowerlimit="0.2992169" stiffness="0.25" />
 </Ragdoll>
