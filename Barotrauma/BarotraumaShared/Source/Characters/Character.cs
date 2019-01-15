@@ -1090,13 +1090,10 @@ namespace Barotrauma
             else if (IsKeyDown(InputType.Attack))
             {
                 AttackContext currentContext = GetAttackContext();
-                var attackLimb = AnimController.Limbs
-                    .Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext))
-                    // TODO: remove this and use the distance
-                    .OrderByDescending(l => l.attack.Priority)
-                    //.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
-                    .FirstOrDefault();
-
+                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext));
+                var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
+                // Select closest
+                var attackLimb = sortedLimbs.FirstOrDefault();
                 if (attackLimb != null)
                 {
                     Vector2 attackPos = attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
@@ -1109,7 +1106,7 @@ namespace Barotrauma
                         attackPos,
                         ignoredBodies,
                         Physics.CollisionCharacter | Physics.CollisionWall);
-                    
+
                     IDamageable attackTarget = null;
                     if (body != null)
                     {
