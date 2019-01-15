@@ -1013,109 +1013,13 @@ namespace Barotrauma
             autoRestartBox.Selected = enabled;
             autoRestartTimer = timer;
         }
-
-        public void ToggleAutoRestart()
-        {
-            autoRestartBox.Selected = !autoRestartBox.Selected;
-            ToggleAutoRestart(autoRestartBox);
-        }
-
-        private bool ToggleAutoRestart(GUITickBox tickBox)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-
-            GameMain.Server.AutoRestart = tickBox.Selected;
-
-            lastUpdateID++;
-
-            return true;*/
-        }
-
+        
         public void SetMissionType(int missionTypeIndex)
         {
             if (missionTypeIndex < 0 || missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) return;
             
             ((GUITextBlock)missionTypeContainer.GetChild(2)).Text = TextManager.Get("MissionType." + ((MissionType)missionTypeIndex).ToString());
             missionTypeContainer.UserData = ((MissionType)missionTypeIndex);
-        }
-
-        public bool ToggleMissionType(GUIButton button, object userData)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-
-            int missionTypeIndex = (int)missionTypeContainer.UserData;
-            missionTypeIndex += (int)userData;
-
-            if (missionTypeIndex < 0) missionTypeIndex = Enum.GetValues(typeof(MissionType)).Length - 1;
-            if (missionTypeIndex >= Enum.GetValues(typeof(MissionType)).Length) missionTypeIndex = 0;
-
-            SetMissionType(missionTypeIndex);
-
-            lastUpdateID++;
-
-            return true;*/
-        }
-        
-        public bool ToggleTraitorsEnabled(GUIButton button, object userData)
-        {
-            ToggleTraitorsEnabled((int)userData);
-            return true;
-        }
-
-        public bool ChangeBotCount(GUIButton button, object userData)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-            SetBotCount(GameMain.Server.BotCount + (int)userData);
-            return true;*/
-        }
-
-        public bool ChangeBotSpawnMode(GUIButton button, object userData)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-            SetBotSpawnMode(GameMain.Server.BotSpawnMode == BotSpawnMode.Fill ? BotSpawnMode.Normal : BotSpawnMode.Fill);
-            return true;*/
-        }
-
-        private bool SelectSub(GUIComponent component, object obj)
-        {
-            return false;
-            /*if (GameMain.Server == null) return false;
-
-            lastUpdateID++;
-
-            var hash = obj is Submarine ? ((Submarine)obj).MD5Hash.Hash : "";
-
-            //hash will be null if opening the sub file failed -> don't select the sub
-            if (string.IsNullOrWhiteSpace(hash))
-            {
-                GUITextBlock submarineTextBlock = component.GetChild<GUITextBlock>();
-                if (submarineTextBlock != null)
-                {
-                    submarineTextBlock.TextColor = Color.DarkRed * 0.8f;
-                    submarineTextBlock.CanBeFocused = false;
-                }
-                else
-                {
-                    DebugConsole.ThrowError("Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
-                    GameAnalyticsManager.AddErrorEventOnce(
-                        "NetLobbyScreen.SelectSub:InvalidComponent", 
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
-                }
-
-
-                StartButton.Enabled = false;
-
-                return false;
-            }
-
-            StartButton.Enabled = true;
-
-            return true;*/
         }
 
         public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
@@ -1306,12 +1210,12 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), 
                 text: obj.ToString(), font: GUI.LargeFont);
 
-            /*if (GameMain.Server != null)
+            //TODO: UI for client permission management
+            /*if (GameMain.Client.IsServer)
             {
                 playerFrame.UserData = selectedClient;
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
-                     selectedClient.Connection.RemoteEndPoint.Address.ToString());
+                //new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), selectedClient.Connection.RemoteEndPoint.Address.ToString());
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), 
                     TextManager.Get("Rank"));
@@ -1432,7 +1336,7 @@ namespace Barotrauma
                         return true;
                     };
                 }
-            } TODO: this is a lot*/
+            }*/
 
             var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
@@ -1516,14 +1420,7 @@ namespace Barotrauma
             GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true, true);
             return false;
         }
-
-        public void ClearPlayers()
-        {
-            playerList.ClearChildren();
-
-            //if (GameMain.Server != null) lastUpdateID++;
-        }
-
+        
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
@@ -1736,16 +1633,7 @@ namespace Barotrauma
                 lastUpdateID++;
             }*/
         }
-
-        private bool SelectSeed(GUITextBox textBox, string seed)
-        {
-            return false;
-            //if (GameMain.Server == null) return false;
-            if (string.IsNullOrWhiteSpace(seed)) return false;
-            LevelSeed = seed;
-            return true;
-        }
-        
+                
         private bool ViewJobInfo(GUIButton button, object obj)
         {
             JobPrefab jobPrefab = button.UserData as JobPrefab;
