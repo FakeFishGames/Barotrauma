@@ -610,7 +610,7 @@ namespace Barotrauma.Networking
                 if (updateTimer > DateTime.Now) return;
                 SendLobbyUpdate();
             }
-            VoipClient.SendToServer();
+            VoipClient?.SendToServer();
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  

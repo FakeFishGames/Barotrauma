@@ -491,9 +491,10 @@ namespace Barotrauma.Networking
                         case NetIncomingMessageType.ConnectionApproval:
                             var msgContent = inc.SenderConnection.RemoteHailMessage ?? inc;
                             ClientPacketHeader packetHeader = (ClientPacketHeader)msgContent.ReadByte();
-                            if (packetHeader == ClientPacketHeader.REQUEST_AUTH || packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
+                            if (packetHeader == ClientPacketHeader.REQUEST_AUTH || 
+                                packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                             {
-                                HandleOwnership(inc);
+                                HandleOwnership(msgContent, inc.SenderConnection);
                             }
 
                             if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
@@ -505,8 +506,7 @@ namespace Barotrauma.Networking
                                 inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
                             }
                             else
-                            {
-                                
+                            {                                
                                 if (packetHeader == ClientPacketHeader.REQUEST_AUTH)
                                 {
                                     inc.SenderConnection.Approve();
@@ -514,7 +514,7 @@ namespace Barotrauma.Networking
                                 }
                                 else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                                 {
-                                    ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
+                                    ReadClientSteamAuthRequest(msgContent, inc.SenderConnection, out ulong clientSteamID);
                                     if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
                                     {
                                         inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
@@ -593,17 +593,16 @@ namespace Barotrauma.Networking
             switch (header)
             {
                 case ClientPacketHeader.REQUEST_AUTH:
-                    HandleOwnership(inc);
+                    HandleOwnership(inc, inc.SenderConnection);
                     HandleClientAuthRequest(inc.SenderConnection);
                     break;
                 case ClientPacketHeader.REQUEST_STEAMAUTH:
-                    HandleOwnership(inc);
-                    ReadClientSteamAuthRequest(inc, out _);
+                    HandleOwnership(inc, inc.SenderConnection);
+                    ReadClientSteamAuthRequest(inc, inc.SenderConnection, out _);
                     break;
                 case ClientPacketHeader.REQUEST_INIT:
                     ClientInitRequest(inc);
                     break;
-
                 case ClientPacketHeader.RESPONSE_STARTGAME:
                     if (connectedClient != null)
                     {
