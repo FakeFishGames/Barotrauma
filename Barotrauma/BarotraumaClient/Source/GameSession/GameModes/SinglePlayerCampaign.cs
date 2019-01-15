@@ -352,7 +352,7 @@ namespace Barotrauma
 
         public static SinglePlayerCampaign Load(XElement element)
         {
-            SinglePlayerCampaign campaign = new SinglePlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null);
+            SinglePlayerCampaign campaign = new SinglePlayerCampaign(GameModePreset.List.Find(gm => gm.Identifier == "singleplayercampaign"), null);
 
             foreach (XElement subElement in element.Elements())
             {

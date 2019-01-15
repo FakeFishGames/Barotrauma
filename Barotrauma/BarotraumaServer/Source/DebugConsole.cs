@@ -79,7 +79,7 @@ namespace Barotrauma
                 if (int.TryParse(string.Join(" ", args), out index))
                 {
                     if (index > 0 && index < GameMain.NetLobbyScreen.GameModes.Length && 
-                        GameMain.NetLobbyScreen.GameModes[index].Name == "Campaign")
+                        GameMain.NetLobbyScreen.GameModes[index].Identifier == "multiplayercampaign")
                     {
                         MultiPlayerCampaign.StartCampaignSetup();
                     }
@@ -97,16 +97,22 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.NetLobbyScreen.SelectedModeName = modeName;
+                        var gameMode = GameModePreset.List.Find(gm => gm.Name.ToLower() == modeName.ToLower());
+                        if (gameMode == null)
+                        {
+                            ThrowError("Game mode \"" + modeName + "\" not found!");
+                            return;
+                        }
+                        GameMain.NetLobbyScreen.SelectedModeIdentifier = gameMode.Identifier;
                     }
                 }
-                NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+                NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeIdentifier, Color.Cyan);
             },
             () =>
             {
                 return new string[][]
                 {
-                    GameModePreset.list.Select(gm => gm.Name).ToArray()
+                    GameModePreset.List.Select(gm => gm.Name).ToArray()
                 };
             }));
 

@@ -155,7 +155,7 @@ namespace Barotrauma
                 case VoteType.Mode:
                     GameModePreset gameMode = data as GameModePreset;
                     if (gameMode == null) return;
-                    msg.Write(gameMode.Name);
+                    msg.Write(gameMode.Identifier);
                     break;
                 case VoteType.EndRound:
                     if (!(data is bool)) return;
@@ -206,8 +206,8 @@ namespace Barotrauma
                 for (int i = 0; i < votableCount; i++)
                 {
                     int votes = inc.ReadByte();
-                    string modeName = inc.ReadString();
-                    GameModePreset mode = GameModePreset.list.Find(m => m.Name == modeName);
+                    string modeIdentifier = inc.ReadString();
+                    GameModePreset mode = GameModePreset.List.Find(m => m.Identifier == modeIdentifier);
                     SetVoteText(GameMain.NetLobbyScreen.ModeList, mode, votes);
                 }
             }
