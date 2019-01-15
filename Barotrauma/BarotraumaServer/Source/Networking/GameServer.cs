@@ -934,7 +934,7 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPermissions.SelectMode:
                     UInt16 modeIndex = inc.ReadUInt16();
-                    if (GameMain.NetLobbyScreen.GameModes[modeIndex].Name.ToLowerInvariant() == "campaign")
+                    if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "campaign")
                     {
                         NetOutgoingMessage msg = server.CreateMessage();
                         msg.Write((byte)ServerPacketHeader.CAMPAIGN_SETUP_INFO);
@@ -950,7 +950,7 @@ namespace Barotrauma.Networking
                     else
                     {
                         GameMain.NetLobbyScreen.SelectedModeIndex = modeIndex;
-                        Log("Gamemode changed to " + GameMain.NetLobbyScreen.SelectedModeName, ServerLog.MessageType.ServerMessage);
+                        Log("Gamemode changed to " + GameMain.NetLobbyScreen.GameModes[GameMain.NetLobbyScreen.SelectedModeIndex].Name, ServerLog.MessageType.ServerMessage);
                     }
                     break;
                 case ClientPermissions.ManageCampaign:
@@ -1577,7 +1577,7 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
-            msg.Write(selectedMode.Name);
+            msg.Write(selectedMode.Identifier);
             msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ?
                 -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 

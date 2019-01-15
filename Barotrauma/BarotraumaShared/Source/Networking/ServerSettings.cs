@@ -537,8 +537,8 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Sandbox", true)]
-        public string GameMode
+        [Serialize("sandbox", true)]
+        public string GameModeIdentifier
         {
             get;
             set;

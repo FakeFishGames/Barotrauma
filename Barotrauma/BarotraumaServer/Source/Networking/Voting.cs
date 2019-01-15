@@ -44,8 +44,8 @@ namespace Barotrauma
                     break;
 
                 case VoteType.Mode:
-                    string modeName = inc.ReadString();
-                    GameModePreset mode = GameModePreset.list.Find(gm => gm.Name == modeName);
+                    string modeIdentifier = inc.ReadString();
+                    GameModePreset mode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
                     if (!mode.Votable) break;
 
                     sender.SetVote(voteType, mode);
@@ -110,7 +110,7 @@ namespace Barotrauma
                 foreach (Pair<object, int> vote in voteList)
                 {
                     msg.Write((byte)vote.Second);
-                    msg.Write(((GameModePreset)vote.First).Name);
+                    msg.Write(((GameModePreset)vote.First).Identifier);
                 }
             }
             msg.Write(AllowEndVoting);

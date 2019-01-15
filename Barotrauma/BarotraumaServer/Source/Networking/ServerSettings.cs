@@ -285,7 +285,7 @@ namespace Barotrauma.Networking
             ServerName = doc.Root.GetAttributeString("name", "");
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             
-            GameMain.NetLobbyScreen.SelectedModeName = GameMode;
+            GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
             GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);

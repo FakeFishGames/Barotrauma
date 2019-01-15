@@ -397,7 +397,7 @@ namespace Barotrauma
                 foreach (Mission mission in availableMissions)
                 {
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform) { MaxSize = maxTickBoxSize },
-                       mission?.Name ?? "No mission")
+                       mission?.Name ?? TextManager.Get("NoMission"))
                     {
                         UserData = mission,
                         Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign),

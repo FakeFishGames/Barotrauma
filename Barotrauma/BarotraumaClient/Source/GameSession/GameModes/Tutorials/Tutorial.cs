@@ -130,7 +130,8 @@ namespace Barotrauma.Tutorials
             Submarine.MainSub = Submarine.Load(submarinePath, "", true);
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(Submarine.MainSub, "", GameModePreset.list.Find(gm => gm.Name.ToLowerInvariant() == "tutorial"));
+            GameMain.GameSession = new GameSession(Submarine.MainSub, "",
+                GameModePreset.List.Find(g => g.Identifier == "tutorial"));
             (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
             GameMain.GameSession.StartRound(levelSeed);
             GameMain.GameSession.EventManager.Events.Clear();
