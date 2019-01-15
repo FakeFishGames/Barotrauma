@@ -159,9 +159,18 @@ namespace Barotrauma.Items.Components
                             (int)brokenSprite.size.X, (int)(brokenSprite.size.Y * (1.0f - openState))),
                         color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, SpriteEffects.None, brokenSprite.Depth);
                 }
-
             }
+        }
 
+
+        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        {
+            base.ClientRead(type, msg, sendingTime);
+
+            SetState(msg.ReadBoolean(), true);
+            Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+
+            predictedState = null;
         }
     }
 }
