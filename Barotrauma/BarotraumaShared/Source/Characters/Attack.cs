@@ -381,7 +381,9 @@ namespace Barotrauma
                 case AttackTarget.Character:
                     return target is Character;
                 case AttackTarget.Structure:
-                    return target is Structure;
+                    // TODO: this does not work. We need to change the ai behaviour first -> target structures instead of characters inside the structures
+                    //return target is Structure;
+                    return true;
                 case AttackTarget.Any:
                 default:
                     return true;
