@@ -2104,6 +2104,12 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("verboselogging", "verboselogging: Toggle verbose console logging on/off. When on, additional debug information is written to the debug console.", (string[] args) =>
+            {
+                GameSettings.VerboseLogging = !GameSettings.VerboseLogging;
+                NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
+            }, null, null, isCheat: false));
+
 #if DEBUG
             commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
             {
