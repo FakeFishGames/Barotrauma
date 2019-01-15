@@ -220,6 +220,7 @@
     <Compile Include="Source\Map\Lights\LightManager.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LinkedSubmarine.cs" />
+    <Compile Include="Source\Map\Map\Location.cs" />
     <Compile Include="Source\Map\Map\Map.cs" />
     <Compile Include="Source\Map\MapEntity.cs" />
     <Compile Include="Source\Map\MapEntityPrefab.cs" />

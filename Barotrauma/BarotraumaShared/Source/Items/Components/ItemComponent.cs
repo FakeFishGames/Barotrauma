@@ -300,7 +300,10 @@ namespace Barotrauma.Items.Components
 
                         break;
                     case "aitarget":
-                        AITarget = new AITarget(item, subElement);
+                        AITarget = new AITarget(item, subElement)
+                        {
+                            Enabled = isActive
+                        };
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
@@ -665,7 +668,10 @@ namespace Barotrauma.Items.Components
         /// Called when all the components of the item have been loaded. Use to initialize connections between components and such.
         /// </summary>
         public virtual void OnItemLoaded() { }
-        
+
+        // TODO: Consider using generics, interfaces, or inheritance instead of reflection -> would be easier to debug when something changes/goes wrong.
+        // For example, currently we can edit the constructors but they will fail in runtime because the parameters are not changed here.
+        // It's also painful to find where the constructors are used, because the references exist only at runtime.
         public static ItemComponent Load(XElement element, Item item, string file, bool errorMessages = true)
         {
             Type t;

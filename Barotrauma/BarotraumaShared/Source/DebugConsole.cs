@@ -611,7 +611,7 @@ namespace Barotrauma
             }, isCheat: true));
 
 #if DEBUG
-            commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
+            commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
@@ -767,6 +767,12 @@ namespace Barotrauma
             }));
 
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
+
+            commands.Add(new Command("verboselogging", "verboselogging: Toggle verbose console logging on/off. When on, additional debug information is written to the debug console.", (string[] args) =>
+            {
+                GameSettings.VerboseLogging = !GameSettings.VerboseLogging;
+                NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
+            }, isCheat: false));
 
 #if DEBUG
             commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>

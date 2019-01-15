@@ -51,6 +51,7 @@ namespace Barotrauma
         private bool recalculateCollider;
         private bool copyJointSettings;
         private bool displayColliders;
+        private bool displayWearables = true;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
         private bool animationResetRequiresForceLoading;
@@ -64,7 +65,7 @@ namespace Barotrauma
         private float spriteSheetZoom = 1;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
-        private int spriteSheetOffsetY = 100;
+        private int spriteSheetOffsetY = 20;
         private int spriteSheetOffsetX;
         private bool hideBodySheet;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
@@ -548,8 +549,8 @@ namespace Barotrauma
             if (showSpritesheet)
             {
                 var topLeft = spriteSheetControls.RectTransform.TopLeft;
-                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, 50), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
+                GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 300, GameMain.GraphicsHeight - 80), "Spritesheet Orientation:", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
+                DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 510, GameMain.GraphicsHeight - 60), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
                     angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
             }
 
@@ -790,10 +791,12 @@ namespace Barotrauma
                 var limb = selectedLimbs[i];
                 if (limb == character.AnimController.MainLimb)
                 {
+                    // TODO: this should be possible now -> test
                     DebugConsole.ThrowError("Can't remove the main limb, because it will crash the game.");
                     continue;
                 }
                 removedIDs.Add(limb.limbParams.ID);
+                limb.limbParams.Element.Remove();
                 RagdollParams.Limbs.Remove(limb.limbParams);
             }
             // Recreate ids
@@ -840,7 +843,11 @@ namespace Barotrauma
                     }
                 }
             }
-            jointsToRemove.ForEach(j => RagdollParams.Joints.Remove(j));
+            foreach (var jointParam in jointsToRemove)
+            {
+                jointParam.Element.Remove();
+                RagdollParams.Joints.Remove(jointParam);
+            }
             RecreateRagdoll();
             ragdollResetRequiresForceLoading = true;
         }
@@ -1030,15 +1037,11 @@ namespace Barotrauma
                 var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List.First(job => job.Identifier == selectedJob));
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
-                // Temp: remove all items from head
-                var removables = character.Inventory.Items.Where(i => i != null && (i.AllowedSlots.Contains(InvSlotType.Head) || i.AllowedSlots.Contains(InvSlotType.Headset)));
-                removables.ForEach(i => i.Unequip(character));
-                // Temp?: Remove all items that don't inherit the source rect
-                removables = character.AnimController.Limbs
-                    .SelectMany(l => l.WearingItems
-                        .Where(i => !i.InheritSourceRect)
-                        .Select(i => i.WearableComponent.Item)).Distinct();
-                removables.ForEachMod(i => i.Unequip(character));
+                HideWearables();
+                if (displayWearables)
+                {
+                    ShowWearables();
+                }
                 selectedJob = characterInfo.Job.Prefab.Identifier;
             }
             else
@@ -1191,6 +1194,22 @@ namespace Barotrauma
             }
             SpawnCharacter(configFilePath, ragdollParams);
         }
+
+        private void ShowWearables()
+        {
+            foreach (var item in character.Inventory.Items)
+            {
+                if (item == null) { continue; }
+                // Temp condition, todo: remove
+                if (item.AllowedSlots.Contains(InvSlotType.Head) || item.AllowedSlots.Contains(InvSlotType.Headset)) { continue; }
+                item.Equip(character);
+            }
+        }
+
+        private void HideWearables()
+        {
+            character.Inventory.Items.ForEachMod(i => i?.Unequip(character));
+        }
         #endregion
 
         #region GUI
@@ -1229,9 +1248,10 @@ namespace Barotrauma
             {
                 leftPanel.RectTransform.Parent = null;
             }
-            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.96f), parent: Frame.RectTransform, anchor: Anchor.TopCenter)
+            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
-                RelativeOffset = new Vector2(0.05f, 0.02f)
+                AbsoluteOffset = new Point((int)(rightPanel.RectTransform.ScaledSize.X + rightPanel.RectTransform.RelativeOffset.X * rightPanel.RectTransform.Parent.ScaledSize.X + 20), 20)
+
             }, style: null) { CanBeFocused = false };
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
             {
@@ -1243,14 +1263,10 @@ namespace Barotrauma
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             // General controls
-            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.BottomRight), style: null) { CanBeFocused = false };
-            var layoutGroupGeneral = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundColorPanel.RectTransform), childAnchor: Anchor.BottomRight)
-            {
-                AbsoluteSpacing = 5, CanBeFocused = false
-            };
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
             // Background color
-            var frame = new GUIFrame(new RectTransform(new Point(500, 80), layoutGroupGeneral.RectTransform), style: null, color: Color.Black * 0.4f);
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, "Background Color:", textColor: Color.WhiteSmoke);
+            var frame = new GUIFrame(new RectTransform(new Point(400, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, "Background \nColor:", textColor: Color.WhiteSmoke);
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight)
             {
                 AbsoluteOffset = new Point(20, 0)
@@ -1298,7 +1314,7 @@ namespace Barotrauma
                 }
             }
             // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), leftPanel.RectTransform, Anchor.TopLeft), style: null)
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.BottomLeft), style: null)
             {
                 CanBeFocused = false
             };
@@ -1335,6 +1351,24 @@ namespace Barotrauma
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Show wearables")
+            {
+                TextColor = Color.White,
+                Selected = displayWearables,
+                OnSelected = (GUITickBox box) =>
+                {
+                    displayWearables = box.Selected;
+                    if (displayWearables)
+                    {
+                        ShowWearables();
+                    }
+                    else
+                    {
+                        HideWearables();
+                    }
+                    return true;
+                }
+            };
             //new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), "Texture scale:", Color.White);
             //new GUIScrollBar(new RectTransform(new Point((int)(elementSize.X * 1.75f), textAreaHeight), layoutGroupSpriteSheet.RectTransform), barSize: 0.2f)
             //{
@@ -1348,7 +1382,7 @@ namespace Barotrauma
             //};
             // Limb controls
             limbControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.BottomLeft) { CanBeFocused = false };
+            var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), "Lock Sprite Origin")
             {
                 Selected = lockSpriteOrigin,
@@ -1393,7 +1427,7 @@ namespace Barotrauma
             // Ragdoll
             Point sliderSize = new Point(300, 20);
             ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.BottomLeft) { CanBeFocused = false };
+            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), "Uniform Scale")
             {
                 Selected = uniformScaling,
@@ -2317,18 +2351,20 @@ namespace Barotrauma
         {
             float width = textures.OrderByDescending(t => t.Width).First().Width;
             float height = textures.Sum(t => t.Height);
+            float margin = 20;
             if (textures == null || textures.None())
             {
                 spriteSheetMaxZoom = 1;
             }
             else if (height > width)
             {
-                spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY) / height;
+                spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY - margin) / height;
             }
             else
             {
-                spriteSheetMaxZoom = (centerPanel.Rect.Left - spriteSheetOffsetX) / width;
+                spriteSheetMaxZoom = (centerPanel.Rect.Left - spriteSheetOffsetX - margin) / width;
             }
+            spriteSheetMinZoom = spriteSheetMinZoom > spriteSheetMaxZoom ? spriteSheetMaxZoom : 0.25f;
             spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
         }
 
@@ -2417,7 +2453,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 100), "HOLD \"Left Alt\" TO ADJUST THE CYCLE SPEED", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             // Widgets for all anims -->
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition: collider.SimPosition);
@@ -2960,7 +2996,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJoints && selectedJoints.Any())
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, GameMain.GraphicsHeight - 150), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 100), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
@@ -3455,10 +3491,12 @@ namespace Barotrauma
                                         };
                                         void RecalculateCollider(Limb l)
                                         {
-                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale);
-                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius));
-                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width));
-                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height));
+                                            // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
+                                            float multiplier = 0.75f;
+                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale * multiplier);
+                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / RagdollParams.LimbScale / RagdollParams.TextureScale));
                                         }
                                         void RecalculateOrigin(Limb l)
                                         {
@@ -4549,18 +4587,18 @@ namespace Barotrauma
                         var colliderAttributes = new List<XAttribute>();
                         if (width == height)
                         {
-                            colliderAttributes.Add(new XAttribute("radius", Math.Max(width / 2, 1)));
+                            colliderAttributes.Add(new XAttribute("radius", width / 2));
                         }
                         else
                         {
                             if (height > width)
                             {
-                                colliderAttributes.Add(new XAttribute("radius", Math.Max(width / 2, 1)));
+                                colliderAttributes.Add(new XAttribute("radius", width / 2));
                                 colliderAttributes.Add(new XAttribute("height", height - width));
                             }
                             else
                             {
-                                colliderAttributes.Add(new XAttribute("radius", Math.Max(height / 2, 1)));
+                                colliderAttributes.Add(new XAttribute("radius", height / 2));
                                 colliderAttributes.Add(new XAttribute("width", width - height));
                             }
                         }

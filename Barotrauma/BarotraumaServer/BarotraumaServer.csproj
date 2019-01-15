@@ -117,6 +117,7 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\GameMain.cs" />
+    <Compile Include="Source\GameSession\CrewManager.cs" />
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiplayerCampaign.cs" />

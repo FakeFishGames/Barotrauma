@@ -429,6 +429,98 @@ namespace Barotrauma
                 }
             }, isCheat: false));
 
+            commands.Add(new Command("color|colour", "Change color (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        if (args.Length < 3)
+                        {
+                            ThrowError("Not enough arguments provided! At least three required.");
+                        }
+                        if (!byte.TryParse(args[0], out byte r))
+                        {
+                            ThrowError($"Failed to parse value for RED from {args[0]}");
+                        }
+                        if (!byte.TryParse(args[1], out byte g))
+                        {
+                            ThrowError($"Failed to parse value for GREEN from {args[1]}");
+                        }
+                        if (!byte.TryParse(args[2], out byte b))
+                        {
+                            ThrowError($"Failed to parse value for BLUE from {args[2]}");
+                        }
+                        Color color = new Color(r, g, b);
+                        if (args.Length > 3)
+                        {
+                            if (!byte.TryParse(args[3], out byte a))
+                            {
+                                ThrowError($"Failed to parse value for ALPHA from {args[3]}");
+                            }
+                            else
+                            {
+                                color.A = a;
+                            }
+                        }
+                        foreach (var mapEntity in MapEntity.SelectedList)
+                        {
+                            if (mapEntity is Structure s)
+                            {
+                                s.SpriteColor = color;
+                            }
+                            else if (mapEntity is Item i)
+                            {
+                                i.SpriteColor = color;
+                            }
+                        }
+                    }
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        if (args.Length > 0)
+                        {
+                            if (!byte.TryParse(args[0], out byte a))
+                            {
+                                ThrowError($"Failed to parse value for ALPHA from {args[0]}");
+                            }
+                            else
+                            {
+                                foreach (var mapEntity in MapEntity.SelectedList)
+                                {
+                                    if (mapEntity is Structure s)
+                                    {
+                                        s.SpriteColor = new Color(s.SpriteColor.R, s.SpriteColor.G, s.SpriteColor.G, a);
+                                    }
+                                    else if (mapEntity is Item i)
+                                    {
+                                        i.SpriteColor = new Color(i.SpriteColor.R, i.SpriteColor.G, i.SpriteColor.G, a);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowError("Not enough arguments provided! One required!");
+                        }
+                    }
+                }
+            }, isCheat: true));
+
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
                 TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
@@ -692,6 +784,21 @@ namespace Barotrauma
                 Screen.Selected.Cam.MoveSmoothness = moveSmoothness;
                 Screen.Selected.Cam.MinZoom = minZoom;
                 Screen.Selected.Cam.MaxZoom = maxZoom;
+            }));
+            
+            commands.Add(new Command("waterparams", "waterparams [distortionscalex] [distortionscaley] [distortionstrengthx] [distortionstrengthy] [bluramount]: default 0.5 0.5 0.5 0.5 1", (string[] args) =>
+            {
+                float distortScaleX = 0.5f, distortScaleY = 0.5f;
+                float distortStrengthX = 0.5f, distortStrengthY = 0.5f;
+                float blurAmount = 0.0f;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleX);
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleY);
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthX);
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthY);
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out blurAmount);
+                WaterRenderer.DistortionScale = new Vector2(distortScaleX, distortScaleY);
+                WaterRenderer.DistortionStrength = new Vector2(distortStrengthX, distortStrengthY);
+                WaterRenderer.BlurAmount = blurAmount;
             }));
 #endif
 

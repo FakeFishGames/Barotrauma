@@ -47,7 +47,7 @@ namespace Barotrauma
             get { return relativeSpacing; }
             set
             {
-                relativeSpacing = MathHelper.Clamp(value, 0, 1);
+                relativeSpacing = MathHelper.Clamp(value, -1, 1);
                 needsToRecalculate = true;
             }
         }

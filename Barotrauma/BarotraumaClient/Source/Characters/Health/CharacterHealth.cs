@@ -4,7 +4,7 @@
     {
         partial void UpdateLimbAfflictionOverlays()
         {
-            foreach (Limb limb in character.AnimController.Limbs)
+            foreach (Limb limb in Character.AnimController.Limbs)
             {
                 limb.BurnOverlayStrength = 0.0f;
                 limb.DamageOverlayStrength = 0.0f;

@@ -353,8 +353,7 @@ namespace Barotrauma
 #endif
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
-
-
+            
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
@@ -472,9 +471,23 @@ namespace Barotrauma
                         break;
                 }
             }
+            
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
 
             //save to get rid of the invalid selected packages in the config file
             if (invalidPackagesFound) { Save(); }
+        }
+
+        public KeyOrMouse KeyBind(InputType inputType)
+        {
+            return keyMapping[(int)inputType];
         }
 
         public void Save()

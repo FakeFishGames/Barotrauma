@@ -338,14 +338,22 @@ namespace Barotrauma.Networking
                 }
 
                 string permissionsStr = clientElement.GetAttributeString("permissions", "");
-                if (!Enum.TryParse(permissionsStr, out ClientPermissions permissions))
+                ClientPermissions permissions = Networking.ClientPermissions.None;
+                if (permissionsStr.ToLowerInvariant() == "all")
+                {
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        permissions |= permission;
+                    }
+                }
+                else if (!Enum.TryParse(permissionsStr, out permissions))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
                     continue;
                 }
 
                 List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-                if (permissions.HasFlag(Barotrauma.Networking.ClientPermissions.ConsoleCommands))
+                if (permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
                 {
                     foreach (XElement commandElement in clientElement.Elements())
                     {

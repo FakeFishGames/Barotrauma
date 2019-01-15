@@ -17,6 +17,8 @@ namespace Barotrauma
         private static List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
 
+        private static Dictionary<string, string> cachedHudTexts = new Dictionary<string, string>();
+
         private static GUIFrame hudFrame;
         public static GUIFrame HUDFrame
         {
@@ -32,6 +34,17 @@ namespace Barotrauma
                 }
                 return hudFrame;
             }
+        }
+
+        private static string GetCachedHudText(string textTag, string keyBind)
+        {
+            if (cachedHudTexts.TryGetValue(textTag + keyBind, out string text))
+            {
+                return text;
+            }
+            text = TextManager.Get(textTag).Replace("[key]", keyBind);
+            cachedHudTexts.Add(textTag + keyBind, text);
+            return text;
         }
         
         public static void AddToGUIUpdateList(Character character)
@@ -178,15 +191,19 @@ namespace Barotrauma
                     textPos.Y += 20;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
-                        // TODO: (garbage colleciton optimization) use the string builder class, because Replace returns a new string and the draw function is called multiple times per frame
-                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Grab).ToString()),
+                        GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBind(InputType.Grab).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
                     {
-                        // TODO: (garbage colleciton optimization) use the string builder class, because Replace returns a new string and the draw function is called multiple times per frame
-                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("HealHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Health).ToString()), Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBind(InputType.Health).ToString()),
+                            Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        textPos.Y += 15;
+                    }
+                    if (!string.IsNullOrEmpty(character.FocusedCharacter.customInteractHUDText))
+                    {
+                        GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.customInteractHUDText, Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                 }

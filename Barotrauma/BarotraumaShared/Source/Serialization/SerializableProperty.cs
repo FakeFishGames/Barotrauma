@@ -18,6 +18,7 @@ namespace Barotrauma
 
         public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
+        public float ValueStep;
 
         public string ToolTip;
 

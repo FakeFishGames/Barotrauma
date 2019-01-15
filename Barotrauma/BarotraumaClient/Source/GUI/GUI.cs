@@ -961,6 +961,8 @@ namespace Barotrauma
 
         public static Texture2D CreateCapsule(int radius, int height)
         {
+            if (radius < 1) { radius = 1; }
+            if (height < 1) { height = 1; }
             int textureWidth = radius * 2, textureHeight = height + radius * 2;
 
             Texture2D texture = new Texture2D(GraphicsDevice, textureWidth, textureHeight);

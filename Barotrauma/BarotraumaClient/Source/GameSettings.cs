@@ -36,12 +36,6 @@ namespace Barotrauma
             }
         }
 
-
-        public KeyOrMouse KeyBind(InputType inputType)
-        {
-            return keyMapping[(int)inputType];
-        }
-
         private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
@@ -542,7 +536,8 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            
+
+
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
                 var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
@@ -559,6 +554,14 @@ namespace Barotrauma
                                     .Replace("[packagename]", contentPackage.Name)
                                     .Replace("[packageversion]", contentPackage.GameVersion.ToString())
                                     .Replace("[gameversion]", GameMain.Version.ToString());
+                }
+                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                {
+                    tickBox.TextColor = Color.Red;
+                    tickBox.Enabled = false;
+                    tickBox.ToolTip = TextManager.Get("ContentPackageMissingCoreFiles")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
                 }
             }
 
