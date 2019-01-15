@@ -437,63 +437,35 @@ namespace Barotrauma
         public Vector2 FindSpawnPos(Vector2 spawnPos)
         {
             Rectangle dockedBorders = GetDockedBorders();
-
             Vector2 diffFromDockedBorders = 
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
                 - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
-
-            int iterations = 0;
-            int margin = 500;
-            bool wallTooClose = false;
-            do
+            
+            float minX = float.MinValue, maxX = float.MaxValue;
+            foreach (VoronoiCell cell in Level.Loaded.GetAllCells())
             {
-                Rectangle worldBorders = new Rectangle(
-                    dockedBorders.X + (int)spawnPos.X - margin,
-                    dockedBorders.Y + (int)spawnPos.Y,
-                    dockedBorders.Width + margin * 2,
-                    dockedBorders.Height);
-                spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+                if (cell.Edges.All(e => e.Point1.Y < Level.Loaded.Size.Y - 1000.0f && e.Point2.Y < Level.Loaded.Size.Y - 1000.0f)) { continue; }
 
-                wallTooClose = false;
-
-                var nearbyCells = Level.Loaded.GetCells(
-                    spawnPos, (int)Math.Ceiling(Math.Max(dockedBorders.Width, dockedBorders.Height) / (float)Level.GridCellSize));
-
-                foreach (VoronoiCell cell in nearbyCells)
+                //find the closest wall at the left and right side of the spawnpos
+                if (cell.Site.Coord.X < spawnPos.X)
                 {
-                    if (cell.CellType == CellType.Empty) { continue; }
-                    
-                    foreach (GraphEdge e in cell.Edges)
-                    {
-                        List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.Point1, e.Point2, worldBorders);
-                        if (intersections.Count == 0) { continue; }
-
-                        wallTooClose = true;
-                                                        
-                        if (intersections[0].X < spawnPos.X)
-                        {
-                            spawnPos.X += Math.Max(e.Point1.X, e.Point2.X) - worldBorders.X + margin;
-                        }
-                        else
-                        {
-                            spawnPos.X -= worldBorders.Right - Math.Min(e.Point1.X, e.Point2.X) + margin;
-                        }
-
-                        spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
-                        worldBorders = new Rectangle(
-                            dockedBorders.X + (int)spawnPos.X - margin,
-                            dockedBorders.Y + (int)spawnPos.Y,
-                            dockedBorders.Width + margin * 2,
-                            dockedBorders.Height);                        
-                    }
+                    minX = Math.Max(minX, cell.Edges.Max(e => Math.Max(e.Point1.X, e.Point2.X)));
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, cell.Edges.Min(e => Math.Min(e.Point1.X, e.Point2.X)));
+                }
+            }
 
-                iterations++;
-            } while (wallTooClose && iterations < 10);
+            if (minX < 0.0f) { minX = spawnPos.X; }
+            if (maxX > Level.Loaded.Size.X) { maxX = spawnPos.X; }
 
-            return spawnPos - diffFromDockedBorders;        
+            //use the midpoint between the closest walls as the spawnpos
+            spawnPos.X = (minX + maxX) / 2;
+            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+            return spawnPos - diffFromDockedBorders;
         }
-        
+
         //drawing ----------------------------------------------------
 
         public static void CullEntities(Camera cam)
