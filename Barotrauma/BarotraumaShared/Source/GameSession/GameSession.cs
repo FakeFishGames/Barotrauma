@@ -274,7 +274,7 @@ namespace Barotrauma
             GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);
             GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
             GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
-                    GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+                    GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
             
             
 #if CLIENT
@@ -311,7 +311,7 @@ namespace Barotrauma
             if (Mission != null) Mission.End();
             GameAnalyticsManager.AddProgressionEvent(
                 (Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
-                GameMode.Name, 
+                GameMode.Preset.Identifier, 
                 (Mission == null ? "None" : Mission.GetType().ToString()));            
 
 #if CLIENT

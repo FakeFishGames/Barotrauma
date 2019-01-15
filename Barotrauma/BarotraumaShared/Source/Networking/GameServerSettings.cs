@@ -316,8 +316,8 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Sandbox", true)]
-        public string GameMode
+        [Serialize("sandbox", true)]
+        public string GameModeIdentifier
         {
             get;
             set;
@@ -508,7 +508,7 @@ namespace Barotrauma.Networking
             {
 #if SERVER
                 GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
-                GameMain.NetLobbyScreen.SelectedModeName = GameMode;
+                GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
                 GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 #endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");

@@ -1666,7 +1666,7 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
-            msg.Write(selectedMode.Name);
+            msg.Write(selectedMode.Identifier);
             msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ? 
                 -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 
