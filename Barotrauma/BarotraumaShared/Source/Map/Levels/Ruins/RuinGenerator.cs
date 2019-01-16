@@ -1034,6 +1034,7 @@ namespace Barotrauma.RuinGeneration
                     wire.Connect(conn1, true);
                     conn2.TryAddLink(wire);
                     wire.Connect(conn2, true);
+                    wire.Hidden = true;
                 }
                 else
                 {
