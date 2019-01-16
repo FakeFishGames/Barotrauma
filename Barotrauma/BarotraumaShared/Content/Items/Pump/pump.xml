@@ -30,7 +30,7 @@
       <RequiredItem identifier="wrench" type="Equipped" />
     </Repairable>
   </Item>
-  <Item name="Small Pump" identifier="smallpump" linkable="true" category="Machine">
+  <Item name="Small Pump" identifier="smallpump" linkable="true" category="Machine" scale="0.5">
     <Sprite texture="FF_smallPump.png" depth="0.8" sourcerect="0,0,220,128" origin="0.5,0.5" />
     <Pump canbeselected="true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3">
       <GuiFrame relativesize="0.17,0.14" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI" />
