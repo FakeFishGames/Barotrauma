@@ -187,7 +187,7 @@ namespace Barotrauma
             Color color = (isHighlighted) ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
-                color = Color.Lerp(color, Color.Gold, 0.5f);
+                //color = Color.Lerp(color, Color.Gold, 0.5f);
 
                 Vector2 rectSize = rect.Size.ToVector2();
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
@@ -195,7 +195,8 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, color);
+                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White, 
+                    thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
