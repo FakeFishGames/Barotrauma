@@ -653,6 +653,11 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
 
+                    if (foot.SimPosition.Y > leg.SimPosition.Y)
+                    {
+                        continue;
+                    }
+
                     if (!foot.Disabled)
                     {
                         foot.DebugRefPos = colliderPos;
@@ -724,30 +729,38 @@ namespace Barotrauma
                     }
 
                     var foot = i == -1 ? rightFoot : leftFoot;
+                    Limb leg = i == -1 ? rightLeg : leftLeg;
 
                     if (!foot.Disabled)
                     {
-                        MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
+                        if (foot.SimPosition.Y > leg.SimPosition.Y)
+                        {
+                            continue;
+                        }
+                        MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength, true);
                         float angle = (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians);
                         if (Crouching && Math.Sign(stepSize.X * i) < 0) { angle -= MathHelper.PiOver2; }
                         foot.body.SmoothRotate(Dir * angle, 50.0f);
                     }
                 }
-                
-                if (!rightHand.Disabled)
+
+                for (int i = 0; i < 2; i++)
                 {
-                    rightHand.body.SmoothRotate(0.0f, 5.0f);
+                    var hand = i == 0 ? rightHand : leftHand;
+                    if (hand.Disabled) { continue; }
 
-                    var rightArm = GetLimb(LimbType.RightArm);
-                    rightArm.body.SmoothRotate(0.0f, 20.0f);
-                }
+                    var armType = i == 0 ? LimbType.RightArm : LimbType.LeftArm;
+                    var foreArmType = i == 0 ? LimbType.RightForearm : LimbType.LeftForearm;
 
-                if (!leftHand.Disabled)
-                {
-                    leftHand.body.SmoothRotate(0.0f, 5.0f);
+                    //get the upper arm to point downwards
+                    var arm = GetLimb(armType);
+                    arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
 
-                    var leftArm = GetLimb(LimbType.LeftArm);
-                    leftArm.body.SmoothRotate(0.0f, 20.0f);
+                    //get the elbow to a neutral rotation
+                    LimbJoint elbow =
+                        GetJointBetweenLimbs(armType, hand.type) ??
+                        GetJointBetweenLimbs(armType, foreArmType);
+                    hand.body.ApplyTorque(-elbow.JointAngle * hand.Mass * 10.0f);
                 }
             }
         }
