@@ -16,7 +16,7 @@ namespace Barotrauma.Items.Components
         
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            if (light.LightSprite != null && (item.body == null || item.body.Enabled))
+            if (light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f)
             {
                 light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, 0.0f, 1.0f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, item.SpriteDepth - 0.0001f);
             }
