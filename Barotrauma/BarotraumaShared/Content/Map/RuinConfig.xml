@@ -22,7 +22,6 @@
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
     <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>
-    <item prefab="alienpistolchest" alignment="bottom" type="Prop"/>
     <ChooseOne>
       <itemassembly prefab="alienarmoryassembly1" alignment="Right" type="Prop" minroomsize="800,700" maxroomsize="10000,800"/>
       <item prefab="aliencoil" alignment="bottom" type="Prop" minroomsize="600,0" maxroomsize="800, 800">
