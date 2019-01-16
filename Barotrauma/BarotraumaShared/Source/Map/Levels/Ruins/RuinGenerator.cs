@@ -831,9 +831,32 @@ namespace Barotrauma.RuinGeneration
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
-                entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
-                CreateChildEntities(entityConfig, entity, room);
-                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                DebugConsole.NewMessage(entityConfig.Prefab.Name, Color.White);
+
+                if (entityConfig.TargetContainer != "")
+                {
+                    List<RuinEntity> roomContents = ruinEntities.FindAll(re => re.Room == room);
+                    Item container = null;
+
+                    for(int i = 0; i < roomContents.Count; i++)
+                    {
+                        if (roomContents[i].Entity is Item && (roomContents[i].Entity as Item).HasTag(entityConfig.TargetContainer))
+                        {
+                            container = roomContents[i].Entity as Item;
+                        }
+                    }
+
+                    entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
+                    container.OwnInventory.TryPutItem(entity as Item, null);
+                    CreateChildEntities(entityConfig, entity, room);
+                    ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                }
+                else
+                {
+                    entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                    CreateChildEntities(entityConfig, entity, room);
+                    ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                }
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
