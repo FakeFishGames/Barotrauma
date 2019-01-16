@@ -30,7 +30,7 @@ namespace Barotrauma
         {
             get
             {
-                return Map.SelectedConnection.SelectedMission;
+                return Map.CurrentLocation?.SelectedMission;
             }
         }
 
@@ -171,10 +171,10 @@ namespace Barotrauma
                 }
             }
             
-            if (map.SelectedConnection?.SelectedMission != null)
+            if (map.CurrentLocation?.SelectedMission != null)
             {
-                DebugConsole.NewMessage("   Selected mission: " + map.SelectedConnection.SelectedMission.Name, Color.White);
-                DebugConsole.NewMessage("\n" + map.SelectedConnection.SelectedMission.Description, Color.White);
+                DebugConsole.NewMessage("   Selected mission: " + map.CurrentLocation.SelectedMission.Name, Color.White);
+                DebugConsole.NewMessage("\n" + map.CurrentLocation.SelectedMission.Description, Color.White);
             }
         }
 
