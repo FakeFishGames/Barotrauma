@@ -13,7 +13,7 @@ namespace Barotrauma
         public void Store(T newState)
         {
             redoStack.Clear();
-            if (Current != null)
+            if (!Current.Equals(default(T)))
             {
                 undoStack.Push(Current);
             }
