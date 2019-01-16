@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
                     depth);
             }
         }
-
+        
         private static Sprite wireSprite;
 
         private static Wire draggingWire;
@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
         
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (sections.Count == 0 && !IsActive)
+            if (sections.Count == 0 && !IsActive || Hidden)
             {
                 Drawable = false;
                 return;

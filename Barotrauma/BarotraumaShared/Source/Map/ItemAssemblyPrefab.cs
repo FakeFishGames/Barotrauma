@@ -90,7 +90,13 @@ namespace Barotrauma
                 Item item = me as Item;
                 if (item == null) continue;
                 Wire wire = item.GetComponent<Wire>();
-                if (wire != null) wire.MoveNodes(position - offset);
+                if (wire != null)
+                {
+                    wire.MoveNodes(position - offset);
+
+                    // Placeholder way of hiding wires in alien ruins for now, until a decision whether unique wiring sprites will be used
+                    if (!(Screen.Selected is SubEditorScreen)) wire.Hidden = Name.ToLowerInvariant().Contains("alien");
+                }
             }
 
             MapEntity.MapLoaded(entities, true);
