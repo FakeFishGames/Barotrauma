@@ -225,7 +225,7 @@
       <Item identifier="iron" />
       <Item identifier="incendium" mincondition="0.9" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,320,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="68,320,56,64" />
     <Sprite texture="weapons.png" sourcerect="100,0,12,27" depth="0.55" />
     <Body width="12" height="27" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
