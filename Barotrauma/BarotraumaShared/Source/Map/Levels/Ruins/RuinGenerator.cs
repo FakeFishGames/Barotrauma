@@ -846,17 +846,23 @@ namespace Barotrauma.RuinGeneration
                         }
                     }
 
-                    entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
-                    container.OwnInventory.TryPutItem(entity as Item, null);
-                    CreateChildEntities(entityConfig, entity, room);
-                    ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                    if (container != null)
+                    {
+                        entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
+                        container.OwnInventory.TryPutItem(entity as Item, null);
+                        CreateChildEntities(entityConfig, entity, room);
+                        ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                        return;
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("No container with tag \"" + entityConfig.TargetContainer + "\" found, placing item in the room");
+                    }
                 }
-                else
-                {
-                    entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
-                    CreateChildEntities(entityConfig, entity, room);
-                    ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
-                }
+
+                entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                CreateChildEntities(entityConfig, entity, room);
+                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
