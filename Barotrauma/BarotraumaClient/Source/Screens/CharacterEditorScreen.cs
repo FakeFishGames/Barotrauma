@@ -3429,6 +3429,7 @@ namespace Barotrauma
                                                 // Keeps the absolute origin unchanged. The relative origin will be recalculated.
                                                 var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
                                                 l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                                TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
                                             }
                                             else
                                             {
@@ -3504,6 +3505,7 @@ namespace Barotrauma
                                             {
                                                 // Keeps the absolute origin unchanged. The relative origin will be recalculated.
                                                 l.ActiveSprite.Origin = l.ActiveSprite.Origin;
+                                                TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
                                             }
                                             else
                                             {
