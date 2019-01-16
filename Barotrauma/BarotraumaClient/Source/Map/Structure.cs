@@ -184,7 +184,7 @@ namespace Barotrauma
                 if (HasBody && !ShowWalls) return;
             }
 
-            Color color = (isHighlighted) ? Color.Orange : spriteColor;
+            Color color = (isHighlighted && (!IsSelected || !editing)) ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
