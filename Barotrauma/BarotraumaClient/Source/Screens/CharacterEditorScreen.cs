@@ -3879,16 +3879,8 @@ namespace Barotrauma
                 };
                 widget.PostUpdate += dTime =>
                 {
-                    if (widget.IsSelected)
-                    {
-                        widget.size = selectedSize;
-                        widget.inputAreaMargin = 20;
-                    }
-                    else
-                    {
-                        widget.size = size;
-                        widget.inputAreaMargin = 5;
-                    }
+                    widget.inputAreaMargin = widget.IsControlled ? 1000 : 0;
+                    widget.size = widget.IsSelected ? selectedSize : size;
                     widget.isFilled = widget.IsControlled;
                 };
                 widget.PreDraw += (sp, dTime) =>
@@ -3940,16 +3932,8 @@ namespace Barotrauma
                 widget.PreUpdate += dTime => widget.Enabled = editJoints;
                 widget.PostUpdate += dTime =>
                 {
-                    if (widget.IsSelected)
-                    {
-                        widget.size = selectedSize;
-                        widget.inputAreaMargin = 10;
-                    }
-                    else
-                    {
-                        widget.size = normalSize;
-                        widget.inputAreaMargin = 0;
-                    }
+                    widget.inputAreaMargin = widget.IsControlled ? 1000 : 0;
+                    widget.size = widget.IsSelected ? selectedSize : normalSize;
                 };
                 widget.MouseDown += () =>
                 {
@@ -4003,16 +3987,8 @@ namespace Barotrauma
                 w.PreUpdate += dTime => w.Enabled = editLimbs && selectedLimbs.Contains(limb);
                 w.PostUpdate += dTime =>
                 {
-                    if (w.IsSelected)
-                    {
-                        w.size = selectedSize;
-                        w.inputAreaMargin = 10;
-                    }
-                    else
-                    {
-                        w.size = normalSize;
-                        w.inputAreaMargin = 0;
-                    }
+                    w.inputAreaMargin = w.IsControlled ? 1000 : 0;
+                    w.size = w.IsSelected ? selectedSize : normalSize;
                     w.isFilled = w.IsControlled;
                 };
                 w.MouseUp += () => RagdollParams.CreateSnapshot();
