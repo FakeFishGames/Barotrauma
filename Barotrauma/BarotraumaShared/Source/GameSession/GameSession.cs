@@ -246,6 +246,20 @@ namespace Barotrauma
                         myPort.Dock(outPostPort);
                         myPort.Lock(true);
                     }
+                    else
+                    {
+                        Rectangle outpostBorders = Level.Loaded.StartOutpost.GetDockedBorders();
+                        Rectangle subBorders = submarine.GetDockedBorders();
+
+                        Vector2 startOutpostSize = Vector2.Zero;
+                        if (Level.Loaded.StartOutpost != null)
+                        {
+                            startOutpostSize = Level.Loaded.StartOutpost.Borders.Size.ToVector2();
+                        }
+                        submarine.SetPosition(
+                            Level.Loaded.StartOutpost.WorldPosition - 
+                            new Vector2(0.0f, outpostBorders.Height / 2 + subBorders.Height / 2));
+                    }
                 }
                 else
                 {
