@@ -188,6 +188,28 @@ namespace Barotrauma
                         }
                     }
                 }
+                else if (PlayerInput.KeyHit(Keys.Z))
+                {
+                    foreach (var e in SelectedList)
+                    {
+                        if (e.rectMemento != null)
+                        {
+                            Point diff = e.rectMemento.Undo().Location - e.rect.Location;
+                            e.Move(diff.ToVector2());
+                        }
+                    }
+                }
+                else if (PlayerInput.KeyHit(Keys.R))
+                {
+                    foreach (var e in SelectedList)
+                    {
+                        if (e.rectMemento != null)
+                        {
+                            Point diff = e.rectMemento.Redo().Location - e.rect.Location;
+                            e.Move(diff.ToVector2());
+                        }
+                    }
+                }
             }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -289,7 +311,16 @@ namespace Barotrauma
                         }
                         else // move
                         {
-                            foreach (MapEntity e in selectedList) e.Move(moveAmount);
+                            foreach (MapEntity e in selectedList)
+                            {
+                                if (e.rectMemento == null)
+                                {
+                                    e.rectMemento = new Memento<Rectangle>();
+                                    e.rectMemento.Store(e.rect);
+                                }
+                                e.Move(moveAmount);
+                                e.rectMemento.Store(e.rect);
+                            }
                         }
                     }
                     startMovingPos = Vector2.Zero;
