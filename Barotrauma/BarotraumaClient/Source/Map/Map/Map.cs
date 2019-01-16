@@ -601,6 +601,22 @@ namespace Barotrauma
                         scale: MapGenerationParams.Instance.LocationIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * iconScale * zoom * 1.2f);            
                 }
 
+                //PLACEHOLDER until the stuff at the center of the map is implemented
+                float centerIconSize = 50.0f;
+                Vector2 centerPos = rectCenter + (new Vector2(size / 2) + viewOffset) * zoom;
+                bool mouseOn = Vector2.Distance(PlayerInput.MousePosition, centerPos) < centerIconSize * zoom;
+
+                var centerLocationType = LocationType.List.Last();
+                Color centerColor = centerLocationType.SpriteColor * (mouseOn ? 1.0f : 0.6f);
+                centerLocationType.Sprite.Draw(spriteBatch, centerPos, centerColor,
+                    scale: centerIconSize / centerLocationType.Sprite.size.X * zoom);
+                MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, centerPos, centerColor,
+                    scale: centerIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * zoom * 1.2f);
+
+                if (mouseOn && PlayerInput.LeftButtonClicked())
+                {
+                    new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
+                }
             }
             
             DrawDecorativeHUD(spriteBatch, rect);
