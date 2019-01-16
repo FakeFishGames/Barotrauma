@@ -171,7 +171,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,450,64,64" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="98,0,67,153" depth="0.55" origin="0.5,0.5185185" />
-    <Body width="11" height="24" density="30" />
+    <Body width="60" height="150" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -196,8 +196,8 @@
       <Item identifier="uex" mincondition="0.9" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" />
-    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,0,97,148" depth="0.55" origin="0.5,0.5" />
-    <Body width="11" height="24" density="30" />
+    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,0,97,143" depth="0.55" origin="0.5,0.5" />
+    <Body width="97" height="143" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -299,7 +299,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,150,156,39" depth="0.55" origin="0.5,0.5" />
-    <Body width="30" height="7" density="50" />
+    <Body width="150" height="30" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="2.0">
       <Attack stun="0.2">
         <Affliction identifier="bleeding" strength="10" />
@@ -308,7 +308,8 @@
     </MeleeWeapon>
   </Item>
   <Item name="Bike Horn" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,390,64,64" depth="0.55" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,390,64,64" depth="0.55" />
+    <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55" />
     <Body width="30" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0" />
     <RangedWeapon reload="2">
