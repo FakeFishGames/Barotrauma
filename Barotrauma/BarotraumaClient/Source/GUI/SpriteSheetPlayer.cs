@@ -75,11 +75,13 @@ namespace Barotrauma
             CreateSpriteSheets(contentPath, videoElement);
             currentSheet = playableSheets[0];
 
-            frame.RectTransform.NonScaledSize = currentSheet.FrameSize + new Point(borderSize, borderSize);
-            sheetView.RectTransform.NonScaledSize = currentSheet.FrameSize;
+            Point resolution = currentSheet.FrameSize;
+
+            frame.RectTransform.NonScaledSize = resolution + new Point(borderSize, borderSize);
+            sheetView.RectTransform.NonScaledSize = resolution;
 
             title.Text = titleText;
-            title.RectTransform.NonScaledSize = new Point(currentSheet.FrameSize.X, 30);
+            title.RectTransform.NonScaledSize = new Point(resolution.X, 30);
 
             if (startPlayback) Play();
         }
@@ -133,11 +135,11 @@ namespace Barotrauma
                 totalElapsed -= animationSpeed;
                 currentFrameIndex++;
 
-                if (currentFrameIndex >= currentSheet.FrameCount - 1)
+                if (currentFrameIndex > currentSheet.FrameCount - 1)
                 {
                     currentSheetIndex++;
 
-                    if (currentSheetIndex >= playableSheets.Length - 1)
+                    if (currentSheetIndex > playableSheets.Length - 1)
                     {
                         if (loopDelay > 0.0f)
                         {

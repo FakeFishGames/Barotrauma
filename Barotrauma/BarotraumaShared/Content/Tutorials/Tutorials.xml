@@ -6,7 +6,8 @@
     </Segment>
     <Segment name="Command a crewmember to operate the reactor" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="5" empty="1"/>
+        <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="9" empty="0"/>
+        <Sheet path="1_CommandReactor/Sheets2.png" columns="5" rows="6" empty="4"/>
       </Video>
     </Segment>
     <Segment name="Nav Console" contenttype="video" istriggered="false">
