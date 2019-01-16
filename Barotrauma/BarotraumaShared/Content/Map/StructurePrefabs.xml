@@ -527,10 +527,10 @@
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
   <largeplatform identifier="largeplatform" allowattachitems="true" width="64" height="64" resizehorizontal="true" body="true" platform="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,64" depth="0.9" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,52" depth="0.9" />
   </largeplatform>
   <platform identifier="platform" allowattachitems="true" width="64" height="26" resizehorizontal="true" body="true" platform="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="896,53,128,32" depth="0.9" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="896,52,128,27" depth="0.9" />
   </platform>
   <roughbgwall identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="1.0" />
