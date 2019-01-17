@@ -186,6 +186,10 @@ namespace Barotrauma.Steam
 
         private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived)
         {
+            foreach (ServerList.Server s in query.Unresponsive)
+            {
+                DebugConsole.Log(s.Name + " did not respond to server query.");
+            }
             foreach (ServerList.Server s in query.Responded)
             {
                 DebugConsole.Log(s.Name + " responded to server query.");
