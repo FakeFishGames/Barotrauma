@@ -150,6 +150,9 @@ namespace Barotrauma
             get { return ""; }
         }
 
+        // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
+        private Memento<Rectangle> rectMemento;
+
         public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
         {
             this.prefab = prefab;

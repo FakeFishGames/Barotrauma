@@ -121,7 +121,7 @@ namespace Barotrauma
             if (editing && !ShowItems) return;
             
             Color color = isHighlighted ? Color.Orange : GetSpriteColor();
-            if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
+            //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
             Sprite activeSprite = prefab.sprite;
             BrokenItemSprite fadeInBrokenSprite = null;
@@ -274,7 +274,8 @@ namespace Barotrauma
 
             if (IsSelected || IsHighlighted)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), Color.Green, false, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), 
+                    Color.White, false, 0, thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
 
                 foreach (Rectangle t in Prefab.Triggers)
                 {

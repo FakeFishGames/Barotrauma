@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public int SelectedMissionIndex
         {
-            get { return SelectedConnection == null ? -1 : SelectedConnection.SelectedMissionIndex; }
+            get { return SelectedConnection == null ? -1 : CurrentLocation.SelectedMissionIndex; }
         }
 
         public LocationConnection SelectedConnection { get; private set; }
@@ -394,7 +394,7 @@ namespace Barotrauma
         {
             if (!Locations.Contains(location))
             {
-                DebugConsole.ThrowError("Failed to select a location. "+location.Name+" not found in the map.");
+                DebugConsole.ThrowError("Failed to select a location. " + location.Name + " not found in the map.");
                 return;
             }
 
@@ -406,8 +406,15 @@ namespace Barotrauma
         public void SelectMission(int missionIndex)
         {
             if (SelectedConnection == null) { return; }
-            SelectedConnection.SelectedMissionIndex = missionIndex;
-            OnMissionSelected?.Invoke(SelectedConnection, SelectedConnection.SelectedMission);
+            CurrentLocation.SelectedMissionIndex = missionIndex;
+
+            //the destination must be the same as the destination of the mission
+            if (CurrentLocation.SelectedMission.Locations[1] != SelectedLocation)
+            {
+                SelectLocation(CurrentLocation.SelectedMission.Locations[1]);
+            }
+
+            OnMissionSelected?.Invoke(SelectedConnection, CurrentLocation.SelectedMission);
         }
 
         public void SelectRandomLocation(bool preferUndiscovered)
@@ -525,12 +532,14 @@ namespace Barotrauma
                         string locationType = subElement.GetAttributeString("type", "");
                         Location location = Locations[subElement.GetAttributeInt("i", 0)];
                         int typeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
+                        int missionsCompleted = subElement.GetAttributeInt("missionscompleted", 0);
 
                         string prevLocationName = location.Name;
                         LocationType prevLocationType = location.Type;
                         location.Discovered = true;
                         location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
                         location.TypeChangeTimer = typeChangeTimer;
+                        location.MissionsCompleted = missionsCompleted;
                         if (showNotifications && prevLocationType != location.Type)
                         {
                             ChangeLocationType(
@@ -541,10 +550,7 @@ namespace Barotrauma
                         break;
                     case "connection":
                         int connectionIndex = subElement.GetAttributeInt("i", 0);
-                        int missionsCompleted = subElement.GetAttributeInt("missionscompleted", 0);
-
                         connections[connectionIndex].Passed = true;
-                        connections[connectionIndex].MissionsCompleted = missionsCompleted;
                         break;
                 }
             }
@@ -565,10 +571,15 @@ namespace Barotrauma
 
                 var locationElement = new XElement("location", new XAttribute("i", i));
                 locationElement.Add(new XAttribute("type", location.Type.Name));
-
                 if (location.TypeChangeTimer > 0)
                 {
                     locationElement.Add(new XAttribute("changetimer", location.TypeChangeTimer));
+                }
+
+                location.CheckMissionCompleted();
+                if (location.MissionsCompleted > 0)
+                {
+                    locationElement.Add(new XAttribute("missionscompleted", location.MissionsCompleted));
                 }
 
                 mapElement.Add(locationElement);
@@ -579,17 +590,13 @@ namespace Barotrauma
                 var connection = connections[i];
                 if (!connection.Passed) continue;
 
-                connection.CheckMissionCompleted();
-
-                var connectionElement = new XElement("connection", new XAttribute("i", i));
-                if (connection.MissionsCompleted > 0)
-                {
-                    connectionElement.Add(new XAttribute("missionscompleted", connection.MissionsCompleted));
-                }
+                var connectionElement = new XElement("connection",
+                    new XAttribute("i", i),
+                    new XAttribute("passed", connection.Passed));
 
                 mapElement.Add(connectionElement);
             }
-            
+
             element.Add(mapElement);
         }
 

@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
         
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            Color color = (item.IsSelected) ? Color.Green : Color.White;
+            Color color = Color.White;
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
