@@ -10,8 +10,6 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
         public UInt16 CharacterID;
-        public ClientPermissions Permissions;
-        public List<DebugConsole.Command> PermittedConsoleCommands;
     }
 
     partial class Client : IDisposable

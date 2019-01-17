@@ -1178,20 +1178,13 @@ namespace Barotrauma.Networking
             
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
             outmsg.Write(LastClientListUpdateID);
-
-            bool includePermissions = c.HasPermission(ClientPermissions.ManagePermissions);
-            outmsg.Write(includePermissions);
-
+            
             outmsg.Write((byte)connectedClients.Count);
             foreach (Client client in connectedClients)
             {
                 outmsg.Write(client.ID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
-                if (includePermissions)
-                {
-                    client.WritePermissions(outmsg);
-                }
             }
         }
 
@@ -2224,7 +2217,19 @@ namespace Barotrauma.Networking
 
             CompressOutgoingMessage(msg);
 
-            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
+            //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
+            List<Client> recipients = new List<Client>() { client };
+            foreach (Client otherClient in connectedClients)
+            {
+                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient))
+                {
+                    recipients.Add(otherClient);
+                }
+            }
+            foreach (Client recipient in recipients)
+            {
+                server.SendMessage(msg, recipient.Connection, NetDeliveryMethod.ReliableUnordered);
+            }
 
             serverSettings.SaveClientPermissions();
         }
