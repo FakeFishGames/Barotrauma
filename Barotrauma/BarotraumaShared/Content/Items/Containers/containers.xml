@@ -39,7 +39,7 @@
   </Item>
   <!-- TODO: switch to SecureSteelLockRed.png when access denied and SecureSteelLockGreen.png when access granted-->
   <Item name="Secure Steel Cabinet" identifier="securesteelcabinet" tags="cabinet" linkable="true" spritecolor="255,255,255,255" pickdistance="150" scale="0.5">
-    <Sprite texture="SecureSteelLock.png" depth="0.84" sourcerect="0,0,311,355" origin="0.5,0.5" />
+    <Sprite texture="SecureSteelLock.png" depth="0.84" sourcerect="0,0,291,446" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
       <Containable identifiers="smallitem,mediumitem" />
@@ -76,28 +76,28 @@
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Metal Crate" identifier="metalcrate" linkable="true" pickdistance="150">
+  <Item name="Metal Crate" identifier="metalcrate" scale="0.5" linkable="true" pickdistance="150">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />
-    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="0,5,152,89" origin="0.5,0.5" />
     <Body width="68" height="39" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Secure Metal Crate" identifier="securemetalcrate" linkable="true" pickdistance="150">
+  <Item name="Secure Metal Crate" identifier="securemetalcrate" scale="0.5" linkable="true" pickdistance="150">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />
-    <Sprite texture="crates.png" depth="0.54" sourcerect="1,0,68,39" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="165,0,152,87" origin="0.5,0.5" />
     <Body width="68" height="39" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
@@ -105,26 +105,26 @@
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Explosive Crate" identifier="explosivecrate" linkable="true" pickdistance="150">
+  <Item name="Explosive Crate" identifier="explosivecrate" scale="0.5" linkable="true" pickdistance="150">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />
-    <Sprite texture="crates.png" depth="0.54" sourcerect="78,5,50,40" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="0,197,153,89" origin="0.5,0.5" />
     <Body width="50" height="40" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Chemical Crate" identifier="chemicalcrate" linkable="true" pickdistance="150">
+  <Item name="Chemical Crate" identifier="chemicalcrate" scale="0.5" linkable="true" pickdistance="150">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64" />
-    <Sprite texture="crates.png" depth="0.54" sourcerect="2,39,49,39" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="1,103,148,87" origin="0.5,0.5" />
     <Body width="49" height="39" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">

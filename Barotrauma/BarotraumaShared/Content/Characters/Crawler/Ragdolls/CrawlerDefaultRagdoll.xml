@@ -2,8 +2,6 @@
   <collider height="80" radius="40" name="Main Collider" width="0" />
   <!-- Head -->
   <limb id="0" radius="50" type="Head" flip="True" steerforce="15" mouthpos="50,0" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" height="0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="153,2,102,82" depth="0.1" origin="0.5238374,0.4827269" subdivisions="3,3">
       <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="add" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" />
@@ -16,8 +14,6 @@
   </limb>
   <!-- BodyUpper (main torso) -->
   <limb id="1" width="50" height="0" type="Torso" flip="True" steerforce="0.1" healthindex="0" attackpriority="0" stepoffset="0,0" bodytype="Dynamic" radius="35" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="36,0,115,113" depth="0.2" origin="0.4606622,0.4951695" subdivisions="5,5">
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" />
@@ -26,8 +22,6 @@
   </limb>
   <!-- BodyLower1 -->
   <limb id="2" width="80" height="70" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="167,173,89,83" depth="0.21" origin="0.5135868,0.5523771" subdivisions="5,5">
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.2" sync="1" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" row0="0,0 0.5,1 1,1 0.5,1 0,0" row1="0,0 0.5,1 1,1 0.5,1 0,0" row2="0,0 0.5,1 1,1 0.5,1 0,0" row3="0,0 0.5,1 1,1 0.5,1 0,0" row4="0,0 0.5,1 1,1 0.5,1 0,0" />
@@ -36,40 +30,30 @@
   </limb>
   <!-- BodyLower2 -->
   <limb id="3" width="62" height="52" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 3" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="71,179,84,78" depth="0.22" origin="0.5427743,0.5" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower3 -->
   <limb id="4" width="45" height="33" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 4" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="97,113,63,57" depth="0.023" origin="0.5571429,0.4577771" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower4 -->
   <limb id="5" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="12" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 5" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,135,48,36" depth="0.24" origin="0.524421,0.5587717" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower5 -->
   <limb id="6" width="30" height="0" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="8" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 6" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="50,114,44,28" depth="0.025" origin="0.5984064,0.5294023" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>
   </limb>
   <!-- BodyLower6 -->
   <limb id="7" width="53" height="10" type="Tail" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 7" notes="">
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="47,142,48,26" depth="0.26" origin="0.5339575,0.464236" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" />
     </deformablesprite>

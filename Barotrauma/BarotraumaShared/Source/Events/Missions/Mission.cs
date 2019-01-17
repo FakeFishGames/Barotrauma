@@ -64,6 +64,8 @@ namespace Barotrauma
         {
             get { return Prefab.SonarLabel; }
         }
+
+        public readonly Location[] Locations;
            
         public Mission(MissionPrefab prefab, Location[] locations)
         {
@@ -75,7 +77,10 @@ namespace Barotrauma
             SuccessMessage = prefab.SuccessMessage;
             FailureMessage = prefab.FailureMessage;
             Headers = new List<string>(prefab.Headers);
-            Messages = new List<string>(prefab.Messages);            
+            Messages = new List<string>(prefab.Messages);
+
+            Locations = locations;
+
             for (int n = 0; n < 2; n++)
             {
                 if (Description != null) Description = Description.Replace("[location" + (n + 1) + "]", locations[n].Name);

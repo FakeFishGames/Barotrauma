@@ -2570,16 +2570,45 @@ namespace Barotrauma
                         {
                             w.tooltip = "Head";
                             w.refresh = () => w.DrawPos = SimToScreen(head.SimPosition.X + humanAnimController.HeadLeanAmount * character.AnimController.Dir, head.PullJointWorldAnchorB.Y);
+                            bool isHorizontal = false;
+                            bool isDirectionSet = false;
+                            w.MouseDown += () => isDirectionSet = false;
                             w.MouseHeld += dTime =>
                             {
-                                w.DrawPos = PlayerInput.MousePosition;
+                                if (PlayerInput.MouseSpeed.NearlyEquals(Vector2.Zero)) { return; }
+                                if (!isDirectionSet)
+                                {
+                                    isHorizontal = Math.Abs(PlayerInput.MouseSpeed.X) > Math.Abs(PlayerInput.MouseSpeed.Y);
+                                    isDirectionSet = true;
+                                }
                                 var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
-                                TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * character.AnimController.Dir);
-                                TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y / RagdollParams.JointScale);
+                                if (isHorizontal)
+                                {
+                                    TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * character.AnimController.Dir);
+                                    w.refresh();
+                                    w.DrawPos = new Vector2(PlayerInput.MousePosition.X, w.DrawPos.Y);
+                                }
+                                else
+                                {
+                                    TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y / RagdollParams.JointScale);
+                                    w.refresh();
+                                    w.DrawPos = new Vector2(w.DrawPos.X, PlayerInput.MousePosition.Y);
+                                }
                             };
                             w.PostDraw += (sB, dTime) =>
                             {
-                                if (w.IsSelected)
+                                if (w.IsControlled && isDirectionSet)
+                                {
+                                    if (isHorizontal)
+                                    {
+                                        GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.Red);
+                                    }
+                                    else
+                                    {
+                                        GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.Red);
+                                    }
+                                }
+                                else if (w.IsSelected)
                                 {
                                     GUI.DrawLine(spriteBatch, w.DrawPos, SimToScreen(head.SimPosition), Color.Red);
                                 }
@@ -2629,16 +2658,45 @@ namespace Barotrauma
                         {
                             w.tooltip = "Torso";
                             w.refresh = () => w.DrawPos = SimToScreen(torso.SimPosition.X +  humanAnimController.TorsoLeanAmount * character.AnimController.Dir, torso.PullJointWorldAnchorB.Y);
+                            bool isHorizontal = false;
+                            bool isDirectionSet = false;
+                            w.MouseDown += () => isDirectionSet = false;
                             w.MouseHeld += dTime =>
                             {
-                                w.DrawPos = PlayerInput.MousePosition;
+                                if (PlayerInput.MouseSpeed.NearlyEquals(Vector2.Zero)) { return; }
+                                if (!isDirectionSet)
+                                {
+                                    isHorizontal = Math.Abs(PlayerInput.MouseSpeed.X) > Math.Abs(PlayerInput.MouseSpeed.Y);
+                                    isDirectionSet = true;
+                                }
                                 var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
-                                TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * character.AnimController.Dir);
-                                TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y / RagdollParams.JointScale);
+                                if (isHorizontal)
+                                {
+                                    TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * character.AnimController.Dir);
+                                    w.refresh();
+                                    w.DrawPos = new Vector2(PlayerInput.MousePosition.X, w.DrawPos.Y);
+                                }
+                                else
+                                {
+                                    TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y / RagdollParams.JointScale);
+                                    w.refresh();
+                                    w.DrawPos = new Vector2(w.DrawPos.X, PlayerInput.MousePosition.Y);
+                                }
                             };
                             w.PostDraw += (sB, dTime) =>
                             {
-                                if (w.IsSelected)
+                                if (w.IsControlled && isDirectionSet)
+                                {
+                                    if (isHorizontal)
+                                    {
+                                        GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.DarkRed);
+                                    }
+                                    else
+                                    {
+                                        GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.DarkRed);
+                                    }
+                                }
+                                else if (w.IsSelected)
                                 {
                                     GUI.DrawLine(spriteBatch, w.DrawPos, SimToScreen(torso.SimPosition), Color.DarkRed);
                                 }
@@ -3429,6 +3487,7 @@ namespace Barotrauma
                                                 // Keeps the absolute origin unchanged. The relative origin will be recalculated.
                                                 var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
                                                 l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                                TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
                                             }
                                             else
                                             {
@@ -3504,6 +3563,7 @@ namespace Barotrauma
                                             {
                                                 // Keeps the absolute origin unchanged. The relative origin will be recalculated.
                                                 l.ActiveSprite.Origin = l.ActiveSprite.Origin;
+                                                TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
                                             }
                                             else
                                             {
@@ -3877,16 +3937,8 @@ namespace Barotrauma
                 };
                 widget.PostUpdate += dTime =>
                 {
-                    if (widget.IsSelected)
-                    {
-                        widget.size = selectedSize;
-                        widget.inputAreaMargin = 20;
-                    }
-                    else
-                    {
-                        widget.size = size;
-                        widget.inputAreaMargin = 5;
-                    }
+                    widget.inputAreaMargin = widget.IsControlled ? 1000 : 0;
+                    widget.size = widget.IsSelected ? selectedSize : size;
                     widget.isFilled = widget.IsControlled;
                 };
                 widget.PreDraw += (sp, dTime) =>
@@ -3938,16 +3990,8 @@ namespace Barotrauma
                 widget.PreUpdate += dTime => widget.Enabled = editJoints;
                 widget.PostUpdate += dTime =>
                 {
-                    if (widget.IsSelected)
-                    {
-                        widget.size = selectedSize;
-                        widget.inputAreaMargin = 10;
-                    }
-                    else
-                    {
-                        widget.size = normalSize;
-                        widget.inputAreaMargin = 0;
-                    }
+                    widget.inputAreaMargin = widget.IsControlled ? 1000 : 0;
+                    widget.size = widget.IsSelected ? selectedSize : normalSize;
                 };
                 widget.MouseDown += () =>
                 {
@@ -4001,16 +4045,8 @@ namespace Barotrauma
                 w.PreUpdate += dTime => w.Enabled = editLimbs && selectedLimbs.Contains(limb);
                 w.PostUpdate += dTime =>
                 {
-                    if (w.IsSelected)
-                    {
-                        w.size = selectedSize;
-                        w.inputAreaMargin = 10;
-                    }
-                    else
-                    {
-                        w.size = normalSize;
-                        w.inputAreaMargin = 0;
-                    }
+                    w.inputAreaMargin = w.IsControlled ? 1000 : 0;
+                    w.size = w.IsSelected ? selectedSize : normalSize;
                     w.isFilled = w.IsControlled;
                 };
                 w.MouseUp += () => RagdollParams.CreateSnapshot();

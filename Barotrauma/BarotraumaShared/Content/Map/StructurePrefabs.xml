@@ -376,27 +376,27 @@
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="760,464,119,35" depth="0.85" />
   </sshellA>
   <!-- Glass / Shuttle Shells -->
-  <sshellA name="Shuttle Shell A Glass A" identifier="sshellaglassa" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="55" castshadow="true">
+  <sshellA name="Shuttle Shell A Glass A" identifier="sshellaglassa" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="55" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="1,573,185,253" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="1,573,185,253" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass B" identifier="sshellaglassb" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="38" castshadow="true">
+  <sshellA name="Shuttle Shell A Glass B" identifier="sshellaglassb" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="38" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="221,601,274,215" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="221,601,274,215" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass C" identifier="sshellaglassc" description="Shuttle wall" body="true" bodywidth="272" bodyheight="40" bodyrotation="43" castshadow="true">
+  <sshellA name="Shuttle Shell A Glass C" identifier="sshellaglassc" description="Shuttle wall" body="true" bodywidth="272" bodyheight="40" bodyrotation="43" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="494,600,221,218" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="494,600,221,218" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass D" identifier="sshellaglassd" description="Shuttle wall" body="true" bodywidth="206" bodyheight="40" bodyrotation="38" castshadow="true">
+  <sshellA name="Shuttle Shell A Glass D" identifier="sshellaglassd" description="Shuttle wall" body="true" bodywidth="206" bodyheight="40" bodyrotation="38" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="730,574,190,147" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="730,574,190,147" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass E" identifier="sshellaglasse" description="Shuttle wall" body="true" resizevertical="true" castshadow="true">
+  <sshellA name="Shuttle Shell A Glass E" identifier="sshellaglasse" description="Shuttle wall" body="true" resizevertical="true" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="979,582,46,189" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="979,582,46,189" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass F" identifier="sshellaglassf" description="Shuttle wall" body="true" resizehorizontal="true" castshadow="true">
+  <sshellA name="Shuttle Shell A Glass F" identifier="sshellaglassf" description="Shuttle wall" body="true" resizehorizontal="true" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="719,739,197,47" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="719,739,197,47" depth="0.85" />
   </sshellA>
@@ -527,10 +527,10 @@
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
   <largeplatform identifier="largeplatform" allowattachitems="true" width="64" height="64" resizehorizontal="true" body="true" platform="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,64" depth="0.9" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,52" depth="0.9" />
   </largeplatform>
   <platform identifier="platform" allowattachitems="true" width="64" height="26" resizehorizontal="true" body="true" platform="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="896,53,128,32" depth="0.9" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="896,52,128,27" depth="0.9" />
   </platform>
   <roughbgwall identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="1.0" />

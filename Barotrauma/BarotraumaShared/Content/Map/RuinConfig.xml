@@ -22,7 +22,6 @@
     <structure prefab="RuinWallHeavyVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
     <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" minoffset="-0.25,-0.25" maxoffset="0.25,0.25" type="Prop" commonness="5"/>
-    <item prefab="alienpistolchest" alignment="bottom" type="Prop"/>
     <ChooseOne>
       <itemassembly prefab="alienarmoryassembly1" alignment="Right" type="Prop" minroomsize="800,700" maxroomsize="10000,800"/>
       <item prefab="aliencoil" alignment="bottom" type="Prop" minroomsize="600,0" maxroomsize="800, 800">
@@ -58,23 +57,23 @@
     <ChooseOne>
       <itemassembly prefab="aliengenericroomassembly1" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly3" alignment="Center" type="Prop" minroomsize="1000,1000" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="900,900" />
@@ -88,9 +87,9 @@
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly8" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
@@ -117,42 +116,43 @@
     <ChooseOne>
       <itemassembly prefab="aliengenericroomassembly1" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly3" alignment="Center" type="Prop" minroomsize="1000,1000" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly4" alignment="Center" type="Prop" minroomsize="900,900" />
       <itemassembly prefab="aliengenericroomassembly5" alignment="Bottom" type="Prop" minroomsize="800,900" maxroomsize="10000, 1000"/>
       <itemassembly prefab="aliengenericroomassembly6" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1"/>
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3">
         <ChooseOne>
-          <item prefab="alientrinket1" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket2" alignment="Center" type="Prop"  />
-          <item prefab="alientrinket3" alignment="Center" type="Prop"  />
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" />
         </ChooseOne>
       </itemassembly>
       <itemassembly prefab="aliengenericroomassembly8" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="aliengenericroomassembly9" alignment="Bottom" type="Prop" minroomsize="800,600" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="alienverticalassembly1" alignment="Center" type="Prop" minroomsize="800,1200" maxroomsize="900,10000"/>
       <itemassembly prefab="aliencelltop" alignment="Top" type="Prop" minroomsize="800, 800"/>
       <itemassembly prefab="aliencellbottom" alignment="Bottom" type="Prop" minroomsize="800, 800"/>

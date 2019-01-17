@@ -188,6 +188,29 @@ namespace Barotrauma
                         }
                     }
                 }
+                else if (PlayerInput.KeyHit(Keys.Z))
+                {
+                    SetPreviousRects(e => e.rectMemento.Undo());
+                }
+                else if (PlayerInput.KeyHit(Keys.R))
+                {
+                    SetPreviousRects(e => e.rectMemento.Redo());
+                }
+                void SetPreviousRects(Func<MapEntity, Rectangle> memoryMethod)
+                {
+                    foreach (var e in SelectedList)
+                    {
+                        if (e.rectMemento != null)
+                        {
+                            Point diff = memoryMethod(e).Location - e.Rect.Location;
+                            // We have to call the move method, because there's a lot more than just storing the rect (in some cases)
+                            // We also have to reassign the rect, because the move method does not set the width and height. They might have changed too.
+                            // The Rect property is virtual and it's overridden for structs. Setting the rect via the property should automatically recreate the sections for resizable structures.
+                            e.Move(diff.ToVector2());
+                            e.Rect = e.rectMemento.Current;
+                        }
+                    }
+                }
             }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -289,7 +312,16 @@ namespace Barotrauma
                         }
                         else // move
                         {
-                            foreach (MapEntity e in selectedList) e.Move(moveAmount);
+                            foreach (MapEntity e in selectedList)
+                            {
+                                if (e.rectMemento == null)
+                                {
+                                    e.rectMemento = new Memento<Rectangle>();
+                                    e.rectMemento.Store(e.Rect);
+                                }
+                                e.Move(moveAmount);
+                                e.rectMemento.Store(e.Rect);
+                            }
                         }
                     }
                     startMovingPos = Vector2.Zero;
@@ -659,6 +691,12 @@ namespace Barotrauma
 
             if (resizing)
             {
+                if (rectMemento == null)
+                {
+                    rectMemento = new Memento<Rectangle>();
+                    rectMemento.Store(Rect);
+                }
+
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
@@ -696,6 +734,7 @@ namespace Barotrauma
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
+                    rectMemento.Store(Rect);
                     resizing = false;
                 }
             }

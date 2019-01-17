@@ -103,7 +103,7 @@
     <Deconstruct time="30">
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
-    <Body width="48" height="48" density="5" />
+    <Body width="48" height="48" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
     </Holdable>
   </Item>
@@ -113,7 +113,7 @@
     <Deconstruct time="30">
       <Item identifier="sulphuriteshard" />
     </Deconstruct>
-    <Body width="48" height="48" density="5" />
+    <Body width="48" height="48" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
     </Holdable>
   </Item>
@@ -123,7 +123,7 @@
     <Deconstruct time="30">
       <Item identifier="physicorium" />
     </Deconstruct>
-    <Body width="48" height="48" density="5" />
+    <Body width="48" height="48" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
     </Holdable>
   </Item>

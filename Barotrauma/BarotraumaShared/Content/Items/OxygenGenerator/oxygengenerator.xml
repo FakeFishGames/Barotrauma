@@ -103,7 +103,8 @@
     category="Machine"
     interactdistance="0"
     linkable="true"
-    allowedlinks="oxygenerator">
+    allowedlinks="oxygenerator"
+    scale="0.8">
 
     <Sprite texture="vent.png" depth="0.91" sourcerect="0,0,64,64"/>
     <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56">

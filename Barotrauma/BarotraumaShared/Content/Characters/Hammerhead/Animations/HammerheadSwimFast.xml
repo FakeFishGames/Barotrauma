@@ -11,7 +11,7 @@
   tailtorque="80"
   footangles="13: 0,17: 0"
   steertorque="75"
-  movementspeed="6.725232"
+  movementspeed="8"
   cyclespeed="1"
   headangle="90"
   torsoangle="90"

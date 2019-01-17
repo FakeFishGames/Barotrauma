@@ -219,6 +219,20 @@ namespace Barotrauma
                 level.Generate(mirrorLevel);
                 if (level.StartOutpost != null)
                 {
+                    //start by placing the sub below the outpost
+                    Rectangle outpostBorders = Level.Loaded.StartOutpost.GetDockedBorders();
+                    Rectangle subBorders = submarine.GetDockedBorders();
+
+                    Vector2 startOutpostSize = Vector2.Zero;
+                    if (Level.Loaded.StartOutpost != null)
+                    {
+                        startOutpostSize = Level.Loaded.StartOutpost.Borders.Size.ToVector2();
+                    }
+                    submarine.SetPosition(
+                        Level.Loaded.StartOutpost.WorldPosition -
+                        new Vector2(0.0f, outpostBorders.Height / 2 + subBorders.Height / 2));
+
+                    //find the port that's the nearest to the outpost and dock if one is found
                     float closestDistance = 0.0f;
                     DockingPort myPort = null, outPostPort = null;
                     foreach (DockingPort port in DockingPort.List)
@@ -230,6 +244,9 @@ namespace Barotrauma
                             continue;
                         }
                         if (port.Item.Submarine != submarine) { continue; }
+
+                        //the submarine port has to be at the top of the sub
+                        if (port.Item.WorldPosition.Y < submarine.WorldPosition.Y) { continue; }
 
                         float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
                         if (myPort == null || dist < closestDistance)

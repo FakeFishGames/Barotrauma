@@ -388,11 +388,11 @@ namespace Barotrauma
             if (connection != null)
             {
                 Point maxTickBoxSize = new Point(int.MaxValue, missionContent.Rect.Height / 4) ;
-                List<Mission> availableMissions = connection.AvailableMissions.ToList();
+                List<Mission> availableMissions = Campaign.Map.CurrentLocation.GetMissionsInConnection(connection).ToList();
                 if (!availableMissions.Contains(null)) { availableMissions.Add(null); }
 
-                Mission selectedMission = connection.SelectedMission != null && connection.AvailableMissions.Contains(connection.SelectedMission) ?
-                    connection.SelectedMission : null;
+                Mission selectedMission = Campaign.Map.CurrentLocation.SelectedMission != null && availableMissions.Contains(Campaign.Map.CurrentLocation.SelectedMission) ?
+                    Campaign.Map.CurrentLocation.SelectedMission : null;
                 missionTickBoxes.Clear();
                 foreach (Mission mission in availableMissions)
                 {
@@ -432,14 +432,14 @@ namespace Barotrauma
         }
 
 
-        public void RefreshMissionTab(Mission mission)
+        public void RefreshMissionTab(Mission selectedMission)
         {
             System.Diagnostics.Debug.Assert(
-                mission == null ||
+                selectedMission == null ||
                 (GameMain.GameSession.Map?.SelectedConnection != null &&
-                GameMain.GameSession.Map.SelectedConnection.AvailableMissions.Contains(mission)));
+                GameMain.GameSession.Map.CurrentLocation.AvailableMissions.Contains(selectedMission)));
             
-            GameMain.GameSession.Map.SelectedConnection.SelectedMission = mission;
+            GameMain.GameSession.Map.CurrentLocation.SelectedMission = selectedMission;
 
             foreach (GUITickBox missionTickBox in missionTickBoxes)
             {
@@ -448,23 +448,23 @@ namespace Barotrauma
 
             selectedMissionInfo.ClearChildren();
             var container = selectedMissionInfo.Content;
-            selectedMissionInfo.Visible = mission != null;
+            selectedMissionInfo.Visible = selectedMission != null;
             selectedMissionInfo.Spacing = 10;
-            if (mission == null) { return; }
+            if (selectedMission == null) { return; }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
-                mission.Name, font: GUI.LargeFont)
+                selectedMission.Name, font: GUI.LargeFont)
             {
                 AutoScale = true,
                 CanBeFocused = false
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
-                TextManager.Get("Reward").Replace("[reward]", mission.Reward.ToString()))
+                TextManager.Get("Reward").Replace("[reward]", selectedMission.Reward.ToString()))
             {
                 CanBeFocused = false
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
-                mission.Description, wrap: true)
+                selectedMission.Description, wrap: true)
             {
                 CanBeFocused = false
             };

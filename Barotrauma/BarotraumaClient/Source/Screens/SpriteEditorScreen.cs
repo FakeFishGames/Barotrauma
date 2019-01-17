@@ -633,16 +633,8 @@ namespace Barotrauma
                 widget.PreUpdate += dTime => widget.Enabled = selectedSprites.Contains(sprite);
                 widget.PostUpdate += dTime =>
                 {
-                    if (widget.IsSelected)
-                    {
-                        widget.size = selectedSize;
-                        widget.inputAreaMargin = 10;
-                    }
-                    else
-                    {
-                        widget.size = size;
-                        widget.inputAreaMargin = 5;
-                    }
+                    widget.inputAreaMargin = widget.IsControlled ? 1000 : 0;
+                    widget.size = widget.IsSelected ? selectedSize : size;
                     widget.isFilled = widget.IsControlled;
                 };
                 widgets.Add(id, widget);

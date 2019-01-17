@@ -2,7 +2,7 @@
   <collider radius="200" height="250" name="Main Collider" width="0" />
   <limb id="0" name="Head" type="Head" width="268" height="200" notes="111cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="20" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" mouthpos="97,-76">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="0,0,331,243" origin="0.4839342,0.4924676" depth="0.1" />
-    <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="12" structuresoundtype="StructureSlash" targetforce="-50" severlimbsprobability="0.8" torque="-500" force="50" applyforceonlimbs="2, 0" context="NotDefined" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0">
+    <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="-250" force="20" applyforceonlimbs="0, 1, 2, 13" context="NotDefined" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0">
       <Affliction identifier="internaldamage" strength="10" />
       <Affliction identifier="bleeding" strength="50" />
       <Affliction identifier="stun" strength="0.1" />
@@ -89,9 +89,9 @@
   <joint name="Joint Chest - Head" limb1="14" limb2="0" limb1anchor="138.932,-0.8007008" limb2anchor="-87.97721,56.0832" canbesevered="True" limitenabled="True" upperlimit="10.42033" lowerlimit="-39.29678" stiffness="0.25" />
   <joint name="Joint Head - Jaw" limb1="0" limb2="1" limb1anchor="-1.624528,-60.53897" limb2anchor="-27.54456,59.59686" canbesevered="True" limitenabled="True" upperlimit="44.2667" lowerlimit="-50.7435" stiffness="0.25" />
   <joint name="Joint Head - HeadArmor" limb1="0" limb2="2" limb1anchor="-20.88369,93.07845" limb2anchor="-123.7834,53.26749" canbesevered="True" limitenabled="True" upperlimit="36.28366" lowerlimit="-0.0929179" stiffness="0.25" />
-  <joint name="Joint Head - TentacleMouthTop1" limb1="0" limb2="3" limb1anchor="68.67088,-79.53261" limb2anchor="-32.95366,-6.455211" canbesevered="True" limitenabled="True" upperlimit="42.08156" lowerlimit="-50.60796" stiffness="0.25" />
-  <joint name="Joint Head - TentacleMouthCenter1" limb1="0" limb2="4" limb1anchor="108.3326,-46.59935" limb2anchor="-38.3434,-1.914418" canbesevered="True" limitenabled="True" upperlimit="44.4156" lowerlimit="-44.543" stiffness="0.25" />
-  <joint name="Joint Jaw - TentacleJaw1" limb1="1" limb2="5" limb1anchor="44.15015,38.00616" limb2anchor="-32.95366,-6.455211" canbesevered="True" limitenabled="True" upperlimit="31.24853" lowerlimit="-49.41855" stiffness="0.25" />
+  <joint name="Joint Head - TentacleMouthTop1" limb1="0" limb2="3" limb1anchor="68.67088,-79.53261" limb2anchor="-32.95366,-6.455211" canbesevered="True" limitenabled="True" upperlimit="-9.897845" lowerlimit="-80.14186" stiffness="0.25" />
+  <joint name="Joint Head - TentacleMouthCenter1" limb1="0" limb2="4" limb1anchor="108.3326,-46.59935" limb2anchor="-38.3434,-1.914418" canbesevered="True" limitenabled="True" upperlimit="-8.322695" lowerlimit="-76.45219" stiffness="0.25" />
+  <joint name="Joint Jaw - TentacleJaw1" limb1="1" limb2="5" limb1anchor="42.51614,11.26706" limb2anchor="-32.95366,-6.455211" canbesevered="True" limitenabled="True" upperlimit="46.9267" lowerlimit="-49.01611" stiffness="0.25" />
   <joint name="Joint TentacleMouthTop1 - TentacleMouthTop2" limb1="3" limb2="6" limb1anchor="36.48199,-9.312155" limb2anchor="-13.95672,-2.960463" canbesevered="True" limitenabled="True" upperlimit="43.55199" lowerlimit="-46.23257" stiffness="0.25" />
   <joint name="Joint TentacleMouthCenter1 - TentacleMouthCenter2" limb1="4" limb2="7" limb1anchor="36.57039,-11.57644" limb2anchor="-24.01854,-2.436953" canbesevered="True" limitenabled="True" upperlimit="45.15474" lowerlimit="-45.15799" stiffness="0.25" />
   <joint name="Joint TentacleJaw1 - TentacleJaw2" limb1="5" limb2="8" limb1anchor="41.12104,-10.49723" limb2anchor="-20.2,-5.732994" canbesevered="True" limitenabled="True" upperlimit="44.19941" lowerlimit="-52.66581" stiffness="0.25" />
@@ -110,6 +110,6 @@
   <joint name="Joint 21 - 22" limb1="21" limb2="22" limb1anchor="67.13286,-49.18624" limb2anchor="-44.98278,-23.95288" canbesevered="True" limitenabled="True" upperlimit="12.21289" lowerlimit="-35.97469" stiffness="2" />
   <joint name="Joint 12 - 23" limb1="12" limb2="23" limb1anchor="-38.96086,32.14551" limb2anchor="-106.6516,13.22071" canbesevered="True" limitenabled="True" upperlimit="127.0314" lowerlimit="60.28888" stiffness="50" />
   <joint name="Joint 23 - 24" limb1="23" limb2="24" limb1anchor="173.2616,-14.95577" limb2anchor="-65.3475,-5.415449" canbesevered="True" limitenabled="True" upperlimit="23.2188" lowerlimit="-39.97002" stiffness="5" />
-  <joint name="Joint 24 - 25" limb1="24" limb2="25" limb1anchor="73.14061,-10.73914" limb2anchor="-39.79012,-10.555" canbesevered="True" limitenabled="True" upperlimit="11.5727" lowerlimit="-37.02826" stiffness="5" />
+  <joint name="Joint 24 - 25" limb1="24" limb2="25" limb1anchor="73.1406,-10.73914" limb2anchor="-39.79012,-10.555" canbesevered="True" limitenabled="True" upperlimit="11.5727" lowerlimit="-37.02826" stiffness="5" />
   <joint name="Joint 25 - 26" limb1="25" limb2="26" limb1anchor="73.21416,-7.531944" limb2anchor="-81.08505,-0.2206997" canbesevered="True" limitenabled="True" upperlimit="4.951983" lowerlimit="-51.46862" stiffness="5" />
 </Ragdoll>

@@ -261,7 +261,7 @@
       <Item identifier="titanium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="123,405,116,60" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="197,785,57,28" depth="0.55" origin="0.5,0.5" />
     <Body width="57" height="27" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
@@ -310,13 +310,16 @@
     <Body width="24" height="12" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  <Item name="Flash Powder" identifier="flashpowder" category="Material" spritecolor="0.1,0.1,0.1,1.0" containercolor="0.1,0.1,0.1,1.0" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" impacttolerance="8" useinhealthinterface="true">
+  <Item name="Flash Powder" identifier="flashpowder" category="Material" 
+        cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" 
+        impacttolerance="8" useinhealthinterface="true"
+        scale="0.5">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,255,64,64" />
-    <Sprite texture="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6" />
-    <Body width="8" height="16" density="20" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
+    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="80,256,31,60" />
+    <Body width="30" height="60" density="20" />
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
       <StatusEffect type="OnFire" target="this" condition="-50" />
