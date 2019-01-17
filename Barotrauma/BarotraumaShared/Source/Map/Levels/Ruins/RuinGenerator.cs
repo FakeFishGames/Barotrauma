@@ -884,7 +884,7 @@ namespace Barotrauma.RuinGeneration
                     if (container != null)
                     {
                         entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
-                        if (container.OwnInventory.TryPutItem(entity as Item, null))
+                        if (container.OwnInventory.TryPutItem(entity as Item, null, createNetworkEvent: false))
                         {
                             CreateChildEntities(entityConfig, entity, room);
                             ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
