@@ -93,9 +93,6 @@ namespace Barotrauma
                 if (wire != null)
                 {
                     wire.MoveNodes(position - offset);
-
-                    // Placeholder way of hiding wires in alien ruins for now, until a decision whether unique wiring sprites will be used
-                    if (!(Screen.Selected is SubEditorScreen)) wire.Hidden = Name.ToLowerInvariant().Contains("alien");
                 }
             }
 
@@ -106,7 +103,7 @@ namespace Barotrauma
                 MapEntity.SelectedList.Clear();
                 MapEntity.SelectedList.AddRange(entities);
             }
-#endif   
+#endif
             return entities;
 
         }

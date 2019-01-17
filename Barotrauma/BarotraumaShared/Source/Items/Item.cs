@@ -1342,6 +1342,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
+                if (!ic.CanBeSelected) continue;
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
                 if (ic.Use(deltaTime, character))
                 {
@@ -1372,6 +1373,7 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                if (!ic.CanBeSelected) continue;
                 if (ic.SecondaryUse(deltaTime, character))
                 {
                     ic.WasUsed = true;
