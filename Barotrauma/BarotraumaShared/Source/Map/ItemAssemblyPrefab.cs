@@ -90,10 +90,7 @@ namespace Barotrauma
                 Item item = me as Item;
                 if (item == null) continue;
                 Wire wire = item.GetComponent<Wire>();
-                if (wire != null)
-                {
-                    wire.MoveNodes(position - offset);
-                }
+                if (wire != null) wire.MoveNodes(position - offset);
             }
 
             MapEntity.MapLoaded(entities, true);
@@ -103,7 +100,7 @@ namespace Barotrauma
                 MapEntity.SelectedList.Clear();
                 MapEntity.SelectedList.AddRange(entities);
             }
-#endif
+#endif   
             return entities;
 
         }
