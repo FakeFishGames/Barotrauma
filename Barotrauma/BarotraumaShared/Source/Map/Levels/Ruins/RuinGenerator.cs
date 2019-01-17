@@ -540,6 +540,10 @@ namespace Barotrauma.RuinGeneration
                                     {
                                         doorItem = item;
                                     }
+                                    else
+                                    {
+                                        ruinEntities.Add(new RuinEntity(doorConfig, e, room));
+                                    }
                                 }
                                 if (doorConfig.Expand) { ExpandEntities(entities); }
                                 //make sure the door gets positioned at the correct place regardless of its position in the item assembly
@@ -627,6 +631,30 @@ namespace Barotrauma.RuinGeneration
             {
                 CreateConnections(ruinEntity);
             }
+
+            foreach (RuinEntity ruinEntity in ruinEntities)
+            {
+                if (ruinEntity.Entity is Item item)
+                {
+                    foreach (ItemComponent ic in item.components)
+                    {
+                        // Prevent wiring & interacting
+                        if (ic is ConnectionPanel connectionPanel)
+                        {
+                            connectionPanel.Locked = true;
+                            connectionPanel.CanBeSelected = false;
+                        }
+
+                        // Hide wires for now
+                        if (ic is Wire wire)
+                        {
+                            wire.Hidden = true;
+                            wire.CanBeSelected = false;
+                        }
+                    }
+                }
+            }
+
             //create hulls ---------------------------
             foreach (Rectangle hullRect in hullRects)
             {
@@ -831,6 +859,33 @@ namespace Barotrauma.RuinGeneration
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
+                if (entityConfig.TargetContainer != "")
+                {
+                    List<RuinEntity> roomContents = ruinEntities.FindAll(re => re.Room == room);
+                    Item container = null;
+
+                    for(int i = 0; i < roomContents.Count; i++)
+                    {
+                        if (roomContents[i].Entity is Item && (roomContents[i].Entity as Item).HasTag(entityConfig.TargetContainer))
+                        {
+                            container = roomContents[i].Entity as Item;
+                        }
+                    }
+
+                    if (container != null)
+                    {
+                        entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
+                        container.OwnInventory.TryPutItem(entity as Item, null);
+                        CreateChildEntities(entityConfig, entity, room);
+                        ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                        return;
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("No container with tag \"" + entityConfig.TargetContainer + "\" found, placing item in the room");
+                    }
+                }
+
                 entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
                 CreateChildEntities(entityConfig, entity, room);
                 ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
@@ -1005,6 +1060,7 @@ namespace Barotrauma.RuinGeneration
                     wire.Connect(conn1, true);
                     conn2.TryAddLink(wire);
                     wire.Connect(conn2, true);
+                    wire.Hidden = true; // Hidden for now
                 }
                 else
                 {

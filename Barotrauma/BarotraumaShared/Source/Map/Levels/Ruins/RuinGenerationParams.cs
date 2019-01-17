@@ -424,6 +424,8 @@ namespace Barotrauma.RuinGeneration
 
         public string Name => Prefab == null ? "null" : Prefab.Name;
 
+        public string TargetContainer = "";
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -439,6 +441,11 @@ namespace Barotrauma.RuinGeneration
             {
                 DebugConsole.ThrowError("Loading ruin entity config failed - map entity prefab \"" + name + "\" not found.");
                 return;
+            }
+
+            if (Prefab is ItemPrefab)
+            {
+                TargetContainer = element.GetAttributeString("targetcontainer", "");
             }
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);

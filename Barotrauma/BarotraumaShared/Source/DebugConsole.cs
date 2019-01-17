@@ -2768,6 +2768,11 @@ namespace Barotrauma
             }
         }
 
+        public static void NewMessage(string msg, bool isCommand = false)
+        {
+            NewMessage(msg, Color.White, isCommand);
+        }
+
         public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
             if (string.IsNullOrEmpty((msg))) return;
