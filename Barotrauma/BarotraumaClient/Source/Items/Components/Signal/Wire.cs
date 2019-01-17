@@ -35,8 +35,7 @@ namespace Barotrauma.Items.Components
                     SpriteEffects.None,
                     depth);
             }
-        }
-        
+        }        
         private static Sprite wireSprite;
 
         private static Wire draggingWire;
