@@ -130,6 +130,55 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void WritePermissions(NetOutgoingMessage msg)
+        {
+            msg.Write((UInt16)Permissions);
+            if (HasPermission(ClientPermissions.ConsoleCommands))
+            {
+                msg.Write((UInt16)PermittedConsoleCommands.Count);
+                foreach (DebugConsole.Command command in PermittedConsoleCommands)
+                {
+                    msg.Write(command.names[0]);
+                }
+            }
+        }
+        public static void ReadPermissions(NetIncomingMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
+        {
+            UInt16 permissionsInt = inc.ReadUInt16();
+
+            permissions = ClientPermissions.None;
+            permittedCommands = new List<DebugConsole.Command>();
+            try
+            {
+                permissions = (ClientPermissions)permissionsInt;
+            }
+            catch (InvalidCastException)
+            {
+                return;
+            }
+            if (permissions.HasFlag(ClientPermissions.ConsoleCommands))
+            {
+                UInt16 commandCount = inc.ReadUInt16();
+                for (int i = 0; i < commandCount; i++)
+                {
+                    string commandName = inc.ReadString();
+                    var consoleCommand = DebugConsole.Commands.Find(c => c.names.Contains(commandName));
+                    if (consoleCommand != null)
+                    {
+                        permittedCommands.Add(consoleCommand);
+                    }
+                }
+            }
+        }
+
+        public void ReadPermissions(NetIncomingMessage inc)
+        {
+            ClientPermissions permissions = ClientPermissions.None;
+            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+            ReadPermissions(inc, out permissions, out permittedCommands);
+            SetPermissions(permissions, permittedCommands);
+        }
+
         public void Dispose()
         {
             DisposeProjSpecific();

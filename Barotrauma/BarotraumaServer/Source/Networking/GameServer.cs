@@ -961,9 +961,43 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPermissions.ConsoleCommands:
-                    string consoleCommand = inc.ReadString();
-                    Vector2 clientCursorPos = new Vector2(inc.ReadSingle(), inc.ReadSingle());
-                    DebugConsole.ExecuteClientCommand(sender, clientCursorPos, consoleCommand);
+                    {
+                        string consoleCommand = inc.ReadString();
+                        Vector2 clientCursorPos = new Vector2(inc.ReadSingle(), inc.ReadSingle());
+                        DebugConsole.ExecuteClientCommand(sender, clientCursorPos, consoleCommand);
+                    }
+                    break;
+                case ClientPermissions.ManagePermissions:
+                    byte targetClientID = inc.ReadByte();
+                    Client targetClient = connectedClients.Find(c => c.ID == targetClientID);
+                    if (targetClient == null || targetClient == sender || targetClient.Connection == OwnerConnection) { return; }
+
+                    targetClient.ReadPermissions(inc);
+
+                    List<string> permissionNames = new List<string>();
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        if (permission == ClientPermissions.None || permission == ClientPermissions.All)
+                        {
+                            continue;
+                        }
+                        if (targetClient.Permissions.HasFlag(permission)) { permissionNames.Add(permission.ToString()); }
+                    }
+
+                    string logMsg;
+                    if (permissionNames.Any())
+                    {
+                        logMsg = "Client \"" + sender.Name + "\" set the permissions of the client \"" + targetClient.Name + "\" to "
+                            + string.Join(", ", permissionNames);
+                    }
+                    else
+                    {
+                        logMsg = "Client \"" + sender.Name + "\" removed all permissions from the client \"" + targetClient.Name + ".";
+                    }
+                    Log(logMsg, ServerLog.MessageType.ServerMessage);
+
+                    UpdateClientPermissions(targetClient);
+
                     break;
             }
 
@@ -1145,12 +1179,19 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerNetObject.CLIENT_LIST);
             outmsg.Write(LastClientListUpdateID);
 
+            bool includePermissions = c.HasPermission(ClientPermissions.ManagePermissions);
+            outmsg.Write(includePermissions);
+
             outmsg.Write((byte)connectedClients.Count);
             foreach (Client client in connectedClients)
             {
                 outmsg.Write(client.ID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
+                if (includePermissions)
+                {
+                    client.WritePermissions(outmsg);
+                }
             }
         }
 
