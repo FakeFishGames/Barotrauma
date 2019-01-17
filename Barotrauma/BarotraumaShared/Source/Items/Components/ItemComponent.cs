@@ -524,6 +524,14 @@ namespace Barotrauma.Items.Components
         {
             if (requiredSkills.Count == 0) return 1.0f;
 
+            if (character == null)
+            {
+                string errorMsg = "ItemComponent.DegreeOfSuccess failed (character was null).\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return 0.0f;
+            }
+
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
