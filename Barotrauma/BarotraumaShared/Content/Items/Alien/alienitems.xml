@@ -98,7 +98,7 @@
     </Holdable>
   </Item>
 
-  <Item name="Alien Trinket" identifier="alientrinket1" category="Alien" Tags="alien" scale="0.5">
+  <Item name="Alien Trinket" identifier="alientrinket1" category="Alien" Tags="alien, smallitem" scale="0.5">
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="431,258,82,85" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="oxygeniteshard" />
@@ -108,7 +108,7 @@
     </Holdable>
   </Item>
 
-  <Item name="Alien Curio" identifier="alientrinket2" category="Alien" Tags="alien" scale="0.5">
+  <Item name="Alien Curio" identifier="alientrinket2" category="Alien" Tags="alien, smallitem" scale="0.5">
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="85,430,89,83" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="sulphuriteshard" />
@@ -118,7 +118,7 @@
     </Holdable>
   </Item>
 
-  <Item name="Alien Ornament" identifier="alientrinket3" category="Alien" Tags="alien" scale="0.5">
+  <Item name="Alien Ornament" identifier="alientrinket3" category="Alien" Tags="alien, smallitem" scale="0.5">
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="0,428,87,84" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="physicorium" />
