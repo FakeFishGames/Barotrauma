@@ -443,7 +443,7 @@ namespace Barotrauma
 
             foreach (GUITickBox missionTickBox in missionTickBoxes)
             {
-                missionTickBox.Selected = missionTickBox.UserData == mission;
+                missionTickBox.Selected = missionTickBox.UserData == selectedMission;
             }
 
             selectedMissionInfo.ClearChildren();
