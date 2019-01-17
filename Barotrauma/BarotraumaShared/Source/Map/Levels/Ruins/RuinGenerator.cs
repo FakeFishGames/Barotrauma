@@ -859,36 +859,48 @@ namespace Barotrauma.RuinGeneration
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
+                int amount = Rand.Range(entityConfig.MinAmount, entityConfig.MaxAmount + 1, Rand.RandSync.Server);
+                if (amount <= 0) return; // Not spawned
+
+                Item container = null;
+
                 if (entityConfig.TargetContainer != "")
                 {
                     List<RuinEntity> roomContents = ruinEntities.FindAll(re => re.Room == room);
-                    Item container = null;
-
-                    for(int i = 0; i < roomContents.Count; i++)
+                    for (int j = 0; j < roomContents.Count; j++)
                     {
-                        if (roomContents[i].Entity is Item && (roomContents[i].Entity as Item).HasTag(entityConfig.TargetContainer))
+                        if (roomContents[j].Entity is Item && (roomContents[j].Entity as Item).HasTag(entityConfig.TargetContainer))
                         {
-                            container = roomContents[i].Entity as Item;
+                            container = roomContents[j].Entity as Item;
+                            break;
                         }
                     }
 
+                    if (container == null) DebugConsole.ThrowError("No container with tag \"" + entityConfig.TargetContainer + "\" found, placing item in the room");
+                }
+
+                for (int i = 0; i < amount; i++)
+                {
                     if (container != null)
                     {
                         entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
-                        container.OwnInventory.TryPutItem(entity as Item, null);
-                        CreateChildEntities(entityConfig, entity, room);
-                        ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
-                        return;
+                        if (container.OwnInventory.TryPutItem(entity as Item, null))
+                        {
+                            CreateChildEntities(entityConfig, entity, room);
+                            ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                        }
+                        else // Removing items that don't fit in the container
+                        {
+                            entity.Remove();
+                        }
                     }
                     else
                     {
-                        DebugConsole.ThrowError("No container with tag \"" + entityConfig.TargetContainer + "\" found, placing item in the room");
+                        entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                        CreateChildEntities(entityConfig, entity, room);
+                        ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
                     }
-                }
-
-                entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
-                CreateChildEntities(entityConfig, entity, room);
-                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                }                
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
