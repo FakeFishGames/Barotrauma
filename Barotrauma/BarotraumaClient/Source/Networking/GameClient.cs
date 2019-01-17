@@ -1080,8 +1080,6 @@ namespace Barotrauma.Networking
         private void ReadClientList(NetIncomingMessage inc)
         {
             UInt16 listId = inc.ReadUInt16();
-            bool includePermissions = inc.ReadBoolean();
-
             List<TempClient> tempClients = new List<TempClient>();
             int clientCount = inc.ReadByte();
             for (int i = 0; i < clientCount; i++)
@@ -1089,22 +1087,12 @@ namespace Barotrauma.Networking
                 byte id = inc.ReadByte();
                 string name = inc.ReadString();
                 UInt16 characterID = inc.ReadUInt16();
-
-                ClientPermissions permissions = ClientPermissions.None;
-                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
                 
-                if (includePermissions)
-                {
-                    Client.ReadPermissions(inc, out permissions, out permittedCommands);
-                }
-
                 tempClients.Add(new TempClient
                 {
                     ID = id,
                     Name = name,
-                    CharacterID = characterID,
-                    Permissions = permissions,
-                    PermittedConsoleCommands = permittedCommands
+                    CharacterID = characterID
                 });
             }
 
@@ -1122,7 +1110,6 @@ namespace Barotrauma.Networking
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
                     }
-                    existingClient.SetPermissions(tc.Permissions, tc.PermittedConsoleCommands);
                     existingClient.Character = null;
                     if (tc.CharacterID > 0)
                     {
