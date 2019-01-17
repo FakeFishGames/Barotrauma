@@ -618,6 +618,7 @@
   <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
   <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
   <ClientPermission.ManageSettings>Manage server settings</ClientPermission.ManageSettings>
+  <ClientPermission.ManagePermissions>Manage player permissions</ClientPermission.ManagePermissions>
   <ClientPermission.All>All</ClientPermission.All>
 
   <!-- Mission types -->

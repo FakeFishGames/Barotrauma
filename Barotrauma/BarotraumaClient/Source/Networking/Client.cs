@@ -2,9 +2,6 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -13,6 +10,8 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
         public UInt16 CharacterID;
+        public ClientPermissions Permissions;
+        public List<DebugConsole.Command> PermittedConsoleCommands;
     }
 
     partial class Client : IDisposable
@@ -53,6 +52,43 @@ namespace Barotrauma.Networking
             VoipQueue = new VoipQueue(ID, false, true);
             GameMain.Client.VoipClient.RegisterQueue(VoipQueue);
             VoipSound = null;
+        }
+
+        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        {
+            if (GameMain.Client == null || !GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
+            {
+                return;
+            }
+            Permissions = permissions;
+            PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
+        }
+
+        public void GivePermission(ClientPermissions permission)
+        {
+            if (GameMain.Client == null || !GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
+            {
+                return;
+            }
+            if (!Permissions.HasFlag(permission)) Permissions |= permission;
+        }
+
+        public void RemovePermission(ClientPermissions permission)
+        {
+            if (GameMain.Client == null || !GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
+            {
+                return;
+            }
+            if (Permissions.HasFlag(permission)) Permissions &= ~permission;
+        }
+
+        public bool HasPermission(ClientPermissions permission)
+        {
+            if (GameMain.Client == null || !GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
+            {
+                return false;
+            }
+            return Permissions.HasFlag(permission);
         }
 
         partial void DisposeProjSpecific()

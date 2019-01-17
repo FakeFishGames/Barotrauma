@@ -892,9 +892,9 @@ namespace Barotrauma.Networking
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
-                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.15f) },
                      TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
-                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.55f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.25f) });
                 foreach (string permittedCommand in permittedConsoleCommands)
                 {
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
@@ -1080,7 +1080,8 @@ namespace Barotrauma.Networking
         private void ReadClientList(NetIncomingMessage inc)
         {
             UInt16 listId = inc.ReadUInt16();
-            
+            bool includePermissions = inc.ReadBoolean();
+
             List<TempClient> tempClients = new List<TempClient>();
             int clientCount = inc.ReadByte();
             for (int i = 0; i < clientCount; i++)
@@ -1088,15 +1089,26 @@ namespace Barotrauma.Networking
                 byte id = inc.ReadByte();
                 string name = inc.ReadString();
                 UInt16 characterID = inc.ReadUInt16();
+
+                ClientPermissions permissions = ClientPermissions.None;
+                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+                
+                if (includePermissions)
+                {
+                    Client.ReadPermissions(inc, out permissions, out permittedCommands);
+                }
+
                 tempClients.Add(new TempClient
                 {
                     ID = id,
                     Name = name,
-                    CharacterID = characterID
+                    CharacterID = characterID,
+                    Permissions = permissions,
+                    PermittedConsoleCommands = permittedCommands
                 });
             }
 
-            if (NetIdUtils.IdMoreRecent(listId,LastClientListUpdateID))
+            if (NetIdUtils.IdMoreRecent(listId, LastClientListUpdateID))
             {
                 bool updateClientListId = true;
                 List<Client> currentClients = new List<Client>();
@@ -1110,6 +1122,7 @@ namespace Barotrauma.Networking
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
                     }
+                    existingClient.SetPermissions(tc.Permissions, tc.PermittedConsoleCommands);
                     existingClient.Character = null;
                     if (tc.CharacterID > 0)
                     {
@@ -1134,7 +1147,7 @@ namespace Barotrauma.Networking
                 if (updateClientListId) LastClientListUpdateID = listId;
             }
         }
-        
+
         private void ReadLobbyUpdate(NetIncomingMessage inc)
         {
             ServerNetObject objHeader;
@@ -1701,6 +1714,16 @@ namespace Barotrauma.Networking
             msg.Write((UInt16)ClientPermissions.Unban);
             msg.Write(string.IsNullOrEmpty(playerName) ? "" : playerName);
             msg.Write(string.IsNullOrEmpty(playerIP) ? "" : playerIP);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void UpdateClientPermissions(Client targetClient)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((UInt16)ClientPermissions.ManagePermissions);
+            msg.Write(targetClient.ID);
+            targetClient.WritePermissions(msg);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
