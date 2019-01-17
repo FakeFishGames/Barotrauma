@@ -5,7 +5,7 @@
   waveamplitude="0.2151219"
   wavelength="65.52189"
   rotatetowardsmovement="True"
-  torsotorque="150"
+  torsotorque="5"
   headtorque="250"
   foottorque="0"
   tailtorque="50"
