@@ -624,8 +624,6 @@ namespace Barotrauma
         
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            //if (hiddenInGame) return;
-
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);
@@ -642,8 +640,6 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            //if (hiddenInGame) return;
-
             AddToGUIUpdateList(addLinkedHUDs: true);
         }
 
