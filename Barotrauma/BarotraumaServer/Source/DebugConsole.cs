@@ -663,11 +663,11 @@ namespace Barotrauma
                 if (GameMain.Config.UseSteam)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                    GameMain.Server?.SendChatMessage("Cheat commands have been enabled by the server. You cannot unlock Steam achievements until you restart the game.", ChatMessageType.MessageBox);
+                    GameMain.Server?.UpdateCheatsEnabled();
                 }
                 else
                 {
-                    GameMain.Server?.SendChatMessage("Cheat commands have been enabled by the server.", ChatMessageType.MessageBox);
+                    GameMain.Server?.UpdateCheatsEnabled();
                 }
             }));
             AssignOnClientRequestExecute("enablecheats", (client, cursorPos, args) =>
@@ -678,11 +678,11 @@ namespace Barotrauma
                 if (GameMain.Config.UseSteam)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                    GameMain.Server.SendChatMessage("Cheat commands have been enabled by the server. You cannot unlock Steam achievements until you restart the game.", ChatMessageType.MessageBox);
+                    GameMain.Server?.UpdateCheatsEnabled();
                 }
                 else
                 {
-                    GameMain.Server.SendChatMessage("Cheat commands have been enabled by the server.", ChatMessageType.MessageBox);
+                    GameMain.Server?.UpdateCheatsEnabled();
                 }
             });
 

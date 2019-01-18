@@ -2269,6 +2269,21 @@ namespace Barotrauma.Networking
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public void UpdateCheatsEnabled()
+        {
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.CHEATS_ENABLED);
+            msg.Write(DebugConsole.CheatsEnabled);
+            msg.WritePadBits();
+
+            CompressOutgoingMessage(msg);
+
+            foreach (Client client in connectedClients)
+            {
+                server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
+            }
+        }
+
         public void SetClientCharacter(Client client, Character newCharacter)
         {
             if (client == null) return;

@@ -712,11 +712,11 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
                                 UInt16 saveCount = inc.ReadUInt16();
                                 List<string> saveFiles = new List<string>();
-                                for (int i=0;i<saveCount;i++)
+                                for (int i = 0; i < saveCount; i++)
                                 {
                                     saveFiles.Add(inc.ReadString());
                                 }
-                                
+
                                 GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(saveFiles);
                                 break;
                             case ServerPacketHeader.PERMISSIONS:
@@ -724,6 +724,23 @@ namespace Barotrauma.Networking
                                 break;
                             case ServerPacketHeader.ACHIEVEMENT:
                                 ReadAchievement(inc);
+                                break;
+                            case ServerPacketHeader.CHEATS_ENABLED:
+                                bool cheatsEnabled = inc.ReadBoolean();
+                                inc.ReadPadBits();
+                                if (cheatsEnabled == DebugConsole.CheatsEnabled)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    DebugConsole.CheatsEnabled = cheatsEnabled;
+                                    SteamAchievementManager.CheatsEnabled = cheatsEnabled;
+                                    if (cheatsEnabled)
+                                    {
+                                        new GUIMessageBox("Cheats enabled.", "Cheat commands have been enabled on this server. You cannot get Steam achievements during this play session.");
+                                    }
+                                }
                                 break;
                             case ServerPacketHeader.FILE_TRANSFER:
                                 fileReceiver.ReadMessage(inc);
