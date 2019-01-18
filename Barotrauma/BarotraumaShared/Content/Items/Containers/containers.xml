@@ -58,7 +58,7 @@
     </ItemContainer>
   </Item>
   <Item name="Toxic Cabinet" identifier="toxcabinet" linkable="true" pickdistance="150" waterproof="true" scale="0.4">
-    <Sprite texture="ToxicCabinet.png" depth="0.84" sourcerect="0,0,146,231" canflipx="false" />
+    <Sprite texture="ToxicCabinet.png" depth="0.84" sourcerect="0,0,212,233" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
