@@ -12,9 +12,7 @@ namespace Barotrauma.Networking
         public readonly NetConnection Connection;
         public readonly ulong SteamID;
         public readonly int Nonce;
-
-        public bool WaitingSteamAuth;
-
+        
         public int FailedAttempts;
 
         public float AuthTimer;
@@ -58,7 +56,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection && uc.WaitingSteamAuth))
+            if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection))
             {
                 DebugConsole.Log("Already waiting for authentication, ignoring...");
                 return;
@@ -73,11 +71,10 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.Connection == inc.SenderConnection);
             var unauthClient = new UnauthenticatedClient(inc.SenderConnection, 0, clientSteamID)
             {
-                AuthTimer = 20,
-                WaitingSteamAuth = true
+                AuthTimer = 20
             };
             unauthenticatedClients.Add(unauthClient);
-            
+
             if (!Steam.SteamManager.StartAuthSession(authTicketData, clientSteamID))
             {
                 unauthenticatedClients.Remove(unauthClient);
