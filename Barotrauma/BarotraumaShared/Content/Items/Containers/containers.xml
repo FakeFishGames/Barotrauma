@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Supplies Cabinet" identifier="suppliescabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="0,0,104,144" origin="0.5,0.5" />
+    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="17,34,123,134" origin="0.5,0.5" />
     <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
