@@ -1351,7 +1351,7 @@ namespace Barotrauma
         {
             distanceToItem = -1.0f;
 
-            if (!CanInteract) return false;
+            if (!CanInteract || item.HiddenInGame) return false;
 
             if (item.ParentInventory != null)
             {
