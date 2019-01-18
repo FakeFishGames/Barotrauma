@@ -53,6 +53,7 @@ namespace Barotrauma.Networking
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
+        CHEATS_ENABLED,     //tell the clients whether cheats are on or off
 
         CAMPAIGN_SETUP_INFO,
 
