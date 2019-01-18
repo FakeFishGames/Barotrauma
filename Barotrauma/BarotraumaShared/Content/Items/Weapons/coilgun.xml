@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Coilgun" identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coligunequipment">
-    <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
+    <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
     <StaticBody width="80" radius="80" />
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="10000" type="OnUse" />
-      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" depth="0.011" origin="0.64, 0.7"/>
-      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" depth="0.012" origin="0.6, 0.8"/>
+      <RailSprite texture="Content/Items/Weapons/coilgunrail.png" depth="0.011" origin="0.64, 0.7" />
+      <BarrelSprite texture="Content/Items/Weapons/coilgunbarrel.png" depth="0.012" origin="0.6, 0.8" />
       <Crosshair texture="Content/Items/Weapons/crosshair.png" />
       <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
@@ -14,7 +14,7 @@
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
       <RequiredSkill identifier="weapons" level="50" />
       <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" IsOn="true">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0" />
       </LightComponent>
     </Turret>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -28,13 +28,12 @@
   </Item>
   <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun">
     <Sprite texture="coilgunloader.png" depth="0.8" sourcerect="0,0,80,128" />
-	  <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="wrench" type="Equipped"/>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="wrench" type="Equipped" />
     </Repairable>
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="40,-90" iteminterval="0,0" itemrotation="0" canbeselected="true"
-                   autointeractwithcontained="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="40,-90" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
       <Containable identifiers="coilgunammobox" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
@@ -43,13 +42,12 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
-  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" tags="coilgunequipment" category="Machine" linkable="true">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64"/>
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="78,5,50,40"/>
-    <Body width="50" height="40" density="50"/>
+  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Machine" linkable="true">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.500139,0.6220645" />
+    <Body width="50" height="40" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
-    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" 
-                   ShowConditionInContainedStateIndicator="true">
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
