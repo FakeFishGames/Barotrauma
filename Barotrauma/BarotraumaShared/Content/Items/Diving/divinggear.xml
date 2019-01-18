@@ -89,7 +89,7 @@
       <Item identifier="polycarbonatebar" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64" />
-    <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="166,0,91,257" depth="0.55" origin="0.5,0.6"/>
+    <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="157,0,90,307" depth="0.55" origin="0.4888889,0.5439739" />
     <Body width="37" height="113" density="15" />
     <Wearable slots="OuterClothes">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
@@ -151,16 +151,16 @@
       <Item identifier="polycarbonatebar" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64"/>
-    <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159"/>
-    <Body width="180" height="95" density="11"/>
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,64,64" />
+    <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159" />
+    <Body width="180" height="95" density="11" />
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" />
     <Propulsion force="150" usablein="water" particles="bubbles">
-      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired"/>
-      <StatusEffect type="OnUse" target="Contained" Condition="-0.25"/>
-      <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true"/>
+      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />
+      <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <LightComponent LightColor="1.0,1.0,1.0,0.8" range="200">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0" />
       </LightComponent>
     </Propulsion>
     <ItemContainer capacity="1" hideitems="true">
