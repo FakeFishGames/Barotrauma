@@ -65,7 +65,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="60.0">
         <ReduceAffliction identifier="huskinfection" amount="0.5" />
-        <Affliction identifier="damage" amount="0.75" />
+        <Affliction identifier="internaldamage" amount="0.75" />
         <!-- Remove the item when fully used -->
         <StatusEffect type="OnBroken" target="This">
           <Remove />
@@ -73,7 +73,7 @@
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Limb" duration="60.0">
         <ReduceAffliction identifier="huskinfection" amount="0.25" />
-        <Affliction identifier="damage" amount="1.5" />
+        <Affliction identifier="internaldamage" amount="1.5" />
         <!-- Remove the item when fully used -->
         <StatusEffect type="OnBroken" target="This">
           <Remove />
@@ -103,7 +103,7 @@
         <ReduceAffliction identifier="damage" amount="0.5" />
         <ReduceAffliction identifier="burn" amount="0.5" />
         <ReduceAffliction identifier="oxygenlow" amount="1" />
-        <Affliction identifier="damage" amount="0.5" />
+        <Affliction identifier="internaldamage" amount="0.5" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -166,7 +166,7 @@
     </MeleeWeapon>
   </SulphuricAcid>
   <!-- meds **************************************************************************************** -->
-  <Bandage name="Bandage" identifier="bandage" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3">
+  <Bandage name="Bandage" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3">
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
@@ -248,13 +248,13 @@
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
-        <Affliction identifier="damage" amount="5" />
+        <Affliction identifier="internaldamage" amount="5" />
         <ReduceAffliction identifier="bleeding" amount="20"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="20" />
       </StatusEffect>
       <StatusEffect type="OnFailure" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
-        <Affliction identifier="damage" amount="7" />
+        <Affliction identifier="internaldamage" amount="7" />
         <ReduceAffliction identifier="bleeding" amount="10"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="10" />
       </StatusEffect>
@@ -394,34 +394,6 @@
       </StatusEffect>
     </Holdable>
   </BloodPack>
-  <AlienBlood name="Alien Blood" identifier="alienblood" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A pack of xenoblood, may be used as a last resort for treating bloodloss in humans." scale="0.3">
-    <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="80" />
-    <Price locationtype="City" buyprice="100" />
-    <Price locationtype="Outpost" buyprice="120" />
-    <SuitableTreatment identifier="bloodloss" suitability="25" />
-    <SuitableTreatment identifier="psychosis" suitability="-25" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64" />
-    <Sprite texture="Medicines.png" sourcerect="0,365,133,70" depth="0.6" origin="0.5,0.5" />
-    <Body width="120" height="60" density="11" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
-      <RequiredSkill identifier="medical" level="18"></RequiredSkill>
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect tags="medical" type="OnUse" target="Character, This" duration="5">
-        <ReduceAffliction identifier="bloodloss" amount="6" />
-        <Affliction identifier="psychosis" amount="5" />
-      </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="Character, This" duration="5">
-        <ReduceAffliction identifier="bloodloss" amount="3" />
-        <Affliction identifier="psychosis" amount="7" />
-      </StatusEffect>
-      <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
-        <Remove />
-      </StatusEffect>
-    </Holdable>
-  </AlienBlood>
   <Deusizine name="Deusizine" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="150" />
