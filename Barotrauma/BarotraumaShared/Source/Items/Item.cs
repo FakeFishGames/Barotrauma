@@ -1428,7 +1428,7 @@ namespace Barotrauma
             {
                 if (!ic.HasRequiredContainedItems(user == Character.Controlled)) continue;
 
-                bool success = Rand.Range(0.0f, 1.0f) < ic.DegreeOfSuccess(Character.Controlled);
+                bool success = Rand.Range(0.0f, 1.0f) < ic.DegreeOfSuccess(user);
                 ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
 
 #if CLIENT
