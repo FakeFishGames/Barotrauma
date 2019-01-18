@@ -295,20 +295,18 @@ namespace Barotrauma
                 }
 
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) return;
-
-                if (doc.Root.Name.ToString().ToLowerInvariant() == "item")
-                {
-                    new ItemPrefab(doc.Root, filePath);
-                }
-                else
+                if (doc?.Root == null) { return; }
+                
+                if (doc.Root.Name.ToString().ToLowerInvariant() == "items")
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != "item") continue;
-
                         new ItemPrefab(element, filePath);
                     }
+                }
+                else
+                {
+                    new ItemPrefab(doc.Root, filePath);
                 }
             }
         }
