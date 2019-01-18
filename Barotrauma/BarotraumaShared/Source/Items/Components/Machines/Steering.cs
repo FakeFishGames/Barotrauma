@@ -174,9 +174,9 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            networkUpdateTimer -= deltaTime;
             if (unsentChanges)
             {
-                networkUpdateTimer -= deltaTime;
                 if (networkUpdateTimer <= 0.0f)
                 {
 #if CLIENT
@@ -192,7 +192,7 @@ namespace Barotrauma.Items.Components
                         item.CreateServerEvent(this);
                     }
 
-                    networkUpdateTimer = 0.5f;
+                    networkUpdateTimer = 0.1f;
                     unsentChanges = false;
                 }
             }
