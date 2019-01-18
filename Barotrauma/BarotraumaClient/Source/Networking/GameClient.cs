@@ -498,8 +498,9 @@ namespace Barotrauma.Networking
 
                 DebugConsole.Log("Sending Steam auth message");
                 DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
-                DebugConsole.Log("   Ticket data: " + steamAuthTicket.Data.Length);
-                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);
+                DebugConsole.Log("   Ticket data: " + 
+                    ToolBox.LimitString(string.Concat(steamAuthTicket.Data.Select(b => b.ToString("X2"))), 16));
+                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);                
             }
             else
             {

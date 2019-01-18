@@ -50,8 +50,8 @@ namespace Barotrauma.Networking
             DebugConsole.Log("Received a Steam auth request");
             DebugConsole.Log("  Steam ID: "+ clientSteamID);
             DebugConsole.Log("  Auth ticket length: " + authTicketLength);
-
-            DebugConsole.Log("  Auth ticket data: " + ((authTicketData == null) ? "null" : authTicketData.Length.ToString()));
+            DebugConsole.Log("  Auth ticket data: " + 
+                ((authTicketData == null) ? "null" : ToolBox.LimitString(string.Concat(authTicketData.Select(b => b.ToString("X2"))), 16)));
 
             if (banList.IsBanned("", clientSteamID))
             {
@@ -60,11 +60,9 @@ namespace Barotrauma.Networking
 
             if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection && uc.WaitingSteamAuth))
             {
-                DebugConsole.Log("Duplicate request");
+                DebugConsole.Log("Already waiting for authentication, ignoring...");
                 return;
             }
-            
-
 
             if (authTicketData == null)
             {
@@ -75,7 +73,7 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.Connection == inc.SenderConnection);
             var unauthClient = new UnauthenticatedClient(inc.SenderConnection, 0, clientSteamID)
             {
-                AuthTimer = 100,
+                AuthTimer = 20,
                 WaitingSteamAuth = true
             };
             unauthenticatedClients.Add(unauthClient);
@@ -100,7 +98,7 @@ namespace Barotrauma.Networking
 
         public void OnAuthChange(ulong steamID, ulong ownerID, Facepunch.Steamworks.ServerAuth.Status status)
         {
-            DebugConsole.Log("OnAuthChange");
+            DebugConsole.Log("************ OnAuthChange");
             DebugConsole.Log("  Steam ID: " + steamID);
             DebugConsole.Log("  Owner ID: " + ownerID);
             DebugConsole.Log("  Status: " + status);
