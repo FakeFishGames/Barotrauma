@@ -117,7 +117,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible) return;
+            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
             if (editing && !ShowItems) return;
             
             Color color = isHighlighted ? Color.Orange : GetSpriteColor();
@@ -624,6 +624,8 @@ namespace Barotrauma
         
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
+            //if (hiddenInGame) return;
+
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);
@@ -640,6 +642,8 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
+            //if (hiddenInGame) return;
+
             AddToGUIUpdateList(addLinkedHUDs: true);
         }
 
