@@ -263,7 +263,7 @@ namespace Barotrauma.Steam
 
 #region Server
 
-        public static bool CreateServer(Networking.GameServer server)
+        public static bool CreateServer(Networking.GameServer server, bool isPublic)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -277,7 +277,7 @@ namespace Barotrauma.Steam
             };
             //options.QueryShareGamePort();
 
-            instance.server = new Server(AppID, options);
+            instance.server = new Server(AppID, options, isPublic);
             if (!instance.server.IsValid)
             {
                 instance.server.Dispose();
@@ -289,17 +289,11 @@ namespace Barotrauma.Steam
             RefreshServerDetails(server);
 
             instance.server.Auth.OnAuthChange = server.OnAuthChange;
-
-            return true;
-        }
-
-        public static bool RegisterToMasterServer()
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
             Instance.server.LogOnAnonymous();
+
             return true;
         }
-
+        
         public static bool RefreshServerDetails(Networking.GameServer server)
         {
             if (instance == null || !instance.isInitialized)

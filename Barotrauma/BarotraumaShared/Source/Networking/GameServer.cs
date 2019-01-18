@@ -200,18 +200,11 @@ namespace Barotrauma.Networking
 
             if (SteamManager.USE_STEAM)
             {
-                SteamManager.CreateServer(this);
+                SteamManager.CreateServer(this, isPublic);
             }
-            if (isPublic)
+            if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             { 
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    SteamManager.RegisterToMasterServer();
-                }
-                else
-                {
-                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
-                }
+                CoroutineManager.StartCoroutine(RegisterToMasterServer());                
             }
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
