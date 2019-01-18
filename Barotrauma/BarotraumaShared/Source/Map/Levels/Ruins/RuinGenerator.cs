@@ -859,11 +859,7 @@ namespace Barotrauma.RuinGeneration
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
-                int amount = Rand.Range(entityConfig.MinAmount, entityConfig.MaxAmount + 1, Rand.RandSync.Server);
-                if (amount <= 0) return; // Not spawned
-
                 Item container = null;
-
                 if (entityConfig.TargetContainer != "")
                 {
                     List<RuinEntity> roomContents = ruinEntities.FindAll(re => re.Room == room);
@@ -878,29 +874,26 @@ namespace Barotrauma.RuinGeneration
 
                     if (container == null) DebugConsole.ThrowError("No container with tag \"" + entityConfig.TargetContainer + "\" found, placing item in the room");
                 }
-
-                for (int i = 0; i < amount; i++)
+                
+                if (container != null)
                 {
-                    if (container != null)
+                    entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
+                    if (container.OwnInventory.TryPutItem(entity as Item, null, createNetworkEvent: false))
                     {
-                        entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
-                        if (container.OwnInventory.TryPutItem(entity as Item, null))
-                        {
-                            CreateChildEntities(entityConfig, entity, room);
-                            ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
-                        }
-                        else // Removing items that don't fit in the container
-                        {
-                            entity.Remove();
-                        }
-                    }
-                    else
-                    {
-                        entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
                         CreateChildEntities(entityConfig, entity, room);
                         ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
                     }
-                }                
+                    else // Removing items that don't fit in the container
+                    {
+                        entity.Remove();
+                    }
+                }
+                else
+                {
+                    entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                    CreateChildEntities(entityConfig, entity, room);
+                    ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                }                              
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
@@ -972,7 +965,11 @@ namespace Barotrauma.RuinGeneration
                 var childRoom = FindRoom(childEntity.PlacementRelativeToParent, room);
                 if (childRoom != null)
                 {
-                    CreateEntity(childEntity, childRoom, parentEntity);
+                    int amount = Rand.Range(childEntity.MinAmount, childEntity.MaxAmount + 1, Rand.RandSync.Server);
+                    for (int i = 0; i < amount; i++)
+                    {
+                        CreateEntity(childEntity, childRoom, parentEntity);
+                    }
                 }
             }
         }

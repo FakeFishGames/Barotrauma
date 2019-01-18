@@ -104,13 +104,15 @@ namespace Barotrauma.Networking
             {
                 AbsoluteOffset = new Point(0, 5),
                 MaxSize = new Point(25, 25)
-            }, TextManager.Get("CamFollowSubmarine"));
-            cameraFollowsSub.OnSelected += (tbox) =>
+            }, TextManager.Get("CamFollowSubmarine"))
             {
-                Camera.FollowSub = tbox.Selected;
-                return true;
+                Selected = Camera.FollowSub,
+                OnSelected = (tbox) =>
+                {
+                    Camera.FollowSub = tbox.Selected;
+                    return true;
+                }
             };
-            cameraFollowsSub.OnSelected(cameraFollowsSub);
 
             chatBox = new ChatBox(inGameHUD, isSinglePlayer: false);
             chatBox.OnEnterMessage += EnterChatMessage;
@@ -548,8 +550,9 @@ namespace Barotrauma.Networking
 
                 DebugConsole.Log("Sending Steam auth message");
                 DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
-                DebugConsole.Log("   Ticket data: " + steamAuthTicket.Data.Length);
-                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);
+                DebugConsole.Log("   Ticket data: " + 
+                    ToolBox.LimitString(string.Concat(steamAuthTicket.Data.Select(b => b.ToString("X2"))), 16));
+                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);                
             }
         }
 

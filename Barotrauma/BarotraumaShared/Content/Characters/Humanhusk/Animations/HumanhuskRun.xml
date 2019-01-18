@@ -1,5 +1,4 @@
 ﻿<HumanoidRun
-  AnimationType="Run"
   getupforce="0.35"
   cyclespeed="2.021435"
   footmovestrength="15"
@@ -23,4 +22,6 @@
   crouchingtorsoangle="-10"
   backwardsmovementmultiplier="0.75"
   animationtype="Run"
-  legbendtorque="10" />
+  legbendtorque="10"
+  footangle="0"
+  crouchingfootmoveoffset="0,0" />

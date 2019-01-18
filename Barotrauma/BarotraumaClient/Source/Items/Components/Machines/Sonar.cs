@@ -17,6 +17,9 @@ namespace Barotrauma.Items.Components
             Passive
         };
 
+        private bool unsentChanges;
+        private float networkUpdateTimer;
+
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
@@ -89,13 +92,12 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
                 {
+                    IsActive = box.Selected;
                     if (GameMain.Client != null)
                     {
-                        item.CreateClientEvent(this);
+                        unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
-                    IsActive = box.Selected;
-
                     return true;
                 }
             };
@@ -112,7 +114,7 @@ namespace Barotrauma.Items.Components
                     zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
                     if (GameMain.Client != null)
                     {
-                        item.CreateClientEvent(this);
+                        unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
                     return true;
@@ -131,10 +133,9 @@ namespace Barotrauma.Items.Components
                 OnSelected = (tickBox) =>
                 {
                     useDirectionalPing = tickBox.Selected;
-
                     if (GameMain.Client != null)
                     {
-                        item.CreateClientEvent(this);
+                        unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
                     return true;
@@ -148,7 +149,7 @@ namespace Barotrauma.Items.Components
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                     if (GameMain.Client != null)
                     {
-                        item.CreateClientEvent(this);
+                        unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
                     return true;
@@ -174,10 +175,29 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (GameMain.Client != null)
+            {
+                if (unsentChanges)
+                {
+                    if (networkUpdateTimer <= 0.0f)
+                    {
+                        item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                        networkUpdateTimer = 0.1f;
+                        unsentChanges = false;
+                    }
+                }
+                networkUpdateTimer -= deltaTime;
+            }
+
             if (sonarView.Rect.Contains(PlayerInput.MousePosition))
             {
-                zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
-                zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
+                float scrollSpeed = PlayerInput.ScrollWheelSpeed / 1000.0f;
+                if (Math.Abs(scrollSpeed) > 0.0001f)
+                {
+                    zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
+                    zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
+                }
             }
 
             float distort = 1.0f - item.Condition / 100.0f;
