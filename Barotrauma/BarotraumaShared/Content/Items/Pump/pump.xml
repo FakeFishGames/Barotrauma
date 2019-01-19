@@ -24,12 +24,13 @@
       <input name="set_speed" />
       <input name="set_targetlevel" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.25" mindeteriorationdelay="60" maxdeteriorationdelay="420" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="Equipped" />
     </Repairable>
   </Item>
+  
   <Item name="Small Pump" identifier="smallpump" linkable="true" category="Machine" scale="0.5">
     <Sprite texture="FF_smallPump.png" depth="0.8" sourcerect="0,0,220,128" origin="0.5,0.5" />
     <Pump canbeselected="true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3">
@@ -52,7 +53,7 @@
       <input name="set_speed" />
       <input name="set_targetlevel" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="15" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.25" mindeteriorationdelay="60" maxdeteriorationdelay="420" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="Equipped" />
