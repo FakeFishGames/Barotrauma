@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
+
   <Item name="Junction Box" identifier="junctionbox" category="Electrical" description="Serves as a hub for power distribution and relaying signals between devices." scale="0.75">
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,73,121" depth="0.8" canflipx="false" origin="0.5,0.5" />
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="73,0,73,123" depth="0.8" maxcondition="55" fadein="true" />
@@ -27,10 +28,11 @@
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0" />
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
+  
   <Item name="Battery" identifier="battery" tags="battery" category="Electrical" Scale="0.5" description="Generally used for storing backup power in case of a reactor failure.">
     <Sprite texture="battery.png" sourcerect="0,0,118,159" depth="0.8" />
     <BrokenSprite texture="battery.png" sourcerect="118,0,118,159" depth="0.8" maxcondition="50" fadein="true" />
@@ -55,19 +57,23 @@
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
       <Containable identifiers="loadable" />
     </ItemContainer>
+	<Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="electrical" level="40" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
+    </Repairable>
   </Item>
   
   <Item name="ShuttleBattery" identifier="shuttlebattery" tags="battery" category="Electrical" Scale="0.2" description="Generally used for storing backup power in case of a reactor failure.">
-
     <Sprite texture="ShuttleBattery.png" sourcerect="0,0,299,307" depth="0.8" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="299,0,299,307" depth="0.8" maxcondition="50" fadein="true" />
     <BrokenSprite texture="ShuttleBattery.png" sourcerect="598,0,299,307" depth="0.8" maxcondition="0" />
-
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected="true" indicatorposition="59,30" indicatorsize="132,83" ishorizontal="true">
       <GuiFrame relativesize="0.18,0.23" minsize="350,250" maxsize="420,300" anchor="Center" relativeoffset="0,-0.1" style="ItemUI" />
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="loadable" Condition="2.0" />
     </PowerContainer>
-
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <StatusEffect type="OnFailure" target="Character">
@@ -80,7 +86,6 @@
       <input name="power_out" />
       <input name="power_in" />
     </ConnectionPanel>
-
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="Charging Dock" >
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI"/>
       <Containable identifiers="loadable" />
@@ -108,14 +113,13 @@
     </ConnectionPanel>
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI" />
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="20.0" />
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0" />
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
+  
   <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
@@ -130,6 +134,7 @@
     <Body width="25" height="17" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" />
   </Item>
+  
   <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
     <Deconstruct time="10">
       <Item identifier="zinc" mincondition="0.5"/>
@@ -139,6 +144,7 @@
     <Body width="23" height="17" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" />
   </Item>
+  
   <Item name="Charging Dock" identifier="chargingdock" category="Electrical" scale="0.5" description="A wall-mounted battery cell charging dock.">
     <Sprite texture="battery.png" sourcerect="0,163,118,32" depth="0.8" />
     <BrokenSprite texture="battery.png" sourcerect="0,163,118,32" depth="0.8" maxcondition="50" fadein="true" />
