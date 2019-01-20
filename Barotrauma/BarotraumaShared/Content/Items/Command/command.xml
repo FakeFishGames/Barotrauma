@@ -9,7 +9,7 @@
     category="Machine">
 
     <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,188,194"/>
-    <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="50" fadein="true" />
     <BrokenSprite texture="Content/Items/Command/navigator.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" />
 
     <CustomInterface canbeselected="true">
@@ -60,13 +60,13 @@
       <output name="signal_out3"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="electrical" level="40"/>
       <RequiredItem identifier="screwdriver" type="equipped"/>
       <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0"/>
-	  <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
+	    <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
     </Repairable>
   </Item>
 
@@ -80,7 +80,7 @@
     scale="0.35">
 
     <Sprite texture="Content/Items/Command/ShuttleNavigator.png" depth="0.8" sourcerect="0,0,406,333"/>
-    <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="406,0,406,333" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="406,0,406,333" depth="0.8" maxcondition="50" fadein="true" />
     <BrokenSprite texture="Content/Items/Command/ShuttleNavigator.png" sourcerect="812,0,406,333" depth="0.8" maxcondition="0" />
 
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="1">

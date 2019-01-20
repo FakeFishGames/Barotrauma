@@ -90,6 +90,14 @@
     <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="90,-270" iteminterval="80,0" itemrotation="90" canbeselected = "true">
       <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>
+	<Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="420" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="wrench" type="Equipped" />
+	  <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0"/>
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0"/>
+	  <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
+    </Repairable>
   </Item>
 
   <Item

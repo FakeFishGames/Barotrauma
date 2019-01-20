@@ -15,7 +15,7 @@
     </Repairable>
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
-    <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="55" />
+    <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="50" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false">

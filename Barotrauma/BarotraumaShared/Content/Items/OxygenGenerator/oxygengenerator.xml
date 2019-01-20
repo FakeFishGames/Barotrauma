@@ -7,7 +7,7 @@
     allowedlinks="vent">
     
     <Sprite texture="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
-    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
     <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
@@ -38,7 +38,7 @@
       <input name="power_in"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="12" maxdeteriorationdelay="420" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="420" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="wrench" type="equipped"/>
@@ -55,7 +55,7 @@
     allowedlinks="vent">
 
     <Sprite texture="ShuttleOxygenerator.png" depth="0.8" sourcerect="0,0,186,125"/>
-    <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,125,186,125" depth="0.8" maxcondition="55" fadein="true" />
+    <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,125,186,125" depth="0.8" maxcondition="50" fadein="true" />
     <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,250,186,125" depth="0.8" maxcondition="0" />
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
