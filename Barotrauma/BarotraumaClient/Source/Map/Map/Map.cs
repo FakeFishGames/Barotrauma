@@ -585,7 +585,7 @@ namespace Barotrauma
                         color *= 0.5f;
                     }
 
-                    float iconScale = 1.0f;
+                    float iconScale = location == CurrentLocation ? 1.2f : 1.0f;
                     if (location == highlightedLocation)
                     {
                         iconScale *= 1.1f;
@@ -598,7 +598,7 @@ namespace Barotrauma
                     location.Type.Sprite.Draw(spriteBatch, pos, color, 
                         scale: MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X * iconScale * zoom);
                     MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, pos, color, 
-                        scale: MapGenerationParams.Instance.LocationIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * iconScale * zoom * 1.2f);            
+                        scale: MapGenerationParams.Instance.LocationIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * iconScale * zoom * 1.4f);            
                 }
 
                 //PLACEHOLDER until the stuff at the center of the map is implemented
