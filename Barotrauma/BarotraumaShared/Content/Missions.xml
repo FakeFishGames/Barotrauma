@@ -206,6 +206,66 @@
     
   </MonsterMission>
 
+
+  <MonsterMission
+  name="Killing a Hammerhead"
+  identifier="killhammerhead"
+  type="Monster"
+  description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of 400 credits has been promised to those who kill the creature."
+  commonness="10"
+  reward="400"
+  sonarlabel="Hammerhead"
+  successmessage="The Hammerhead has been killed."
+  monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
+    <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Ruins"/>
+
+    <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
+
+  </MonsterMission>
+  
+  <MonsterMission
+  name="Terminate a Swarm"
+  identifier="killswarm"
+  type="Monster"
+  description="A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of 400 credits has been promised to those who kill the creature."
+  commonness="10"
+  reward="400"
+  sonarlabel="Swarm"
+  successmessage="The swarm has been terminated."
+  monsterfile="Content/Characters/Crawler/crawler.xml" >   
+    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Ruins"/>
+
+    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+  </MonsterMission>  
+  
+
   <MonsterMission
     name="Beast from the Abyss"
     identifier="killendworm"
