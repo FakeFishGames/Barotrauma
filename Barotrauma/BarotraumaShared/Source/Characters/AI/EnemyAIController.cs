@@ -531,8 +531,7 @@ namespace Barotrauma
                 return;
             }
 
-            //Limb attackLimb = attackingLimb;
-            Limb steeringLimb = Character.AnimController.MainLimb;
+            Limb steeringLimb = attackingLimb ?? Character.AnimController.MainLimb;
             if (attackingLimb == null)
             {
                 AttackContext currentContext = Character.GetAttackContext();
