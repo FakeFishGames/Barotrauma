@@ -527,21 +527,22 @@ namespace Barotrauma
             for (int i = 0; i < 2; i++)
             {
                 Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
+                Limb foot = i == 0 ? leftFoot : rightFoot;
                 if (leg == null) { continue; }
 
-                float shortestAngle = leg.Rotation - torso.Rotation;
-
-                if (Math.Abs(shortestAngle) < 2.5f) continue;
-
+                float shortestAngle = leg.Rotation - torso.Rotation;                
                 if (Math.Abs(shortestAngle) > 5.0f)
                 {
                     TargetDir = TargetDir == Direction.Right ? Direction.Left : Direction.Right;
+                    foot.Disabled = true;
+                    break;
                 }
-                else
+                else if (Math.Abs(shortestAngle) > 2.5f)
                 {
                     leg.body.ApplyTorque(shortestAngle * LegBendTorque);
                     leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
                     leg.body.ApplyTorque(-shortestAngle * LegBendTorque);
+                    foot.Disabled = true;
                 }
             }
 
@@ -624,7 +625,7 @@ namespace Barotrauma
 
                 return;
             }
-
+            
             Vector2 waistPos = waist != null ? waist.SimPosition : torso.SimPosition;
 
             //moving horizontally
@@ -637,6 +638,7 @@ namespace Barotrauma
                 {
                     Limb foot = i == -1 ? leftFoot : rightFoot;
                     Limb leg = i == -1 ? leftLeg : rightLeg;
+                    Limb thigh = GetLimb(i == -1 ? LimbType.LeftThigh : LimbType.RightThigh);
 
                     Vector2 footPos = stepSize * -i;
                     footPos += new Vector2(Math.Sign(movement.X) * FootMoveOffset.X, FootMoveOffset.Y);
@@ -653,17 +655,16 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
 
-                    if (foot.SimPosition.Y > leg.SimPosition.Y)
-                    {
-                        continue;
-                    }
 
                     if (!foot.Disabled)
                     {
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = colliderPos + footPos;
-                        MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength, true);
-                        foot.body.SmoothRotate(leg.body.Rotation + (CurrentGroundedParams.FootAngleInRadians + MathHelper.PiOver2) * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
+                        if (ValidateLegJoints(waist, thigh, leg, foot) && foot.SimPosition.Y < waist.SimPosition.Y)
+                        {
+                            MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength, true);
+                            foot.body.SmoothRotate(leg.body.Rotation + (CurrentGroundedParams.FootAngleInRadians + MathHelper.PiOver2) * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
+                        }
                     }
                 }
 
@@ -704,7 +705,6 @@ namespace Barotrauma
                             handPos.X,
                             (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), CurrentGroundedParams.HandMoveStrength);
                 }
-
             }
             else
             {
@@ -728,19 +728,22 @@ namespace Barotrauma
                         footPos.Y = Math.Max(Math.Min(floorPos, footPos.Y + 0.5f), footPos.Y);
                     }
 
-                    var foot = i == -1 ? rightFoot : leftFoot;
+                    Limb foot = i == -1 ? rightFoot : leftFoot;
                     Limb leg = i == -1 ? rightLeg : leftLeg;
+                    Limb thigh = GetLimb(i == -1 ? LimbType.RightThigh : LimbType.LeftThigh);
 
                     if (!foot.Disabled)
                     {
-                        if (foot.SimPosition.Y > leg.SimPosition.Y)
+                        if (ValidateLegJoints(waist, thigh, leg, foot) && foot.SimPosition.Y < waist.SimPosition.Y)
                         {
-                            continue;
+                            MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength, true);
+                            float angle = (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians);
+                            if (Crouching && Math.Sign(stepSize.X * i) < 0) { angle -= MathHelper.PiOver2; }
+                            if (foot.SimPosition.Y < leg.SimPosition.Y)
+                            {
+                                foot.body.SmoothRotate(Dir * angle, 50.0f);
+                            }
                         }
-                        MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength, true);
-                        float angle = (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians);
-                        if (Crouching && Math.Sign(stepSize.X * i) < 0) { angle -= MathHelper.PiOver2; }
-                        foot.body.SmoothRotate(Dir * angle, 50.0f);
                     }
                 }
 
@@ -783,6 +786,49 @@ namespace Barotrauma
                         movement.X,
                         Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);                
             }
+        }
+
+        private bool ValidateLegJoints(Limb waist, Limb thigh, Limb leg, Limb foot)
+        {
+            float tolerance = 1.0f;
+
+            var kneeJoint =  GetJointBetweenLimbs(thigh.type, leg.type);
+            var waistJoint =  GetJointBetweenLimbs(waist.type, thigh.type);
+            var ankleJoint = GetJointBetweenLimbs(leg.type, foot.type);
+            
+            bool jointsValid = true;
+            if (waistJoint.JointAngle < waistJoint.LowerLimit - tolerance)
+            {
+                //thigh.body.ApplyTorque(thigh.Mass * Dir * (waistJoint.LowerLimit - waistJoint.JointAngle));
+                jointsValid = false;
+            }
+            else if (waistJoint.JointAngle > waistJoint.UpperLimit + tolerance)
+            {
+                //thigh.body.ApplyTorque(thigh.Mass * Dir * (waistJoint.UpperLimit - waistJoint.JointAngle));
+                jointsValid = false;
+            }
+
+            if (kneeJoint.JointAngle < kneeJoint.LowerLimit - tolerance)
+            {
+                //leg.body.ApplyTorque(leg.Mass * Dir * (kneeJoint.LowerLimit - kneeJoint.JointAngle));
+                jointsValid = false;
+            }
+            else if (kneeJoint.JointAngle > kneeJoint.UpperLimit + tolerance)
+            {
+                //leg.body.ApplyTorque(leg.Mass * Dir * (kneeJoint.UpperLimit - kneeJoint.JointAngle));
+                jointsValid = false;
+            }
+            if (ankleJoint.JointAngle < ankleJoint.LowerLimit - tolerance)
+            {
+                //leg.body.ApplyTorque(leg.Mass * Dir * (kneeJoint.LowerLimit - kneeJoint.JointAngle));
+                jointsValid = false;
+            }
+            else if (ankleJoint.JointAngle > ankleJoint.UpperLimit + tolerance)
+            {
+                //leg.body.ApplyTorque(leg.Mass * Dir * (kneeJoint.UpperLimit - kneeJoint.JointAngle));
+                jointsValid = false;
+            }
+            return jointsValid;
         }
 
         private void ClimbOverObstacles()
