@@ -129,8 +129,7 @@ namespace Barotrauma
 
         public bool Crouching;
 
-        private float upperArmLength = 0.0f;
-        private float forearmLength = 0.0f;
+        private float upperArmLength = 0.0f, forearmLength = 0.0f;
         public Vector2 RightHandIKPos
         {
             get;
@@ -143,6 +142,8 @@ namespace Barotrauma
         }
 
         private LimbJoint shoulder;
+
+        private float upperLegLength = 0.0f, lowerLegLength = 0.0f;
 
         private bool aiming;
 
@@ -210,6 +211,7 @@ namespace Barotrauma
         {
             base.Recreate(ragdollParams);
             CalculateArmLengths();
+            CalculateLegLengths();
         }
 
         private void CalculateArmLengths()
@@ -254,6 +256,35 @@ namespace Barotrauma
             }
         }
 
+        private void CalculateLegLengths()
+        {
+            //calculate upper and lower leg length (atm this assumes that both legs are the same size)
+            LimbType upperLegType = LimbType.RightThigh;
+            LimbType lowerLegType = LimbType.RightLeg;
+            LimbType footType = LimbType.RightFoot;
+
+            var waistJoint = GetJointBetweenLimbs(LimbType.Waist, upperLegType);
+            Vector2 localAnchorWaist = Vector2.Zero;
+            Vector2 localAnchorKnee = Vector2.Zero;
+            if (shoulder != null)
+            {
+                localAnchorWaist = waistJoint.LimbA.type == upperLegType ? waistJoint.LocalAnchorA : waistJoint.LocalAnchorB;
+            }
+            LimbJoint kneeJoint = GetJointBetweenLimbs(upperLegType, lowerLegType);
+            if (kneeJoint != null)
+            {
+                localAnchorKnee = kneeJoint.LimbA.type == upperLegType ? kneeJoint.LocalAnchorA : kneeJoint.LocalAnchorB;
+            }
+            upperLegLength = Vector2.Distance(localAnchorWaist, localAnchorKnee);
+
+            LimbJoint ankleJoint = GetJointBetweenLimbs(lowerLegType, footType);
+            lowerLegLength = Vector2.Distance(
+                kneeJoint.LimbA.type == lowerLegType ? kneeJoint.LocalAnchorA : kneeJoint.LocalAnchorB,
+                ankleJoint.LimbA.type == lowerLegType ? ankleJoint.LocalAnchorA : ankleJoint.LocalAnchorB);
+            lowerLegLength += Vector2.Distance(
+                ankleJoint.LimbA.type == footType ? ankleJoint.LocalAnchorA : ankleJoint.LocalAnchorB,
+                GetLimb(footType).PullJointLocalAnchorA);
+        }
         private LimbJoint GetJointBetweenLimbs(LimbType limbTypeA, LimbType limbTypeB)
         {
             return LimbJoints.FirstOrDefault(lj =>
@@ -523,28 +554,6 @@ namespace Barotrauma
 
             if (torso == null) { return; }
 
-            // Doesn't seem to have much (positive) effect. The ragdoll breaks anyway.
-            for (int i = 0; i < 2; i++)
-            {
-                Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
-                if (leg == null) { continue; }
-
-                float shortestAngle = leg.Rotation - torso.Rotation;
-
-                if (Math.Abs(shortestAngle) < 2.5f) continue;
-
-                if (Math.Abs(shortestAngle) > 5.0f)
-                {
-                    TargetDir = TargetDir == Direction.Right ? Direction.Left : Direction.Right;
-                }
-                else
-                {
-                    leg.body.ApplyTorque(shortestAngle * LegBendTorque);
-                    leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
-                    leg.body.ApplyTorque(-shortestAngle * LegBendTorque);
-                }
-            }
-
             if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
             {
                 //move slower if collider isn't upright
@@ -653,29 +662,13 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
 
-                    if (foot.SimPosition.Y > leg.SimPosition.Y)
-                    {
-                        continue;
-                    }
-
                     if (!foot.Disabled)
                     {
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = colliderPos + footPos;
-                        MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength, true);
-                        foot.body.SmoothRotate(leg.body.Rotation + (CurrentGroundedParams.FootAngleInRadians + MathHelper.PiOver2) * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
-                    }
-                }
-
-                if (LegBendTorque > 0.0f)
-                {
-                    if (Math.Sign(walkPosX) != Math.Sign(movement.X))
-                    {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * LegBendTorque);
-                    }
-                    else
-                    {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * LegBendTorque);
+                        MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength);
+                        FootIK(foot, colliderPos + footPos, 
+                            CurrentGroundedParams.LegBendTorque, CurrentGroundedParams.FootRotateStrength, CurrentGroundedParams.FootAngleInRadians);
                     }
                 }
 
@@ -715,7 +708,7 @@ namespace Barotrauma
                     if (Crouching)
                     {
                         footPos = new Vector2(
-                            waistPos.X + Math.Sign(stepSize.X * i) * Dir * 0.3f,
+                            waistPos.X + Math.Sign(stepSize.X * i) * Dir * 0.1f,
                             colliderPos.Y - 0.1f);
                     }
                     else
@@ -733,14 +726,11 @@ namespace Barotrauma
 
                     if (!foot.Disabled)
                     {
-                        if (foot.SimPosition.Y > leg.SimPosition.Y)
-                        {
-                            continue;
-                        }
-                        MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength, true);
-                        float angle = (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians);
-                        if (Crouching && Math.Sign(stepSize.X * i) < 0) { angle -= MathHelper.PiOver2; }
-                        foot.body.SmoothRotate(Dir * angle, 50.0f);
+                        foot.DebugRefPos = colliderPos;
+                        foot.DebugTargetPos = footPos;
+                        MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength);
+                        FootIK(foot, footPos, 
+                            CurrentGroundedParams.LegBendTorque, CurrentGroundedParams.FootRotateStrength, CurrentGroundedParams.FootAngleInRadians);
                     }
                 }
 
@@ -976,47 +966,15 @@ namespace Barotrauma
             }
 
             WalkPos += movement.Length();
-            //float handCyclePos = walkPos / 2.0f * -Dir;
-            //float waveRotation = (float)Math.Sin(walkPos / waveLength);
-            //walkPos -= movement.Length();
-            //legCyclePos = walkPos / Math.Abs(CurrentSwimParams.LegCycleLength) * -Dir;
             legCyclePos += Vector2.Normalize(movement).Length();
             handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
 
-            footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
-
-            for (int i = -1; i < 2; i += 2)
-            {
-                var thigh = i == -1 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
-                var leg = i == -1 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
-                if (leg == null) { continue; }
-                float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
-                if (thigh != null)
-                {
-                    if (thighDiff > MathHelper.PiOver2)
-                    {
-                        //thigh bent too close to the torso -> force the leg to extend
-                        float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 10.0f;
-                        thigh.body.ApplyTorque(thighTorque);
-                        leg.body.ApplyTorque(thighTorque);
-                    }
-                    else
-                    {
-                        thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f * CurrentAnimationParams.CycleSpeed, 2.0f);
-                    }
-                }
-                var foot = i == -1 ? GetLimb(LimbType.LeftFoot) : GetLimb(LimbType.RightFoot);
-                if (foot != null)
-                {
-                    foot.body.SmoothRotate(leg.body.Rotation + (CurrentSwimParams.FootAngleInRadians + MathHelper.PiOver2) * Dir, CurrentSwimParams.FootRotateStrength);
-                }
-            }
-
+            footPos = GetLimb(LimbType.Waist).SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * (upperLegLength + lowerLegLength);
             Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * CurrentSwimParams.LegMoveAmount * CurrentAnimationParams.CycleSpeed, 0.0f);
             transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
-            MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
-            MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);            
+            FootIK(rightFoot, footPos - transformedFootPos, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootAngleInRadians);
+            FootIK(leftFoot, footPos + transformedFootPos, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootAngleInRadians);
 
             handPos = (torso.SimPosition + head.SimPosition) / 2.0f;
 
@@ -1776,7 +1734,7 @@ namespace Barotrauma
 
             //distance from shoulder to holdpos
             float c = Vector2.Distance(pos, shoulderPos);
-            c = MathHelper.Clamp(forearmLength + upperArmLength - 0.01f, upperArmLength - forearmLength, c);
+            c = MathHelper.Clamp(c, Math.Abs(upperArmLength - forearmLength), forearmLength + upperArmLength - 0.01f);
 
             float ang2 = MathUtils.VectorToAngle(pos - shoulderPos) + MathHelper.PiOver2;
 
@@ -1786,6 +1744,56 @@ namespace Barotrauma
             arm?.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force * arm.Mass);
             forearm?.body.SmoothRotate((ang2 + handAngle * Dir), 20.0f * force * forearm.Mass);
             hand?.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
+        }
+
+        private void FootIK(Limb foot, Vector2 pos, float legTorque, float footTorque, float footAngle)
+        {
+            Limb upperLeg, lowerLeg;
+            if (foot.type == LimbType.LeftFoot)
+            {
+                upperLeg = GetLimb(LimbType.LeftThigh);
+                lowerLeg = GetLimb(LimbType.LeftLeg);
+            }
+            else
+            {
+                upperLeg = GetLimb(LimbType.RightThigh);
+                lowerLeg = GetLimb(LimbType.RightLeg);
+            }
+            var torso = GetLimb(LimbType.Torso);
+            var waist = GetJointBetweenLimbs(LimbType.Waist, upperLeg.type);
+            Vector2 waistPos = waist.LimbA == upperLeg ? waist.WorldAnchorA : waist.WorldAnchorB;
+
+            //distance from waist joint to the target position
+            float c = Vector2.Distance(pos, waistPos);
+            c = Math.Max(c, Math.Abs(upperLegLength - lowerLegLength));
+
+            float legAngle = MathUtils.VectorToAngle(pos - waistPos) + MathHelper.PiOver2;
+            if (!MathUtils.IsValid(legAngle))
+            {
+                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidAngle", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
+            //make sure the angle "has the same number of revolutions" as the torso
+            //(e.g. we don't want to rotate the legs to 0 if the torso is at 360, because that'd blow up the hip joints) 
+            while (torso.Rotation - legAngle > MathHelper.Pi)
+            {
+                legAngle += MathHelper.TwoPi;
+            }
+            while (torso.Rotation - legAngle < -MathHelper.Pi)
+            {
+                legAngle -= MathHelper.TwoPi;
+            }
+            
+            //if the distance is longer than the length of the upper and lower leg, we'll just have to extend them directly towards the target
+            float upperLegAngle = c >= upperLegLength + lowerLegLength ? 0.0f : MathUtils.SolveTriangleSSS(lowerLegLength, upperLegLength, c);
+            float lowerLegAngle = c >= upperLegLength + lowerLegLength ? 0.0f : MathUtils.SolveTriangleSSS(upperLegLength, lowerLegLength, c);
+
+            upperLeg.body.SmoothRotate((legAngle + upperLegAngle * Dir), upperLeg.Mass * legTorque, wrapAngle: false);
+            lowerLeg.body.SmoothRotate((legAngle - lowerLegAngle * Dir), lowerLeg.Mass * legTorque, wrapAngle: false);
+            foot.body.SmoothRotate((legAngle - (lowerLegAngle + footAngle) * Dir), foot.Mass * footTorque, wrapAngle: false);
         }
 
         public override void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
