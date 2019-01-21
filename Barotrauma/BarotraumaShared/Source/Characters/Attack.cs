@@ -22,7 +22,7 @@ namespace Barotrauma
     {
         Any,
         Character,
-        Structure
+        Structure   // Including hulls etc. Evaluated as anything but a character.
     }
 
     struct AttackResult
@@ -86,7 +86,10 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 30.0f)]
+        /// <summary>
+        /// Legacy support. Use Afflictions.
+        /// </summary>
+        [Serialize(0.0f, false)]
         public float Stun { get; private set; }
 
         [Serialize(false, true), Editable]
@@ -381,9 +384,7 @@ namespace Barotrauma
                 case AttackTarget.Character:
                     return target is Character;
                 case AttackTarget.Structure:
-                    // TODO: this does not work. We need to change the ai behaviour first -> target structures instead of characters inside the structures
-                    //return target is Structure;
-                    return true;
+                    return !(target is Character);
                 case AttackTarget.Any:
                 default:
                     return true;
