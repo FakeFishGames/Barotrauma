@@ -9,10 +9,17 @@ Berith
 Bramerton
 Brunhes
 Chandelle Crevasse
+Dolgovskoy
+Gangpo
 Huronia
 Hyldemoer
+Kimju
+Kogavostok
+Krytogorsk
+Kury
 Meltwater
 Milda
+Molovsk
 Moulin
 New Nanhui
 New Siberia
@@ -21,9 +28,12 @@ Novyj Moskva
 Oshan
 Pastonia
 Randkluft
+Riville
+Seosu
 Serac
 Sermilik
 Set
+Shinkonai
 Skaani
 Skadi's Cauldron
 Sontu
@@ -31,7 +41,11 @@ St. Musk
 Tara
 Thaw
 Topol
+Uusi-Turcu
+Vellamo's Crevasse
+Versas
 Vorta
 Wolstone
 Worm Cave
+Xinzou
 Zamoroska
