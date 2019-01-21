@@ -667,7 +667,8 @@ namespace Barotrauma
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = colliderPos + footPos;
                         MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength);
-                        FootIK(foot, colliderPos + footPos);
+                        FootIK(foot, colliderPos + footPos, 
+                            CurrentGroundedParams.LegBendTorque, CurrentGroundedParams.FootRotateStrength, CurrentGroundedParams.FootAngleInRadians);
                     }
                 }
 
@@ -728,10 +729,8 @@ namespace Barotrauma
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = footPos;
                         MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength);
-                        FootIK(foot, footPos);
-                        /*float angle = (MathHelper.PiOver2 + CurrentGroundedParams.FootAngleInRadians);
-                        if (Crouching && Math.Sign(stepSize.X * i) < 0) { angle -= MathHelper.PiOver2; }
-                        foot.body.SmoothRotate(Dir * angle, 50.0f);*/
+                        FootIK(foot, footPos, 
+                            CurrentGroundedParams.LegBendTorque, CurrentGroundedParams.FootRotateStrength, CurrentGroundedParams.FootAngleInRadians);
                     }
                 }
 
@@ -967,47 +966,15 @@ namespace Barotrauma
             }
 
             WalkPos += movement.Length();
-            //float handCyclePos = walkPos / 2.0f * -Dir;
-            //float waveRotation = (float)Math.Sin(walkPos / waveLength);
-            //walkPos -= movement.Length();
-            //legCyclePos = walkPos / Math.Abs(CurrentSwimParams.LegCycleLength) * -Dir;
             legCyclePos += Vector2.Normalize(movement).Length();
             handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
 
-            footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
-
-            for (int i = -1; i < 2; i += 2)
-            {
-                var thigh = i == -1 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
-                var leg = i == -1 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
-                if (leg == null) { continue; }
-                float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
-                if (thigh != null)
-                {
-                    if (thighDiff > MathHelper.PiOver2)
-                    {
-                        //thigh bent too close to the torso -> force the leg to extend
-                        float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 10.0f;
-                        thigh.body.ApplyTorque(thighTorque);
-                        leg.body.ApplyTorque(thighTorque);
-                    }
-                    else
-                    {
-                        thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f * CurrentAnimationParams.CycleSpeed, 2.0f);
-                    }
-                }
-                var foot = i == -1 ? GetLimb(LimbType.LeftFoot) : GetLimb(LimbType.RightFoot);
-                if (foot != null)
-                {
-                    foot.body.SmoothRotate(leg.body.Rotation + (CurrentSwimParams.FootAngleInRadians + MathHelper.PiOver2) * Dir, CurrentSwimParams.FootRotateStrength);
-                }
-            }
-
+            footPos = GetLimb(LimbType.Waist).SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * (upperLegLength + lowerLegLength);
             Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * CurrentSwimParams.LegMoveAmount * CurrentAnimationParams.CycleSpeed, 0.0f);
             transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
-            MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
-            MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);            
+            FootIK(rightFoot, footPos - transformedFootPos, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootAngleInRadians);
+            FootIK(leftFoot, footPos + transformedFootPos, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootRotateStrength, CurrentSwimParams.FootAngleInRadians);
 
             handPos = (torso.SimPosition + head.SimPosition) / 2.0f;
 
@@ -1779,7 +1746,7 @@ namespace Barotrauma
             hand?.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
         }
 
-        private void FootIK(Limb foot, Vector2 pos)
+        private void FootIK(Limb foot, Vector2 pos, float legTorque, float footTorque, float footAngle)
         {
             Limb upperLeg, lowerLeg;
             if (foot.type == LimbType.LeftFoot)
@@ -1824,9 +1791,9 @@ namespace Barotrauma
             float upperLegAngle = c >= upperLegLength + lowerLegLength ? 0.0f : MathUtils.SolveTriangleSSS(lowerLegLength, upperLegLength, c);
             float lowerLegAngle = c >= upperLegLength + lowerLegLength ? 0.0f : MathUtils.SolveTriangleSSS(upperLegLength, lowerLegLength, c);
 
-            upperLeg.body.SmoothRotate((legAngle + upperLegAngle * Dir), upperLeg.Mass * CurrentGroundedParams.LegBendTorque, wrapAngle: false);
-            lowerLeg.body.SmoothRotate((legAngle - lowerLegAngle * Dir), lowerLeg.Mass * CurrentGroundedParams.LegBendTorque, wrapAngle: false);
-            foot.body.SmoothRotate((legAngle - (lowerLegAngle + CurrentGroundedParams.FootAngleInRadians) * Dir), foot.Mass * CurrentGroundedParams.FootRotateStrength, wrapAngle: false);
+            upperLeg.body.SmoothRotate((legAngle + upperLegAngle * Dir), upperLeg.Mass * legTorque, wrapAngle: false);
+            lowerLeg.body.SmoothRotate((legAngle - lowerLegAngle * Dir), lowerLeg.Mass * legTorque, wrapAngle: false);
+            foot.body.SmoothRotate((legAngle - (lowerLegAngle + footAngle) * Dir), foot.Mass * footTorque, wrapAngle: false);
         }
 
         public override void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
