@@ -29,14 +29,24 @@ namespace Barotrauma
             if (!repairablesFound) { return 0.0f; }
 
             float priority = 100.0f - item.Condition;
-            float dist = Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y);
+            //vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = 
+                Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + 
+                Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y) * 2.0f;
+
+            //heavily increase the priority if the item is already selected 
+            //so characters don't keep switching between nearby damaged items
+            if (character.SelectedConstruction == item)
+            {
+                priority += 50.0f;
+            }
             if (insufficientSkills)
             {
-                return MathHelper.Lerp(0.0f, 50.0f, priority / 100.0f / Math.Max(dist / 1000.0f, 1.0f));
+                return MathHelper.Lerp(0.0f, 50.0f, priority / 100.0f / Math.Max(dist / 100.0f, 1.0f));
             }
             else
             {
-                return MathHelper.Lerp(50.0f, 100.0f, priority / 100.0f / Math.Max(dist / 1000.0f, 1.0f));
+                return MathHelper.Lerp(50.0f, 100.0f, priority / 100.0f / Math.Max(dist / 100.0f, 1.0f));
             }
         }
 
