@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -13,7 +15,8 @@ namespace Barotrauma
             Name,
             SpeciesName,
             HasTag,
-            HasStatusTag
+            HasStatusTag,
+            Affliction
         }
 
         public enum OperatorType
@@ -30,6 +33,10 @@ namespace Barotrauma
         public readonly string PropertyName;
         public readonly OperatorType Operator;
         public readonly string Value;
+        /// <summary>
+        /// All strings separated by whitespace.
+        /// </summary>
+        public readonly List<string> Values = new List<string>();
 
         public readonly string TargetItemComponentName;
 
@@ -47,49 +54,63 @@ namespace Barotrauma
                     atStr = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
                 }
             }
-            //thanks xml for not letting me use < or > in attributes :(
-            string op = splitString[0];
-            switch (op)
+            splitString.ForEach(s => Values.Add(s));
+            bool isOperatorParsed = false;
+            for (int i = 0; i < splitString.Length; i++)
             {
-                case "e":
-                case "eq":
-                case "equals":
-                    Operator = OperatorType.Equals;
-                    break;
-                case "ne":
-                case "neq":
-                case "notequals":
-                case "!":
-                case "!e":
-                case "!eq":
-                case "!equals":
-                    Operator = OperatorType.NotEquals;
-                    break;
-                case "gt":
-                case "greaterthan":
-                    Operator = OperatorType.GreaterThan;
-                    break;
-                case "lt":
-                case "lessthan":
-                    Operator = OperatorType.LessThan;
-                    break;
-                case "gte":
-                case "gteq":
-                case "greaterthanequals":
-                    Operator = OperatorType.GreaterThanEquals;
-                    break;
-                case "lte":
-                case "lteq":
-                case "lessthanequals":
-                    Operator = OperatorType.LessThanEquals;
-                    break;
-                default:
-                    if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
-                    {
-                        atStr = attributeString; //We probably don't even have an operator
-                    }
-                    break;
+                //thanks xml for not letting me use < or > in attributes :(
+                string op = splitString[i];
+                switch (op)
+                {
+                    case "e":
+                    case "eq":
+                    case "equals":
+                        Operator = OperatorType.Equals;
+                        isOperatorParsed = true;
+                        break;
+                    case "ne":
+                    case "neq":
+                    case "notequals":
+                    case "!":
+                    case "!e":
+                    case "!eq":
+                    case "!equals":
+                        Operator = OperatorType.NotEquals;
+                        isOperatorParsed = true;
+                        break;
+                    case "gt":
+                    case "greaterthan":
+                        Operator = OperatorType.GreaterThan;
+                        isOperatorParsed = true;
+                        break;
+                    case "lt":
+                    case "lessthan":
+                        Operator = OperatorType.LessThan;
+                        isOperatorParsed = true;
+                        break;
+                    case "gte":
+                    case "gteq":
+                    case "greaterthanequals":
+                        Operator = OperatorType.GreaterThanEquals;
+                        isOperatorParsed = true;
+                        break;
+                    case "lte":
+                    case "lteq":
+                    case "lessthanequals":
+                        Operator = OperatorType.LessThanEquals;
+                        isOperatorParsed = true;
+                        break;
+                        // TODO: figure out what to do with this
+                    //default:
+                    //    if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
+                    //    {
+                    //        atStr = attributeString; //We probably don't even have an operator
+                    //    }
+                    //    break;
+                }
+                if (isOperatorParsed) { break; }
             }
+
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
 
@@ -118,6 +139,7 @@ namespace Barotrauma
 
         public bool Matches(ISerializableEntity target)
         {
+            if (target == null) { return false; }
             string valStr = Value.ToString();
 
             switch (Type)
@@ -179,6 +201,32 @@ namespace Barotrauma
                     Character targetCharacter = target as Character;
                     if (targetCharacter == null) return false;
                     return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == valStr);
+                case ConditionType.Affliction:
+                    if (target is Character targetChar)
+                    {
+                        var affliction = targetChar.CharacterHealth.GetAffliction(Values.FirstOrDefault());
+                        if (affliction == null) { return false; }
+                        if (float.TryParse(Values.LastOrDefault(), out float value))
+                        {
+                            switch (Operator)
+                            {
+                                case OperatorType.Equals:
+                                    return affliction.Strength == value;
+                                case OperatorType.GreaterThan:
+                                    return affliction.Strength > value;
+                                case OperatorType.GreaterThanEquals:
+                                    return affliction.Strength >= value;
+                                case OperatorType.LessThan:
+                                    return affliction.Strength < value;
+                                case OperatorType.LessThanEquals:
+                                    return affliction.Strength <= value;
+                                case OperatorType.NotEquals:
+                                    return affliction.Strength != value;
+                            }
+                            // TODO: use the Matches method below?
+                        }
+                    }
+                    return false;
                 default:
                     return false;
             }
