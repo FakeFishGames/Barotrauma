@@ -1080,7 +1080,7 @@ namespace Barotrauma
                 if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
             }
 
-            if (selectedSub.GameVersion < new Version("0.9.0.0"))
+            if (selectedSub.GameVersion < new Version("0.8.9.0"))
             {
                 var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
                     new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
