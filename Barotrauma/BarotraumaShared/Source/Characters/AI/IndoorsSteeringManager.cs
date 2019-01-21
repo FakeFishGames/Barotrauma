@@ -88,7 +88,7 @@ namespace Barotrauma
                     }
                 }
 
-                currentPath = pathFinder.FindPath(pos, target);
+                currentPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
 
                 findPathTimer = Rand.Range(1.0f, 1.2f);
 
