@@ -5,7 +5,9 @@
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -15,12 +17,15 @@
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/fractalguardian.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
   </EventSet>
+  
   <!--1 star event set 1-->
   <EventSet minleveldifficulty="2" maxleveldifficulty="5" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -34,12 +39,15 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--1 star event set 2-->
   <EventSet minleveldifficulty="2" maxleveldifficulty="5" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -53,12 +61,15 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--1 star event set 3-->
   <EventSet minleveldifficulty="2" maxleveldifficulty="5" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -72,12 +83,16 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--2 star event set 1-->
   <EventSet minleveldifficulty="5" maxleveldifficulty="10" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -99,12 +114,15 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--2 star event set 2-->
   <EventSet minleveldifficulty="5" maxleveldifficulty="10" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -122,12 +140,15 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--2 star event set 3-->
   <EventSet minleveldifficulty="5" maxleveldifficulty="10" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -145,12 +166,15 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--2 star event set 4-->
   <EventSet minleveldifficulty="5" maxleveldifficulty="10" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -164,12 +188,15 @@
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/tigerthresher.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--2 star event set 5-->
   <EventSet minleveldifficulty="5" maxleveldifficulty="10" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -183,12 +210,15 @@
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--3 star event set 1-->
   <EventSet minleveldifficulty="9" maxleveldifficulty="15" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -211,12 +241,15 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--3 star event set 2-->
   <EventSet minleveldifficulty="9" maxleveldifficulty="15" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -235,12 +268,15 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--3 star event set 3-->
   <EventSet minleveldifficulty="9" maxleveldifficulty="15" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -258,12 +294,15 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--4 star event set 1-->
   <EventSet minleveldifficulty="14" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -284,12 +323,15 @@
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/tigerthresher.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--4 star event set 2-->
   <EventSet minleveldifficulty="14" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -313,12 +355,15 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--4 star event set 3-->
   <EventSet minleveldifficulty="14" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -341,12 +386,15 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--4 star event set 4-->
   <EventSet minleveldifficulty="14" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -367,12 +415,15 @@
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster"></MonsterEvent>
     </EventSet>
   </EventSet>
+  
   <!--5 star event set 1-->
   <EventSet minleveldifficulty="24" maxleveldifficulty="35" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -400,12 +451,15 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--5 star event set 2-->
   <EventSet minleveldifficulty="24" maxleveldifficulty="35" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -432,12 +486,15 @@
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/tigerthresher.xml" minamount="3" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!--5 star event set 3-->
   <EventSet minleveldifficulty="24" maxleveldifficulty="35" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
-      <Override leveltype="VoidBasic" commonness="2" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
     </Commonness>
     <!-- always spawn a couple of artifacts	 -->
     <ArtifactEvent itemidentifier="skyholderartifact" />
@@ -465,6 +522,7 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- easy event set -->
   <EventSet minleveldifficulty="2" maxleveldifficulty="15" chooserandom="false">
     <Commonness commonness="5">
@@ -494,6 +552,7 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="0" maxamount="1" spawntype="mainpath,ruin" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- another easy event set, with different trigger times -->
   <EventSet minleveldifficulty="0" maxleveldifficulty="15" chooserandom="false">
     <Commonness commonness="5">
@@ -523,6 +582,7 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="0" maxamount="2" spawntype="mainpath,ruin" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- easyish basic event set (a bunch of crawlers, mantises and a thresher) -->
   <EventSet minleveldifficulty="10" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
@@ -552,6 +612,7 @@
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/tigerthresher.xml" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- medium difficulty (a bunch of crawlers or mantises, moloch and some more crawlers or a thresher) -->
   <EventSet minleveldifficulty="20" maxleveldifficulty="40" chooserandom="false">
     <Commonness commonness="5">
@@ -581,6 +642,7 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="3" maxamount="3" spawntype="mainpath,ruin" musictype="monster"></MonsterEvent>
     </EventSet>
   </EventSet>
+  
   <!-- medium difficulty (a bunch of husks, moloch, crawlers and mantises) -->
   <EventSet minleveldifficulty="30" maxleveldifficulty="60" chooserandom="false">
     <Commonness commonness="5">
@@ -609,6 +671,7 @@
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="2" maxamount="3" spawntype="mainpath,ruin" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- high difficulty, common in open levels (multiple molochs and an endworm) -->
   <EventSet minleveldifficulty="50" maxleveldifficulty="80" chooserandom="false">
     <Commonness commonness="0">
@@ -634,6 +697,7 @@
       <MonsterEvent characterfile="Content/Characters/Endworm/endworm.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- high difficulty (large swarm of crawlers, one moloch or one carrier, some husks, multiple threshers) -->
   <EventSet minleveldifficulty="80" maxleveldifficulty="100" chooserandom="false">
     <Commonness commonness="5">
@@ -674,6 +738,7 @@
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/tigerthresher.xml" minamount="2" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
   </EventSet>
+  
   <!-- high difficulty (multiple mantises or crawlers almost immediately, a moloch or some threshers, more mantises, endworm) -->
   <EventSet minleveldifficulty="50" maxleveldifficulty="80">
     <Commonness commonness="5">
