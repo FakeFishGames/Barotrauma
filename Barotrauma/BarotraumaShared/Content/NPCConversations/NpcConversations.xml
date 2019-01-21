@@ -49,9 +49,10 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Let's see what the Oceans have in store for us this time!" flags="Initial" allowedjobs="captain" speaker="0"/>
-  <Conversation line="My guess would be horrifying monsters, gruesome death and eternal darkness." speakertags="joker, fearful" speaker="1">
-    <Conversation line="Can it. We don't need your sarcasm." speakertags="professional" speaker="0"/>
+  <Conversation line="Let's see what the Oceans have in store for us this time!" flags="Initial" allowedjobs="captain" speaker="0">
+    <Conversation line="My guess would be horrifying monsters, gruesome death and eternal darkness." speakertags="joker, fearful" speaker="1">
+      <Conversation line="Can it. We don't need your sarcasm." speakertags="professional" speaker="0"/>
+    </Conversation>    
   </Conversation>
 
   <Conversation line="Everyone ready? You better be, ain't no turning back anymore." flags="Initial" allowedjobs="captain" speaker="0">
@@ -70,7 +71,7 @@
       <Conversation line="You can't calm the storm, so stop trying." speaker="1">
         <Conversation line="What you can do is calm yourself, the storm will pass." speaker="1">
           <Conversation line="...Man, you're full of shit." speakertags="rude, fearful" speaker="0"/>
-        </Conversation>/>
+        </Conversation>
       </Conversation>
     </Conversation>
     <Conversation line="I'm sure we all do." speaker="1"/>
