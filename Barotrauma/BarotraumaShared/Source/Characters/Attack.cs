@@ -174,6 +174,11 @@ namespace Barotrauma
 
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
+        /// <summary>
+        /// Only affects ai decision making.
+        /// </summary>
+        public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
+
         private readonly List<StatusEffect> statusEffects;
         
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
@@ -269,6 +274,12 @@ namespace Barotrauma
 
                         float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
                         Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        break;
+                    case "conditional":
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            Conditionals.Add(new PropertyConditional(attribute));
+                        }
                         break;
                 }
 

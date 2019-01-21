@@ -72,6 +72,7 @@ namespace Barotrauma
         private float raycastTimer;
                 
         //a "cooldown time" after an attack during which the Character doesn't try to attack again
+        // TODO: cool down value should be defined per attack
         private float attackCoolDown;
         private float coolDownTimer;
         
@@ -538,7 +539,7 @@ namespace Barotrauma
 
                 if (steeringLimb != null)
                 {
-                    var t = wallTarget != null ? wallTarget.Structure : selectedAiTarget.Entity;
+                    var target = wallTarget != null ? wallTarget.Structure : selectedAiTarget.Entity;
 
                     attackingLimb = Character.AnimController.Limbs
                         .Where(l =>
@@ -546,7 +547,8 @@ namespace Barotrauma
                             !l.IsSevered &&
                             !l.IsStuck &&
                             l.attack.IsValidContext(currentContext) &&
-                            l.attack.IsValidTarget(t) &&
+                            l.attack.IsValidTarget(target) &&
+                            l.attack.Conditionals.All(c => c.Matches(target as ISerializableEntity)) &&
                             ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)) < l.attack.Range)
                         .OrderByDescending(l => l.attack.Priority)
                         .FirstOrDefault();
