@@ -12,7 +12,11 @@
     </Segment>
     <Segment name="Nav Console" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="2_NavConsole/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="2_NavConsole/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets5.png" columns="5" rows="2" empty="4"/>
       </Video>
     </Segment>
     <Segment name="Destination Objective" contenttype="text" istriggered="false">
@@ -20,7 +24,11 @@
     </Segment>
     <Segment name="Flood" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="3_Flood/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="3_Flood/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets5.png" columns="5" rows="5" empty="2"/>
       </Video>
     </Segment>
     <Segment name="Reactor" contenttype="video" istriggered="false">
@@ -38,7 +46,8 @@
     </Segment>
     <Segment name="Degrading II" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="6_Degrading2/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="6_Degrading2/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="6_Degrading2/Sheets2.png" columns="5" rows="7"/>
       </Video>
     </Segment>
     <Segment name="Medical" contenttype="video" istriggered="false">
