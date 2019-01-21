@@ -35,7 +35,9 @@
     <Body width="58" height="120" density="20" />
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <RequiredSkill identifier="medical" level="25"></RequiredSkill>       
+      <RequiredSkill identifier="medical" level="25"></RequiredSkill>
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="5">
@@ -78,6 +80,8 @@
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="17"></RequiredSkill>
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="60.0">
@@ -114,6 +118,8 @@
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="16"></RequiredSkill>
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
@@ -219,7 +225,9 @@
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="15"></RequiredSkill>
           
-      <StatusEffect type="OnUse" target="This" Condition="-101" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      
       <StatusEffect type="OnUse" target="This, Limb" duration="1.0">
         <Sound file="Content/Items/Medical/bandage1.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/bandage2.ogg" type="OnUse" range="500" />
@@ -260,7 +268,9 @@
     
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
-      <StatusEffect type="OnUse" target="This" Condition="-101.0" disabledeltatime="true" />
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
       
       <StatusEffect type="OnUse" target="This, Limb" duration="1">
         <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
@@ -300,7 +310,10 @@
     <SuitableTreatment identifier="damage" suitability="-15" />
     
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-51.0" disabledeltatime="true" />
+      
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="22" />
       
       <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
@@ -346,6 +359,10 @@
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="30" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
@@ -394,7 +411,10 @@
     <Body width="60" height="110" density="20" />
 
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="30" />
 
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="5">
@@ -439,7 +459,10 @@
     <Body width="120" height="60" density="11" />
     
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="20" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character, This" duration="5">
@@ -473,7 +496,9 @@
     <Body width="120" height="60" density="11" />
     
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
-      <RequiredSkill identifier="medical" level="23" />      
+      <RequiredSkill identifier="medical" level="23" />
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character, This" duration="15">
@@ -507,7 +532,10 @@
     <SuitableTreatment identifier="burn" suitability="90" />
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="35"></RequiredSkill>
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="30">
@@ -545,6 +573,8 @@
     <Body width="60" height="110" density="20" />
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <StatusEffect type="OnUse" target="Character">
@@ -585,8 +615,11 @@
     <Sprite texture="Medicines.png" sourcerect="64,235,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"> 
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
       
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="1">
@@ -621,7 +654,10 @@
     <Body width="8" height="16" density="20" />
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="30.0">
@@ -658,6 +694,8 @@
     <Body width="60" height="110" density="20" />
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
@@ -682,7 +720,10 @@
     <Body width="60" height="110" density="20" />
     
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
