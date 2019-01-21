@@ -2,7 +2,7 @@
   getupforce="0.35"
   cyclespeed="2.021435"
   footmovestrength="15"
-  footrotatestrength="20"
+  footrotatestrength="30"
   stepsize="0.4229301,0.1518838"
   legcorrectiontorque="12"
   thighcorrectiontorque="5"
@@ -22,6 +22,6 @@
   crouchingtorsoangle="-10"
   backwardsmovementmultiplier="0.75"
   animationtype="Run"
-  legbendtorque="10"
-  footangle="0"
+  legbendtorque="50"
+  footangle="-90"
   crouchingfootmoveoffset="0,0" />

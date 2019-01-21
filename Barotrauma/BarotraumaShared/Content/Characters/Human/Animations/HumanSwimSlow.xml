@@ -9,4 +9,6 @@
   handcyclespeed="3.080001"
   legcyclelength="6.800001"
   cyclespeed="1"
-  animationtype="SwimSlow" />
+  animationtype="SwimSlow"
+  footangle="-40"
+  footrotatestrength="25" />
