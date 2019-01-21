@@ -930,26 +930,11 @@ namespace Barotrauma
                 valueModifier = valueModifier * targetMemory.Priority / (float)Math.Sqrt(dist);
 
                 if (valueModifier > targetValue)
-                {                  
-                    Vector2 rayStart = character.AnimController.Limbs[0].SimPosition;
-                    Vector2 rayEnd = target.SimPosition;
-
-                    if (target.Entity.Submarine != null && character.Submarine==null)
-                    {
-                        rayStart -= ConvertUnits.ToSimUnits(target.Entity.Submarine.Position);
-                    }
-
-                    Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
-                    Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
-                    
-                    if (selectedAiTarget == null || valueModifier > targetValue)
-                    {
-                        selectedAiTarget = target;
-                        selectedTargetMemory = targetMemory;
-                        targetingPriority = targetingPriorities[targetingTag];
-
-                        targetValue = valueModifier;
-                    }
+                {
+                    selectedAiTarget = target;
+                    selectedTargetMemory = targetMemory;
+                    targetingPriority = targetingPriorities[targetingTag];
+                    targetValue = valueModifier;
                 }
             }
 
