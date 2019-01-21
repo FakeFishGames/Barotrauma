@@ -539,13 +539,15 @@ namespace Barotrauma
 
                 if (steeringLimb != null)
                 {
+                    var t = wallTarget != null ? wallTarget.Structure : selectedAiTarget.Entity;
+
                     attackingLimb = Character.AnimController.Limbs
                         .Where(l =>
                             l.attack != null &&
                             !l.IsSevered &&
                             !l.IsStuck &&
                             l.attack.IsValidContext(currentContext) &&
-                            l.attack.IsValidTarget(selectedAiTarget.Entity) &&
+                            l.attack.IsValidTarget(t) &&
                             ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)) < l.attack.Range)
                         .OrderByDescending(l => l.attack.Priority)
                         .FirstOrDefault();
