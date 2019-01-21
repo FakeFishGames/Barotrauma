@@ -212,7 +212,8 @@ namespace Barotrauma
                                 new Vector2(rect.Width, rect.Height),
                                 color: Color.Black * 0.5f,
                                 textureScale: TextureScale * Scale,
-                                startOffset: backGroundOffset);
+                                startOffset: backGroundOffset,
+                                depth: (prefab.sprite.Depth + prefab.BackgroundSprite.Depth) / 2.0f);
                         }
 
                         prefab.BackgroundSprite.effects = oldEffects;
@@ -237,7 +238,8 @@ namespace Barotrauma
                                 Vector2.Zero,
                                 scale: Scale,
                                 rotate: 0,
-                                spriteEffect: SpriteEffects);
+                                spriteEffect: SpriteEffects,
+                                depth: (prefab.sprite.Depth + prefab.BackgroundSprite.Depth) / 2.0f);
                         }
                     }
                 }
