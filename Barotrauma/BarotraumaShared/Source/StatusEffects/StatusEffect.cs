@@ -317,6 +317,7 @@ namespace Barotrauma
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                                continue;
                             }
                         }
                         else
@@ -325,7 +326,8 @@ namespace Barotrauma
                             afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
                             if (afflictionPrefab == null)
                             {
-                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.");
+                                continue;
                             }
                         }
 
@@ -343,9 +345,19 @@ namespace Barotrauma
                         }
                         else
                         {
-                            ReduceAffliction.Add(new Pair<string, float>(
-                                (subElement.GetAttributeString("identifier", null) ?? subElement.GetAttributeString("type", null)).ToLowerInvariant(),
-                                subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                            string name = subElement.GetAttributeString("identifier", null) ?? subElement.GetAttributeString("type", null);
+                            name = name.ToLowerInvariant();
+
+                            if (AfflictionPrefab.List.Any(ap => ap.Identifier == name || ap.AfflictionType == name))
+                            {
+                                ReduceAffliction.Add(new Pair<string, float>(
+                                    name,
+                                    subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier or type \"" + name + "\" not found.");
+                            }
                         }
                         break;
                     case "spawnitem":
