@@ -16,7 +16,7 @@
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Elastin>
   
-  <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2">
+  <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
     
     <!-- TODO: adjust prices -->
     <SuitableTreatment identifier="damage" suitability="50" />
@@ -66,7 +66,7 @@
     </MeleeWeapon>
   </Opium>
   
-  <Antibiotics name="Broad-spectrum Antibiotics" identifier="antibiotics" category="Material" Tags="smallitem,chem" description="A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds." cargocontaineridentifier="chemicalcrate" scale="0.3">
+  <Antibiotics name="Broad-spectrum Antibiotics" identifier="antibiotics" category="Material" Tags="smallitem,chem" description="A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds." cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
@@ -361,7 +361,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
-      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
       <RequiredSkill identifier="medical" level="30" />
       
