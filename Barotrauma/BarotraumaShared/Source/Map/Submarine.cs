@@ -441,7 +441,9 @@ namespace Barotrauma
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
                 - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
 
-            int minHeight = Math.Max(submarineHeight.HasValue ? submarineHeight.Value : dockedBorders.Height, 1000);
+            int minHeight = Math.Max(submarineHeight ?? dockedBorders.Height, 1000);
+            //a bit of extra padding to prevent the sub from spawning in a super tight gap between walls
+            minHeight += 500;
 
             float minX = float.MinValue, maxX = float.MaxValue;
             foreach (VoronoiCell cell in Level.Loaded.GetAllCells())
