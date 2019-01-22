@@ -20,15 +20,10 @@ namespace Barotrauma
         {
             get { return spawnPos; }
         }
-
-        public override string DebugDrawText
-        {
-            get { return "ArtifactEvent (" + itemPrefab.Name + ")"; }
-        }
-
+        
         public override string ToString()
         {
-            return "ScriptedEvent (" + (itemPrefab == null ? "null" : itemPrefab.Name) + ")";
+            return "ArtifactEvent (" + (itemPrefab == null ? "null" : itemPrefab.Name) + ")";
         }
 
         public ArtifactEvent(ScriptedEventPrefab prefab)
