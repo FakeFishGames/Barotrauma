@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics;
@@ -1823,6 +1824,54 @@ namespace Barotrauma
                 Hull.WaveDampening = damp;
             },
             null, null));
+
+            commands.Add(new Command("testlevels", "testlevels", (string[] args) =>
+            {
+                CoroutineManager.StartCoroutine(TestLevels());
+            },
+            null, null));
+
+            IEnumerable<object> TestLevels()
+            {
+                Submarine selectedSub = null;
+                string subName = GameMain.Config.QuickStartSubmarineName;
+                if (!string.IsNullOrEmpty(subName))
+                {
+                    selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
+                }
+
+                while (true)
+                {
+                    var gamesession = new GameSession(
+                        Submarine.SavedSubmarines.GetRandom(s => !s.HasTag(SubmarineTag.HideInMenus)),
+                        "Data/Saves/test.xml",
+                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
+                        missionPrefab: null);
+                    string seed = ToolBox.RandomSeed(16);
+                    gamesession.StartRound(seed);
+
+                    Rectangle subWorldRect = Submarine.MainSub.Borders;
+                    subWorldRect.Location += new Point((int)Submarine.MainSub.WorldPosition.X, (int)Submarine.MainSub.WorldPosition.Y);
+                    subWorldRect.Y -= subWorldRect.Height;
+                    foreach (var ruin in Level.Loaded.Ruins)
+                    {
+                        if (ruin.Area.Intersects(subWorldRect))
+                        {
+                            ThrowError("Ruins intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Name);
+                            yield return CoroutineStatus.Success;
+                        }
+                    }
+
+                    //todo: check level walls
+
+                    GameMain.GameSession.EndRound("");
+                    Submarine.Unload();
+
+                    NewMessage("Level seed " + seed + " ok.");
+
+                    yield return CoroutineStatus.Running;
+                }
+            }
 #endif
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
