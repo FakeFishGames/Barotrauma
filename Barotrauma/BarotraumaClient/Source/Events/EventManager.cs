@@ -79,42 +79,40 @@ namespace Barotrauma
                     "Intensity too high for new events: " + (int)(currentIntensity * 100) + "%/" + (int)(eventThreshold * 100) + "%", Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
                 y += 15;
             }
-            else
+            foreach (ScriptedEventSet eventSet in selectedEventSets)
             {
-                foreach (ScriptedEventSet eventSet in selectedEventSets)
+                float distanceTraveled = MathHelper.Clamp(
+                    (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
+                    0.0f, 1.0f);
+
+                GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                y += 12;
+
+                if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
+                    roundDuration < eventSet.MinMissionTime)
                 {
-                    float distanceTraveled = MathHelper.Clamp(
-                        (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
-                        0.0f, 1.0f);
-
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                        "    " + (int)(eventSet.MinDistanceTraveled * 100.0f) + "% travelled (current: " + (int)(distanceTraveled * 100.0f) + " %)",
+                        Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
-
-                    if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
-                        roundDuration < eventSet.MinMissionTime)
-                    {
-                        GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
-                            "    " + (int)(eventSet.MinDistanceTraveled * 100.0f) + "% travelled (current: " + (int)(distanceTraveled * 100.0f) + " %)",
-                            Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                        y += 12;
-                    }
-                    if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
-                    {
-                        GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
-                            "    intensity between " + ((int)eventSet.MinIntensity) + " and " + ((int)eventSet.MaxIntensity),
-                            Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                        y += 12;
-                    }
-                    if (roundDuration < eventSet.MinMissionTime)
-                    {
-                        GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
-                            "    " + (int)(eventSet.MinMissionTime - roundDuration) + " s",
-                            Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                    }
-
-                    y += 15;
                 }
+                if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                        "    intensity between " + ((int)eventSet.MinIntensity) + " and " + ((int)eventSet.MaxIntensity),
+                        Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    y += 12;
+                }
+                if (roundDuration < eventSet.MinMissionTime)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                        "    " + (int)(eventSet.MinMissionTime - roundDuration) + " s",
+                        Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                }
+
+                y += 15;
             }
+            
 
             GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "Current events: ", Color.White * 0.9f, null, 0, GUI.SmallFont);
             y += 12;
