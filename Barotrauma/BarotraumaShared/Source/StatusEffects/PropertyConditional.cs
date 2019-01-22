@@ -148,7 +148,6 @@ namespace Barotrauma
 
         public bool Matches(ISerializableEntity target)
         {
-            if (target == null) { return false; }
             string valStr = AttributeValue.ToString();
 
             switch (Type)
@@ -236,7 +235,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    return false;
+                    return true;
                 default:
                     return false;
             }
