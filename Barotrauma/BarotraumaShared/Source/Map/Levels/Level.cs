@@ -721,8 +721,14 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
-            if (StartOutpost != null) { startPosition = StartOutpost.WorldPosition.ToPoint(); }
-            if (EndOutpost != null) { endPosition = EndOutpost.WorldPosition.ToPoint(); }
+            if (StartOutpost != null)
+            {
+                startPosition = new Point((int)StartOutpost.WorldPosition.X, (int)StartOutpost.WorldPosition.Y);
+            }
+            if (EndOutpost != null)
+            {
+                endPosition = new Point((int)EndOutpost.WorldPosition.X, (int)EndOutpost.WorldPosition.Y);
+            }
 
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + siteCoordsX.Count + " sites in " + sw.ElapsedMilliseconds + " ms");

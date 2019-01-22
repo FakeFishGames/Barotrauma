@@ -57,15 +57,12 @@ namespace Barotrauma
                 //if there's already an entity with the same ID, give it the old ID of this one
                 if (dictionary.TryGetValue(value, out Entity existingEntity))
                 {
-                    System.Diagnostics.Debug.WriteLine(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     DebugConsole.Log(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     dictionary.Remove(value);
                     dictionary.Add(id, existingEntity);
                     existingEntity.id = id;
                     DebugConsole.Log("The id of " + existingEntity + " is now " + id);
                     DebugConsole.Log("The id of " + this + " is now " + value);
-                    System.Diagnostics.Debug.WriteLine("The id of " + existingEntity + " is now " + id);
-                    System.Diagnostics.Debug.WriteLine("The id of " + this + " is now " + value);
                 }
 
                 id = value;
