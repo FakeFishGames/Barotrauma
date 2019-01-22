@@ -434,17 +434,21 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 FindSpawnPos(Vector2 spawnPos)
+        public Vector2 FindSpawnPos(Vector2 spawnPos, int? submarineHeight = null)
         {
             Rectangle dockedBorders = GetDockedBorders();
             Vector2 diffFromDockedBorders = 
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
                 - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
-            
+
+            int minHeight = Math.Max(submarineHeight ?? dockedBorders.Height, 1000);
+            //a bit of extra padding to prevent the sub from spawning in a super tight gap between walls
+            minHeight += 500;
+
             float minX = float.MinValue, maxX = float.MaxValue;
             foreach (VoronoiCell cell in Level.Loaded.GetAllCells())
             {
-                if (cell.Edges.All(e => e.Point1.Y < Level.Loaded.Size.Y - 1000.0f && e.Point2.Y < Level.Loaded.Size.Y - 1000.0f)) { continue; }
+                if (cell.Edges.All(e => e.Point1.Y < Level.Loaded.Size.Y - minHeight && e.Point2.Y < Level.Loaded.Size.Y - minHeight)) { continue; }
 
                 //find the closest wall at the left and right side of the spawnpos
                 if (cell.Site.Coord.X < spawnPos.X)
@@ -454,6 +458,19 @@ namespace Barotrauma
                 else
                 {
                     maxX = Math.Min(maxX, cell.Edges.Min(e => Math.Min(e.Point1.X, e.Point2.X)));
+                }
+            }
+
+            foreach (var ruin in Level.Loaded.Ruins)
+            {
+                if (ruin.Area.Y + ruin.Area.Height < Level.Loaded.Size.Y - minHeight) { continue; }
+                if (ruin.Area.X < spawnPos.X)
+                {
+                    minX = Math.Max(minX, ruin.Area.Right + 100.0f);
+                }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
             }
 
