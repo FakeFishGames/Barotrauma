@@ -90,6 +90,7 @@ namespace Barotrauma
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
+            ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
