@@ -381,6 +381,21 @@
         <RequiredItem identifier="uranium"/>
         <RequiredItem identifier="uex"/>
       </FabricableItem>
+
+    <FabricableItem identifier="depthdecoyshell" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="25"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="sonarbeacon"/>
+    </FabricableItem>
+
+    <FabricableItem identifier="nucleardepthdecoy" requiredtime="30">
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="uranium"/>
+      <RequiredItem identifier="uex"/>
+      <RequiredItem identifier="sonarbeacon"/>
+    </FabricableItem>
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
