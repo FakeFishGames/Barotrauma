@@ -6,9 +6,33 @@
     linkable="true"
     allowedlinks="vent">
     
-    <Sprite texture="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
-    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="FF_oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
+    <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
+    <BrokenSprite texture="oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,199,214,31" depth="0.85" origin="0.5,3.5" hidewheninactive="false"
+                      offset="0,7" offsetanim="Sine" offsetanimspeed="0.5">
+      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />  
+    </DecorativeSprite>
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,231,214,20" depth="0.82" origin="0.5,5.0" hidewheninactive="false"
+                      offset="0,7" offsetanim="Sine" offsetanimspeed="0.5">
+      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,250,214,20" depth="0.83" origin="0.5,4.5" hidewheninactive="false" 
+                      offset="1,5" offsetanim="Sine" offsetanimspeed="0.5">
+      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,270,214,20" depth="0.84" origin="0.5,4.0" hidewheninactive="false"
+                      offset="2,3" offsetanim="Sine" offsetanimspeed="0.5">
+      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,289,214,20" depth="0.85" origin="0.5,3.5" hidewheninactive="false" 
+                      offset="1,1" offsetanim="Sine" offsetanimspeed="0.5">
+      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,331,214,53" depth="0.86" origin="0.5,0.8" hidewheninactive="false" 
+                      offset="0,1" offsetanim="Sine" offsetanimspeed="0.5">
+      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+    </DecorativeSprite>
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
@@ -28,10 +52,10 @@
   
     <trigger/>
 
-    <ItemContainer capacity="5" canbeselected = "true" msg="Insert oxygen tank to refill it">
+    <ItemContainer capacity="5" canbeselected="true" hideitems="false" itempos="28,-125" iteminterval="22,0" msg="Insert oxygen tank to refill it">
       <Containable identifiers="oxygentank,oxygenitetank"/>
     </ItemContainer>
-
+    
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
@@ -106,10 +130,7 @@
     scale="0.8">
 
     <Sprite texture="vent.png" depth="0.91" sourcerect="0,0,64,64"/>
-    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56">
-      <Conditional OxygenFlow="lte 10" targetitemcomponent="Vent"/>
-    </DecorativeSprite>
-    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56" rotationspeed="360">
+    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56" rotationspeed="360" hidewheninactive="false" >
       <Conditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
     </DecorativeSprite>
 

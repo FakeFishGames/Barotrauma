@@ -174,7 +174,7 @@ namespace Barotrauma
                             depth: depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
-                            if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
+                            if (!spriteAnimState[decorativeSprite].IsActive && decorativeSprite.HideWhenInactive) { continue; }                            
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
                             decorativeSprite.Sprite.DrawTiled(spriteBatch, 
                                 new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)), 
@@ -188,7 +188,7 @@ namespace Barotrauma
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
-                            if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                            if (!spriteAnimState[decorativeSprite].IsActive && decorativeSprite.HideWhenInactive) { continue; }
                             float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, 
@@ -226,7 +226,7 @@ namespace Barotrauma
 
                     foreach (var decorativeSprite in Prefab.DecorativeSprites)
                     {
-                        if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                        if (!spriteAnimState[decorativeSprite].IsActive && decorativeSprite.HideWhenInactive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                         Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
 

@@ -64,6 +64,12 @@ namespace Barotrauma
             public AnimationType RotationAnim { get; private set; }
 
             /// <summary>
+            /// Should the sprite be hidden when the sprite is inactive (otherwise animations are just disabled)
+            /// </summary>
+            [Serialize(true, false)]
+            public bool HideWhenInactive { get; private set; }
+
+            /// <summary>
             /// If > 0, only one sprite of the same group is used (chosen randomly)
             /// </summary>
             [Serialize(0, false)]
