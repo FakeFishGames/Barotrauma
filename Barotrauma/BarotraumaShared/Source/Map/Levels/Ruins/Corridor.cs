@@ -163,11 +163,64 @@ namespace Barotrauma.RuinGeneration
                         if (leaves1[i].Rect.Right < leaves2[j].Rect.X + width) continue;
                     }
 
+                    if (CheckForIntersection(leaves1[i], leaves2[j], leaves1, leaves2, width, isHorizontal)) continue;
+
                     return new BTRoom[] { leaves1[i], leaves2[j] };
                 }
             }
 
             return null;
+        }
+
+        private bool CheckForIntersection(BTRoom potential1, BTRoom potential2, List<BTRoom> leaves1, List<BTRoom> leaves2, int width, bool isHorizontal)
+        {
+            Rectangle potential1Rect = potential1.Rect;
+            Rectangle potential2Rect = potential2.Rect;
+
+            Rectangle corridorRectangle = new Rectangle();
+
+            if (isHorizontal)
+            {
+                int left = Math.Min(potential1Rect.Right, potential2Rect.Right);
+                int right = Math.Max(potential1Rect.X, potential2Rect.X);
+
+                int top = Math.Max(potential1Rect.Y, potential2Rect.Y);
+                //int bottom = Math.Min(room1.Bottom, room2.Bottom);
+                int yPos = top;//Rand.Range(top, bottom - width, Rand.RandSync.Server);
+
+                corridorRectangle = new Rectangle(left, yPos, right - left, width);
+            }
+            else if (potential1Rect.Y > potential2Rect.Bottom || potential2Rect.Y > potential1Rect.Bottom)
+            {
+                int left = Math.Max(potential1Rect.X, potential2Rect.X);
+                int right = Math.Min(potential1Rect.Right, potential2Rect.Right);
+
+                int top = Math.Min(potential1Rect.Bottom, potential2Rect.Bottom);
+                int bottom = Math.Max(potential1Rect.Y, potential2Rect.Y);
+
+                int xPos = Rand.Range(left, right - width, Rand.RandSync.Server);
+
+                corridorRectangle = new Rectangle(xPos, top, width, bottom - top);
+            }
+            else
+            {
+                DebugConsole.ThrowError("wat");
+                return false;
+            }
+
+            for (int i = 0; i < leaves1.Count; i++)
+            {
+                if (leaves1[i] == potential1) continue;
+                if (corridorRectangle.Intersects(leaves1[i].Rect)) return true;
+            }
+
+            for (int i = 0; i < leaves2.Count; i++)
+            {
+                if (leaves2[i] == potential2) continue;
+                if (corridorRectangle.Intersects(leaves2[i].Rect)) return true;
+            }
+
+            return false;
         }
     }
 }
