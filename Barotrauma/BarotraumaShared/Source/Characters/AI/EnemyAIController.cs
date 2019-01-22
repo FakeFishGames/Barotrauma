@@ -72,6 +72,8 @@ namespace Barotrauma
         private float raycastTimer;
                 
         private float coolDownTimer;
+        private float secondaryCoolDownTimer;
+        private bool IsCoolDownRunning => coolDownTimer > 0 || secondaryCoolDownTimer > 0;
         
         private bool aggressiveBoarding;
 
@@ -326,7 +328,7 @@ namespace Barotrauma
                     UpdateNone(deltaTime);
                     break;
                 case AIState.Attack:
-                    run = coolDownTimer <= 0.0f;
+                    run = !IsCoolDownRunning;
                     UpdateAttack(deltaTime);
                     break;
                 case AIState.Eat:
@@ -354,10 +356,17 @@ namespace Barotrauma
 
         #region Idle
 
-        private void UpdateNone(float deltaTime)
+        private void DecrementCoolDown(float deltaTime)
         {
             coolDownTimer -= deltaTime;
+            secondaryCoolDownTimer -= deltaTime;
+            if (coolDownTimer < 0) { coolDownTimer = 0; }
+            if (secondaryCoolDownTimer < 0) { secondaryCoolDownTimer = 0; }
+        }
 
+        private void UpdateNone(float deltaTime)
+        {
+            DecrementCoolDown(deltaTime);
             if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
@@ -522,54 +531,67 @@ namespace Barotrauma
                 }
             }
 
-            if (coolDownTimer > 0.0f)
+            bool canAttack = true;
+            if (IsCoolDownRunning)
             {
-                UpdateCoolDown(attackSimPosition, deltaTime);
-                return;
+                DecrementCoolDown(deltaTime);
+                if (attackingLimb == null)
+                {
+                    UpdateFallBack(attackSimPosition, deltaTime);
+                    return;
+                }
+                if (attackingLimb.attack.SecondaryCoolDown > 0)
+                {
+                    if (secondaryCoolDownTimer <= 0)
+                    {
+                        // If the secondary cooldown is defined and expired, check if we can switch the attack
+                        var previousLimb = attackingLimb;
+                        attackingLimb = GetAttackLimb(attackSimPosition, previousLimb);
+                        if (attackingLimb == null)
+                        {
+                            // If not, fall back and stop trying.
+                            UpdateFallBack(attackSimPosition, deltaTime);
+                            return;
+                        }
+                        // TODO: switching from one attack to another and back now probably by-passes the original cool down -> fix
+                    }
+                    else
+                    {
+                        // Cannot attack, but should steer towards the target.
+                        canAttack = false;
+                    }
+                }
+                else
+                {
+                    // If no secondary cooldown is defined, fall back and stop trying.
+                    attackingLimb = null;
+                    UpdateFallBack(attackSimPosition, deltaTime);
+                    return;
+                }
             }
 
-            Limb steeringLimb = attackingLimb ?? Character.AnimController.MainLimb;
             if (attackingLimb == null)
             {
-                AttackContext currentContext = Character.GetAttackContext();
-
-                if (steeringLimb != null)
-                {
-                    var target = wallTarget != null ? wallTarget.Structure : selectedAiTarget.Entity;
-
-                    attackingLimb = Character.AnimController.Limbs
-                        .Where(l =>
-                            l.attack != null &&
-                            !l.IsSevered &&
-                            !l.IsStuck &&
-                            l.attack.IsValidContext(currentContext) &&
-                            l.attack.IsValidTarget(target) &&
-                            l.attack.Conditionals.All(c => c.Matches(target as ISerializableEntity)) &&
-                            ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)) < l.attack.Range)
-                        .OrderByDescending(l => l.attack.Priority)
-                        .FirstOrDefault();
-                }
-
-                //foreach (Limb limb in Character.AnimController.Limbs)
-                //{
-                //    if (limb.attack == null) continue;
-                //    if (!limb.attack.IsValidContext(currentContext)) { continue; }
-                //    if (!limb.attack.IsValidTarget(selectedAiTarget.Entity)) { continue; }
-                //    if (limb.IsSevered || limb.IsStuck) { continue; }
-                //    attackLimb = limb;
-
-                //    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
-
-                //    attackingLimb = limb;
-                //    break;
-                //}
-
+                attackingLimb = GetAttackLimb(attackSimPosition);
+                // TODO: decide what to do with this check. It's not probably not at the right place now.
                 if (Character.IsRemotePlayer)
                 {
                     if (!Character.IsKeyDown(InputType.Attack)) return;
                 }
             }
+            if (canAttack)
+            {
+                canAttack = attackingLimb != null;
+            }
+            if (canAttack)
+            {
+                // Check that we can reach the target
+                // TODO: optimize by passing the distance to the UpdateLimbAttack function?
+                float distance = ConvertUnits.ToDisplayUnits(Vector2.Distance(attackingLimb.SimPosition, attackSimPosition));
+                canAttack = distance < attackingLimb.attack.Range;
+            }
 
+            Limb steeringLimb = attackingLimb ?? Character.AnimController.MainLimb;
             if (steeringLimb != null)
             {
                 steeringManager.SteeringSeek(attackSimPosition - (steeringLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
@@ -589,7 +611,7 @@ namespace Barotrauma
                             steeringManager.SteeringWander();
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
-                        {                            
+                        {
                             steeringManager.SteeringManual(deltaTime, attackSimPosition - steeringLimb.SimPosition);
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
@@ -604,12 +626,31 @@ namespace Barotrauma
                         }
                     }
                 }
-                
-                if (attackingLimb != null)
-                {
-                    UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
-                }
             }
+                
+            if (canAttack)
+            {
+                UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
+            }
+        }
+
+        private Limb GetAttackLimb(Vector2 attackSimPosition, Limb ignoredLimb = null)
+        {
+            AttackContext currentContext = Character.GetAttackContext();
+            var target = wallTarget != null ? wallTarget.Structure : selectedAiTarget.Entity;
+            var limbs = Character.AnimController.Limbs
+                .Where(l =>
+                    l != ignoredLimb &&
+                    l.attack != null &&
+                    !l.IsSevered &&
+                    !l.IsStuck &&
+                    l.attack.IsValidContext(currentContext) &&
+                    l.attack.IsValidTarget(target) &&
+                    l.attack.Conditionals.All(c => (target is ISerializableEntity se && c.Matches(se)) || !(target is ISerializableEntity)))
+                .OrderByDescending(l => l.attack.Priority)
+                .ThenBy(l => ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)));
+            // TODO: priority should probably not override the distance -> use values instead of booleans
+            return limbs.FirstOrDefault();
         }
 
         private void UpdateWallTarget()
@@ -728,16 +769,13 @@ namespace Barotrauma
                 wallTarget = null;
                 limb.ResetAttack();
                 coolDownTimer = limb.attack.CoolDown;
+                secondaryCoolDownTimer = limb.attack.SecondaryCoolDown;
             }
         }
 
-        private void UpdateCoolDown(Vector2 attackPosition, float deltaTime)
+        private void UpdateFallBack(Vector2 attackPosition, float deltaTime)
         {
-            coolDownTimer -= deltaTime;
-            attackingLimb = null;
-
             float dist = Vector2.Distance(attackPosition, Character.SimPosition);
-
             float desiredDist = colliderSize * 2.0f;
             if (dist < desiredDist)
             {
