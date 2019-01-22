@@ -1840,6 +1840,7 @@ namespace Barotrauma
                     selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
                 }
 
+                int count = 0;
                 while (true)
                 {
                     var gamesession = new GameSession(
@@ -1861,14 +1862,37 @@ namespace Barotrauma
                             yield return CoroutineStatus.Success;
                         }
                     }
-
-                    //todo: check level walls
+                    
+                    var levelCells = Level.Loaded.GetCells(
+                        Submarine.MainSub.WorldPosition,
+                        Math.Max(Submarine.MainSub.Borders.Width / Level.GridCellSize, 2));
+                    foreach (var cell in levelCells)
+                    {
+                        Vector2 minExtents = new Vector2(
+                            cell.Edges.Min(e => Math.Min(e.Point1.X, e.Point2.X)),
+                            cell.Edges.Min(e => Math.Min(e.Point1.Y, e.Point2.Y)));
+                        Vector2 maxExtents = new Vector2(
+                            cell.Edges.Max(e => Math.Max(e.Point1.X, e.Point2.X)),
+                            cell.Edges.Max(e => Math.Max(e.Point1.Y, e.Point2.Y)));
+                        Rectangle cellRect = new Rectangle(
+                            (int)minExtents.X, (int)minExtents.Y, 
+                            (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
+                        if (cellRect.Intersects(subWorldRect))
+                        {
+                            ThrowError("Level cells intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Name);
+                            yield return CoroutineStatus.Success;
+                        }
+                    }
 
                     GameMain.GameSession.EndRound("");
                     Submarine.Unload();
 
-                    NewMessage("Level seed " + seed + " ok.");
-
+                    count++;
+                    NewMessage("Level seed " + seed + " ok (test #" + count + ")");
+#if CLIENT
+                    //dismiss round summary and any other message boxes
+                    GUIMessageBox.CloseAll();
+#endif
                     yield return CoroutineStatus.Running;
                 }
             }
