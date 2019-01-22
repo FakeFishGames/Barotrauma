@@ -1445,12 +1445,19 @@ namespace Barotrauma
                 {
                     continue;
                 }
-
+                
                 string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
                 var outpost = new Submarine(outpostFile, tryLoad: false);
                 outpost.Load(unloadPrevious: false);
                 outpost.MakeOutpost();
-                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
+
+                int? minHeight = null;
+                if (Submarine.MainSub != null)
+                {
+                    minHeight = Submarine.MainSub.GetDockedBorders().Height + outpost.Borders.Height;
+                }
+
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minHeight));
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;
