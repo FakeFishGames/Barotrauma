@@ -60,7 +60,11 @@
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_out"/>
-      <input name="power_in"/>      
+      <input name="power_in"/>
+      <input name="set_rate"/>
+      <output name="charge"/>
+      <output name="charge_%"/>
+      <output name="charge_rate"/>
     </ConnectionPanel>
 
     <ItemContainer capacity="3" canbeselected="true" hideitems="true">
@@ -87,6 +91,10 @@
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_out"/>
       <input name="power_in"/>
+      <input name="set_rate"/>
+      <output name="charge"/>
+      <output name="charge_%"/>
+      <output name="charge_rate"/>
     </ConnectionPanel>
   </Item>
 

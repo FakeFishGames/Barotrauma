@@ -191,6 +191,72 @@
   </Item>
 
   <Item
+    name="Equals Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the sum of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="80,64,16,16"/>
+
+    <EqualsComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Greater Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the sum of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="80,64,16,16"/>
+
+    <GreaterComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
     name="Adder Component"
     category="Electrical"
     Tags="smallitem"
@@ -207,6 +273,140 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
 
     <AdderComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Color Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs a combined color signal for light control.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,80,16,16"/>
+
+    <ColorComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_r"/>
+      <input name="signal_g"/>
+      <input name="signal_b"/>
+      <input name="signal_a"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Subtract Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the subtracted value of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
+
+    <SubtractComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Multiply Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the product of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
+
+    <MultiplyComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Divide Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the devided value of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
+
+    <DivideComponent canbeselected="true"/>
 
     <Body width="16" height="16" density="30"/>
 
@@ -240,6 +440,40 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16"/>
 
     <OrComponent canbeselected = "true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <input name="set_output"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Xor Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="true"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Sends a signal if either of the inputs but not both receive a signal.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16"/>
+
+    <XorComponent canbeselected = "true"/>
 
     <Body width="16" height="16" density="30"/>
 
@@ -364,6 +598,39 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Memory Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="true"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Output a stored signal that can be updated from other sources.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,32,16,8"/>
+
+    <MemoryComponent canbeselected = "true"/>
+
+    <Body width="16" height="8" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in"/>
+      <input name="signal_store"/>
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
