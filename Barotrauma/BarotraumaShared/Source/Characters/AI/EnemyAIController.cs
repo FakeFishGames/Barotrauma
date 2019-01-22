@@ -71,9 +71,6 @@ namespace Barotrauma
 
         private float raycastTimer;
                 
-        //a "cooldown time" after an attack during which the Character doesn't try to attack again
-        // TODO: cool down value should be defined per attack
-        private float attackCoolDown;
         private float coolDownTimer;
         
         private bool aggressiveBoarding;
@@ -180,7 +177,6 @@ namespace Barotrauma
                 aiElements[0] : ToolBox.SelectWeightedRandom(aiElements, aiCommonness, random);
             
             combatStrength      = aiElement.GetAttributeFloat("combatstrength", 1.0f);
-            attackCoolDown      = aiElement.GetAttributeFloat("attackcooldown", 5.0f);
             attackWhenProvoked  = aiElement.GetAttributeBool("attackwhenprovoked", false);
             aggressiveBoarding  = aiElement.GetAttributeBool("aggressiveboarding", false);
 
@@ -731,7 +727,7 @@ namespace Barotrauma
             {
                 wallTarget = null;
                 limb.ResetAttack();
-                coolDownTimer = attackCoolDown;                
+                coolDownTimer = limb.attack.CoolDown;
             }
         }
 
