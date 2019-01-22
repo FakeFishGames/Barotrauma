@@ -68,17 +68,18 @@ namespace Barotrauma.RuinGeneration
         /// <summary>
         /// Goes through all the walls of the ruin shape and clips off parts that are inside the rectangle
         /// </summary>
-        public void SplitWalls(Rectangle rectangle)
+        public void SplitWalls(Rectangle rectangle, bool useBuffer = false)
         {
             List<Line> newLines = new List<Line>();
+            float buffer = (!useBuffer) ? 0.0f : 0.0f;
 
             foreach (Line line in Walls)
             {
                 if (!line.IsHorizontal) //vertical line
                 {
                     //line doesn't intersect the rectangle
-                    if (rectangle.X > line.A.X || rectangle.Right < line.A.X ||
-                        rectangle.Y > line.B.Y || rectangle.Bottom < line.A.Y)
+                    if (rectangle.X > line.A.X - buffer || rectangle.Right < line.A.X + buffer ||
+                        rectangle.Y > line.B.Y - buffer || rectangle.Bottom < line.A.Y + buffer)
                     {
                         newLines.Add(line);
                     }
@@ -107,8 +108,8 @@ namespace Barotrauma.RuinGeneration
                 else
                 {
                     //line doesn't intersect the rectangle
-                    if (rectangle.X > line.B.X || rectangle.Right < line.A.X ||
-                        rectangle.Y > line.A.Y || rectangle.Bottom < line.A.Y)
+                    if (rectangle.X > line.B.X - buffer || rectangle.Right < line.A.X + buffer ||
+                        rectangle.Y > line.A.Y - buffer || rectangle.Bottom < line.A.Y + buffer)
                     {
 
                         newLines.Add(line);
@@ -288,7 +289,7 @@ namespace Barotrauma.RuinGeneration
 
                 foreach (BTRoom leaf in rooms)
                 {
-                    corridor.SplitWalls(leaf.Rect);
+                    corridor.SplitWalls(leaf.Rect, true);
                 }
 
                 foreach (Corridor corridor2 in corridors)
