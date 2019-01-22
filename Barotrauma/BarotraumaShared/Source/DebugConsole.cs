@@ -1798,6 +1798,18 @@ namespace Barotrauma
                 new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos, null);
             }, isCheat: true));
 
+            commands.Add(new Command("showseed|showlevelseed", "showseed: Show the seed of the current level.", (string[] args) =>
+            {
+                if (Level.Loaded == null)
+                {
+                    ThrowError("No level loaded.");
+                }
+                else
+                {
+                    NewMessage("Level seed: " + Level.Loaded.Seed);
+                }
+            },null, null));
+
 #if DEBUG
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
