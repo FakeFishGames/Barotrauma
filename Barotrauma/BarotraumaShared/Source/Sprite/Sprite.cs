@@ -77,7 +77,7 @@ namespace Barotrauma
             get => _relativeOrigin;
             set
             {
-                _relativeOrigin = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
+                _relativeOrigin = value;
                 origin = new Vector2(_relativeOrigin.X * sourceRect.Width, _relativeOrigin.Y * sourceRect.Height);
             }
         }
