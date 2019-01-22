@@ -721,7 +721,15 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
-            
+            if (StartOutpost != null)
+            {
+                startPosition = new Point((int)StartOutpost.WorldPosition.X, (int)StartOutpost.WorldPosition.Y);
+            }
+            if (EndOutpost != null)
+            {
+                endPosition = new Point((int)EndOutpost.WorldPosition.X, (int)EndOutpost.WorldPosition.Y);
+            }
+
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + siteCoordsX.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
             Debug.WriteLine("Seed: " + seed);
@@ -1437,12 +1445,19 @@ namespace Barotrauma
                 {
                     continue;
                 }
-
+                
                 string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
                 var outpost = new Submarine(outpostFile, tryLoad: false);
                 outpost.Load(unloadPrevious: false);
                 outpost.MakeOutpost();
-                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition));
+
+                int? minHeight = null;
+                if (Submarine.MainSub != null)
+                {
+                    minHeight = Submarine.MainSub.GetDockedBorders().Height + outpost.Borders.Height;
+                }
+
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minHeight));
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;

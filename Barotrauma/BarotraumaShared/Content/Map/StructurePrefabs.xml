@@ -62,16 +62,16 @@
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="309,234,128,339" depth="0.01" origin="0.5,0.5" />
   </extA_Tail>
   <TailFin name="Tail Fin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.01" origin="0.5,0.5" />
+    <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.9" origin="0.5,0.5" />
   </TailFin>
   <TailFin name="Tail Fin B" identifier="tailfinb" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="1064,2,988,514" depth="0.01" origin="0.5,0.5" />
+    <sprite texture="Content/Map/SubFins.png" sourcerect="1064,2,988,514" depth="0.9" origin="0.5,0.5" />
   </TailFin>
   <TailFin name="Tail Fin C" identifier="tailfinc" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="0,1524,1033,180" depth="0.01" origin="0.5,0.5" />
+    <sprite texture="Content/Map/SubFins.png" sourcerect="0,1524,1033,180" depth="0.9" origin="0.5,0.5" />
   </TailFin>
   <TailFin name="Tail Fin D" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.01" origin="0.5,0.5" />
+    <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.9" origin="0.5,0.5" />
   </TailFin>
   <extA_Front identifier="extA_Front" description="Submarine front temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="300"  castshadow="false">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="675,147,306,500" depth="0.01" origin="0.5,0.5" />

@@ -241,7 +241,8 @@ namespace Barotrauma
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;
                 
-                if (character.CurrentHull != null)
+                if (character.CurrentHull?.Submarine != null && 
+                    (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                 {
                     //crawler inside the sub adds 0.1f to enemy danger, mantis 0.25f
                     enemyDanger += enemyAI.CombatStrength / 1000.0f;
