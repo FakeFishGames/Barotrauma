@@ -2,7 +2,7 @@
 <Randomevents>
 
   <!--                               Set 1                                       -->
-  <EventSet minleveldifficulty="0" maxleveldifficulty="25">
+  <EventSet minleveldifficulty="0" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
