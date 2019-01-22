@@ -87,7 +87,7 @@ namespace Barotrauma
                         (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
                         0.0f, 1.0f);
 
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
 
                     if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
