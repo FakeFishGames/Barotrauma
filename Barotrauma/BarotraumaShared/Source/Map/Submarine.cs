@@ -457,6 +457,19 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var ruin in Level.Loaded.Ruins)
+            {
+                if (ruin.Area.Y + ruin.Area.Height < Level.Loaded.Size.Y - 1000.0f) { continue; }
+                if (ruin.Area.X < spawnPos.X)
+                {
+                    minX = Math.Max(minX, ruin.Area.Right + 100.0f);
+                }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                }
+            }
+
             if (minX < 0.0f) { minX = spawnPos.X; }
             if (maxX > Level.Loaded.Size.X) { maxX = spawnPos.X; }
 
