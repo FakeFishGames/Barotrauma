@@ -1104,8 +1104,9 @@ namespace Barotrauma
                     }
                     if (distSqr > 10000.0 * 10000.0) continue;
 
-                    double moveAmountX = 1000.0 * diffX / distSqr;
-                    double moveAmountY = 1000.0 * diffY / distSqr;
+                    double dist = Math.Sqrt(distSqr);
+                    double moveAmountX = 100.0 * diffX / dist;
+                    double moveAmountY = 100.0 * diffY / dist;
 
                     weighedPathPosX += moveAmountX;
                     weighedPathPosY += moveAmountY;
@@ -1140,11 +1141,29 @@ namespace Barotrauma
                     weighedPathPosY += moveAmountY;
                 }                
                 ruinPos = new Point((int)weighedPathPosX, (int)weighedPathPosY);
-                if (ruinPos.Y + ruinSize.Y / 2 > level.Size.Y)
+
+                //if we can't find a suitable position after 10 000 iterations, give up
+                if (iter > 10000)
                 {
-                    ruinPos.Y -= ((ruinPos.Y + ruinSize.Y / 2) - level.Size.Y);
+                    if (ruins.Count > 0)
+                    {
+                        //we already have some ruins, don't add this one at all
+                        return;
+                    }
+                    string errorMsg = "Failed to find a suitable position for ruins. Level seed: " + seed +
+                        ", ruin size: " + ruinSize + ", selected sub " + (Submarine.MainSub == null ? "none" : Submarine.MainSub.Name);
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Level.GenerateRuins:PosNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    break;
                 }
-                if (iter > 10000) break;
+                //if we haven't found a position after 500 iterations, try another starting point
+                else if (iter > 500 && iter % 500 == 0)
+                {
+                    int newCellIndex = Rand.Int(cells.Count, Rand.RandSync.Server);
+                    ruinPos = new Point((int)cells[newCellIndex].Site.Coord.X, (int)cells[newCellIndex].Site.Coord.X);
+                }
+                ruinPos.Y = Math.Min(ruinPos.Y, borders.Y + borders.Height - ruinSize.Y / 2);
+                ruinPos.Y = Math.Max(ruinPos.Y, SeaFloorTopPos + ruinSize.Y / 2);
             }
 
             if (Math.Abs(ruinPos.X) > int.MaxValue / 2 || Math.Abs(ruinPos.Y) > int.MaxValue / 2)
@@ -1201,15 +1220,36 @@ namespace Barotrauma
                             MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, rect) != null)
                         {
                             cell.CellType = CellType.Removed;
-
                             int x = (int)Math.Floor(cell.Center.X / GridCellSize);
                             int y = (int)Math.Floor(cell.Center.Y / GridCellSize);
-
                             cellGrid[x, y].Remove(cell);
                             cells.Remove(cell);
                             break;
                         }
                     }
+                }
+            }
+
+            //cast a ray from the closest path cell towards the ruin and remove the cell it hits
+            //to ensure that there's always at least one way from the main tunnel to the ruin
+            List<VoronoiCell> validCells = cells.FindAll(c => c.CellType != CellType.Empty && c.CellType != CellType.Removed);
+            foreach (VoronoiCell cell in validCells)
+            {
+                foreach (GraphEdge e in cell.Edges)
+                {
+                    if (MathUtils.LinesIntersect(closestPathCell.Center, ruinPos.ToVector2(), e.Point1, e.Point2))
+                    {
+                        cell.CellType = CellType.Removed;
+                        int x = (int)Math.Floor(cell.Center.X / GridCellSize);
+                        int y = (int)Math.Floor(cell.Center.Y / GridCellSize);
+                        cellGrid[x, y].Remove(cell);
+                        cells.Remove(cell);
+                        break;
+                    }
+                }
+                if (cell.CellType == CellType.Removed)
+                {
+                    break;
                 }
             }
         }
