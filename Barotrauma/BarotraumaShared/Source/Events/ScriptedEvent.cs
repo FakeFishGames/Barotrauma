@@ -1,8 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -11,22 +7,7 @@ namespace Barotrauma
         protected bool isFinished;
 
         private readonly ScriptedEventPrefab prefab;
-
-        public string Name
-        {
-            get { return prefab.Name; }
-        }
-
-        /*public string Description
-        {
-            get { return prefab.Description; }
-        }*/
-
-        public virtual bool IsActive
-        {
-            get { return true; }
-        }
-        
+                
         public bool IsFinished
         {
             get { return isFinished; }
@@ -34,7 +15,7 @@ namespace Barotrauma
         
         public override string ToString()
         {
-            return "ScriptedEvent (" + prefab.Name + ")";
+            return "ScriptedEvent (" + prefab.EventType.ToString() +")";
         }
 
         public virtual Vector2 DebugDrawPos
@@ -44,15 +25,7 @@ namespace Barotrauma
                 return Vector2.Zero;
             }
         }
-
-        public virtual string DebugDrawText
-        {
-            get
-            {
-                return "";
-            }
-        }
-
+        
         public ScriptedEvent(ScriptedEventPrefab prefab)
         {
             this.prefab = prefab;

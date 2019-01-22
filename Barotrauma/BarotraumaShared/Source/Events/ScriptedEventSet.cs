@@ -16,13 +16,14 @@ namespace Barotrauma
 
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
-
-        //public readonly XElement ConfigElement;
-
+        
         public readonly bool ChooseRandom;
 
         public readonly float MinDistanceTraveled;
         public readonly float MinMissionTime;
+
+        //the events in this set are delayed if the current EventManager intensity is not between these values
+        public readonly float MinIntensity, MaxIntensity;
 
         public readonly Dictionary<string, float> Commonness;
 
@@ -38,6 +39,9 @@ namespace Barotrauma
 
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
+
+            MinIntensity = element.GetAttributeFloat("minintensity", 0.0f);
+            MaxIntensity = Math.Max(element.GetAttributeFloat("maxintensity", 100.0f), MinIntensity);
 
             ChooseRandom = element.GetAttributeBool("chooserandom", true);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
