@@ -1,7 +1,7 @@
 ﻿<MantisWalk
   movementspeed="2"
   stepsize="0.1281207,0.1795029"
-  legtorque="10"
+  legtorque="0"
   colliderstandangle="0"
   footangle="180"
   flip="True"
@@ -9,13 +9,15 @@
   headangle="-90"
   headmoveforce="10"
   torsomoveforce="10"
-  footmoveforce="8"
+  footmoveforce="20"
   headtorque="50"
   torsotorque="50"
-  foottorque="25"
-  footangles="8: -1.218539,10: 1.078918"
+  foottorque="100"
+  footangles="8: -2.726755,10: 2.945091"
   torsoposition="NaN"
   backwardsmovementmultiplier="0.75"
   cyclespeed="5.690165"
   torsoangle="NaN"
-  animationtype="Walk" />
+  animationtype="Walk"
+  tailtorque="50"
+  tailangle="NaN" />

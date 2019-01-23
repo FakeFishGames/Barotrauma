@@ -68,7 +68,7 @@
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
   </Item>
-  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem">
+  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" scale="0.32">
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="350" />
     <Price locationtype="City" buyprice="500" />
@@ -77,7 +77,7 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64" />
-    <Sprite texture="weapons.png" sourcerect="56,98,44,27" depth="0.55" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="56,98,44,27" depth="0.55" />
     <Body width="40" height="25" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-10,-7" />
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">

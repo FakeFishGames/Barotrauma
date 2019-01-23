@@ -5,7 +5,7 @@
   <animations folder="default"/>
 
   <health
-    vitality="200"
+    vitality="100"
     doesbleed="false"/>
 
   <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />

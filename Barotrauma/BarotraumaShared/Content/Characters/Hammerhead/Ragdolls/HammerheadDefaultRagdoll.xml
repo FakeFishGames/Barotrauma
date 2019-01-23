@@ -1,21 +1,21 @@
 ﻿<Ragdoll type="Hammerhead" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True" spritesheetorientation="270">
   <collider radius="80" name="Main Collider" width="0" height="300" />
-  <limb id="0" name="Torso" type="Torso" radius="0" width="200" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="0" name="Torso" type="Torso" radius="0" width="200" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="2" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="0,0,263,191" origin="0.5,0.5" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
   </limb>
-  <limb id="1" name="Head" type="Head" radius="0" width="310" notes="1cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="1" name="Head" type="Head" radius="0" width="310" notes="1cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="3" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="264,0,329,191" origin="0.5,0.5" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
-    <attack targettype="Any" priority="1" range="280" damagerange="250" cooldown="10" secondarycooldown="1" structuredamage="25" force="30" targetimpulse="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0">
+    <attack targettype="Any" priority="1" range="280" damagerange="250" cooldown="10" secondarycooldown="1" structuredamage="25" force="30" targetimpulse="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.5">
       <Affliction identifier="internaldamage" strength="20" />
       <Affliction identifier="stun" strength="5" />
       <Conditional stun="lte 0"></Conditional>
     </attack>
   </limb>
-  <limb id="2" name="22CL_FinFront" type="None" radius="95" width="77" notes="7cl_22CL_FinFront" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+  <limb id="2" name="22CL_FinFront" type="None" radius="95" width="77" notes="7cl_22CL_FinFront" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="3" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="593,0,268,191" origin="0.5,0.5" subdivisions="3,3" depth="0.1">
       <spritedeformation type="noise" resolution="3,3" frequency="5" amplitude="0.25" changespeed="0.5" blendmode="add" />
     </deformablesprite>
@@ -45,7 +45,7 @@
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
   </limb>
-  <limb id="10" name="FinBack" type="None" radius="61" width="81" notes="22CL_FinBack" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
+  <limb id="10" name="FinBack" type="None" radius="61" width="81" notes="22CL_FinBack" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="3" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="464,339,204,123" origin="0.5,0.5" subdivisions="3,3" depth="0.1">
       <spritedeformation type="noise" resolution="3,3" frequency="5" amplitude="0.25" changespeed="0.5" blendmode="add" />
     </deformablesprite>

@@ -1,8 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Structures
-  RoomDivisionIterationsMin="4"
-  RoomDivisionIterationsMax="4"
-  VerticalSplitProbability="0.3"
+  sizemin="6000,6000"
+  sizemax="9000,9000"
+  RoomDivisionIterationsMin="5"
+  RoomDivisionIterationsMax="5"
+  VerticalSplitProbability="0.2"
+  minsplitwidth="400"
+  minsplitheight="400"
   RoomWidthRange="0.5,0.7"
   RoomHeightRange="0.7,0.7"
   CorridorWidthRange="256,256">
@@ -25,6 +29,7 @@
     <ChooseOne>
       <itemassembly prefab="alienarmoryassembly1" alignment="Right" type="Prop" minroomsize="800,700" maxroomsize="10000,800"/>
       <itemassembly prefab="aliengenericroomassembly9" alignment="Bottom" type="Prop" minroomsize="800,600" minoffset="0, 0.1" maxoffset="0, 0.5"/>
+      <itemassembly prefab="alienfractalspawnpoint" alignment="center" type="Prop" />
       <item prefab="aliencoil" alignment="bottom" type="Prop" minroomsize="600,0" maxroomsize="800, 800">
         <item prefab="alienmotionsensor" alignment="Top, Bottom, Left, Right, Center" type="Prop">
           <Connection targetentity="parent">
@@ -48,11 +53,10 @@
         </item>
       </item>
     </ChooseOne>
-    <itemassembly prefab="alienfractalspawnpoint" alignment="Center" type="Prop" minamount="-1" maxamount="1" />
 
   </RoomType>
   
-  <RoomType name="genericroom1" placement="any" minwateramount="0.0" maxwateramount="0.0">
+  <RoomType name="genericroom1" placement="any" minwateramount="0.0" maxwateramount="1.0">
     <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/>
@@ -67,7 +71,7 @@
         <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
         <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
       </itemassembly>
-      <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5">
+      <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, -0.5" maxoffset="0, 0.2">
         <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
         <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
         <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
@@ -99,16 +103,6 @@
         <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
         <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
       </itemassembly>
-      <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3">
-        <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="oxygeniteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="sulphuriteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alienpowercell" alignment="Center" type="Prop" minamount="-2" maxamount="1" targetcontainer="container0"/>
-        <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
-      </itemassembly>
       <itemassembly prefab="aliengenericroomassembly8" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly9" alignment="Bottom" type="Prop" minroomsize="800,600" minoffset="0, 0.1" maxoffset="0, 0.5">
         <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
@@ -121,6 +115,8 @@
         <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
       </itemassembly>
       <itemassembly prefab="alienverticalassembly1" alignment="Center" type="Prop" minroomsize="800,1200" maxroomsize="900,10000"/>
+      <itemassembly prefab="alienverticalassembly2" alignment="Left" type="Prop" minroomsize="800,1200" />
+      <itemassembly prefab="alienverticalassembly3" alignment="Right" type="Prop" minroomsize="800,1200" />
       <itemassembly prefab="aliencelltop" alignment="Top" type="Prop" minroomsize="800, 800">
         <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
         <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
@@ -143,18 +139,39 @@
       </itemassembly>
       <itemassembly prefab="alienpumpassembly1" alignment="Bottom" type="Prop" minamount="-2" maxamount="1" minroomsize="700,500"/>
       <itemassembly prefab="alienpumpassembly2" alignment="Bottom" type="Prop" minamount="-2" maxamount="1" minroomsize="700,500"/>
+      <itemassembly prefab="alienfractalspawnpoint" alignment="Center" type="Prop" />
+      <itemassembly prefab="alienchestlarge" alignment="Bottom" type="Prop">
+        <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="oxygeniteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="sulphuriteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alienpowercell" alignment="Center" type="Prop" minamount="-2" maxamount="1" targetcontainer="container0"/>
+        <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
+      </itemassembly>
+      <itemassembly prefab="alienchestsmall" alignment="Bottom" type="Prop">
+        <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="oxygeniteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="sulphuriteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alienpowercell" alignment="Center" type="Prop" minamount="-2" maxamount="1" targetcontainer="container0"/>
+        <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
+      </itemassembly>
+
     </ChooseOne>
     <!--<ChooseOne>
-      <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-10" maxamount="1" />
-      <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-10" maxamount="1" />
-      <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-10" maxamount="1" />
+      <item prefab="alientrinket1" alignment="Center,Left,Right" type="Prop" minamount="-10" maxamount="1" />
+      <item prefab="alientrinket2" alignment="Center,Left,Right" type="Prop" minamount="-10" maxamount="1" />
+      <item prefab="alientrinket3" alignment="Center,Left,Right" type="Prop" minamount="-10" maxamount="1" />
     </ChooseOne>-->
-    <itemassembly prefab="alienfractalspawnpoint" alignment="Center" type="Prop" minamount="-8" maxamount="1" />
 
 
   </RoomType>
 
-  <RoomType name="genericroom2" placement="any" minwateramount="0.0" maxwateramount="0.0">
+  <RoomType name="genericroom2" placement="any" minwateramount="0.0" maxwateramount="1.0">
     <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
     <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
     <structure prefab="RuinBackFractal" alignment="Center" type="Back" commonness="2"/>
@@ -169,7 +186,7 @@
         <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
         <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
       </itemassembly>
-      <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, 0.1" maxoffset="0, 0.5">
+      <itemassembly prefab="aliengenericroomassembly2" alignment="Center" type="Prop" minroomsize="700,700" minoffset="0, -0.5" maxoffset="0, 0.2">
         <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
         <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
         <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
@@ -201,16 +218,6 @@
         <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
         <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
       </itemassembly>
-      <itemassembly prefab="aliengenericroomassembly7" alignment="Center" type="Prop" minroomsize="1000,800" minoffset="0, 0.1" maxoffset="0, 0.3">
-        <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="oxygeniteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="sulphuriteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alienpowercell" alignment="Center" type="Prop" minamount="-2" maxamount="1" targetcontainer="container0"/>
-        <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
-        <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
-      </itemassembly>
       <itemassembly prefab="aliengenericroomassembly8" alignment="Center" type="Prop" minroomsize="800,800" minoffset="0, 0.1" maxoffset="0, 0.5"/>
       <itemassembly prefab="aliengenericroomassembly9" alignment="Bottom" type="Prop" minroomsize="800,600" minoffset="0, 0.1" maxoffset="0, 0.5">
         <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
@@ -223,6 +230,8 @@
         <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
       </itemassembly>
       <itemassembly prefab="alienverticalassembly1" alignment="Center" type="Prop" minroomsize="800,1200" maxroomsize="900,10000"/>
+      <itemassembly prefab="alienverticalassembly2" alignment="Left" type="Prop" minroomsize="800,1200" />
+      <itemassembly prefab="alienverticalassembly3" alignment="Right" type="Prop" minroomsize="800,1200" />
       <itemassembly prefab="aliencelltop" alignment="Top" type="Prop" minroomsize="800, 800">
         <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
         <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
@@ -245,16 +254,34 @@
       </itemassembly>
       <itemassembly prefab="alienpumpassembly1" alignment="Bottom" type="Prop" minamount="-2" maxamount="1" minroomsize="700,500"/>
       <itemassembly prefab="alienpumpassembly2" alignment="Bottom" type="Prop" minamount="-2" maxamount="1" minroomsize="700,500"/>
-    </ChooseOne>
+      <itemassembly prefab="alienfractalspawnpoint" alignment="Center" type="Prop" />
+      <itemassembly prefab="alienchestlarge" alignment="Bottom" type="Prop">
+        <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="oxygeniteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="sulphuriteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alienpowercell" alignment="Center" type="Prop" minamount="-2" maxamount="1" targetcontainer="container0"/>
+        <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
+        <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
+      </itemassembly>
+      <itemassembly prefab="alienchestsmall" alignment="Bottom" type="Prop">
+          <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+          <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+          <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+          <item prefab="oxygeniteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+          <item prefab="sulphuriteshard" alignment="Center" type="Prop" minamount="-3" maxamount="1" targetcontainer="container0"/>
+          <item prefab="alienpowercell" alignment="Center" type="Prop" minamount="-2" maxamount="1" targetcontainer="container0"/>
+          <item prefab="ancientweapon" alignment="Center" type="Prop" minamount="-10" maxamount="1" targetcontainer="container0"/>
+          <item prefab="alienpistol" alignment="Center" type="Prop" minamount="-5" maxamount="1" targetcontainer="container0"/>
+       </itemassembly>
+
+        </ChooseOne>
     <!--<ChooseOne>
-      <item prefab="alientrinket1" alignment="Center" type="Prop" minamount="-10" maxamount="1" />
-      <item prefab="alientrinket2" alignment="Center" type="Prop" minamount="-10" maxamount="1" />
-      <item prefab="alientrinket3" alignment="Center" type="Prop" minamount="-10" maxamount="1" />
+      <item prefab="alientrinket1" alignment="Center,Left,Right" type="Prop" minamount="-10" maxamount="1" />
+      <item prefab="alientrinket2" alignment="Center,Left,Right" type="Prop" minamount="-10" maxamount="1" />
+      <item prefab="alientrinket3" alignment="Center,Left,Right" type="Prop" minamount="-10" maxamount="1" />
     </ChooseOne>-->
-    <itemassembly prefab="alienfractalspawnpoint" alignment="Center" type="Prop" minamount="-8" maxamount="1" />
-
-
-
   </RoomType>
 
   <RoomType name="entrancecorridor" placement="first" iscorridor="true">
@@ -273,7 +300,7 @@
     <itemassembly prefab="aliendoorassembly2" alignment="Center" type="Door" minroomsize="400,0"/>
     <itemassembly prefab="aliendoorassembly5" alignment="Center" type="Door" minroomsize="400,0"/>
     <itemassembly prefab="alienhatchassembly" alignment="Center" type="Hatch" minroomsize="0,400"/>
-    <itemassembly prefab="alienhatchassembly2" alignment="Center" type="Hatch" minroomsize="0,700"/>
+    <!--<itemassembly prefab="alienhatchassembly2" alignment="Center" type="Hatch" minroomsize="0,700"/>-->
   </RoomType>
 
   <RoomType name="genericcorridor2" placement="any" iscorridor="true">
@@ -284,7 +311,7 @@
     <itemassembly prefab="aliendoorassembly2" alignment="Center" type="Door" minroomsize="400,0"/>
     <itemassembly prefab="aliendoorassembly5" alignment="Center" type="Door" minroomsize="400,0"/>
     <itemassembly prefab="alienhatchassembly" alignment="Center" type="Hatch" minroomsize="0,400"/>
-    <itemassembly prefab="alienhatchassembly2" alignment="Center" type="Hatch" minroomsize="0,400"/>
+    <!--<itemassembly prefab="alienhatchassembly2" alignment="Center" type="Hatch" minroomsize="0,400"/>-->
   </RoomType>
   
 </Structures>
