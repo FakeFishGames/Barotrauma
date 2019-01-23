@@ -12,7 +12,7 @@
   <!-- spike/tentacle thingy -->
   <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
     <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.052" origin="0.5,0.5"/>
-    <attack range="70" damagerange="35" duration="0.2"  targetforce="10" structuresoundtype="StructureBlunt"
+    <attack cooldown="1" range="70" damagerange="35" duration="0.2"  targetforce="10" structuresoundtype="StructureBlunt"
             force="5" applyforceonlimbs="1" torque="-10">
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <ReduceAffliction identifier="internaldamage" strength="5"/>
