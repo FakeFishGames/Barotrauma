@@ -410,6 +410,9 @@ namespace Barotrauma.RuinGeneration
         [Serialize("100000,100000", false)]
         public Point MaxRoomSize { get; private set; }
 
+        [Serialize("", false)]
+        public string TargetContainer { get; private set; }
+
         public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
 
 
@@ -423,8 +426,6 @@ namespace Barotrauma.RuinGeneration
         }
 
         public string Name => Prefab == null ? "null" : Prefab.Name;
-
-        public string TargetContainer = "";
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -441,11 +442,6 @@ namespace Barotrauma.RuinGeneration
             {
                 DebugConsole.ThrowError("Loading ruin entity config failed - map entity prefab \"" + name + "\" not found.");
                 return;
-            }
-
-            if (Prefab is ItemPrefab)
-            {
-                TargetContainer = element.GetAttributeString("targetcontainer", "");
             }
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
