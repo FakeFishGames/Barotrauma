@@ -285,6 +285,7 @@
     </deformablesprite>    
     -->
     <attack
+      cooldown="1"
       range="200"
       damagerange="100"
       duration="0.25"

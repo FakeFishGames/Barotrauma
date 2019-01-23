@@ -28,8 +28,7 @@
     sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    aggressiveboarding="true"
-    attackcooldown="3.0">
+    aggressiveboarding="true">
     
     <latchonto 
       attachtowalls="true"
