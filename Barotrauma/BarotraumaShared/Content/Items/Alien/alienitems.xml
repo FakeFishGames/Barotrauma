@@ -227,7 +227,7 @@
     <Body width="85" height="40" density="15" />
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11" />
     <RepairTool structurefixamount="-3.0" limbfixamount="-0.7" range="600" barrelpos="30,15">
-      <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained" />
+      <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
       <ParticleEmitter particle="largeplasma" particlespersecond="50" />
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
@@ -243,7 +243,7 @@
       </LightComponent>
     </RepairTool>
     <Propulsion force="-40" usablein="both">
-      <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained" />
+      <RequiredItems identifier="alienpowercell" type="Contained" />
     </Propulsion>
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="500" damagetype="Blunt">
@@ -261,8 +261,7 @@
       </StatusEffect>
     </Projectile>
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
-      <Containable identifiers="oxygeniteshard" />
-      <Containable identifiers="sulphuriteshard" />
+      <Containable identifiers="alienpowercell" />
     </ItemContainer>
   </Item>
   <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien">
