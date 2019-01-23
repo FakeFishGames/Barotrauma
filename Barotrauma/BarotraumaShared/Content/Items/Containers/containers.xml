@@ -70,6 +70,17 @@
       <Containable identifiers="divingsuit" />
     </ItemContainer>
   </Item>
+  <Item name="Diving Suit Locker" identifier="divingsuitlocker2" pickdistance="50" scale="0.5">
+    <Sprite name="Diving Suit Locker" texture="DivingSuitLocker.png" depth="0.84" sourcerect="0,0,330,338" origin="0.5,0.5" />
+    <!--TODO: Implement
+    <Sprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,0,241,77" origin="0.5,0.5" />
+    <Sprite name="Diving Suit Locker Glass" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,77,241,67" origin="0.5,0.5" />
+    -->
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="5" itempos="27,-90" iteminterval="50,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
+      <Containable identifiers="divingsuit" />
+    </ItemContainer>
+  </Item>
   <Item name="Diving Gear Cabinet" identifier="divingsuitcabinet" tags="cabinet" linkable="true" pickdistance="50">
     <Sprite texture="containers.png" depth="0.84" sourcerect="113,0,54,169" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true">
