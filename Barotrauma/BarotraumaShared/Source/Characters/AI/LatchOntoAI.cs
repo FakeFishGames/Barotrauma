@@ -189,10 +189,16 @@ namespace Barotrauma
                 case AIController.AIState.Attack:
                     if (enemyAI.AttackingLimb != null)
                     {
-                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
-                            Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null)
                         {
-                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                            // is not attached or is attached to something else
+                            if (!IsAttached || IsAttached && attachJoints[0].BodyB == attachTargetBody)
+                            {
+                                if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                                {
+                                    AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                                }
+                            }
                         }
                     }
                     break;
