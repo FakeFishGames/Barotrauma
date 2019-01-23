@@ -296,13 +296,10 @@
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="3,4,110,112" depth="0.8" origin="0.5,0.5" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="10">
-      <Conditional MotionDetected="false" targetitemcomponent="MotionSensor" />
-    </DecorativeSprite>
     <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="180">
-      <Conditional MotionDetected="true" targetitemcomponent="MotionSensor" />
+      <AnimationConditional MotionDetected="true" targetitemcomponent="MotionSensor" />
     </DecorativeSprite>
-    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="204,2,49,49" depth="0.7" origin="0.5,0.5" offset="40,40" offsetanim="Noise" offsetanimspeed="0.05" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="204,2,49,49" depth="0.7" origin="0.5,0.5" offset="80,80" offsetanim="Noise" offsetanimspeed="0.05" />
     <MotionSensor range="300" output="0" onlyhumans="true" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -330,7 +327,7 @@
   </Item>
   <Item name="Alien Generator" identifier="aliengenerator" category="Alien" Tags="alien" scale="0.3">
     <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,0,512,573" />
-    <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="167,583,178,178" depth="0.78" offset="2,-12" origin="0.5,0.5">
+    <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="167,583,178,178" depth="0.78" offset="6,-36" origin="0.5,0.5">
       <Conditional Charge="gt 1" targetitemcomponent="PowerContainer" />
     </DecorativeSprite>
     <LightComponent lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />

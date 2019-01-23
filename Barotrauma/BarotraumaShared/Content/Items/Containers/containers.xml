@@ -65,20 +65,31 @@
   </Item>
   <Item name="Diving Suit Locker" identifier="divingsuitlocker" pickdistance="50">
     <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="-90" canbeselected="true" autointeractwithcontained="true">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="divingsuit" />
     </ItemContainer>
   </Item>
   <Item name="Diving Suit Locker" identifier="divingsuitlocker2" pickdistance="50" scale="0.5">
-    <Sprite name="Diving Suit Locker" texture="DivingSuitLocker.png" depth="0.84" sourcerect="0,0,330,338" origin="0.5,0.5" />
-    <!--TODO: Implement
-    <Sprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,0,241,77" origin="0.5,0.5" />
-    <Sprite name="Diving Suit Locker Glass" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,77,241,67" origin="0.5,0.5" />
+    <Sprite name="Diving Suit Locker" texture="DivingSuitLocker.png" depth="0.84" sourcerect="82,0,248,338" origin="0.5,0.5" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,130"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,65" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,-65"/>
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,-130" />
+    <!-- TODO: implement
+    <DecorativeSprite name="Diving Suit Locker Light" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,77,241,67" origin="0.5,0.5" />
     -->
-    <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="5" itempos="27,-90" iteminterval="50,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="5" itempos="124,-45" iteminterval="0,-66" itemrotation="0" containedspritedepth="0.83" canbeselected="true">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="divingsuit" />
+    </ItemContainer>
+  </Item>
+  <Item name="Oxygen Tank Shelf" identifier="oxygentankshelf" pickdistance="50" scale="0.5">
+    <Sprite name="Diving Suit Locker" texture="DivingSuitLocker.png" depth="0.84" sourcerect="0,0,92,338" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="10" slotsperrow="5" itempos="26,-43" iteminterval="42,-65" itemsperrow="2" itemrotation="0" canbeselected="true">
+      <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
+      <Containable identifiers="oxygentank,weldingfueltank,oxygenitetank" />
     </ItemContainer>
   </Item>
   <Item name="Diving Gear Cabinet" identifier="divingsuitcabinet" tags="cabinet" linkable="true" pickdistance="50">
