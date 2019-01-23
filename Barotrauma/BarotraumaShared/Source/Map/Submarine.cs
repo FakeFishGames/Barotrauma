@@ -434,14 +434,15 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 FindSpawnPos(Vector2 spawnPos, int? submarineHeight = null)
+        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null)
         {
             Rectangle dockedBorders = GetDockedBorders();
             Vector2 diffFromDockedBorders = 
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
                 - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
 
-            int minHeight = Math.Max(submarineHeight ?? dockedBorders.Height, 1000);
+            int minWidth = Math.Max(submarineSize.HasValue ? submarineSize.Value.X : dockedBorders.Width, 500);
+            int minHeight = Math.Max(submarineSize.HasValue ? submarineSize.Value.Y : dockedBorders.Height, 1000);
             //a bit of extra padding to prevent the sub from spawning in a super tight gap between walls
             minHeight += 500;
 
@@ -473,12 +474,27 @@ namespace Barotrauma
                     maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
             }
-
-            if (minX < 0.0f) { minX = spawnPos.X; }
-            if (maxX > Level.Loaded.Size.X) { maxX = spawnPos.X; }
-
-            //use the midpoint between the closest walls as the spawnpos
-            spawnPos.X = (minX + maxX) / 2;
+            
+            if (minX < 0.0f && maxX > Level.Loaded.Size.X)
+            {
+                //no walls found at either side, just use the initial spawnpos and hope for the best
+            }
+            else if (minX < 0)
+            {
+                //no wall found at the left side, spawn to the left from the right-side wall
+                spawnPos.X = maxX - minWidth - 100.0f;
+            }
+            else if (maxX > Level.Loaded.Size.X)
+            {
+                //no wall found at right side, spawn to the right from the left-side wall
+                spawnPos.X = minX + minWidth + 100.0f;
+            }
+            else
+            {
+                //walls found at both sides, use their midpoint
+                spawnPos.X = (minX + maxX) / 2;
+            }
+            
             spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
             return spawnPos - diffFromDockedBorders;
         }
