@@ -1491,13 +1491,15 @@ namespace Barotrauma
                 outpost.Load(unloadPrevious: false);
                 outpost.MakeOutpost();
 
-                int? minHeight = null;
+                Point? minSize = null;
                 if (Submarine.MainSub != null)
                 {
-                    minHeight = Submarine.MainSub.GetDockedBorders().Height + outpost.Borders.Height;
+                    Point subSize = Submarine.MainSub.GetDockedBorders().Size;
+                    Point outpostSize = outpost.GetDockedBorders().Size;
+                    minSize = new Point(Math.Max(subSize.X, outpostSize.X), subSize.Y + outpostSize.Y);
                 }
 
-                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minHeight));
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize));
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;
