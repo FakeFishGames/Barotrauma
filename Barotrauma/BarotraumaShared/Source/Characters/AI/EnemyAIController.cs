@@ -701,12 +701,12 @@ namespace Barotrauma
                 if (wall.IsHorizontal)
                 {
                     attachTargetNormal = new Vector2(0.0f, Math.Sign(Character.WorldPosition.Y - wall.WorldPosition.Y));
-                    sectionPos.Y += ConvertUnits.ToSimUnits(wall.Rect.Height / 2) * attachTargetNormal.Y;
+                    sectionPos.Y += ConvertUnits.ToSimUnits((wall.BodyHeight <= 0.0f ? wall.Rect.Height : wall.BodyHeight) / 2) * attachTargetNormal.Y;
                 }
                 else
                 {
                     attachTargetNormal = new Vector2(Math.Sign(Character.WorldPosition.X - wall.WorldPosition.X), 0.0f);
-                    sectionPos.X += ConvertUnits.ToSimUnits(wall.Rect.Width / 2) * attachTargetNormal.X;
+                    sectionPos.X += ConvertUnits.ToSimUnits((wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2) * attachTargetNormal.X;
                 }
                 wallTarget = new WallTarget(ConvertUnits.ToDisplayUnits(sectionPos), wall, sectionIndex);
                 latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, sectionPos, attachTargetNormal);
