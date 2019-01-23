@@ -24,7 +24,6 @@
     <Item identifier="swimbladder"/>
   </Inventory>
 
-  <!-- Disabled temporarily
   <ai
     combatstrength="100"
     sight="0.5"
@@ -53,7 +52,6 @@
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
   </ai>
-    -->
 
   <ai
     combatstrength="100"
