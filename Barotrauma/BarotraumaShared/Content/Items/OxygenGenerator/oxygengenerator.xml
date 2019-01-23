@@ -9,29 +9,35 @@
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
     <BrokenSprite texture="oxygengenerator.png" sourcerect="214,0,214,192" depth="0.8" maxcondition="50" fadein="true" />
     <BrokenSprite texture="oxygengenerator.png" sourcerect="428,0,214,192" depth="0.8" maxcondition="0" />
-    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,199,214,31" depth="0.85" origin="0.5,3.5" hidewheninactive="false"
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,199,214,31" depth="0.85" origin="0.5,3.5"
                       offset="0,7" offsetanim="Sine" offsetanimspeed="0.5">
-      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />  
+      <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
-    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,231,214,20" depth="0.82" origin="0.5,5.0" hidewheninactive="false"
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,231,214,20" depth="0.82" origin="0.5,5.0"
                       offset="0,7" offsetanim="Sine" offsetanimspeed="0.5">
-      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
-    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,250,214,20" depth="0.83" origin="0.5,4.5" hidewheninactive="false" 
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,250,214,20" depth="0.83" origin="0.5,4.5"
                       offset="1,5" offsetanim="Sine" offsetanimspeed="0.5">
-      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
-    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,270,214,20" depth="0.84" origin="0.5,4.0" hidewheninactive="false"
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,270,214,20" depth="0.84" origin="0.5,4.0"
                       offset="2,3" offsetanim="Sine" offsetanimspeed="0.5">
-      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
-    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,289,214,20" depth="0.85" origin="0.5,3.5" hidewheninactive="false" 
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,289,214,20" depth="0.85" origin="0.5,3.5"
                       offset="1,1" offsetanim="Sine" offsetanimspeed="0.5">
-      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
-    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,331,214,53" depth="0.86" origin="0.5,0.8" hidewheninactive="false" 
+    <DecorativeSprite texture="oxygengenerator.png" sourcerect="0,331,214,53" depth="0.86" origin="0.5,0.8"
                       offset="0,1" offsetanim="Sine" offsetanimspeed="0.5">
-      <Conditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <AnimationConditional Voltage="gt 0.5" targetitemcomponent="OxygenGenerator" />
+      <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
@@ -130,8 +136,8 @@
     scale="0.8">
 
     <Sprite texture="vent.png" depth="0.91" sourcerect="0,0,64,64"/>
-    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56" rotationspeed="360" hidewheninactive="false" >
-      <Conditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
+    <DecorativeSprite texture="vent.png" depth="0.92" sourcerect="68,4,56,56" rotationspeed="360" >
+      <AnimationConditional OxygenFlow="gt 10" targetitemcomponent="Vent"/>
     </DecorativeSprite>
 
     <Vent>

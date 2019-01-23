@@ -174,7 +174,7 @@ namespace Barotrauma
                             depth: depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
-                            if (!spriteAnimState[decorativeSprite].IsActive && decorativeSprite.HideWhenInactive) { continue; }                            
+                            if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
                             decorativeSprite.Sprite.DrawTiled(spriteBatch, 
                                 new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)), 
@@ -188,7 +188,7 @@ namespace Barotrauma
                         fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
-                            if (!spriteAnimState[decorativeSprite].IsActive && decorativeSprite.HideWhenInactive) { continue; }
+                            if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                             float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, 
@@ -226,7 +226,7 @@ namespace Barotrauma
 
                     foreach (var decorativeSprite in Prefab.DecorativeSprites)
                     {
-                        if (!spriteAnimState[decorativeSprite].IsActive && decorativeSprite.HideWhenInactive) { continue; }
+                        if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                         Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
 
@@ -330,30 +330,46 @@ namespace Barotrauma
                             continue;
                         }
                     }
+
+                    //check if the sprite is active (whether it should be drawn or not)
                     var spriteState = spriteAnimState[decorativeSprite];
                     spriteState.IsActive = true;
-                    foreach (PropertyConditional conditional in decorativeSprite.Conditionals)
+                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
+                    {
+                        if (!ConditionalMatches(conditional))
+                        {
+                            spriteState.IsActive = false;
+                            break;
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+
+                    //check if the sprite should be animated
+                    bool animate = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
+                    {
+                        if (!ConditionalMatches(conditional)) { animate = false; break; }
+                    }
+                    if (!animate) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
+
+                    bool ConditionalMatches(PropertyConditional conditional)
                     {
                         if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
                         {
-                            if (conditional.Matches(this)) { continue; }                        
-                            spriteState.IsActive = false;
-                            break;                        
+                            if (!conditional.Matches(this)) { return false; }
                         }
                         else
                         {
                             foreach (ItemComponent component in components)
                             {
                                 if (component.Name != conditional.TargetItemComponentName) { continue; }
-                                if (conditional.Matches(component)) { continue; }
-                                spriteState.IsActive = false;
-                                break;
+                                if (!conditional.Matches(component)) { return false; }
                             }
                         }
+                        return true;
                     }
-                    if (!spriteState.IsActive) { continue; }
-                    spriteState.OffsetState += deltaTime;
-                    spriteState.RotationState += deltaTime;
                 }
             }
             

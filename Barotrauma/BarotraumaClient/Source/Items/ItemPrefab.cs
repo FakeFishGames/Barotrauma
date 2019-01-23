@@ -62,13 +62,7 @@ namespace Barotrauma
 
             [Serialize(AnimationType.None, false)]
             public AnimationType RotationAnim { get; private set; }
-
-            /// <summary>
-            /// Should the sprite be hidden when the sprite is inactive (otherwise animations are just disabled)
-            /// </summary>
-            [Serialize(true, false)]
-            public bool HideWhenInactive { get; private set; }
-
+            
             /// <summary>
             /// If > 0, only one sprite of the same group is used (chosen randomly)
             /// </summary>
@@ -78,7 +72,11 @@ namespace Barotrauma
             /// <summary>
             /// The sprite is only drawn if these conditions are fulfilled
             /// </summary>
-            public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
+            public List<PropertyConditional> IsActiveConditionals { get; private set; } = new List<PropertyConditional>();
+            /// <summary>
+            /// The sprite is only animated if these conditions are fulfilled
+            /// </summary>
+            public List<PropertyConditional> AnimationConditionals { get; private set; } = new List<PropertyConditional>();
 
             public DecorativeSprite(XElement element, string path = "")
             {
@@ -87,14 +85,24 @@ namespace Barotrauma
 
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional")
+                    List<PropertyConditional> conditionalList = null;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
                     {
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                            Conditionals.Add(new PropertyConditional(attribute));
-                        }
+                        case "conditional":
+                        case "isactiveconditional":
+                            conditionalList = IsActiveConditionals;
+                            break;
+                        case "animationconditional":
+                            conditionalList = AnimationConditionals;
+                            break;
+                        default:
+                            continue;
                     }
+                    foreach (XAttribute attribute in subElement.Attributes())
+                    {
+                        if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                        conditionalList.Add(new PropertyConditional(attribute));
+                    }                    
                 }
             }
 
