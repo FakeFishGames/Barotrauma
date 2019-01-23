@@ -1,6 +1,6 @@
 ﻿<CrawlerWalk
   movementspeed="2.034052"
-  stepsize="0.3150373,0.09961097"
+  stepsize="0.2436086,0.05675382"
   legtorque="0"
   colliderstandangle="90"
   flip="True"
@@ -8,7 +8,7 @@
   torsoposition="0.8050063"
   headangle="10.37946"
   torsoangle="23.53741"
-  footmoveforce="5"
+  footmoveforce="10"
   torsomoveforce="10"
   torsotorque="50"
   headmoveforce="10"
@@ -17,7 +17,7 @@
   backwardsmovementmultiplier="0.75"
   cyclespeed="2.883953"
   animationtype="Walk"
-  foottorque="25"
-  footangles="10: 0.078583"
+  foottorque="50"
+  footangles="10: -0.1484762"
   tailtorque="50"
   tailangle="42.62601" />
