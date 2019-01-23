@@ -24,6 +24,7 @@
     <Item identifier="swimbladder"/>
   </Inventory>
 
+  <!-- Disabled temporarily
   <ai
     combatstrength="100"
     sight="0.5"
@@ -52,14 +53,14 @@
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
   </ai>
+    -->
 
   <ai
     combatstrength="100"
     sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    aggressiveboarding="true"
-    attackcooldown="3.0">
+    aggressiveboarding="true">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>

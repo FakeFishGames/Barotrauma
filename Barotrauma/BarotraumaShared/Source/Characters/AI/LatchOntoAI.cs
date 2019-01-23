@@ -192,6 +192,7 @@ namespace Barotrauma
                         if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
                             Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
                         {
+                            // TODO: is there something wrong with the distance check?
                             AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
                         }
                     }
