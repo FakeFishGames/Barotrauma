@@ -17,4 +17,6 @@
   footangles="5: 1.882514,7: 1.918389,9: 1.836728"
   backwardsmovementmultiplier="0.75"
   cyclespeed="6.637759"
-  animationtype="Run" />
+  animationtype="Run"
+  tailtorque="50"
+  tailangle="NaN" />

@@ -3,13 +3,13 @@
   flip="True"
   headmoveforce="5"
   torsomoveforce="25"
-  footmoveforce="20"
+  footmoveforce="5"
   headtorque="25"
   torsotorque="100"
-  foottorque="5"
+  foottorque="50"
   legtorque="10"
   colliderstandangle="0"
-  footangles="17: 1.528637,26: 4.838658,22: 0.8092585"
+  footangles="17: -0.5578073,26: 4.838658,22: -0.4465178"
   stepsize="0.7948844,0.626456"
   headposition="5.579515"
   torsoposition="5.134964"
@@ -19,4 +19,4 @@
   headangle="-5"
   torsoangle="0"
   tailtorque="50"
-  tailangle="150.6038" />
+  tailangle="168.437" />

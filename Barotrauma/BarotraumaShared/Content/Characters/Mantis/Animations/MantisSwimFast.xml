@@ -6,12 +6,14 @@
   flip="True"
   mirror="True"
   rotatetowardsmovement="True"
-  headangle="-296.4336"
+  headangle="114.8558"
   torsotorque="25"
   headtorque="30"
   foottorque="25"
   tailtorque="50"
-  footangles="8: 0,10: 0"
+  footangles="8: -3.098032,10: 0.3156534"
   cyclespeed="1"
   torsoangle="NaN"
-  animationtype="SwimFast" />
+  animationtype="SwimFast"
+  usesinemovement="False"
+  tailangle="NaN" />

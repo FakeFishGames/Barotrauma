@@ -105,9 +105,9 @@
   <!--Head To Jaw-->
   <joint limb1="0" limb2="8" limb1anchor="-13.74361,-17.22302" limb2anchor="0.8587904,16.14077" canbesevered="True" limitenabled="True" upperlimit="23.76226" lowerlimit="-21.58732" name="Joint 0 - 8" stiffness="0.25" />
   <!--Shoulder-->
-  <joint limb1="1" limb2="9" limb1anchor="15.05702,-15.9578" limb2anchor="0.8482082,21.33283" canbesevered="True" limitenabled="True" upperlimit="358.7352" lowerlimit="247.4892" name="Joint 1 - 9" stiffness="0.25" />
+  <joint limb1="1" limb2="9" limb1anchor="15.05702,-15.9578" limb2anchor="0.8482082,21.33283" canbesevered="True" limitenabled="True" upperlimit="41.20124" lowerlimit="272.899" name="Joint 1 - 9" stiffness="0.25" />
   <!--Elbow-->
-  <joint limb1="9" limb2="10" limb1anchor="-4.953471,-29.06207" limb2anchor="-44.07518,9.280527" canbesevered="True" limitenabled="True" upperlimit="60.05338" lowerlimit="-65.67323" name="Joint 9 - 10" stiffness="0.25" />
+  <joint limb1="9" limb2="10" limb1anchor="-4.516037,-28.62164" limb2anchor="-44.07518,9.280527" canbesevered="True" limitenabled="True" upperlimit="56.15002" lowerlimit="-95.31316" name="Joint 9 - 10" stiffness="0.25" />
   <!--FakeFeet-->
   <joint limb1="2" limb2="11" limb1anchor="-1.630605,-27.50153" limb2anchor="5.272902,20.79574" canbesevered="True" limitenabled="True" upperlimit="55.2636" lowerlimit="-71.75" name="Joint 2 - 11" stiffness="0.25" />
   <joint limb1="3" limb2="12" limb1anchor="12.48289,-22.7742" limb2anchor="10.91163,18.78148" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-57.98726" name="Joint 3 - 12" stiffness="0.25" />
