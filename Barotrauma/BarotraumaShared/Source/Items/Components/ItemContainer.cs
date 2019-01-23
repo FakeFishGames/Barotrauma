@@ -51,60 +51,10 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        //the position of the first item in the container
-        private Vector2 itemPos;
-        [Serialize("0.0,0.0", false)]
-        public Vector2 ItemPos
-        {
-            get { return itemPos; }
-            set { itemPos = value; }
-        }
-
-        //item[i].Pos = itemPos + itemInterval*i 
-        private Vector2 itemInterval;
-        [Serialize("0.0,0.0", false)]
-        public Vector2 ItemInterval
-        {
-            get { return itemInterval; }
-            set { itemInterval = value; }
-        }
-
-        private float itemRotation;
-        [Serialize(0.0f, false)]
-        public float ItemRotation
-        {
-            get { return MathHelper.ToDegrees(itemRotation); }
-            set { itemRotation = MathHelper.ToRadians(value); }
-        }
-
-
-        private Vector2 hudPos;
         [Serialize("0.5,0.5", false)]
-        public Vector2 HudPos
-        {
-            get { return hudPos; }
-            set 
-            { 
-                hudPos = value;
-            }
-        }
-
-        private int slotsPerRow;
+        public Vector2 HudPos { get; set; }
         [Serialize(5, false)]
-        public int SlotsPerRow
-        {
-            get { return slotsPerRow; }
-            set { slotsPerRow = value; }
-        }
-
-
-        private string uiLabel;
-        [Serialize(null, false)]
-        public string UILabel
-        {
-            get { return uiLabel; }
-            set { uiLabel = value; }
-        }
+        public int SlotsPerRow { get; set; }
 
         public List<RelatedItem> ContainableItems
         {
@@ -114,7 +64,7 @@ namespace Barotrauma.Items.Components
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            Inventory = new ItemInventory(item, this, capacity, hudPos, slotsPerRow);            
+            Inventory = new ItemInventory(item, this, capacity, HudPos, SlotsPerRow);            
             containableItems = new List<RelatedItem>();
             
             foreach (XElement subElement in element.Elements())
