@@ -39,7 +39,7 @@
       damageondetach="1000"
       detachstun="5.0"
       attachlimb="Head"
-      localattachpos="50,-10"
+      localattachpos="40,10"
       attachlimbrotation="100"/>
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
