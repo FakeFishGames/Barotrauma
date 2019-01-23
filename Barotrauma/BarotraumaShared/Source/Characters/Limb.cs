@@ -131,9 +131,6 @@ namespace Barotrauma
         private List<DamageModifier> damageModifiers;
 
         private Direction dir;
-        
-        public float AttackTimer { get; private set; }
-        private bool forcesApplied;
 
         public int HealthIndex => limbParams.HealthIndex;
         public float Scale => limbParams.Ragdoll.LimbScale;
@@ -472,33 +469,23 @@ namespace Barotrauma
                     body.Enabled = false;
                 }
             }
+
+            if (attack != null)
+            {
+                attack.UpdateCoolDown(deltaTime);
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime);
 
-        public void ResetAttack()
-        {
-            AttackTimer = 0.0f;
-            forcesApplied = false;
-        }
-
         /// <summary>
-        /// Returns true if the attack successfully hit something
+        /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
-        public bool UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget)
+        public bool UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget, float distance = -1)
         {
-            float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
-
-            AttackTimer += deltaTime;
-            if (AttackTimer > attack.Duration)
-            {
-                forcesApplied = false;
-            }
-
-            if (!forcesApplied)
-            {
-                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
-            }
+            float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
+            bool wasRunning = attack.IsRunning;
+            attack.UpdateAttackTimer(deltaTime);
 
             bool wasHit = false;
             Body structureBody = null;
@@ -568,38 +555,38 @@ namespace Barotrauma
 
             if (wasHit)
             {
-                if (AttackTimer >= attack.Duration && damageTarget != null)
-                {
-                    bool playSound = false;
+                wasHit = damageTarget != null;
+            }
+
+            if (wasHit)
+            {
+                bool playSound = false;
 #if CLIENT
-                    playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
-                    if (playSound)
-                    {
-                        LastAttackSoundTime = SoundInterval;
-                    }
-#endif
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
-                    if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
-                    {
-                        // TODO: use the hit pos?
-                        var localFront = body.GetLocalFront(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
-                        var from = body.FarseerBody.GetWorldPoint(localFront);
-                        var to = from;
-                        var drawPos = body.DrawPosition;
-                        StickTo(structureBody, from, to);
-                    }
-                }
-                else
+                playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
+                if (playSound)
                 {
-                    wasHit = false;
+                    LastAttackSoundTime = SoundInterval;
                 }
+#endif
+                attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+                {
+                    // TODO: use the hit pos?
+                    var localFront = body.GetLocalFront(MathHelper.ToRadians(ragdoll.RagdollParams.SpritesheetOrientation));
+                    var from = body.FarseerBody.GetWorldPoint(localFront);
+                    var to = from;
+                    var drawPos = body.DrawPosition;
+                    StickTo(structureBody, from, to);
+                }
+                attack.ResetAttackTimer();
+                attack.SetCoolDown();
             }
 
             Vector2 diff = attackPosition - SimPosition;
-            if (diff.LengthSquared() < 0.00001f) return wasHit;
-            
-            if (!forcesApplied)
+            bool applyForces = (!attack.ApplyForcesOnlyOnce || !wasRunning) && diff.LengthSquared() > 0.00001f;
+            if (applyForces)
             {
+                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
                 if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
                 {
                     foreach (int limbIndex in attack.ForceOnLimbIndices)
@@ -615,10 +602,6 @@ namespace Barotrauma
                 {
                     Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
                     body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
-                }
-                if (attack.ApplyForcesOnlyOnce)
-                {
-                    forcesApplied = true;
                 }
             }
             return wasHit;

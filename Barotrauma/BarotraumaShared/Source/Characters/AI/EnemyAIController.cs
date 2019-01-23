@@ -71,9 +71,7 @@ namespace Barotrauma
 
         private float raycastTimer;
                 
-        private float coolDownTimer;
-        private float secondaryCoolDownTimer;
-        private bool IsCoolDownRunning => coolDownTimer > 0 || secondaryCoolDownTimer > 0;
+        private bool IsCoolDownRunning => attackingLimb != null && attackingLimb.attack.CoolDownTimer > 0;
         
         private bool aggressiveBoarding;
 
@@ -356,17 +354,8 @@ namespace Barotrauma
 
         #region Idle
 
-        private void DecrementCoolDown(float deltaTime)
-        {
-            coolDownTimer -= deltaTime;
-            secondaryCoolDownTimer -= deltaTime;
-            if (coolDownTimer < 0) { coolDownTimer = 0; }
-            if (secondaryCoolDownTimer < 0) { secondaryCoolDownTimer = 0; }
-        }
-
         private void UpdateNone(float deltaTime)
         {
-            DecrementCoolDown(deltaTime);
             if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
@@ -534,37 +523,33 @@ namespace Barotrauma
             bool canAttack = true;
             if (IsCoolDownRunning)
             {
-                DecrementCoolDown(deltaTime);
-                if (attackingLimb == null)
-                {
-                    UpdateFallBack(attackSimPosition, deltaTime);
-                    return;
-                }
                 if (attackingLimb.attack.SecondaryCoolDown > 0)
                 {
-                    if (secondaryCoolDownTimer <= 0)
+                    if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
                     {
                         // If the secondary cooldown is defined and expired, check if we can switch the attack
                         var previousLimb = attackingLimb;
-                        attackingLimb = GetAttackLimb(attackSimPosition, previousLimb);
-                        if (attackingLimb == null)
+                        var newLimb = GetAttackLimb(attackSimPosition, previousLimb);
+                        if (newLimb != null)
                         {
-                            // If not, fall back and stop trying.
+                            attackingLimb = newLimb;
+                        }
+                        else
+                        {
+                            // No new limb was found.
                             UpdateFallBack(attackSimPosition, deltaTime);
                             return;
                         }
-                        // TODO: switching from one attack to another and back now probably by-passes the original cool down -> fix
                     }
                     else
                     {
-                        // Cannot attack, but should steer towards the target.
+                        // If the cooldown is not yet expired, fall back, we cannot attack, but should steer towards the target. TODO: there's a steering issue where the target tries to circle away and the hunter circles after -> solve by not trying to go in circles?
                         canAttack = false;
                     }
                 }
                 else
                 {
-                    // If no secondary cooldown is defined, fall back and stop trying.
-                    attackingLimb = null;
+                    // No secondary cooldown is defined.
                     UpdateFallBack(attackSimPosition, deltaTime);
                     return;
                 }
@@ -581,13 +566,13 @@ namespace Barotrauma
             }
             if (canAttack)
             {
-                canAttack = attackingLimb != null;
+                canAttack = attackingLimb != null && attackingLimb.attack.CoolDownTimer <= 0;
             }
+            float distance = 0;
             if (canAttack)
             {
                 // Check that we can reach the target
-                // TODO: optimize by passing the distance to the UpdateLimbAttack function?
-                float distance = ConvertUnits.ToDisplayUnits(Vector2.Distance(attackingLimb.SimPosition, attackSimPosition));
+                distance = ConvertUnits.ToDisplayUnits(Vector2.Distance(attackingLimb.SimPosition, attackSimPosition));
                 canAttack = distance < attackingLimb.attack.Range;
             }
 
@@ -630,7 +615,7 @@ namespace Barotrauma
                 
             if (canAttack)
             {
-                UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
+                UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition, distance);
             }
         }
 
@@ -731,7 +716,16 @@ namespace Barotrauma
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
-            coolDownTimer *= 0.1f;
+            
+            // Reduce the cooldown so that the character can react
+            foreach (var limb in Character.AnimController.Limbs)
+            {
+                if (limb.attack != null)
+                {
+                    limb.attack.CoolDownTimer *= 0.1f;
+                    // secondary cooldown?
+                }
+            }
 
             if (attackResult.Damage > 0.0f && attackWhenProvoked)
             {
@@ -750,26 +744,26 @@ namespace Barotrauma
             targetMemory.Priority += attackResult.Damage / Math.Max(Character.Vitality, 1.0f);
         }
 
-        private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)
+        private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition, float distance = -1)
         {
             var damageTarget = wallTarget != null ? wallTarget.Structure : selectedAiTarget.Entity as IDamageable;
             if (damageTarget == null) return;
 
             float prevHealth = damageTarget.Health;
-            limb.UpdateAttack(deltaTime, attackPosition, damageTarget);
-
+            if (limb.UpdateAttack(deltaTime, attackPosition, damageTarget, distance))
+            {
+                // Managed to hit
+                selectedTargetMemory.Priority += 5;
+            }
             if (damageTarget.Health < prevHealth)
             {
-                //managed to do damage to the target -> increase priority
-                selectedTargetMemory.Priority += 10.0f;
+                // Managed to make damage (should be cumulative +10 now)
+                selectedTargetMemory.Priority += 5;
             }
 
-            if (limb.AttackTimer >= limb.attack.Duration)
+            if (!limb.attack.IsRunning)
             {
                 wallTarget = null;
-                limb.ResetAttack();
-                coolDownTimer = limb.attack.CoolDown;
-                secondaryCoolDownTimer = limb.attack.SecondaryCoolDown;
             }
         }
 

@@ -1141,9 +1141,8 @@ namespace Barotrauma
 
                     attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
 
-                    if (attackLimb.AttackTimer > attackLimb.attack.Duration)
+                    if (!attackLimb.attack.IsRunning)
                     {
-                        attackLimb.ResetAttack();
                         attackCoolDown = 1.0f;
                     }
                 }

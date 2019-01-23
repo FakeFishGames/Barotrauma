@@ -77,7 +77,7 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
+        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ToolTip = "An approximation of the attack length. If set to too low value, it's possible that the attack won't hit the target in time.")]
         public float Duration { get; private set; }
 
         [Serialize(5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How long the AI waits between the attacks.")]
@@ -386,6 +386,48 @@ namespace Barotrauma
             }
 
             return attackResult;
+        }
+
+        public float AttackTimer { get; private set; }
+        public float CoolDownTimer { get; set; }
+        public float SecondaryCoolDownTimer { get; set; }
+        public bool IsRunning { get; private set; }
+
+        public void UpdateCoolDown(float deltaTime)
+        {
+            CoolDownTimer -= deltaTime;
+            SecondaryCoolDownTimer -= deltaTime;
+            if (CoolDownTimer < 0) { CoolDownTimer = 0; }
+            if (SecondaryCoolDownTimer < 0) { SecondaryCoolDownTimer = 0; }
+        }
+
+        public void UpdateAttackTimer(float deltaTime)
+        {
+            IsRunning = true;
+            AttackTimer += deltaTime;
+            if (AttackTimer >= Duration)
+            {
+                ResetAttackTimer();
+                SetCoolDown();
+            }
+        }
+
+        public void ResetAttackTimer()
+        {
+            AttackTimer = 0;
+            IsRunning = false;
+        }
+
+        public void SetCoolDown()
+        {
+            CoolDownTimer = CoolDown;
+            SecondaryCoolDownTimer = SecondaryCoolDown;
+        }
+
+        public void ResetCoolDown()
+        {
+            CoolDownTimer = 0;
+            SecondaryCoolDownTimer = 0;
         }
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
