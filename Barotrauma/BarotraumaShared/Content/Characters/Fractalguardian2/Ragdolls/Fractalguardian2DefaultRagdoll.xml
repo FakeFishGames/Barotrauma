@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="fractalguardian2" canentersubmarine="false">
+<Ragdoll type="fractalguardian2" canentersubmarine="false" limbscale="0.5" jointscale="0.5">
 
   <collider radius="80" height="30"/>
     
@@ -8,7 +8,7 @@
     <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
     <attack cooldown="8" type="Hit" range="120" damagerange="60" duration="0.2" force="5" targetforce="50" structuresoundtype="StructureBlunt">
       <Affliction identifier="internaldamage" strength="10"/>
-      <Affliction identifier="stun" strength="1"/>
+      <!--<Affliction identifier="stun" strength="1"/>-->
     </attack>
   </limb>
 
@@ -20,7 +20,7 @@
     <attack cooldown="8" range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash">
       <Affliction identifier="internaldamage" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>
-      <Affliction identifier="stun" strength="0.5"/>
+      <!--<Affliction identifier="stun" strength="0.5"/>-->
     </attack>
   </limb>
     
@@ -33,7 +33,7 @@
     <attack range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash">
       <Affliction identifier="internaldamage" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>
-      <Affliction identifier="stun" strength="0.5"/>
+      <!--<Affliction identifier="stun" strength="0.5"/>-->
     </attack>
   </limb>        
 
