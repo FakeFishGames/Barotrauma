@@ -20,8 +20,7 @@
     combatstrength="100"
     sight="0.5"
     hearing="1.0"
-    aggressiveboarding="true"
-    attackcooldown="1.0">
+    aggressiveboarding="true">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="60"/>

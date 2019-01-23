@@ -17,7 +17,6 @@
 
   <ai
     combatstrength="1200"
-    attackcooldown="15.0"
     sight="0.0" hearing="1.0">
     <targetpriority tag="stronger" state="Escape" priority="100"/>
     <targetpriority tag="room" state="Attack" priority="50"/>

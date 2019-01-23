@@ -79,10 +79,28 @@
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>    
     -->
-    <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="12" structuresoundtype="StructureSlash" targetforce="-100" severlimbsprobability="0.8" torque="-20" force="10" applyforceonlimbs="0, 6" context="NotDefined" targettype="Any" hitdetectiontype="Distance" cooldown="5" secondarycooldown="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0">
-      <Affliction identifier="internaldamage" strength="10" />
-      <Affliction identifier="bleeding" strength="50" />
-      <Affliction identifier="stun" strength="0.1" />
+    <attack
+      cooldown="1"
+      range="200"
+      damagerange="100"
+      duration="0.25"
+      structuredamage="10"
+      itemdamage="12"
+      structuresoundtype="StructureSlash"
+      targetforce="-100"
+      severlimbsprobability="0.8"
+      torque="-20"
+      force="10"
+      applyforceonlimbs="0,6">
+      <Affliction
+        identifier="internaldamage"
+        strength="10" />
+      <Affliction
+        identifier="bleeding"
+        strength="50" />
+      <Affliction
+        identifier="stun"
+        strength="0.1" />
     </attack>
   </limb>
   <limb id="7" width="15" height="63" mass="4" type="LeftLeg" flip="True" bodytype="Dynamic" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 7" notes="">

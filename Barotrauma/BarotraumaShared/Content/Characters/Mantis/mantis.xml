@@ -24,7 +24,6 @@
   
   <ai
     combatstrength="250"
-    attackcooldown="1.0"
     sight="0.5"
     hearing="1.0"
     aggressiveboarding="true"

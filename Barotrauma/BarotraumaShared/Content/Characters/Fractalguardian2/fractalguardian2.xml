@@ -5,7 +5,7 @@
   <animations folder="default"/>
 
   <health
-    vitality="200"
+    vitality="100"
     doesbleed="false"/>
 
   <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />
@@ -18,8 +18,7 @@
     attackpriorityrooms="0.0"
     attackpriorityhumans="100"
     sight="1.0"
-    hearing="2.0"
-    attackcooldown="8">
+    hearing="2.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="100"/>
     <targetpriority tag="sonar" state="Attack" priority="50"/>

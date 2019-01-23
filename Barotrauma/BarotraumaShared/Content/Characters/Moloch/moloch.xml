@@ -18,7 +18,6 @@
 
   <ai
     combatstrength="1200"
-    attackcooldown="15.0"
     sight="0.0" hearing="1.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="stronger" state="Escape" priority="100"/>
