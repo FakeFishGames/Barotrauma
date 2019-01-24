@@ -1,15 +1,54 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
   <!-- INTERIOR WALLS FF -->
-  <ff_x_wall identifier="ff_x_wall" description="A vertical wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/FF_inWall_X.png" depth="0.05" sourcerect="0,0,512,48" />
-  </ff_x_wall>
-  <ff_x_wall_cables identifier="ff_x_wall_cables" description="A vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/FF_inWall_X_cables.png" depth="0.05" sourcerect="0,0,512,73" />
-  </ff_x_wall_cables>
-  <ff_y_wall identifier="ff_y_wall" description="A horizontal wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/FF_inWall_Y.png" depth="0.06" sourcerect="0,0,48,512" />
-  </ff_y_wall>
+  <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,0,512,48" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,55,512,76" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L 90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="464,135,48,512" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,177,27,50" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="57,178,52,48" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="186,178,51,58" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="309,182,49,52" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="310,248,48,27" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="299,329,59,50" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,235,74,48" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="75,251,73,17" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="5,298,111,54" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="301,397,48,72" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="316,471,16,72" origin="0.5,0.5" />
+  </structure>
+  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="223,267,53,110" origin="0.5,0.5" />
+  </structure>
   <!-- BACK WALLS START -->
   <FF_Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="1.0" />
@@ -58,7 +97,8 @@
   </FF_Wall_H1>
   <!-- BACK WALLS ENDS -->
   <!-- TAIL -->
-  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="40" bodyheight="300"  castshadow="false"> <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
+  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="40" bodyheight="300" castshadow="false">
+    <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="309,234,128,339" depth="0.01" origin="0.5,0.5" />
   </extA_Tail>
   <TailFin name="Tail Fin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
@@ -73,7 +113,7 @@
   <TailFin name="Tail Fin D" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <extA_Front identifier="extA_Front" description="Submarine front temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="300"  castshadow="false">
+  <extA_Front identifier="extA_Front" description="Submarine front temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="300" castshadow="false">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="675,147,306,500" depth="0.01" origin="0.5,0.5" />
   </extA_Front>
   <!-- TAIL ENDS-->
@@ -82,8 +122,7 @@
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="0,0,96,512" depth="0.85" />
   </shellA>
   <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" health="200" width="256" height="160" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">&gt;
-    <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="96,0,256,160" depth="0.1" />
-    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="96,0,256,160" depth="0.85" /></shellA>
+    <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="96,0,256,160" depth="0.1" /><backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="96,0,256,160" depth="0.85" /></shellA>
   <shellA name="Shell A 34 deg" identifier="shella34deg" description="Submarine wall" body="true" castshadow="true" health="200" width="96" height="160" bodywidth="116" bodyheight="60" bodyrotation="-34">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="384,0,96,160" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="384,0,95,160" depth="0.85" />

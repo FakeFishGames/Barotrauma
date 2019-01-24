@@ -53,7 +53,7 @@ namespace Barotrauma
             findPathTimer = Rand.Range(0.0f, 1.0f);
         }
 
-        public override void Update(float speed = 1)
+        public override void Update(float speed)
         {
             base.Update(speed);
 
@@ -68,7 +68,7 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
-        protected override Vector2 DoSteeringSeek(Vector2 target, float speed = 1)
+        protected override Vector2 DoSteeringSeek(Vector2 target, float speed)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (currentPath == null || Vector2.Distance(target, currentTarget) > 1.0f || findPathTimer < -1.0f)

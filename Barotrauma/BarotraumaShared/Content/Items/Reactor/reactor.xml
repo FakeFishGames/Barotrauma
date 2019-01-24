@@ -2,6 +2,7 @@
   <Item
     name="Nuclear Reactor"
     identifier="reactor1"
+    tags="reactor"
     type ="Reactor"
     linkable="true"
     category="Machine">

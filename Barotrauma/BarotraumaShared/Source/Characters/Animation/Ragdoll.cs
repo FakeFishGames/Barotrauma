@@ -508,37 +508,7 @@ namespace Barotrauma
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
         {
-            byte limb1ID = Convert.ToByte(subElement.Attribute("limb1").Value);
-            byte limb2ID = Convert.ToByte(subElement.Attribute("limb2").Value);
-
-            Vector2 limb1Pos = subElement.GetAttributeVector2("limb1anchor", Vector2.Zero) * scale;
-            limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
-
-            Vector2 limb2Pos = subElement.GetAttributeVector2("limb2anchor", Vector2.Zero) * scale;
-            limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
-
-            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
-            //joint.CanBeSevered = subElement.GetAttributeBool("canbesevered", true);
-
-            if (subElement.Attribute("lowerlimit") != null)
-            {
-                joint.LimitEnabled = true;
-                joint.LowerLimit = float.Parse(subElement.Attribute("lowerlimit").Value) * ((float)Math.PI / 180.0f);
-                joint.UpperLimit = float.Parse(subElement.Attribute("upperlimit").Value) * ((float)Math.PI / 180.0f);
-            }
-
-            GameMain.World.AddJoint(joint);
-
-            for (int i = 0; i < LimbJoints.Length; i++)
-            {
-                if (LimbJoints[i] != null) continue;
-
-                LimbJoints[i] = joint;
-                return;
-            }
-
-            Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
-            LimbJoints[LimbJoints.Length - 1] = joint;
+            AddJoint(new JointParams(subElement, RagdollParams));
         }
 
         protected void AddLimb(LimbParams limbParams)
