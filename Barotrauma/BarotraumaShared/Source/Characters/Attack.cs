@@ -78,6 +78,9 @@ namespace Barotrauma
         [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
+        [Serialize(AIBehaviorIdle.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
+        public AIBehaviorIdle AfterAttack { get; private set; }
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target before the AI tries to attack.")]
         public float Range { get; private set; }
 
@@ -158,9 +161,6 @@ namespace Barotrauma
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
-
-        [Serialize(AIBehaviorIdle.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
-        public AIBehaviorIdle AfterAttack { get; private set; }
              
         public IEnumerable<StatusEffect> StatusEffects
         {
