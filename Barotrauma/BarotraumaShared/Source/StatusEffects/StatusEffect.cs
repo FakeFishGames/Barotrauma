@@ -476,6 +476,14 @@ namespace Barotrauma
             return targetIdentifiers.Any(id => id == entity.Name);
         }
 
+        public void SetUser(Character user)
+        {
+            foreach (Affliction affliction in Afflictions)
+            {
+                affliction.Source = user;
+            }
+        }
+
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;

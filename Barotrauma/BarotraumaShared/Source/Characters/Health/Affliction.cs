@@ -14,6 +14,11 @@ namespace Barotrauma
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
 
+        /// <summary>
+        /// Which character gave this affliction
+        /// </summary>
+        public Character Source;
+
         public Affliction(AfflictionPrefab prefab, float strength)
         {
             Prefab = prefab;
@@ -22,7 +27,7 @@ namespace Barotrauma
 
         public Affliction CreateMultiplied(float multiplier)
         {
-            return Prefab.Instantiate(Strength * multiplier);
+            return Prefab.Instantiate(Strength * multiplier, Source);
         }
 
         public override string ToString()

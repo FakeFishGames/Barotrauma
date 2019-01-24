@@ -601,7 +601,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
         
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Character user = null)
         {
             if (statusEffectLists == null) return;
 
@@ -610,7 +610,8 @@ namespace Barotrauma.Items.Components
             bool broken = item.Condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                if (broken && effect.type != ActionType.OnBroken) continue;
+                if (broken && effect.type != ActionType.OnBroken) { continue; }
+                if (user != null) { effect.SetUser(user); }
                 item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, false, false);
             }
         }
