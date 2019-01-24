@@ -419,7 +419,7 @@ namespace Barotrauma
             else
             {
                 //lower room is full of water
-                if (hull2.Pressure + subOffset.Y > hull1.Pressure)
+                if (hull2.Pressure + subOffset.Y > hull1.Pressure && hull2.WaterVolume > 0.0f)
                 {
                     float delta = Math.Min(hull2.WaterVolume - hull2.Volume + Hull.MaxCompress, deltaTime * 8000.0f * sizeModifier);
 
