@@ -604,6 +604,13 @@ namespace Barotrauma.Items.Components
                     {
                         if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
                     }
+                    //make sure the left hull is linked to the gap first (gap logic assumes that the first hull is the one to the left)
+                    if (doorGap.linkedTo[0].Rect.X > doorGap.linkedTo[1].Rect.X)
+                    {
+                        var temp = doorGap.linkedTo[0];
+                        doorGap.linkedTo[0] = doorGap.linkedTo[1];
+                        doorGap.linkedTo[1] = temp;
+                    }
                 }
                 else
                 {
@@ -614,6 +621,13 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
+                    }
+                    //make sure the upper hull is linked to the gap first (gap logic assumes that the first hull is above the second one)
+                    if (doorGap.linkedTo[0].Rect.Y < doorGap.linkedTo[1].Rect.Y)
+                    {
+                        var temp = doorGap.linkedTo[0];
+                        doorGap.linkedTo[0] = doorGap.linkedTo[1];
+                        doorGap.linkedTo[1] = temp;
                     }
                 }                
             }
@@ -716,7 +730,17 @@ namespace Barotrauma.Items.Components
                     item.SendSignal(0, "0", "state_out", null);
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
-                    if (Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
+                    Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+
+                    if (jointDiff.LengthSquared() > 0.02f * 0.02f)
+                    {
+                        Vector2 relativeVelocity = DockingTarget.item.Submarine.Velocity - item.Submarine.Velocity;
+                        Vector2 desiredRelativeVelocity = jointDiff.ClampLength(10.0f);
+
+                        item.Submarine.Velocity += relativeVelocity + desiredRelativeVelocity;
+                        DockingTarget.item.Submarine.Velocity += -relativeVelocity - desiredRelativeVelocity;
+                    }
+                    else
                     {
                         Lock(false);
                     }
