@@ -128,7 +128,7 @@ namespace Barotrauma
             }
         }
 
-        public XElement SourceElement { get; private set; }
+        public XElement SourceElement { get; set; }
 
         public XElement HairElement { get; private set; }
         public XElement BeardElement { get; private set; }
