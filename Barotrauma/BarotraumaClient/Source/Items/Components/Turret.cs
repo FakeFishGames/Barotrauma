@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
 using Barotrauma.Sounds;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -29,6 +30,8 @@ namespace Barotrauma.Items.Components
         private bool flashNoAmmo;
         private float flashTimer;
         private float flashLength = 1;
+
+        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
         [Editable, Serialize("0.0,0.0,0.0,0.0", true)]
         public Color HudTint
@@ -80,6 +83,9 @@ namespace Barotrauma.Items.Components
                     case "movesound":
                         moveSound = Submarine.LoadRoundSound(subElement, false);
                         break;
+                    case "particleemitter":
+                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        break;
                 }
             }
             
@@ -95,6 +101,11 @@ namespace Barotrauma.Items.Components
         {
             recoilTimer = Math.Max(Reload, 0.1f);
             PlaySound(ActionType.OnUse, item.WorldPosition);
+            Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
+            foreach (ParticleEmitter emitter in particleEmitters)
+            {
+                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation);
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime)
