@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class BasicTutorial : Tutorial
+    class BasicTutorial : ScenarioTutorial
     {
         public BasicTutorial(XElement element)
             : base(element)

@@ -128,6 +128,7 @@ namespace Barotrauma
                 OnMoved = (scrollBar, value) =>
                 {
                     zoom = MathHelper.Lerp(minZoom, maxZoom, value);
+                    viewAreaOffset = Point.Zero;
                     return true;
                 }
             };
@@ -347,6 +348,13 @@ namespace Barotrauma
                 zoomBar.BarScroll = GetBarScrollValue();
             }
             widgets.Values.ForEach(w => w.Update((float)deltaTime));
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
+            if (PlayerInput.MidButtonHeld())
+            {
+                // "Camera" Pan
+                Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f;
+                viewAreaOffset += moveSpeed.ToPoint();
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -566,19 +574,21 @@ namespace Barotrauma
             var viewArea = GetViewArea;
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;
-            maxZoom = Math.Min(width, height);
-            zoom = Math.Min(1, maxZoom);
+            maxZoom = 10; // TODO: user-definable?
+            zoom = Math.Min(1, Math.Min(width, height));
             zoomBar.BarScroll = GetBarScrollValue();
+            viewAreaOffset = Point.Zero;
         }
         #endregion
 
         #region Helpers
+        private Point viewAreaOffset;
         private Rectangle GetViewArea
         {
             get
             {
                 int margin = 20;
-                var viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
+                var viewArea = new Rectangle(leftPanel.Rect.Right + margin + viewAreaOffset.X, topPanel.Rect.Bottom + margin + viewAreaOffset.Y, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
                 return viewArea;
             }
         }

@@ -27,7 +27,6 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
   </ItemGroup>
   <ItemGroup>
@@ -1699,6 +1698,60 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts\FinnishVanilla.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\Sheets2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\Sheets2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\Sheets3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\Sheets4.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\Sheets5.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\Sheets2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\Sheets3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\Sheets4.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\Sheets5.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\5_EnemyOnSonar\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\6_Degrading2\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\6_Degrading2\Sheets2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\7_Medical\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\8_Approach1\Sheets1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\Tutorials.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
