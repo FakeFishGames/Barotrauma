@@ -598,10 +598,14 @@ namespace Barotrauma
                 canAttack = distance < attackingLimb.attack.Range;
             }
 
-            Limb steeringLimb = attackingLimb ?? Character.AnimController.MainLimb;
+            Limb steeringLimb = Character.AnimController.MainLimb;
             if (steeringLimb != null)
             {
-                steeringManager.SteeringSeek(attackSimPosition - (steeringLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
+                Vector2 steeringVector = attackSimPosition - steeringLimb.SimPosition;
+                Vector2 targetingVector = Vector2.Normalize(steeringVector) * attackingLimb.attack.Range;
+                // Offset the position a bit so that we don't overshoot the movement.
+                Vector2 steerPos = attackSimPosition + targetingVector;
+                steeringManager.SteeringSeek(steerPos, speed);
                 if (Character.CurrentHull == null)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, speed);
@@ -619,7 +623,7 @@ namespace Barotrauma
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {
-                            steeringManager.SteeringManual(deltaTime, attackSimPosition - steeringLimb.SimPosition);
+                            steeringManager.SteeringManual(deltaTime, steeringVector);
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                         {
