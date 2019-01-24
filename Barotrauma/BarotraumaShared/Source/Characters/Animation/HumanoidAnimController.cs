@@ -21,7 +21,6 @@ namespace Barotrauma
         {
             get
             {
-                //TODO: this causes humanhusks to use the ragdoll params of the human whose info is being used, so the husk doesn't have the stringer
                 if (character.Info == null)
                 {
                     if (_ragdollParams == null)
