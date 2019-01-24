@@ -322,8 +322,7 @@ namespace Barotrauma
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
-
-
+            
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
@@ -453,6 +452,11 @@ namespace Barotrauma
             if (invalidPackagesFound) { Save(); }
         }
         
+        public KeyOrMouse KeyBind(InputType inputType)
+        {
+            return keyMapping[(int)inputType];
+        }
+
         public void Save()
         {
             UnsavedSettings = false;

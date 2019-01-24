@@ -20,8 +20,6 @@ namespace Barotrauma
         /// </summary>
         const float CharacterWaitOnSwitch = 20.0f;
 
-        const float ConversationIntervalMin = 100.0f;
-        const float ConversationIntervalMax = 180.0f;
 
         private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
         private List<Character> characters = new List<Character>();
@@ -30,8 +28,6 @@ namespace Barotrauma
 
         public int WinningTeam = 1;
 
-        private float conversationTimer, conversationLineTimer;
-        private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
         #region UI
 
@@ -215,14 +211,14 @@ namespace Barotrauma
             return characterListBox.Rect;
         }
 
-        public List<Character> GetCharacters()
+        public IEnumerable<Character> GetCharacters()
         {
-            return new List<Character>(characters);
+            return characters;
         }
 
-        public List<CharacterInfo> GetCharacterInfos()
+        public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
-            return new List<CharacterInfo>(characterInfos);
+            return characterInfos;
         }
 
         public void AddCharacter(Character character)
@@ -606,49 +602,7 @@ namespace Barotrauma
         #endregion
 
         #region Dialog
-
-        private void UpdateConversations(float deltaTime)
-        {
-            conversationTimer -= deltaTime;
-            if (conversationTimer <= 0.0f)
-            {
-                List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
-                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || c.SpeechImpediment >= 100.0f);
-                if (GameMain.Server != null)
-                {
-                    foreach (Client client in GameMain.Server.ConnectedClients)
-                    {
-                        if (client.Character != null) availableSpeakers.Remove(client.Character);
-                    }
-                    if (GameMain.Server.Character != null) availableSpeakers.Remove(GameMain.Server.Character);
-                }
-
-                pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
-                conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
-            }
-
-            if (pendingConversationLines.Count > 0)
-            {
-                conversationLineTimer -= deltaTime;
-                if (conversationLineTimer <= 0.0f)
-                {
-                    //speaker of the next line can't speak, interrupt the conversation
-                    if (pendingConversationLines[0].First.SpeechImpediment >= 100.0f)
-                    {
-                        pendingConversationLines.Clear();
-                        return;
-                    }
-
-                    pendingConversationLines[0].First.Speak(pendingConversationLines[0].Second, null);
-                    if (pendingConversationLines.Count > 1)
-                    {
-                        conversationLineTimer = MathHelper.Clamp(pendingConversationLines[0].Second.Length * 0.1f, 1.0f, 5.0f);
-                    }
-                    pendingConversationLines.RemoveAt(0);
-                }
-            }
-        }
-
+        
         /// <summary>
         /// Adds the message to the single player chatbox.
         /// </summary>
@@ -1139,7 +1093,7 @@ namespace Barotrauma
         /// <summary>
         /// Creates a listbox that includes all the characters in the crew, can be used externally (round info menus etc)
         /// </summary>
-        public void CreateCrewListFrame(List<Character> crew, GUIFrame crewFrame)
+        public void CreateCrewListFrame(IEnumerable<Character> crew, GUIFrame crewFrame)
         {
             List<byte> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
@@ -1169,7 +1123,7 @@ namespace Barotrauma
                     return true;
                 };
 
-                foreach (Character character in crew.FindAll(c => c.TeamID == teamIDs[i]))
+                foreach (Character character in crew.Where(c => c.TeamID == teamIDs[i]))
                 {
                     GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), crewList.Content.RectTransform), style: "ListBoxElement")
                     {
@@ -1323,24 +1277,13 @@ namespace Barotrauma
 
             for (int i = 0; i < waypoints.Length; i++)
             {
-                Character character;
-
-                if (characterInfos[i].HullID != null)
+                Character character;                
+                character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
+                if (character.Info != null && !character.Info.StartItemsGiven)
                 {
-                    var hull = Entity.FindEntityByID((ushort)characterInfos[i].HullID) as Hull;
-                    if (hull == null) continue;
-                    character = Character.Create(characterInfos[i], hull.WorldPosition, characterInfos[i].Name);
-                }
-                else
-                {
-                    character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
-
-                    if (character.Info != null && !character.Info.StartItemsGiven)
-                    {
-                        character.GiveJobItems(waypoints[i]);
-                        character.Info.StartItemsGiven = true;
-                    }
-                }
+                    character.GiveJobItems(waypoints[i]);
+                    character.Info.StartItemsGiven = true;
+                }                
 
                 if (character.Info?.InventoryData != null)
                 {

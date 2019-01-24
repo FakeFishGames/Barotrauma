@@ -160,7 +160,7 @@ namespace Barotrauma.Tutorials
                 return;
             }
 
-            crew = GameMain.GameSession.CrewManager.GetCharacters();
+            crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
             started = true;
         }
 

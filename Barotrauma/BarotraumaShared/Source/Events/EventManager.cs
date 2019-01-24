@@ -134,6 +134,11 @@ namespace Barotrauma
                     continue;
                 }
 
+                if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
+                {
+                    continue;
+                }
+
                 selectedEventSets.RemoveAt(i);
 
                 if (eventSet.ChooseRandom)
@@ -143,6 +148,7 @@ namespace Barotrauma
                         MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
                         var newEvent = eventSet.EventPrefabs[rand.NextInt32() % eventSet.EventPrefabs.Count].CreateInstance();
                         newEvent.Init(true);
+                        DebugConsole.Log("Initialized event " + newEvent.ToString());
                         events.Add(newEvent);
                     }
                     if (eventSet.ChildSets.Count > 0)
@@ -158,6 +164,7 @@ namespace Barotrauma
                     {
                         var newEvent = eventPrefab.CreateInstance();
                         newEvent.Init(true);
+                        DebugConsole.Log("Initialized event " + newEvent.ToString());
                         events.Add(newEvent);
                     }
 
@@ -173,8 +180,8 @@ namespace Barotrauma
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)
             CalculateCurrentIntensity(deltaTime);
-            
-            if (GameMain.Client != null) return;
+
+            if (GameMain.Client != null) { return; }
 
             roundDuration += deltaTime;
 
@@ -189,8 +196,7 @@ namespace Barotrauma
                 eventThreshold = settings.DefaultEventThreshold;
                 eventCoolDown = settings.EventCooldown;
             }
-
-            events.RemoveAll(t => t.IsFinished);
+            
             foreach (ScriptedEvent ev in events)
             {
                 if (!ev.IsFinished)
@@ -235,7 +241,8 @@ namespace Barotrauma
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;
                 
-                if (character.CurrentHull != null)
+                if (character.CurrentHull?.Submarine != null && 
+                    (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                 {
                     //crawler inside the sub adds 0.1f to enemy danger, mantis 0.25f
                     enemyDanger += enemyAI.CombatStrength / 1000.0f;

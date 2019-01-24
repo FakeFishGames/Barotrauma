@@ -161,7 +161,14 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-        
+
+        [Serialize(false, false)]
+        public bool Impassable
+        {
+            get;
+            set;
+        }
+
         public Door(Item item, XElement element)
             : base(item, element)
         {
@@ -294,7 +301,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                body.Enabled = openState < 1.0f;
+                body.Enabled = Impassable || openState < 1.0f;                
             }
 
             //don't use the predicted state here, because it might set
@@ -309,7 +316,10 @@ namespace Barotrauma.Items.Components
 
         private void EnableBody()
         {
-            body.FarseerBody.IsSensor = false;
+            if (!Impassable)
+            {
+                body.FarseerBody.IsSensor = false;
+            }
 #if CLIENT
             UpdateConvexHulls();
 #endif
@@ -320,7 +330,10 @@ namespace Barotrauma.Items.Components
         {
             //change the body to a sensor instead of disabling it completely, 
             //because otherwise repairtool raycasts won't hit it
-            body.FarseerBody.IsSensor = true;
+            if (!Impassable)
+            {
+                body.FarseerBody.IsSensor = true;
+            }
             linkedGap.Open = 1.0f;
             IsOpen = false;
 #if CLIENT

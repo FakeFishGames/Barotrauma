@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -45,8 +46,7 @@ namespace Barotrauma
         {
             get
             {
-                CampaignMode mode = (GameMode as CampaignMode);
-                return (mode == null) ? null : mode.Map;
+                return (GameMode as CampaignMode)?.Map;
             }
         }
 
@@ -217,7 +217,57 @@ namespace Barotrauma
             if (level != null)
             {
                 level.Generate(mirrorLevel);
-                submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition));
+                if (level.StartOutpost != null)
+                {
+                    //start by placing the sub below the outpost
+                    Rectangle outpostBorders = Level.Loaded.StartOutpost.GetDockedBorders();
+                    Rectangle subBorders = submarine.GetDockedBorders();
+
+                    Vector2 startOutpostSize = Vector2.Zero;
+                    if (Level.Loaded.StartOutpost != null)
+                    {
+                        startOutpostSize = Level.Loaded.StartOutpost.Borders.Size.ToVector2();
+                    }
+                    submarine.SetPosition(
+                        Level.Loaded.StartOutpost.WorldPosition -
+                        new Vector2(0.0f, outpostBorders.Height / 2 + subBorders.Height / 2));
+
+                    //find the port that's the nearest to the outpost and dock if one is found
+                    float closestDistance = 0.0f;
+                    DockingPort myPort = null, outPostPort = null;
+                    foreach (DockingPort port in DockingPort.List)
+                    {
+                        if (port.IsHorizontal) { continue; }
+                        if (port.Item.Submarine == level.StartOutpost)
+                        {
+                            outPostPort = port;
+                            continue;
+                        }
+                        if (port.Item.Submarine != submarine) { continue; }
+
+                        //the submarine port has to be at the top of the sub
+                        if (port.Item.WorldPosition.Y < submarine.WorldPosition.Y) { continue; }
+
+                        float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
+                        if (myPort == null || dist < closestDistance)
+                        {
+                            myPort = port;
+                            closestDistance = dist;
+                        }
+                    }
+
+                    if (myPort != null && outPostPort != null)
+                    {
+                        Vector2 portDiff = myPort.Item.WorldPosition - submarine.WorldPosition;
+                        submarine.SetPosition((outPostPort.Item.WorldPosition - portDiff) - Vector2.UnitY * outPostPort.DockedDistance);
+                        myPort.Dock(outPostPort);
+                        myPort.Lock(true);
+                    }
+                }
+                else
+                {
+                    submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition));
+                }
             }
 
             Entity.Spawner = new EntitySpawner();
@@ -241,7 +291,7 @@ namespace Barotrauma
             GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);
             GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
             GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
-                    GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+                    GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
             
             
 #if CLIENT
@@ -278,7 +328,7 @@ namespace Barotrauma
             if (Mission != null) Mission.End();
             GameAnalyticsManager.AddProgressionEvent(
                 (Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
-                GameMode.Name, 
+                GameMode.Preset.Identifier, 
                 (Mission == null ? "None" : Mission.GetType().ToString()));            
 
 #if CLIENT

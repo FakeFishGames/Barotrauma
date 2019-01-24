@@ -540,6 +540,10 @@ namespace Barotrauma.RuinGeneration
                                     {
                                         doorItem = item;
                                     }
+                                    else
+                                    {
+                                        ruinEntities.Add(new RuinEntity(doorConfig, e, room));
+                                    }
                                 }
                                 if (doorConfig.Expand) { ExpandEntities(entities); }
                                 //make sure the door gets positioned at the correct place regardless of its position in the item assembly
@@ -627,6 +631,30 @@ namespace Barotrauma.RuinGeneration
             {
                 CreateConnections(ruinEntity);
             }
+
+            foreach (RuinEntity ruinEntity in ruinEntities)
+            {
+                if (ruinEntity.Entity is Item item)
+                {
+                    foreach (ItemComponent ic in item.components)
+                    {
+                        // Prevent wiring & interacting
+                        if (ic is ConnectionPanel connectionPanel)
+                        {
+                            connectionPanel.Locked = true;
+                            connectionPanel.CanBeSelected = false;
+                        }
+
+                        // Hide wires for now
+                        if (ic is Wire wire)
+                        {
+                            wire.Hidden = true;
+                            wire.CanBeSelected = false;
+                        }
+                    }
+                }
+            }
+
             //create hulls ---------------------------
             foreach (Rectangle hullRect in hullRects)
             {
@@ -831,9 +859,41 @@ namespace Barotrauma.RuinGeneration
             MapEntity entity = null;
             if (entityConfig.Prefab is ItemPrefab)
             {
-                entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
-                CreateChildEntities(entityConfig, entity, room);
-                ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                Item container = null;
+                if (entityConfig.TargetContainer != "")
+                {
+                    List<RuinEntity> roomContents = ruinEntities.FindAll(re => re.Room == room);
+                    for (int j = 0; j < roomContents.Count; j++)
+                    {
+                        if (roomContents[j].Entity is Item && (roomContents[j].Entity as Item).HasTag(entityConfig.TargetContainer))
+                        {
+                            container = roomContents[j].Entity as Item;
+                            break;
+                        }
+                    }
+
+                    if (container == null) DebugConsole.ThrowError("No container with tag \"" + entityConfig.TargetContainer + "\" found, placing item in the room");
+                }
+                
+                if (container != null)
+                {
+                    entity = new Item((ItemPrefab)entityConfig.Prefab, container.Position, null);
+                    if (container.OwnInventory.TryPutItem(entity as Item, null, createNetworkEvent: false))
+                    {
+                        CreateChildEntities(entityConfig, entity, room);
+                        ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                    }
+                    else // Removing items that don't fit in the container
+                    {
+                        entity.Remove();
+                    }
+                }
+                else
+                {
+                    entity = new Item((ItemPrefab)entityConfig.Prefab, position, null);
+                    CreateChildEntities(entityConfig, entity, room);
+                    ruinEntities.Add(new RuinEntity(entityConfig, entity, room, parent));
+                }                              
             }
             else if (entityConfig.Prefab is ItemAssemblyPrefab itemAssemblyPrefab)
             {
@@ -855,6 +915,7 @@ namespace Barotrauma.RuinGeneration
                 {
                     ExpandEntities(entities);
                 }
+                CreateChildEntities(entityConfig, entity, room);
             }
             else
             {
@@ -874,14 +935,41 @@ namespace Barotrauma.RuinGeneration
             }            
         }
 
-        private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room)
+        private void CreateChildEntities(RuinEntityConfig parentEntityConfig, MapEntity parentEntity, RuinShape room, Rand.RandSync randSync = Rand.RandSync.Server)
         {
-            foreach (RuinEntityConfig childEntity in parentEntityConfig.ChildEntities)
+            Dictionary<int, List<RuinEntityConfig>> propGroups = new Dictionary<int, List<RuinEntityConfig>>();
+            foreach (RuinEntityConfig entityConfig in parentEntityConfig.ChildEntities)
+            {
+                if (!propGroups.ContainsKey(entityConfig.SingleGroupIndex))
+                {
+                    propGroups[entityConfig.SingleGroupIndex] = new List<RuinEntityConfig>();
+                }
+                propGroups[entityConfig.SingleGroupIndex].Add(entityConfig);
+            }
+
+            List<RuinEntityConfig> props = new List<RuinEntityConfig>();
+            foreach (KeyValuePair<int, List<RuinEntityConfig>> propGroup in propGroups)
+            {
+                if (propGroup.Key == 0)
+                {
+                    props.AddRange(propGroup.Value);
+                }
+                else
+                {
+                    props.Add(propGroup.Value[Rand.Int(propGroup.Value.Count, randSync)]);
+                }
+            }
+
+            foreach (RuinEntityConfig childEntity in props)
             {
                 var childRoom = FindRoom(childEntity.PlacementRelativeToParent, room);
                 if (childRoom != null)
                 {
-                    CreateEntity(childEntity, childRoom, parentEntity);
+                    int amount = Rand.Range(childEntity.MinAmount, childEntity.MaxAmount + 1, Rand.RandSync.Server);
+                    for (int i = 0; i < amount; i++)
+                    {
+                        CreateEntity(childEntity, childRoom, parentEntity);
+                    }
                 }
             }
         }
@@ -981,6 +1069,7 @@ namespace Barotrauma.RuinGeneration
                     wire.Connect(conn1, true);
                     conn2.TryAddLink(wire);
                     wire.Connect(conn2, true);
+                    wire.Hidden = true; // Hidden for now
                 }
                 else
                 {

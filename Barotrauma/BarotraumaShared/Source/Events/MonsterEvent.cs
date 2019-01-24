@@ -24,28 +24,27 @@ namespace Barotrauma
         private Level.PositionType spawnPosType;
 
         private bool spawnPending;
+
+        private string characterFileName;
         
         public override Vector2 DebugDrawPos
         {
             get { return spawnPos; }
         }
-
-        public override string DebugDrawText
-        {
-            get { return "MonsterEvent (" + characterFile + ")"; }
-        }
-
+        
         public override string ToString()
         {
-            return "ScriptedEvent (" + characterFile + ")";
-        }
-
-        private bool isActive;
-        public override bool IsActive
-        {
-            get
+            if (maxAmount <= 1)
             {
-                return isActive;
+                return "MonsterEvent (" + characterFileName + ")";
+            }
+            else if (minAmount < maxAmount)
+            {
+                return "MonsterEvent (" + characterFileName + " x" + minAmount + "-" + maxAmount + ")";
+            }
+            else
+            {
+                return "MonsterEvent (" + characterFileName + " x" + maxAmount + ")";
             }
         }
 
@@ -67,12 +66,12 @@ namespace Barotrauma
             }
 
             spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
+            characterFileName = Path.GetFileName(Path.GetDirectoryName(characterFile)).ToLower();
 
             if (GameMain.NetworkMember != null)
             {
                 List<string> monsterNames = GameMain.NetworkMember.monsterEnabled.Keys.ToList();
-                string characterName = Path.GetFileName(Path.GetDirectoryName(characterFile)).ToLower();
-                string tryKey = monsterNames.Find(s => characterName == s.ToLower());
+                string tryKey = monsterNames.Find(s => characterFileName == s.ToLower());
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
                     if (!GameMain.NetworkMember.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
@@ -241,7 +240,6 @@ namespace Barotrauma
 
                     if (targetEntity != null && Vector2.DistanceSquared(monster.WorldPosition, targetEntity.WorldPosition) < 5000.0f * 5000.0f)
                     {
-                        isActive = true;
                         break;
                     }
                 }

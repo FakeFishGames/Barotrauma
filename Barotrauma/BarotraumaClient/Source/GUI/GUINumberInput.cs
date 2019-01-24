@@ -101,6 +101,8 @@ namespace Barotrauma
             }
         }
 
+        public float valueStep;
+
         private float pressedTimer;
         private float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
@@ -128,28 +130,14 @@ namespace Barotrauma
             };
             PlusButton.OnClicked += (button, data) =>
             {
-                if (inputType == NumberType.Int)
-                {
-                    IntValue++;
-                }
-                else if (inputType == NumberType.Float)
-                {
-                    FloatValue += Round();
-                }
+                IncreaseValue();
                 return true;
             };
             PlusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
-                    if (inputType == NumberType.Int)
-                    {
-                        IntValue++;
-                    }
-                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
-                    {
-                        FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
-                    }
+                    IncreaseValue();
                 }
                 return true;
             };
@@ -163,28 +151,14 @@ namespace Barotrauma
             };
             MinusButton.OnClicked += (button, data) =>
             {
-                if (inputType == NumberType.Int)
-                {
-                    IntValue--;
-                }
-                else if (inputType == NumberType.Float)
-                {
-                    FloatValue -= Round();
-                }
+                ReduceValue();
                 return true;
             };
             MinusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
-                    if (inputType == NumberType.Int)
-                    {
-                        IntValue--;
-                    }
-                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
-                    {
-                        FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
-                    }
+                    ReduceValue();
                 }
                 return true;
             };
@@ -224,18 +198,42 @@ namespace Barotrauma
             }
         }
 
+        private void ReduceValue()
+        {
+            if (inputType == NumberType.Int)
+            {
+                IntValue -= valueStep > 0 ? (int)valueStep : 1;
+            }
+            else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+            {
+                FloatValue -= valueStep > 0 ? valueStep : Round();
+            }
+        }
+
+        private void IncreaseValue()
+        {
+            if (inputType == NumberType.Int)
+            {
+                IntValue += valueStep > 0 ? (int)valueStep : 1;
+            }
+            else if (inputType == NumberType.Float)
+            {
+                FloatValue += valueStep > 0 ? valueStep : Round();
+            }
+        }
+
         /// <summary>
-        /// Calculates one tent between the range as the increment/decrement.
+        /// Calculates one percent between the range as the increment/decrement.
         /// This value is rounded so that the bigger it is, the less decimals are used (min 0, max 3).
         /// Return value is clamped between 0.1f and 1000.
         /// </summary>
         private float Round()
         {
             if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return 0;
-            float tenPercent = MathHelper.Lerp(minValueFloat.Value, maxValueFloat.Value, 0.1f);
+            float onePercent = MathHelper.Lerp(minValueFloat.Value, maxValueFloat.Value, 0.01f);
             float diff = maxValueFloat.Value - minValueFloat.Value;
             int decimals = (int)MathHelper.Lerp(3, 0, MathUtils.InverseLerp(10, 1000, diff));
-            return MathHelper.Clamp((float)Math.Round(tenPercent / 100, decimals) * 100, 0.1f, 1000);
+            return MathHelper.Clamp((float)Math.Round(onePercent, decimals), 0.1f, 1000);
         }
 
         private bool TextChanged(GUITextBox textBox, string text)

@@ -24,7 +24,7 @@ namespace Facepunch.Steamworks
         /// <summary>
         /// Initialize a Steam Server instance
         /// </summary>
-        public Server( uint appId, ServerInit init) : base( appId )
+        public Server( uint appId, ServerInit init, bool isPublic) : base( appId )
         {
             if ( Instance != null )
             {
@@ -41,7 +41,14 @@ namespace Facepunch.Steamworks
             //
             // Get other interfaces
             //
-            if ( !native.InitServer( this, ipaddress, init.SteamPort, init.GamePort, init.QueryPort, init.Secure ? 3 : 2, init.VersionString ) )
+
+            //kind of a hack: 
+            //use an outdated version number to hide private servers from the server list.
+            //couldn't find a way to do it otherwise - using 1 as the eServerMode doesn't 
+            //seem to work, the server info is still returned by the API calls
+            string versionString = isPublic ? init.VersionString : "0.0.0.0";
+            if ( !native.InitServer( this, ipaddress, init.SteamPort, init.GamePort, init.QueryPort, init.Secure ? 3 : 2,
+                isPublic ? init.VersionString : "0.0.0.0" ) )
             {
                 native.Dispose();
                 native = null;

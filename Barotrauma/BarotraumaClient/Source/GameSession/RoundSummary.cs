@@ -120,10 +120,19 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction ?
-                        characterInfo.CauseOfDeath.Affliction.CauseOfDeathDescription :
-                        TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.Type.ToString());
-                    
+                    if (characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction && characterInfo.CauseOfDeath.Affliction == null)
+                    {
+                        string errorMsg = "Character \"" + character.Name + "\" had an invalid cause of death (the type of the cause of death was Affliction, but affliction was not specified).";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("RoundSummary:InvalidCauseOfDeath", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        statusText = TextManager.Get("CauseOfDeathDescription.Unknown");
+                    }
+                    else
+                    {
+                        statusText = characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                            characterInfo.CauseOfDeath.Affliction.CauseOfDeathDescription :
+                            TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.Type.ToString());
+                    }                    
                     statusColor = Color.DarkRed;
                 }
                 else

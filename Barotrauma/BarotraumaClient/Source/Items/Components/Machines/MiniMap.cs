@@ -203,6 +203,10 @@ namespace Barotrauma.Items.Components
 
                 Rectangle worldBorders = sub.GetDockedBorders();
                 worldBorders.Location += sub.WorldPosition.ToPoint();
+                
+                scale = Math.Min(
+                    submarineContainer.Rect.Width / (float)worldBorders.Width,
+                    submarineContainer.Rect.Height / (float)worldBorders.Height) * 0.9f;
 
                 float displayScale = ConvertUnits.ToDisplayUnits(scale);
                 Vector2 offset = ConvertUnits.ToSimUnits(sub.WorldPosition - new Vector2(worldBorders.Center.X, worldBorders.Y - worldBorders.Height / 2));

@@ -155,7 +155,7 @@ namespace Barotrauma
             }
         }
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, string errorMsgStr)
         {            
             float closestDist = 0.0f;
             PathNode startNode = null;
@@ -201,7 +201,7 @@ namespace Barotrauma
 
             if (startNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find a start node", Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find a start node. "+ errorMsgStr, Color.DarkRed);
 
                 return new SteeringPath();
             }
@@ -233,7 +233,7 @@ namespace Barotrauma
 
             if (endNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node", Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. "+ errorMsgStr, Color.DarkRed);
                 return new SteeringPath();
             }
 
@@ -260,10 +260,9 @@ namespace Barotrauma
                 }
             }
 
-
             if (startNode == null || endNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints", Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints.", Color.DarkRed);
                 return new SteeringPath();
             }
 

@@ -20,11 +20,11 @@ namespace Barotrauma
 
         private float timer;
 
-        public override string DebugDrawText
+        public override string ToString()
         {
-            get { return "MalfunctionEvent (" + string.Join(", ", targetItemIdentifiers) + ")"; }
+            return "MalfunctionEvent (" + string.Join(", ", targetItemIdentifiers) + ")";
         }
-
+        
         public MalfunctionEvent(ScriptedEventPrefab prefab)
             : base(prefab)
         {

@@ -383,8 +383,7 @@ namespace Barotrauma.Items.Components
 
                 hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, ((int)DockedDistance / 2), hullRects[0].Height);
                 hullRects[1] = new Rectangle(hullRects[1].Center.X - ((int)DockedDistance / 2), hullRects[1].Y, ((int)DockedDistance / 2), hullRects[1].Height);
-
-
+                
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int leftSubRightSide = int.MinValue, rightSubLeftSide = int.MaxValue;
                 foreach (Hull hull in Hull.hullList)
@@ -406,11 +405,10 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-
                 //expand left hull to the rightmost hull of the sub at the left side
                 //(unless the difference is more than 100 units - if the distance is very large 
                 //there's something wrong with the positioning of the docking ports or submarine hulls)
-                int leftHullDiff = hullRects[0].X - leftSubRightSide;
+                int leftHullDiff = (hullRects[0].X - leftSubRightSide) + 5;
                 if (leftHullDiff > 0)
                 {
                     if (leftHullDiff > 100)
@@ -424,7 +422,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                int rightHullDiff = rightSubLeftSide - hullRects[1].Right;
+                int rightHullDiff = (rightSubLeftSide - hullRects[1].Right) + 5;
                 if (rightHullDiff > 0)
                 {
                     if (rightHullDiff > 100)
@@ -490,7 +488,7 @@ namespace Barotrauma.Items.Components
                 //expand lower hull to the topmost hull of the lower sub 
                 //(unless the difference is more than 100 units - if the distance is very large 
                 //there's something wrong with the positioning of the docking ports or submarine hulls)
-                int lowerHullDiff = (hullRects[0].Y - hullRects[0].Height) - lowerSubTop;
+                int lowerHullDiff = ((hullRects[0].Y - hullRects[0].Height) - lowerSubTop) + 5;
                 if (lowerHullDiff > 0)
                 {
                     if (lowerHullDiff > 100)
@@ -503,7 +501,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                int upperHullDiff = upperSubBottom - hullRects[1].Y;
+                int upperHullDiff = (upperSubBottom - hullRects[1].Y) + 5;
                 if (upperHullDiff > 0)
                 {
                     if (upperHullDiff > 100)
@@ -606,6 +604,13 @@ namespace Barotrauma.Items.Components
                     {
                         if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
                     }
+                    //make sure the left hull is linked to the gap first (gap logic assumes that the first hull is the one to the left)
+                    if (doorGap.linkedTo[0].Rect.X > doorGap.linkedTo[1].Rect.X)
+                    {
+                        var temp = doorGap.linkedTo[0];
+                        doorGap.linkedTo[0] = doorGap.linkedTo[1];
+                        doorGap.linkedTo[1] = temp;
+                    }
                 }
                 else
                 {
@@ -616,6 +621,13 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
+                    }
+                    //make sure the upper hull is linked to the gap first (gap logic assumes that the first hull is above the second one)
+                    if (doorGap.linkedTo[0].Rect.Y < doorGap.linkedTo[1].Rect.Y)
+                    {
+                        var temp = doorGap.linkedTo[0];
+                        doorGap.linkedTo[0] = doorGap.linkedTo[1];
+                        doorGap.linkedTo[1] = temp;
                     }
                 }                
             }
@@ -718,7 +730,17 @@ namespace Barotrauma.Items.Components
                     item.SendSignal(0, "0", "state_out", null);
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
-                    if (Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
+                    Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+
+                    if (jointDiff.LengthSquared() > 0.02f * 0.02f)
+                    {
+                        Vector2 relativeVelocity = DockingTarget.item.Submarine.Velocity - item.Submarine.Velocity;
+                        Vector2 desiredRelativeVelocity = jointDiff.ClampLength(10.0f);
+
+                        item.Submarine.Velocity += relativeVelocity + desiredRelativeVelocity;
+                        DockingTarget.item.Submarine.Velocity += -relativeVelocity - desiredRelativeVelocity;
+                    }
+                    else
                     {
                         Lock(false);
                     }

@@ -316,8 +316,8 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Sandbox", true)]
-        public string GameMode
+        [Serialize("sandbox", true)]
+        public string GameModeIdentifier
         {
             get;
             set;
@@ -508,7 +508,7 @@ namespace Barotrauma.Networking
             {
 #if SERVER
                 GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
-                GameMain.NetLobbyScreen.SelectedModeName = GameMode;
+                GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
                 GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 #endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
@@ -569,7 +569,15 @@ namespace Barotrauma.Networking
                 }
 
                 string permissionsStr = clientElement.GetAttributeString("permissions", "");
-                if (!Enum.TryParse(permissionsStr, out ClientPermissions permissions))
+                ClientPermissions permissions = ClientPermissions.None;
+                if (permissionsStr.ToLowerInvariant() == "all")
+                {
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        permissions |= permission;
+                    }
+                }
+                else if (!Enum.TryParse(permissionsStr, out permissions))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
                     continue;

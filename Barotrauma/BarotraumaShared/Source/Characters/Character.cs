@@ -203,6 +203,10 @@ namespace Barotrauma
 
         public bool ResetInteract;
 
+        //text displayed when the character is highlighted if custom interact is set
+        public string customInteractHUDText;
+        private Action<Character, Character> onCustomInteract;
+        
         private float lockHandsTimer;
         public bool LockHands
         {
@@ -1086,13 +1090,10 @@ namespace Barotrauma
             else if (IsKeyDown(InputType.Attack))
             {
                 AttackContext currentContext = GetAttackContext();
-                var attackLimb = AnimController.Limbs
-                    .Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext))
-                    // TODO: remove this and use the distance
-                    .OrderByDescending(l => l.attack.Priority)
-                    //.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition))
-                    .FirstOrDefault();
-
+                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContext));
+                var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
+                // Select closest
+                var attackLimb = sortedLimbs.FirstOrDefault();
                 if (attackLimb != null)
                 {
                     Vector2 attackPos = attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
@@ -1105,7 +1106,7 @@ namespace Barotrauma
                         attackPos,
                         ignoredBodies,
                         Physics.CollisionCharacter | Physics.CollisionWall);
-                    
+
                     IDamageable attackTarget = null;
                     if (body != null)
                     {
@@ -1140,9 +1141,8 @@ namespace Barotrauma
 
                     attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
 
-                    if (attackLimb.AttackTimer > attackLimb.attack.Duration)
+                    if (!attackLimb.attack.IsRunning)
                     {
-                        attackLimb.ResetAttack();
                         attackCoolDown = 1.0f;
                     }
                 }
@@ -1333,7 +1333,7 @@ namespace Barotrauma
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
             if (c == this || Removed || !c.Enabled || !c.CanBeSelected) return false;
-            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged) return false;
+            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && c.onCustomInteract == null) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
@@ -1350,7 +1350,7 @@ namespace Barotrauma
         {
             distanceToItem = -1.0f;
 
-            if (!CanInteract) return false;
+            if (!CanInteract || item.HiddenInGame) return false;
 
             if (item.ParentInventory != null)
             {
@@ -1448,6 +1448,17 @@ namespace Barotrauma
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Set an action that's invoked when another character interacts with this one.
+        /// </summary>
+        /// <param name="onCustomInteract">Action invoked when another character interacts with this one. T1 = this character, T2 = the interacting character</param>
+        /// <param name="hudText">Displayed on the character when highlighted.</param>
+        public void SetCustomInteract(Action<Character, Character> onCustomInteract, string hudText)
+        {
+            this.onCustomInteract = onCustomInteract;
+            customInteractHUDText = hudText;
         }
 
         private List<Item> debugInteractablesInRange = new List<Item>();
@@ -1705,6 +1716,10 @@ namespace Barotrauma
                     if (Controlled == this) CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
 #endif
                 }
+            }
+            else if (focusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.onCustomInteract != null)
+            {
+                FocusedCharacter.onCustomInteract(focusedCharacter, this);
             }
             else if (focusedItem != null)
             {
@@ -2283,7 +2298,7 @@ namespace Barotrauma
 
         public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
         {
-            if (IsDead) return;
+            if (IsDead || CharacterHealth.Unkillable) { return; }
 
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.Client != null)

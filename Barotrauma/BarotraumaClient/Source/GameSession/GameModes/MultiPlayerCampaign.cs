@@ -59,7 +59,8 @@ namespace Barotrauma
 
             campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
             {
-                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, 
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
                 var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.GenerateMap(mapSeed);
                 campaign.SetDelegates();
@@ -116,6 +117,7 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -134,6 +136,7 @@ namespace Barotrauma
             string mapSeed = msg.ReadString();
             UInt16 currentLocIndex = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            byte selectedMissionIndex = msg.ReadByte();
 
             int money = msg.ReadInt32();
 
@@ -158,7 +161,8 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(null, savePath,
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
 
                 campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.CampaignID = campaignID;
@@ -188,6 +192,7 @@ namespace Barotrauma
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                campaign.Map.SelectMission(selectedMissionIndex);
 
                 campaign.Money = money;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);

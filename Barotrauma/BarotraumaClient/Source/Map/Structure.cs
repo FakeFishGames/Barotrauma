@@ -62,73 +62,28 @@ namespace Barotrauma
             get { return textureOffset; }
             set { textureOffset = value; }
         }
-
-        private void GenerateConvexHull()
+        
+        partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
         {
-            // If not null and not empty , remove the hulls from the system
-            if (convexHulls != null && convexHulls.Any())
-                convexHulls.ForEach(x => x.Remove());
+            if (!CastShadow) { return; }
 
-            // list all of hulls for this structure
-            convexHulls = new List<ConvexHull>();
-
-            var mergedSections = new List<WallSection>();
-            foreach (var section in Sections)
+            if (convexHulls == null)
             {
-                if (mergedSections.Count > 5)
-                {
-                    int width = IsHorizontal ? section.rect.Width : (int)BodyWidth;
-                    int height = IsHorizontal ? (int)BodyHeight : section.rect.Height;
-                    mergedSections.Add(new WallSection(new Rectangle(
-                        section.rect.Center.X - width / 2,
-                        section.rect.Y - section.rect.Height / 2 + height / 2,
-                        width, height)));
-
-                    GenerateMergedHull(mergedSections);
-                    continue;
-                }
-
-                // if there is a gap and we have sections to merge, do it.
-                if (section.gap != null)
-                {
-                    GenerateMergedHull(mergedSections);
-                }
-                else
-                {
-                    int width = IsHorizontal ? section.rect.Width : (int)BodyWidth;
-                    int height = IsHorizontal ? (int)BodyHeight : section.rect.Height;
-                    mergedSections.Add(new WallSection(new Rectangle(
-                        section.rect.Center.X - width / 2,
-                        section.rect.Y - section.rect.Height / 2 + height / 2,
-                        width, height)));
-                }
+                convexHulls = new List<ConvexHull>();
             }
 
-            // take care of any leftover pieces
-            if (mergedSections.Count > 0)
+            Vector2 halfSize = size / 2;
+            Vector2[] verts = new Vector2[]
             {
-                GenerateMergedHull(mergedSections);
-            }
-        }
+                position + new Vector2(-halfSize.X, halfSize.Y),
+                position + new Vector2(halfSize.X, halfSize.Y),
+                position + new Vector2(halfSize.X, -halfSize.Y),
+                position + new Vector2(-halfSize.X, -halfSize.Y),
+            };
 
-        private void GenerateMergedHull(List<WallSection> mergedSections)
-        {
-            if (!mergedSections.Any()) return;
-            Rectangle mergedRect = GenerateMergedRect(mergedSections);
-            mergedRect.Location += BodyOffset.ToPoint();
-
-            var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
-
-            if (prefab.BodyRotation != 0.0f)
-            {
-                float rotation = MathHelper.ToRadians(prefab.BodyRotation);
-                if (FlippedX != FlippedY) rotation = -rotation;
-                h.Rotate(Position, -rotation);
-            }
-
-            mergedSections.ForEach(x => x.hull = h);
+            var h = new ConvexHull(verts, Color.Black, this);
+            h.Rotate(position, rotation);
             convexHulls.Add(h);
-            mergedSections.Clear();
         }
 
         public override void UpdateEditing(Camera cam)
@@ -184,10 +139,11 @@ namespace Barotrauma
                 if (HasBody && !ShowWalls) return;
             }
 
-            Color color = (isHighlighted) ? Color.Orange : spriteColor;
+            Color color = isHighlighted ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
-                color = Color.Lerp(color, Color.Gold, 0.5f);
+                //color = Color.Lerp(color, Color.Gold, 0.5f);
+                color = spriteColor;
 
                 Vector2 rectSize = rect.Size.ToVector2();
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
@@ -195,7 +151,8 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, color);
+                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White, 
+                    thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
@@ -255,7 +212,8 @@ namespace Barotrauma
                                 new Vector2(rect.Width, rect.Height),
                                 color: Color.Black * 0.5f,
                                 textureScale: TextureScale * Scale,
-                                startOffset: backGroundOffset);
+                                startOffset: backGroundOffset,
+                                depth: (prefab.sprite.Depth + prefab.BackgroundSprite.Depth) / 2.0f);
                         }
 
                         prefab.BackgroundSprite.effects = oldEffects;
@@ -280,7 +238,8 @@ namespace Barotrauma
                                 Vector2.Zero,
                                 scale: Scale,
                                 rotate: 0,
-                                spriteEffect: SpriteEffects);
+                                spriteEffect: SpriteEffects,
+                                depth: (prefab.sprite.Depth + prefab.BackgroundSprite.Depth) / 2.0f);
                         }
                     }
                 }
