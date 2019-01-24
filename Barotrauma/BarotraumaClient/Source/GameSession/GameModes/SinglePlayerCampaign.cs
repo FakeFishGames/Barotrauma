@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,8 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
+        public ContextualTutorial ContextualTutorial;
+
         private GUIButton endRoundButton;
                 
         private bool crewDead;
@@ -38,6 +41,13 @@ namespace Barotrauma
                     CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
                 }
             }
+
+            ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
+
+            if(ContextualTutorial.Selected)
+            {
+                ContextualTutorial.Initialize();
+            }
         }
 
         public override void Start()
@@ -54,6 +64,11 @@ namespace Barotrauma
             endTimer = 5.0f;
             isRunning = true;
             CrewManager.InitSinglePlayerRound();
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Start();
+            }
         }
 
         public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
@@ -146,6 +161,11 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
@@ -153,6 +173,11 @@ namespace Barotrauma
             if (!isRunning) { return; }
 
             base.Update(deltaTime);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Update(deltaTime);
+            }
 
             if (!GUI.DisableHUD)
             {
@@ -281,6 +306,7 @@ namespace Barotrauma
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) => { if (ContextualTutorial.Initialized) ContextualTutorial.Stop(); return true; };
                 }
             }
 
@@ -364,6 +390,9 @@ namespace Barotrauma
                     case "map":
                         campaign.map = Map.LoadNew(subElement);
                         break;
+                    case "contextualtutorial":
+                        campaign.ContextualTutorial.LoadPartiallyComplete(subElement);
+                        break;
                 }
             }
 
@@ -399,6 +428,7 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
+            ContextualTutorial.SavePartiallyComplete(modeElement);
 
             element.Add(modeElement);
         }

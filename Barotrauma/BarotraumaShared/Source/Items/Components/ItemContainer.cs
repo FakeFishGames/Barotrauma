@@ -249,7 +249,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            if (Screen.Selected == GameMain.SubEditorScreen)
+            if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
             {
                 string itemNames = string.Empty;
 
