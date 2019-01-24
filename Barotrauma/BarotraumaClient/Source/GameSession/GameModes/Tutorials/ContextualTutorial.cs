@@ -349,7 +349,7 @@ namespace Barotrauma.Tutorials
                     if (!injuredFound) return false;
                     break;
                 case 10: // Approach1: Destination is within ~100m [Video]
-                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 7500f)
+                    if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 8000f)
                     {
                         return false;
                     }
