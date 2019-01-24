@@ -269,10 +269,11 @@ namespace Barotrauma
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
-
+#if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
             myForm.Deactivate += new EventHandler(HandleDefocus);
             myForm.Activated += new EventHandler(HandleFocus);
+#endif
         }
 
         private void HandleDefocus(object sender, EventArgs e)
