@@ -525,12 +525,12 @@ namespace Barotrauma
             {
                 switch (attackingLimb.attack.AfterAttack)
                 {
-                    case AIBehaviorIdle.Pursue:
-                    case AIBehaviorIdle.PursueIfCanAttack:
+                    case AIBehaviorAfterAttack.Pursue:
+                    case AIBehaviorAfterAttack.PursueIfCanAttack:
                         if (attackingLimb.attack.SecondaryCoolDown <= 0)
                         {
                             // No (valid) secondary cooldown defined.
-                            if (attackingLimb.attack.AfterAttack == AIBehaviorIdle.Pursue)
+                            if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                             {
                                 canAttack = false;
                             }
@@ -554,7 +554,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // No new limb was found.
-                                    if (attackingLimb.attack.AfterAttack == AIBehaviorIdle.Pursue)
+                                    if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                                     {
                                         canAttack = false;
                                     }
@@ -572,7 +572,7 @@ namespace Barotrauma
                             }
                         }
                         break;
-                    case AIBehaviorIdle.FallBack:
+                    case AIBehaviorAfterAttack.FallBack:
                     default:
                         UpdateFallBack(attackSimPosition, deltaTime);
                         return;
