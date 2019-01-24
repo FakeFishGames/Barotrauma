@@ -135,7 +135,7 @@ namespace Barotrauma
                     }
                 }
                 
-                character.AIController.SteeringManager.SteeringWander();
+                character.AIController.SteeringManager.SteeringWander(character.AnimController.GetCurrentSpeed(false));
                 //reset vertical steering to prevent dropping down from platforms etc
                 character.AIController.SteeringManager.ResetY();                
 
@@ -148,7 +148,7 @@ namespace Barotrauma
                 currentTarget = null;
                 return;
             }
-            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, 2.0f);
+            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(true));
         }
 
         private AITarget FindRandomTarget()
