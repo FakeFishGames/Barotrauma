@@ -71,13 +71,13 @@ namespace Barotrauma
         [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target before the AI tries to attack.")]
         public float Range { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target to do damage. In distance based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired.")]
         public float DamageRange { get; set; }
 
-        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ToolTip = "An approximation of the attack length. If set to too low value, it's possible that the attack won't hit the target in time.")]
+        [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ToolTip = "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time.")]
         public float Duration { get; private set; }
 
         [Serialize(5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How long the AI waits between the attacks.")]
@@ -122,34 +122,25 @@ namespace Barotrauma
             }
         }
 
-        //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
-        //the direction of the force is towards the target that's being attacked
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs). The direction of the force is towards the target that's being attacked.")]
         public float Force { get; private set; }
 
-        //torque applied to the attacking limb
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the attacking limb.")]
         public float Torque { get; private set; }
 
         [Serialize(false, true), Editable]
         public bool ApplyForcesOnlyOnce { get; private set; }
 
-        //impulse applied to the target the attack hits
-        //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer).")]
         public float TargetImpulse { get; private set; }
 
-        //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", true), Editable]
+        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards).")]
         public Vector2 TargetImpulseWorld { get; private set; }
 
-        //force applied to the target the attack hits 
-        //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f)]
+        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f, ToolTip = "Applied to the target the attack hits. The direction of the force is from this limb towards the target (use negative values to pull the target closer).")]
         public float TargetForce { get; private set; }
 
-        //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", true), Editable]
+        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards).")]
         public Vector2 TargetForceWorld { get; private set; }
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
