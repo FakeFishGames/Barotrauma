@@ -352,7 +352,18 @@ namespace Barotrauma
                 return;
             }
 
-            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;            
+            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
+
+            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
+            {
+                movementAngle += MathHelper.TwoPi;
+            }
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) < -MathHelper.Pi)
+            {
+                movementAngle -= MathHelper.TwoPi;
+            }            
+
             if (CurrentSwimParams.RotateTowardsMovement)
             {
                 Collider.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque);
