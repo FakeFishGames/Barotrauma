@@ -19,34 +19,25 @@ namespace Barotrauma
 
     public class KeyOrMouse
     {
-        Keys keyBinding;
-        int? mouseButton;
-
-        public Keys Key
-        {
-            get { return keyBinding; }
-        }
-        public int? MouseButton
-        {
-            get { return mouseButton; }
-        }
+        public Keys Key { get; private set; }
+        public int? MouseButton { get; private set; }
 
         public KeyOrMouse(Keys keyBinding)
         {
-            this.keyBinding = keyBinding;
+            this.Key = keyBinding;
         }
 
         public KeyOrMouse(int mouseButton)
         {
-            this.mouseButton = mouseButton;
+            this.MouseButton = mouseButton;
         }
 
         public bool IsDown()
         {
-            switch (mouseButton)
+            switch (MouseButton)
             {
                 case null:
-                    return PlayerInput.KeyDown(keyBinding);
+                    return PlayerInput.KeyDown(Key);
                 case 0:
                     return PlayerInput.LeftButtonHeld();
                 case 1:
@@ -60,10 +51,10 @@ namespace Barotrauma
 
         public bool IsHit()
         {
-            switch (mouseButton)
+            switch (MouseButton)
             {
                 case null:
-                    return PlayerInput.KeyHit(keyBinding);
+                    return PlayerInput.KeyHit(Key);
                 case 0:
                     return PlayerInput.LeftButtonClicked();
                 case 1:
@@ -77,10 +68,10 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            switch (mouseButton)
+            switch (MouseButton)
             {
                 case null:
-                    return keyBinding.ToString();
+                    return Key.ToString();
                 case 0:
                     return "Mouse1";
                 case 1:

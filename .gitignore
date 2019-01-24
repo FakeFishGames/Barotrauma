@@ -19,3 +19,6 @@ bld/
 *.vsp
 *.psess
 .vs/
+
+# Mac
+*.DS_Store

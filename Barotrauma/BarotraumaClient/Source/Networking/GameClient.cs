@@ -498,8 +498,9 @@ namespace Barotrauma.Networking
 
                 DebugConsole.Log("Sending Steam auth message");
                 DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
-                DebugConsole.Log("   Ticket data: " + steamAuthTicket.Data.Length);
-                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);
+                DebugConsole.Log("   Ticket data: " + 
+                    ToolBox.LimitString(string.Concat(steamAuthTicket.Data.Select(b => b.ToString("X2"))), 16));
+                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);                
             }
             else
             {
@@ -876,7 +877,7 @@ namespace Barotrauma.Networking
             string shuttleName      = inc.ReadString();
             string shuttleHash      = inc.ReadString();
 
-            string modeName         = inc.ReadString();
+            string modeIdentifier   = inc.ReadString();
             int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
@@ -909,13 +910,13 @@ namespace Barotrauma.Networking
             }
             inc.ReadPadBits();
 
-            GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
+            GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
             MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
             if (gameMode == null)
             {
-                DebugConsole.ThrowError("Game mode \"" + modeName + "\" not found!");
+                DebugConsole.ThrowError("Game mode \"" + modeIdentifier + "\" not found!");
                 yield return CoroutineStatus.Success;
             }
 
@@ -977,7 +978,7 @@ namespace Barotrauma.Networking
             float endPreviewLength = 10.0f;
             if (Screen.Selected == GameMain.GameScreen)
             {
-                new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+                new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
                 float secondsLeft = endPreviewLength;
                 do
                 {

@@ -117,11 +117,11 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible) return;
+            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
             if (editing && !ShowItems) return;
             
             Color color = isHighlighted ? Color.Orange : GetSpriteColor();
-            if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
+            //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
             Sprite activeSprite = prefab.sprite;
             BrokenItemSprite fadeInBrokenSprite = null;
@@ -175,7 +175,7 @@ namespace Barotrauma
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                             decorativeSprite.Sprite.DrawTiled(spriteBatch, 
                                 new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)), 
                                 new Vector2(rect.Width, rect.Height), color: color,
@@ -190,7 +190,7 @@ namespace Barotrauma
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                             float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, 
                                 SpriteRotation + rotation, Scale, activeSprite.effects,
                                 depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
@@ -228,7 +228,7 @@ namespace Barotrauma
                     {
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
 
                         var ca = (float)Math.Cos(-body.Rotation);
                         var sa = (float)Math.Sin(-body.Rotation);
@@ -274,7 +274,8 @@ namespace Barotrauma
 
             if (IsSelected || IsHighlighted)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), Color.Green, false, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), 
+                    Color.White, false, 0, thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
 
                 foreach (Rectangle t in Prefab.Triggers)
                 {
@@ -329,30 +330,46 @@ namespace Barotrauma
                             continue;
                         }
                     }
+
+                    //check if the sprite is active (whether it should be drawn or not)
                     var spriteState = spriteAnimState[decorativeSprite];
                     spriteState.IsActive = true;
-                    foreach (PropertyConditional conditional in decorativeSprite.Conditionals)
+                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
+                    {
+                        if (!ConditionalMatches(conditional))
+                        {
+                            spriteState.IsActive = false;
+                            break;
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+
+                    //check if the sprite should be animated
+                    bool animate = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
+                    {
+                        if (!ConditionalMatches(conditional)) { animate = false; break; }
+                    }
+                    if (!animate) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
+
+                    bool ConditionalMatches(PropertyConditional conditional)
                     {
                         if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
                         {
-                            if (conditional.Matches(this)) { continue; }                        
-                            spriteState.IsActive = false;
-                            break;                        
+                            if (!conditional.Matches(this)) { return false; }
                         }
                         else
                         {
                             foreach (ItemComponent component in components)
                             {
                                 if (component.Name != conditional.TargetItemComponentName) { continue; }
-                                if (conditional.Matches(component)) { continue; }
-                                spriteState.IsActive = false;
-                                break;
+                                if (!conditional.Matches(component)) { return false; }
                             }
                         }
+                        return true;
                     }
-                    if (!spriteState.IsActive) { continue; }
-                    spriteState.OffsetState += deltaTime;
-                    spriteState.RotationState += deltaTime;
                 }
             }
             

@@ -1,17 +1,42 @@
+Aegirsgrave
+Aitreles
+Amar
 Arran Chaos
 Ashvini II
 Baal's Vent
+Baluni
+Bathakon
+Begorot
 Boeotia Macula
+Brullu
 Calyx Cave
 Castalia Macula
+Chmi
 Chthonius Linea
 Conamara Chaos
 Cyclades Macula
+Dondar
+Drool
+Galpus
+Gegir
+Gerra
+Gleeu Kalach
+Gope
+Graoklost
 Hadal Crevasse
+Hecta
+Hullsbane
+Ihegga
+Kecnash
+Kyklis
 Malcam's Cauldron
 Mandel Wastes
+Mori
 Murias Chaos
 Narbeth Chaos
+Naur
+Nythra
+Orlonsgrave
 R'lyeh
 Rathmore Chaos
 Sabbati Macula
@@ -22,3 +47,5 @@ Thotep Chaos
 Thrace Macula
 Tnaboe
 Untarktika
+Vermo
+Vulbass

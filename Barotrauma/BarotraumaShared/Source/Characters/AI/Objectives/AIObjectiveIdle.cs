@@ -65,9 +65,12 @@ namespace Barotrauma
                 if (currentTarget != null)
                 {
                     Vector2 pos = character.SimPosition;
-                    if (character != null && character.Submarine == null) pos -= Submarine.MainSub.SimPosition;
-                    
-                    var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition);
+                    if (character != null && character.Submarine == null) { pos -= Submarine.MainSub.SimPosition; }
+
+                    string errorMsg = "(Character " + character.Name + " idling, target "
+                        + ((currentTarget.Entity is Hull hull && hull.RoomName != null) ? hull.RoomName : currentTarget.Entity.ToString()) + ")";
+
+                    var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition, errorMsg);
                     if (path.Cost > 1000.0f && character.AnimController.CurrentHull!=null) return;
 
                     pathSteering.SetPath(path);
@@ -171,6 +174,10 @@ namespace Barotrauma
                 List<Hull> targetHulls = new List<Hull>(Hull.hullList);
                 //ignore all hulls with fires or water in them
                 targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
+                if (character.Submarine != null)
+                {
+                    targetHulls.RemoveAll(h => h.Submarine != character.Submarine);
+                }
 
                 //remove ballast hulls
                 foreach (Item item in Item.ItemList)

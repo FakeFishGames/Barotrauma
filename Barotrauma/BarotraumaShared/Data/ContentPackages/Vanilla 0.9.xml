@@ -60,13 +60,12 @@
   <Character file="Content/Characters/Manta/manta.xml" />
   <Character file="Content/Characters/Mantis/mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
-  <Character file="Content/Characters/Seamantis/seamantis.xml" />
   <Character file="Content/Characters/Molochboss/molochboss.xml" />
   <Character file="Content/Characters/Tigerthresher/tigerthresher.xml" />
   <Character file="Content/Characters/Tigerthresherboss/tigerthresherboss.xml" />
-  <Character file="Content/Characters/Testhuman/Testhuman.xml" />
   <Character file="Content/Characters/Watcher/watcher.xml" />
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
+  <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Submarine file="Submarines/Turso.sub" />
   <Submarine file="Submarines/Polaris.sub" />
   <Submarine file="Submarines/The Nibbler.sub" />

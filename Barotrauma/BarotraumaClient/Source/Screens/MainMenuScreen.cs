@@ -24,7 +24,7 @@ namespace Barotrauma
         private GUITextBox serverNameBox, portBox, queryPortBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
 
-        private GUIButton steamWorkshopButton;
+        private GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
 
         private GameMain game;
 
@@ -71,7 +71,7 @@ namespace Barotrauma
                     var gamesession = new GameSession(
                         selectedSub,
                         "Data/Saves/test.xml",
-                        GameModePreset.list.Find(gm => gm.Name == "SPSandbox"),
+                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
                         missionPrefab: null);
                     //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
                     gamesession.StartRound(ToolBox.RandomSeed(8));
@@ -129,11 +129,11 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("JoinServerButton"), style: "GUIButtonLarge")
+            joinServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("JoinServerButton"), style: "GUIButtonLarge")
             {
                 OnClicked = JoinServerClicked
             };
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("HostServerButton"), style: "GUIButtonLarge")
+            hostServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("HostServerButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.HostServer,
                 OnClicked = SelectTab
@@ -161,7 +161,6 @@ namespace Barotrauma
             {
                 steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
                 {
-                    Enabled = false,
                     OnClicked = SteamWorkshopClicked
                 };
             }
@@ -441,11 +440,17 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
-
-            if (steamWorkshopButton != null)
+#if !DEBUG
+            if (Steam.SteamManager.USE_STEAM)
             {
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+#endif
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -508,7 +513,8 @@ namespace Barotrauma
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
 
             ContextualTutorial.Selected = campaignSetupUI.TutorialSelected;
-            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            GameMain.GameSession = new GameSession(selectedSub, saveName,
+                GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
 
 

@@ -64,15 +64,12 @@ namespace Barotrauma
             OnItemsChanged?.Invoke();
         }
 
-        public void SellItem(ItemPrefab item, int quantity = 1)
+        public void SellItem(PurchasedItem purchasedItem, int quantity = 1)
         {
-            campaign.Money += item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
-            PurchasedItem purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item);
-            if (purchasedItem != null && purchasedItem.Quantity - quantity > 0)
-            {
-                purchasedItem.Quantity -= quantity;
-            }
-            else
+            quantity = Math.Min(purchasedItem.Quantity, quantity);
+            campaign.Money += purchasedItem.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
+            purchasedItem.Quantity -= quantity;
+            if (purchasedItem != null && purchasedItem.Quantity <= 0)
             {
                 PurchasedItems.Remove(purchasedItem);
             }

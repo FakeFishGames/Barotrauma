@@ -127,6 +127,14 @@ namespace Barotrauma
             set { description = value; }
         }
 
+        private bool hiddenInGame;
+        [Editable, Serialize(false, true)]
+        public bool HiddenInGame
+        {
+            get { return hiddenInGame; }
+            set { hiddenInGame = value; }
+        }
+
         public float ImpactTolerance
         {
             get { return Prefab.ImpactTolerance; }
@@ -1411,7 +1419,7 @@ namespace Barotrauma
             {
                 if (!ic.HasRequiredContainedItems(user == Character.Controlled)) continue;
 
-                bool success = Rand.Range(0.0f, 1.0f) < ic.DegreeOfSuccess(Character.Controlled);
+                bool success = Rand.Range(0.0f, 1.0f) < ic.DegreeOfSuccess(user);
                 ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
 
 #if CLIENT

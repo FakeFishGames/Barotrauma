@@ -2,9 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
+    // TODO: This class should be refactored: 
+    // - Use XElement instead of XAttribute in the constructor
+    // - Simplify, remove unnecessary conversions
+    // - Improve the flow so that the logic is undestandable.
+    // - Maybe ass some test cases for the operators?
     class PropertyConditional
     {
         public enum ConditionType
@@ -13,7 +19,8 @@ namespace Barotrauma
             Name,
             SpeciesName,
             HasTag,
-            HasStatusTag
+            HasStatusTag,
+            Affliction
         }
 
         public enum OperatorType
@@ -27,24 +34,37 @@ namespace Barotrauma
         }
 
         public readonly ConditionType Type;
-        public readonly string PropertyName;
         public readonly OperatorType Operator;
-        public readonly string Value;
+        public readonly string AttributeName;
+        public readonly string AttributeValue;
+        /// <summary>
+        /// Currently only used for afflictions. TODO: use for other kind of conditionals also to reduce the parsing.
+        /// </summary>
+        public readonly float? FloatValue;
 
         public readonly string TargetItemComponentName;
 
+        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk" };
+
         private readonly int cancelStatusEffect;
 
+        // TODO: use XElement instead of XAttribute
         public PropertyConditional(XAttribute attribute)
         {
-            string attributeString = attribute.Value.ToString();
-            string atStr = attributeString;
-            string[] splitString = atStr.Split(' ');
+            AttributeName = attribute.Name.ToString();
+            string attributeValueString = attribute.Value.ToString();
+            if (string.IsNullOrWhiteSpace(attributeValueString))
+            {
+                DebugConsole.ThrowError($"Conditional attribute value is empty: {attribute.Parent.ToString()}");
+                return;
+            }
+            string valueString = attributeValueString;
+            string[] splitString = valueString.Split(' ');
             if (splitString.Length > 0)
             {
                 for (int i = 1; i < splitString.Length; i++)
                 {
-                    atStr = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
+                    valueString = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
                 }
             }
             //thanks xml for not letting me use < or > in attributes :(
@@ -86,7 +106,7 @@ namespace Barotrauma
                 default:
                     if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
                     {
-                        atStr = attributeString; //We probably don't even have an operator
+                        valueString = attributeValueString; //We probably don't even have an operator
                     }
                     break;
             }
@@ -107,24 +127,35 @@ namespace Barotrauma
                 }
             }
 
-            if (!Enum.TryParse(attribute.Name.ToString(), true, out Type))
+            if (!Enum.TryParse(AttributeName, true, out Type))
             {
-                PropertyName = attribute.Name.ToString();
-                Type = ConditionType.PropertyValue;
+                if (afflictionNames.Any(n => n == AttributeName))
+                {
+                    Type = ConditionType.Affliction;
+                }
+                else
+                {
+                    Type = ConditionType.PropertyValue;
+                }
             }
             
-            Value = atStr;            
+            AttributeValue = valueString;
+            if (float.TryParse(AttributeValue, out float value))
+            {
+                FloatValue = value;
+            }
         }
 
         public bool Matches(ISerializableEntity target)
         {
-            string valStr = Value.ToString();
+            string valStr = AttributeValue.ToString();
 
             switch (Type)
             {
                 case ConditionType.PropertyValue:
                     SerializableProperty property;
-                    if (target.SerializableProperties.TryGetValue(PropertyName.ToLowerInvariant(), out property))
+                    // TODO: memory optimization: no need to convert to lower invariant?
+                    if (target.SerializableProperties.TryGetValue(AttributeName.ToLowerInvariant(), out property))
                     {
                         return Matches(property);
                     }
@@ -179,28 +210,55 @@ namespace Barotrauma
                     Character targetCharacter = target as Character;
                     if (targetCharacter == null) return false;
                     return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == valStr);
+                case ConditionType.Affliction:
+                    if (target is Character targetChar)
+                    {
+                        var affliction = targetChar.CharacterHealth.GetAffliction(AttributeName);
+                        if (affliction == null) { return false; }
+                        if (FloatValue.HasValue)
+                        {
+                            float value = FloatValue.Value;
+                            switch (Operator)
+                            {
+                                case OperatorType.Equals:
+                                    return affliction.Strength == value;
+                                case OperatorType.GreaterThan:
+                                    return affliction.Strength > value;
+                                case OperatorType.GreaterThanEquals:
+                                    return affliction.Strength >= value;
+                                case OperatorType.LessThan:
+                                    return affliction.Strength < value;
+                                case OperatorType.LessThanEquals:
+                                    return affliction.Strength <= value;
+                                case OperatorType.NotEquals:
+                                    return affliction.Strength != value;
+                            }
+                        }
+                    }
+                    return true;
                 default:
                     return false;
             }
         }
         
+        // TODO: refactor and add tests
         private bool Matches(SerializableProperty property)
         {
             object propertyValue = property.GetValue();
 
             if (propertyValue == null)
             {
-                DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" - property.GetValue() returns null!");
+                DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" - property.GetValue() returns null!");
                 return false;
             }
-
+            // TODO: use the cached float value
             Type type = propertyValue.GetType();
             float? floatValue = null;
             float? floatProperty = null;
             if (type == typeof(float) || type == typeof(int))
             {
                 float parsedFloat;
-                if (Single.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedFloat))
+                if (Single.TryParse(AttributeValue, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedFloat))
                 {
                     floatValue = parsedFloat;
                 }
@@ -212,11 +270,11 @@ namespace Barotrauma
                 case OperatorType.Equals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) == (Value.ToLowerInvariant() == "true");
+                        return ((bool)propertyValue) == (AttributeValue.ToLowerInvariant() == "true");
                     }
                     else if (floatValue == null)
                     {
-                        return propertyValue.ToString().Equals(Value);
+                        return propertyValue.ToString().Equals(AttributeValue);
                     }
                     else
                     {
@@ -225,11 +283,11 @@ namespace Barotrauma
                 case OperatorType.NotEquals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) != (Value.ToLowerInvariant() == "true");
+                        return ((bool)propertyValue) != (AttributeValue.ToLowerInvariant() == "true");
                     }
                     else if (floatValue == null)
                     {
-                        return !propertyValue.ToString().Equals(Value);
+                        return !propertyValue.ToString().Equals(AttributeValue);
                     }
                     else
                     {
@@ -238,7 +296,7 @@ namespace Barotrauma
                 case OperatorType.GreaterThan:
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
                     else if (floatProperty > floatValue)
@@ -247,7 +305,7 @@ namespace Barotrauma
                 case OperatorType.LessThan:
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
                     else if (floatProperty < floatValue)
@@ -256,7 +314,7 @@ namespace Barotrauma
                 case OperatorType.GreaterThanEquals:
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
                     else if (floatProperty >= floatValue)
@@ -265,7 +323,7 @@ namespace Barotrauma
                 case OperatorType.LessThanEquals:
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
                     else if (floatProperty <= floatValue)

@@ -88,7 +88,7 @@ namespace Barotrauma
                     }
                 }
 
-                currentPath = pathFinder.FindPath(pos, target);
+                currentPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
 
                 findPathTimer = Rand.Range(1.0f, 1.2f);
 
@@ -188,6 +188,18 @@ namespace Barotrauma
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
+                        currentPath.SkipToNextNode();
+                    }
+                }
+                else
+                {
+                    //if the current node is below the character and the next one is above (or vice versa)
+                    //and both are on ladders, we can skip directly to the next one
+
+                    //e.g. no point in going down to reach the starting point of a path when we could go directly to the one above
+                    if (currentPath.CurrentNode.Ladders != null && currentPath.CurrentNode.Ladders == currentPath.NextNode?.Ladders &&
+                        Math.Sign(currentPath.CurrentNode.WorldPosition.Y - character.WorldPosition.Y) != Math.Sign(currentPath.NextNode.WorldPosition.Y - character.WorldPosition.Y))
+                    {
                         currentPath.SkipToNextNode();
                     }
                 }

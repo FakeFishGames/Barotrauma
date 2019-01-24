@@ -7,7 +7,7 @@
     
     <nameformats f0="[name]"/>
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,768,256,256" color="236,200,159,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="514,806,253,196" color="236,200,159,255"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
 
@@ -37,7 +37,7 @@
     commonnessperzone="1: 5.0"
     halo="0,1,0,0.3">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,512,256,256" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="520,527,244,228" color="198,252,222,255"/>
 
     <Hireable identifier="assistant" commonness="10"/>
     <Hireable identifier="engineer" commonness="3"/>
@@ -60,7 +60,7 @@
     commonnessperzone="2: 5.0, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,256,256,256" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="545,275,181,220" color="198,252,222,255"/>
     
     <Hireable identifier="assistant" commonness="10"/>
     <Hireable identifier="engineer" commonness="3"/>
@@ -111,7 +111,7 @@
     commonnessperzone="2: 1.25, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,256,256,256" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="803,265,190,241" color="198,252,222,255"/>
     
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
@@ -135,7 +135,7 @@
     commonnessperzone="2: 1.25, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/mine.png" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="284,773,220,244" color="198,252,222,255"/>
     
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
@@ -155,7 +155,7 @@
     commonnessperzone="1: 0.5, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.4">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,0,256,256" color="216,91,80,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
 
     <nameformats
       f0="[name] Breeding Grounds"
@@ -174,7 +174,7 @@
     commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.2">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,768,256,256" color="216,91,80,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="784,847,233,158" color="216,91,80,255"/>
     
     <nameformats
       f0="[name] Ruins"/>

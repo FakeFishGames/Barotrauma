@@ -200,18 +200,11 @@ namespace Barotrauma.Networking
 
             if (SteamManager.USE_STEAM)
             {
-                SteamManager.CreateServer(this);
+                SteamManager.CreateServer(this, isPublic);
             }
-            if (isPublic)
+            if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             { 
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    SteamManager.RegisterToMasterServer();
-                }
-                else
-                {
-                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
-                }
+                CoroutineManager.StartCoroutine(RegisterToMasterServer());                
             }
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
@@ -1666,7 +1659,7 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
-            msg.Write(selectedMode.Name);
+            msg.Write(selectedMode.Identifier);
             msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ? 
                 -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 
@@ -1782,7 +1775,7 @@ namespace Barotrauma.Networking
         {
             float endPreviewLength = 10.0f;
             
-            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+            var cinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
             do
             {

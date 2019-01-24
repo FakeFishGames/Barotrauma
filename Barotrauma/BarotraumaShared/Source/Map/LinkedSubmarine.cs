@@ -62,8 +62,10 @@ namespace Barotrauma
 
         public static LinkedSubmarine CreateDummy(Submarine mainSub, Submarine linkedSub)
         {
-            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
-            sl.sub = linkedSub;
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub)
+            {
+                sub = linkedSub
+            };
 
             return sl;
         }
@@ -143,8 +145,10 @@ namespace Barotrauma
             }
             else
             {
-                linkedSub = new LinkedSubmarine(submarine);
-                linkedSub.saveElement = element;
+                linkedSub = new LinkedSubmarine(submarine)
+                {
+                    saveElement = element
+                };
 
                 string levelSeed = element.GetAttributeString("location", "");
                 if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
@@ -228,10 +232,7 @@ namespace Barotrauma
                     Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
                 offset *= myPort.DockedDistance;
 
-                sub.SetPosition(
-                    (linkedPort.Item.WorldPosition - portDiff)
-                    - offset);
-
+                sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
                 myPort.Dock(linkedPort);   
                 myPort.Lock(true);

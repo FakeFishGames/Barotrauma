@@ -8,7 +8,7 @@
   <PersonalityTrait name="Broken English" alloweddialogtags="brokenenglish" commonness="0.5"/>
   <PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="0.5"/>
   <PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="0.5"/>
-  
+
   <Conversation line="Alright folks, let's take her out for a spin!" flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line=""/>
     <Conversation line="Aye aye." speaker="1">
@@ -48,32 +48,41 @@
       <Conversation line="Aye, sir!" speaker="2"/>
     </Conversation>
   </Conversation>
-  
-  <Conversation line="Let's see what the Ocean has in store for us this time!" flags="Initial" allowedjobs="captain" speaker="0"/>
-  
+
+  <Conversation line="Let's see what the Oceans have in store for us this time!" flags="Initial" allowedjobs="captain" speaker="0">
+    <Conversation line="My guess would be horrifying monsters, gruesome death and eternal darkness." speakertags="joker, fearful" speaker="1">
+      <Conversation line="Can it. We don't need your sarcasm." speakertags="professional" speaker="0"/>
+    </Conversation>    
+  </Conversation>
+
   <Conversation line="Everyone ready? You better be, ain't no turning back anymore." flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line=""/>
     <Conversation line="Aye, sir!." speaker="1">
       <Conversation line="Let's do this!" speaker="2"/>
       <Conversation line="Ready always!" speakertags="brokenenglish" speaker="2"/>
+      <Convesation line="Woo! We're all gonna die!" speakertags="crazy" speaker="2"/>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="I'm cold." maxintensity="0.4" speaker="0"/>
-  
+
   <Conversation line="I have a bad feeling about this..." maxintensity="0.4" speakertags="fearful" speaker="0">
     <Conversation line="I knew this old captain who used to say..." speakertags="professional,tough" speaker="1">
       <Conversation line="You can't calm the storm, so stop trying." speaker="1">
-        <Conversation line="What you can do is calm yourself, the storm will pass." speaker="1"/>
+        <Conversation line="What you can do is calm yourself, the storm will pass." speaker="1">
+          <Conversation line="...Man, you're full of shit." speakertags="rude, fearful" speaker="0"/>
+        </Conversation>
       </Conversation>
     </Conversation>
-    <Conversation line="I'm sure we all do." speaker="1"/>  
+    <Conversation line="I'm sure we all do." speaker="1"/>
+    <Conversation line="Are you having gas again?" speakertags="joker" speaker="1"/>
   </Conversation>
 
   <Conversation line="I can hear the hull creaking." maxintensity="0.4" speakertags="fearful" speaker="0">
-    <Conversation line="I hear too." speakertags="brokenenglish" speaker="1"/>
+    <Conversation line="I am hearing too as well." speakertags="brokenenglish" speaker="1"/>
+    <Conversation lin="Are you having gas again?" speakertags="joker" speaker="1"/>
   </Conversation>
-  
+
   <Conversation line="Can't wait to get back home and pop a bottle of Ol' Cadmus." maxintensity="0.2" speakertags="laid-back" speaker="0">
     <Conversation line="Focus on your job or you'll get to join that bottle in your casket." speakertags="professional,tough,rude" speaker="1">
       <Conversation line="Haha! Burial in a casket! When was the last time that happened?" speakertags="laid-back,joker" speaker="2"/>
@@ -81,15 +90,15 @@
     <Conversation line="This ain't no time to think about home, we've got a long way ahead of us." speakertags="professional,tough" speaker="1"/>
     <Conversation line="Cadmus fish piss. I like it stronger." speakertags="brokenenglish" speaker="1"/>
   </Conversation>
-  
+
   <Conversation line="Back in the Earth Navy they had this saying..." maxintensity="0.3" allowedjobs="captain" speakertags="professional,tough" speaker="0">
-    <Conversation line="There are two ways to do things; the right way, and again." speaker="0">
-      <Conversation line="That don't apply here. No second chances on Europa." speaker="0">
-        <Conversation line="So everyone, focus on the task at hand." speaker="0"/>
+    <Conversation line="There are only two ways to go about doing things; doing it right, or doing it again." speaker="0">
+      <Conversation line="But not here. There are no second chances on Europa." speaker="0">
+        <Conversation line="So, everyone, focus on the task at hand." speaker="0"/>
       </Conversation>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="I'm Popeye the sailor man!" maxintensity="0.2" allowedjobs="medicaldoctor" speakertags="laid-back,joker" speaker="0">
     <Conversation line="I'm strong to the finich, cause I eats me spinach!" speaker="0">
       <Conversation line="Doc, have you been at the ethanol stash again?" speaker="1">
@@ -99,17 +108,17 @@
     </Conversation>
     <Conversation line="No singing on my boat." allowedjobs="captain" speakertags="professional,tough" speaker="1"/>
   </Conversation>
-  
+
   <Conversation line="I miss the sun." maxintensity="0.2" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="I've heard sunlight gives you cancer. We're better off without it." speaker="1">
       <Conversation line="Jupiter gives you cancer too. I'd take the sun over Jupiter any day." speaker="0">
-        <Conversation line="Cut it out." speakertags="professional,tough" speaker="2"/>        
+        <Conversation line="Cut it out." speakertags="professional,tough" speaker="2"/>
       </Conversation>
     </Conversation>
     <Conversation line="Cut it out." speakertags="professional,tough" speaker="1"/>
   </Conversation>
-  
+
   <Conversation line="Husks creep me out." maxintensity="0.2" speakertags="fearful" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="Me too. Promise to put a spear through my head if I ever get infected." speaker="1">
@@ -117,7 +126,7 @@
       <Conversation line="I would've gone with calyxanide, but a spear will do too." allowedjobs="medicaldoctor" speakertags="rude" speaker="2"/>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="Has any of you heard of labor unions?" maxintensity="0.2" speaker="0">
     <Conversation line="A trade, improving the increased by the integrity of the integrity of a monopoly of the integrity of a monopoly of a monopoly of the integrity." flags="Psychosis" speaker="0">
       <Conversation line="Bargaining safety standards, and retirement, and retirement, and retirement, and workers. A trade, improving the workers." flags="Psychosis" speaker="0"/>
@@ -164,7 +173,7 @@
       </Conversation>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="Are we there yet?" maxintensity="0.2" speakertags="joker" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="Shut up." speakertags="rude" speaker="1"/>
@@ -209,7 +218,7 @@
       </Conversation>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="Cigarettes are so expensive nowadays." maxintensity="0.2" speakertags="laid-back" speaker="0">
     <Conversation line="Tell me about it." speaker="1"/>
     <Conversation line="Well yeah, hydroponic farms are expensive." speaker="1">
@@ -228,6 +237,7 @@
       <Conversation line="Some deep groaning sound from the outside." speaker="0">
         <Conversation line="The Crabmen. I've told you." speakertags="crazy" speaker="1"/>
         <Conversation line="Probably just the hull. Relax." speaker="1"/>
+        <Conversation line="Are you having gas again?" speakertags="joker" speaker="1"/>
       </Conversation>
     </Conversation>
   </Conversation>
@@ -269,18 +279,18 @@
   </Conversation>
 
   <Conversation line="This sucks!" speakertags="tough" speaker="0">
-    <Conversation line="I love it!"/>
+    <Conversation line="I wanna go home!"/>
   </Conversation>
   <Conversation line="I want some action!" maxintensity="0.2" speakertags="tough"/>
   <Conversation line="Smooth seas don't make skillful sailors." speakertags="tough">
-    <Conversation line="Rough sea make dead sailors!" speakertags="brokenenglish" speaker="1"/>    
+    <Conversation line="Rough sea make dead sailors!" speakertags="brokenenglish" speaker="1"/>
   </Conversation>
-  
-  <Conversation line="We should get a coffeemaker on board." maxintensity="0.2" speakertags="laid-back">
+
+  <Conversation line="We should get a coffee maker on board." maxintensity="0.2" speakertags="laid-back">
     <Conversation line="You think I don't know what you're implying?" flags="PsychosisSelf" speaker="1">
-      <Conversation line="Coffee... Yeah right..." flags="PsychosisSelf" speaker="1">
+      <Conversation line="Coffee? Yeah, right..." flags="PsychosisSelf" speaker="1">
         <Conversation line="This will all end soon." flags="PsychosisSelf" speaker="1"/>
-      </Conversation>        
+      </Conversation>
     </Conversation>
     <Conversation line="Agreed." speaker="1"/>
     <Conversation line="I don't drink coffee." speaker="1"/>
@@ -288,7 +298,7 @@
   </Conversation>
 
   <Conversation line="I saw a crawler the other day. Horrible creatures." maxintensity="0.2" speakertags="joker,crazy"/>
-  
+
   <Conversation line="Give a man a fish and you feed him for a day;" maxintensity="0.4" speakertags="joker" speaker="0">
     <Conversation line="Give a fish a man and you feed it for a day." flags="Psychosis" speaker="0">
       <Conversation line="Give a fish and you feed him for a man." flags="Psychosis" speaker="0">
@@ -303,7 +313,7 @@
     </Conversation>
     <Conversation line="Teach a man to fish and he most likely dies in a horrible accident." speakertags="joker" speaker="0">
       <Conversation line="I don't think that's how it goes." speaker="1">
-        <Conversation line="Here that's exactly how it goes." speaker="0"/>        
+        <Conversation line="Here that's exactly how it goes." speaker="0"/>
       </Conversation>
       <Conversation line="Enough with the joking." speakertags="professional,rude" speaker="0"/>
     </Conversation>
@@ -351,7 +361,7 @@
       <Conversation line="Yes hear you good!" speakertags="brokenenglish" speaker="1"/>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="Radio check." maxintensity="0.3" speakertags="professional" speaker="0">
     <Conversation line="Radio check." flags="PsychosisSelf" speaker="1">
       <Conversation line="Check radio." flags="PsychosisSelf" speaker="1">
@@ -361,7 +371,7 @@
           </Conversation>
         </Conversation>
       </Conversation>
-    </Conversation>      
+    </Conversation>
     <Conversation line="Loud and clear." speakertags="professional" speaker="1"/>
     <Conversation line="Good and readable." speakertags="professional" speaker="1"/>
     <Conversation line="All good!" speaker="1"/>
@@ -381,7 +391,7 @@
       <Conversation line="I don't understood." speakertags="brokenenglish" speaker="1"/>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="Can God see through leagues of ice?" maxintensity="0.2" speakertags="crazy">
     <Conversation line="Or is it Jupiter?" speakertags="crazy">
       <Conversation line="" />
@@ -392,7 +402,7 @@
         <Conversation line="" />
         <Conversation line="Please." speaker="1"/>
         <Conversation line="Perhaps, perhaps." speaker="1">
-          <Conversation line="But we've got more important things to worry about right now." speaker="1"/>          
+          <Conversation line="But we've got more important things to worry about right now." speaker="1"/>
         </Conversation>
       </Conversation>
     </Conversation>
@@ -404,9 +414,9 @@
       <Conversation line="No dancing or dying on my boat, please." allowedjobs="captain" speaker="1"/>
       <Conversation line="I don't find any of this amusing at all." speakertags="professional" speaker="1"/>
       <Conversation line="*sigh*" speaker="1"/>
-    </Conversation>  
+    </Conversation>
   </Conversation>
-    
+
   <Conversation line="This is going to be a rough ride." minintensity="0.3" maxintensity="0.5"/>
   <Conversation line="This is getting tense." minintensity="0.3" maxintensity="0.6"/>
   <Conversation line="We can do this." minintensity="0.3"/>
@@ -448,13 +458,13 @@
     <Conversation line="That's what she said." speakertags="joker" speaker="1"/>
     <Conversation line="It'll be fine. She's been deeper." speakertags="tough" speaker="1"/>
   </Conversation>
-  
+
   <Conversation line="Can you hear the hull groaning? Are you sure this is safe?" speakertags="fearful" flags="SubmarineDeep" speaker="0">
     <Conversation line="Shouldn't have joined the Fleet if safety is what you're after." speakertags="tough,rude" speaker="1"/>
     <Conversation line="We'll make it. She's been deeper." speakertags="tough" speaker="1"/>
     <Conversation line="It should be fine. Keep the welders ready though." speaker="1"/>
   </Conversation>
-  
+
   <!-- Afflictions -->
   <Conversation line="I'm feeling faint." flags="Bloodloss"/>
   <Conversation line="I'm not feeling too good." flags="Bloodloss"/>
@@ -477,9 +487,9 @@
 
   <Conversation line="I think I sshould lay down for a bit..." flags="DrunkHigh">
     <Conversation line="Oh for fuck's sake. Stay out of the way until you sober up." speakertags="professional,tough,rude" speaker="1"/>
-    <Conversation line=""/>    
+    <Conversation line=""/>
   </Conversation>
-  
+
   <Conversation line="Whatsshall we do with the drunkenn sailor, what shall we do wit' the drunken sailor..." flags="DrunkHigh">
     <Conversation line="Earley in the mornin'!" flags="DrunkHigh">
       <Conversation line="You're in no condition to do your duties, sailor. When you sober up, we're going to have a serious talk." allowedjobs="captain" speakertags="professional,tough,rude" speaker="1">
@@ -498,7 +508,7 @@
 
   <Conversation line="I don't feel too good." flags="OpiateWithdrawalLow"/>
   <Conversation line="I feel nauseous..." flags="OpiateWithdrawalLow"/>
-  
+
   <Conversation line="My leg is killing me, could I get some morphine?" flags="OpiateWithdrawalMedium">
     <Conversation line="There's nothing wrong with your leg. I think you should cut back on the morphine for a while." allowedjobs="medicaldoctor" speaker="1"/>
     <Conversation line="There's nothing wrong with your leg, you junkie." speakertags="rude" speaker="1"/>
@@ -530,14 +540,14 @@
       <Conversation line="By we ent make wills wrong end there's the rub." flags="Psychosis" speaker="0"/>
     </Conversation>
   </Conversation>
-    
+
   <Conversation line="The realittle; but some day the piecing together of our from the will eithe reality." flags="Psychosis" speaker="0">
     <Conversation line="And safety of revelated knowledge by far." flags="Psychosis" speaker="0">
       <Conversation line="We live on the day the shall it was own direction or flee from the inability." flags="Psychosis" speaker="0"/>
       <Conversation line="And is the most of a blank seas own dissociated knowledge will open up such terrifying to therto spawned us." flags="Psychosis" speaker="0"/>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="BUMP! And then we looked." flags="Psychosis" speaker="0">
     <Conversation line="And our fish came down too. Along with the boat." flags="Psychosis" speaker="0">
       <Conversation line="Not a little bit! And our fish as he said out our time and so the fish came." flags="Psychosis" speaker="0">
@@ -548,7 +558,7 @@
       </Conversation>
     </Conversation>
   </Conversation>
-  
+
   <Conversation line="Where's the fuck is the morphine?" flags="OpiateWithdrawalHigh">
     <Conversation line="You don't need any more of that. We need to get you some naloxone." allowedjobs="medicaldoctor" speaker="1"/>
     <Conversation line="Somewhere you can't reach, I hope." speakertags="rude" speaker="1"/>
@@ -559,7 +569,41 @@
   </Conversation>
 
   <Conversation line="I've been shot, get me some bandages!" flags="GunshotWound"/>
-  <Conversation line="Help, I've been shot!" flags="GunshotWound"/>  
-  
+  <Conversation line="Help, I've been shot!" flags="GunshotWound"/>
+
   <!-- /Afflictions -->
+
+  <!-- Watchmen -->
+
+  <Conversation line="Hello, sailors!" flags="EnterEndOutpost" allowedjobs="watchman" speaker="0">
+    <Conversation line="The rest of the outpost is under construction, but please do check back in a few months!" speaker="0">
+      <Conversation line="I can however show you a list of supplies we have for sale and people who are looking for work." speaker="0">
+        <Conversation line="And when you're ready, I can give you navigation instructions to the nearby locations." speaker="0"/>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="Nice to see a friendly face! We don't get too many visitors around these parts." flags="EnterEndOutpost" allowedjobs="watchman" speaker="0">
+    <Conversation line="The rest of the outpost is under construction, but please do check back in a few months!" speaker="0">
+      <Conversation line="But if you need any supplies or extra crew, let me know." speaker="0">
+        <Conversation line="And when you're ready, I can give you navigation instructions to the nearby locations." speaker="0"/>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="Heading back already?" flags="EnterStartOutpost" allowedjobs="watchman" speaker="0">
+    <Conversation line="If you need more supplies or crew, or just want to head back to another location, please let me know." speaker="0"/>
+  </Conversation>
+
+  <Conversation line="Alright, what can I do for you?" flags="WatchmanInteract" allowedjobs="watchman" speaker="0"/>
+  <Conversation line="What do you need?" flags="WatchmanInteract" allowedjobs="watchman" speaker="0"/>
+  <Conversation line="Okay, let's get this over with, I've got work to do." flags="WatchmanInteract" allowedjobs="watchman" speaker="0"/>
+
+  <Conversation line="Sorry, I need to talk to someone higher up. Anyone in your crew with campaign management privileges?" flags="WatchmanInteractNotAllowed" allowedjobs="watchman" speaker="0"/>
+
+  <Conversation line="I cannot let you enter until your vessel is properly docked. Or at least close enough to the outpost." flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman" speaker="0"/>
+  <Conversation line="You want to leave your sub behind? Please get it closer to the outpost." flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman" speaker="0"/>
+
+  <!-- /Watchmen -->
+
 </Conversations>

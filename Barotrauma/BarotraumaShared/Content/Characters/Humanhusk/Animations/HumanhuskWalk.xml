@@ -1,9 +1,8 @@
 ﻿<HumanWalk
-  AnimationType="Walk"
   getupforce="0.35"
   cyclespeed="3.748913"
-  footmovestrength="15"
-  footrotatestrength="15"
+  footmovestrength="12"
+  footrotatestrength="20"
   stepsize="0.3289057,0.06857298"
   legcorrectiontorque="13.74999"
   thighcorrectiontorque="5"
@@ -12,9 +11,9 @@
   handmovestrength="0.7"
   handclampy="-1"
   headposition="1.480801"
-  torsoposition="1.076026"
+  torsoposition="1.067493"
   headleanamount="0.2155389"
-  torsoleanamount="0.3359231"
+  torsoleanamount="0.3389727"
   footmoveoffset="0,0"
   movementspeed="1.509427"
   headangle="-75.65061"
@@ -23,4 +22,6 @@
   crouchingtorsoangle="-10"
   backwardsmovementmultiplier="0.5"
   animationtype="Walk"
-  legbendtorque="10" />
+  legbendtorque="50"
+  footangle="-90"
+  crouchingfootmoveoffset="0,0" />

@@ -16,13 +16,14 @@ namespace Barotrauma
 
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
-
-        //public readonly XElement ConfigElement;
-
+        
         public readonly bool ChooseRandom;
 
         public readonly float MinDistanceTraveled;
         public readonly float MinMissionTime;
+
+        //the events in this set are delayed if the current EventManager intensity is not between these values
+        public readonly float MinIntensity, MaxIntensity;
 
         public readonly Dictionary<string, float> Commonness;
 
@@ -30,8 +31,15 @@ namespace Barotrauma
 
         public readonly List<ScriptedEventSet> ChildSets;
 
-        private ScriptedEventSet(XElement element)
+        public string DebugIdentifier
         {
+            get;
+            private set;
+        } = "";
+
+        private ScriptedEventSet(XElement element, string debugIdentifier)
+        {
+            DebugIdentifier = debugIdentifier;
             Commonness = new Dictionary<string, float>();
             EventPrefabs = new List<ScriptedEventPrefab>();
             ChildSets = new List<ScriptedEventSet>();
@@ -39,7 +47,10 @@ namespace Barotrauma
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
 
-            ChooseRandom = element.GetAttributeBool("chooserandom", true);
+            MinIntensity = element.GetAttributeFloat("minintensity", 0.0f);
+            MaxIntensity = Math.Max(element.GetAttributeFloat("maxintensity", 100.0f), MinIntensity);
+
+            ChooseRandom = element.GetAttributeBool("chooserandom", false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
@@ -63,7 +74,7 @@ namespace Barotrauma
                         }
                         break;
                     case "eventset":
-                        ChildSets.Add(new ScriptedEventSet(subElement));
+                        ChildSets.Add(new ScriptedEventSet(subElement, this.DebugIdentifier + "-" + ChildSets.Count));
                         break;
                     default:
                         EventPrefabs.Add(new ScriptedEventPrefab(subElement));
@@ -94,10 +105,12 @@ namespace Barotrauma
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null) continue;
 
+                int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
                     if (element.Name.ToString().ToLowerInvariant() != "eventset") continue;
-                    List.Add(new ScriptedEventSet(element));
+                    List.Add(new ScriptedEventSet(element, i.ToString()));
+                    i++;
                 }
             }
         }

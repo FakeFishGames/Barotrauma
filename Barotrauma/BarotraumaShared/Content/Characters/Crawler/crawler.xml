@@ -29,8 +29,7 @@
     sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    aggressiveboarding="true"
-    attackcooldown="3.0">
+    aggressiveboarding="true">
     
     <latchonto 
       attachtowalls="true"
@@ -40,7 +39,7 @@
       damageondetach="1000"
       detachstun="5.0"
       attachlimb="Head"
-      localattachpos="50,-10"
+      localattachpos="40,10"
       attachlimbrotation="100"/>
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
@@ -59,8 +58,7 @@
     sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    aggressiveboarding="true"
-    attackcooldown="3.0">
+    aggressiveboarding="true">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>

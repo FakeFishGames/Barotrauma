@@ -50,11 +50,14 @@ namespace Barotrauma.Networking
             {
                 AbsoluteOffset = new Point(0, 5),
                 MaxSize = new Point(25, 25)
-            }, TextManager.Get("CamFollowSubmarine"));
-            cameraFollowsSub.OnSelected += (tbox) =>
+            }, TextManager.Get("CamFollowSubmarine"))
             {
-                Camera.FollowSub = tbox.Selected;
-                return true;
+                Selected = Camera.FollowSub,
+                OnSelected = (tbox) =>
+                {
+                    Camera.FollowSub = tbox.Selected;
+                    return true;
+                }
             };
             cameraFollowsSub.OnSelected(cameraFollowsSub);
 

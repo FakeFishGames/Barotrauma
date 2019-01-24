@@ -68,7 +68,7 @@
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
   </Item>
-  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem">
+  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" scale="0.32">
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="350" />
     <Price locationtype="City" buyprice="500" />
@@ -77,8 +77,8 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64" />
-    <Sprite texture="weapons.png" sourcerect="56,98,44,27" depth="0.55" />
-    <Body width="40" height="25" density="50" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="0,242,228,110" depth="0.55" />
+    <Body width="90" radius="40" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-10,-7" />
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
       <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse" />
@@ -169,9 +169,9 @@
       <Item identifier="copper" mincondition="0.9" />
       <Item identifier="uex" mincondition="0.9" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,450,64,64" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="98,0,67,153" depth="0.55" origin="0.5,0.5185185" />
-    <Body width="11" height="24" density="30" />
+    <Body width="60" height="150" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -196,8 +196,8 @@
       <Item identifier="uex" mincondition="0.9" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" />
-    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,0,97,148" depth="0.55" origin="0.5,0.5" />
-    <Body width="11" height="24" density="30" />
+    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,0,97,143" depth="0.55" origin="0.5,0.5" />
+    <Body width="97" height="143" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -225,7 +225,7 @@
       <Item identifier="iron" />
       <Item identifier="incendium" mincondition="0.9" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,320,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="68,320,56,64" />
     <Sprite texture="weapons.png" sourcerect="100,0,12,27" depth="0.55" />
     <Body width="12" height="27" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
@@ -299,7 +299,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,150,156,39" depth="0.55" origin="0.5,0.5" />
-    <Body width="30" height="7" density="50" />
+    <Body width="150" height="30" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="2.0">
       <Attack stun="0.2">
         <Affliction identifier="bleeding" strength="10" />
@@ -308,7 +308,8 @@
     </MeleeWeapon>
   </Item>
   <Item name="Bike Horn" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,390,64,64" depth="0.55" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,390,64,64" depth="0.55" />
+    <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55" />
     <Body width="30" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0" />
     <RangedWeapon reload="2">

@@ -17,6 +17,7 @@ namespace Barotrauma
         ItemAssembly,
         Character,
         Structure,
+        Outpost,
         Text,
         Executable,
         ServerExecutable,
@@ -57,6 +58,7 @@ namespace Barotrauma
             ContentType.Missions,
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
+            ContentType.Outpost,
             ContentType.Afflictions
         };
 
@@ -67,6 +69,7 @@ namespace Barotrauma
             ContentType.Item,
             ContentType.Character,
             ContentType.Structure,
+            ContentType.Outpost,
             ContentType.Text,
             ContentType.Executable,
             ContentType.ServerExecutable,

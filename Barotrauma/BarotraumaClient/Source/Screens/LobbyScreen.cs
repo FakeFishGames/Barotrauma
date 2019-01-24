@@ -10,10 +10,8 @@ namespace Barotrauma
     class LobbyScreen : Screen
     {
         private CampaignUI campaignUI;
-        
-        private GUIFrame topPanel, bottomPanel;
 
-        private GUITextBlock locationTitle;
+        private GUIFrame campaignUIContainer;
 
         private CrewManager CrewManager
         {
@@ -27,47 +25,7 @@ namespace Barotrauma
 
         public LobbyScreen()
         {
-            topPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.1f), Frame.RectTransform, Anchor.TopCenter, Pivot.TopCenter)
-            {
-                RelativeOffset = new Vector2(0.0f, 0.05f)
-            });
-
-            GUIFrame paddedToPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.6f), topPanel.RectTransform, Anchor.Center), style: null);
-
-            locationTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), paddedToPanel.RectTransform), "", Color.White, GUI.LargeFont);
-
-            GUITextBlock moneyText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), paddedToPanel.RectTransform, Anchor.BottomLeft), "");
-            moneyText.TextGetter = GetMoney;
-
-            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
-            {
-                RelativeOffset = new Vector2(0.05f, 0.0f)
-            }, TextManager.Get("Map"));
-            button.UserData = CampaignUI.Tab.Map;
-            button.OnClicked = SelectTab;
-            SelectTab(button, button.UserData);
-
-            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
-            {
-                RelativeOffset = new Vector2(0.13f, 0.0f)
-            }, TextManager.Get("Crew"));
-            button.UserData = CampaignUI.Tab.Crew;
-            button.OnClicked = SelectTab;
-            
-            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
-            {
-                RelativeOffset = new Vector2(0.21f, 0.0f)
-            }, TextManager.Get("Store"));
-            button.UserData = CampaignUI.Tab.Store;
-            button.OnClicked = SelectTab;
-   
-            //---------------------------------------------------------------
-            //---------------------------------------------------------------
-            
-            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.78f), Frame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter)
-            {
-                RelativeOffset = new Vector2(0.0f, 0.05f)
-            });
+            campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, Frame.RectTransform, Anchor.Center), style: null);
         }
 
         public override void Select()
@@ -75,20 +33,16 @@ namespace Barotrauma
             base.Select();
 
             CampaignMode campaign = GameMain.GameSession.GameMode as CampaignMode;
-
-            if (campaign == null)
-            {
-                return;
-            }
-
-            locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
+            if (campaign == null) { return; }
 
             campaign.Map.SelectLocation(-1);
 
-            bottomPanel.ClearChildren();
-            campaignUI = new CampaignUI(campaign, bottomPanel);
-            campaignUI.StartRound = StartRound;
-            campaignUI.OnLocationSelected = SelectLocation;
+            campaignUIContainer.ClearChildren();
+            campaignUI = new CampaignUI(campaign, campaignUIContainer)
+            {
+                StartRound = StartRound,
+                OnLocationSelected = SelectLocation
+            };
             campaignUI.UpdateCharacterLists();
 
             GameAnalyticsManager.SetCustomDimension01("singleplayer");
@@ -103,26 +57,6 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
-
-        }
-
-        public bool SelectTab(GUIButton button, object selection)
-        {
-            if (campaignUI == null) return false;
-
-             if (button != null)
-             {
-                 button.Selected = true;
-                 foreach (GUIComponent child in topPanel.Children)
-                 {
-                     GUIButton otherButton = child as GUIButton;
-                     if (otherButton == null || otherButton == button) continue;
-                     otherButton.Selected = false;
-                 }
-             }
-            campaignUI.SelectTab((CampaignUI.Tab)selection);
-
-            return true;
         }
 
         public void SelectLocation(Location location, LocationConnection locationConnection)

@@ -431,8 +431,36 @@
       minchromaticaberration="0.0"
       maxchromaticaberration="5.0">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
-    </Effect>
-
+    </Effect>      
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
+
+  <Affliction
+    name="Sufforin Poisoning"
+    identifier="sufforinpoisoning"
+    description="Without prompt treatment, sufforine poisoning leads to delusions and rapid death."
+    type="poison"
+    causeofdeathdescription="Died of sufforin poisoning."
+    selfcauseofdeathdescription="You have died of sufforin poisoning."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="5"
+    maxstrength="100">
+    <!-- Slow down the character and decrease vitality -->
+    <!-- Becomes lethal in ~50 seconds -->
+    <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="100"
+      strengthchange="2"
+      minscreendistort="0.0"
+      maxscreendistort="0.25"
+      minscreenblur="0.0"
+      maxscreenblur="0.25"
+      minchromaticaberration="0.0"
+      maxchromaticaberration="5.0">
+      <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
+    </Effect>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+  </Affliction>
+  
 </Afflictions>

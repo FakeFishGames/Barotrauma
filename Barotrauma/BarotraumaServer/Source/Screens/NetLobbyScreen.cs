@@ -45,14 +45,14 @@ namespace Barotrauma
             }
         }
 
-        public string SelectedModeName
+        public string SelectedModeIdentifier
         {
-            get { return gameModes[SelectedModeIndex].Name; }
+            get { return gameModes[SelectedModeIndex].Identifier; }
             set
             {
-                for (int i = 0; i < gameModes.Count(); i++)
+                for (int i = 0; i < gameModes.Length; i++)
                 {
-                    if (gameModes[i].Name.ToLower() == value.ToLower())
+                    if (gameModes[i].Identifier.ToLower() == value.ToLower())
                     {
                         SelectedModeIndex = i;
                         break;
@@ -126,7 +126,7 @@ namespace Barotrauma
             DebugConsole.NewMessage("Selected sub: " + SelectedSub.Name, Color.White);
             DebugConsole.NewMessage("Selected shuttle: " + SelectedShuttle.Name, Color.White);
 
-            gameModes = GameModePreset.list.ToArray();
+            gameModes = GameModePreset.List.ToArray();
         }
         
         private List<Submarine> subs;
@@ -161,7 +161,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < GameModes.Length; i++)
             {
-                if ((GameModes[i].Name == "Campaign") == enabled)
+                if ((GameModes[i].Identifier == "multiplayercampaign") == enabled)
                 {
                     selectedModeIndex = i;
                     break;
@@ -188,8 +188,8 @@ namespace Barotrauma
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
             {
-                var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Name != "Campaign");
-                SelectedModeName = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Name;
+                var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Identifier != "multiplayercampaign");
+                SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
             }
         }
     }

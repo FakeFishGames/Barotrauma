@@ -35,24 +35,13 @@ namespace Barotrauma
 
             Padding = element.GetAttributeVector4("padding", Vector4.Zero);
 
-            Vector4 colorVector = element.GetAttributeVector4("color", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-            Color = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
+            Color = element.GetAttributeColor("color", Color.Transparent);
+            textColor = element.GetAttributeColor("textcolor", Color.Black);
+            HoverColor = element.GetAttributeColor("hovercolor", Color.Transparent);
+            SelectedColor = element.GetAttributeColor("selectedcolor", Color.Transparent);
+            PressedColor = element.GetAttributeColor("pressedcolor", Color.Transparent);
+            OutlineColor = element.GetAttributeColor("outlinecolor", Color.Transparent);
 
-            colorVector = element.GetAttributeVector4("textcolor", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-            textColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
-
-            colorVector = element.GetAttributeVector4("hovercolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-            HoverColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
-
-            colorVector = element.GetAttributeVector4("selectedcolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-            SelectedColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
-
-            colorVector = element.GetAttributeVector4("pressedcolor", new Vector4(1, 1, 1, 1));
-            PressedColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
-
-            colorVector = element.GetAttributeVector4("outlinecolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-            OutlineColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
-            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

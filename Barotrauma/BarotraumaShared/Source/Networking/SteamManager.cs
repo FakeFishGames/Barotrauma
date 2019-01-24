@@ -173,22 +173,37 @@ namespace Barotrauma.Steam
                 { "secure", "1" }
             };
 
+            //include unresponsive servers in the server list
+
+            //the response is queried using the server's query port, not the game port,
+            //so it may be possible to play on the server even if it doesn't respond to server list queries
             var query = instance.client.ServerList.Internet(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived); };
+            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             query.OnFinished = onFinished;
 
             var localQuery = instance.client.ServerList.Local(filter);
-            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived); };
+            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
             localQuery.OnFinished = onFinished;
 
             return true;
         }
 
-        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived)
+        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, bool includeUnresponsive)
         {
-            foreach (ServerList.Server s in query.Responded)
+            IEnumerable<ServerList.Server> servers = includeUnresponsive ?
+                new List<ServerList.Server>(query.Responded).Concat(query.Unresponsive) :
+                query.Responded;
+
+            foreach (ServerList.Server s in servers)
             {
-                DebugConsole.Log(s.Name + " responded to server query.");
+                if (query.Responded.Contains(s))
+                {
+                    DebugConsole.Log(s.Name + " responded to server query.");
+                }
+                else
+                {
+                    DebugConsole.Log(s.Name + " did not respond to server query.");
+                }
                 var serverInfo = new Networking.ServerInfo()
                 {
                     ServerName = s.Name,
@@ -210,7 +225,7 @@ namespace Barotrauma.Steam
                     if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
                     if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
 
-                    if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"]=="True";
+                    if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"] == "True";
                     if (s.Rules.ContainsKey("modeselectionmode"))
                     {
                         if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
@@ -238,10 +253,6 @@ namespace Barotrauma.Steam
 
                 onServerFound(serverInfo);
             }
-            foreach (ServerList.Server s in query.Unresponsive)
-            {
-                DebugConsole.Log(s.Name + " did not respond to server query.");
-            }
             query.Responded.Clear();
         }
 
@@ -259,7 +270,7 @@ namespace Barotrauma.Steam
 
 #region Server
 
-        public static bool CreateServer(Networking.GameServer server)
+        public static bool CreateServer(Networking.GameServer server, bool isPublic)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -273,7 +284,7 @@ namespace Barotrauma.Steam
             };
             //options.QueryShareGamePort();
 
-            instance.server = new Server(AppID, options);
+            instance.server = new Server(AppID, options, isPublic);
             if (!instance.server.IsValid)
             {
                 instance.server.Dispose();
@@ -285,17 +296,11 @@ namespace Barotrauma.Steam
             RefreshServerDetails(server);
 
             instance.server.Auth.OnAuthChange = server.OnAuthChange;
-
-            return true;
-        }
-
-        public static bool RegisterToMasterServer()
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
             Instance.server.LogOnAnonymous();
+
             return true;
         }
-
+        
         public static bool RefreshServerDetails(Networking.GameServer server)
         {
             if (instance == null || !instance.isInitialized)
@@ -321,7 +326,7 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("allowrespawn", server.AllowRespawn.ToString());
             Instance.server.SetKey("traitors", server.TraitorsEnabled.ToString());
             Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
-            Instance.server.SetKey("gamemode", server.GameMode);
+            Instance.server.SetKey("gamemode", server.GameModeIdentifier);
 
 #if SERVER
             instance.server.DedicatedServer = true;

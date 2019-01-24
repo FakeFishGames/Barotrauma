@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
             {
                 lightColor = value;
 #if CLIENT
-                if (light != null) light.Color = lightColor;
+                if (light != null) light.Color = IsActive ? lightColor : Color.Transparent;
 #endif
             }
         }

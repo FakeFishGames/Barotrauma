@@ -266,15 +266,20 @@ namespace Barotrauma
     
         public Vector2 MeasureString(string text)
         {
+            if (text == null)
+            {
+                return Vector2.Zero;
+            }
+
             float currentLineX = 0.0f;
             Vector2 retVal = Vector2.Zero;
-            retVal.Y = baseHeight*1.8f;
+            retVal.Y = baseHeight * 1.8f;
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n')
                 {
                     currentLineX = 0.0f;
-                    retVal.Y += baseHeight*18/10;
+                    retVal.Y += baseHeight * 18 / 10;
                     continue;
                 }
                 uint charIndex = text[i];
@@ -282,7 +287,7 @@ namespace Barotrauma
                 {
                     currentLineX += gd.advance;
                 }
-                retVal.X = Math.Max(retVal.X,currentLineX);
+                retVal.X = Math.Max(retVal.X, currentLineX);
             }
             return retVal;
         }

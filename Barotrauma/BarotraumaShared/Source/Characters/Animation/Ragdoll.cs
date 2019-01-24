@@ -1228,12 +1228,8 @@ namespace Barotrauma
                 contacts = contacts.Next;
             }
 
-            if (forceStanding)
-            {
-                onGround = true;
-            }
             //the ragdoll "stays on ground" for 50 millisecs after separation
-            else if (onFloorTimer <= 0.0f)
+            if (onFloorTimer <= 0.0f)
             {
                 onGround = false;
             }

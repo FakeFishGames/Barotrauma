@@ -1,16 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
     partial class Location
     {
-        private string name;
-
-        private Vector2 mapPosition;
-
-        private LocationType type;
-
         public List<LocationConnection> Connections;
 
         private string baseName;
@@ -20,34 +15,69 @@ namespace Barotrauma
 
         public int TypeChangeTimer;
 
-        public string Name
+        public string Name { get; private set; }
+
+        public Vector2 MapPosition { get; private set; }
+
+        public LocationType Type { get; private set; }
+
+
+        public int MissionsCompleted;
+
+        private List<Mission> availableMissions = new List<Mission>();
+        public IEnumerable<Mission> AvailableMissions
         {
-            get { return name; }
+            get
+            {
+                CheckMissionCompleted();
+
+                for (int i = availableMissions.Count; i < Connections.Count * 2; i++)
+                {
+                    int seed = (ToolBox.StringToInt(Name) + MissionsCompleted * 10 + i) % int.MaxValue;
+                    MTRandom rand = new MTRandom(seed);
+
+                    LocationConnection connection = Connections[(MissionsCompleted + i) % Connections.Count];
+                    Location destination = connection.OtherLocation(this);
+
+                    var mission = Mission.LoadRandom(new Location[] { this, destination }, rand, true, MissionType.Random, true);
+                    if (mission == null) { continue; }
+                    if (availableMissions.Any(m => m.Prefab == mission.Prefab)) { continue; }
+                    if (GameSettings.VerboseLogging && mission != null)
+                    {
+                        DebugConsole.NewMessage("Generated a new mission for a location connection (seed: " + seed.ToString("X") + ", type: " + mission.Name + ")", Color.White);
+                    }
+                    availableMissions.Add(mission);
+                }
+
+                return availableMissions;
+            }
         }
 
-        public Vector2 MapPosition
+        public Mission SelectedMission
         {
-            get { return mapPosition; }
+            get;
+            set;
         }
-        
-        public LocationType Type
+
+        public int SelectedMissionIndex
         {
-            get { return type; }
+            get { return availableMissions.IndexOf(SelectedMission); }
+            set
+            {
+                if (value < 0 || value >= AvailableMissions.Count())
+                {
+                    SelectedMission = null;
+                    return;
+                }
+                SelectedMission = availableMissions[value];
+            }
         }
 
         public Location(Vector2 mapPosition, int? zone)
         {
-            this.type = LocationType.Random("", zone);
-            this.name = RandomName(type);
-            this.mapPosition = mapPosition;
-
-#if CLIENT
-            if (type.HasHireableCharacters)
-            {
-                hireManager = new HireManager();
-                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
-            }
-#endif
+            this.Type = LocationType.Random("", zone);
+            this.Name = RandomName(Type);
+            this.MapPosition = mapPosition;
 
             Connections = new List<LocationConnection>();
         }
@@ -57,20 +87,31 @@ namespace Barotrauma
             return new Location(position, zone);        
         }
 
+        public IEnumerable<Mission> GetMissionsInConnection(LocationConnection connection)
+        {
+            System.Diagnostics.Debug.Assert(Connections.Contains(connection));
+            return AvailableMissions.Where(m => m.Locations[1] == connection.OtherLocation(this));
+        }
+
         public void ChangeType(LocationType newType)
         {
-            if (newType == type) return;
+            if (newType == Type) return;
 
-            type = newType;
-            name = type.NameFormats[nameFormatIndex % type.NameFormats.Count].Replace("[name]", baseName);
+            Type = newType;
+            Name = Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
+        }
 
-#if CLIENT
-            if (type.HasHireableCharacters)
+        public void CheckMissionCompleted()
+        {
+            foreach (Mission mission in availableMissions)
             {
-                hireManager = new HireManager();
-                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
+                if (mission.Completed)
+                {
+                    MissionsCompleted++;
+                }
             }
-#endif
+
+            availableMissions.RemoveAll(m => m.Completed);
         }
 
         private string RandomName(LocationType type)
@@ -79,5 +120,12 @@ namespace Barotrauma
             nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
             return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }
+
+        public void Remove()
+        {
+            RemoveProjSpecific();
+        }
+
+        partial void RemoveProjSpecific();
     }
 }

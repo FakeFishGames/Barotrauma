@@ -410,7 +410,11 @@ namespace Barotrauma.RuinGeneration
         [Serialize("100000,100000", false)]
         public Point MaxRoomSize { get; private set; }
 
+        [Serialize("", false)]
+        public string TargetContainer { get; private set; }
+
         public List<EntityConnection> EntityConnections { get; private set; } = new List<EntityConnection>();
+
 
         public int SingleGroupIndex;
 
@@ -441,18 +445,28 @@ namespace Barotrauma.RuinGeneration
             }
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            
+            int gIndex = 0;
+            LoadChildren(element, ref gIndex);
 
-            foreach (XElement subElement in element.Elements())
+            void LoadChildren(XElement element2, ref int groupIndex)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                foreach (XElement subElement in element2.Elements())
                 {
-                    case "connection":
-                    case "entityconnection":
-                        EntityConnections.Add(new EntityConnection(subElement));
-                        break;
-                    default:
-                        childEntities.Add(new RuinEntityConfig(subElement));
-                        break;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "connection":
+                        case "entityconnection":
+                            EntityConnections.Add(new EntityConnection(subElement));
+                            break;
+                        case "chooseone":
+                            groupIndex++;
+                            LoadChildren(subElement, ref groupIndex);
+                            break;
+                        default:
+                            childEntities.Add(new RuinEntityConfig(subElement) { SingleGroupIndex = groupIndex });
+                            break;
+                    }
                 }
             }
         }

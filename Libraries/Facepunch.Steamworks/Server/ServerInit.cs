@@ -24,7 +24,7 @@ namespace Facepunch.Steamworks
         /// If you go into the dedicated server tab on steamworks you'll be able to server the latest version. If this version number is
         /// less than that latest version then your server won't show.
         /// </summary>
-        public string VersionString = "2.0.0.0";
+        public string VersionString = "1.0.0.0";
 
         /// <summary>
         /// This should be the same directory game where gets installed into. Just the folder name, not the whole path. I.e. "Rust", "Garrysmod".

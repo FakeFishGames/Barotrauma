@@ -189,10 +189,16 @@ namespace Barotrauma
                 case AIController.AIState.Attack:
                     if (enemyAI.AttackingLimb != null)
                     {
-                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
-                            Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null)
                         {
-                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                            // is not attached or is attached to something else
+                            if (!IsAttached || IsAttached && attachJoints[0].BodyB == attachTargetBody)
+                            {
+                                if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                                {
+                                    AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                                }
+                            }
                         }
                     }
                     break;
@@ -253,14 +259,14 @@ namespace Barotrauma
                 KinematicBodyB = true,
                 CollideConnected = false,
             };
-
-            // Limb scale is already taken into account when creating the collider.
-            Vector2 colliderFront = collider.GetLocalFront(MathHelper.ToRadians(attachLimb.ragdoll.RagdollParams.SpritesheetOrientation));
-            if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
-            collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), angle);
-
             GameMain.World.AddJoint(limbJoint);
             attachJoints.Add(limbJoint);
+
+            // Limb scale is already taken into account when creating the collider.
+            Vector2 colliderFront = collider.GetLocalFront();
+            if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
+            collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2);
+
             var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
             {
                 FrequencyHz = 10.0f,

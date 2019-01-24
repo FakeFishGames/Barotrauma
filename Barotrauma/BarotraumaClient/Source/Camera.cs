@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -9,7 +8,7 @@ namespace Barotrauma
     {
         public static bool FollowSub = true;
 
-        private float defaultZoom = 1.1f;
+        private float defaultZoom = 1.3f;
         public float DefaultZoom
         {
             get { return defaultZoom; }

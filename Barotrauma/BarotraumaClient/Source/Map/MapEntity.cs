@@ -31,6 +31,9 @@ namespace Barotrauma
 
         private static List<MapEntity> highlightedList = new List<MapEntity>();
 
+        // Test feature. Not yet saved.
+        public static Dictionary<MapEntity, List<MapEntity>> SelectionGroups { get; private set; } = new Dictionary<MapEntity, List<MapEntity>>();
+
         private static float highlightTimer;
 
         private static GUIListBox highlightedListBox;
@@ -133,22 +136,18 @@ namespace Barotrauma
 
             if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
             {
-                if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.C) &&
-                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.C))
+                if (PlayerInput.KeyHit(Keys.C))
                 {
                     CopyEntities(selectedList);
                 }
-                else if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.X) &&
-                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.X))
+                else if (PlayerInput.KeyHit(Keys.X))
                 {
                     CopyEntities(selectedList);
 
                     selectedList.ForEach(e => e.Remove());
                     selectedList.Clear();
                 }
-                else if (copiedList.Count > 0 &&
-                    PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
-                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
+                else if (copiedList.Count > 0 && PlayerInput.KeyHit(Keys.V))
                 {
                     List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
                     Clone(copiedList);
@@ -166,6 +165,50 @@ namespace Barotrauma
                     {
                         clone.Move(moveAmount);
                         clone.Submarine = Submarine.MainSub;
+                    }
+                }
+                else if (PlayerInput.KeyHit(Keys.G))
+                {
+                    if (selectedList.Any())
+                    {
+                        if (SelectionGroups.ContainsKey(selectedList.Last()))
+                        {
+                            // Ungroup all selected
+                            selectedList.ForEach(e => SelectionGroups.Remove(e));
+                        }
+                        else
+                        {
+                            foreach (var entity in selectedList)
+                            {
+                                // Remove the old group, if any
+                                SelectionGroups.Remove(entity);
+                                // Create a group that can be accessed with any member
+                                SelectionGroups.Add(entity, selectedList);
+                            }
+                        }
+                    }
+                }
+                else if (PlayerInput.KeyHit(Keys.Z))
+                {
+                    SetPreviousRects(e => e.rectMemento.Undo());
+                }
+                else if (PlayerInput.KeyHit(Keys.R))
+                {
+                    SetPreviousRects(e => e.rectMemento.Redo());
+                }
+                void SetPreviousRects(Func<MapEntity, Rectangle> memoryMethod)
+                {
+                    foreach (var e in SelectedList)
+                    {
+                        if (e.rectMemento != null)
+                        {
+                            Point diff = memoryMethod(e).Location - e.Rect.Location;
+                            // We have to call the move method, because there's a lot more than just storing the rect (in some cases)
+                            // We also have to reassign the rect, because the move method does not set the width and height. They might have changed too.
+                            // The Rect property is virtual and it's overridden for structs. Setting the rect via the property should automatically recreate the sections for resizable structures.
+                            e.Move(diff.ToVector2());
+                            e.Rect = e.rectMemento.Current;
+                        }
                     }
                 }
             }
@@ -269,7 +312,16 @@ namespace Barotrauma
                         }
                         else // move
                         {
-                            foreach (MapEntity e in selectedList) e.Move(moveAmount);
+                            foreach (MapEntity e in selectedList)
+                            {
+                                if (e.rectMemento == null)
+                                {
+                                    e.rectMemento = new Memento<Rectangle>();
+                                    e.rectMemento.Store(e.Rect);
+                                }
+                                e.Move(moveAmount);
+                                e.rectMemento.Store(e.Rect);
+                            }
                         }
                     }
                     startMovingPos = Vector2.Zero;
@@ -289,7 +341,17 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (highLightedEntity != null) newSelection.Add(highLightedEntity);
+                    if (highLightedEntity != null)
+                    {
+                        if (SelectionGroups.TryGetValue(highLightedEntity, out List<MapEntity> group))
+                        {
+                            newSelection.AddRange(group);
+                        }
+                        else
+                        {
+                            newSelection.Add(highLightedEntity);
+                        }
+                    }
                 }
 
                 if (PlayerInput.LeftButtonReleased())
@@ -629,6 +691,12 @@ namespace Barotrauma
 
             if (resizing)
             {
+                if (rectMemento == null)
+                {
+                    rectMemento = new Memento<Rectangle>();
+                    rectMemento.Store(Rect);
+                }
+
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
@@ -666,6 +734,7 @@ namespace Barotrauma
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
+                    rectMemento.Store(Rect);
                     resizing = false;
                 }
             }
