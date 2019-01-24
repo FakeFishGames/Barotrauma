@@ -253,7 +253,7 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 2: // Nav Console: 20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
-                    if (Character.Controlled.SelectedConstruction != navConsole.Item)
+                    if (Character.Controlled?.SelectedConstruction != navConsole.Item)
                     {
                         if (tutorialTimer < 30.5f)
                         {
@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 5: // Reactor: Player uses reactor for the first time [Video]
-                    if (Character.Controlled.SelectedConstruction != reactor.Item)
+                    if (Character.Controlled?.SelectedConstruction != reactor.Item)
                     {
                         return false;
                     }
