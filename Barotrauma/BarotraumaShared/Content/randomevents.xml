@@ -1,8 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Randomevents>
 
+  <!--                               Set 0                                       -->
+  <EventSet minleveldifficulty="0" maxleveldifficulty="10" chooserandom="false">
+    <Commonness commonness="5">
+      <Override leveltype="RidgeBasic" commonness="10" />
+      <Override leveltype="WastesBasic" commonness="10" />
+      <Override leveltype="VoidBasic" commonness="10" />
+      <Override leveltype="ColdCavernsBasic" commonness="10" />
+      <Override leveltype="PlateauBasic" commonness="10" />
+    </Commonness>
+    <!-- always spawn a couple of artifacts	 -->
+    <ArtifactEvent itemidentifier="skyholderartifact" />
+    <ArtifactEvent itemidentifier="thermalartifact" />
+
+    <!-- chance of a couple of fractal guardians inside ruins -->
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian/fractalguardian.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
+
+    <!-- 1 crawler or 1 mantis after 150 seconds or passing 20% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.20" minmissiontime="150" minintensity="0.0" maxintensity="0.25">
+      <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+    </EventSet>
+
+    <!-- 1 thresher or 1 hammerhead after 5 minutes or passing 40% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.33" minmissiontime="240" minintensity="0.0" maxintensity="0.25">
+      <MonsterEvent characterfile="Content/Characters/Tigerthresher/tigerthresher.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+    </EventSet>
+
+    <!-- 1 mantis or 1 crawler after 10 minutes or passing 60% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.40" minmissiontime="600" minintensity="0.0" maxintensity="1.0">
+      <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+    </EventSet>
+
+    <!-- 0-2 crawlers or 0-1 mantis after 15 minutes or passing 80% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.8" minmissiontime="1200" minintensity="0.0" maxintensity="0.5">
+      <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="2" spawntype="mainpath" musictype="monster" />
+    </EventSet>
+  </EventSet>  
+  
   <!--                               Set 1                                       -->
-  <EventSet minleveldifficulty="0" maxleveldifficulty="25" chooserandom="false">
+  <EventSet minleveldifficulty="10" maxleveldifficulty="25" chooserandom="false">
     <Commonness commonness="5">
       <Override leveltype="RidgeBasic" commonness="10" />
       <Override leveltype="WastesBasic" commonness="10" />
@@ -17,10 +59,10 @@
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/fractalguardian.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="1" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
     
-    <!-- 1-2 crawlers or 1 mantis after 60 seconds or passing 10% -->
-    <EventSet chooserandom="true" mindistancetraveled="0.10" minmissiontime="60" minintensity="0.0" maxintensity="0.33">
+    <!-- 1-2 crawlers or 1 mantis after 120 seconds or passing 10% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.10" minmissiontime="120" minintensity="0.0" maxintensity="0.33">
       <MonsterEvent characterfile="Content/Characters/Crawler/crawler.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Manta/manta.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
