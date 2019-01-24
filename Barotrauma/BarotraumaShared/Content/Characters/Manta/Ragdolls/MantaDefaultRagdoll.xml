@@ -2,7 +2,7 @@
   <collider radius="200" height="250" name="Main Collider" width="0" />
   <limb id="0" name="Head" type="Head" width="268" height="200" notes="111cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="20" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" mouthpos="97,-76">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="0,0,331,243" origin="0.4839342,0.4924676" depth="0.1" />
-    <attack cooldown="2" afterattack="pursue" range="200" damagerange="100" duration="0.25" structuredamage="20" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="-250" force="20" applyforceonlimbs="0, 1, 2, 13" context="NotDefined" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0">
+    <attack context="Ground" cooldown="2" afterattack="pursue" range="120" damagerange="100" duration="0.25" structuredamage="20" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="-250" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0">
       <Affliction identifier="internaldamage" strength="10" />
       <Affliction identifier="bleeding" strength="50" />
       <Affliction identifier="stun" strength="0.1" />
@@ -10,6 +10,11 @@
   </limb>
   <limb id="1" name="Jaw" type="None" width="179" height="200" notes="1112br_Jaw" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="336,0,228,247" origin="0.4761672,0.4675852" depth="0.1" />
+    <attack context="Water" cooldown="2" afterattack="pursue" range="200" damagerange="100" duration="0.25" structuredamage="20" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="0" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0">
+      <Affliction identifier="internaldamage" strength="10" />
+      <Affliction identifier="bleeding" strength="50" />
+      <Affliction identifier="stun" strength="0.1" />
+    </attack>
   </limb>
   <limb id="2" name="HeadArmor" type="None" width="336" height="150" notes="1111tr_HeadArmor" flip="True" healthindex="0" attackpriority="0" steerforce="10" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="557,0,418,263" origin="0.5009799,0.5003958" depth="0.08" />
