@@ -1292,8 +1292,7 @@ namespace Barotrauma
 
                 if (!pickHit && !selectHit) continue;
 
-                Skill tempRequiredSkill;
-                if (!ic.HasRequiredSkills(picker, out tempRequiredSkill)) hasRequiredSkills = false;
+                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
@@ -1426,7 +1425,7 @@ namespace Barotrauma
                 ic.PlaySound(actionType, user.WorldPosition, user);
 #endif
                 ic.WasUsed = true;
-                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb);
+                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
 
                 GameMain.Server?.CreateEntityEvent(this, new object[]
                 {

@@ -286,7 +286,7 @@ namespace Barotrauma
             return "AfflictionPrefab (" + Name + ")";
         }
 
-        public Affliction Instantiate(float strength)
+        public Affliction Instantiate(float strength, Character source = null)
         {
             object instance = null;
             try
@@ -297,8 +297,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
             }
-
-            return instance as Affliction;
+            Affliction affliction = instance as Affliction;
+            affliction.Source = source;
+            return affliction;
         }
 
         public Effect GetActiveEffect(float currentStrength)

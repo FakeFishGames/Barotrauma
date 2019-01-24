@@ -475,7 +475,7 @@ namespace Barotrauma
         {
             if (CurrentGroundedParams == null) { return; }
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
-            
+
             Collider.LinearVelocity = new Vector2(
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
@@ -487,12 +487,23 @@ namespace Barotrauma
 
             Vector2 colliderBottom = GetColliderBottom();
 
+            float movementAngle = 0.0f;
+            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
+            {
+                movementAngle += MathHelper.TwoPi;
+            }
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) < -MathHelper.Pi)
+            {
+                movementAngle -= MathHelper.TwoPi;
+            }
+
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
                 if (TorsoAngle.HasValue)
                 {
-                    SmoothRotateWithoutWrapping(torso, TorsoAngle.Value * Dir, MainLimb, TorsoTorque);
+                    SmoothRotateWithoutWrapping(torso, movementAngle + TorsoAngle.Value * Dir, MainLimb, TorsoTorque);
                 }
                 if (TorsoPosition.HasValue)
                 {
@@ -514,7 +525,7 @@ namespace Barotrauma
             {
                 if (HeadAngle.HasValue)
                 {
-                    SmoothRotateWithoutWrapping(head, HeadAngle.Value * Dir, MainLimb, HeadTorque);
+                    SmoothRotateWithoutWrapping(head, movementAngle + HeadAngle.Value * Dir, MainLimb, HeadTorque);
                 }
                 if (HeadPosition.HasValue)
                 {
@@ -536,10 +547,10 @@ namespace Barotrauma
                 var tail = GetLimb(LimbType.Tail);
                 if (tail != null)
                 {
-                    SmoothRotateWithoutWrapping(tail, TailAngle.Value * Dir, MainLimb, TailTorque);
+                    SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, MainLimb, TailTorque);
                 }
             }
-                        
+
             WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / RagdollParams.JointScale / 100.0f);
 
             Vector2 transformedStepSize = Vector2.Zero;
@@ -588,11 +599,13 @@ namespace Barotrauma
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f);
                             limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
-                        
+
                         if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
                         {
-                            SmoothRotateWithoutWrapping(limb, CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, MainLimb, FootTorque);
-                        }     
+                            SmoothRotateWithoutWrapping(limb,
+                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir,
+                                MainLimb, FootTorque);
+                        }
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
@@ -601,7 +614,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         void UpdateDying(float deltaTime)
         {
             if (deathAnimDuration <= 0.0f) return;
