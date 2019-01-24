@@ -1120,6 +1120,8 @@ namespace Barotrauma
 
         private void DrawHealthWindow(SpriteBatch spriteBatch, Rectangle drawArea, bool allowHighlight, bool highlightAll)
         {
+            if (Character.Removed) { return; }
+
             int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
