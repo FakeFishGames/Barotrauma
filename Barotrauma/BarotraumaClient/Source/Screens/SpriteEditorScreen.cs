@@ -419,17 +419,20 @@ namespace Barotrauma
                     }
                 }
             }
-            if (PlayerInput.ScrollWheelSpeed != 0 && GetViewArea.Contains(PlayerInput.MousePosition))
+            if (GUI.MouseOn == null)
             {
-                zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
-                zoomBar.BarScroll = GetBarScrollValue();
-            }
-            widgets.Values.ForEach(w => w.Update((float)deltaTime));
-            if (PlayerInput.MidButtonHeld())
-            {
-                // "Camera" Pan
-                Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f;
-                viewAreaOffset += moveSpeed.ToPoint();
+                if (PlayerInput.ScrollWheelSpeed != 0)
+                {
+                    zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
+                    zoomBar.BarScroll = GetBarScrollValue();
+                }
+                widgets.Values.ForEach(w => w.Update((float)deltaTime));
+                if (PlayerInput.MidButtonHeld())
+                {
+                    // "Camera" Pan
+                    Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f;
+                    viewAreaOffset += moveSpeed.ToPoint();
+                }
             }
         }
 
