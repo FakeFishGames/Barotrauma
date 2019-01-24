@@ -2296,7 +2296,7 @@ namespace Barotrauma
 
         partial void ImplodeFX();
 
-        public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
+        public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (IsDead || CharacterHealth.Unkillable) { return; }
 
@@ -2312,7 +2312,7 @@ namespace Barotrauma
             
             if (causeOfDeath == CauseOfDeathType.Affliction)
             {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Name + ")", ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
             }
             else
             {
@@ -2332,11 +2332,13 @@ namespace Barotrauma
                     characterType = "AICrew";
 
                 string causeOfDeathStr = causeOfDeathAffliction == null ?
-                    causeOfDeath.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
+                    causeOfDeath.ToString() : causeOfDeathAffliction.Prefab.Name.Replace(" ", "");
                 GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
             }
 
-            CauseOfDeath = new CauseOfDeath(causeOfDeath, causeOfDeathAffliction, LastAttacker, LastDamageSource);
+            CauseOfDeath = new CauseOfDeath(
+                causeOfDeath, causeOfDeathAffliction.Prefab, 
+                causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);

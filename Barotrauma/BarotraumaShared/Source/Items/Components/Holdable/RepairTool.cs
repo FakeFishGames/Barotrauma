@@ -219,14 +219,14 @@ namespace Barotrauma.Items.Components
 
                 targetCharacter.LastDamageSource = item;
                 targetCharacter.AddDamage(hitPos,
-                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
+                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 targetLimb.character.LastDamageSource = item;
                 targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
-                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
+                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
 
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
             }

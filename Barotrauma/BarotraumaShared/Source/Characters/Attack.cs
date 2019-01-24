@@ -48,7 +48,7 @@ namespace Barotrauma
 
             foreach (Affliction affliction in afflictions)
             {
-                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength, affliction.Source));
             }
             AppliedDamageModifiers = appliedDamageModifiers;
             Damage = Afflictions.Sum(a => a.GetVitalityDecrease(null));
@@ -187,13 +187,22 @@ namespace Barotrauma
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
         private readonly List<StatusEffect> statusEffects;
+
+        public void SetUser(Character user)
+        {
+            if (statusEffects == null) { return; }
+            foreach (StatusEffect statusEffect in statusEffects)
+            {
+                statusEffect.SetUser(user);
+            }
+        }
         
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
             List<Affliction> multipliedAfflictions = new List<Affliction>();
             foreach (Affliction affliction in Afflictions)
             {
-                multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier));
+                multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier, affliction.Source));
             }
             return multipliedAfflictions;
         }
@@ -314,6 +323,8 @@ namespace Barotrauma
                 if (targetCharacter != null && targetCharacter.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
+            SetUser(attacker);
+
             DamageParticles(deltaTime, worldPosition);
             
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
@@ -358,6 +369,8 @@ namespace Barotrauma
             {
                 if (targetLimb.character != null && targetLimb.character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
+
+            SetUser(attacker);
 
             DamageParticles(deltaTime, worldPosition);
 

@@ -1,52 +1,52 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
   <!-- INTERIOR WALLS FF -->
-  <structure name="InWall L0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
+  <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,0,512,48" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
+  <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,55,512,76" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall L90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="500">
+  <structure name="InWall L 90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="464,135,48,512" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall L90cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" castshadow="true" health="500">
+  <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall Cap H1" identifier="inwalllcaph1" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,177,27,50" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall Cap H2" identifier="inwalllcaph2" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="57,178,52,48" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall Cap H3" identifier="inwalllcaph3" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="186,178,51,58" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall Cap V1" identifier="inwalllcapy1" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="309,182,49,52" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall Cap V2" identifier="inwalllcapy2" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="310,248,48,27" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall Cap V4" identifier="inwalllcapy4" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="299,329,59,50" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall tie H1" identifier="inwallltieh1" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,235,74,48" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall tie H2" identifier="inwallltieh2" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="75,251,73,17" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall tie H3" identifier="inwallltieh3" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="5,298,111,54" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall tie V1" identifier="inwallltiev1" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="301,397,48,72" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall tie V2" identifier="inwallltiev2" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="316,471,16,72" origin="0.5,0.5" />
   </structure>
-  <structure Name="InWall tie V3" identifier="inwallltiev3" description="A large wall cap" castshadow="true" health="500">
+  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="223,267,53,110" origin="0.5,0.5" />
   </structure>
   <!-- BACK WALLS START -->

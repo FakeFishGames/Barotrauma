@@ -43,7 +43,16 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
-        public Character User;
+        private Character user;
+        public Character User
+        {
+            get { return user; }
+            set
+            {
+                user = value;
+                attack?.SetUser(user);                
+            }
+        }
 
         private float persistentStickJointTimer;
 
@@ -368,8 +377,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (character != null) character.LastDamageSource = item;
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb);
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
+            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
             
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
