@@ -102,6 +102,8 @@
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\ContextualTutorial.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\ScenarioTutorial.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
     <Compile Include="Source\GUI\ParamsEditor.cs" />
     <Compile Include="Source\GUI\ShapeExtensions.cs" />
@@ -113,6 +115,7 @@
     <Compile Include="Source\GUI\GUILayoutGroup.cs" />
     <Compile Include="Source\GUI\HUDLayoutSettings.cs" />
     <Compile Include="Source\GUI\RectTransform.cs" />
+    <Compile Include="Source\GUI\SpriteSheetPlayer.cs" />
     <Compile Include="Source\GUI\UISprite.cs" />
     <Compile Include="Source\GUI\Widget.cs" />
     <Compile Include="Source\Items\Components\ElectricalDischarger.cs" />
