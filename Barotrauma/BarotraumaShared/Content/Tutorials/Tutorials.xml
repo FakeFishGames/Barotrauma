@@ -60,9 +60,9 @@
         <Sheet path="8_Approach1/Sheets1.png" columns="1" rows="1"/>
       </Video>
     </Segment>
-    <InactiveSegment name="Approach II" contenttype="text" istriggered="false">
+    <Segment name="Approach II" contenttype="text" istriggered="false">
       <Text tag="Approach2" width="300" height="80" anchor="Center"/>
-    </InactiveSegment>
+    </Segment>
   </ContextualTutorial>
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/human.xml">
