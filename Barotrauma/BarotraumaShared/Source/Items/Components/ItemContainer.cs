@@ -249,6 +249,12 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+#if CLIENT
+            inventoryTopSprite?.Remove();
+            inventoryBackSprite?.Remove();
+            inventoryBottomSprite?.Remove();
+            ContainedStateIndicator?.Remove();
+
             if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
             {
                 string itemNames = string.Empty;
@@ -280,21 +286,15 @@ namespace Barotrauma.Items.Components
                         return true;
                     };
                 }
+                return;
             }
-            else
+#endif
+
+            foreach (Item item in Inventory.Items)
             {
-                foreach (Item item in Inventory.Items)
-                {
-                    if (item == null) continue;
-                    item.Drop();
-                }
-            }
-#if CLIENT
-                inventoryTopSprite?.Remove();
-                inventoryBackSprite?.Remove();
-                inventoryBottomSprite?.Remove();
-                ContainedStateIndicator?.Remove();
-#endif            
+                if (item == null) continue;
+                item.Drop();
+            }               
         }        
 
         public override void Load(XElement componentElement)
