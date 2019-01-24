@@ -25,6 +25,13 @@ namespace Barotrauma
         Structure   // Including hulls etc. Evaluated as anything but a character.
     }
 
+    public enum AIBehaviorIdle
+    {
+        FallBack,
+        PursueIfCanAttack,
+        Pursue
+    }
+
     struct AttackResult
     {
         public readonly float Damage;
@@ -151,6 +158,9 @@ namespace Barotrauma
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
+
+        [Serialize(AIBehaviorIdle.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
+        public AIBehaviorIdle AfterAttack { get; private set; }
              
         public IEnumerable<StatusEffect> StatusEffects
         {

@@ -523,35 +523,60 @@ namespace Barotrauma
             bool canAttack = true;
             if (IsCoolDownRunning)
             {
-                if (attackingLimb.attack.SecondaryCoolDown > 0)
+                switch (attackingLimb.attack.AfterAttack)
                 {
-                    if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
-                    {
-                        // If the secondary cooldown is defined and expired, check if we can switch the attack
-                        var previousLimb = attackingLimb;
-                        var newLimb = GetAttackLimb(attackSimPosition, previousLimb);
-                        if (newLimb != null)
+                    case AIBehaviorIdle.Pursue:
+                    case AIBehaviorIdle.PursueIfCanAttack:
+                        if (attackingLimb.attack.SecondaryCoolDown <= 0)
                         {
-                            attackingLimb = newLimb;
+                            // No (valid) secondary cooldown defined.
+                            if (attackingLimb.attack.AfterAttack == AIBehaviorIdle.Pursue)
+                            {
+                                canAttack = false;
+                            }
+                            else
+                            {
+                                UpdateFallBack(attackSimPosition, deltaTime);
+                                return;
+                            }
                         }
                         else
                         {
-                            // No new limb was found.
-                            UpdateFallBack(attackSimPosition, deltaTime);
-                            return;
+                            if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            {
+                                // If the secondary cooldown is defined and expired, check if we can switch the attack
+                                var previousLimb = attackingLimb;
+                                var newLimb = GetAttackLimb(attackSimPosition, previousLimb);
+                                if (newLimb != null)
+                                {
+                                    attackingLimb = newLimb;
+                                }
+                                else
+                                {
+                                    // No new limb was found.
+                                    if (attackingLimb.attack.AfterAttack == AIBehaviorIdle.Pursue)
+                                    {
+                                        canAttack = false;
+                                    }
+                                    else
+                                    {
+                                        UpdateFallBack(attackSimPosition, deltaTime);
+                                        return;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Cooldown not yet expired, cannot attack -> steer towards the target
+                                canAttack = false;
+                            }
                         }
-                    }
-                    else
-                    {
-                        // If the cooldown is not yet expired, fall back, we cannot attack, but should steer towards the target. TODO: there's a steering issue where the target tries to circle away and the hunter circles after -> solve by not trying to go in circles?
-                        canAttack = false;
-                    }
-                }
-                else
-                {
-                    // No secondary cooldown is defined.
-                    UpdateFallBack(attackSimPosition, deltaTime);
-                    return;
+                        break;
+                    case AIBehaviorIdle.FallBack:
+                    default:
+                        UpdateFallBack(attackSimPosition, deltaTime);
+                        return;
+
                 }
             }
 
