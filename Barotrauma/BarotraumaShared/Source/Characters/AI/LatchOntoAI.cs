@@ -128,7 +128,7 @@ namespace Barotrauma
 
             switch (enemyAI.State)
             {
-                case AIController.AIState.None:
+                case AIController.AIState.Idle:
                     if (attachToWalls && character.Submarine == null && Level.Loaded != null)
                     {
                         raycastTimer -= deltaTime;
@@ -181,8 +181,8 @@ namespace Barotrauma
                         {
                             //move closer to the wall
                             DeattachFromBody();
-                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
-                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, 2.0f);
+                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, character.AnimController.GetCurrentSpeed(false) * 0.1f);
+                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, character.AnimController.GetCurrentSpeed(true));
                         }
                     }
                     break;

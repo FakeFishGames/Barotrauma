@@ -168,7 +168,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
         private void SetUser(Character character)
         {
             if (user == character) return;
@@ -217,6 +216,8 @@ namespace Barotrauma.Items.Components
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;
+
+            attack?.SetUser(user);
 
             if (f2.Body.UserData is Limb)
             {
@@ -313,7 +314,7 @@ namespace Barotrauma.Items.Components
 
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: user);
             }
 
             if (DeleteOnUse)

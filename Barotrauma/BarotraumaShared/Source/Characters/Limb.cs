@@ -225,8 +225,10 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
-                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+#if DEBUG
+                    DebugConsole.ThrowError(errorMsg);
+#endif
                     return;
                 }
 
@@ -237,8 +239,10 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace;
-                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+#if DEBUG
+                    DebugConsole.ThrowError(errorMsg);
+#endif
                     return;
                 }
                 
@@ -254,8 +258,10 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
-                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+#if DEBUG
+                    DebugConsole.ThrowError(errorMsg);
+#endif
                     return;
                 }
                 
@@ -266,8 +272,10 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace;
-                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+#if DEBUG
+                    DebugConsole.ThrowError(errorMsg);
+#endif
                     return;
                 }
 

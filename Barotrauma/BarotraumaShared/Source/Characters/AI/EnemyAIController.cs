@@ -217,7 +217,7 @@ namespace Barotrauma
             outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false, canBreakDoors);
             steeringManager = outsideSteering;
-            State = AIState.None;
+            State = AIState.Idle;
 
             colliderSize = 0.1f;
             switch (Character.AnimController.Collider.BodyShape)
@@ -288,7 +288,7 @@ namespace Barotrauma
 
                 if (selectedAiTarget == null)
                 {
-                    State = AIState.None;
+                    State = AIState.Idle;
                 }
                 else if (Character.Health < fleeHealthThreshold)
                 {
@@ -304,7 +304,7 @@ namespace Barotrauma
 
             if (selectedAiTarget != null && (selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed))
             {
-                State = AIState.None;
+                State = AIState.Idle;
                 return;
             }
 
@@ -322,8 +322,8 @@ namespace Barotrauma
             bool run = false;
             switch (State)
             {
-                case AIState.None:
-                    UpdateNone(deltaTime);
+                case AIState.Idle:
+                    UpdateIdle(deltaTime);
                     break;
                 case AIState.Attack:
                     run = !IsCoolDownRunning;
@@ -340,26 +340,23 @@ namespace Barotrauma
                     throw new NotImplementedException();
             }
 
+            // Just some debug code that makes the characters to follow the mouse cursor 
+            //run = true;
+            //Vector2 mousePos = ConvertUnits.ToSimUnits(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
+            //steeringManager.SteeringSeek(mousePos, Character.AnimController.GetCurrentSpeed(run));
+
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
-            //if (run)
-            //{
-            //    steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);
-            //    
-            //}
-            //else
-            //{
-            //    steeringManager.Update();
-            //}
         }
 
         #region Idle
 
-        private void UpdateNone(float deltaTime)
+        private void UpdateIdle(float deltaTime)
         {
+            float speed = Character.AnimController.GetCurrentSpeed(false);
             if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
-                steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitY * speed);
                 return;
             }
 
@@ -369,17 +366,17 @@ namespace Barotrauma
             {
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
 
-                steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 1.0f);
-                steeringManager.SteeringSeek(targetSimPos, 1.0f);
+                steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, speed);
+                steeringManager.SteeringSeek(targetSimPos, speed);
             }
             else
             {
                 //wander around randomly
                 if (Character.Submarine == null)
                 {
-                    steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f, 1.0f);
+                    steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f, speed);
                 }
-                steeringManager.SteeringWander(0.5f);
+                steeringManager.SteeringWander(speed / 2);
             }          
         }
 
@@ -391,17 +388,18 @@ namespace Barotrauma
         {
             if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
-                State = AIState.None;
+                State = AIState.Idle;
                 return;
             }
 
             Vector2 escapeDir = Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition);
             if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
-            SteeringManager.SteeringManual(deltaTime, escapeDir * Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
-            SteeringManager.SteeringWander(1.0f);
+            float speed = Character.AnimController.GetCurrentSpeed(useMaxSpeed: true);
+            SteeringManager.SteeringManual(deltaTime, escapeDir * speed);
+            SteeringManager.SteeringWander(speed);
             if (Character.CurrentHull == null)
             {
-                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 5f);
+                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, speed);
             }
         }
 
@@ -413,9 +411,11 @@ namespace Barotrauma
         {
             if (selectedAiTarget == null)
             {
-                State = AIState.None;
+                State = AIState.Idle;
                 return;
             }
+
+            float speed = Character.AnimController.GetCurrentSpeed(true);
 
             selectedTargetMemory.Priority -= deltaTime * 0.1f;
 
@@ -489,7 +489,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos), 10.0f);
+                            steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos), speed);
                         }
                         return;
                     }
@@ -504,7 +504,8 @@ namespace Barotrauma
                         {
                             if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
                             {
-                                steeringManager.SteeringManual(deltaTime, Vector2.UnitX * (door.LinkedGap.FlowTargetHull.WorldPosition.X - Character.WorldPosition.X));
+                                var velocity = Vector2.UnitX * (door.LinkedGap.FlowTargetHull.WorldPosition.X - Character.WorldPosition.X) * speed;
+                                steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
                         }
@@ -512,7 +513,8 @@ namespace Barotrauma
                         {
                             if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
                             {
-                                steeringManager.SteeringManual(deltaTime, Vector2.UnitY * (door.LinkedGap.FlowTargetHull.WorldPosition.Y - Character.WorldPosition.Y));
+                                var velocity = Vector2.UnitY * (door.LinkedGap.FlowTargetHull.WorldPosition.Y - Character.WorldPosition.Y) * speed;
+                                steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
                         }
@@ -523,46 +525,66 @@ namespace Barotrauma
             bool canAttack = true;
             if (IsCoolDownRunning)
             {
-                if (attackingLimb.attack.SecondaryCoolDown > 0)
+                switch (attackingLimb.attack.AfterAttack)
                 {
-                    if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
-                    {
-                        // If the secondary cooldown is defined and expired, check if we can switch the attack
-                        var previousLimb = attackingLimb;
-                        var newLimb = GetAttackLimb(attackSimPosition, previousLimb);
-                        if (newLimb != null)
+                    case AIBehaviorAfterAttack.Pursue:
+                    case AIBehaviorAfterAttack.PursueIfCanAttack:
+                        if (attackingLimb.attack.SecondaryCoolDown <= 0)
                         {
-                            attackingLimb = newLimb;
+                            // No (valid) secondary cooldown defined.
+                            if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
+                            {
+                                canAttack = false;
+                            }
+                            else
+                            {
+                                UpdateFallBack(attackSimPosition, deltaTime);
+                                return;
+                            }
                         }
                         else
                         {
-                            // No new limb was found.
-                            UpdateFallBack(attackSimPosition, deltaTime);
-                            return;
+                            if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            {
+                                // If the secondary cooldown is defined and expired, check if we can switch the attack
+                                var previousLimb = attackingLimb;
+                                var newLimb = GetAttackLimb(attackSimPosition, previousLimb);
+                                if (newLimb != null)
+                                {
+                                    attackingLimb = newLimb;
+                                }
+                                else
+                                {
+                                    // No new limb was found.
+                                    if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
+                                    {
+                                        canAttack = false;
+                                    }
+                                    else
+                                    {
+                                        UpdateFallBack(attackSimPosition, deltaTime);
+                                        return;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Cooldown not yet expired, cannot attack -> steer towards the target
+                                canAttack = false;
+                            }
                         }
-                    }
-                    else
-                    {
-                        // If the cooldown is not yet expired, fall back, we cannot attack, but should steer towards the target. TODO: there's a steering issue where the target tries to circle away and the hunter circles after -> solve by not trying to go in circles?
-                        canAttack = false;
-                    }
-                }
-                else
-                {
-                    // No secondary cooldown is defined.
-                    UpdateFallBack(attackSimPosition, deltaTime);
-                    return;
+                        break;
+                    case AIBehaviorAfterAttack.FallBack:
+                    default:
+                        UpdateFallBack(attackSimPosition, deltaTime);
+                        return;
+
                 }
             }
 
             if (attackingLimb == null)
             {
                 attackingLimb = GetAttackLimb(attackSimPosition);
-                // TODO: decide what to do with this check. It's not probably not at the right place now.
-                if (Character.IsRemotePlayer)
-                {
-                    if (!Character.IsKeyDown(InputType.Attack)) return;
-                }
             }
             if (canAttack)
             {
@@ -582,7 +604,7 @@ namespace Barotrauma
                 steeringManager.SteeringSeek(attackSimPosition - (steeringLimb.SimPosition - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
                 if (Character.CurrentHull == null)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, 1.0f);
+                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, speed);
                 }
 
                 if (steeringManager is IndoorsSteeringManager indoorsSteering)
@@ -593,7 +615,7 @@ namespace Barotrauma
                         {
                             //wander around randomly and decrease the priority faster if no path is found
                             if (selectedTargetMemory != null) selectedTargetMemory.Priority -= deltaTime * 10.0f;
-                            steeringManager.SteeringWander();
+                            steeringManager.SteeringWander(speed);
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {
@@ -612,7 +634,7 @@ namespace Barotrauma
                     }
                 }
             }
-                
+
             if (canAttack)
             {
                 UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition, distance);
@@ -775,11 +797,10 @@ namespace Barotrauma
             {
                 Vector2 attackDir = Vector2.Normalize(Character.SimPosition - attackPosition);
                 if (!MathUtils.IsValid(attackDir)) attackDir = Vector2.UnitY;
-                //steeringManager.SteeringSeek(attackPosition, -0.8f);
                 steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
             }
 
-            steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 1.0f);
+            steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, Character.AnimController.GetCurrentSpeed(false));
         }
 
         #endregion
@@ -790,7 +811,7 @@ namespace Barotrauma
         {
             if (selectedAiTarget == null)
             {
-                State = AIState.None;
+                State = AIState.Idle;
                 return;
             }
 
@@ -799,7 +820,7 @@ namespace Barotrauma
             if (mouthLimb == null)
             {
                 DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
-                State = AIState.None;
+                State = AIState.Idle;
                 return;
             }
 

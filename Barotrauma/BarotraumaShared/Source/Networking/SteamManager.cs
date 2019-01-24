@@ -154,7 +154,20 @@ namespace Barotrauma.Steam
             }
 
             DebugConsole.Log("Unlocked achievement \"" + achievementName + "\"");
-            return instance.client.Achievements.Trigger(achievementName);
+
+            bool unlocked = instance.client.Achievements.Trigger(achievementName);
+            if (!unlocked)
+            {
+                //can be caused by an incorrect identifier, but also happens during normal gameplay:
+                //SteamAchievementManager tries to unlock achievements that may or may not exist 
+                //(discovered[whateverbiomewasentered], kill[withwhateveritem], kill[somemonster] etc) so that we can add
+                //some types of new achievements without the need for client-side changes.
+#if DEBUG
+                DebugConsole.NewMessage("Failed to unlock achievement \"" + achievementName + "\".");
+#endif
+            }
+
+            return unlocked;
         }
 
 #region Connecting to servers

@@ -21,6 +21,7 @@ namespace Barotrauma
         {
             get
             {
+                //TODO: this causes humanhusks to use the ragdoll params of the human whose info is being used, so the husk doesn't have the stringer
                 if (character.Info == null)
                 {
                     if (_ragdollParams == null)
@@ -1299,7 +1300,8 @@ namespace Barotrauma
                             targetTorso.WorldPosition, targetTorso, 
                             new List<Affliction>()
                             {
-                                AfflictionPrefab.InternalDamage.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier)
+                                AfflictionPrefab.InternalDamage.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier,
+                                source: character)
                             },
                             0.0f, true, 0.0f, character);
                     }

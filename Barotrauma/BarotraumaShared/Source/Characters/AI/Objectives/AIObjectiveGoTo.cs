@@ -117,7 +117,8 @@ namespace Barotrauma
             }
             else
             {
-                character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+                float normalSpeed = character.AnimController.GetCurrentSpeed(false);
+                character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
                 if (getDivingGearIfNeeded && Target?.Submarine == null && AllowGoingOutside)
                 {
                     AddSubObjective(new AIObjectiveFindDivingGear(character, true));
@@ -126,7 +127,7 @@ namespace Barotrauma
                 {
                     if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
                     {
-                        indoorsSteering.SteeringWander();
+                        indoorsSteering.SteeringWander(normalSpeed);
                     }
                     else if (AllowGoingOutside && 
                         getDivingGearIfNeeded && 

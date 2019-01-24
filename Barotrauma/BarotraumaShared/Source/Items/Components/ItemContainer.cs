@@ -249,19 +249,53 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            foreach (Item item in Inventory.Items)
-            {
-                if (item == null) continue;
-                item.Drop();
-            }
-
 #if CLIENT
             inventoryTopSprite?.Remove();
             inventoryBackSprite?.Remove();
             inventoryBottomSprite?.Remove();
             ContainedStateIndicator?.Remove();
+
+            if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
+            {
+                string itemNames = string.Empty;
+
+                foreach (Item item in Inventory.Items)
+                {
+                    if (item == null) continue;
+                    itemNames += item.Name + "\n";
+                }
+
+                if (itemNames.Length > 0)
+                {
+                    var msgBox = new GUIMessageBox(Item.Name, TextManager.Get("DeletingContainerWithItems") + itemNames, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                    {
+                        Inventory.DeleteAllItems();
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    msgBox.Buttons[1].OnClicked = (btn, userdata) =>
+                    {
+                        foreach (Item item in Inventory.Items)
+                        {
+                            if (item == null) continue;
+                            item.Drop();
+                        }
+                        msgBox.Close();
+                        return true;
+                    };
+                }
+                return;
+            }
 #endif
-        }
+
+            foreach (Item item in Inventory.Items)
+            {
+                if (item == null) continue;
+                item.Drop();
+            }               
+        }        
 
         public override void Load(XElement componentElement)
         {

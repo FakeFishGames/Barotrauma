@@ -205,9 +205,10 @@ namespace Barotrauma
                         if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
                     }
                     c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
-
+                    
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
+                        attack.SetUser(attacker);
                         var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
                         foreach (StatusEffect statusEffect in attack.StatusEffects)
                         {
