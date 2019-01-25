@@ -365,8 +365,8 @@
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
   <DeleteFileError>Could not delete file "[file]"!</DeleteFileError>
 
-  <SteamDllNotFound>Initializing Steam client failed (steam_api64.dll not found).</SteamDllNotFound>
-  <SteamClientInitFailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account.</SteamClientInitFailed>
+  <SteamDllNotFound>Initializing Steam client failed (steam_api64.dll not found). All Steam features have been disabled - you will not be able to use the Steam Workshop or join servers that use Steam.</SteamDllNotFound>
+  <SteamClientInitFailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account. All Steam features have been disabled - you will not be able to use the Steam Workshop or join servers that use Steam.</SteamClientInitFailed>
 
   <!-- Pronouns -->
   <PronounMale>He</PronounMale>
