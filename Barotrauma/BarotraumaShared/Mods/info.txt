@@ -34,7 +34,7 @@ Example:
 
 	<contentpackage name="BestModEver" path="Data\ContentPackages\BestModEver">
 		<Item file="Mods\BestModEver\items.xml" />
-		<Character file="Mods\BestModEver\Human\human.xml" />
+		<Character file="Mods\BestModEver\Human\Human.xml" />
 		<Character file="Mods\BestModEver\Cthulhu\cthulhu.xml" />
 		<Character file="Content\Characters\Crawler\crawler.xml" />
 		<Structure file="Content\Map\StructurePrefabs.xml" />

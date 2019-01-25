@@ -92,6 +92,12 @@ namespace Barotrauma
             get { return bloodEmitters; }
         }
 
+        private List<ParticleEmitter> damageEmitters = new List<ParticleEmitter>();
+        public IEnumerable<ParticleEmitter> DamageEmitters
+        {
+            get { return damageEmitters; }
+        }
+
         private List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> GibEmitters
         {
@@ -118,6 +124,9 @@ namespace Barotrauma
                 {
                     case "sound":
                         sounds.Add(new CharacterSound(subElement));
+                        break;
+                    case "damageemitter":
+                        damageEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "bloodemitter":
                         bloodEmitters.Add(new ParticleEmitter(subElement));
@@ -302,7 +311,7 @@ namespace Barotrauma
                     else
                     {
                         //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                        hudInfoVisible = controlled.CanSeeCharacter(this);                    
+                        hudInfoVisible = controlled.CanSeeCharacter(this, controlled.ViewTarget == null ? controlled.WorldPosition : controlled.ViewTarget.WorldPosition);
                     }
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
