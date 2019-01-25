@@ -159,7 +159,7 @@
     reward="1000"
     sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
-    monsterfile="Content/Characters/MolochBoss/molochboss.xml">
+    monsterfile="Content/Characters/MolochBoss/Molochboss.xml">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -186,7 +186,7 @@
     reward="800"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/TigerthresherBoss/tigerthresherboss.xml">
+    monsterfile="Content/Characters/TigerthresherBoss/Tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
     <LocationType from="City" to="None"/>
@@ -275,7 +275,7 @@
     reward="10000"
     sonarlabel="Target"
     successmessage="The End Worm is dead and the passageway is open for transport again."
-    monsterfile="Content/Characters/Endworm/endworm.xml">
+    monsterfile="Content/Characters/Endworm/Endworm.xml">
     
     <LocationType from="City" to="Lair"/>
     <LocationType from="Military" to="Lair"/>
@@ -295,7 +295,7 @@
     reward="1000"
     sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
-    monsterfile="Content/Characters/Moloch/moloch.xml">
+    monsterfile="Content/Characters/Moloch/Moloch.xml">
     
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -320,7 +320,7 @@
     reward="1000"
     sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
-    monsterfile="Content/Characters/Carrier/carrier.xml">
+    monsterfile="Content/Characters/Carrier/Carrier.xml">
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>

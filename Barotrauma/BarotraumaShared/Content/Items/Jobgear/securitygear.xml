@@ -40,9 +40,9 @@
     </Wearable>
   </Item>  
   <Item name="Body Armor" identifier="bodyarmor" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
-    <Price locationtype="Military" buyprice="150" />
-    <Price locationtype="City" buyprice="200" />
-    <Price locationtype="Outpost" buyprice="300" />
+    <Price locationtype="Military" buyprice="225" />
+    <Price locationtype="City" buyprice="300" />
+    <Price locationtype="Outpost" buyprice="500" />
     <Deconstruct time="40">
       <Item identifier="ballisticfiber" />
       <Item identifier="ballisticfiber" />
@@ -58,9 +58,9 @@
     </Wearable>
   </Item>
   <Item name="Ballistic Helmet" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
-    <Price locationtype="Military" buyprice="80" />
-    <Price locationtype="City" buyprice="100" />
-    <Price locationtype="Outpost" buyprice="150" />
+    <Price locationtype="Military" buyprice="125" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="200" />
     <Deconstruct time="10">
       <Item identifier="ballisticfiber" />
     </Deconstruct>
@@ -90,9 +90,9 @@
     </Wearable>
   </Item>
   <Item name="Riot Shield" identifier="riotshield" category="Equipment" tags="weapon">
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="City" buyprice="100" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="City" buyprice="225" />
+    <Price locationtype="Outpost" buyprice="225" />
     <Deconstruct time="10">
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>

@@ -50,8 +50,8 @@
     sonarsize="5"
     scale="0.25">
 
-    <Price locationtype="Military" buyprice="140"/>
-    <Price locationtype="City" buyprice="150"/>
+    <Price locationtype="Military" buyprice="75"/>
+    <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
@@ -88,8 +88,8 @@
     sonarsize="5"
     scale="0.25">
 
-    <Price locationtype="Military" buyprice="300"/>
-    <Price locationtype="City" buyprice="400"/>
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="300"/>
     <Price locationtype="Outpost" buyprice="500"/>
 
     <Deconstruct time="20">
@@ -136,9 +136,9 @@
     sonarsize="5"
     scale="0.25">
 
-    <Price locationtype="Military" buyprice="140"/>
-    <Price locationtype="City" buyprice="150"/>
-    <Price locationtype="Outpost" buyprice="200"/>
+    <Price locationtype="Military" buyprice="175"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="300"/>
 
     <Deconstruct time="10">
       <Item identifier="steel"/>
@@ -175,8 +175,8 @@
     sonarsize="5"
     scale="0.25">
 
-    <Price locationtype="Military" buyprice="300"/>
-    <Price locationtype="City" buyprice="400"/>
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="300"/>
     <Price locationtype="Outpost" buyprice="500"/>
 
     <Deconstruct time="20">
