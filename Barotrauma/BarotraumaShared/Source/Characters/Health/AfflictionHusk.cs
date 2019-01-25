@@ -133,7 +133,7 @@ namespace Barotrauma
             //husk appendage already created, don't do anything
             if (huskAppendage != null) return;
 
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "huskappendage.xml"));
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "Huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
             var limbElement = doc.Root.Element("limb");
