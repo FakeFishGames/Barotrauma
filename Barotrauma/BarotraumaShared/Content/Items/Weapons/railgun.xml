@@ -180,7 +180,8 @@
     name="Nuclear Shell"
     identifier="nuclearshell"
     category="Misc"
-    sonarsize="5">
+    sonarsize="5"
+    scale="0.26">
     
     <Price locationtype="Military" buyprice="400"/>
     
@@ -191,7 +192,7 @@
     </Deconstruct>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64"/>
-    <Sprite texture="weapons.png" sourcerect="0,77,88,20" depth ="0.55"/>
+    <Sprite texture="railgunshell.png" sourcerect="0,80,428,77" depth ="0.55"/>
 
     <Body width="87" height="18" density="35"/>
 
@@ -224,7 +225,58 @@
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
       <Containable identifiers="smallitem"/>
     </ItemContainer>
-  </Item> 
+  </Item>
+
+  <Item
+    name="Alien Shell"
+    identifier="alienshell"
+    category="Misc"
+    sonarsize="5"
+    scale="0.26">
+
+    <Price locationtype="Military" buyprice="400"/>
+
+    <Deconstruct time="10">
+      <Item identifier="steel"/>
+      <Item identifier="uranium"/>
+      <Item identifier="uex"/>
+    </Deconstruct>
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,64,64"/>
+    <Sprite texture="weapons.png" sourcerect="0,161,428,77" depth ="0.55"/>
+
+    <Body width="87" height="18" density="35"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="200" severlimbsprobability="1.0">
+        <Affliction identifier="internaldamage" strength="100"/>
+        <Affliction identifier="bleeding" strength="10"/>
+      </Attack>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000"/>
+      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
+          <Affliction identifier="burn" strength="500"/>
+          <Affliction identifier="internaldamage" strength="500"/>
+          <Affliction identifier="stun" strength="10"/>
+        </Explosion>
+      </StatusEffect>
+
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
+    </Projectile>
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable identifiers="smallitem"/>
+    </ItemContainer>
+  </Item>
   
 </Items>
 
