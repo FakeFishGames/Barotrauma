@@ -438,7 +438,7 @@ namespace Barotrauma.Tutorials
                     spriteSheetPlayer.SetContent(playableContentPath, activeSegment.Content, activeSegment.Name, true);
                     break;
                 case ContentTypes.Text:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
                                               activeSegment.Content.GetAttributeInt("width", 300),
                                               activeSegment.Content.GetAttributeInt("height", 80),
                                               activeSegment.Content.GetAttributeString("anchor", "Center"), false);

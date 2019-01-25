@@ -2,15 +2,15 @@
 <Tutorials>
   <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
     <Segment name="Welcome" contenttype="text" istriggered="false">
-      <Text tag="Welcome" width="900" height="80" anchor="Center"/>
+      <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
     </Segment>
-    <Segment name="Command a crewmember to operate the reactor" contenttype="video" istriggered="false">
+    <Segment name="ReactorCommand" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="9" empty="0"/>
         <Sheet path="1_CommandReactor/Sheets2.png" columns="5" rows="6" empty="4"/>
       </Video>
     </Segment>
-    <Segment name="Nav Console" contenttype="video" istriggered="false">
+    <Segment name="NavConsole" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="2_NavConsole/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="2_NavConsole/Sheets2.png" columns="5" rows="9"/>
@@ -19,8 +19,8 @@
         <Sheet path="2_NavConsole/Sheets5.png" columns="5" rows="2" empty="4"/>
       </Video>
     </Segment>
-    <Segment name="Destination Objective" contenttype="text" istriggered="false">
-      <Text tag="DestinationObjective" width="300" height="80" anchor="Center"/>
+    <Segment name="DestinationObjective" contenttype="text" istriggered="false">
+      <Text tag="DestinationObjectiveText" width="300" height="80" anchor="Center"/>
     </Segment>
     <Segment name="Flood" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
@@ -31,7 +31,7 @@
         <Sheet path="3_Flood/Sheets5.png" columns="5" rows="5" empty="2"/>
       </Video>
     </Segment>
-    <Segment name="Reactor" contenttype="video" istriggered="false">
+    <Segment name="ReactorUse" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="4_Reactor/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="4_Reactor/Sheets2.png" columns="5" rows="9"/>
@@ -40,17 +40,17 @@
         <Sheet path="4_Reactor/Sheets5.png" columns="5" rows="2" empty="3"/>
       </Video>
     </Segment>
-    <Segment name="Enemy on Sonar" contenttype="video" istriggered="false">
+    <Segment name="EnemyOnSonar" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="5_EnemyOnSonar/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="5_EnemyOnSonar/Sheets2.png" columns="5" rows="9"/>
         <Sheet path="5_EnemyOnSonar/Sheets3.png" columns="5" rows="7" empty="1"/>
       </Video>
     </Segment>
-    <Segment name="Degrading I" contenttype="text" istriggered="false">
-      <Text tag="Degrading1" width="300" height="80" anchor="Center"/>
+    <Segment name="Degrading1" contenttype="text" istriggered="false">
+      <Text tag="Degrading1Text" width="300" height="80" anchor="Center"/>
     </Segment>
-    <Segment name="Degrading II" contenttype="video" istriggered="false">
+    <Segment name="Degrading2" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
         <Sheet path="6_Degrading2/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="6_Degrading2/Sheets2.png" columns="5" rows="7"/>
@@ -69,8 +69,8 @@
         <Sheet path="8_Approach1/Sheets1.png" columns="1" rows="1"/>
       </Video>
     </Segment>
-    <Segment name="Approach II" contenttype="text" istriggered="false">
-      <Text tag="Approach2" width="300" height="80" anchor="Center"/>
+    <Segment name="Approach2" contenttype="text" istriggered="false">
+      <Text tag="Approach2Text" width="300" height="80" anchor="Center"/>
     </Segment>
   </ContextualTutorial>
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">

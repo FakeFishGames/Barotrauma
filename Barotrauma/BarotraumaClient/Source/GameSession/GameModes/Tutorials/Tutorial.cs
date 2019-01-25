@@ -168,13 +168,18 @@ namespace Barotrauma.Tutorials
             return infoBlock;
         }
 
-        protected GUIComponent CreateInfoFrame(string text, int width, int height, string anchorStr, bool hasButton = false)
+        protected GUIComponent CreateInfoFrame(string title, string text, int width, int height, string anchorStr, bool hasButton = false)
         {
             if (hasButton) height += 30;
 
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
 
             height += wrappedText.Split('\n').Length * 25;
+
+            if (title.Length > 0)
+            {
+                height += 35;
+            }
 
             Anchor anchor = Anchor.TopRight;
             Enum.TryParse(anchorStr, out anchor);
@@ -182,7 +187,13 @@ namespace Barotrauma.Tutorials
             var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.7f), infoBlock.RectTransform, Anchor.Center),
+            if (title.Length > 0)
+            {
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1f, .35f), infoBlock.RectTransform, Anchor.TopCenter,
+                Pivot.TopCenter), title, font: GUI.LargeFont, textAlignment: Alignment.Center);
+            }
+
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
                 text, wrap: true);
 
             if (hasButton)
