@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Button" identifier="button" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="Research" buyprice="10" />
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="20" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="City" buyprice="80" />
+    <Price locationtype="Military" buyprice="80" />
+    <Price locationtype="Outpost" buyprice="80" />
     <Sprite texture="button.png" sourcerect="0,0,24,27" depth="0.8" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="fpgacircuit" />
@@ -25,10 +25,10 @@
     </Holdable>
   </Item>
   <Item name="Switch" identifier="switch" category="Electrical" tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="Research" buyprice="10" />
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="20" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="City" buyprice="80" />
+    <Price locationtype="Military" buyprice="80" />
+    <Price locationtype="Outpost" buyprice="80" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,448,64,64" />
     <Sprite texture="button.png" sourcerect="24,0,11,17" depth="0.79" origin="0.5,0.5" />
     <Deconstruct time="10">

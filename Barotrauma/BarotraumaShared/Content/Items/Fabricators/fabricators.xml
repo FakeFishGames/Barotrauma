@@ -24,10 +24,6 @@
         <RequiredItem identifier="carbon"/>
         <RequiredItem identifier="iron"/>
       </FabricableItem>
-      <FabricableItem identifier="aluminium" requiredtime="5">
-        <RequiredItem identifier="aluminium"/>
-        <RequiredItem identifier="silicon"/>
-      </FabricableItem>
       <FabricableItem identifier="titaniumaluminiumalloy" requiredtime="5">
         <RequiredItem identifier="titanium"/>
         <RequiredItem identifier="aluminium"/>
@@ -58,6 +54,11 @@
       <FabricableItem identifier="orangewire" requiredtime="5">
         <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
         <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="fpgacircuit" requiredtime="5">
+        <RequiredItem identifier="plastic" />
+        <RequiredItem identifier="copper" />
       </FabricableItem>
 
       <FabricableItem identifier="button" requiredtime="10">
@@ -232,7 +233,6 @@
 
       <FabricableItem identifier="batterycell" requiredtime="10">
         <RequiredItem identifier="zinc"/>
-        <RequiredItem identifier="lithium"/>
       </FabricableItem>
       
       <FabricableItem identifier="fulguriumbatterycell" requiredtime="10">
@@ -307,10 +307,6 @@
       <FabricableItem identifier="explosivespear" requiredtime="10">
         <RequiredItem identifier="spear"/>
         <RequiredItem identifier="c4block"/>
-      </FabricableItem>
-      <FabricableItem identifier="revolverround" requiredtime="10">
-        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
-        <RequiredItem identifier="lead" mincondition="0.2" usecondition="true"/>
       </FabricableItem>
       
       <FabricableItem identifier="stungrenade" requiredtime="20">
@@ -470,7 +466,6 @@
       <FabricableItem identifier="antibloodloss1" requiredtime="10">
         <RequiredSkill identifier="medical" level="30"/>
         <RequiredItem identifier="sodium"/>
-        <RequiredItem identifier="chlorine"/>
       </FabricableItem>
       <FabricableItem identifier="antibloodloss2" requiredtime="10">
         <RequiredSkill identifier="medical" level="60"/>

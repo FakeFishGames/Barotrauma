@@ -1,10 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Health Scanner HUD" identifier="healthscanner" scale="0.5" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="A heads-up display that displays information of the vital signs and status of nearby humans.">
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="100" />
-    <Price locationtype="City" buyprice="100" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="Research" buyprice="100" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="150" />
+    <Deconstruct time="20">
+      <Item identifier="fpgacircuit" />
+      <Item identifier="plastic" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64" />
     <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="193,0,96,96" depth="0.6" origin="0.5,0.5" />
     <Body width="18" height="6" density="30" />

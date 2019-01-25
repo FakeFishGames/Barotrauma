@@ -7,10 +7,10 @@
         cargocontaineridentifier="metalcrate"
         description="One of the most crucial tools on board the submarine. Also works underwater."
         Scale="0.32">
-    <Price locationtype="City" buyprice="140" />
-    <Price locationtype="Research" buyprice="140" />
-    <Price locationtype="Military" buyprice="140" />
-    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="City" buyprice="75" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="Outpost" buyprice="75" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64" />
     <Sprite texture="tools_new.png" sourcerect="0,117,152,118" depth="0.55" />
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into steel and plastic -->
@@ -59,10 +59,10 @@
         cargocontaineridentifier="metalcrate"
         description="Cuts through various materials using a jet of ionized oxygen."
         Scale="0.32">
-    <Price locationtype="City" buyprice="140" />
-    <Price locationtype="Research" buyprice="140" />
-    <Price locationtype="Military" buyprice="140" />
-    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="City" buyprice="75" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="Outpost" buyprice="75" />
     <Deconstruct time="10">
       <Item identifier="steel" />
       <Item identifier="plastic" />
@@ -120,10 +120,10 @@
     </Holdable>
   </Item>
   <Item name="Fire Extinguisher" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="A handheld carbon dioxide extinguisher.">
-    <Price locationtype="City" buyprice="140" />
-    <Price locationtype="Research" buyprice="140" />
-    <Price locationtype="Military" buyprice="150" />
-    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Research" buyprice="100" />
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="Outpost" buyprice="150" />
     <Deconstruct time="10">
       <Item identifier="aluminium" />
       <Item identifier="sodium" />
@@ -140,10 +140,10 @@
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -153,10 +153,10 @@
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
   </Item>
   <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -171,10 +171,10 @@
     </MeleeWeapon>
   </Item>
   <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="80" />
-    <Price locationtype="Research" buyprice="80" />
-    <Price locationtype="Military" buyprice="80" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -252,10 +252,10 @@
         Tags="smallitem"
         cargocontaineridentifier="metalcrate"
         Scale="0.32">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="80" />
+    <Price locationtype="City" buyprice="120" />
+    <Price locationtype="Research" buyprice="120" />
+    <Price locationtype="Military" buyprice="120" />
+    <Price locationtype="Outpost" buyprice="175" />
     <Deconstruct time="15">
       <Item identifier="aluminium" />
       <Item identifier="lightcomponent" />
@@ -278,10 +278,10 @@
     </ItemContainer>
   </Item>
   <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
-    <Price locationtype="City" buyprice="10" />
-    <Price locationtype="Research" buyprice="10" />
-    <Price locationtype="Military" buyprice="10" />
-    <Price locationtype="Outpost" buyprice="20" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="75" />
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />

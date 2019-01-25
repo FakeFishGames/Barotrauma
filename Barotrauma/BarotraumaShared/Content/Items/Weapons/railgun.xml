@@ -143,9 +143,9 @@
     sonarsize="5"
     scale="0.26">
 
-    <Price locationtype="Military" buyprice="150"/>
-    <Price locationtype="City" buyprice="180"/>
-    <Price locationtype="Outpost" buyprice="250"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item identifier="steel"/>
@@ -183,7 +183,7 @@
     sonarsize="5"
     scale="0.26">
     
-    <Price locationtype="Military" buyprice="400"/>
+    <Price locationtype="Military" buyprice="200"/>
     
     <Deconstruct time="10">
       <Item identifier="steel"/>

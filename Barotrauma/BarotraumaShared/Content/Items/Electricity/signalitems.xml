@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Wire" identifier="wire" category="Electrical" Tags="smallitem,wire" spritecolor="210,215,218,255" InventoryIconColor="210,215,218,255" canbepicked="true" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="80" />
-    <Price locationtype="Outpost" buyprice="80" />
-    <Price locationtype="Research" buyprice="80" />
-    <Price locationtype="Military" buyprice="80" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -16,10 +16,10 @@
     <Wire />
   </Item>
   <Item name="Red Wire" identifier="redwire" category="Electrical" Tags="smallitem,wire" spritecolor="254,23,17,255" InventoryIconColor="254,23,17,255" canbepicked="true" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="5" />
-    <Price locationtype="Outpost" buyprice="5" />
-    <Price locationtype="Research" buyprice="5" />
-    <Price locationtype="Military" buyprice="5" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -31,10 +31,10 @@
     <Wire />
   </Item>
   <Item name="Blue Wire" identifier="bluewire" category="Electrical" Tags="smallitem,wire" spritecolor="51,121,173,255" InventoryIconColor="51,121,173,255" canbepicked="true" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="5" />
-    <Price locationtype="Outpost" buyprice="5" />
-    <Price locationtype="Research" buyprice="5" />
-    <Price locationtype="Military" buyprice="5" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -46,10 +46,10 @@
     <Wire />
   </Item>
   <Item name="Orange Wire" identifier="orangewire" category="Electrical" Tags="smallitem,wire" spritecolor="255,140,13,255" InventoryIconColor="255,140,13,255" canbepicked="true" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="5" />
-    <Price locationtype="Outpost" buyprice="5" />
-    <Price locationtype="Research" buyprice="5" />
-    <Price locationtype="Military" buyprice="5" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -61,10 +61,10 @@
     <Wire />
   </Item>
   <Item name="Green Wire" identifier="greenwire" category="Electrical" Tags="smallitem,wire" spritecolor="56,143,111,255" InventoryIconColor="56,143,111,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
-    <Price locationtype="City" buyprice="5" />
-    <Price locationtype="Outpost" buyprice="5" />
-    <Price locationtype="Research" buyprice="5" />
-    <Price locationtype="Military" buyprice="5" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -76,10 +76,10 @@
     <Wire />
   </Item>
   <Item name="Black Wire" identifier="blackwire" category="Electrical" Tags="smallitem,wire" spritecolor="50,50,50,255" InventoryIconColor="50,50,50,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
-    <Price locationtype="City" buyprice="5" />
-    <Price locationtype="Outpost" buyprice="5" />
-    <Price locationtype="Research" buyprice="5" />
-    <Price locationtype="Military" buyprice="5" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -91,10 +91,10 @@
     <Wire />
   </Item>
   <Item name="Brown Wire" identifier="brownwire" category="Electrical" Tags="smallitem,wire" spritecolor="123,77,62,255" InventoryIconColor="123,77,62,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
-    <Price locationtype="City" buyprice="5" />
-    <Price locationtype="Outpost" buyprice="5" />
-    <Price locationtype="Research" buyprice="5" />
-    <Price locationtype="Military" buyprice="5" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
       <Item identifier="copper" outcondition="0.2"/>
       <Item identifier="rubber" outcondition="0.2"/>
@@ -106,10 +106,10 @@
     <Wire />
   </Item>
   <Item name="FPGA Circuit" identifier="fpgacircuit" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="City" buyprice="25" />
-    <Price locationtype="Outpost" buyprice="25" />
-    <Price locationtype="Military" buyprice="25" />
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="City" buyprice="60" />
+    <Price locationtype="Outpost" buyprice="60" />
+    <Price locationtype="Military" buyprice="60" />
     <Deconstruct time="5">
       <Item identifier="plastic" />
       <Item identifier="copper" />
@@ -120,7 +120,7 @@
     <Holdable slots="Any,RightHand,LeftHand" />
   </Item>
   <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -145,7 +145,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" price="10" description="Outputs the sum of the received signals.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -169,7 +169,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -194,7 +194,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -217,7 +217,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -254,7 +254,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -277,7 +277,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -304,7 +304,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Oxygen Detector" identifier="oxygendetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a value between 0-100 depending on the quality of the surrounding air." scale="0.16">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -326,7 +326,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.16">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -348,7 +348,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.16">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -370,7 +370,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.16">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -392,7 +392,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -417,7 +417,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -440,7 +440,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -464,7 +464,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel.">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
@@ -487,10 +487,10 @@
     </ConnectionPanel>
   </Item>
   <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="City" buyprice="80" />
-    <Price locationtype="Outpost" buyprice="80" />
-    <Price locationtype="Military" buyprice="80" />
+    <Price locationtype="Research" buyprice="80" />
+    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="Military" buyprice="100" />
     <Deconstruct time="10">
       <Item identifier="fpgacircuit" />
       <Item identifier="steel" />
@@ -512,7 +512,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
     <Price locationtype="Military" buyprice="80" />
