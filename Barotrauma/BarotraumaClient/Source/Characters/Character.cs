@@ -311,7 +311,7 @@ namespace Barotrauma
                     else
                     {
                         //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                        hudInfoVisible = controlled.CanSeeCharacter(this);                    
+                        hudInfoVisible = controlled.CanSeeCharacter(this, controlled.ViewTarget == null ? controlled.WorldPosition : controlled.ViewTarget.WorldPosition);
                     }
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
