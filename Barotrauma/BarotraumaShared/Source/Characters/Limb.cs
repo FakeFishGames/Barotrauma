@@ -489,8 +489,9 @@ namespace Barotrauma
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
-        public bool UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget, float distance = -1)
+        public bool UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget, out AttackResult attackResult, float distance = -1)
         {
+            attackResult = default(AttackResult);
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime);
@@ -576,7 +577,7 @@ namespace Barotrauma
                     LastAttackSoundTime = SoundInterval;
                 }
 #endif
-                attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
                 if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
                 {
                     // TODO: use the hit pos?

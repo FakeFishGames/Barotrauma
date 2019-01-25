@@ -270,6 +270,14 @@ namespace Barotrauma
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
+            //if there's no more space in the buffer, don't render the water in the hull
+            //not an ideal solution, but this seems to only happen in cases where the missing 
+            //water is not very noticeable (e.g. zoomed very far out so that multiple subs and ruins are visible)
+            if (renderer.PositionInBuffer > renderer.vertices.Length - 6)
+            {
+                return;
+            }
+
             if (!renderer.IndoorsVertices.ContainsKey(entityGrid))
             {
                 renderer.IndoorsVertices[entityGrid] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];
@@ -387,7 +395,8 @@ namespace Barotrauma
                     }
                 }
 
-                if (renderer.PositionInIndoorsBuffer[entityGrid] <= renderer.IndoorsVertices[entityGrid].Length - 12)
+                if (renderer.PositionInIndoorsBuffer[entityGrid] <= renderer.IndoorsVertices[entityGrid].Length - 12 &&
+                    cam.Zoom > 0.6f)
                 {
                     const float SurfaceSize = 10.0f;
                     const float SineFrequency1 = 0.01f;

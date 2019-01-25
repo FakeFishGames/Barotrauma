@@ -255,6 +255,8 @@ namespace Barotrauma
         {
             if (CheatsEnabled) return;
 
+            identifier = identifier.ToLowerInvariant();
+
             if (unlockClients && GameMain.Server != null)
             {
                 foreach (Client c in GameMain.Server.ConnectedClients)
@@ -271,7 +273,6 @@ namespace Barotrauma
             if (conditions != null && !conditions(Character.Controlled)) return;
 
             SteamManager.UnlockAchievement(identifier);
-
         }
     }
 }

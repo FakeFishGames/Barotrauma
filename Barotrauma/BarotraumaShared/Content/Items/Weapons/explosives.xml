@@ -3,10 +3,10 @@
   <Item name="UEX" identifier="uex" category="Equipment" 
         description="A simple explosive compound made of sodium and phosphorus."
         Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
-    <Price locationtype="Military" buyprice="100" />
-    <Price locationtype="City" buyprice="200" />
-    <Price locationtype="Outpost" buyprice="200" />
-    <Price locationtype="Research" buyprice="200" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Outpost" buyprice="125" />
+    <Price locationtype="Research" buyprice="75" />
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
@@ -25,9 +25,9 @@
   </Item>
   <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
     <Price locationtype="Military" buyprice="100" />
-    <Price locationtype="City" buyprice="200" />
+    <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="200" />
-    <Price locationtype="Research" buyprice="200" />
+    <Price locationtype="Research" buyprice="125" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
     <Body width="23" height="16" density="20"/>
