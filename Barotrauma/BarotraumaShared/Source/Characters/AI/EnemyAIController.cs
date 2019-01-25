@@ -100,6 +100,9 @@ namespace Barotrauma
 
         private float colliderSize;
 
+        private readonly float aggressiongreed;
+        private readonly float aggressionhurt;
+
         public bool AttackHumans
         {
             get
@@ -182,6 +185,9 @@ namespace Barotrauma
 
             sight           = aiElement.GetAttributeFloat("sight", 0.0f);
             hearing         = aiElement.GetAttributeFloat("hearing", 0.0f);
+
+            aggressionhurt = aiElement.GetAttributeFloat("aggressionhurt", 100f);
+            aggressiongreed = aiElement.GetAttributeFloat("aggressiongreed", 10f);
 
             fleeHealthThreshold = aiElement.GetAttributeFloat("fleehealththreshold", 0.0f);
 
@@ -767,8 +773,11 @@ namespace Barotrauma
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
-            targetMemory.Priority += attackResult.Damage / Math.Max(Character.Vitality, 1.0f);
+            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * aggressionhurt; ;
         }
+
+        // 10 dmg, 100 health -> 0.1
+        private float GetRelativeDamage(float dmg, float vitality) => dmg / Math.Max(vitality, 1.0f);
 
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition, float distance = -1)
         {
@@ -776,15 +785,13 @@ namespace Barotrauma
             if (damageTarget == null) return;
 
             float prevHealth = damageTarget.Health;
-            if (limb.UpdateAttack(deltaTime, attackPosition, damageTarget, distance))
+            if (limb.UpdateAttack(deltaTime, attackPosition, damageTarget, out AttackResult attackResult, distance))
             {
-                // Managed to hit
-                selectedTargetMemory.Priority += 5;
-            }
-            if (damageTarget.Health < prevHealth)
-            {
-                // Managed to make damage (should be cumulative +10 now)
-                selectedTargetMemory.Priority += 5;
+                if (damageTarget.Health > 0)
+                {
+                    // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
+                    selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * aggressiongreed; ;
+                }
             }
 
             if (!limb.attack.IsRunning)
