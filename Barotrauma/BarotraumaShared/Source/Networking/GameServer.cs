@@ -2311,6 +2311,7 @@ namespace Barotrauma.Networking
 
         public void GiveAchievement(Character character, string achievementIdentifier)
         {
+            achievementIdentifier = achievementIdentifier.ToLowerInvariant();
             foreach (Client client in connectedClients)
             {
                 if (client.Character == character)
