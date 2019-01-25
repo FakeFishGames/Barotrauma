@@ -31,7 +31,7 @@ namespace Barotrauma
     {
         public static WaterRenderer Instance;
 
-        public const int DefaultBufferSize = 1500;
+        public const int DefaultBufferSize = 2000;
         public const int DefaultIndoorsBufferSize = 3000;
 
         public static Vector2 DistortionScale = new Vector2(0.5f, 0.5f);
