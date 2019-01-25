@@ -2337,7 +2337,7 @@ namespace Barotrauma
             }
 
             CauseOfDeath = new CauseOfDeath(
-                causeOfDeath, causeOfDeathAffliction.Prefab, 
+                causeOfDeath, causeOfDeathAffliction?.Prefab, 
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
