@@ -92,6 +92,12 @@ namespace Barotrauma
             get { return bloodEmitters; }
         }
 
+        private List<ParticleEmitter> damageEmitters = new List<ParticleEmitter>();
+        public IEnumerable<ParticleEmitter> DamageEmitters
+        {
+            get { return damageEmitters; }
+        }
+
         private List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> GibEmitters
         {
@@ -118,6 +124,9 @@ namespace Barotrauma
                 {
                     case "sound":
                         sounds.Add(new CharacterSound(subElement));
+                        break;
+                    case "damageemitter":
+                        damageEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "bloodemitter":
                         bloodEmitters.Add(new ParticleEmitter(subElement));
