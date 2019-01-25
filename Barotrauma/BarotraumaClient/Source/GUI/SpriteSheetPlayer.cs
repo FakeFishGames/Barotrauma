@@ -11,7 +11,7 @@ namespace Barotrauma
         private SpriteSheet[] playableSheets;
         private SpriteSheet currentSheet;
 
-        private GUIFrame frame;
+        private GUIFrame background, videoFrame;
         private GUITextBlock title;
         private GUICustomComponent sheetView;
 
@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private int currentSheetIndex = 0;
         private int currentFrameIndex = 0;
+
+        private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
 
         private bool isPlaying;
         public bool IsPlaying
@@ -42,12 +44,11 @@ namespace Barotrauma
             int width = (int)defaultResolution.X;
             int height = (int)defaultResolution.Y;
 
-            frame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), null, Anchor.Center), "SonarFrame");
-
-            sheetView = new GUICustomComponent(new RectTransform(new Point(width, height), frame.RectTransform, Anchor.Center),
+            background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
+            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center), "SonarFrame");
+            sheetView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawSheetView(spriteBatch, guiCustomComponent.Rect); }, UpdateSheetView);
-
-            title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), frame.RectTransform, Anchor.TopCenter, Pivot.BottomCenter), string.Empty, font: GUI.LargeFont, textAlignment: Alignment.Center);
+            title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), videoFrame.RectTransform, Anchor.TopCenter, Pivot.BottomCenter), string.Empty, font: GUI.LargeFont, textAlignment: Alignment.Center);
         }
 
         public void Play()
@@ -63,10 +64,10 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             if (!isPlaying) return;
-            frame.AddToGUIUpdateList();
+            background.AddToGUIUpdateList();
         }
 
-        public void SetContent(string contentPath, XElement videoElement, string titleText, bool startPlayback)
+        public void SetContent(string contentPath, XElement videoElement, string titleTag, bool startPlayback)
         {
             totalElapsed = loopTimer = 0.0f;
             animationSpeed = videoElement.GetAttributeFloat("animationspeed", 0.1f);
@@ -77,10 +78,10 @@ namespace Barotrauma
 
             Point resolution = currentSheet.FrameSize;
 
-            frame.RectTransform.NonScaledSize = resolution + new Point(borderSize, borderSize);
+            videoFrame.RectTransform.NonScaledSize = resolution + new Point(borderSize, borderSize);
             sheetView.RectTransform.NonScaledSize = resolution;
 
-            title.Text = titleText;
+            title.Text = TextManager.Get(titleTag);
             title.RectTransform.NonScaledSize = new Point(resolution.X, 30);
 
             if (startPlayback) Play();
