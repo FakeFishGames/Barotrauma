@@ -297,15 +297,7 @@ namespace Barotrauma
             }
         }
 
-        public float SoundRange
-        {
-            get { return aiTarget.SoundRange; }
-        }
-
-        public float SightRange
-        {
-            get { return aiTarget.SightRange; }
-        }
+        private float Noise { get; set; }
 
         private float pressureProtection;
         public float PressureProtection
@@ -668,6 +660,7 @@ namespace Barotrauma
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
+            Noise = doc.Root.GetAttributeFloat("noise", 100f);
 
             //List<XElement> ragdollElements = new List<XElement>();
             //List<float> ragdollCommonness = new List<float>();
@@ -1139,7 +1132,7 @@ namespace Barotrauma
                         }
                     }
 
-                    attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
+                    attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult);
 
                     if (!attackLimb.attack.IsRunning)
                     {
@@ -1907,7 +1900,7 @@ namespace Barotrauma
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
             
             UpdateSightRange();
-            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
+            UpdateSoundRange();
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
             
@@ -1972,9 +1965,16 @@ namespace Barotrauma
 
         private void UpdateSightRange()
         {
-            if (aiTarget == null) return;
+            if (aiTarget == null) { return; }
+            float range = (float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f;
+            aiTarget.SightRange = MathHelper.Clamp(range, 2000.0f, 50000.0f);
+        }
 
-            aiTarget.SightRange = MathHelper.Clamp((float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f, 2000.0f, 50000.0f);
+        private void UpdateSoundRange()
+        {
+            if (aiTarget == null) { return; }
+            float range = (float)Math.Sqrt(Mass) * 100.0f + AnimController.Collider.LinearVelocity.Length() * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 2000f, 50000f);
         }
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
