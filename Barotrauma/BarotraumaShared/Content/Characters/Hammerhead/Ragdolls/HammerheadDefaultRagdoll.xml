@@ -5,7 +5,7 @@
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
   </limb>
-  <limb id="1" name="Head" type="Head" radius="0" width="310" notes="1cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="3" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="1" name="Head" type="Head" radius="0" width="310" notes="1cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="10" stepoffset="0,0" height="150" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="264,0,329,191" origin="0.5,0.5" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>

@@ -42,10 +42,19 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\BackgroundCreaturePrefabs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Carrier.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Ragdolls\CarrierDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Charybdis.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Ragdolls\CharybdisDefaultRagdoll.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Coelanth.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Ragdolls\CoelanthDefaultRagdoll.xml">
@@ -66,12 +75,25 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\crawler.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\crawler.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Crawler.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Crawler\Ragdolls\CrawlerDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Endworm.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\Fractalguardian2.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Fractalguardian.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Human.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Huskappendage.xml" />
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdoll_old.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -243,7 +265,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Manta\Manta.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Manta\manta.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Manta\Manta.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Manta\Ragdolls\MantaDefaultRagdoll.xml">
@@ -276,7 +298,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Ragdolls\TigerthresherbossDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\tigerthresher.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\Tigerthresher.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\Ragdolls\WatcherDefaultRagdoll.xml">
@@ -741,9 +763,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\carrier.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\carrier.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Animations\CarrierSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -751,9 +770,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\charybdis.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\charybdis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\CharybdisSwimFast.xml">
@@ -771,13 +787,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\coelanth.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\coelanth.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\legacycrawler.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\legacycrawler.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Legacycrawler.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Animations\LegacycrawlerRun.xml">
@@ -801,12 +814,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\endworm.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\endworm.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\fractalguardian2.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\Animations\Fractalguardian2SwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -820,9 +827,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\fractalguardian.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\fractalguardian.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\damagedhead.png">
@@ -840,10 +844,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\firstnames_male.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\human.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\humanhusk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Humanhusk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\HumanRun.xml">
@@ -856,9 +857,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\HumanWalk.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\huskappendage.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\lastnames.txt">
@@ -907,7 +905,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversationsFinnish.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -915,7 +912,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\DivingSuit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\husk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Husk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\legs.png">
@@ -936,10 +933,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\mantis.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\mantis.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Mantis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\molochboss.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Molochboss.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Animations\MolochbossSwimFast.xml">
@@ -957,10 +954,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacymoloch\legacymoloch.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacymoloch\legacymoloch.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacymoloch\Legacymoloch.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\tigerthresherboss.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Tigerthresherboss.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Animations\TigerthresherbossSwimFast.xml">
@@ -993,7 +990,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\watcher.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\watcher.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\Watcher.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\CodeWords.txt">
@@ -1700,7 +1697,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts\FinnishVanilla.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\Sheets1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2752,6 +2748,14 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Typhon.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Moloch.png" />
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Moloch.xml" />
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\postprocess_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\deformshader_opengl.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
@@ -2825,7 +2829,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\SmokeDetector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
@@ -3003,6 +3006,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiplayerCampaign.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Character name="Legacymoloch" humanoid="false">
+
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <gibemitter particle="blackwaterblood" particleamount="40" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
+  
+  <health
+    vitality="1000"
+    doesbleed="false"/>
+
+  <sound file="Content/Characters/Legacymoloch/attack1.ogg" state="Attack" range="3000"/>
+  <sound file="Content/Characters/Legacymoloch/attack2.ogg" state="Attack" range="3000"/>
+  <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="None" range="3000"/>
+
+  <ai
+    combatstrength="1200"
+    sight="0.0" hearing="1.0">
+    <targetpriority tag="stronger" state="Escape" priority="100"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Attack" priority="45"/>
+    <targetpriority tag="sonar" state="Attack" priority="45"/>
+    <targetpriority tag="human" state="Attack" priority="40"/>
+  </ai>
+
+</Character>
