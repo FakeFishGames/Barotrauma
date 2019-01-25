@@ -33,7 +33,11 @@
     </Segment>
     <Segment name="Reactor" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="4_Reactor/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="4_Reactor/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets5.png" columns="5" rows="2" empty="3"/>
       </Video>
     </Segment>
     <Segment name="Enemy on Sonar" contenttype="video" istriggered="false">

@@ -1737,6 +1737,18 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\Sheets1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\Sheets2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\Sheets3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\Sheets4.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\Sheets5.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\5_EnemyOnSonar\Sheets1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
