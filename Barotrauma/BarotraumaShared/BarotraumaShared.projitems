@@ -258,12 +258,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Animations\MolochSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Moloch.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Moloch.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Ragdolls\MolochDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -907,7 +901,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversationsFinnish.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1700,7 +1693,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts\FinnishVanilla.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\Sheets1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2737,6 +2729,14 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Typhon.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\moloch.png" />
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\moloch.xml" />
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\postprocess_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\deformshader_opengl.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
@@ -2810,7 +2810,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\SmokeDetector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
@@ -2988,6 +2987,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiplayerCampaign.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
   </ItemGroup>
 </Project>
