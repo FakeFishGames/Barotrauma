@@ -790,7 +790,7 @@ namespace Barotrauma
                 if (damageTarget.Health > 0)
                 {
                     // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
-                    selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * aggressiongreed; ;
+                    selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * aggressiongreed;
                 }
             }
 
