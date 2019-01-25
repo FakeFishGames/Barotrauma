@@ -65,7 +65,7 @@
     </Segment>
   </ContextualTutorial>
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
-    <Character file="Content/Characters/Human/human.xml">
+    <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>
@@ -75,7 +75,7 @@
     </Character>
   </BasicTutorial>
   <BasicTutorial name="Test 1"  tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
-    <Character file="Content/Characters/Human/human.xml">
+    <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>
@@ -85,7 +85,7 @@
     </Character>
   </BasicTutorial>
   <BasicTutorial name="Test 2"  tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
-    <Character file="Content/Characters/Human/human.xml">
+    <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>

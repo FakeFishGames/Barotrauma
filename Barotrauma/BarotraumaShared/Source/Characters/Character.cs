@@ -794,7 +794,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    humanConfigFile = GetConfigFile("human");
+                    humanConfigFile = GetConfigFile("Human");
                 }
                 return humanConfigFile; 
             }

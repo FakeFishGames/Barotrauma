@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Character name="Legacycrawler" humanoid="false" blooddecal="blood">
+  
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
+
+  <bloodemitter particle="blood" particleamount="10"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+
+  <health
+    vitality="70"
+    doesbleed="true"/>
+
+  <sound file="Content/Characters/Legacycrawler/attack1.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Legacycrawler/attack2.ogg" state="Attack" range="500"/>
+
+  <sound file="Content/Characters/Legacycrawler/idle1.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Legacycrawler/idle2.ogg" state="None" range="500"/>
+
+  <Inventory slots="Any, Any" accessiblewhenalive="false">
+    <Item identifier="swimbladder"/>
+  </Inventory>
+
+  <ai
+    combatstrength="100"
+    sight="0.5"
+    hearing="1.0"
+    fleehealththreshold="10"
+    aggressiveboarding="true">
+    
+    <latchonto 
+      attachtowalls="true"
+      attachtosub="true"
+      mindeattachspeed="3.0"
+      maxdeattachspeed="10.0"
+      damageondetach="1000"
+      detachstun="5.0"
+      attachlimb="Head"
+      localattachpos="10,32"
+      attachlimbrotation="40"/>
+
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="nasonov" state="Attack" priority="100"/>
+    <targetpriority tag="stronger" state="Escape" priority="60"/>
+    <targetpriority tag="dead" state="Eat" priority="55"/>
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+  </ai>
+
+  <ai
+    combatstrength="100"
+    sight="0.5"
+    hearing="1.0"
+    fleehealththreshold="10"
+    aggressiveboarding="true"
+    attackcooldown="3.0">
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="nasonov" state="Attack" priority="100"/>
+    <targetpriority tag="stronger" state="Escape" priority="60"/>
+    <targetpriority tag="dead" state="Eat" priority="55"/>
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+  </ai>
+  
+</Character>
+
