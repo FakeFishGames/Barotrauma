@@ -1241,7 +1241,27 @@ namespace Barotrauma
                 return false;
             }
         }
-        
+
+        public bool CanSeeCharacter(Character character, Vector2 sourceWorldPos)
+        {
+            Vector2 diff = ConvertUnits.ToSimUnits(character.WorldPosition - sourceWorldPos);
+
+            Body closestBody = null;
+            if (character.Submarine == null)
+            {
+                closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
+                if (closestBody == null) return true;
+            }
+            else
+            {
+                closestBody = Submarine.CheckVisibility(character.WorldPosition, character.WorldPosition - diff);
+                if (closestBody == null) return true;
+            }
+
+            Structure wall = closestBody.UserData as Structure;
+            return wall == null || !wall.CastShadow;
+        }
+
         public bool HasEquippedItem(Item item)
         {
             for (int i = 0; i < Inventory.Capacity; i++)
