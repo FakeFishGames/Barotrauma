@@ -719,7 +719,8 @@
     <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9" />
     <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000" />
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="2" triggeredby="Submarine" force="0,0.2" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200"
+             networksyncing="true" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
         <Affliction identifier="burn" strength="1" />
@@ -732,7 +733,8 @@
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9" />
     <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000" />
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="2" triggeredby="Submarine" force="0,0.2" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200"
+             networksyncing="true" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
         <Affliction identifier="burn" strength="1" />
@@ -745,7 +747,8 @@
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9" />
     <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000" />
-    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" />
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="2" triggeredby="Submarine" force="0,0.2" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200"
+             networksyncing="true" forcefluctuationstrength="1.0" forcefluctuationinterval="10"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300">
       <Attack onlyhumans="true">
         <Affliction identifier="burn" strength="1" />
