@@ -38,7 +38,9 @@
     </Segment>
     <Segment name="Enemy on Sonar" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="5_EnemyOnSonar/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="5_EnemyOnSonar/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="5_EnemyOnSonar/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="5_EnemyOnSonar/Sheets3.png" columns="5" rows="7" empty="1"/>
       </Video>
     </Segment>
     <Segment name="Degrading I" contenttype="text" istriggered="false">
@@ -52,7 +54,10 @@
     </Segment>
     <Segment name="Medical" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="7_Medical/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="7_Medical/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="7_Medical/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="7_Medical/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="7_Medical/Sheets4.png" columns="5" rows="2" empty="3"/>
       </Video>
     </Segment>
     <Segment name="Approach I" contenttype="video" istriggered="false">
