@@ -62,6 +62,8 @@ namespace Barotrauma
 
         private Tutorials.EditorTutorial tutorial;
 
+        private DateTime editorSelectedTime;
+
         public override Camera Cam
         {
             get { return cam; }
@@ -517,6 +519,8 @@ namespace Barotrauma
         {
             base.Select();
 
+            editorSelectedTime = DateTime.Now;
+
             GUI.ForceMouseOn(null);
             SetCharacterMode(false);
 
@@ -549,6 +553,12 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+
+            TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                Steam.SteamManager.IncrementStat("hoursineditor", (float)timeInEditor.TotalHours);
+            }
 
             GUI.ForceMouseOn(null);
 
