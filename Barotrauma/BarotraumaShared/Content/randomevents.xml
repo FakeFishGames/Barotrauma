@@ -16,7 +16,7 @@
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
 
     <!-- 1 crawler or 1 mantis after 150 seconds or passing 20% -->
     <EventSet chooserandom="true" mindistancetraveled="0.20" minmissiontime="150" minintensity="0.0" maxintensity="0.25">
@@ -58,7 +58,7 @@
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
     
     <!-- 1-2 crawlers or 1 mantis after 120 seconds or passing 10% -->
@@ -103,7 +103,7 @@
     
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Manta/Manta.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
 
@@ -153,7 +153,7 @@
 
     <!-- chance of a couple of fractal guardians inside ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
 
     <!-- 2-4 crawlers or 1-2 mantises after 30 seconds or passing 5% -->
     <EventSet chooserandom="true" mindistancetraveled="0.05" minmissiontime="30" minintensity="0.0" maxintensity="0.75">
