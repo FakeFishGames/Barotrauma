@@ -13,38 +13,44 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin watershader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:watershader.fx
-
-#begin blurshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:blurshader.fx
-
-#begin damageshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:damageshader.fx
-
-#begin losshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:losshader.fx
-
 #begin utg_4.mp4
 /importer:H264Importer
 /processor:VideoProcessor
 /build:utg_4.mp4
 
-#begin SpineEffect.fx
+#begin Effects/blurshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:SpineEffect.fx
+/build:Effects/blurshader.fx
+
+#begin Effects/damageshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/damageshader.fx
+
+#begin Effects/deformshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/deformshader.fx
+
+#begin Effects/losshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/losshader.fx
+
+#begin Effects/postprocess.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/postprocess.fx
+
+#begin Effects/watershader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/watershader.fx
 
