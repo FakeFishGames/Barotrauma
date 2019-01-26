@@ -246,11 +246,16 @@ namespace Barotrauma
             {
                 SetupVertexBuffers();
             }
-            
+
+#if LINUX
+            effect.Parameters["TextureSampler+xTexture"].SetValue(sprite.Texture);
+#else
+            effect.Parameters["xTexture"].SetValue(sprite.Texture);
+#endif
+
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
-            effect.Parameters["xTexture"].SetValue(sprite.Texture);
             effect.Parameters["tintColor"].SetValue(color.ToVector4());
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
