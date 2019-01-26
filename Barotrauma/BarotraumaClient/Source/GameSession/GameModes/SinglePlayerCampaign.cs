@@ -119,7 +119,7 @@ namespace Barotrauma
                 }
                 else if (outpost == Level.Loaded.EndOutpost)
                 {
-                    if (!closestSub.AtStartPosition) { return null; }
+                    if (!closestSub.AtEndPosition) { return null; }
                 }
                 return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;                
             }            
