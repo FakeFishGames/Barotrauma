@@ -104,6 +104,18 @@ namespace Facepunch.Steamworks
         }
 
         /// <summary>
+        /// Adds this amount to the named stat. Internally this calls Get() and adds 
+        /// to that value. Steam doesn't provide a mechanism for atomically increasing
+        /// stats like this, this functionality is added here as a convenience.
+        /// </summary>
+        public bool Add(string name, float amount = 1.0f, bool store = true)
+        {
+            var val = GetFloat(name);
+            val += amount;
+            return Set(name, val, store);
+        }
+
+        /// <summary>
         /// Practically wipes the slate clean for this user. If includeAchievements is true, will wipe
         /// any achievements too.
         /// </summary>
