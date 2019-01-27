@@ -483,26 +483,26 @@ namespace Barotrauma.Lights
                         continue;
                     }
 
-                    Vector2? intersection = null;
+                    bool intersects;
+                    Vector2 intersection = Vector2.Zero;
                     if (visibleSegments[i].IsAxisAligned)
                     {
-                        intersection = MathUtils.GetAxisAlignedLineIntersection(p2a, p2b, p1a, p1b, visibleSegments[i].IsHorizontal);
+                        intersects = MathUtils.GetAxisAlignedLineIntersection(p2a, p2b, p1a, p1b, visibleSegments[i].IsHorizontal, out intersection);
                     }
                     else if (visibleSegments[j].IsAxisAligned)
                     {
-                        intersection = MathUtils.GetAxisAlignedLineIntersection(p1a, p1b, p2a, p2b, visibleSegments[j].IsHorizontal);
+                        intersects = MathUtils.GetAxisAlignedLineIntersection(p1a, p1b, p2a, p2b, visibleSegments[j].IsHorizontal, out intersection);
                     }
                     else
                     {
-                        intersection = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b);
+                        intersects = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b, out intersection);
                     }
 
-                    if (intersection != null)
+                    if (intersects)
                     {
-                        Vector2 intersectionVal = intersection.Value;
                         SegmentPoint start = visibleSegments[i].Start;
                         SegmentPoint end = visibleSegments[i].End;
-                        SegmentPoint mid = new SegmentPoint(intersectionVal, null);
+                        SegmentPoint mid = new SegmentPoint(intersection, null);
                         if (visibleSegments[i].ConvexHull?.ParentEntity?.Submarine != null)
                         {
                             mid.Pos -= visibleSegments[i].ConvexHull.ParentEntity.Submarine.DrawPosition;
@@ -685,13 +685,11 @@ namespace Barotrauma.Lights
                     if (s.Start.WorldPos.X > maxX) continue;
                 }
                 
-                Vector2? intersection = s.IsAxisAligned ?
-                    MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal) :
-                    MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
-
-                if (intersection.HasValue)
+                if (s.IsAxisAligned ?
+                  MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal, out Vector2 intersection) :
+                  MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, out intersection))
                 {
-                    float dist = Vector2.DistanceSquared(intersection.Value, rayStart);
+                    float dist = Vector2.DistanceSquared(intersection, rayStart);
                     if (dist < closestDist)
                     {
                         closestDist = dist;

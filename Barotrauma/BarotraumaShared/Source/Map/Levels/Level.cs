@@ -1217,7 +1217,7 @@ namespace Barotrauma
                         Rectangle rect = ruinShape.Rect;
                         rect.Y += rect.Height;
                         if (ruinShape.Rect.Contains(e.Point1) || ruinShape.Rect.Contains(e.Point2) ||
-                            MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, rect) != null)
+                            MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, rect, out _))
                         {
                             cell.CellType = CellType.Removed;
                             int x = (int)Math.Floor(cell.Center.X / GridCellSize);

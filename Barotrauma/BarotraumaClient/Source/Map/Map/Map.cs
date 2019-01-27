@@ -530,16 +530,15 @@ namespace Barotrauma
                         }
                         else
                         {
-                            Vector2? intersection = MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height));
-                            if (intersection != null)
+                            if (MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height), out Vector2 intersection))
                             {
                                 if (!rect.Contains(start))
                                 {
-                                    start = (Vector2)intersection;
+                                    start = intersection;
                                 }
                                 else
                                 {
-                                    end = (Vector2)intersection;
+                                    end = intersection;
                                 }
                             }
                         }

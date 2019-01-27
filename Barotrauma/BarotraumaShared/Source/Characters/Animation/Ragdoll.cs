@@ -871,14 +871,13 @@ namespace Barotrauma
                     Vector2 moveDir = hullDiff.LengthSquared() < 0.001f ? Vector2.UnitY : Vector2.Normalize(hullDiff);
 
                     //find a position 32 units away from the hull
-                    Vector2? intersection = MathUtils.GetLineRectangleIntersection(
-                        newHull.WorldPosition, 
+                    if (MathUtils.GetLineRectangleIntersection(
+                        newHull.WorldPosition,
                         newHull.WorldPosition + moveDir * Math.Max(newHull.Rect.Width, newHull.Rect.Height),
-                        new Rectangle(newHull.WorldRect.X - 32, newHull.WorldRect.Y + 32, newHull.WorldRect.Width + 64, newHull.Rect.Height + 64));
-
-                    if (intersection != null)
+                        new Rectangle(newHull.WorldRect.X - 32, newHull.WorldRect.Y + 32, newHull.WorldRect.Width + 64, newHull.Rect.Height + 64),
+                        out Vector2 intersection))
                     {
-                        Collider.SetTransform(ConvertUnits.ToSimUnits((Vector2)intersection), Collider.Rotation);
+                        Collider.SetTransform(ConvertUnits.ToSimUnits(intersection), Collider.Rotation);
                     }
                 }
 
