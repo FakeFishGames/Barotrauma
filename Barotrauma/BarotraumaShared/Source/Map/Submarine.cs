@@ -526,7 +526,7 @@ namespace Barotrauma
             }
 
             HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
-            if (Level.Loaded)
+            if (Level.Loaded != null)
             {
                 foreach (Ruin ruin in Level.Loaded.Ruins)
                 {
