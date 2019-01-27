@@ -1180,17 +1180,16 @@ namespace Barotrauma.RuinGeneration
             float closestDist = rayLength * rayLength;
             foreach (Line line in walls)
             {
-                Vector2? intersection = MathUtils.GetLineIntersection(line.A, line.B, rayStart, rayEnd);
-                if (!intersection.HasValue) continue;
+                if (!MathUtils.GetLineIntersection(line.A, line.B, rayStart, rayEnd, out Vector2 intersection)) { continue; }
 
                 intersection = line.IsHorizontal ?
-                    new Vector2(intersection.Value.X, intersection.Value.Y - Math.Sign(dir.Y) * line.Radius) :
-                    new Vector2(intersection.Value.X - Math.Sign(dir.X) * line.Radius, intersection.Value.Y);
+                    new Vector2(intersection.X, intersection.Y - Math.Sign(dir.Y) * line.Radius) :
+                    new Vector2(intersection.X - Math.Sign(dir.X) * line.Radius, intersection.Y);
 
-                float dist = Vector2.DistanceSquared(rayStart, intersection.Value);
+                float dist = Vector2.DistanceSquared(rayStart, intersection);
                 if (dist < closestDist)
                 {
-                    closestIntersection = intersection.Value;
+                    closestIntersection = intersection;
                     closestDist = dist;
                 }
             }
