@@ -54,8 +54,11 @@ namespace Barotrauma
                 }
 
                 //make sure the weapon is loaded
-                var weaponComponent = weapon.GetComponent<RangedWeapon>() as ItemComponent ?? weapon.GetComponent<MeleeWeapon>() as ItemComponent;
-                if (weaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
+                var weaponComponent = 
+                    weapon.GetComponent<RangedWeapon>() as ItemComponent ?? 
+                    weapon.GetComponent<MeleeWeapon>() as ItemComponent ??
+                    weapon.GetComponent<RepairTool>() as ItemComponent;
+                if (weaponComponent != null && weaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
                 {
                     Item[] containedItems = weapon.ContainedItems;
                     foreach (RelatedItem requiredItem in weaponComponent.requiredItems[RelatedItem.RelationType.Contained])
