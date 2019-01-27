@@ -343,9 +343,13 @@ namespace Barotrauma
             {
                 item.Update(deltaTime, cam);
             }
-            
+
+            UpdateAllProjSpecific(deltaTime);
+
             Spawner?.Update();
         }
+
+        static partial void UpdateAllProjSpecific(float deltaTime);
 
         public virtual void Update(float deltaTime, Camera cam) { }
 

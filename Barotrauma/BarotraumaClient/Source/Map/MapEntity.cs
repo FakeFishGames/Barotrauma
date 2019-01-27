@@ -464,7 +464,18 @@ namespace Barotrauma
                 return true;
             };
         }
-
+        
+        static partial void UpdateAllProjSpecific(float deltaTime)
+        {
+            var entitiesToRender = Submarine.VisibleEntities ?? mapEntityList;
+            foreach (MapEntity me in entitiesToRender)
+            {
+                if (me is Item item)
+                {
+                    item.UpdateSpriteStates(deltaTime);
+                }
+            }
+        }
 
         /// <summary>
         /// Draw the "selection rectangle" and outlines of entities that are being dragged (if any)

@@ -68,6 +68,10 @@ namespace Barotrauma
         private static List<Submarine> loaded = new List<Submarine>();
 
         private static List<MapEntity> visibleEntities;
+        public static IEnumerable<MapEntity> VisibleEntities
+        {
+            get { return visibleEntities; }
+        }
 
         private SubmarineBody subBody;
 
