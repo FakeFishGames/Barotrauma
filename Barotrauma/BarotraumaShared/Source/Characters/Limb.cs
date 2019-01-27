@@ -512,8 +512,21 @@ namespace Barotrauma
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
                             
-                            // If the attack is aimed to a character but hits a structure, the hit is blocked. If the attack is aimed to a structure and hits a structure, it should be successful (?)
-                            wasHit = damageTarget is Structure || structureBody == null;
+                            if (damageTarget is Item && structureBody?.UserData is Item)
+                            {
+                                // If the attack is aimed to an item and hits an item, it's successful
+                                wasHit = true;
+                            }
+                            else if (damageTarget is Structure && structureBody?.UserData is Structure)
+                            {
+                                // If the attack is aimed to a structure and hits a structure, it's successful
+                                wasHit = true;
+                            }
+                            else
+                            {
+                                // If the attack is aimed to a character but hits a structure, the hit is blocked. 
+                                wasHit = structureBody == null;
+                            }
                         }
                         break;
                     case HitDetection.Contact:
