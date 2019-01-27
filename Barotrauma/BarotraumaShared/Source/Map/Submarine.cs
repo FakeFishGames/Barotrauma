@@ -526,17 +526,20 @@ namespace Barotrauma
             }
 
             HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
-            foreach (Ruin ruin in Level.Loaded.Ruins)
+            if (Level.Loaded)
             {
-                Rectangle worldBorders = new Rectangle(
-                    ruin.Area.X - 500,
-                    ruin.Area.Y + ruin.Area.Height + 500,
-                    ruin.Area.Width + 1000,
-                    ruin.Area.Height + 1000);
-
-                if (RectsOverlap(worldBorders, cam.WorldView))
+                foreach (Ruin ruin in Level.Loaded.Ruins)
                 {
-                    visibleRuins.Add(ruin);
+                    Rectangle worldBorders = new Rectangle(
+                        ruin.Area.X - 500,
+                        ruin.Area.Y + ruin.Area.Height + 500,
+                        ruin.Area.Width + 1000,
+                        ruin.Area.Height + 1000);
+
+                    if (RectsOverlap(worldBorders, cam.WorldView))
+                    {
+                        visibleRuins.Add(ruin);
+                    }
                 }
             }
             
