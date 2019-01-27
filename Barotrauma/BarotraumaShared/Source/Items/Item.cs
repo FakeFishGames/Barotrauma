@@ -37,8 +37,17 @@ namespace Barotrauma
         public static bool ShowLinks = true;
         
         private HashSet<string> tags;
-        
-        public Hull CurrentHull;
+
+        private Hull currentHull;
+        public Hull CurrentHull
+        {
+            get { return currentHull; }
+            set
+            {
+                currentHull = value;
+                ParentRuin = currentHull?.ParentRuin;
+            }
+        }
         
         public bool Visible = true;
 

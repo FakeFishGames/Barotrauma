@@ -625,11 +625,12 @@ namespace Barotrauma.RuinGeneration
             {
                 door.IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.2f;
             }
-            
+
             //create connections between all generated entities ---------------------------
             foreach (RuinEntity ruinEntity in ruinEntities)
             {
                 CreateConnections(ruinEntity);
+                ruinEntity.Entity.ParentRuin = this;
             }
 
             foreach (RuinEntity ruinEntity in ruinEntities)
@@ -662,6 +663,7 @@ namespace Barotrauma.RuinGeneration
                 var hull = new Hull(MapEntityPrefab.Find(null, "hull"),
                     new Rectangle(hullRect.X, hullRect.Y + hullRect.Height, hullRect.Width, hullRect.Height), submarine: null)
                 {
+                    ParentRuin = this,
                     ShouldBeSaved = false
                 };
                 RuinShape room = allShapes.Find(s => s.Rect.Contains(hullRect.Center));
@@ -723,6 +725,7 @@ namespace Barotrauma.RuinGeneration
                     new Gap(new Rectangle(gapRect.Value.X, gapRect.Value.Y + gapRect.Value.Height, gapRect.Value.Width, gapRect.Value.Height),
                         isHorizontal: gapRect.Value.Height > gapRect.Value.Width, submarine: null)
                     {
+                        ParentRuin = this,
                         ShouldBeSaved = false
                     };
                 }

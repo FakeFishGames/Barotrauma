@@ -571,12 +571,12 @@ namespace Barotrauma
 #endif
         }
 
-        public override bool IsVisible(Rectangle WorldView)
+        public override bool IsVisible(Rectangle worldView)
         {
             Rectangle worldRect = WorldRect;
 
-            if (worldRect.X > WorldView.Right || worldRect.Right < WorldView.X) return false;
-            if (worldRect.Y < WorldView.Y - WorldView.Height || worldRect.Y - worldRect.Height > WorldView.Y) return false;
+            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) return false;
+            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) return false;
 
             return true;
         }
@@ -585,8 +585,7 @@ namespace Barotrauma
         {
             if (prefab.Platform)
             {
-                Limb limb;
-                if ((limb = f2.Body.UserData as Limb) != null)
+                if (f2.Body.UserData is Limb limb)
                 {
                     if (limb.character.AnimController.IgnorePlatforms) return false;
                 }
