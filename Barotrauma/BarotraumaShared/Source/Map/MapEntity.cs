@@ -145,6 +145,12 @@ namespace Barotrauma
             }
         }
 
+        public RuinGeneration.Ruin ParentRuin
+        {
+            get;
+            set;
+        }
+
         public virtual string Name
         {
             get { return ""; }
