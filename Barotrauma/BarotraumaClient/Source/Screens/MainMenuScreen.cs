@@ -41,8 +41,9 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            
+
             //debug button for quickly starting a new round
+#if DEBUG
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, -40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
             {
@@ -103,6 +104,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+#endif
 
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
