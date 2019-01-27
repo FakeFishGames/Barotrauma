@@ -290,13 +290,16 @@ namespace Barotrauma
                 }
             };
 
-            foreach (XElement subElement in element.Elements())
+            if (element != null)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                foreach (XElement subElement in element.Elements())
                 {
-                    case "sprite":
-                        limbIndicatorOverlay = new SpriteSheet(subElement);
-                        break;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "sprite":
+                            limbIndicatorOverlay = new SpriteSheet(subElement);
+                            break;
+                    }
                 }
             }
         }
