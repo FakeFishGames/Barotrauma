@@ -141,6 +141,7 @@
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
+      <Item identifier="assistantclothes" equip="true"/>
       <Item identifier="wrench"/>
       <Item identifier="screwdriver"/>
       <Item identifier="headset" equip="true">
