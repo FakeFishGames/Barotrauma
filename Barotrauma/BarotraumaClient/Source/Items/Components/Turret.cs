@@ -25,9 +25,7 @@ namespace Barotrauma.Items.Components
         private SoundChannel moveSoundChannel;
 
         private Vector2 crosshairPos, crosshairPointerPos;
-
-        private float baseAngle;
-
+        
         private bool flashLowPower;
         private bool flashNoAmmo;
         private float flashTimer;
@@ -98,6 +96,7 @@ namespace Barotrauma.Items.Components
             }, 
             barSize: 0.0f);
         }
+
 
         partial void LaunchProjSpecific()
         {
