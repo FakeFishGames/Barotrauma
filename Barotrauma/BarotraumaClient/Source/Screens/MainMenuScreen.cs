@@ -307,6 +307,7 @@ namespace Barotrauma
             {
                 case Tab.NewGame:
                     campaignSetupUI.CreateDefaultSaveName();
+                    campaignSetupUI.UpdateTutorialSelection();
                     break;
                 case Tab.LoadGame:
                     campaignSetupUI.UpdateLoadMenu();
