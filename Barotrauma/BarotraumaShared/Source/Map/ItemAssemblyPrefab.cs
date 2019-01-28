@@ -43,8 +43,14 @@ namespace Barotrauma
             DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
             foreach (XElement entityElement in doc.Root.Elements())
             {
-                string entityName = entityElement.GetAttributeString("name", "");
-                MapEntityPrefab mapEntity = List.Find(p => p.Name == entityName);
+                string identifier = entityElement.GetAttributeString("identifier", "");
+                MapEntityPrefab mapEntity = List.Find(p => p.Identifier == identifier);
+                if (mapEntity == null)
+                {
+                    string entityName = entityElement.GetAttributeString("name", "");
+                    mapEntity = List.Find(p => p.Name == entityName);
+                }
+
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
                 if (mapEntity != null && !entityElement.GetAttributeBool("hideinassemblypreview", false))
                 {

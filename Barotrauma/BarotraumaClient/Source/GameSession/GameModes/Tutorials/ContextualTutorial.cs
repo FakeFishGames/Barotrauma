@@ -173,6 +173,7 @@ namespace Barotrauma.Tutorials
         public void Stop()
         {
             started = ContentRunning = Initialized = false;
+            spriteSheetPlayer.Remove();
             spriteSheetPlayer = null;
             characterTimeOnSonar = null;
         }

@@ -68,8 +68,8 @@
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Submarine file="Submarines/Turso.sub" />
   <Submarine file="Submarines/Polaris.sub" />
-  <Submarine file="Submarines/The Nibbler.sub" />
-  <Submarine file="Submarines/The Blind Carp.sub" />
+  <Submarine file="Submarines/Typhon.sub" />
+  <Submarine file="Submarines/Muikku.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
   <Text file="Content/Texts/EnglishVanillaLoadingTips.xml" />
   <UIStyle file="Content/UI/style.xml"/>  

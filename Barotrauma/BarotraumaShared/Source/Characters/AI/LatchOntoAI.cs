@@ -144,12 +144,11 @@ namespace Barotrauma
                                 {
                                     foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                     {
-                                        Vector2? intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center);
-                                        if (intersection.HasValue)
+                                        if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
                                         {
                                             attachSurfaceNormal = edge.GetNormal(cell);
                                             attachTargetBody = cell.Body;
-                                            wallAttachPos = ConvertUnits.ToSimUnits(intersection.Value);
+                                            wallAttachPos = ConvertUnits.ToSimUnits(intersection);
                                             break;
                                         }
                                     }
