@@ -353,7 +353,7 @@ namespace Barotrauma
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("multiplylights [color]", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
+            commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
             {
                 if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1) return;
 
