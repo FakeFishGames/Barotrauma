@@ -441,19 +441,19 @@
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="719,739,197,47" depth="0.85" />
   </sshellA>
   <!-- Fins / Shuttle Shells -->
-  <sshellA name="Shuttle Fin A" identifier="sshellafina" description="Shuttle wall" body="false" bodywidth="115" bodyheight="80" bodyrotation="67" castshadow="false">
+  <sshellA name="Shuttle Fin A" identifier="sshellafina" description="Shuttle wall" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="702,885,172,123" depth="0.9" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="702,885,172,123" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Fin B" identifier="sshellafinb" description="Shuttle wall" body="false" bodywidth="115" bodyheight="115" bodyrotation="80" castshadow="false">
+  <sshellA name="Shuttle Fin B" identifier="sshellafinb" description="Shuttle wall" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="500,884,177,126" depth="0.9" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="500,884,177,126" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Fin C" identifier="sshellafinc" description="Shuttle wall" body="false" bodywidth="60" bodyheight="60" bodyrotation="0" castshadow="false">
+  <sshellA name="Shuttle Fin C" identifier="sshellafinc" description="Shuttle wall" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="858,44,145,108" depth="0.9" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="858,44,145,108" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Fin D" identifier="sshellafind" description="Shuttle wall" body="false" bodywidth="60" bodyheight="60" bodyrotation="0" castshadow="false">
+  <sshellA name="Shuttle Fin D" identifier="sshellafind" description="Shuttle wall" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="892,890,107,129" depth="0.9" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="892,890,107,129" depth="0.85" />
   </sshellA>
