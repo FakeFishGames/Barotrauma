@@ -117,10 +117,18 @@ namespace Barotrauma
             }
         }
 
+        private Item container;
         public Item Container
         {
-            get;
-            private set;
+            get { return container; }
+            private set
+            {
+                if (value != container)
+                {
+                    container = value;
+                    SetActiveSprite();
+                }
+            }
         }
                 
         public override string Name
@@ -210,13 +218,22 @@ namespace Barotrauma
             get;
             protected set;
         }
-
-
+        
         [Serialize("1.0,1.0,1.0,1.0", false), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
         public Color ContainerColor
         {
             get;
             protected set;
+        }
+
+        [Serialize("", false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to check what item this item is contained inside
+        /// </summary>
+        public string ContainerIdentifier
+        {
+            get { return Container?.prefab.Identifier ?? ""; }
+            set { /*do nothing*/ }
         }
 
         public Color Color
@@ -459,6 +476,7 @@ namespace Barotrauma
                     case "price":
                     case "levelcommonness":
                     case "suitabletreatment":
+                    case "containedsprite":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
