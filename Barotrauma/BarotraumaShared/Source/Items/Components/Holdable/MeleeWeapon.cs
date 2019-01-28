@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
 
             SetUser(character);
 
-            if (hitPos < MathHelper.Pi * 0.69f) return false;
+            if (hitPos < MathHelper.Pi * 0.49f) return false;
 
             reloadTimer = reload;
 
@@ -143,12 +143,13 @@ namespace Barotrauma.Items.Components
 
             AnimController ac = picker.AnimController;
 
+            //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
                 if (picker.IsKeyDown(InputType.Aim))
                 {
-                    hitPos = Math.Min(hitPos + deltaTime * 5.0f, MathHelper.Pi * 0.7f);
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
+                    hitPos = Math.Min(hitPos + deltaTime * 5.0f, MathHelper.Pi * 0.5f);
+                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos, holdAngle);
                 }
                 else
                 {
@@ -158,7 +159,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 hitPos -= deltaTime * 15.0f;
-                ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
+                ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos, holdAngle);
                 if (hitPos < -MathHelper.PiOver4 * 1.2f)
                 {
                     RestoreCollision();

@@ -1581,7 +1581,8 @@ namespace Barotrauma
             }
         }
 
-        public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
+        //TODO: refactor this method, it's way too convoluted
+        public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f)
         {
             if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
 
@@ -1714,7 +1715,7 @@ namespace Barotrauma
                 }
             }
 
-            item.SetTransform(currItemPos, itemAngle);
+            item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir);
 
             if (Anim == Animation.Climbing) return;
 
