@@ -29,13 +29,8 @@ namespace Barotrauma
 
         // Only for testing in the debug build. Not saved.
         protected Vector2 textureScale = Vector2.One;
-
-#if DEBUG
+        
         [Editable(DecimalCount = 3), Serialize("1.0, 1.0", false)]
-#else
-        [Editable(DecimalCount = 3)]
-#endif
-
         public Vector2 TextureScale
         {
             get { return textureScale; }
@@ -48,11 +43,9 @@ namespace Barotrauma
         }
 
         // Only for testing in the debug build. Not saved.
-        [Editable,
 #if DEBUG
-            Serialize(true, false)
+        [Editable, Serialize(true, false)]
 #endif
-        ]
         public bool DrawTiled { get; protected set; } = true;
         
         protected Vector2 textureOffset = Vector2.Zero;
