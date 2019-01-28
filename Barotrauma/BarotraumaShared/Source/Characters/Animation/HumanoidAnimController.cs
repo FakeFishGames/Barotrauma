@@ -1009,7 +1009,6 @@ namespace Barotrauma
             var handMoveOffset = CurrentSwimParams.HandMoveOffset.Flip();
             float handPosX = (float)Math.Cos(handCyclePos) * handMoveAmount.X * CurrentAnimationParams.CycleSpeed;
             float handPosY = (float)Math.Sin(handCyclePos) * handMoveAmount.Y * CurrentAnimationParams.CycleSpeed;
-            //handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(torso.Rotation);
 
@@ -1019,7 +1018,7 @@ namespace Barotrauma
                 rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, rightHandPos.X) : Math.Min(-0.3f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
 
-                HandIK(rightHand, handPos + rightHandPos, 0.5f);
+                HandIK(rightHand, handPos + rightHandPos, CurrentSwimParams.HandMoveStrength);
             }
 
             if (!leftHand.Disabled)
@@ -1028,7 +1027,7 @@ namespace Barotrauma
                 leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, leftHandPos.X) : Math.Min(-0.3f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
 
-                HandIK(leftHand, handPos + leftHandPos, 0.5f);
+                HandIK(leftHand, handPos + leftHandPos, CurrentSwimParams.HandMoveStrength);
             }
         }
 
