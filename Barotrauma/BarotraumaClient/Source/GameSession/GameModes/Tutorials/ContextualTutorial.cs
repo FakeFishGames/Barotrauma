@@ -29,11 +29,10 @@ namespace Barotrauma.Tutorials
         private float requiredTimeOnSonar = 5f;
 
         private bool started = false;
-
         private string playableContentPath;
 
         private float inputGracePeriodTimer;
-        private const float inputGracePeriod = 1f;
+        private const float inputGracePeriod = .5f;
         private float tutorialTimer;
         private float degrading2ActivationCountdown;
 
@@ -73,6 +72,23 @@ namespace Barotrauma.Tutorials
             {
                 segments.Add(new TutorialSegment(segment));
             }
+
+            Name = "ContextualTutorial";
+        }
+
+        public override void Initialize()
+        {
+            if (Initialized) return;
+            Initialized = true;
+
+            base.Initialize();
+            spriteSheetPlayer = new SpriteSheetPlayer();
+            characterTimeOnSonar = new List<Pair<Character, float>>();
+
+            for (int i = 0; i < segments.Count; i++)
+            {
+                segments[i].IsTriggered = false;
+            }
         }
 
         public void LoadPartiallyComplete(XElement element)
@@ -87,6 +103,15 @@ namespace Barotrauma.Tutorials
             for (int i = 0; i < completedSegments.Length; i++)
             {
                 segments[completedSegments[i]].IsTriggered = true;
+            }
+        }
+
+        private void PreloadVideoContent()
+        {
+            for (int i = 0; i < segments.Count; i++)
+            {
+                if (segments[i].ContentType != ContentTypes.Video || segments[i].IsTriggered) continue;
+                spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Name, segments[i].Content);
             }
         }
 
@@ -117,24 +142,12 @@ namespace Barotrauma.Tutorials
             return completedSegments;
         }
 
-        public override void Initialize()
-        {
-            if (Initialized) return;
-
-            Initialized = true;
-            base.Initialize();
-            spriteSheetPlayer = new SpriteSheetPlayer();
-            characterTimeOnSonar = new List<Pair<Character, float>>();
-
-            for (int i = 0; i < segments.Count; i++)
-            {
-                segments[i].IsTriggered = false;
-            }
-        }
-
         public override void Start()
         {
             if (!Initialized) return;
+
+            PreloadVideoContent();
+            Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
 
             base.Start();
 
@@ -150,6 +163,7 @@ namespace Barotrauma.Tutorials
             sonar = navConsole?.Item.GetComponent<Sonar>();
             reactor = Item.ItemList.Find(i => i.HasTag("reactor"))?.GetComponent<Reactor>();
 
+#if DEBUG
             if (reactor == null || navConsole == null || sonar == null)
             {
                 infoBox = CreateInfoFrame("Submarine not compatible with the tutorial:"
@@ -159,6 +173,10 @@ namespace Barotrauma.Tutorials
                 CoroutineManager.StartCoroutine(WaitForErrorClosed());
                 return;
             }
+#endif
+            if (navConsole == null) segments[2].IsTriggered = true; // Disable navigation console usage tutorial
+            if (reactor == null) segments[5].IsTriggered = true; // Disable reactor usage tutorial
+            if (sonar == null) segments[6].IsTriggered = true; // Disable enemy on sonar tutorial
 
             crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
             started = true;
@@ -256,6 +274,7 @@ namespace Barotrauma.Tutorials
                 case 2: // Nav Console: 20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
                     if (Character.Controlled?.SelectedConstruction != navConsole.Item)
                     {
+                        if (!segments[1].IsTriggered) return false; // Do not advance tutorial timer based on this segment if reactor has not been powered up
                         if (tutorialTimer < 30.5f)
                         {
                             tutorialTimer += deltaTime;
@@ -264,6 +283,15 @@ namespace Barotrauma.Tutorials
                     }
                     else
                     {
+                        if (!segments[1].IsTriggered || !HasOrder("operatereactor")) // If reactor has not been powered up or ordered to be, default to that one first
+                        {
+                            if (tutorialTimer < 10.5f)
+                            {
+                                tutorialTimer = 10.5f;
+                            }
+                            return false;
+                        }
+
                         tutorialTimer = 30.5f;
                     }
                     break;
@@ -436,7 +464,7 @@ namespace Barotrauma.Tutorials
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    spriteSheetPlayer.SetContent(playableContentPath, activeSegment.Content, activeSegment.Name, true);
+                    spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true);
                     break;
                 case ContentTypes.Text:
                     infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
@@ -451,7 +479,7 @@ namespace Barotrauma.Tutorials
                 if (!segments[i].IsTriggered) return;
             }
 
-            Completed = true;
+            Stop(); // Completed
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Barotrauma.Tutorials
         public string Name
         {
             get;
-            private set;
+            protected set;
         }
 
         private bool completed;

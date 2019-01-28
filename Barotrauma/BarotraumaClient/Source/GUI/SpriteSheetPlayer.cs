@@ -8,8 +8,9 @@ namespace Barotrauma
 {
     class SpriteSheetPlayer
     {
-        private SpriteSheet[] playableSheets;
+        private SpriteSheet[] playingSheets;
         private SpriteSheet currentSheet;
+        private List<PreloadedContent> preloadedSheets;
 
         private GUIFrame background, videoFrame;
         private GUITextBlock title;
@@ -39,6 +40,20 @@ namespace Barotrauma
         private readonly Vector2 defaultResolution = new Vector2(520, 300);
         private readonly int borderSize = 20;
 
+        private class PreloadedContent
+        {
+            public string ContentName;
+            public string ContentTag;
+            public SpriteSheet[] Sheets;
+
+            public PreloadedContent(string name, string tag, SpriteSheet[] sheets)
+            {
+                ContentName = name;
+                ContentTag = tag;
+                Sheets = sheets;
+            }
+        }
+
         public SpriteSheetPlayer()
         {
             int width = (int)defaultResolution.X;
@@ -49,6 +64,47 @@ namespace Barotrauma
             sheetView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawSheetView(spriteBatch, guiCustomComponent.Rect); }, UpdateSheetView);
             title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), videoFrame.RectTransform, Anchor.TopCenter, Pivot.BottomCenter), string.Empty, font: GUI.LargeFont, textAlignment: Alignment.Center);
+
+            preloadedSheets = new List<PreloadedContent>();
+        }
+
+        public void PreloadContent(string contentPath, string contentTag, string contentId, XElement contentElement)
+        {
+            if (preloadedSheets.Find(s => s.ContentName == contentId) != null) return; // Already loaded
+            preloadedSheets.Add(new PreloadedContent(contentId, contentTag, CreateSpriteSheets(contentPath, contentElement)));
+        }
+
+        public void RemoveAllPreloaded()
+        {
+            if (preloadedSheets == null || preloadedSheets.Count == 0) return;
+
+            for (int i = 0; i < preloadedSheets.Count; i++)
+            {
+                for (int j = 0; j < preloadedSheets[i].Sheets.Length; j++)
+                {
+                    preloadedSheets[i].Sheets[j].Remove();
+                }
+            }
+
+            preloadedSheets.Clear();
+        }
+
+        public void RemovePreloadedByTag(string tag)
+        {
+            if (preloadedSheets == null || preloadedSheets.Count == 0) return;
+
+            for (int i = 0; i < preloadedSheets.Count; i++)
+            {
+                if (preloadedSheets[i].ContentTag != tag) continue;
+                for (int j = 0; j < preloadedSheets[i].Sheets.Length; j++)
+                {
+                    preloadedSheets[i].Sheets[j].Remove();
+                }
+
+                preloadedSheets[i] = null;
+                preloadedSheets.RemoveAt(i);
+                i--;
+            }
         }
 
         public void Play()
@@ -67,36 +123,44 @@ namespace Barotrauma
             background.AddToGUIUpdateList();
         }
 
-        public void SetContent(string contentPath, XElement videoElement, string titleTag, bool startPlayback)
+        public void LoadContent(string contentPath, XElement videoElement, string contentId, bool startPlayback)
         {
             totalElapsed = loopTimer = 0.0f;
             animationSpeed = videoElement.GetAttributeFloat("animationspeed", 0.1f);
             loopDelay = videoElement.GetAttributeFloat("loopdelay", 0.0f); ;
 
-            CreateSpriteSheets(contentPath, videoElement);
-            currentSheet = playableSheets[0];
+            if (playingSheets != null)
+            {
+                foreach (SpriteSheet existingSheet in playingSheets)
+                {
+                    existingSheet.Remove();
+                }
+                playingSheets = null;
+            }
+
+            playingSheets = preloadedSheets.Find(s => s.ContentName == contentId).Sheets;
+
+            if (playingSheets == null) // No preloaded sheets found, create sheets
+            {
+                playingSheets = CreateSpriteSheets(contentPath, videoElement);
+            }
+
+            currentSheet = playingSheets[0];
 
             Point resolution = currentSheet.FrameSize;
 
             videoFrame.RectTransform.NonScaledSize = resolution + new Point(borderSize, borderSize);
             sheetView.RectTransform.NonScaledSize = resolution;
 
-            title.Text = TextManager.Get(titleTag);
+            title.Text = TextManager.Get(contentId);
             title.RectTransform.NonScaledSize = new Point(resolution.X, 30);
 
             if (startPlayback) Play();
         }
 
-        private void CreateSpriteSheets(string contentPath, XElement videoElement)
+        private SpriteSheet[] CreateSpriteSheets(string contentPath, XElement videoElement)
         {
-            if (playableSheets != null)
-            {
-                foreach (SpriteSheet existingSheet in playableSheets)
-                {
-                    existingSheet.Remove();
-                }
-                playableSheets = null;
-            }
+            SpriteSheet[] sheets = null;
 
             try
             {
@@ -107,17 +171,19 @@ namespace Barotrauma
                     sheetElements.Add(sheetElement);
                 }
 
-                playableSheets = new SpriteSheet[sheetElements.Count];
+                sheets = new SpriteSheet[sheetElements.Count];
 
                 for (int i = 0; i < sheetElements.Count; i++)
                 {
-                    playableSheets[i] = new SpriteSheet(sheetElements[i], contentPath, sheetElements[i].GetAttributeString("path", ""), sheetElements[i].GetAttributeInt("empty", 0));
+                    sheets[i] = new SpriteSheet(sheetElements[i], contentPath, sheetElements[i].GetAttributeString("path", ""), sheetElements[i].GetAttributeInt("empty", 0));
                 }
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error loading sprite sheet content " + contentPath + "!", e);
             }
+
+            return sheets;
         }
 
         private void UpdateSheetView(float deltaTime, GUICustomComponent viewContainer)
@@ -131,7 +197,7 @@ namespace Barotrauma
                 {
                     currentSheetIndex = 0;
                     currentFrameIndex = 0;
-                    currentSheet = playableSheets[currentSheetIndex];
+                    currentSheet = playingSheets[currentSheetIndex];
                 }
                 else
                 {
@@ -149,7 +215,7 @@ namespace Barotrauma
                 {
                     currentSheetIndex++;
 
-                    if (currentSheetIndex > playableSheets.Length - 1)
+                    if (currentSheetIndex > playingSheets.Length - 1)
                     {
                         if (loopDelay > 0.0f)
                         {
@@ -161,7 +227,7 @@ namespace Barotrauma
                     }
 
                     currentFrameIndex = 0;
-                    currentSheet = playableSheets[currentSheetIndex];
+                    currentSheet = playingSheets[currentSheetIndex];
                 }
             }
         }
@@ -174,14 +240,16 @@ namespace Barotrauma
 
         public void Remove()
         {
-            if (playableSheets != null)
+            if (playingSheets != null)
             {
-                foreach (SpriteSheet existingSheet in playableSheets)
+                foreach (SpriteSheet existingSheet in playingSheets)
                 {
                     existingSheet.Remove();
                 }
-                playableSheets = null;
+                playingSheets = null;
             }
+
+            RemoveAllPreloaded();
         }
     }
 }
