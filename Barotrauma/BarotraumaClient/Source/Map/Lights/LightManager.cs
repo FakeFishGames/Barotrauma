@@ -166,16 +166,14 @@ namespace Barotrauma.Lights
             foreach (Hull hull in smoothedHullAmbientLights.Keys.ToList())
             {
                 Color targetColor = Color.TransparentBlack;
-
                 hullAmbientLights.TryGetValue(hull, out targetColor);
-
                 smoothedHullAmbientLights[hull] = Color.Lerp(smoothedHullAmbientLights[hull], targetColor, deltaTime);
             }
         }
 
         private List<LightSource> activeLights = new List<LightSource>(capacity: 100);
 
-        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
+        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             if (!LightingEnabled) return;
 
@@ -191,7 +189,7 @@ namespace Barotrauma.Lights
 
             if (GameMain.Config.SpecularityEnabled)
             {
-                UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam);
+                UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
             }
 
             graphics.SetRenderTarget(LightMap);
@@ -248,16 +246,27 @@ namespace Barotrauma.Lights
 
             if (backgroundSpritesDrawn)
             {
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
-                foreach (Rectangle drawRect in visibleHulls.Values)
+                if (backgroundObstructor != null)
                 {
-                    //TODO: draw some sort of smoothed rectangle
-                    GUI.DrawRectangle(spriteBatch,
-                        new Vector2(drawRect.X, -drawRect.Y),
-                        new Vector2(drawRect.Width, drawRect.Height),
-                        Color.Black, true);
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+                    spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
+                        (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
+                    spriteBatch.End();
                 }
-                spriteBatch.End();
+                else
+                {
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
+                    foreach (Rectangle drawRect in visibleHulls.Values)
+                    {
+                        //TODO: draw some sort of smoothed rectangle
+                        GUI.DrawRectangle(spriteBatch,
+                            new Vector2(drawRect.X, -drawRect.Y),
+                            new Vector2(drawRect.Width, drawRect.Height),
+                            Color.Black, true);
+                    }                
+                    spriteBatch.End();
+                }
+
                 graphics.BlendState = BlendState.Additive;
             }
 
@@ -373,7 +382,7 @@ namespace Barotrauma.Lights
         }
 
 
-        public void UpdateSpecularMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam)
+        public void UpdateSpecularMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             graphics.SetRenderTarget(SpecularMap);
             
@@ -406,13 +415,18 @@ namespace Barotrauma.Lights
             
             foreach (Rectangle drawRect in visibleHulls.Values)
             {
-                //TODO: draw some sort of smoothed rectangle
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X, -drawRect.Y),
                     new Vector2(drawRect.Width, drawRect.Height),
                     Color.Gray, true);
             }
             spriteBatch.End();
+
+            //TODO: use renderTargetFront to obstruct the things behind the sub (has to be drawn with a solid gray color)
+            /*spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            spriteBatch.Draw(renderTargetFront, new Rectangle(0, 0,
+                (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
+            spriteBatch.End();*/
 
             //TODO: specular maps for level walls
             Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
@@ -519,7 +533,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 1f || light.Range < 1.0f) continue;
+                if (light.Color.A < 1f || light.Range < 1.0f || light.IsBackground) continue;
 
                 var newAmbientLights = AmbientLightHulls(light);
                 foreach (Hull hull in newAmbientLights.Keys)
@@ -551,7 +565,7 @@ namespace Barotrauma.Lights
             var hull = Hull.FindHull(light.WorldPosition);
             if (hull == null) return hullAmbientLight;
 
-            return AmbientLightHulls(hull, hullAmbientLight, light.Color * (light.Range / 2000.0f));
+            return AmbientLightHulls(hull, hullAmbientLight, light.Color * Math.Min(light.Range / 1000.0f, 1.0f));
         }
 
         /// <summary>
