@@ -89,6 +89,15 @@ namespace Barotrauma
 
         private void CreateSpriteSheets(string contentPath, XElement videoElement)
         {
+            if (playableSheets != null)
+            {
+                foreach (SpriteSheet existingSheet in playableSheets)
+                {
+                    existingSheet.Remove();
+                }
+                playableSheets = null;
+            }
+
             try
             {
                 List<XElement> sheetElements = new List<XElement>();
@@ -161,6 +170,18 @@ namespace Barotrauma
         {
             if (!isPlaying) return;
             currentSheet.Draw(spriteBatch, currentFrameIndex, rect.Center.ToVector2(), Color.White, currentSheet.Origin, 0f, Vector2.One);
+        }
+
+        public void Remove()
+        {
+            if (playableSheets != null)
+            {
+                foreach (SpriteSheet existingSheet in playableSheets)
+                {
+                    existingSheet.Remove();
+                }
+                playableSheets = null;
+            }
         }
     }
 }

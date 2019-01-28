@@ -145,6 +145,12 @@ namespace Barotrauma
             }
         }
 
+        public RuinGeneration.Ruin ParentRuin
+        {
+            get;
+            set;
+        }
+
         public virtual string Name
         {
             get { return ""; }
@@ -343,9 +349,13 @@ namespace Barotrauma
             {
                 item.Update(deltaTime, cam);
             }
-            
+
+            UpdateAllProjSpecific(deltaTime);
+
             Spawner?.Update();
         }
+
+        static partial void UpdateAllProjSpecific(float deltaTime);
 
         public virtual void Update(float deltaTime, Camera cam) { }
 

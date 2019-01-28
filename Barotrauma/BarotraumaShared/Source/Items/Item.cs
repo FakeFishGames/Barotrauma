@@ -37,8 +37,17 @@ namespace Barotrauma
         public static bool ShowLinks = true;
         
         private HashSet<string> tags;
-        
-        public Hull CurrentHull;
+
+        private Hull currentHull;
+        public Hull CurrentHull
+        {
+            get { return currentHull; }
+            set
+            {
+                currentHull = value;
+                ParentRuin = currentHull?.ParentRuin;
+            }
+        }
         
         public bool Visible = true;
 
@@ -910,9 +919,7 @@ namespace Barotrauma
                 aiTarget.SightRange -= deltaTime * 1000.0f;
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
-
-            UpdateSpriteStates(deltaTime);
-
+            
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)
@@ -981,9 +988,7 @@ namespace Barotrauma
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
-
-        partial void UpdateSpriteStates(float deltaTime);
-        
+                
         public void UpdateTransform()
         {
             Submarine prevSub = Submarine;

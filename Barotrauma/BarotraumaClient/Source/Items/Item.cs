@@ -313,7 +313,7 @@ namespace Barotrauma
             }
         }
 
-        partial void UpdateSpriteStates(float deltaTime)
+        public void UpdateSpriteStates(float deltaTime)
         {
             foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
             {

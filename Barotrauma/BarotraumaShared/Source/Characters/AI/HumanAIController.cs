@@ -129,11 +129,13 @@ namespace Barotrauma
                 Character.AnimController.TargetMovement = targetMovement;
             }
 
-            if (Character.SelectedConstruction != null && Character.SelectedConstruction.GetComponent<Items.Components.Ladder>()!=null)
+            if (Character.AnimController.Anim == AnimController.Animation.Climbing &&
+                Character.SelectedConstruction != null &&
+                Character.SelectedConstruction.GetComponent<Items.Components.Ladder>() != null)
             {
                 if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
                 {
-                    Character.AnimController.TargetMovement = new Vector2( 0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+                    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
                 }
             }
 

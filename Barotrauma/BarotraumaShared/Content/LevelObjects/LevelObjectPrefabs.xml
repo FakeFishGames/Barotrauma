@@ -507,7 +507,7 @@
     <LightSource range="1500" color="1.0,0.85,0.8,0.4">
       <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="492,0,521,288" origin="0.5,0.35" subdivisions="5,3"/>
     </LightSource>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
@@ -529,7 +529,7 @@
     <LightSource range="1500" color="1.0,0.85,0.8,0.5">
       <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="151,383,488,341" origin="0.5,0.1" subdivisions="5,3"/>
     </LightSource>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
@@ -551,7 +551,7 @@
     <LightSource range="1200" color="1.0,0.85,0.8,0.4">
       <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="644,366,380,357" origin="0.5,0.15" subdivisions="5,3"/>
     </LightSource>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
@@ -573,7 +573,7 @@
     <LightSource range="1000" color="1.0,0.85,0.8,0.4">
       <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="47,788,318,236" origin="0.6,0.2" subdivisions="5,3"/>
     </LightSource>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
@@ -595,7 +595,7 @@
     <LightSource range="1000" color="1.0,0.85,0.8,0.4">
       <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="395,723,309,301" origin="0.5,0.2" subdivisions="5,3"/>
     </LightSource>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
@@ -617,7 +617,7 @@
     <LightSource range="1000" color="1.0,0.85,0.8,0.4">
       <DeformableSprite texture="Content/LevelObjects/SonarFloraGlow.png" sourcerect="709,779,304,234" origin="0.5,0.2" subdivisions="5,3"/>
     </LightSource>
-    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0" />
+    <Sound file="Content/Sounds/Ambient/Ambient3.ogg" range="2000" position="0,0" />
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>

@@ -186,7 +186,7 @@
     reward="800"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/TigerthresherBoss/Tigerthresherboss.xml">
+    monsterfile="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
     <LocationType from="City" to="None"/>

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Lidgren.Network;
@@ -68,6 +69,10 @@ namespace Barotrauma
         private static List<Submarine> loaded = new List<Submarine>();
 
         private static List<MapEntity> visibleEntities;
+        public static IEnumerable<MapEntity> VisibleEntities
+        {
+            get { return visibleEntities; }
+        }
 
         private SubmarineBody subBody;
 
@@ -519,6 +524,24 @@ namespace Barotrauma
                     visibleSubs.Add(sub);
                 }
             }
+
+            HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
+            if (Level.Loaded != null)
+            {
+                foreach (Ruin ruin in Level.Loaded.Ruins)
+                {
+                    Rectangle worldBorders = new Rectangle(
+                        ruin.Area.X - 500,
+                        ruin.Area.Y + ruin.Area.Height + 500,
+                        ruin.Area.Width + 1000,
+                        ruin.Area.Height + 1000);
+
+                    if (RectsOverlap(worldBorders, cam.WorldView))
+                    {
+                        visibleRuins.Add(ruin);
+                    }
+                }
+            }
             
             if (visibleEntities == null)
             {
@@ -530,12 +553,19 @@ namespace Barotrauma
             }
 
             Rectangle worldView = cam.WorldView;
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            foreach (MapEntity entity in MapEntity.mapEntityList)
             {
-                if (me.Submarine == null || visibleSubs.Contains(me.Submarine))
+                if (entity.Submarine != null)
                 {
-                    if (me.IsVisible(worldView)) visibleEntities.Add(me);
+                    if (!visibleSubs.Contains(entity.Submarine)) { continue; }
+
                 }
+                else if(entity.ParentRuin != null)
+                {
+                    if (!visibleRuins.Contains(entity.ParentRuin)) { continue; }
+                }
+
+                if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }             
             }
         }
 

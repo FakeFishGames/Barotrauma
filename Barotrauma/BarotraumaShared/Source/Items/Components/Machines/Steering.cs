@@ -331,10 +331,9 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GraphEdge edge in cell.Edges)
                 {
-                    var intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, controlledSub.WorldPosition, cell.Center);
-                    if (intersection != null)
+                    if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
                     {
-                        Vector2 diff = controlledSub.WorldPosition - (Vector2)intersection;
+                        Vector2 diff = controlledSub.WorldPosition - intersection;
 
                         //far enough -> ignore
                         if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y)

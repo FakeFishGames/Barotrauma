@@ -170,7 +170,37 @@ namespace Barotrauma.Steam
             return unlocked;
         }
 
-#region Connecting to servers
+
+        public static bool IncrementStat(string statName, int increment)
+        {
+            if (instance == null || !instance.isInitialized) { return false; }
+            DebugConsole.Log("Incremented stat \"" + statName + "\" by " + increment);
+            bool success = instance.client.Stats.Add(statName, increment);
+            if (!success)
+            {
+#if DEBUG
+                DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
+#endif
+            }
+            return success;
+        }
+
+        public static bool IncrementStat(string statName, float increment)
+        {
+            if (instance == null || !instance.isInitialized) { return false; }
+            DebugConsole.Log("Incremented stat \"" + statName + "\" by " + increment);
+            bool success = instance.client.Stats.Add(statName, increment);
+            if (!success)
+            {
+#if DEBUG
+                DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
+#endif
+            }
+            return success;
+        }
+
+
+        #region Connecting to servers
 
         public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
         {

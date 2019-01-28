@@ -37,8 +37,8 @@
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
       <RequiredSkill identifier="weapons" level="50"/>
-	    <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2500" IsOn="true">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+	    <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2048" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
       </LightComponent>
       <ParticleEmitter particle="muzzleflashrailgun" particleamount="1" velocitymin="50" velocitymax="100" />
     </Turret>

@@ -37,9 +37,6 @@ namespace Barotrauma
         public readonly OperatorType Operator;
         public readonly string AttributeName;
         public readonly string AttributeValue;
-        /// <summary>
-        /// Currently only used for afflictions. TODO: use for other kind of conditionals also to reduce the parsing.
-        /// </summary>
         public readonly float? FloatValue;
 
         public readonly string TargetItemComponentName;
@@ -51,7 +48,7 @@ namespace Barotrauma
         // TODO: use XElement instead of XAttribute
         public PropertyConditional(XAttribute attribute)
         {
-            AttributeName = attribute.Name.ToString();
+            AttributeName = attribute.Name.ToString().ToLowerInvariant();
             string attributeValueString = attribute.Value.ToString();
             if (string.IsNullOrWhiteSpace(attributeValueString))
             {
@@ -140,7 +137,7 @@ namespace Barotrauma
             }
             
             AttributeValue = valueString;
-            if (float.TryParse(AttributeValue, out float value))
+            if (float.TryParse(AttributeValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
             {
                 FloatValue = value;
             }
@@ -154,8 +151,7 @@ namespace Barotrauma
             {
                 case ConditionType.PropertyValue:
                     SerializableProperty property;
-                    // TODO: memory optimization: no need to convert to lower invariant?
-                    if (target.SerializableProperties.TryGetValue(AttributeName.ToLowerInvariant(), out property))
+                    if (target.SerializableProperties.TryGetValue(AttributeName, out property))
                     {
                         return Matches(property);
                     }
@@ -251,17 +247,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" - property.GetValue() returns null!");
                 return false;
             }
-            // TODO: use the cached float value
+
             Type type = propertyValue.GetType();
-            float? floatValue = null;
             float? floatProperty = null;
             if (type == typeof(float) || type == typeof(int))
             {
-                float parsedFloat;
-                if (Single.TryParse(AttributeValue, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedFloat))
-                {
-                    floatValue = parsedFloat;
-                }
                 floatProperty = (float)propertyValue;
             }
 
@@ -270,64 +260,72 @@ namespace Barotrauma
                 case OperatorType.Equals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) == (AttributeValue.ToLowerInvariant() == "true");
+                        return ((bool)propertyValue) == (AttributeValue == "true");
                     }
-                    else if (floatValue == null)
+                    else if (FloatValue == null)
                     {
                         return propertyValue.ToString().Equals(AttributeValue);
                     }
                     else
                     {
-                        return propertyValue.Equals(floatValue);
+                        return propertyValue.Equals(FloatValue);
                     }
                 case OperatorType.NotEquals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) != (AttributeValue.ToLowerInvariant() == "true");
+                        return ((bool)propertyValue) != (AttributeValue == "true");
                     }
-                    else if (floatValue == null)
+                    else if (FloatValue == null)
                     {
                         return !propertyValue.ToString().Equals(AttributeValue);
                     }
                     else
                     {
-                        return !propertyValue.Equals(floatValue);
+                        return !propertyValue.Equals(FloatValue);
                     }
                 case OperatorType.GreaterThan:
-                    if (floatValue == null)
+                    if (FloatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if (floatProperty > floatValue)
+                    else if (floatProperty > FloatValue)
+                    {
                         return true;
+                    }
                     break;
                 case OperatorType.LessThan:
-                    if (floatValue == null)
+                    if (FloatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if (floatProperty < floatValue)
+                    else if (floatProperty < FloatValue)
+                    {
                         return true;
+                    }
                     break;
                 case OperatorType.GreaterThanEquals:
-                    if (floatValue == null)
+                    if (FloatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if (floatProperty >= floatValue)
+                    else if (floatProperty >= FloatValue)
+                    {
                         return true;
+                    }
                     break;
                 case OperatorType.LessThanEquals:
-                    if (floatValue == null)
+                    if (FloatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if (floatProperty <= floatValue)
+                    else if (floatProperty <= FloatValue)
+                    {
                         return true;
+                    }
                     break;
             }
             return false;
