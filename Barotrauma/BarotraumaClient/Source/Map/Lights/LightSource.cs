@@ -915,16 +915,18 @@ namespace Barotrauma.Lights
             if (!CastShadows)
             {
                 Texture2D currentTexture = texture ?? LightTexture;
-                if (OverrideLightTexture != null) currentTexture = OverrideLightTexture.Texture;                
+                if (OverrideLightTexture != null) { currentTexture = OverrideLightTexture.Texture; }           
 
-                Vector2 center = new Vector2(currentTexture.Width / 2, currentTexture.Height / 2);
+                Vector2 center = OverrideLightTexture == null ? 
+                    new Vector2(currentTexture.Width / 2, currentTexture.Height / 2) : 
+                    OverrideLightTexture.Origin;
                 float scale = Range / (currentTexture.Width / 2.0f);
 
                 Vector2 drawPos = position;
                 if (ParentSub != null) drawPos += ParentSub.DrawPosition;
                 drawPos.Y = -drawPos.Y;  
 
-                spriteBatch.Draw(currentTexture, drawPos, null, Color, 0, center, scale, SpriteEffects.None, 1);
+                spriteBatch.Draw(currentTexture, drawPos, null, Color, -rotation, center, scale, SpriteEffects.None, 1);
                 return;
             }
 
