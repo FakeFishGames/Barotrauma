@@ -985,6 +985,19 @@ namespace Barotrauma
             }
         }
 
+        private List<string> vanillaCharacters;
+        private List<string> VanillaCharacters
+        {
+            get
+            {
+                if (vanillaCharacters == null)
+                {
+                    vanillaCharacters = GameMain.VanillaContent.GetFilesOfType(ContentType.Character).ToList();
+                }
+                return vanillaCharacters;
+            }
+        }
+
         private string GetNextConfigFile()
         {
             GetCurrentCharacterIndex();
@@ -1152,8 +1165,18 @@ namespace Barotrauma
             Cam.Position = character.WorldPosition;
         }
 
-        private void CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
+        private bool CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
         {
+            // TODO: there should be a way to choose the content package?
+            var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+#if !DEBUG
+            if (contentPackage == GameMain.VanillaContent)
+            {
+                GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                return false;
+            }
+#endif
+
             string speciesName = name;
             string mainFolder = $"Content/Characters/{speciesName}";
             // Config file
@@ -1174,8 +1197,7 @@ namespace Barotrauma
                     Directory.CreateDirectory(mainFolder);
                 }
                 doc.Save(configFilePath);
-                // Add to the content package
-                var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+                // Add to the selected content package
                 contentPackage.AddFile(configFilePath, ContentType.Character);
                 contentPackage.Save(contentPackage.Path);
             }
@@ -1201,6 +1223,7 @@ namespace Barotrauma
                 AllFiles.Add(configFilePath);
             }
             SpawnCharacter(configFilePath, ragdollParams);
+            return true;
         }
 
         private void ShowWearables()
@@ -1783,6 +1806,13 @@ namespace Barotrauma
             var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animations");
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
+#if !DEBUG
+                if (VanillaCharacters.Contains(currentCharacterConfig))
+                {
+                    GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                    return false;
+                }
+#endif
                 AnimParams.ForEach(p => p.Save());
                 animationResetRequiresForceLoading = true;
                 GUI.AddMessage($"All animations saved", Color.Green, font: GUI.Font);
@@ -1791,6 +1821,13 @@ namespace Barotrauma
             var quickSaveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Ragdoll");
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
+#if !DEBUG
+                if (VanillaCharacters.Contains(currentCharacterConfig))
+                {
+                    GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                    return false;
+                }
+#endif
                 character.AnimController.SaveRagdoll();
                 ragdollResetRequiresForceLoading = true;
                 GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
@@ -1856,6 +1893,14 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
+#if !DEBUG
+                    if (VanillaCharacters.Contains(currentCharacterConfig))
+                    {
+                        GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                        box.Close();
+                        return false;
+                    }
+#endif
                     character.AnimController.SaveRagdoll(inputField.Text);
                     ragdollResetRequiresForceLoading = true;
                     GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
@@ -1981,6 +2026,14 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
+#if !DEBUG
+                    if (VanillaCharacters.Contains(currentCharacterConfig))
+                    {
+                        GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                        box.Close();
+                        return false;
+                    }
+#endif
                     var animParams = character.AnimController.GetAnimationParamsFromType(selectedType);
                     animParams.Save(inputField.Text);
                     animationResetRequiresForceLoading = true;
@@ -4447,8 +4500,10 @@ namespace Barotrauma
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams);
-                        GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
+                        if (CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams))
+                        {
+                            GUI.AddMessage($"Character {Name} Created", Color.Green, font: GUI.Font);
+                        }
                         Instance.SelectTab(Tab.None);
                         return true;
                     };
