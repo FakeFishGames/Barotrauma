@@ -64,9 +64,13 @@
         <Sheet path="7_Medical/Sheets4.png" columns="5" rows="2" empty="3"/>
       </Video>
     </Segment>
-    <Segment name="Approach I" contenttype="video" istriggered="false">
+    <Segment name="Approach1" contenttype="video" istriggered="false">
       <Video animationspeed="0.1">
-        <Sheet path="8_Approach1/Sheets1.png" columns="1" rows="1"/>
+        <Sheet path="8_Approach1/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets5.png" columns="5" rows="9"/>
       </Video>
     </Segment>
     <Segment name="Approach2" contenttype="text" istriggered="false">
