@@ -137,7 +137,7 @@ namespace Barotrauma
 
         public virtual void UpdateAnim(float deltaTime) { }
 
-        public virtual void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle) { }
+        public virtual void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f) { }
 
         public virtual void DragCharacter(Character target, float deltaTime) { }
 
