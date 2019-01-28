@@ -4,13 +4,13 @@
   <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,0,512,48" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,55,512,76" origin="0.5,0.5" />
+  <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" bodyheight="52" bodyoffset="0,12" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,55,512,74" origin="0.5,0.5" />
   </structure>
   <structure name="InWall L 90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="464,135,48,512" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" castshadow="true" health="500">
+  <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" bodywidth="52" bodyoffset="12,0" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
   </structure>
   <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" castshadow="true" health="500">
@@ -50,51 +50,51 @@
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="223,267,53,110" origin="0.5,0.5" />
   </structure>
   <!-- BACK WALLS START -->
-  <FF_Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="1.0" />
-  </FF_Wall_B>
-  <FF_Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_B>
+  <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="1.0" />
-  </FF_Wall_BP>
-  <FF_Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_BP>
+  <Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast_C.png" sourcerect="0,0,512,256" depth="1.0" />
-  </FF_Wall_BC>
-  <FF_Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_BC>
+  <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="1.0" />
-  </FF_Wall_C1>
-  <FF_Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_C1>
+  <Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="1.0" />
-  </FF_Wall_C2>
-  <FF_Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_C2>
+  <Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="1.0" />
-  </FF_Wall_C3>
-  <FF_Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_C3>
+  <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="1.0" />
-  </FF_Wall_D1>
-  <FF_Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_D1>
+  <Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="1.0" />
-  </FF_Wall_D2>
-  <FF_Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_D2>
+  <Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="1.0" />
-  </FF_Wall_D3>
-  <FF_Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_D3>
+  <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="1.0" />
-  </FF_Wall_E>
-  <FF_Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_E>
+  <Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="1.0" />
-  </FF_Wall_F>
-  <FF_Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_F>
+  <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="1.0" />
-  </FF_Wall_G1>
-  <FF_Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_G1>
+  <Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="1.0" />
-  </FF_Wall_G2>
-  <FF_Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  </Wall_G2>
+  <Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="1.0" />
-  </FF_Wall_G3>
-  <FF_Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
+  </Wall_G3>
+  <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="1.0" />
-  </FF_Wall_H1>
+  </Wall_H1>
   <!-- BACK WALLS ENDS -->
   <!-- TAIL -->
   <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="40" bodyheight="300" castshadow="false">
@@ -236,137 +236,137 @@
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="1488,1312,560,338" depth="0.85" />
   </shellA>
   <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
-  <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="219" bodyheight="40" bodyrotation="90" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,0,47,219" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,0,47,219" depth="0.85" />
+  <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="40" bodyheight="60" resizevertical="true" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,0,45,208" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,0,45,208" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A02" identifier="sshella02" description="Shuttle wall" body="true" bodywidth="216" bodyheight="40" bodyrotation="0" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="66,2,208,42" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="66,2,208,42" depth="0.85" />
+  <sshellA name="Shuttle Shell A02" identifier="sshella02" description="Shuttle wall" body="true" bodywidth="60" bodyheight="40" resizehorizontal="true" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="65,0,207,45" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="65,0,207,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A03" identifier="sshella03" description="Shuttle wall" body="true" castshadow="true">
+  <!-- <sshellA name="Shuttle Shell A03" identifier="sshella03" description="Shuttle wall" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="292,-2,159,52" depth="0.1" origin="0.5068434,0.5813913" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="292,-2,159,52" depth="0.85" />
+  </sshellA> -->
+  <sshellA name="Shuttle Shell A04" identifier="sshella04" description="Shuttle wall" body="true" bodywidth="177" bodyheight="44" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="458,0,185,45" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="458,0,185,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A04" identifier="sshella04" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="457,0,186,47" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="457,0,186,47" depth="0.85" />
+  <sshellA name="Shuttle Shell A05" identifier="sshella05" description="Shuttle wall" body="true" bodywidth="150" bodyheight="44" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="649,0,155,45" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="649,0,155,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A05" identifier="sshella05" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="647,0,159,47" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="647,0,159,47" depth="0.85" />
+  <sshellA name="Shuttle Shell A06" identifier="sshellaA06" description="Shuttle wall" body="true" bodywidth="104" bodyheight="44" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="807,0,106,45" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="807,0,106,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A06" identifier="sshellaA06" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="804,2,112,46" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="804,2,112,46" depth="0.85" />
-  </sshellA>
-  <sshellA name="Shuttle Shell A07" identifier="sshella07" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="918,1,82,46" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="918,1,82,46" depth="0.85" />
+  <sshellA name="Shuttle Shell A07" identifier="sshella07" description="Shuttle wall" body="true" bodywidth="77" bodyheight="43" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="916,1,80,44" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="916,1,80,44" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A08" identifier="sshella08" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="57,76,222,54" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="57,76,222,54" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="63,79,211,47" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="63,79,211,47" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A09" identifier="sshella09" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="286,69,155,70" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="286,69,155,70" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="286,72,148,52" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="286,72,148,52" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A10" identifier="sshella10" description="Shuttle wall" body="true" bodywidth="160" bodyheight="45" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="448,76,164,49" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="448,76,164,49" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="449,80,157,43" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="449,80,157,43" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A11" identifier="sshella11" description="Shuttle wall" body="true" bodywidth="180" bodyheight="45" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="660,77,185,49" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="660,77,185,49" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="660,77,183,46" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="660,77,183,46" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A14" identifier="sshella14" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="63,146,200,81" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="63,146,200,81" depth="0.85" />
+  <sshellA name="Shuttle Shell A14" identifier="sshella14" description="Shuttle wall" body="true" bodywidth="186" bodyheight="62" bodyoffset="0,-8" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="63,146,186,77" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="63,146,186,77" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A15a" identifier="sshella15a" description="Shuttle Fin" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="300,146,224,32" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="300,146,224,32" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="298,148,222,28" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="298,148,222,28" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A15b" identifier="sshella15b" description="Shuttle Fin" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="299,185,225,30" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="299,185,225,30" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="299,185,220,29" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="299,185,220,29" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A15c" identifier="sshella15c" description="Shuttle Fin" body="true" bodywidth="200" bodyheight="40" bodyrotation="10" castshadow="true">
+  <sshellA name="Shuttle Shell A15c" identifier="sshella15c" description="Shuttle Fin" body="true" bodywidth="200" bodyheight="25" bodyoffset="-5,-5" bodyrotation="10" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="454,544,207,53" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="454,544,207,53" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A17a" identifier="sshella17a" description="Shuttle wall" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="629,154,39,55" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="629,154,39,55" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="636,156,23,51" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="636,156,23,51" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A17b" identifier="sshella17b" description="Shuttle wall" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="673,152,51,55" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,0,512,512" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="675,156,47,48" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="675,156,47,48" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A17c" identifier="sshella17c" description="Shuttle wall" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="572,168,49,30" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="572,168,49,30" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="574,169,39,25" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="574,169,39,25" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A18" identifier="sshella18" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="729,149,53,59" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="729,149,53,59" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="731,152,44,51" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="731,152,44,51" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A19" identifier="sshella19" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="788,154,120,53" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="788,154,120,53" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="787,155,116,51" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="787,155,116,51" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A20" identifier="sshella20" description="Shuttle wall" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="2,270,46,101" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="2,270,46,101" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A21" identifier="sshella21" description="Shuttle wall" body="true" bodywidth="115" bodyheight="40" bodyrotation="14" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="81,288,118,81" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="81,288,118,81" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="79,286,117,73" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="79,286,117,73" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A22" identifier="sshella22" description="Shuttle wall" body="true" bodywidth="190" bodyheight="40" bodyrotation="14.7" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="207,279,189,91" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="207,279,189,91" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="204,278,188,87" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="204,278,188,87" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A23" identifier="sshella23" description="Shuttle wall" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="404,257,119,121" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="404,257,119,121" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="400,258,116,121" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="400,258,116,121" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A24" identifier="sshella24" description="Shuttle wall" body="true" bodywidth="143" bodyheight="45" bodyrotation="40" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="528,247,105,126" depth="0.1" origin="0.4936646,0.4560038" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="528,247,105,126" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="524,246,108,127" depth="0.1" origin="0.4936646,0.4560038" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="524,246,108,127" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A25" identifier="sshella25" description="Shuttle wall" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="638,253,154,123" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="638,253,154,123" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="635,257,155,113" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="635,257,155,113" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A26" identifier="sshella26" description="Shuttle wall" body="true" bodywidth="118" bodyheight="46" bodyrotation="48" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="810,266,104,114" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="810,266,108,115" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="812,265,100,112" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="812,265,100,112" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A27" identifier="sshella27" description="Shuttle wall" body="true" bodywidth="118" bodyheight="45" bodyrotation="64.3" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="913,258,92,120" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="913,258,92,120" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="913,256,86,118" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="913,256,86,118" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A28" identifier="sshella28" description="Shuttle wall" body="true" bodywidth="146" bodyheight="45" bodyrotation="90" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,404,54,122" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,404,54,122" depth="0.85" />
+  <sshellA name="Shuttle Shell A28" identifier="sshella28" description="Shuttle wall" body="true" bodywidth="48" bodyheight="111" castshadow="true">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,404,49,115" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,404,49,115" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A30" identifier="sshella30" description="Shuttle wall" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="302,381,50,200" depth="0.1" origin="0.391928,0.4112628" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="302,381,50,200" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A32b" identifier="sshella32b" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="636,397,196,44" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="636,397,196,44" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="634,398,196,43" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="634,398,196,43" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A32c" identifier="sshella32c" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="835,402,150,44" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="835,402,150,44" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="838,400,144,43" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="838,400,144,43" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A32d" identifier="sshella32d" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="981,425,44,149" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="981,425,44,149" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="983,425,41,146" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="983,425,41,146" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A36" identifier="sshella36" description="Shuttle wall" body="true" bodywidth="115" bodyheight="80" bodyrotation="67" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="702,885,172,123" depth="0.1" origin="0.5,0.5" />
@@ -377,102 +377,102 @@
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="500,884,177,126" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A38" identifier="sshella38" description="Shuttle wall" body="true" bodywidth="50" bodyheight="50" bodyrotation="0" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="377,909,116,95" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="377,909,116,95" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="379,909,110,89" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="379,909,110,89" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A39" identifier="sshella39" description="Shuttle wall" body="true" bodywidth="154" bodyheight="40" bodyrotation="11" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="211,914,163,78" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="211,914,163,78" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="211,914,160,74" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="211,914,160,74" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A40" identifier="sshella40" description="Shuttle wall" body="true" bodywidth="210" bodyheight="40" bodyrotation="20" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="3,898,204,107" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="3,898,204,107" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,899,204,102" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,899,204,102" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A41" identifier="sshella41" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="801,782,155,76" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="801,782,155,76" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="803,784,148,69" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="803,784,148,69" depth="0.85" />
   </sshellA>
   <!-- SHUTTLE SHELLS / SPECIAL PIECES -->
   <!-- Front / Shuttle Shells -->
-  <sshellA name="Shuttle Lights A" identifier="sshellalightsa" description="Shuttle wall" body="true" bodywidth="60" bodyheight="60" bodyrotation="0" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="105,409,133,156" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="105,409,133,156" depth="0.85" />
+  <sshellA name="Shuttle Lights A" identifier="sshellalightsa" description="Shuttle wall" body="false">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="106,411,128,159" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="106,411,128,159" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Plate A" identifier="sshellaplatea" description="Shuttle wall" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="403,415,117,115" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="403,415,117,115" depth="0.85" />
+  <sshellA name="Shuttle Plate A" identifier="sshellaplatea" description="Shuttle wall" body="false" castshadow="false">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="405,413,113,113" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="405,413,113,113" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Plate B" identifier="sshellaplateb" description="Shuttle wall" body="true" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="529,412,103,112" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="529,412,103,112" depth="0.85" />
+  <sshellA name="Shuttle Plate B" identifier="sshellaplateb" description="Shuttle wall" body="false" castshadow="false">
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="534,414,98,105" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="534,414,98,105" depth="0.85" />
   </sshellA>
   <!-- Bumper / Shuttle Shells -->
   <sshellA name="Shuttle Bumper A" identifier="sshellabumpera" description="Shuttle wall" body="true" bodywidth="240" bodyheight="30" health="10000" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="710,498,266,61" depth="0.12" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="710,498,266,61" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="714,501,255,53" depth="0.12" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="714,501,255,53" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Bumper B" identifier="sshellabumperb" description="Shuttle wall" body="true" bodywidth="105" bodyheight="30" health="10000" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="760,464,119,35" depth="0.12" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="760,464,119,35" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="764,464,111,31" depth="0.12" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="764,464,111,31" depth="0.85" />
   </sshellA>
   <!-- Glass / Shuttle Shells -->
   <sshellA name="Shuttle Shell A Glass A" identifier="sshellaglassa" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="55" castshadow="false" tags="glass">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="1,573,185,253" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="1,573,185,253" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="1,573,181,249" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="1,573,181,249" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A Glass B" identifier="sshellaglassb" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="38" castshadow="false" tags="glass">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="221,601,274,215" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="221,601,274,215" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="222,598,268,218" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="222,598,268,218" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A Glass C" identifier="sshellaglassc" description="Shuttle wall" body="true" bodywidth="272" bodyheight="40" bodyrotation="43" castshadow="false" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="494,600,221,218" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="494,600,221,218" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A Glass D" identifier="sshellaglassd" description="Shuttle wall" body="true" bodywidth="206" bodyheight="40" bodyrotation="38" castshadow="false" tags="glass">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="730,574,190,147" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="730,574,190,147" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="735,576,181,143" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="735,576,181,143" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A Glass E" identifier="sshellaglasse" description="Shuttle wall" body="true" resizevertical="true" castshadow="false" tags="glass">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="979,582,46,189" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="979,582,46,189" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="979,577,45,190" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="979,577,45,190" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Shell A Glass F" identifier="sshellaglassf" description="Shuttle wall" body="true" resizehorizontal="true" castshadow="false" tags="glass">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="719,739,197,47" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="719,739,197,47" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="721,736,190,47" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="721,736,190,47" depth="0.85" />
   </sshellA>
   <!-- Fins / Shuttle Shells -->
   <sshellA name="Shuttle Fin A" identifier="sshellafina" description="Shuttle wall" body="false" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="702,885,172,123" depth="0.9" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="702,885,172,123" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="702,885,165,121" depth="0.9" origin="0.5,0.5" />
+    <!--  <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="702,885,172,123" depth="0.85" /> -->
   </sshellA>
   <sshellA name="Shuttle Fin B" identifier="sshellafinb" description="Shuttle wall" body="false" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="500,884,177,126" depth="0.9" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="500,884,177,126" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="500,884,172,120" depth="0.9" origin="0.5,0.5" />
+    <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="500,884,177,126" depth="0.85" /> -->
   </sshellA>
   <sshellA name="Shuttle Fin C" identifier="sshellafinc" description="Shuttle wall" body="false" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="858,44,145,108" depth="0.9" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="858,44,145,108" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="858,46,130,101" depth="0.9" origin="0.5,0.5" />
+    <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="858,44,145,108" depth="0.85" /> -->
   </sshellA>
   <sshellA name="Shuttle Fin D" identifier="sshellafind" description="Shuttle wall" body="false" castshadow="false">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="892,890,107,129" depth="0.9" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="892,890,107,129" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="892,887,102,131" depth="0.9" origin="0.5,0.5" />
+    <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="892,890,107,129" depth="0.85" /> -->
   </sshellA>
   <!-- Gromits / Shuttle Shells  -->
   <sshellA name="Shuttle Gromit A" identifier="sshellagromita" description="Shuttle wall" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="538,171,18,20" depth="0.1" origin="0.414694,0.4719137" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="538,171,18,20" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="539,172,18,18" depth="0.1" origin="0.414694,0.4719137" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="539,172,18,18" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Gromit B" identifier="sshellagromitb" description="Shuttle gromit" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="917,181,46,20" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="917,181,46,20" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="915,181,45,16" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="915,181,45,16" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Gromit C" identifier="sshellagromitc" description="Shuttle gromit" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="915,157,40,16" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="915,157,40,16" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="914,158,39,14" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="914,158,39,14" depth="0.85" />
   </sshellA>
   <sshellA name="Shuttle Gromit D" identifier="sshellagromitd" description="Shuttle gromit" castshadow="true">
-    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="965,157,18,15" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="965,157,18,15" depth="0.85" />
+    <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="966,159,12,11" depth="0.1" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="966,159,12,11" depth="0.85" />
   </sshellA>
   <!-- OLD PIECES -->
   <largehorizontalback identifier="largehorizontalback" allowattachitems="true" description="A decorative structure with no collision detection" width="128" height="64" resizehorizontal="true">
@@ -566,7 +566,7 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="896,80,64,128" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
-  <largeplatform identifier="largeplatform" allowattachitems="true" width="64" height="64" resizehorizontal="true" body="true" platform="true">
+  <largeplatform identifier="largeplatform" allowattachitems="true" width="64" height="52" resizehorizontal="true" body="true" platform="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,52" depth="0.9" />
   </largeplatform>
   <platform identifier="platform" allowattachitems="true" width="64" height="26" resizehorizontal="true" body="true" platform="true">
