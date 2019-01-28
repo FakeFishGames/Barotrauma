@@ -176,14 +176,14 @@
   identifier="alienpistol"
   category="Equipment"
   tags="smallitem,weapon,alien"
-  Scale="0.32">
-    <InventoryIcon texture="alientools.png" sourcerect="0,0,117,64" />
-    <Sprite texture="alientools.png" sourcerect="0,0,117,64" depth="0.55" />
-    <Body width="28" height="20" density="50" />
+  Scale="0.6">
+    <InventoryIcon texture="alientools.png" sourcerect="0,50,54,32" />
+    <Sprite texture="alientools.png" sourcerect="0,50,54,32" depth="0.55" />
+    <Body radius="15" width="15" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" >
       <StatusEffect type="OnBroken" target="This" Condition="100" delay="1" />
     </Holdable>
-    <ItemContainer capacity="1" hideitems="false">
+    <ItemContainer capacity="1" hideitems="false" itempos="20,-20">
       <Containable identifiers="alienpowercell" />
     </ItemContainer>
 

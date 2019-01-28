@@ -53,7 +53,7 @@
       <Item identifier="plastic" />
       <Item identifier="rubber" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,320,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,322,57,62" />
     <Sprite name="Diving Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.55" sourcerect="96,0,96,96" origin="0.5,0.5" />
     <Body width="26" height="18" density="15" />
     <Wearable limbtype="Head" slots="Any,Head">
@@ -87,7 +87,7 @@
       <Item identifier="titanium" />
       <Item identifier="rubber" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="449,320,63,64" />
     <!--
     <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="157,0,90,307" depth="0.55" origin="0.4888889,0.5439739" />
     -->
