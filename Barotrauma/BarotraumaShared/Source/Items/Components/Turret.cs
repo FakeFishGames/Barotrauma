@@ -18,7 +18,6 @@ namespace Barotrauma.Items.Components
         private Vector2 barrelPos;
         private Vector2 transformedBarrelPos;
 
-        private bool? hasLight;
         private LightComponent lightComponent;
         
         private float rotation, targetRotation;
@@ -86,6 +85,13 @@ namespace Barotrauma.Items.Components
                 maxRotation = MathHelper.ToRadians(Math.Max(value.X, value.Y));
 
                 rotation = (minRotation + maxRotation) / 2;
+#if CLIENT
+                if (lightComponent != null) 
+                {
+                    lightComponent.Rotation = rotation;
+                    lightComponent.Light.Rotation = -rotation;
+                }
+#endif
             }
         }
 
@@ -157,9 +163,7 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-
-            hasLight = null;
-
+            
             InitProjSpecific(element);
         }
 
@@ -176,23 +180,24 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
+        public override void OnItemLoaded()
+        {
+            var lightComponents = item.GetComponents<LightComponent>();
+            if (lightComponents != null && lightComponents.Count() > 0)
+            {
+                lightComponent = lightComponents.FirstOrDefault(lc => lc.Parent == this);
+#if CLIENT
+                if (lightComponent != null) 
+                {
+                    lightComponent.Rotation = rotation;
+                    lightComponent.Light.Rotation = -rotation;
+                }
+#endif
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (hasLight == null)
-            {
-                var lightComponents = item.GetComponents<LightComponent>();
-                
-                if (lightComponents != null && lightComponents.Count() > 0)
-                {
-                    lightComponent = lightComponents.FirstOrDefault(lc => lc.Parent == this);
-                    hasLight = (lightComponent != null);
-                }
-                else
-                {
-                    hasLight = false;
-                }
-            }
-
             this.cam = cam;
 
             if (reload > 0.0f) reload -= deltaTime;
@@ -237,7 +242,7 @@ namespace Barotrauma.Items.Components
                 angularVelocity *= -0.5f;
             }
 
-            if ((bool)hasLight)
+            if (lightComponent != null)
             {
                 lightComponent.Rotation = rotation;
             }
