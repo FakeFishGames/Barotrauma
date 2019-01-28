@@ -20,9 +20,7 @@ namespace Barotrauma.Items.Components
 
         private bool? hasLight;
         private LightComponent lightComponent;
-
-        private float baseAngle;
-
+        
         private float rotation, targetRotation;
 
         private float reload, reloadTime;
@@ -34,6 +32,8 @@ namespace Barotrauma.Items.Components
         private Camera cam;
 
         private float angularVelocity;
+
+        private int failedLaunchAttempts;
 
         private Character user;
         
@@ -139,9 +139,7 @@ namespace Barotrauma.Items.Components
                 UpdateTransformedBarrelPos();
             }
         }
-
-
-
+        
         public Turret(Item item, XElement element)
             : base(item, element)
         {
@@ -171,7 +169,7 @@ namespace Barotrauma.Items.Components
         {
             float flippedRotation = BaseRotation;
             if (item.FlippedX) flippedRotation = -flippedRotation;
-            if (item.FlippedY) flippedRotation = 180.0f - flippedRotation;
+            //if (item.FlippedY) flippedRotation = 180.0f - flippedRotation;
             transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos * item.Scale, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), flippedRotation);
 #if CLIENT
             item.SpriteRotation = MathHelper.ToRadians(flippedRotation);
@@ -284,15 +282,22 @@ namespace Barotrauma.Items.Components
             var projectiles = GetLoadedProjectiles(true);
             if (projectiles.Count == 0)
             {
+                //coilguns spawns ammo in the ammo boxes with the OnUse statuseffect when the turret is launched,
+                //causing a one frame delay before the gun can be launched (or more in multiplayer where there may be a longer delay)
+                //  -> attempt to launch the gun multiple times before showing the "no ammo" flash
+                failedLaunchAttempts++;
 #if CLIENT
-                if (!flashNoAmmo && character != null && character == Character.Controlled)
+                if (!flashNoAmmo && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
                 {
                     flashNoAmmo = true;
+                    failedLaunchAttempts = 0;
                     GUI.PlayUISound(GUISoundType.PickItemFail);
                 }
 #endif
                 return false;
             }
+
+            failedLaunchAttempts = 0;
 
             var batteries = item.GetConnectedComponents<PowerContainer>();
             float availablePower = 0.0f;
@@ -580,7 +585,10 @@ namespace Barotrauma.Items.Components
 
         public override void FlipY(bool relativeToSub)
         {
-            minRotation = -minRotation;
+            baseRotationRad = MathUtils.WrapAngleTwoPi(baseRotationRad - MathHelper.Pi);
+            UpdateTransformedBarrelPos();
+
+            /*minRotation = -minRotation;
             maxRotation = -maxRotation;
 
             var temp = minRotation;
@@ -596,7 +604,7 @@ namespace Barotrauma.Items.Components
             }
             rotation = (minRotation + maxRotation) / 2;
 
-            UpdateTransformedBarrelPos();
+            UpdateTransformedBarrelPos();*/
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
