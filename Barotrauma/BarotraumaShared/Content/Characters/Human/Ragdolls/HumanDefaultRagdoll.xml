@@ -12,7 +12,7 @@
     <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6" depth="0" />
   </limb>
   <limb id="12" radius="13" mass="20" type="Waist" healthindex="1" name="Limb 12" flip="True" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="0,1,98,90" depth="0.11" origin="0.5612245,0.4222222" />
+    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="0,1,98,90" depth="0.11" origin="0.4897959,0.6111111" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5" depth="0" />
   </limb>
   <!-- left arm -->
@@ -63,7 +63,7 @@
   </limb>
   <!-- head to body -->
   <joint limb1="0" limb1anchor="-1.107115,-9.960549" limb2="1" limb2anchor="2.598679,24.53047" lowerlimit="-90" upperlimit="45" canbesevered="True" name="Joint 0 - 1" limitenabled="True" stiffness="0.25" />
-  <joint limb1="1" limb1anchor="3.380959,-17.87113" limb2="12" limb2anchor="2.676021,1.599435" lowerlimit="-17.57775" upperlimit="18.69145" canbesevered="False" name="Joint 1 - 12" limitenabled="True" stiffness="0.25" />
+  <joint limb1="1" limb1anchor="3.371222,-15.66562" limb2="12" limb2anchor="4.84189,12.6504" lowerlimit="-59.71867" upperlimit="12.64146" canbesevered="False" name="Joint 1 - 12" limitenabled="True" stiffness="0.25" />
   <!-- body to left arm -->
   <joint limb1="1" limb1anchor="-0.0260481,9.356544" limb2="2" limb2anchor="0.1378281,6.515157" limitenabled="False" name="Joint 1 - 2" canbesevered="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
   <joint limb1="2" limb1anchor="0.598445,-15.47756" limb2="3" limb2anchor="-1.72428,15.81094" lowerlimit="3.949243" upperlimit="181.6321" canbesevered="True" name="Joint 2 - 3" limitenabled="True" stiffness="0.25" />
@@ -71,11 +71,11 @@
   <joint limb1="1" limb1anchor="-7.013377,8.597107" limb2="4" limb2anchor="0.1378281,6.515157" limitenabled="False" name="Joint 1 - 4" canbesevered="True" upperlimit="220.5413" lowerlimit="-65.71375" stiffness="0.25" />
   <joint limb1="4" limb1anchor="0.598445,-15.47756" limb2="5" limb2anchor="-1.72428,15.81094" lowerlimit="3.949243" upperlimit="181.6321" canbesevered="True" name="Joint 4 - 5" limitenabled="True" stiffness="0.25" />
   <!-- body to left leg -->
-  <joint limb1="12" limb1anchor="5.903615,-7.230489" limb2="6" limb2anchor="-0.09624133,15.82768" lowerlimit="-30" upperlimit="107.245" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
+  <joint limb1="12" limb1anchor="0.4394971,1.955703" limb2="6" limb2anchor="-2.293741,15.82768" lowerlimit="-30" upperlimit="107.245" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
   <joint limb1="6" limb1anchor="3.097271,-18.08422" limb2="7" limb2anchor="2.890171,17.48538" lowerlimit="-99.91029" upperlimit="-4.698214" canbesevered="True" name="Joint 6 - 7" limitenabled="True" stiffness="0.25" />
   <joint limb1="7" limb1anchor="2.022141,-14.71872" limb2="8" limb2anchor="7.845267,4.614426" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" stiffness="0.25" />
   <!-- body to right leg -->
-  <joint limb1="12" limb1anchor="1.85841,-7.22257" limb2="9" limb2anchor="-0.09624133,15.82768" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" stiffness="0.25" />
+  <joint limb1="12" limb1anchor="-3.642087,2.302029" limb2="9" limb2anchor="-3.094239,15.45416" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" stiffness="0.25" />
   <joint limb1="9" limb1anchor="3.097271,-18.08422" limb2="10" limb2anchor="2.890171,17.48538" lowerlimit="-99.91029" upperlimit="-4.698214" canbesevered="True" name="Joint 9 - 10" limitenabled="True" stiffness="0.25" />
   <joint limb1="10" limb1anchor="1.256918,-14.71872" limb2="11" limb2anchor="7.845267,4.614426" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" stiffness="0.25" />
 </Ragdoll>
