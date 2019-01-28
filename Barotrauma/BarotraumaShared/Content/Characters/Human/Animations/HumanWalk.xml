@@ -16,10 +16,12 @@
   movementspeed="1.647068"
   headangle="351.4598"
   torsoangle="-7.130458"
-  crouchingtorsopos="0.65"
-  crouchingtorsoangle="-10"
+  crouchingtorsopos="0.8"
+  crouchingtorsoangle="-20"
   legbendtorque="30"
   backwardsmovementmultiplier="0.75"
   animationtype="Walk"
   footangle="-90"
-  crouchingfootmoveoffset="0,0" />
+  crouchingfootmoveoffset="0,0"
+  crouchingheadpos="1.2"
+  crouchingheadangle="0" />
