@@ -167,11 +167,27 @@ namespace Barotrauma
             }
         }
 
+        public override float? HeadPosition
+        {
+            get
+            {
+                return Crouching ? CurrentGroundedParams.CrouchingHeadPos * RagdollParams.JointScale : base.HeadPosition;
+            }
+        }
+
         public override float? TorsoAngle
         {
             get
             {
                 return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
+            }
+        }
+
+        public override float? HeadAngle
+        {
+            get
+            {
+                return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingHeadAngle) : base.HeadAngle;
             }
         }
 
