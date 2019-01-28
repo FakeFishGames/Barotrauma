@@ -4,11 +4,12 @@
   headangle="42.5"
   torsoangle="0"
   legmoveamount="0.4873754"
-  handmoveamount="0.7065676,-0.1610214"
+  handmoveamount="1.268011,0.2154751"
   handmoveoffset="0,0"
-  handcyclespeed="2.82627"
+  handcyclespeed="2.536023"
   legcyclelength="8.0442"
   cyclespeed="1.429391"
   animationtype="SwimSlow"
   footangle="-40"
-  footrotatestrength="5" />
+  footrotatestrength="5"
+  handmovestrength="1" />
