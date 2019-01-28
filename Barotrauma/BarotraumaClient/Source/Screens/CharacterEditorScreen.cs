@@ -136,6 +136,14 @@ namespace Barotrauma
                 }
                 GameMain.World.ProcessChanges();
             }
+            else
+            {
+                if (character != null)
+                {
+                    character.ForceRun = false;
+                    character.AnimController.ForceSelectAnimationType = AnimationType.NotDefined;
+                }
+            }
             GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
             ClearWidgets();
