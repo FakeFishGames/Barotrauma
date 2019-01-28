@@ -353,21 +353,26 @@ namespace Barotrauma
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
+            commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given Vector4 value (for example, 1,1,1,0.5).", (string[] args) =>
             {
-                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1) return;
+                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1)
+                {
+                    ThrowError("The multiplylights command can only be used in the submarine editor.");
+                }
+                if (args.Length < 1) return;
 
-                Color color = XMLExtensions.ParseColor(args[0]);
+                //join args in case there's spaces between the components
+                Vector4 value = XMLExtensions.ParseVector4(string.Join("", args));
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.ParentInventory != null || item.body != null) continue;
                     var lightComponent = item.GetComponent<LightComponent>();
                     if (lightComponent != null) lightComponent.LightColor = 
                         new Color(
-                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f), 
-                            (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
-                            (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
-                            (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
+                            (lightComponent.LightColor.R / 255.0f) * value.X, 
+                            (lightComponent.LightColor.G / 255.0f) * value.Y,
+                            (lightComponent.LightColor.B / 255.0f) * value.Z,
+                            (lightComponent.LightColor.A / 255.0f) * value.W);
                 }
             }, isCheat: false));
 
