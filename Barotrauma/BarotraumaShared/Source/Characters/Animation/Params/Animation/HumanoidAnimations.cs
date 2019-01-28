@@ -58,6 +58,9 @@ namespace Barotrauma
         [Serialize("0.5, 0.1", true), Editable(DecimalCount = 2)]
         public Vector2 HandMoveAmount { get; set; }
 
+        [Serialize(0.5f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+        public float HandMoveStrength { get; set; }
+
         [Serialize(5.0f, true), Editable]
         public float HandCycleSpeed { get; set; }
 

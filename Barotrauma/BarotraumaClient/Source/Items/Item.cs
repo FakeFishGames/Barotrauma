@@ -97,6 +97,18 @@ namespace Barotrauma
         partial void SetActiveSprite()
         {
             activeSprite = prefab.sprite;
+            if (Container != null)
+            {
+                foreach (ContainedItemSprite containedSprite in Prefab.ContainedSprites)
+                {
+                    if (containedSprite.MatchesContainer(Container))
+                    {
+                        activeSprite = containedSprite.Sprite;
+                        return;
+                    }
+                }
+            }
+
             foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
             {
                 if (condition <= brokenSprite.MaxCondition)

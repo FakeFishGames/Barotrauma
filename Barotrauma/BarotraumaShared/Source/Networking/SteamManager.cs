@@ -239,7 +239,10 @@ namespace Barotrauma.Steam
 
             foreach (ServerList.Server s in servers)
             {
-                if (query.Responded.Contains(s))
+                if (!ValidateServerInfo(s)) { continue; }
+
+                bool responded = query.Responded.Contains(s);
+                if (responded)
                 {
                     DebugConsole.Log(s.Name + " responded to server query.");
                 }
@@ -258,9 +261,14 @@ namespace Barotrauma.Steam
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
-                s.FetchRules();
-                s.OnReceivedRules += (_) =>
+                if (!responded)
                 {
+                    s.FetchRules();
+                }
+                s.OnReceivedRules += (bool rulesReceived) =>
+                {
+                    if (!rulesReceived || s.Rules == null) { return; }
+
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
 
@@ -297,6 +305,14 @@ namespace Barotrauma.Steam
                 onServerFound(serverInfo);
             }
             query.Responded.Clear();
+        }
+
+        private static bool ValidateServerInfo(ServerList.Server server)
+        {
+            if (string.IsNullOrEmpty(server.Name)) { return false; }
+            if (server.Address == null) { return false; }
+
+            return true;
         }
 
         public static Auth.Ticket GetAuthSessionTicket()

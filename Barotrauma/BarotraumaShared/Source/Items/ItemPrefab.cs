@@ -437,6 +437,18 @@ namespace Barotrauma
                         DecorativeSpriteGroups[groupID].Add(decorativeSprite);
 
                         break;
+                    case "containedsprite":
+                        string containedSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            containedSpriteFolder = Path.GetDirectoryName(filePath);
+                        }
+                        var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder);
+                        if (containedSprite.Sprite != null)
+                        {
+                            ContainedSprites.Add(containedSprite);
+                        }
+                        break;
 #endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
