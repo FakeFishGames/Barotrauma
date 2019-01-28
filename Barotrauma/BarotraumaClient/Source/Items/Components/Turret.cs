@@ -26,6 +26,8 @@ namespace Barotrauma.Items.Components
 
         private Vector2 crosshairPos, crosshairPointerPos;
 
+        private float baseAngle;
+
         private bool flashLowPower;
         private bool flashNoAmmo;
         private float flashTimer;
