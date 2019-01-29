@@ -272,6 +272,7 @@ namespace Barotrauma
 
         public BodyType BodyType
         {
+            get { return body.BodyType; }
             set { body.BodyType = value; }
         }
 
