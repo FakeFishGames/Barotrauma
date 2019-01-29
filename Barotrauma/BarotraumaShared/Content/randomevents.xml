@@ -24,10 +24,11 @@
       <MonsterEvent characterfile="Content/Characters/Manta/Manta.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
-    <!-- 1 thresher or 1 hammerhead after 5 minutes or passing 40% -->
+    <!-- 1 thresher or 1 hammerhead or 3 crawlers after 5 minutes or passing 40% -->
     <EventSet chooserandom="true" mindistancetraveled="0.33" minmissiontime="240" minintensity="0.0" maxintensity="0.25">
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/Tigerthresher.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="3" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 1 mantis or 1 crawler after 10 minutes or passing 60% -->
@@ -155,19 +156,19 @@
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
 
-    <!-- 2-4 crawlers or 1-2 mantises after 30 seconds or passing 5% -->
-    <EventSet chooserandom="true" mindistancetraveled="0.05" minmissiontime="30" minintensity="0.0" maxintensity="0.75">
+    <!-- 2-4 crawlers or 1-2 mantises after 4 minutes or passing 15% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="240" minintensity="0.0" maxintensity="0.65">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Manta/Manta.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 1-2 molochs after 10 minutes or passing 40% -->
-    <EventSet chooserandom="false" mindistancetraveled="0.40" minmissiontime="600" minintensity="0.0" maxintensity="0.5">
+    <EventSet chooserandom="false" mindistancetraveled="0.40" minmissiontime="600" minintensity="0.0" maxintensity="0.45">
       <MonsterEvent characterfile="Content/Characters/Moloch/Moloch.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 1-2 tigerthreshers or 1 - 2 Hammerhead after 10 minutes or passing 40% -->
-    <EventSet chooserandom="true" mindistancetraveled="0.40" minmissiontime="600" minintensity="0.0" maxintensity="0.5">
+    <EventSet chooserandom="true" mindistancetraveled="0.40" minmissiontime="600" minintensity="0.0" maxintensity="0.40">
       <MonsterEvent characterfile="Content/Characters/Tigerthresher/Tigerthresher.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />    </EventSet>
 
