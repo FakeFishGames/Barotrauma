@@ -1588,6 +1588,7 @@ namespace Barotrauma
 
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
+            // TODO: don't create new arrays, reuse
             Vector2[] transformedHandlePos = new Vector2[2];
             transformedHandlePos[0] = Vector2.Transform(handlePos[0], itemTransfrom);
             transformedHandlePos[1] = Vector2.Transform(handlePos[1], itemTransfrom);
@@ -1597,6 +1598,7 @@ namespace Barotrauma
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
             
+            // TODO: Remove this. Provide the position in params.
             Vector2 itemPos = aim ? aimPos : holdPos;
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
