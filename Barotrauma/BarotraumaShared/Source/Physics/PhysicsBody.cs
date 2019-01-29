@@ -239,7 +239,7 @@ namespace Barotrauma
             get { return body.AngularVelocity; }
             set
             {
-                if (!IsValidValue(value, "angular velocity")) return;
+                if (!IsValidValue(value, "angular velocity", -1000f, 1000f)) return;
                 body.AngularVelocity = value;
             }
         }
