@@ -25,7 +25,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Railgun Controller" tags="railgunequipment" category="Legacy" type="Controller" disableitemusagewhenselected="true">
-    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="333,375,60,96" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="452,194,60,96" origin="0.5,0.5" />
     <Controller UserPos="-35.0, -50.0" direction="Right" canbeselected="true" requireaimtouse="true">
       <limbposition limb="Head" position="-5,-62" />
       <limbposition limb="Torso" position="-5,-108" />
@@ -41,7 +41,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Rear Railgun Controller" tags="railgunequipment" category="Legacy" type="Controller" disableitemusagewhenselected="true">
-    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="276,375,57,96" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="395,194,57,96" origin="0.5,0.5" />
     <Controller UserPos="35, -50.0" direction="Left" canbeselected="true">
       <limbposition limb="Head" position="-5,-62" />
       <limbposition limb="Torso" position="-5,-108" />

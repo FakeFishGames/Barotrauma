@@ -147,7 +147,7 @@ namespace Barotrauma.Items.Components
 
                 limb.Disabled = true;
                 
-                Vector2 worldPosition = lb.position + new Vector2(item.WorldRect.X, item.WorldRect.Y);
+                Vector2 worldPosition = new Vector2(item.WorldRect.X, item.WorldRect.Y) + lb.position * item.Scale;
                 Vector2 diff = worldPosition - limb.WorldPosition;
 
                 limb.PullJointEnabled = true;
@@ -320,11 +320,11 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < limbPositions.Count; i++)
             {
-                float diff = (item.Rect.X + limbPositions[i].position.X) - item.Rect.Center.X;
+                float diff = (item.Rect.X + limbPositions[i].position.X * item.Scale) - item.Rect.Center.X;
 
                 Vector2 flippedPos =
                     new Vector2(
-                        item.Rect.Center.X - diff - item.Rect.X,
+                        (item.Rect.Center.X - diff - item.Rect.X) / item.Scale,
                         limbPositions[i].position.Y);
 
                 limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
