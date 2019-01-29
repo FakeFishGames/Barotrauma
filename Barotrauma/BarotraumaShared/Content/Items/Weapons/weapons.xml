@@ -170,7 +170,7 @@
         </Explosion>
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
@@ -197,7 +197,7 @@
         </Explosion>
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
@@ -225,7 +225,7 @@
         </Explosion>
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
@@ -255,7 +255,7 @@
         <Fire size="300.0" />
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
