@@ -46,7 +46,7 @@
   </Item>
   <Item name="Railgun Loader" identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="53,-140" iteminterval="48.5,0" itemrotation="90" canbeselected="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true">
       <Containable identifiers="railgunammo" />
     </ItemContainer>
     <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="420" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
