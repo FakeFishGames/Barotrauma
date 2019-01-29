@@ -87,7 +87,7 @@
   </Item>
   <Item name="Oxygen Tank Shelf" identifier="oxygentankshelf" pickdistance="50" scale="0.5">
     <Sprite name="Diving Suit Locker" texture="DivingSuitLocker.png" depth="0.84" sourcerect="0,0,92,338" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="10" slotsperrow="5" itempos="26,-43" iteminterval="42,-65" itemsperrow="2" itemrotation="0" canbeselected="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="10" slotsperrow="5" itempos="26,-43" iteminterval="42,-65" itemsperrow="2" itemrotation="0" canbeselected="true" containedspritedepth="0.83">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="oxygentank,weldingfueltank,oxygenitetank" />
     </ItemContainer>
