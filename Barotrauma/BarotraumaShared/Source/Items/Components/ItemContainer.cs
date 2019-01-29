@@ -237,6 +237,11 @@ namespace Barotrauma.Items.Components
                 Item item = Entity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
 
+                if (i >= Inventory.Capacity)
+                {
+                    continue;
+                }
+
                 Inventory.TryPutItem(item, i, false, false, null, false);
             }
 
