@@ -37,6 +37,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [InGameEditable(ToolTip = "Should the component discard previously received signals when the incoming signal changes."), Serialize(false, true)]
+        public bool ResetWhenDifferentSignalReceived
+        {
+            get;
+            set;
+        }
+
         public DelayComponent(Item item, XElement element)
             : base (item, element)
         {
@@ -65,6 +72,10 @@ namespace Barotrauma.Items.Components
                 case "signal_in":
                     if (signalQueue.Count >= SignalQueueSize) return;
                     if (ResetWhenSignalReceived) signalQueue.Clear();
+                    if (ResetWhenDifferentSignalReceived && signalQueue.Count > 0 && signalQueue.Peek().Signal != signal)
+                    {
+                        signalQueue.Clear();
+                    }
                     signalQueue.Enqueue(new DelayedSignal(signal, signalStrength, Delay));
                     break;
             }
