@@ -22,6 +22,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        //connection panels can't be deactivated
+        public override bool IsActive
+        {
+            get { return true; }
+            set { /*do nothing*/ }
+        }
+
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
         {
