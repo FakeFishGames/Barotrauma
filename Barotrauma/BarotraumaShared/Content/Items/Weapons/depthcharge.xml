@@ -25,7 +25,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,130,89" depth="0.55" origin="0.5,0.5" />
-    <Body width="253" height="172" density="30" />
+    <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
@@ -50,7 +50,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,1,129,88" depth="0.55" origin="0.5,0.5" />
-    <Body width="253" height="172" density="30" />
+    <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
@@ -83,7 +83,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,128,88" depth="0.55" origin="0.5,0.5" />
-    <Body width="253" height="172" density="30" />
+    <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <AiTarget soundrange="20000" />
@@ -109,7 +109,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,0,128,89" depth="0.55" origin="0.5,0.5" />
-    <Body width="253" height="172" density="30" />
+    <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <AiTarget soundrange="20000" />
