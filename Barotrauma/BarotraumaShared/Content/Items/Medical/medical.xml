@@ -958,7 +958,7 @@
   </Deliriumine>
   <!-- legacy **************************************************************************************** -->
   <!-- Medical items -->
-  <MedicalSyringe name="Medical Syringe" identifier="medicalsyringe" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" usecontainedspritecolor="true" usecontainedinventoryiconcolor="true" description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
+  <MedicalSyringe name="Medical Syringe" identifier="medicalsyringe" category="Equipment" Tags="smallitem,medical,syringe" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" usecontainedspritecolor="true" usecontainedinventoryiconcolor="true" description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
     <Price locationtype="Research" buyprice="25" />
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="30" />
