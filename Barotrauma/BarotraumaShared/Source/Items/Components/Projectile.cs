@@ -62,7 +62,20 @@ namespace Barotrauma.Items.Components
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
-        
+
+        [Serialize(0.0f, false)]
+        public float LaunchRotation
+        {
+            get { return MathHelper.ToDegrees(LaunchRotationRadians); }
+            set { LaunchRotationRadians = MathHelper.ToRadians(value); }
+        }
+
+        public float LaunchRotationRadians
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         //backwards compatibility, can stick to anything
         public bool DoesStick

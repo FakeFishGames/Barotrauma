@@ -152,7 +152,8 @@ namespace Barotrauma.Items.Components
             projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
 
             //set the rotation of the projectile again because dropping the projectile resets the rotation
-            projectile.Item.SetTransform(projectilePos, rotation);
+            projectile.Item.SetTransform(projectilePos,
+                rotation + ((item.body.Dir == 1.0f) ? projectile.LaunchRotationRadians : projectile.LaunchRotationRadians - MathHelper.Pi));
 
             //recoil
             item.body.ApplyLinearImpulse(

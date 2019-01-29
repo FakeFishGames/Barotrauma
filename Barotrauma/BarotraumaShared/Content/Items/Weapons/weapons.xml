@@ -82,6 +82,7 @@
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
   </Item>
+  
   <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" scale="0.32">
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="120" />
@@ -96,15 +97,16 @@
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-10,-7" />
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
       <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse" />
-      <RequiredItems identifier="medicalsyringe" type="Contained" msg="ItemMsgSyringeRequired" />
+      <RequiredItems identifier="syringe" type="Contained" msg="ItemMsgSyringeRequired" />
       <RequiredSkill identifier="weapons" level="15" />
       <RequiredSkill identifier="medical" level="30" />
     </RangedWeapon>
-    <ItemContainer capacity="1" itempos="0,10" hideitems="false">
+    <ItemContainer capacity="4" itempos="0,10" hideitems="false">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
-      <Containable identifiers="medicalsyringe" />
+      <Containable identifiers="syringe,medicalsyringe" />
     </ItemContainer>
   </Item>
+  
   <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="30" />
