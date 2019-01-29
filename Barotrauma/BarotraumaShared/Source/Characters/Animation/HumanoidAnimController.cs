@@ -1827,9 +1827,10 @@ namespace Barotrauma
             {
                 TargetMovement = Vector2.Zero;
                 TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
-                if (Vector2.DistanceSquared(character.WorldPosition, handWorldPos) > 1.0f)
+                float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
+                if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
                 {
-                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition);
+                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false);
                 }
             }
 
