@@ -78,6 +78,8 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character, Camera cam)
         {
+            if (GUI.DisableHUD) { return; }
+
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)

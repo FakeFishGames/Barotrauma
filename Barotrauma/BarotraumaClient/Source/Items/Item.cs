@@ -630,22 +630,25 @@ namespace Barotrauma
                 }
             }
 
-            if (itemInUseWarning != null) { itemInUseWarning.Visible = false; }
-            foreach (Character otherCharacter in Character.CharacterList)
+            if (itemInUseWarning != null && mergedHUDRect != Rectangle.Empty)
             {
-                if (otherCharacter != character &&
-                    otherCharacter.SelectedConstruction == character.SelectedConstruction)
+                itemInUseWarning.Visible = false;
+                foreach (Character otherCharacter in Character.CharacterList)
                 {
-                    ItemInUseWarning.Visible = true;
-                    if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
-                    itemInUseWarning.RectTransform.ScreenSpaceOffset = new Point(mergedHUDRect.X, mergedHUDRect.Bottom);
-                    itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
-                    if (itemInUseWarning.UserData != otherCharacter)
+                    if (otherCharacter != character &&
+                        otherCharacter.SelectedConstruction == character.SelectedConstruction)
                     {
-                        itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
-                        itemInUseWarning.UserData = otherCharacter;
+                        ItemInUseWarning.Visible = true;
+                        if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
+                        itemInUseWarning.RectTransform.ScreenSpaceOffset = new Point(mergedHUDRect.X, mergedHUDRect.Bottom);
+                        itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
+                        if (itemInUseWarning.UserData != otherCharacter)
+                        {
+                            itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
+                            itemInUseWarning.UserData = otherCharacter;
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
