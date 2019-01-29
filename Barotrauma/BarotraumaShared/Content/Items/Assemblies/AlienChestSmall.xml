@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienChestSmall" description="" hideinmenus="false">
+<ItemAssembly name="AlienChestSmall" description="" hideinmenus="true">
   <Item name="Small Alien Chest" identifier="alienitemcontainersmall" ID="4" rect="-48,15,76,32" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet,container0" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
     <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="0,0,0,0,0" />
   </Item>
