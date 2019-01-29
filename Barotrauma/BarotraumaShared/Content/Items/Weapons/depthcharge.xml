@@ -1,219 +1,136 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item
-    name="Depth Charge Tube"
-    identifier="depthchargetube"
-    tags="depthchargelauncher"
-    category="Machine"
-    focusonselected="true"
-    offsetonselected="700"
-    linkable="true"
-    allowedlinks="depthchargeammosource"
-    scale="0.5">
-    
-    <Sprite texture="DepthChargeTube.png" depth="0.01" sourcerect="0,0,85,149"/>
-
-    <Turret canbeselected="false" linkable="true" characterusable="false" 
-            barrelpos="42, 149"
-            rotationlimits="90,90"
-            powerconsumption="0.0"/>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,wire" type="Equipped"/>
-      <input name="trigger_in"/>
+  <Item name="Depth Charge Tube" identifier="depthchargetube" tags="depthchargelauncher" category="Machine" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="depthchargeammosource" scale="0.5">
+    <Sprite texture="TurretsAndDepthCharges.png" depth="0.01" sourcerect="259,1,85,149" origin="0.5,0.5" />
+    <Turret canbeselected="false" linkable="true" characterusable="false" barrelpos="42, 149" rotationlimits="90,90" powerconsumption="0.0" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,wire" type="Equipped" />
+      <input name="trigger_in" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Depth Charge Loader"
-    identifier="depthchargeloader"
-    tags="depthchargeammosource"
-    category="Machine"
-    linkable="true"
-    allowedlinks="depthchargelauncher"
-    scale="0.5">
-
-    <Sprite texture="DepthChargeLoader.png" depth="0.8" sourcerect="0,0,125,188"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true"
-                   autointeractwithcontained="true">
-      <Containable identifiers="depthchargeammo"/>      
+  <Item name="Depth Charge Loader" identifier="depthchargeloader" tags="depthchargeammosource" category="Machine" linkable="true" allowedlinks="depthchargelauncher" scale="0.5">
+    <Sprite texture="TurretsAndDepthCharges.png" depth="0.8" sourcerect="354,2,125,188" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" autointeractwithcontained="true">
+      <Containable identifiers="depthchargeammo" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Depth Charge Shell"
-    identifier="depthchargeshell"
-    tags="depthchargeammo"
-    category="Misc"
-    sonarsize="5"
-    scale="0.25">
-
-    <Price locationtype="Military" buyprice="75"/>
-    <Price locationtype="City" buyprice="100"/>
-    <Price locationtype="Outpost" buyprice="200"/>
-    
+  <Item name="Depth Charge Shell" identifier="depthchargeshell" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Outpost" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="aluminium"/>
+      <Item identifier="steel" />
+      <Item identifier="aluminium" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
-    <Sprite texture="DepthChargeShell.png" sourcerect="0,0,253,172" depth="0.55"/>
-
-    <Body width="253" height="172" density="30"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,130,89" depth="0.55" origin="0.5,0.5" />
+    <Body width="128" height="85" density="30" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <Affliction identifier="internaldamage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem,explosive"/>
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Nuclear Depth Charge"
-    identifier="nucleardepthcharge"
-    tags="depthchargeammo"
-    category="Misc"
-    sonarsize="5"
-    scale="0.25">
-
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="300"/>
-    <Price locationtype="Outpost" buyprice="500"/>
-
+  <Item name="Nuclear Depth Charge" identifier="nucleardepthcharge" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="City" buyprice="300" />
+    <Price locationtype="Outpost" buyprice="500" />
     <Deconstruct time="20">
-      <Item identifier="steel"/>
-      <Item identifier="uranium"/>
-      <Item identifier="uex"/>
+      <Item identifier="steel" />
+      <Item identifier="uranium" />
+      <Item identifier="uex" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64"/>
-    <Sprite texture="NuclearDepthCharge.png" sourcerect="0,0,253,172" depth="0.55"/>
-
-    <Body width="253" height="172" density="30"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,1,129,88" depth="0.55" origin="0.5,0.5" />
+    <Body width="128" height="85" density="30" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
-        <Affliction identifier="internaldamage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10" />
       </Attack>
-      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
-      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000" />
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
-          <Affliction identifier="burn" strength="500"/>
-          <Affliction identifier="internaldamage" strength="500"/>
-          <Affliction identifier="stun" strength="5"/>
+          <Affliction identifier="burn" strength="500" />
+          <Affliction identifier="internaldamage" strength="500" />
+          <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem,explosive"/>
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Depth Decoy Shell"
-    identifier="depthdecoyshell"
-    tags="depthchargeammo,decoy"
-    category="Misc"
-    sonarsize="5"
-    scale="0.25">
-
-    <Price locationtype="Military" buyprice="175"/>
-    <Price locationtype="City" buyprice="200"/>
-    <Price locationtype="Outpost" buyprice="300"/>
-
+  <Item name="Depth Decoy Shell" identifier="depthdecoyshell" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="175" />
+    <Price locationtype="City" buyprice="200" />
+    <Price locationtype="Outpost" buyprice="300" />
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="aluminium"/>
+      <Item identifier="steel" />
+      <Item identifier="aluminium" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64"/>
-    <Sprite texture="DepthChargeShell.png" sourcerect="0,0,253,172" depth="0.55"/>
-
-    <Body width="253" height="172" density="30"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,128,88" depth="0.55" origin="0.5,0.5" />
+    <Body width="128" height="85" density="30" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <AiTarget soundrange="20000" />
       <Attack structuredamage="1" damagetype="Blunt">
-        <Affliction identifier="internaldamage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem,explosive"/>
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Nuclear Depth Decoy"
-    identifier="nucleardepthdecoy"
-    tags="depthchargeammo,decoy"
-    category="Misc"
-    sonarsize="5"
-    scale="0.25">
-
-    <Price locationtype="Military" buyprice="200"/>
-    <Price locationtype="City" buyprice="300"/>
-    <Price locationtype="Outpost" buyprice="500"/>
-
+  <Item name="Nuclear Depth Decoy" identifier="nucleardepthdecoy" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="City" buyprice="300" />
+    <Price locationtype="Outpost" buyprice="500" />
     <Deconstruct time="20">
-      <Item identifier="steel"/>
-      <Item identifier="uranium"/>
-      <Item identifier="uex"/>
+      <Item identifier="steel" />
+      <Item identifier="uranium" />
+      <Item identifier="uex" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64"/>
-    <Sprite texture="NuclearDepthCharge.png" sourcerect="0,0,253,172" depth="0.55"/>
-
-    <Body width="253" height="172" density="30"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,0,128,89" depth="0.55" origin="0.5,0.5" />
+    <Body width="128" height="85" density="30" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <AiTarget soundrange="20000" />
       <Attack structuredamage="1" damagetype="Blunt">
-        <Affliction identifier="internaldamage" strength="10"/>
+        <Affliction identifier="internaldamage" strength="10" />
       </Attack>
-      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
-      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000" />
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="500" force="30.0">
-          <Affliction identifier="burn" strength="300"/>
-          <Affliction identifier="internaldamage" strength="300"/>
-          <Affliction identifier="stun" strength="5"/>
+          <Affliction identifier="burn" strength="300" />
+          <Affliction identifier="internaldamage" strength="300" />
+          <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem,explosive"/>
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
-  
 </Items>

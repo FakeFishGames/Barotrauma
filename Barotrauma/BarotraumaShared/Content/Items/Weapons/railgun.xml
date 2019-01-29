@@ -1,282 +1,172 @@
-﻿<Items>
-  <Item
-    name="Railgun"
-    identifier="railgun"
-    Tags="turret"
-    category="Machine"
-    interactthroughwalls="true"
-    interactdistance="10"
-    focusonselected="true"
-    offsetonselected="700"
-    linkable="true"
-    allowedlinks="railgunammosource">
-
-    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false"/>
-
-    <StaticBody width="80" radius="80"/>
-
-    <Turret canbeselected="false" characterusable="false" linkable="true" 
-            barrelpos="126, 89" 
-            rotationlimits="180,360"
-            powerconsumption="20000.0"
-            showchargeindicator="true"
-            showprojectileindicator="true"
-            recoildistance="100"
-            springstiffnesslowskill="2" springstiffnesshighskill="50"
-            springdampinglowskill="0.5" springdampinghighskill="10"
-            rotationspeedlowskill="1" rotationspeedhighskill="8">      
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Railgun" identifier="railgun" Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
+    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
+    <StaticBody width="80" radius="80" />
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="126, 89" rotationlimits="180,360" powerconsumption="20000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="100" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
       <StatusEffect type="OnUse" target="This">
-        <sound file="Content/Items/Weapons/railgun.ogg" range="5000"/>
-        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
+        <sound file="Content/Items/Weapons/railgun.ogg" range="5000" />
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" />
       </StatusEffect>
-      <RailSprite texture="Content/Items/Weapons/railgunrail.png" origin="0.52, 0.59" depth="0.011"/>
-      <BarrelSprite texture="Content/Items/Weapons/railgunbarrel.png" origin="0.5, 0.85" depth="0.012"/>
-      <Crosshair texture="Content/Items/Weapons/crosshair.png"/>
-      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png"/>
-      <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
-      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
-      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
-      <RequiredSkill identifier="weapons" level="50"/>
-	    <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2048" IsOn="true" drawbehindsubs="true">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
+      <RailSprite texture="Content/Items/Weapons/railgunrail.png" origin="0.52, 0.59" depth="0.011" />
+      <BarrelSprite texture="Content/Items/Weapons/railgunbarrel.png" origin="0.5, 0.85" depth="0.012" />
+      <Crosshair texture="Content/Items/Weapons/crosshair.png" />
+      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
+      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
+      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
+      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
+      <RequiredSkill identifier="weapons" level="50" />
+      <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2048" IsOn="true" drawbehindsubs="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0" />
       </LightComponent>
       <ParticleEmitter particle="muzzleflashrailgun" particleamount="1" velocitymin="50" velocitymax="100" />
     </Turret>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="position_in"/>
-      <input name="trigger_in"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <input name="power_in" />
+      <input name="position_in" />
+      <input name="trigger_in" />
     </ConnectionPanel>
   </Item>
-  <Item
-    name="Periscope"
-    identifier="periscope"
-    tags="railgunequipment"
-    category="Machine"
-    type="Controller"
-    disableitemusagewhenselected="true"
-    scale="0.2">
-
-    <Sprite texture="periscope.png" depth="0.8" sourcerect="0,0,344,506"/>
-
-    <Controller UserPos="-35.0, -50.0" direction ="Right" canbeselected="true" requireaimtouse="true">
-      <limbposition limb="Head" position="-5,-62"/>
-      <limbposition limb="Torso" position="-5,-108"/>
-      <limbposition limb="LeftHand" position="43,-85"/>
-      <limbposition limb="RightHand" position="43,-85"/>
+  <Item name="Periscope" identifier="periscope" tags="railgunequipment" category="Machine" type="Controller" disableitemusagewhenselected="true" scale="0.5">
+    <Sprite texture="TurretsAndDepthCharges.png" depth="0.8" sourcerect="2,210,134,203" origin="0.5,0.5" />
+    <Controller UserPos="-35.0, -50.0" direction="Right" canbeselected="true" requireaimtouse="true">
+      <limbposition limb="Head" position="-10,-130" />
+      <limbposition limb="Torso" position="-10,-200" />
+      <limbposition limb="LeftHand" position="67,-170" />
+      <limbposition limb="RightHand" position="67,-170" />
     </Controller>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
-      <output name="position_out"/>
-      <output name="trigger_out"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <output name="position_out" />
+      <output name="trigger_out" />
     </ConnectionPanel>
   </Item>
-  
-  <Item
-    name="Railgun Loader"
-    identifier="railgunloader"
-    tags="railgunequipment,railgunammosource"
-    category="Machine"
-    linkable="true"
-    allowedlinks="railgun"
-    scale="0.3">
-
-    <Sprite texture="RailgunLoader.png" depth="0.8" sourcerect="0,0,500,460"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="90,-270" iteminterval="80,0" itemrotation="90" canbeselected = "true">
-      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+  <Item name="Railgun Loader" identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+    <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="53,-140" iteminterval="48.5,0" itemrotation="90" canbeselected="true">
+      <Containable identifiers="railgunammo" />
     </ItemContainer>
-	  <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="420" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="420" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="Equipped" />
-	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0"/>
-      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0"/>
-	    <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
+      <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
+      <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0" />
+      <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-
-  <Item
-    name="Railgun Loader Single"
-    identifier="railgunloadersinglevertical"
-    tags="railgunequipment,railgunammosource"
-    category="Machine"
-    linkable="true"
-    allowedlinks="railgun"
-    scale="0.26">
-
-    <Sprite texture="railgunsingleloader_vertical.png" depth="0.8" sourcerect="0,0,225,636"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="110,-275" iteminterval="0,0" itemrotation="90" canbeselected="true"
-                   autointeractwithcontained="true">
-      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+  <Item name="Railgun Loader Single" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+    <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="43,-130" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true">
+      <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Railgun Loader Single"
-    identifier="railgunloadersinglehorizontal"
-    tags="railgunequipment,railgunammosource"
-    category="Machine"
-    linkable="true"
-    allowedlinks="railgun"
-    scale="0.26">
-
-    <Sprite texture="railgunsingleloader_horizontal.png" depth="0.8" sourcerect="0,0,636,225"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="275,-110" iteminterval="0,0" itemrotation="180" canbeselected="true"
-                   autointeractwithcontained="true">
-      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+  <Item name="Railgun Loader Single" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+    <Sprite texture="Loaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="130,-43" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true">
+      <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Railgun Shell"
-    identifier="railgunshell"
-    tags="railgunequipment"
-    category="Misc"
-    sonarsize="5"
-    scale="0.26">
-
-    <Price locationtype="Military" buyprice="30"/>
-    <Price locationtype="City" buyprice="50"/>
-    <Price locationtype="Outpost" buyprice="100"/>
-
+  <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="30" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
     <Deconstruct time="10">
-      <Item identifier="steel"/>
+      <Item identifier="steel" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64"/>
-    <Sprite texture="railgunshell.png" sourcerect="0,0,428,80" depth ="0.55"/>
-
-    <Body width="87" height="18" density="30"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="2,91,215,33" depth="0.55" origin="0.5,0.5" />
+    <Body width="215" height="30" density="30" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
-        <Affliction identifier="internaldamage" strength="100"/>
-        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="internaldamage" strength="100" />
+        <Affliction identifier="bleeding" strength="10" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
-        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3"/>
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem"/>
-    </ItemContainer>    
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem" />
+    </ItemContainer>
   </Item>
-
-  <Item
-    name="Nuclear Shell"
-    identifier="nuclearshell"
-    category="Misc"
-    sonarsize="5"
-    scale="0.26">
-    
-    <Price locationtype="Military" buyprice="200"/>
-    
+  <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="uranium"/>
-      <Item identifier="uex"/>
+      <Item identifier="steel" />
+      <Item identifier="uranium" />
+      <Item identifier="uex" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64"/>
-    <Sprite texture="railgunshell.png" sourcerect="0,80,428,77" depth ="0.55"/>
-
-    <Body width="87" height="18" density="35"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,131,217,33" depth="0.55" origin="0.5,0.5" />
+    <Body width="215" height="30" density="35" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
-        <Affliction identifier="internaldamage" strength="100"/>
-        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="internaldamage" strength="100" />
+        <Affliction identifier="bleeding" strength="10" />
       </Attack>
-      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000"/>
-      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000" />
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
-          <Affliction identifier="burn" strength="500"/>
-          <Affliction identifier="internaldamage" strength="500"/>
-          <Affliction identifier="stun" strength="10"/>          
+          <Affliction identifier="burn" strength="500" />
+          <Affliction identifier="internaldamage" strength="500" />
+          <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-
       <StatusEffect type="OnActive" target="This">
-        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3"/>
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
       </StatusEffect>
-
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem"/>
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Alien Shell"
-    identifier="alienshell"
-    category="Misc"
-    sonarsize="5"
-    scale="0.26">
-
-    <Price locationtype="Military" buyprice="400"/>
-
+  <Item name="Alien Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+    <Price locationtype="Military" buyprice="400" />
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="uranium"/>
-      <Item identifier="uex"/>
+      <Item identifier="steel" />
+      <Item identifier="uranium" />
+      <Item identifier="uex" />
     </Deconstruct>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,64,64"/>
-    <Sprite texture="weapons.png" sourcerect="0,161,428,77" depth ="0.55"/>
-
-    <Body width="87" height="18" density="35"/>
-
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,64,64" />
+    <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,170,216,34" depth="0.55" origin="0.5,0.5" />
+    <Body width="215" height="30" density="35" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
-        <Affliction identifier="internaldamage" strength="100"/>
-        <Affliction identifier="bleeding" strength="10"/>
+        <Affliction identifier="internaldamage" strength="100" />
+        <Affliction identifier="bleeding" strength="10" />
       </Attack>
-      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000"/>
-      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000"/>
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000" />
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
-          <Affliction identifier="burn" strength="500"/>
-          <Affliction identifier="internaldamage" strength="500"/>
-          <Affliction identifier="stun" strength="10"/>
+          <Affliction identifier="burn" strength="500" />
+          <Affliction identifier="internaldamage" strength="500" />
+          <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-
       <StatusEffect type="OnActive" target="This">
-        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3"/>
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
       </StatusEffect>
-
       <StatusEffect type="OnImpact" target="Contained">
-        <Use/>
+        <Use />
       </StatusEffect>
     </Projectile>
-
-    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable identifiers="smallitem"/>
+    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+      <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  
 </Items>
-

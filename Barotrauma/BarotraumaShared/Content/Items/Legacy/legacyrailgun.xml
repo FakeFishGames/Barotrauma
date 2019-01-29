@@ -1,130 +1,71 @@
-﻿<Items>
-  <Item
-    name="Railgun"
-    Tags="turret"
-    category="Legacy"
-    interactthroughwalls="true"
-    interactdistance="10"
-    focusonselected="true"
-    offsetonselected="700"
-    linkable="true"
-    allowedlinks="railgunammosource">
-
-    <Sprite texture="Content/Items/Legacy/legacyrailgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
-
-    <StaticBody width="80" radius="80"/>
-
-    <Turret canbeselected="false" characterusable="false" linkable="true" 
-            barrelpos="128, 128" 
-            rotationlimits="180,360"
-            powerconsumption="20000.0"
-            showchargeindicator="true"
-            showprojectileindicator="true"
-            recoildistance="100"
-            springstiffnesslowskill="2" springstiffnesshighskill="50"
-            springdampinglowskill="0.5" springdampinghighskill="10"
-            rotationspeedlowskill="1" rotationspeedhighskill="8">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Railgun" Tags="turret" category="Legacy" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
+    <Sprite texture="Content/Items/Legacy/legacyrailgunbase.png" depth="0.01" sourcerect="0,0,256,256" />
+    <StaticBody width="80" radius="80" />
+    <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128, 128" rotationlimits="180,360" powerconsumption="20000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="100" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
       <StatusEffect type="OnUse" target="This">
-        <sound file="Content/Items/Weapons/railgun.ogg" range="5000"/>
-        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false"/>
+        <sound file="Content/Items/Weapons/railgun.ogg" range="5000" />
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" />
       </StatusEffect>
-      <BarrelSprite texture="Content/Items/Legacy/legacyrailgunbarrel.png" origin="0.5, 0.85"/>
-      <Crosshair texture="Content/Items/Weapons/crosshair.png"/>
-      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png"/>
-      <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
-      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
-      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
-      <RequiredSkill identifier="weapons" level="50"/>
+      <BarrelSprite texture="Content/Items/Legacy/legacyrailgunbarrel.png" origin="0.5, 0.85" />
+      <Crosshair texture="Content/Items/Weapons/crosshair.png" />
+      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
+      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
+      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
+      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
+      <RequiredSkill identifier="weapons" level="50" />
     </Turret>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="position_in"/>
-      <input name="trigger_in"/>
-    </ConnectionPanel>
-  </Item>
-
-  <Item
-    name="Railgun Controller"
-    tags="railgunequipment"
-    category="Legacy"
-    type="Controller"
-    disableitemusagewhenselected="true">
-
-    <Sprite texture="Content/Items/Weapons/railgunetc.png" depth="0.8" sourcerect="192,0,64,96"/>
-
-    <Controller UserPos="-35.0, -50.0" direction ="Right" canbeselected="true" requireaimtouse="true">
-      <limbposition limb="Head" position="-5,-62"/>
-      <limbposition limb="Torso" position="-5,-108"/>
-      <limbposition limb="LeftHand" position="43,-85"/>
-      <limbposition limb="RightHand" position="43,-85"/>
-    </Controller>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
-      <input name="power_in"/>
-      <output name="position_out"/>
-      <output name="trigger_out"/>
-    </ConnectionPanel>
-  </Item>
-
-  <Item
-    name="Rear Railgun Controller"
-    tags="railgunequipment"
-    category="Legacy"
-    type="Controller"
-    disableitemusagewhenselected="true">
-
-    <Sprite texture="Content/Items/Weapons/railgunetc2.png" depth="0.8" sourcerect="188,0,57,96"/>
-
-    <Controller UserPos="35, -50.0" direction ="Left" canbeselected = "true">
-      <limbposition limb="Head" position="-5,-62"/>
-      <limbposition limb="Torso" position="-5,-108"/>
-      <limbposition limb="LeftHand" position="43,-85"/>
-      <limbposition limb="RightHand" position="43,-85"/>
-    </Controller>
-
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
-      <input name="power_in"/>
-      <output name="position_out"/>
-      <output name="trigger_out"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <input name="power_in" />
+      <input name="position_in" />
+      <input name="trigger_in" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Forward Railgun Loader"
-    tags="railgunequipment,railgunammosource"
-    category="Legacy"
-    linkable="true"
-    allowedlinks="railgun">
-
-    <Sprite texture="Content/Items/Weapons/railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected="true"
-                   autointeractwithcontained="true">
-      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+  <Item name="Railgun Controller" tags="railgunequipment" category="Legacy" type="Controller" disableitemusagewhenselected="true">
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="333,375,60,96" origin="0.5,0.5" />
+    <Controller UserPos="-35.0, -50.0" direction="Right" canbeselected="true" requireaimtouse="true">
+      <limbposition limb="Head" position="-5,-62" />
+      <limbposition limb="Torso" position="-5,-108" />
+      <limbposition limb="LeftHand" position="43,-85" />
+      <limbposition limb="RightHand" position="43,-85" />
+    </Controller>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <input name="power_in" />
+      <output name="position_out" />
+      <output name="trigger_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Rear Railgun Controller" tags="railgunequipment" category="Legacy" type="Controller" disableitemusagewhenselected="true">
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="276,375,57,96" origin="0.5,0.5" />
+    <Controller UserPos="35, -50.0" direction="Left" canbeselected="true">
+      <limbposition limb="Head" position="-5,-62" />
+      <limbposition limb="Torso" position="-5,-108" />
+      <limbposition limb="LeftHand" position="43,-85" />
+      <limbposition limb="RightHand" position="43,-85" />
+    </Controller>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <input name="power_in" />
+      <output name="position_out" />
+      <output name="trigger_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Forward Railgun Loader" tags="railgunequipment,railgunammosource" category="Legacy" linkable="true" allowedlinks="railgun">
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="2,416,128,46" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+      <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
-
-  <Item
-    name="Rear Railgun Loader"
-    tags="railgunequipment,railgunammosource"
-    category="Legacy"
-    linkable="true"
-    allowedlinks="railgun">
-
-    <Sprite texture="Content/Items/Weapons/railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
-
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected = "true"
-                   autointeractwithcontained="true">
-      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+  <Item name="Rear Railgun Loader" tags="railgunequipment,railgunammosource" category="Legacy" linkable="true" allowedlinks="railgun">
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.8" sourcerect="3,464,128,46" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true">
+      <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
-
 </Items>
-

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Supplies Cabinet" identifier="suppliescabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="suppliesCabinet.png" depth="0.84" sourcerect="17,34,123,134" origin="0.5,0.5" />
+    <Sprite texture="containers.png" depth="0.84" sourcerect="160,1,120,132" origin="0.5,0.5" />
     <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
@@ -46,7 +46,7 @@
     </ItemContainer>
   </Item>
   <Item name="Railgun Shell Rack" identifier="railgunshellrack" pickdistance="120" scale="0.6">
-    <Sprite texture="Content/Items/Weapons/railgunshellrack.png" depth="0.84" sourcerect="0,0,182,176" />
+    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.84" sourcerect="210,197,182,176" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected="true">
       <Containable identifiers="railgunshell,nuclearshell" />
     </ItemContainer>
@@ -58,13 +58,13 @@
     </ItemContainer>
   </Item>
   <Item name="Toxic Cabinet" identifier="toxcabinet" linkable="true" pickdistance="150" waterproof="true" scale="0.4">
-    <Sprite texture="ToxicCabinet.png" depth="0.84" sourcerect="0,0,212,233" canflipx="false" origin="0.5,0.5" />
+    <Sprite texture="containers.png" depth="0.84" sourcerect="0,0,157,185" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
   <Item name="Diving Suit Locker" identifier="divingsuitlocker" pickdistance="50" tags="divingsuitcontainervertical">
-    <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169" />
+    <Sprite texture="containers.png" depth="0.84" sourcerect="323,1,54,169" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" canbeselected="true" autointeractwithcontained="true">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="divingsuit" />
@@ -72,11 +72,11 @@
   </Item>
   <Item name="Large Diving Suit Locker" identifier="divingsuitlocker2" pickdistance="50" scale="0.5" tags="divingsuitcontainerhorizontal">
     <Sprite name="Large Diving Suit Locker" texture="DivingSuitLocker.png" depth="0.84" sourcerect="82,0,248,338" origin="0.5,0.5" />
-    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,130"/>
-    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,65" />
-    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" />
-    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,-65"/>
-    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="330,0,241,77" origin="0.5,0.5" offset="0,-130" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,130" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,65" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,-65" />
+    <DecorativeSprite name="Diving Suit Locker Frame" texture="DivingSuitLocker.png" depth="0.82" sourcerect="0,340,232,69" origin="0.5,0.5" offset="0,-130" />
     <!-- TODO: implement
     <DecorativeSprite name="Diving Suit Locker Light" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,77,241,67" origin="0.5,0.5" />
     -->
@@ -93,7 +93,7 @@
     </ItemContainer>
   </Item>
   <Item name="Diving Gear Cabinet" identifier="divingsuitcabinet" tags="cabinet" linkable="true" pickdistance="50">
-    <Sprite texture="containers.png" depth="0.84" sourcerect="113,0,54,169" />
+    <Sprite texture="containers.png" depth="0.84" sourcerect="385,0,60,170" origin="0.5,0.5" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
@@ -104,7 +104,7 @@
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />-->
     <Sprite texture="crates.png" depth="0.54" sourcerect="0,5,152,89" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" />
@@ -118,7 +118,7 @@
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />-->
     <Sprite texture="crates.png" depth="0.54" sourcerect="165,0,152,87" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" />
@@ -132,11 +132,11 @@
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="crates.png" depth="0.54" sourcerect="0,197,153,89" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="12" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
@@ -145,24 +145,24 @@
       <Item identifier="steel" />
       <Item identifier="steel" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64" />
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64" />-->
     <Sprite texture="crates.png" depth="0.54" sourcerect="1,103,148,87" origin="0.5,0.5" />
     <Body width="145" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="12" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
   <Item name="Fire Extinguisher Bracket" identifier="extinguisherbracket" pickdistance="75">
-    <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false" />
+    <Sprite texture="containers.png" depth="0.84" sourcerect="281,3,36,102" canflipx="false" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="extinguisher" />
     </ItemContainer>
   </Item>
   <Item name="Weapon Holder" identifier="weaponholder" scale="0.5">
-    <Sprite texture="WeaponHolder.png" depth="0.85" sourcerect="107,86,88,88" canflipx="false" />
-    <DecorativeSprite texture="WeaponHolder.png" depth="0.5" sourcerect="107,2,124,33" canflipx="false" origin="0.5,0.5" />
+    <Sprite texture="containers.png" depth="0.85" sourcerect="109,271,88,88" canflipx="false" origin="0.5,0.5" />
+    <DecorativeSprite texture="containers.png" depth="0.5" sourcerect="109,188,124,33" canflipx="false" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="weapon" />

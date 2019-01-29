@@ -96,7 +96,6 @@ namespace Barotrauma.Items.Components
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
-
         [Serialize(0.0f, false), Editable]
         public float HoldAngle
         {
@@ -143,10 +142,16 @@ namespace Barotrauma.Items.Components
 
             handlePos = new Vector2[2];
             scaledHandlePos = new Vector2[2];
+            Vector2 previousValue = Vector2.Zero;
             for (int i = 1; i < 3; i++)
             {
-                handlePos[i - 1] = element.GetAttributeVector2("handle" + i, Vector2.Zero);
-                handlePos[i - 1] = ConvertUnits.ToSimUnits(handlePos[i - 1]);
+                int index = i - 1;
+                string attributeName = "handle" + i;
+                var attribute = element.Attribute(attributeName);
+                // If no value is defind for handle2, use the value of handle1.
+                var value = attribute != null ? ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(attribute.Value)) : previousValue;
+                handlePos[index] = value;
+                previousValue = value;
             }
 
             canBePicked = true;

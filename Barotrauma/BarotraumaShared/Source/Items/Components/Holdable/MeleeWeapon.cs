@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
 
             SetUser(character);
 
-            if (hitPos < MathHelper.Pi * 0.49f) return false;
+            if (hitPos < MathHelper.PiOver4) return false;
 
             reloadTimer = reload;
 
@@ -134,6 +134,7 @@ namespace Barotrauma.Items.Components
             if (!picker.HasSelectedItem(item)) IsActive = false;
 
             reloadTimer -= deltaTime;
+            if (reloadTimer < 0) { reloadTimer = 0; }
 
             if (!picker.IsKeyDown(InputType.Aim) && !hitting) hitPos = 0.0f;
 
@@ -146,25 +147,27 @@ namespace Barotrauma.Items.Components
             //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
-                if (picker.IsKeyDown(InputType.Aim))
+                if (picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0)
                 {
-                    hitPos = Math.Min(hitPos + deltaTime * 5.0f, MathHelper.Pi * 0.5f);
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos, holdAngle);
+                    hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, hitPos, holdAngle + hitPos);
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, false, holdAngle);
+                    hitPos = 0;
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, false, holdAngle);
                 }
             }
             else
             {
-                hitPos -= deltaTime * 15.0f;
-                ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos, holdAngle);
+                hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
+                ac.HoldItem(deltaTime, item, handlePos, new Vector2(2, 0), Vector2.Zero, false, hitPos, holdAngle + hitPos); // aimPos not used -> zero (new Vector2(-0.3f, 0.2f)), holdPos new Vector2(0.6f, -0.1f)
                 if (hitPos < -MathHelper.PiOver4 * 1.2f)
                 {
                     RestoreCollision();
                     hitting = false;
                     hitTargets.Clear();
+                    hitPos = 0;
                 }
             }
         }
