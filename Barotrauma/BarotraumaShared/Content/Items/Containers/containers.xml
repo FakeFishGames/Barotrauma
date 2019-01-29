@@ -6,32 +6,20 @@
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Small Windowed Steel Cabinet" identifier="smallwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,106,177" origin="0.5,0.5" />
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem" />
-    </ItemContainer>
-  </Item>
-  <Item name="Small Steel Cabinet" identifier="smallsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="1,176,105,176" origin="0.5,0.5" />
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem" />
-    </ItemContainer>
-  </Item>
   <Item name="Medium Steel Cabinet" identifier="mediumsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="99,0,108,354" origin="0.5,0.5" />
+    <Sprite texture="Lockers.png" depth="0.84" sourcerect="545,2,175,374" origin="0.5,0.5" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Medium Windowed Steel Cabinet" identifier="mediumwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="198,2,110,351" origin="0.5,0.5" />
+  <Item name="Medium Windowed Steel Cabinet" aliases="Diving Gear Cabinet" identifier="mediumwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="Lockers.png" depth="0.84" sourcerect="375,0,168,377" origin="0.5,0.5" />
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Large Steel Cabinet" identifier="steelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
-    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,310,353" origin="0.5,0.5" />
+    <Sprite texture="Lockers.png" depth="0.84" sourcerect="2,1,364,373" origin="0.5,0.5" />
     <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
       <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" />
@@ -63,9 +51,9 @@
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
-  <Item name="Diving Suit Locker" identifier="divingsuitlocker" pickdistance="50" tags="divingsuitcontainervertical">
-    <Sprite texture="containers.png" depth="0.84" sourcerect="323,1,54,169" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" canbeselected="true" autointeractwithcontained="true">
+  <Item name="Diving Suit Locker" identifier="divingsuitlocker" pickdistance="50" tags="divingsuitcontainerwindow" scale="0.5">
+    <Sprite texture="Lockers.png" depth="0.84" sourcerect="719,3,173,372" origin="0.5,0.5" />
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="86,-131" iteminterval="0,0" canbeselected="true" autointeractwithcontained="true">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="divingsuit" />
     </ItemContainer>
@@ -90,12 +78,6 @@
     <ItemContainer hideitems="false" drawinventory="true" capacity="10" slotsperrow="5" itempos="26,-43" iteminterval="42,-65" itemsperrow="2" itemrotation="0" canbeselected="true" containedspritedepth="0.83">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="oxygentank,weldingfueltank,oxygenitetank" />
-    </ItemContainer>
-  </Item>
-  <Item name="Diving Gear Cabinet" identifier="divingsuitcabinet" tags="cabinet" linkable="true" pickdistance="50">
-    <Sprite texture="containers.png" depth="0.84" sourcerect="385,0,60,170" origin="0.5,0.5" />
-    <ItemContainer capacity="15" canbeselected="true" hideitems="true">
-      <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Metal Crate" identifier="metalcrate" scale="0.5" linkable="true" pickdistance="150">
