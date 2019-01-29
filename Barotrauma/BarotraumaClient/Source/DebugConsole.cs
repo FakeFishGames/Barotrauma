@@ -766,7 +766,7 @@ namespace Barotrauma
                         {
                             if (mapEntity is Item item)
                             {
-                                item.Rect = new Rectangle(0, 0, 
+                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y, 
                                     (int)(item.Prefab.sprite.size.X * item.Prefab.Scale), 
                                     (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
                             }
