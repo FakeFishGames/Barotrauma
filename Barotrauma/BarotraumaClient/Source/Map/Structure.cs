@@ -99,7 +99,7 @@ namespace Barotrauma
                 Sprite.ReloadXML();
                 return true;
             };
-            editor.AddCustomContent(reloadTextureButton, 6);
+            editor.AddCustomContent(reloadTextureButton, editor.ContentCount);
 
             PositionEditingHUD();
 
