@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
 
             SetUser(character);
 
-            //if (hitPos < MathHelper.Pi * 0.49f) return false;
+            if (hitPos < MathHelper.PiOver4) return false;
 
             reloadTimer = reload;
 
