@@ -337,8 +337,7 @@
   </AntibioticGlue>
   
 
-  <Morphine name="Morphine" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
-    
+  <Morphine name="Morphine" identifier="antidama1" tags="syringe" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
     <SuitableTreatment identifier="damage" suitability="75" />
     <SuitableTreatment identifier="burn" suitability="75" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="75" />
@@ -384,9 +383,21 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
-      </StatusEffect>>
-      
+      </StatusEffect>      
     </MeleeWeapon>
+    
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
+        <ReduceAffliction identifier="burn" amount="2.5" />
+        <ReduceAffliction identifier="damage" amount="2.5" />
+        <Affliction identifier="oxygenlow" amount="3" />
+        <Affliction identifier="opiateaddiction" amount="0.3" />
+        <Affliction identifier="opiateoverdose" amount="0.3" />
+        <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
+      </StatusEffect>      
+    </Projectile>
+    
   </Morphine>
 
 
@@ -947,7 +958,7 @@
   </Deliriumine>
   <!-- legacy **************************************************************************************** -->
   <!-- Medical items -->
-  <MedicalSyringe name="Medical Syringe" identifier="medicalsyringe" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" usecontainedspritecolor="true" usecontainedinventoryiconcolor="true" description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
+  <MedicalSyringe name="Medical Syringe" identifier="medicalsyringe" category="Equipment" Tags="smallitem,medical,syringe" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" usecontainedspritecolor="true" usecontainedinventoryiconcolor="true" description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
     <Price locationtype="Research" buyprice="25" />
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="30" />

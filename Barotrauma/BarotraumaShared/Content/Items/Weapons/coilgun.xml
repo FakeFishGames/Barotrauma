@@ -31,8 +31,8 @@
     </ConnectionPanel>
   </Item>
   
-  <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun">
-    <Sprite texture="coilgunloader.png" depth="0.8" sourcerect="0,0,80,128" />
+  <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun" scale="0.5">
+    <Sprite texture="coilgunloader.png" depth="0.8" sourcerect="0,0,149,368" />
     <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="420" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
@@ -41,7 +41,7 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0"/>
 	    <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
     </Repairable>
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="40,-90" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
       <Containable identifiers="coilgunammobox" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
@@ -52,10 +52,10 @@
   </Item>
   
   <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Machine" linkable="true">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.500139,0.6220645" />
-    <Body width="50" height="40" density="50" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" />
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <Body width="115" height="88" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
