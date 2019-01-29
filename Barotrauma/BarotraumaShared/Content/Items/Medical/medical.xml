@@ -337,7 +337,7 @@
   </AntibioticGlue>
   
 
-  <Morphine name="Morphine" identifier="antidama1" tags="syringe" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
+  <Morphine name="Morphine" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
     <SuitableTreatment identifier="damage" suitability="75" />
     <SuitableTreatment identifier="burn" suitability="75" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="75" />
@@ -401,7 +401,7 @@
   </Morphine>
 
 
-  <Fentanyl name="Fentanyl" identifier="antidama2" tags="syringe" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
+  <Fentanyl name="Fentanyl" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
 
     <SuitableTreatment identifier="damage" suitability="100" />
     <SuitableTreatment identifier="burn" suitability="100" />
@@ -623,7 +623,7 @@
     </MeleeWeapon>
   </Calyxanide>
   
-  <Haloperidol name="Haloperidol" identifier="antipsychosis" tags="syringe" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A strong antipsychotic drug." scale="0.3">
+  <Haloperidol name="Haloperidol" identifier="antipsychosis" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" description="A strong antipsychotic drug." scale="0.3">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="220" />
@@ -667,7 +667,7 @@
     
   </Haloperidol>
   
-  <Naloxone name="Naloxone" identifier="antinarc" tags="syringe" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="An opioid antagonist for the treatment of opiate based withdrawal and overdose." scale="0.3">
+  <Naloxone name="Naloxone" identifier="antinarc" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" description="An opioid antagonist for the treatment of opiate based withdrawal and overdose." scale="0.3">
     
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />

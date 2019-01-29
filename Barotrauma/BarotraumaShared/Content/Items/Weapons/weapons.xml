@@ -170,7 +170,7 @@
         </Explosion>
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
@@ -197,7 +197,7 @@
         </Explosion>
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
@@ -225,7 +225,7 @@
         </Explosion>
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
@@ -255,7 +255,7 @@
         <Fire size="300.0" />
       </StatusEffect>
     </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
@@ -277,7 +277,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,0,64,64" />
     <Sprite texture="weapons.png" sourcerect="19,0,76,24" depth="0.55" />
     <Body width="90" height="30" density="30" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-20,0" holdangle="0" reload="1.0">
       <Attack stun="0.2">
         <Sound file="Content/Items/Weapons/smack.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="2" />
@@ -316,7 +316,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,150,156,39" depth="0.55" origin="0.5,0.5" />
     <Body width="150" height="30" density="50" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="2.0">
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="2.0">
       <Attack stun="0.2">
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
