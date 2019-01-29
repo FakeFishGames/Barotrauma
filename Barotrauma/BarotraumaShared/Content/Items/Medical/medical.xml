@@ -391,9 +391,9 @@
       <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
         <ReduceAffliction identifier="burn" amount="2.5" />
         <ReduceAffliction identifier="damage" amount="2.5" />
-        <Affliction identifier="oxygenlow" amount="3" />
-        <Affliction identifier="opiateaddiction" amount="0.3" />
-        <Affliction identifier="opiateoverdose" amount="0.3" />
+        <Affliction identifier="oxygenlow" amount="6" />
+        <Affliction identifier="opiateaddiction" amount="0.6" />
+        <Affliction identifier="opiateoverdose" amount="2" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
       </StatusEffect>      
     </Projectile>
@@ -401,7 +401,7 @@
   </Morphine>
 
 
-  <Fentanyl name="Fentanyl" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
+  <Fentanyl name="Fentanyl" identifier="antidama2" tags="syringe" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
 
     <SuitableTreatment identifier="damage" suitability="100" />
     <SuitableTreatment identifier="burn" suitability="100" />
@@ -450,6 +450,19 @@
       </StatusEffect>>
 
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="5">
+        <ReduceAffliction identifier="damage" amount="7.5" />
+        <ReduceAffliction identifier="burn" amount="7.5" />
+        <Affliction identifier="oxygenlow" amount="18" />
+        <Affliction identifier="opiateaddiction" amount="0.3" />
+        <Affliction identifier="opiateoverdose" amount="5" />
+        <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
+      </StatusEffect>
+    </Projectile>
+    
   </Fentanyl>
 
 
@@ -610,7 +623,7 @@
     </MeleeWeapon>
   </Calyxanide>
   
-  <Haloperidol name="Haloperidol" identifier="antipsychosis" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A strong antipsychotic drug." scale="0.3">
+  <Haloperidol name="Haloperidol" identifier="antipsychosis" tags="syringe" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A strong antipsychotic drug." scale="0.3">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="220" />
@@ -644,9 +657,17 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
+        <ReduceAffliction identifier="psychosis" amount="25" />
+      </StatusEffect>
+    </Projectile>
+    
   </Haloperidol>
   
-  <Naloxone name="Naloxone" identifier="antinarc" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="An opioid antagonist for the treatment of opiate based withdrawal and overdose." scale="0.3">
+  <Naloxone name="Naloxone" identifier="antinarc" tags="syringe" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="An opioid antagonist for the treatment of opiate based withdrawal and overdose." scale="0.3">
     
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />
@@ -686,6 +707,17 @@
         <Remove />
       </StatusEffect>    
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="30">
+        <ReduceAffliction identifier="opiatewithdrawal" amount="1.0" />
+        <ReduceAffliction identifier="opiateaddiction" amount="1.0" />
+        <ReduceAffliction identifier="opiateoverdose" amount="1.0" />
+        <Affliction identifier="oxygenlow" amount="1.0" />
+      </StatusEffect>
+    </Projectile>
+    
   </Naloxone>
   
   <MorbusineAntidote name="Morbusine Antidote" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute morbusine poisoning." useinhealthinterface="true" scale="0.3">
