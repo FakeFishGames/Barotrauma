@@ -201,6 +201,8 @@ namespace Barotrauma
                     ScreenOverlayColor, true);
             }
 
+            if (DisableHUD) { return; }
+
             if (GameMain.ShowFPS || GameMain.DebugDraw)
             {
                 DrawString(spriteBatch, new Vector2(10, 10),
@@ -378,10 +380,7 @@ namespace Barotrauma
                 MouseOn.DrawToolTip(spriteBatch);
             }
             
-            if (!DisableHUD)
-            {
-                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
-            }
+            Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite)
