@@ -108,8 +108,8 @@
     <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Manta/Manta.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
 
-    <!-- 4-6 crawlers or 2-4 mantises or a hammerhead after 30 seconds or passing 5% -->
-    <EventSet chooserandom="true" mindistancetraveled="0.05" minmissiontime="30" minintensity="0.0" maxintensity="0.5">
+    <!-- 4-6 crawlers or 2-4 mantises or a hammerhead after 3 minutes or passing 15% -->
+    <EventSet chooserandom="true" mindistancetraveled="0.45" minmissiontime="240" minintensity="0.0" maxintensity="0.5">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="4" maxamount="6" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Manta/Manta.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
@@ -157,7 +157,7 @@
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
 
     <!-- 2-4 crawlers or 1-2 mantises after 4 minutes or passing 15% -->
-    <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="240" minintensity="0.0" maxintensity="0.65">
+    <EventSet chooserandom="true" mindistancetraveled="0.10" minmissiontime="180" minintensity="0.0" maxintensity="0.65">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Manta/Manta.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
