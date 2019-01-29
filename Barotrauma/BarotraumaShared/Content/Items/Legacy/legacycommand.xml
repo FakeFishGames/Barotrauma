@@ -9,7 +9,7 @@
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="1">
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="Sonar">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>

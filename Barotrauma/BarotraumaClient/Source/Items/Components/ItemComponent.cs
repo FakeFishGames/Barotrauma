@@ -141,8 +141,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(-1, false)]
-        public int LinkUIToComponent
+        private ItemComponent linkToUIComponent;
+        [Serialize("", false)]
+        public string LinkUIToComponent
         {
             get;
             set;
@@ -343,6 +344,27 @@ namespace Barotrauma.Items.Components
         public virtual bool ShouldDrawHUD(Character character)
         {
             return true;
+        }
+
+
+        public ItemComponent GetLinkUIToComponent()
+        {
+            if (string.IsNullOrEmpty(LinkUIToComponent))
+            {
+                return null;
+            }
+            foreach (ItemComponent component in item.components)
+            {
+                if (component.name.ToLower() == LinkUIToComponent.ToLower())
+                {
+                    linkToUIComponent = component;
+                }
+            }
+            if (linkToUIComponent == null)
+            {
+                DebugConsole.ThrowError("Failed to link the component \"" + Name + "\" to \"" + LinkUIToComponent + "\" in the item \"" + item.Name + "\" - component with a matching name not found.");
+            }
+            return linkToUIComponent;
         }
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }

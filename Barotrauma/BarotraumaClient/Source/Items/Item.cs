@@ -534,11 +534,11 @@ namespace Barotrauma
             if (editingHUD != null && editingHUD.UserData == this)
             {
                 elementsToMove.Add(editingHUD);
-            }
-
+            }       
+            
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.LinkUIToComponent > -1) continue;
+                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) continue;
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 elementsToMove.Add(ic.GuiFrame);
             }
@@ -558,10 +558,10 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.GuiFrame == null) continue;
-                if (ic.LinkUIToComponent < 0 || ic.LinkUIToComponent >= components.Count) continue;
-
-                ItemComponent linkedComponent = components[ic.LinkUIToComponent];
-                ic.GuiFrame.RectTransform.ScreenSpaceOffset = linkedComponent.GuiFrame.RectTransform.ScreenSpaceOffset;
+                var linkUIToComponent = ic.GetLinkUIToComponent();
+                if (linkUIToComponent == null) continue;
+                
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = linkUIToComponent.GuiFrame.RectTransform.ScreenSpaceOffset;
             }
         }
 

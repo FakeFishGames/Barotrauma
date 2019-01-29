@@ -4,14 +4,7 @@
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="0,0,188,194" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="188,0,188,194" depth="0.8" maxcondition="50" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="376,0,188,194" depth="0.8" maxcondition="0" origin="0.5,0.5" />
-    <CustomInterface canbeselected="true">
-      <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />
-      <Button text="Signal out #1" connection="signal_out1" />
-      <Button text="Signal out #2" connection="signal_out2" />
-      <Button text="Signal out #3" connection="signal_out3" />
-      <TickBox text="Signal out #4" connection="signal_out4" />
-    </CustomInterface>
-    <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="4">
+    <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="Sonar">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
@@ -36,6 +29,13 @@
       <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
     </Sonar>
+    <CustomInterface canbeselected="true">
+      <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />
+      <Button text="Signal out #1" connection="signal_out1" />
+      <Button text="Signal out #2" connection="signal_out2" />
+      <Button text="Signal out #3" connection="signal_out3" />
+      <TickBox text="Signal out #4" connection="signal_out4" />
+    </CustomInterface>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
@@ -61,11 +61,7 @@
     <Sprite texture="Content/Items/Command/CommandDevices.png" depth="0.8" sourcerect="2,196,284,237" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="285,196,284,237" depth="0.8" maxcondition="50" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="572,196,284,237" depth="0.8" maxcondition="0" origin="0.5,0.5" />
-    <CustomInterface canbeselected="true">
-      <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />
-      <Button text="Signal out #1" connection="signal_out1" />
-    </CustomInterface>
-    <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="1">
+    <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="Sonar">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
@@ -84,6 +80,10 @@
       <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
     </Sonar>
+    <CustomInterface canbeselected="true">
+      <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />
+      <Button text="Signal out #1" connection="signal_out1" />
+    </CustomInterface>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
