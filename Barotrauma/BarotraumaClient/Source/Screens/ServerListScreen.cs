@@ -671,6 +671,13 @@ namespace Barotrauma
 
         public void PingServer(ServerInfo serverInfo, int timeOut)
         {
+            if (serverInfo?.IP == null)
+            {
+                serverInfo.PingChecked = true;
+                serverInfo.Ping = -1;
+                return;
+            }
+
             long rtt = -1;
             IPAddress address = IPAddress.Parse(serverInfo.IP);
             if (address != null)
@@ -699,7 +706,9 @@ namespace Barotrauma
                     }
                     catch (PingException ex)
                     {
-                        DebugConsole.NewMessage("Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + ex.Message, Color.Red);
+                        string errorMsg = "Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + ex.Message;
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + serverInfo.IP, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        DebugConsole.NewMessage(errorMsg, Color.Red);
                     }
                 }
             }
