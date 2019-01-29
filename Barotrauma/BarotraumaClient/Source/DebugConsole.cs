@@ -428,7 +428,7 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: true));
-
+            
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
@@ -749,6 +749,31 @@ namespace Barotrauma
                 WaterRenderer.BlurAmount = blurAmount;
             },
             null, null));
+
+
+            commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
+            {
+                //TODO: maybe do this automatically during loading when possible?
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s) first!");
+                    }
+                    else
+                    {                        
+                        foreach (var mapEntity in MapEntity.SelectedList)
+                        {
+                            if (mapEntity is Item item)
+                            {
+                                item.Rect = new Rectangle(0, 0, 
+                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale), 
+                                    (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
+                            }
+                        }
+                    }
+                }
+            }, isCheat: true));
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
