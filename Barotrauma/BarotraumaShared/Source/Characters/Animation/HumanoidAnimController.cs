@@ -1588,6 +1588,7 @@ namespace Barotrauma
 
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
+            // TODO: don't create new arrays, reuse
             Vector2[] transformedHandlePos = new Vector2[2];
             transformedHandlePos[0] = Vector2.Transform(handlePos[0], itemTransfrom);
             transformedHandlePos[1] = Vector2.Transform(handlePos[1], itemTransfrom);
@@ -1597,6 +1598,7 @@ namespace Barotrauma
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
             
+            // TODO: Remove this. Provide the position in params.
             Vector2 itemPos = aim ? aimPos : holdPos;
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
@@ -1825,9 +1827,10 @@ namespace Barotrauma
             {
                 TargetMovement = Vector2.Zero;
                 TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
-                if (Vector2.DistanceSquared(character.WorldPosition, handWorldPos) > 1.0f)
+                float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
+                if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
                 {
-                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition);
+                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false);
                 }
             }
 
