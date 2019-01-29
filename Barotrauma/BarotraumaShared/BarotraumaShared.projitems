@@ -373,6 +373,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Automated Docking Hatch.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Small Diving Gear Cabinet.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Large Diving Suit Cabinet.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -565,16 +568,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\ChargedAlienGenerator.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Diving suit locker.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Emergency kit.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Diving Suit Locker.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Large Diving Gear Cabinet.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Small Diving Gear Cabinet.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\directionalPingCircle.png">
@@ -1012,7 +1009,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\containers.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\FF_Locker3.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\Lockers.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Containers\FF_MedicalCabinette.png">
