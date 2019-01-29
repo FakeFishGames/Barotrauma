@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
                     Vector2 particlePos = item.Rect.Location.ToVector2() + pumpOutEmitter.First;
                     if (item.CurrentHull != null && item.CurrentHull.Surface < particlePos.Y) continue;
 
-                    pumpOutEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpOutEmitter.First, item.CurrentHull,
+                    pumpOutEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpOutEmitter.First * item.Scale, item.CurrentHull,
                         velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, -FlowPercentage / 100.0f));
                 }
             }
@@ -147,7 +147,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Pair<Vector2, ParticleEmitter> pumpInEmitter in pumpInEmitters)
                 {
-                    pumpInEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpInEmitter.First, item.CurrentHull,
+                    pumpInEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpInEmitter.First * item.Scale, item.CurrentHull,
                         velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, FlowPercentage / 100.0f));
                 }
             }
