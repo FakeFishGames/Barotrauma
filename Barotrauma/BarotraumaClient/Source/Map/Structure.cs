@@ -30,7 +30,7 @@ namespace Barotrauma
         // Only for testing in the debug build. Not saved.
         protected Vector2 textureScale = Vector2.One;
         
-        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", false)]
+        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
         public Vector2 TextureScale
         {
             get { return textureScale; }
@@ -49,7 +49,7 @@ namespace Barotrauma
         public bool DrawTiled { get; protected set; } = true;
         
         protected Vector2 textureOffset = Vector2.Zero;
-        [Editable, Serialize("0.0, 0.0", true)]
+        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
         public Vector2 TextureOffset
         {
             get { return textureOffset; }
