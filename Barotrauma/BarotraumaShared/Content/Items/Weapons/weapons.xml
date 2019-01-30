@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.5">
     <Price locationtype="Military" buyprice="30" />
@@ -82,7 +82,6 @@
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
   </Item>
-  
   <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" scale="0.32">
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="120" />
@@ -92,7 +91,7 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,64,64,64" />
-    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="0,242,228,110" depth="0.55" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="0,242,232,111" depth="0.55" origin="0.5,0.5" />
     <Body width="90" radius="40" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-10,-7" />
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
@@ -106,7 +105,6 @@
       <Containable identifiers="syringe,medicalsyringe" />
     </ItemContainer>
   </Item>
-  
   <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="30" />
@@ -314,7 +312,7 @@
       <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" />
-    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,150,156,39" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,150,164,40" depth="0.55" origin="0.5,0.5" />
     <Body width="150" height="30" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="2.0">
       <Attack stun="0.2">
