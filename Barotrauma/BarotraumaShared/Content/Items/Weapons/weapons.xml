@@ -275,7 +275,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,0,64,64" />
     <Sprite texture="weapons.png" sourcerect="19,0,76,24" depth="0.55" />
     <Body width="90" height="30" density="30" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-20,0" holdangle="0" reload="1.0">
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75">
       <Attack stun="0.2">
         <Sound file="Content/Items/Weapons/smack.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="2" />
