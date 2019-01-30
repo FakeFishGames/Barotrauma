@@ -682,13 +682,19 @@ namespace Barotrauma
             };
                         
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogDescription"));
-
-            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform))
+            
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform));
+            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), font: GUI.SmallFont, wrap: true);
+            descriptionBox.OnTextChanged += (textBox, text) =>
             {
-                Wrap = true,
-                Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description
+                Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Rect.Height, (int)textSize.Y + 10));
+                descriptionContainer.UpdateScrollBarSize();
+                descriptionContainer.BarScroll = 1.0f;
+                ChangeSubDescription(textBox, text);
+                return true;
             };
-            descriptionBox.OnTextChanged += ChangeSubDescription;
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
 
             var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform), style: null);
             
