@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma
@@ -61,6 +62,9 @@ namespace Barotrauma
             pumps = new List<Pump>();
             foreach (Item item in Item.ItemList)
             {
+                //don't attempt to use pumps outside the sub
+                if (item.Submarine == null) { continue; }
+
                 var pump = item.GetComponent<Pump>();
                 if (pump == null) continue;
 

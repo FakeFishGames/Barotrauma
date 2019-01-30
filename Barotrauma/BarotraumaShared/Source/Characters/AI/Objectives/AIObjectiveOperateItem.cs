@@ -74,6 +74,7 @@ namespace Barotrauma
                 character.Speak(TextManager.Get("DialogCantFindController").Replace("[item]", component.Item.Name), null, 2.0f, "cantfindcontroller", 30.0f);
                 return;
             }
+            
 
             if (target.CanBeSelected)
             { 
@@ -93,7 +94,13 @@ namespace Barotrauma
             }
             else
             {
-                if (!character.Inventory.Items.Contains(component.Item))
+                if (component.Item.GetComponent<Pickable>() == null)
+                {
+                    //controller/target can't be selected and the item cannot be picked -> objective can't be completed
+                    canBeCompleted = false;
+                    return;
+                }
+                else if (!character.Inventory.Items.Contains(component.Item))
                 {
                     AddSubObjective(new AIObjectiveGetItem(character, component.Item, true));
                 }
