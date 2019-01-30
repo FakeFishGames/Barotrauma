@@ -40,9 +40,9 @@ namespace Barotrauma
             return handle;
         }
 
-        public static void InvokeAfter(Action action, float delay)
+        public static CoroutineHandle InvokeAfter(Action action, float delay)
         {
-            StartCoroutine(DoInvokeAfter(action, delay));
+            return StartCoroutine(DoInvokeAfter(action, delay));
         }
 
         private static IEnumerable<object> DoInvokeAfter(Action action, float delay)
