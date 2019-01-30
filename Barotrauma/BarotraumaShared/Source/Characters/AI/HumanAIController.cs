@@ -255,7 +255,7 @@ namespace Barotrauma
                 return;
             }
 
-            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1, Rand.RandSync.Server), () =>
+            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1, Rand.RandSync.Unsynced), () =>
             {
                 //the objective in the manager is not necessarily the same as the one we just instantiated,
                 //because the objective isn't added if there's already an identical objective in the manager
