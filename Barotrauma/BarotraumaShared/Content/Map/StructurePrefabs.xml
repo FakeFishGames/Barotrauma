@@ -496,152 +496,152 @@
   <engineeringLabel identifier="engineeringLabel" width="153" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.99" canflipx="false" />
   </engineeringLabel>
-  <commandLabel identifier="commandLabel" width="128" height="16">
+  <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.99" canflipx="false" />
   </commandLabel>
-  <airlockLabel identifier="airlockLabel" width="99" height="16">
+  <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.99" canflipx="false" />
   </airlockLabel>
-  <cabinsLabel identifier="cabinsLabel" width="83" height="16">
+  <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.99" canflipx="false" />
   </cabinsLabel>
-  <medicalLabel identifier="medicalLabel" width="110" height="16">
+  <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.99" canflipx="false" />
   </medicalLabel>
-  <arrowUp identifier="arrowUp" width="16" height="16">
+  <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.99" />
   </arrowUp>
-  <arrowDown identifier="arrowDown" width="16" height="16">
+  <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.99" />
   </arrowDown>
-  <arrowLeft identifier="arrowLeft" width="16" height="16">
+  <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.99" />
   </arrowLeft>
-  <arrowRight identifier="arrowRight" width="16" height="16">
+  <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.99" />
   </arrowRight>
-  <leftwall identifier="leftwall" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="500">
+  <leftwall name="Basic Wall Left" identifier="leftwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" fliphorizontal="true" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth="0.85" fliphorizontal="true" />
   </leftwall>
-  <rightwall identifier="rightwall" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="500">
+  <rightwall name="Basic Wall Right" identifier="rightwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth="0.85" />
   </rightwall>
-  <topwall identifier="topwall" description="A horizontal wall with collision detection" width="64" height="32" resizehorizontal="true" body="true" castshadow="true" health="500">
+  <topwall name="Basic Wall Top" identifier="topwall" category="Legacy" description="A horizontal wall with collision detection" width="64" height="32" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,989,576,32" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="0,953,576,32" depth="0.85" />
   </topwall>
-  <TopWallHeavy identifier="TopWallHeavy" description="A horizontal wall with collision detection" width="96" height="96" resizehorizontal="true" body="true" castshadow="true" health="1000">
+  <TopWallHeavy name="Heavy Wall Top" identifier="TopWallHeavy" category="Legacy" description="A horizontal wall with collision detection" width="96" height="96" resizehorizontal="true" body="true" castshadow="true" health="1000">
     <sprite texture="Content/Map/testroom.png" sourcerect="197,347,480,96" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="197,446,480,96" depth="0.85" />
   </TopWallHeavy>
-  <LeftWallHeavy identifier="LeftWallHeavy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="1000">
+  <LeftWallHeavy name="Heavy Wall Left" identifier="LeftWallHeavy" category="Legacy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="1000">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth="0.06" fliphorizontal="true" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" fliphorizontal="true" />
   </LeftWallHeavy>
-  <RightWallHeavy identifier="RightWallHeavy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="1000">
+  <RightWallHeavy name="Heavy Wall Right" identifier="RightWallHeavy" category="Legacy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="1000">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" />
   </RightWallHeavy>
-  <CableHolderHorizontal identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="24" resizehorizontal="true">
+  <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="24" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="478,902,96,24" depth="0.85" />
   </CableHolderHorizontal>
-  <CableHolderVertical identifier="CableHolderVertical" allowattachitems="true" width="24" height="32" resizevertical="true">
+  <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="24" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="550,804,24,96" depth="0.85" />
   </CableHolderVertical>
-  <topwindow identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
+  <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,80" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,80" depth="0.85" />
   </topwindow>
-  <verticalwindow identifier="verticalwindow" width="128" height="224" body="true" health="100" tags="glass">
+  <verticalwindow name="Window Vertical" identifier="verticalwindow" width="128" height="224" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="368,544,128,224" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="239,544,128,224" depth="0.85" />
   </verticalwindow>
-  <horizontalresizablewindow identifier="horizontalresizablewindow" width="128" height="64" body="true" health="100" tags="glass" resizehorizontal="true">
+  <horizontalresizablewindow name="Window Horizontal Resizable" identifier="horizontalresizablewindow" category="Legacy" width="128" height="64" body="true" health="100" tags="glass" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="207,771,128,64" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="337,771,128,64" depth="0.85" />
   </horizontalresizablewindow>
-  <verticalresizablewindow identifier="verticalresizablewindow" width="64" height="128" body="true" health="100" tags="glass" resizevertical="true">
+  <verticalresizablewindow name="Window Vertical Resizable" identifier="verticalresizablewindow" category="Legacy" width="64" height="128" body="true" health="100" tags="glass" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,80,64,128" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
-  <largeplatform identifier="largeplatform" allowattachitems="true" width="64" height="52" resizehorizontal="true" body="true" platform="true">
+  <largeplatform name="Platform Large" identifier="largeplatform" allowattachitems="true" width="64" height="52" resizehorizontal="true" body="true" platform="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,52" depth="0.9" />
   </largeplatform>
-  <platform identifier="platform" allowattachitems="true" width="64" height="26" resizehorizontal="true" body="true" platform="true">
+  <platform name="Platform Basic" identifier="platform" allowattachitems="true" width="64" height="26" resizehorizontal="true" body="true" platform="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,52,128,27" depth="0.9" />
   </platform>
-  <roughbgwall identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="1.0" />
   </roughbgwall>
-  <cleanbgwall identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <cleanbgwall name="BackWall Clean" identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="448,96,448,224" depth="1.0" />
   </cleanbgwall>
-  <bgpanels identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanels name="BackWall Panels" identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="720,336,224,224" depth="1.0" />
   </bgpanels>
-  <bgpanelswindow identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanelswindow name="BackWall Window" identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="724,560,224,224" depth="1.0" />
   </bgpanelswindow>
-  <bgorangepanels identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanels name="BackWall Orange Panels" identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="576,798,446,224" depth="1.0" />
   </bgorangepanels>
-  <bgorangepanelwindow identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanelwindow name="BackWall Orange Panels Window" identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="501,560,224,224" depth="1.0" />
   </bgorangepanelwindow>
-  <PipesBackground identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <PipesBackground name="BackWall Pipes" identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="320,0,192,192" depth="1.0" />
   </PipesBackground>
-  <SlopeForward identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <SlopeForward name="Slope Forwards" identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,0,224,64" depth="0.95" />
   </SlopeForward>
-  <SlopeBack identifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <SlopeBack name="Slope Backwards" identifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,64,224,64" depth="0.95" />
   </SlopeBack>
-  <stairsright identifier="stairsright" width="256" height="320" stairdirection="Right">
+  <stairsright name="Stairs Right" identifier="stairsright" width="256" height="320" stairdirection="Right">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" depth="0.1" />
   </stairsright>
-  <stairsleft identifier="stairsleft" width="256" height="320" stairdirection="Left">
+  <stairsleft name="Stairs Left" identifier="stairsleft" width="256" height="320" stairdirection="Left">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth="0.1" />
   </stairsleft>
-  <bunk identifier="bunk" width="173" height="129">
+  <bunk name="Bunk" identifier="bunk" width="173" height="129">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth="0.9" />
   </bunk>
-  <RuinWallHorizontal identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="500">
+  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,896,832,128" depth="0.06" />
   </RuinWallHorizontal>
-  <RuinWallVertical identifier="RuinWallVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="500">
+  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="896,192,128,832" depth="0.061" />
   </RuinWallVertical>
-  <RuinWallHeavyHorizontal identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="100000">
+  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="100000">
     <sprite texture="Content/Map/ruins3.png" sourcerect="352,896,672,128" depth="0.06" />
   </RuinWallHeavyHorizontal>
-  <RuinWallHeavyVertical identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="100000">
+  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="100000">
     <sprite texture="Content/Map/ruins3.png" sourcerect="896,0,128,672" depth="0.061" />
   </RuinWallHeavyVertical>
-  <RuinWallHorizontalSmall identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="128" height="54" resizehorizontal="true" body="true" health="500">
+  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="128" height="54" resizehorizontal="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,842,832,54" depth="0.062" />
   </RuinWallHorizontalSmall>
-  <RuinWallVerticalSmall identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="54" height="128" resizevertical="true" body="true" health="500">
+  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="54" height="128" resizevertical="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,832" depth="0.063" />
   </RuinWallVerticalSmall>
-  <RuinBack identifier="RuinBack" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBack name="Ruin BackWall Basic" identifier="RuinBack" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,0,512,512" depth="0.98" />
   </RuinBack>
-  <RuinBackCarvings identifier="RuinBackCarvings" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBackCarvings name="Ruin BackWall Carvings" identifier="RuinBackCarvings" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/ruins.png" sourcerect="512,0,233,512" depth="0.981" />
   </RuinBackCarvings>
-  <RuinBackFractal identifier="RuinBackFractal" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <RuinBackFractal name="Ruin BackWall Fractal" identifier="RuinBackFractal" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/ruins3.png" sourcerect="0,0,640,896" depth="0.98" />
   </RuinBackFractal>
-  <RuinBlock identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
+  <RuinBlock name="Ruin Prop Block" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.99" />
   </RuinBlock>
-  <RuinFractalBall identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512">
+  <RuinFractalBall name="Ruin Prop Fractalball" identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512">
     <sprite texture="Content/Map/ruins2.png" sourcerect="0,0,512,512" depth="0.971" />
   </RuinFractalBall>
-  <RuinClaw identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270">
-    <sprite texture="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth="0.97" />
+  <RuinClaw name="Ruin Prop Claw" identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270">
+    <sprite texture="Content/Map/ruins.png" sourcerect="512,517,126,270" depth="0.97" />
   </RuinClaw>
 </prefabs>
