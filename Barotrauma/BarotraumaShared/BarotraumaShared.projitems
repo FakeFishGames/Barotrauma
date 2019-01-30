@@ -487,10 +487,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\SecurityVest.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\CraftingElements1.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\CraftingElements2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\CraftingElements2.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\CraftingElements1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Materials\LootablePlants.png">
