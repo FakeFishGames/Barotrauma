@@ -606,6 +606,16 @@ namespace Barotrauma
                 Hull.hullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() :
                 MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
 
+            //ignore items whose body is disabled (wires, items inside cabinets)
+            entities.RemoveAll(e =>
+            {
+                if (e is Item item)
+                {
+                    if (item.body != null && !item.body.Enabled) { return true; }
+                }
+                return false;
+            });
+
             if (entities.Count == 0) return Rectangle.Empty;
 
             float minX = entities[0].Rect.X, minY = entities[0].Rect.Y - entities[0].Rect.Height;

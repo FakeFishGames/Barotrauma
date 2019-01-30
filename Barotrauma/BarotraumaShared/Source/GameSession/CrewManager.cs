@@ -30,6 +30,7 @@ namespace Barotrauma
         public CrewManager(bool isSinglePlayer)
         {
             this.isSinglePlayer = isSinglePlayer;
+            conversationTimer = 5.0f;
 
             InitProjectSpecific();
         }
