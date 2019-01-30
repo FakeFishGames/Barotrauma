@@ -127,7 +127,7 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             return true;
         }
-
+        
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character != user) return false;

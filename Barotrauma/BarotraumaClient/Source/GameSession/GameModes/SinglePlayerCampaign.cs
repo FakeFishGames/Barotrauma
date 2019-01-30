@@ -61,6 +61,7 @@ namespace Barotrauma
                 savedOnStart = true;
             }
 
+            crewDead = false;
             endTimer = 5.0f;
             isRunning = true;
             CrewManager.InitSinglePlayerRound();
@@ -225,6 +226,7 @@ namespace Barotrauma
             isRunning = false;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+            crewDead = false;
 
             if (success)
             {
@@ -352,17 +354,18 @@ namespace Barotrauma
         {
             isRunning = false;
             
-            var cinematic = new RoundEndCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
+            //var cinematic = new RoundEndCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
 
-            CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
-
+            //CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
+            End("");
+            
             return true;
         }
 
-        private IEnumerable<object> EndCinematic(RoundEndCinematic cinematic)
+        /*private IEnumerable<object> EndCinematic(RoundEndCinematic cinematic)
         {
             while (cinematic.Running)
             {
@@ -374,7 +377,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null) End("");
 
             yield return CoroutineStatus.Success;
-        }
+        }*/
 
         public static SinglePlayerCampaign Load(XElement element)
         {

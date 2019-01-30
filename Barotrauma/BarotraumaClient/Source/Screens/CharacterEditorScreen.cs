@@ -345,6 +345,42 @@ namespace Barotrauma
                     }
                 }
                 UpdateJointCreation();
+                if (PlayerInput.KeyHit(Keys.Left))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.X--;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.Right))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.X++;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.Down))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.Y++;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.Up))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.Y--;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
             }
             if (!isFreezed)
             {
@@ -2376,6 +2412,51 @@ namespace Barotrauma
                 }
             }
             return rect;
+        }
+
+        // TODO: refactor this so that it can be used in all cases
+        private void UpdateSourceRect(Limb limb, Rectangle newRect)
+        {
+            limb.ActiveSprite.SourceRect = newRect;
+            if (limb.DamagedSprite != null)
+            {
+                limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+            }
+            RecalculateOrigin(limb);
+            TryUpdateLimbParam(limb, "sourcerect", newRect);
+            if (limbPairEditing)
+            {
+                UpdateOtherLimbs(limb, otherLimb =>
+                {
+                    otherLimb.ActiveSprite.SourceRect = newRect;
+                    if (otherLimb.DamagedSprite != null)
+                    {
+                        otherLimb.DamagedSprite.SourceRect = newRect;
+                    }
+                    TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
+                    RecalculateOrigin(otherLimb);
+                });
+            };
+
+            void RecalculateOrigin(Limb l)
+            {
+                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
+
+                // TODO:
+                //if (lockSpriteOrigin)
+                //{
+                //    // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                //    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
+                //    l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                //    TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
+                //}
+                //else
+                //{
+                //    // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                //    l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
+                //}
+            }
         }
 
         private void DrawJointCreationOnSpritesheet(SpriteBatch spriteBatch, Vector2 startPos)
