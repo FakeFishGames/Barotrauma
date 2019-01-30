@@ -26,7 +26,7 @@
       </Item>
     </Items>
     <PortraitClothing>
-      <sprite name="Portrait Clothing Captain" texture="Content/Characters/Human/PortraitClothing.png" sheetindex="2,0"/>
+      <sprite name="Portrait Clothing Captain" texture="Content/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
   </Job>
   
@@ -56,7 +56,7 @@
       </Item>
     </Items>
     <PortraitClothing>
-      <sprite name="Portrait Clothing Engineer" texture="Content/Characters/Human/PortraitClothing.png" sheetindex="0,0"/>
+      <sprite name="Portrait Clothing Engineer" texture="Content/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
     </PortraitClothing>
   </Job>
 
@@ -86,7 +86,7 @@
       </Item>
     </Items>
     <PortraitClothing>
-      <sprite name="Portrait Clothing Mechanic" texture="Content/Characters/Human/PortraitClothing.png" sheetindex="1,0"/>
+      <sprite name="Portrait Clothing Mechanic" texture="Content/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
     </PortraitClothing>
   </Job>
 
@@ -115,7 +115,7 @@
       </Item>      
     </Items>
     <PortraitClothing>
-      <sprite name="Portrait Clothing Security Officer" texture="Content/Characters/Human/PortraitClothing.png" sheetindex="1,1"/>
+      <sprite name="Portrait Clothing Security Officer" texture="Content/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
   </Job>
 
@@ -140,7 +140,7 @@
       </Item>      
     </Items>
     <PortraitClothing>
-      <sprite name="Portrait Clothing Medic" texture="Content/Characters/Human/PortraitClothing.png" sheetindex="0,1"/>
+      <sprite name="Portrait Clothing Medic" texture="Content/Jobgear/PortraitClothing.png" sheetindex="0,1"/>
     </PortraitClothing>
   </Job>
 
@@ -164,7 +164,7 @@
       </Item>      
     </Items>
     <PortraitClothing>
-      <sprite name="Portrait Clothing Assistant" texture="Content/Characters/Human/PortraitClothing.png" sheetindex="0,2"/>
+      <sprite name="Portrait Clothing Assistant" texture="Content/Jobgear/PortraitClothing.png" sheetindex="0,2"/>
     </PortraitClothing>
   </Job>
 
