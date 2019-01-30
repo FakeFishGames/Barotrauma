@@ -261,19 +261,18 @@
       <Item identifier="titanium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="197,785,57,28" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="125,407,114,57" depth="0.55" origin="0.5,0.5" />
     <Body width="57" height="27" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  <Item name="Plastic" identifier="plastic" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate">
+  <Item name="Plastic" identifier="plastic" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="40" />
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="40" />
-    <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
-    <Sprite texture="materials.png" sourcerect="0,0,24,12" depth="0.55" />
+    <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" />
     <Body width="24" height="12" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
@@ -318,7 +317,7 @@
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
-    <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="80,256,31,60" />
+    <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,87" />
     <Body width="30" height="60" density="20" />
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
