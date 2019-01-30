@@ -487,7 +487,13 @@ namespace Barotrauma.Tutorials
                 if (!segments[i].IsTriggered) return;
             }
 
-            Stop(); // Completed
+            CoroutineManager.StartCoroutine(WaitToStop()); // Completed
+        }
+
+        private IEnumerable<object> WaitToStop()
+        {
+            while (ContentRunning) yield return null;
+            Stop();
         }
     }
 }
