@@ -1154,7 +1154,8 @@ namespace Barotrauma
 
             commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
             {
-                throw new NotImplementedException();
+                ThrowError("Karma has not been fully implemented yet, and is disabled in this version of Barotrauma.");
+                return;
                 if (GameMain.Server == null) return;
                 GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
             }));
@@ -2194,6 +2195,35 @@ namespace Barotrauma
                 GameSettings.VerboseLogging = !GameSettings.VerboseLogging;
                 NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, null, null, isCheat: false));
+
+
+            commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    string packageName = string.Join(" ", args).ToLower();
+                    var package = GameMain.Config.SelectedContentPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
+                    if (package == null)
+                    {
+                        ThrowError("Content package \"" + packageName + "\" not found.");
+                    }
+                    else
+                    {
+                        package.CalculateHash(logging: true);
+                    }
+                }
+                else
+                {
+                    GameMain.Config.SelectedContentPackages.First().CalculateHash(logging: true);
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    GameMain.Config.SelectedContentPackages.Select(cp => cp.Name).ToArray()
+                };
+            }));
 
 #if DEBUG
             commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
