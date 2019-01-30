@@ -19,7 +19,7 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <!-- physics body -->
-    <Body width="41" height="17" density="40" />
+    <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-50,-40" handle2="21,-27" />
     <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
@@ -69,7 +69,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" />
     <Sprite texture="tools_new.png" sourcerect="0,0,220,105" depth="0.55" />
-    <Body width="42" height="31" density="40" />
+    <Body width="220" height="105" density="40" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-60,-28" handle2="-5,-38" />
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />

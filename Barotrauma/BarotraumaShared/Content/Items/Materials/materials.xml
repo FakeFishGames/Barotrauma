@@ -262,7 +262,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="125,407,114,57" depth="0.55" origin="0.5,0.5" />
-    <Body width="57" height="27" density="50" />
+    <Body width="114" height="57" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
   <Item name="Plastic" identifier="plastic" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4">
@@ -273,7 +273,7 @@
     <Price locationtype="Outpost" buyprice="40" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" />
-    <Body width="24" height="12" density="20" />
+    <Body width="85" height="60" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
   <Item name="Ballistic Fiber" identifier="ballisticfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
@@ -312,13 +312,13 @@
   <Item name="Flash Powder" identifier="flashpowder" category="Material" 
         cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" 
         impacttolerance="8" useinhealthinterface="true"
-        scale="0.5">
+        scale="0.4">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,87" />
-    <Body width="30" height="60" density="20" />
+    <Body width="45" height="87" density="20" />
     <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
       <StatusEffect type="OnFire" target="this" condition="-50" />
