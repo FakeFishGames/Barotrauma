@@ -98,6 +98,22 @@ namespace Barotrauma
             }
         }
 
+        private Sprite clothingSprite;
+        public Sprite ClothingSprite
+        {
+            get
+            {
+                if (clothingSprite == null)
+                {
+                    if (Job != null && Job.Prefab.ClothingElement != null)
+                    {
+                        clothingSprite = new Sprite(Job.Prefab.ClothingElement.Element("sprite"));
+                    }
+                }
+                return clothingSprite;
+            }
+        }
+
         private Sprite portraitBackground;
         public Sprite PortraitBackground
         {

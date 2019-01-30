@@ -96,6 +96,8 @@ namespace Barotrauma
             private set;
         }
 
+        public XElement ClothingElement { get; private set; }
+
         public JobPrefab(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
@@ -156,6 +158,12 @@ namespace Barotrauma
             }
 
             Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
+
+            ClothingElement = element.Element("PortraitClothing");
+            if (ClothingElement == null)
+            {
+                ClothingElement = element.Element("portraitclothing");
+            }
         }
 
         public static JobPrefab Random()
