@@ -528,29 +528,29 @@ namespace Barotrauma.Networking
             base.Update(deltaTime);
 
             if (!connected) return;
-            
-            if (reconnectBox!=null)
+
+            if (reconnectBox != null)
             {
-                reconnectBox.Close(null,null);
+                reconnectBox.Close(null, null);
                 reconnectBox = null;
             }
 
-#if DEBUG
             try
             {
-#endif
                 CheckServerMessages();
-#if DEBUG
             }
             catch (Exception e)
             {
-
-                DebugConsole.ThrowError("Error while receiving message from server", e);         
+                string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                DebugConsole.ThrowError("Error while reading a message from server.", e);
+                new GUIMessageBox(TextManager.Get("Error"), "Error while reading a message from the server. (" + e.Message + " Target site: " + e.TargetSite + ")");
+                Disconnect();
+                GameMain.MainMenuScreen.Select();
+                return;
             }
-#endif
 
-
-                if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 endVoteTickBox.Visible = Voting.AllowEndVoting && HasSpawned;
 
