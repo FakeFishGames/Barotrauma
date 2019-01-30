@@ -2677,7 +2677,7 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Bunyip.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Hammerhead.sub">
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Humpback.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Muikku.sub">
