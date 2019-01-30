@@ -302,6 +302,8 @@ namespace Barotrauma.Networking
                         }
                         outmsg.Write(name);
                         client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
+
+                        DebugConsole.Log("Sending init request (" + (requiresPw ? "password required" : "no password required") + ")");
                     }
                     reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
                 }
@@ -327,16 +329,19 @@ namespace Barotrauma.Networking
                             switch (header)
                             {
                                 case ServerPacketHeader.AUTH_RESPONSE:
+                                    DebugConsole.Log("Received auth response (needauth: " + needAuth + ")");
                                     if (needAuth)
                                     {
                                         if (inc.ReadBoolean())
                                         {
+                                            DebugConsole.Log("  password required.");
                                             //requires password
                                             nonce = inc.ReadInt32();
                                             requiresPw = true;
                                         }
                                         else
                                         {
+                                            DebugConsole.Log("  password not required.");
                                             requiresPw = false;
                                             reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
                                         }
@@ -345,10 +350,12 @@ namespace Barotrauma.Networking
                                     break;
                                 case ServerPacketHeader.AUTH_FAILURE:
                                     //failed to authenticate, can still use same nonce
+                                    DebugConsole.Log("Received auth failure message");
                                     pwMsg = inc.ReadString();
                                     requiresPw = true;
                                     break;
                                 case ServerPacketHeader.UPDATE_LOBBY:
+                                    DebugConsole.Log("Recived lobby update");
                                     //server accepted client
                                     ReadLobbyUpdate(inc);
                                     CanStart = true;
@@ -454,6 +461,8 @@ namespace Barotrauma.Networking
 
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
+                steamAuthTicket?.Cancel();
+                steamAuthTicket = null;
                 var reconnect = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get("CouldNotConnectToServer"), new string[] { TextManager.Get("Retry"), TextManager.Get("Cancel") });
 
                 DebugConsole.NewMessage("Failed to connect to the server - connection status: " + client.ConnectionStatus.ToString(), Color.Orange);
@@ -496,7 +505,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(steamAuthTicket.Data.Length);
                 outmsg.Write(steamAuthTicket.Data);
 
-                DebugConsole.Log("Sending Steam auth message");
+                DebugConsole.Log("Sending Steam auth request");
                 DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
                 DebugConsole.Log("   Ticket data: " + 
                     ToolBox.LimitString(string.Concat(steamAuthTicket.Data.Select(b => b.ToString("X2"))), 16));
@@ -504,6 +513,7 @@ namespace Barotrauma.Networking
             }
             else
             {
+                DebugConsole.Log("Sending auth request");
                 outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
             }
         }
@@ -675,6 +685,9 @@ namespace Barotrauma.Networking
 
         private void ReadDisconnectMessage(NetIncomingMessage inc, bool allowReconnect)
         {
+            steamAuthTicket?.Cancel();
+            steamAuthTicket = null;
+
             string disconnectMsg = inc.ReadString();
             string[] splitMsg = disconnectMsg.Split(';');
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
@@ -1575,6 +1588,7 @@ namespace Barotrauma.Networking
         {
             client.Shutdown("");
             steamAuthTicket?.Cancel();
+            steamAuthTicket = null;
 
             foreach (var fileTransfer in FileReceiver.ActiveTransfers)
             {
