@@ -434,6 +434,10 @@ namespace Barotrauma
                 {
                     slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
                         GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
+                    if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
+                    {
+                        slots[i].EquipButtonState = GUIComponent.ComponentState.None;
+                    }
                     
                     if (slots[i].EquipButtonState != GUIComponent.ComponentState.Hover)
                     {
