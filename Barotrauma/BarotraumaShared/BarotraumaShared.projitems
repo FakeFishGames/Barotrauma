@@ -364,6 +364,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienPumpAssembly2.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienVaultAssembly1.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\AlienVerticalAssembly2.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
