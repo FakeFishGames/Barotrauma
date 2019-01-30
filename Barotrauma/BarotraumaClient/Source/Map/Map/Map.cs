@@ -56,7 +56,7 @@ namespace Barotrauma
         private Rectangle borders;
         
         private MapTile[,] mapTiles;
-        
+        private bool messageBoxOpen;
 #if DEBUG
         private GUIComponent editor;
 
@@ -612,9 +612,10 @@ namespace Barotrauma
                 MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, centerPos, centerColor,
                     scale: centerIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * zoom * 1.2f);
 
-                if (mouseOn && PlayerInput.LeftButtonClicked())
+                if (mouseOn && PlayerInput.LeftButtonClicked() && !messageBoxOpen)
                 {
-                    new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
+                    var messageBox = new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
+                    CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
                 }
             }
             
@@ -640,6 +641,14 @@ namespace Barotrauma
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred);
+        }
+
+        private IEnumerable<object> WaitForMessageBoxClosed(GUIMessageBox box)
+        {
+            messageBoxOpen = true;
+            while (GUIMessageBox.MessageBoxes.Contains(box)) yield return null;
+            yield return new WaitForSeconds(.1f);
+            messageBoxOpen = false;
         }
 
         private float hudOpenState;
