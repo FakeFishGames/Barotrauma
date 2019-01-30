@@ -13,9 +13,6 @@
       <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform Right Lower Arm" texture="securityofficer_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform Left Lower Arm" texture="securityofficer_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      
-      
-      
       <sprite name="Security Officer's Uniform Waist" texture="securityofficer_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform Right Thigh" texture="securityofficer_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform Left Thigh" texture="securityofficer_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

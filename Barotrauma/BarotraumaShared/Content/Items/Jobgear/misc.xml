@@ -62,86 +62,50 @@
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="1.0" damagesound="LimbClown" />
     </Wearable>
   </Item>
-  <Item
-    name="Assistant Clothes"
-    identifier="assistantclothes"
-    category="Equipment"
-    tags="smallitem"
-    fireproof="false"
-    cargocontaineridentifier="metalcrate"
-    description="Even the assistant needs clothing."
-    scale="0.5">
-
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="50"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
-    <Sprite texture="clothes.png" sourcerect="264,36,183,67" depth="0.6"/>
-
-    <Body width="50" height="17" density="20"/>
-
+  <Item name="Assistant Clothes" identifier="assistantclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="Even the assistant needs clothing." scale="0.5">
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" />
+    <Sprite texture="clothes.png" sourcerect="264,36,183,67" depth="0.6" />
+    <Body width="50" height="17" density="20" />
     <Wearable slots="Any,InnerClothes">
-      <sprite name="Assistant Torso" texture="assistant_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Assistant Left Upper Arm" texture="assistant_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Assistant Right Upper Arm" texture="assistant_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Assistant Left Lower Arm" texture="assistant_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Assistant Right Upper Arm" texture="assistant_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Assistant Waist" texture="assistant_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Assistant Right Thigh" texture="assistant_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Assistant Left Thigh" texture="assistant_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Assistant Right Leg" texture="assistant_legs_[GENDER].png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Assistant Left Leg" texture="assistant_legs_[GENDER].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Assistant Right Shoe" texture="assistant_legs_[GENDER].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Assistant Left Shoe" texture="assistant_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      
+      <sprite name="Assistant Torso" texture="assistant_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Left Upper Arm" texture="assistant_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Right Upper Arm" texture="assistant_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Left Lower Arm" texture="assistant_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Right Upper Arm" texture="assistant_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Waist" texture="assistant_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Right Thigh" texture="assistant_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Left Thigh" texture="assistant_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Right Leg" texture="assistant_legs_[GENDER].png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Left Leg" texture="assistant_legs_[GENDER].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Right Shoe" texture="assistant_legs_[GENDER].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Assistant Left Shoe" texture="assistant_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
-  <Item
-    name="Watchman Clothes"
-    identifier="watchmanclothes"
-    category="Equipment"
-    tags="smallitem"
-    fireproof="false"
-    cargocontaineridentifier="metalcrate"
-    description=""
-    scale="0.5">
-
-    <Price locationtype="Research" buyprice="20"/>
-    <Price locationtype="Military" buyprice="20"/>
-    <Price locationtype="City" buyprice="20"/>
-    <Price locationtype="Outpost" buyprice="50"/>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
-    <Sprite texture="clothes.png" sourcerect="264,36,183,67" depth="0.6"/>
-
-    <Body width="50" height="17" density="20"/>
-
+  <Item name="Watchman Clothes" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5">
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" />
+    <Sprite texture="clothes.png" sourcerect="264,36,183,67" depth="0.6" />
+    <Body width="50" height="17" density="20" />
     <Wearable slots="Any,InnerClothes">
-      <sprite name="Watchman Torso" texture="watchman_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Watchman Left Upper Arm" texture="watchman_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Watchman Right Upper Arm" texture="watchman_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Watchman Left Lower Arm" texture="watchman_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Watchman Right Upper Arm" texture="watchman_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Watchman Waist" texture="watchman_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Watchman Right Thigh" texture="watchman_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Watchman Left Thigh" texture="watchman_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Watchman Right Leg" texture="watchman_legs_[GENDER].png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Watchman Left Leg" texture="watchman_legs_[GENDER].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Watchman Right Shoe" texture="watchman_legs_[GENDER].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Watchman Left Shoe" texture="watchman_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
+      <sprite name="Watchman Torso" texture="watchman_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Left Upper Arm" texture="watchman_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Right Upper Arm" texture="watchman_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Left Lower Arm" texture="watchman_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Right Upper Arm" texture="watchman_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Waist" texture="watchman_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Right Thigh" texture="watchman_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Left Thigh" texture="watchman_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Right Leg" texture="watchman_legs_[GENDER].png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Left Leg" texture="watchman_legs_[GENDER].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Right Shoe" texture="watchman_legs_[GENDER].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Watchman Left Shoe" texture="watchman_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
 </Items>
