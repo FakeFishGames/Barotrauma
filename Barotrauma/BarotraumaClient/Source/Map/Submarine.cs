@@ -339,6 +339,18 @@ namespace Barotrauma
             {
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
+                    //move disabled items (wires, items inside containers) inside the sub
+                    if (e is Item item && item.body != null && !item.body.Enabled)
+                    {
+                        item.SetTransform(ConvertUnits.ToSimUnits(HiddenSubPosition), 0.0f);
+                    }
+                }
+            }
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
+                {
                     var msgBox = new GUIMessageBox(
                         TextManager.Get("Warning"),
                         TextManager.Get("FarAwayEntitiesWarning"),
