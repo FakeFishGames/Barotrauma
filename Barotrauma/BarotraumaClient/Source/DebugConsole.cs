@@ -770,10 +770,25 @@ namespace Barotrauma
                                     (int)(item.Prefab.sprite.size.X * item.Prefab.Scale), 
                                     (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
                             }
+                            else if (mapEntity is Structure structure)
+                            {
+                                if (!structure.ResizeHorizontal)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        (int)structure.Prefab.ScaledSize.X,
+                                        structure.Rect.Height);
+                                }
+                                if (!structure.ResizeVertical)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        structure.Rect.Width,
+                                        (int)structure.Prefab.ScaledSize.Y);
+                                }
+                            }
                         }
                     }
                 }
-            }, isCheat: true));
+            }, isCheat: false));
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
