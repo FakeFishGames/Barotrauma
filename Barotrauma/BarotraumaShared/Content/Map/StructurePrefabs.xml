@@ -51,49 +51,49 @@
   </structure>
   <!-- BACK WALLS START -->
   <Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="0.98" />
   </Wall_B>
   <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="0.98" />
   </Wall_BP>
   <Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_Ballast_C.png" sourcerect="0,0,512,256" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_Ballast_C.png" sourcerect="0,0,512,256" depth="0.98" />
   </Wall_BC>
   <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="0.98" />
   </Wall_C1>
   <Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="0.98" />
   </Wall_C2>
   <Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="0.98" />
   </Wall_C3>
   <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="0.98" />
   </Wall_D1>
   <Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="0.98" />
   </Wall_D2>
   <Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="0.98" />
   </Wall_D3>
   <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="0.98" />
   </Wall_E>
   <Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
   </Wall_F>
   <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="0.98" />
   </Wall_G1>
   <Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="0.98" />
   </Wall_G2>
   <Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="1.0" />
+    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="0.98" />
   </Wall_G3>
   <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
-    <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="1.0" />
+    <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" />
   </Wall_H1>
   <!-- BACK WALLS ENDS -->
   <!-- TAIL -->
@@ -494,19 +494,19 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="160,96,32,352" depth="0.9" />
   </smallverticalback2>
   <engineeringLabel identifier="engineeringLabel" width="153" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.99" canflipx="false" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.97" canflipx="false" />
   </engineeringLabel>
   <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.99" canflipx="false" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.97" canflipx="false" />
   </commandLabel>
   <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.99" canflipx="false" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.97" canflipx="false" />
   </airlockLabel>
   <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.99" canflipx="false" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.97" canflipx="false" />
   </cabinsLabel>
   <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.99" canflipx="false" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.97" canflipx="false" />
   </medicalLabel>
   <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.99" />
@@ -573,25 +573,25 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="896,52,128,27" depth="0.9" />
   </platform>
   <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="1.0" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="0.98" />
   </roughbgwall>
   <cleanbgwall name="BackWall Clean" identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="448,96,448,224" depth="1.0" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="448,96,448,224" depth="0.98" />
   </cleanbgwall>
   <bgpanels name="BackWall Panels" identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="720,336,224,224" depth="1.0" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="720,336,224,224" depth="0.98" />
   </bgpanels>
   <bgpanelswindow name="BackWall Window" identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="724,560,224,224" depth="1.0" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="724,560,224,224" depth="0.98" />
   </bgpanelswindow>
   <bgorangepanels name="BackWall Orange Panels" identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="576,798,446,224" depth="1.0" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="576,798,446,224" depth="0.98" />
   </bgorangepanels>
   <bgorangepanelwindow name="BackWall Orange Panels Window" identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="501,560,224,224" depth="1.0" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="501,560,224,224" depth="0.98" />
   </bgorangepanelwindow>
   <PipesBackground name="BackWall Pipes" identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/structures2.png" sourcerect="320,0,192,192" depth="1.0" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="320,0,192,192" depth="0.98" />
   </PipesBackground>
   <SlopeForward name="Slope Forwards" identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,0,224,64" depth="0.95" />
@@ -636,7 +636,7 @@
     <sprite texture="Content/Map/ruins3.png" sourcerect="0,0,640,896" depth="0.98" />
   </RuinBackFractal>
   <RuinBlock name="Ruin Prop Block" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
-    <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.99" />
+    <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.98" />
   </RuinBlock>
   <RuinFractalBall name="Ruin Prop Fractalball" identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512">
     <sprite texture="Content/Map/ruins2.png" sourcerect="0,0,512,512" depth="0.971" />
@@ -646,16 +646,16 @@
   </RuinClaw>
   <!-- BACKGROUND ROCKS -->
   <BGRock1 name="Background Rock 1" identifier="BGRock1" category="Misc" allowattachitems="true" width="668" height="523">
-    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" depth="2" />
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" depth="1" />
   </BGRock1>
   <BGRock2 name="Background Rock 2" identifier="BGRock2" category="Misc" allowattachitems="true" width="355" height="513">
-    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="669,0,355,513" depth="2" />
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="669,0,355,513" depth="1" />
   </BGRock2>
   <BGRock3 name="Background Rock 3" identifier="BGRock3" category="Misc" allowattachitems="true" width="331" height="501">
-    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,523,331,501" depth="2" />
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,523,331,501" depth="1" />
   </BGRock3>
   <BGRock4 name="Background Rock 4" identifier="BGRock4" category="Misc" allowattachitems="true" width="322" height="511">
-    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" depth="2" />
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" depth="1" />
   </BGRock4>
   
 </prefabs>
