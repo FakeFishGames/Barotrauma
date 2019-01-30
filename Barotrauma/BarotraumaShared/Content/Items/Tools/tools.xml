@@ -15,7 +15,7 @@
     <!-- physics body -->
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-50,-40" handle2="21,-27" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" />
     <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
