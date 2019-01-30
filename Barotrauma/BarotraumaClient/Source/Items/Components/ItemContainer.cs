@@ -32,9 +32,18 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+#if DEBUG
+        [Serialize("0.0,0.0", false), Editable]
+#else
         [Serialize("0.0,0.0", false)]
+#endif
         public Vector2 ItemPos { get; set; }
+
+#if DEBUG
+        [Serialize("0.0,0.0", false), Editable]
+#else
         [Serialize("0.0,0.0", false)]
+#endif
         public Vector2 ItemInterval { get; set; }
         [Serialize(100, false)]
         public int ItemsPerRow { get; set; }
