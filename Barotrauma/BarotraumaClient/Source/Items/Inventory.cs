@@ -310,6 +310,10 @@ namespace Barotrauma
             }*/
 
             bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI;
+            if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
+            {
+                mouseOn = false;
+            }
 
             if (selectedSlot != null && selectedSlot.Slot != slot)
             {
@@ -340,7 +344,7 @@ namespace Barotrauma
 
                 if (draggingItem == null)
                 {
-                    if (PlayerInput.LeftButtonHeld())
+                    if (PlayerInput.LeftButtonDown())
                     {
                         draggingItem = Items[slotIndex];
                         draggingSlot = slot;
