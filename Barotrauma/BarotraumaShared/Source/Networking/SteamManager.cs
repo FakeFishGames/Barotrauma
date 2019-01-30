@@ -261,7 +261,7 @@ namespace Barotrauma.Steam
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
-                if (!responded)
+                if (responded)
                 {
                     s.FetchRules();
                 }
