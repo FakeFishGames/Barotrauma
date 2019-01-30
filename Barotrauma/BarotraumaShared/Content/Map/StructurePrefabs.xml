@@ -80,9 +80,9 @@
   <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="0.98" />
   </Wall_E>
-  <Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <!--<Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
-  </Wall_F>
+  </Wall_F>-->
   <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="0.98" />
   </Wall_G1>
