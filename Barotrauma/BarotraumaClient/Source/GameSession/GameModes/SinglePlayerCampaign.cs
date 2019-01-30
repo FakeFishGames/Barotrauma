@@ -432,7 +432,11 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
-            ContextualTutorial.SavePartiallyComplete(modeElement);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.SavePartiallyComplete(modeElement);
+            }
 
             element.Add(modeElement);
         }

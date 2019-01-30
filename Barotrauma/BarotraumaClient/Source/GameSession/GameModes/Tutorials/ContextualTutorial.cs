@@ -100,6 +100,12 @@ namespace Barotrauma.Tutorials
                 return;
             }
 
+            if (completedSegments.Length == segments.Count) // Completed all segments
+            {
+                Stop();
+                return;
+            }
+
             for (int i = 0; i < completedSegments.Length; i++)
             {
                 segments[completedSegments[i]].IsTriggered = true;
