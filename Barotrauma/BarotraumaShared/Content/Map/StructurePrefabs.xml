@@ -644,4 +644,18 @@
   <RuinClaw name="Ruin Prop Claw" identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270">
     <sprite texture="Content/Map/ruins.png" sourcerect="512,517,126,270" depth="0.97" />
   </RuinClaw>
+  <!-- BACKGROUND ROCKS -->
+  <BGRock1 name="Background Rock 1" identifier="BGRock1" category="Misc" allowattachitems="true" width="668" height="523">
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" depth="2" />
+  </BGRock1>
+  <BGRock2 name="Background Rock 2" identifier="BGRock2" category="Misc" allowattachitems="true" width="355" height="513">
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="669,0,355,513" depth="2" />
+  </BGRock2>
+  <BGRock3 name="Background Rock 3" identifier="BGRock3" category="Misc" allowattachitems="true" width="331" height="501">
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,523,331,501" depth="2" />
+  </BGRock3>
+  <BGRock4 name="Background Rock 4" identifier="BGRock4" category="Misc" allowattachitems="true" width="322" height="511">
+    <sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" depth="2" />
+  </BGRock4>
+  
 </prefabs>
