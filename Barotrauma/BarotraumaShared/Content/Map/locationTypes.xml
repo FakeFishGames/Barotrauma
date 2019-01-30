@@ -33,7 +33,7 @@
   <City
     name="Colony"
     namefile="Content/Map/cityNames.txt"
-    background="Content/Map/LocationPortraits/WorkCamp_Mining1.jpg"
+    background="Content/Map/LocationPortraits/Colony.jpg"
     commonnessperzone="1: 5.0"
     halo="0,1,0,0.3">
 
@@ -131,7 +131,7 @@
     name="Mining Outpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
+    background="Content/Map/LocationPortraits/WorkCamp_Mining1.jpg"
     commonnessperzone="2: 1.25, 3: 2.5"
     halo="0,1,0,0.2">
 
