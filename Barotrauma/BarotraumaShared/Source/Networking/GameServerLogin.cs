@@ -11,6 +11,7 @@ namespace Barotrauma.Networking
     {
         public readonly NetConnection Connection;
         public readonly ulong SteamID;
+        public Facepunch.Steamworks.ServerAuth.Status? SteamAuthStatus = null;
         public readonly int Nonce;
         
         public int FailedAttempts;
@@ -56,9 +57,19 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            ulong steamID = clientSteamID;
             if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection))
             {
-                DebugConsole.Log("Already waiting for authentication, ignoring...");
+                var steamAuthedClient = unauthenticatedClients.Find(uc =>
+                    uc.Connection == inc.SenderConnection &&
+                    uc.SteamID == steamID &&
+                    uc.SteamAuthStatus == Facepunch.Steamworks.ServerAuth.Status.OK);
+                if (steamAuthedClient != null)
+                {
+                    DebugConsole.Log("Client already authenticated, sending AUTH_RESPONSE again...");
+                    HandleClientAuthRequest(inc.SenderConnection, steamID);
+                }
+                DebugConsole.Log("Steam authentication already pending...");
                 return;
             }
 
@@ -103,11 +114,11 @@ namespace Barotrauma.Networking
             UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.SteamID == ownerID);
             if (unauthClient != null)
             {
+                unauthClient.SteamAuthStatus = status;
                 switch (status)
                 {
                     case Facepunch.Steamworks.ServerAuth.Status.OK:
                         ////steam authentication done, check password next
-                        unauthenticatedClients.Remove(unauthClient);
                         HandleClientAuthRequest(unauthClient.Connection, unauthClient.SteamID);
                         break;
                     default:
@@ -126,6 +137,10 @@ namespace Barotrauma.Networking
                 }
                 return;
             }
+            else
+            {
+                DebugConsole.Log("    No unauthenticated clients found with the Steam ID " + steamID);
+            }
 
             //kick connected client if status becomes invalid (e.g. VAC banned, not connected to steam)
             if (status != Facepunch.Steamworks.ServerAuth.Status.OK && GameMain.Config.RequireSteamAuthentication)
@@ -140,6 +155,8 @@ namespace Barotrauma.Networking
 
         private void HandleClientAuthRequest(NetConnection connection, ulong steamID = 0)
         {
+            DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
+
             if (GameMain.Config.RequireSteamAuthentication && steamID == 0)
             {
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
@@ -156,6 +173,7 @@ namespace Barotrauma.Networking
             UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == connection);
             if (unauthClient == null)
             {
+                DebugConsole.Log("Unauthed client, generating a nonce...");
                 //new client, generate nonce and add to unauth queue
                 if (ConnectedClients.Count >= maxPlayers)
                 {
@@ -182,15 +200,18 @@ namespace Barotrauma.Networking
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
             }
             CompressOutgoingMessage(nonceMsg);
+            DebugConsole.Log("Sending auth response...");
             server.SendMessage(nonceMsg, connection, NetDeliveryMethod.Unreliable);
         }
 
         private void ClientInitRequest(NetIncomingMessage inc)
         {
+            DebugConsole.Log("Received client init request");
             if (ConnectedClients.Find(c => c.Connection == inc.SenderConnection) != null)
             {
                 //this client was already authenticated
                 //another init request means they didn't get any update packets yet
+                DebugConsole.Log("Client already connected, ignoring...");
                 return;
             }
 
@@ -244,8 +265,20 @@ namespace Barotrauma.Networking
             List<string> contentPackageHashes = new List<string>();
             for (int i = 0; i < contentPackageCount; i++)
             {
-                contentPackageNames.Add(inc.ReadString());
-                contentPackageHashes.Add(inc.ReadString());
+                string packageName = inc.ReadString();
+                string packageHash = inc.ReadString();
+                contentPackageNames.Add(packageName);
+                contentPackageHashes.Add(packageHash);
+                if (contentPackageCount == 0)
+                {
+                    DebugConsole.Log("Client is using content package " +
+                        (packageName ?? "null") + " (" + (packageHash ?? "null" + ")"));
+                }
+            }
+
+            if (contentPackageCount == 0)
+            {
+                DebugConsole.Log("Client did not list any content packages.");
             }
 
             string clName = Client.SanitizeName(inc.ReadString());
