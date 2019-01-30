@@ -188,11 +188,13 @@ namespace Barotrauma.Tutorials
             started = true;
         }
 
+#if DEBUG
         private IEnumerable<object> WaitForErrorClosed()
         {
             while (infoBox != null) yield return null;
             Stop();
         }
+#endif
 
         public void Stop()
         {
