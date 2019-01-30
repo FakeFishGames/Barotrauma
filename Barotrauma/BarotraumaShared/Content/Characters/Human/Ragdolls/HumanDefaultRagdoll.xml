@@ -43,7 +43,7 @@
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="8" radius="6" height="15" mass="2" type="LeftFoot" flip="True" pullpos="-4.7,2" healthindex="4" name="Limb 8" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" depth="0.17" origin="0.4164518,0.4219334" />
+    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" depth="0.17" origin="0.4520548,0.4117647" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
     <sound tag="footstep_metal" />
   </limb>
@@ -57,7 +57,7 @@
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="11" radius="6" height="15" mass="2" type="RightFoot" flip="True" pullpos="-4.669737,1.984612" healthindex="5" name="Limb 11" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" origin="0.4164518,0.4219334" depth="0.14" />
+    <sprite texture="Content/Characters/Human/legs_[GENDER].png" sourcerect="1,91,73,102" origin="0.4520548,0.4117647" depth="0.14" />
     <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
     <sound tag="footstep_metal" />
   </limb>
@@ -73,9 +73,9 @@
   <!-- body to left leg -->
   <joint limb1="12" limb1anchor="3.045837,-0.2198574" limb2="6" limb2anchor="-2.293741,15.82768" lowerlimit="-11.98455" upperlimit="1.191315" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
   <joint limb1="6" limb1anchor="3.097271,-18.08422" limb2="7" limb2anchor="2.890171,17.48538" lowerlimit="-99.91029" upperlimit="-4.698214" canbesevered="True" name="Joint 6 - 7" limitenabled="True" stiffness="0.25" />
-  <joint limb1="7" limb1anchor="-1.837945,-12.91255" limb2="8" limb2anchor="7.426126,5.830779" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" stiffness="0.25" />
+  <joint limb1="7" limb1anchor="-1.837945,-12.91255" limb2="8" limb2anchor="7.783974,5.812551" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" stiffness="0.25" />
   <!-- body to right leg -->
   <joint limb1="12" limb1anchor="-1.031944,-2.107499" limb2="9" limb2anchor="-3.094239,15.45416" lowerlimit="-11.98455" upperlimit="1.191315" canbesevered="True" name="Joint 12 - 9" limitenabled="True" stiffness="0.25" />
   <joint limb1="9" limb1anchor="3.097271,-18.08422" limb2="10" limb2anchor="2.890171,17.48538" lowerlimit="-99.91029" upperlimit="-4.698214" canbesevered="True" name="Joint 9 - 10" limitenabled="True" stiffness="0.25" />
-  <joint limb1="10" limb1anchor="-1.837945,-12.91255" limb2="11" limb2anchor="7.426126,5.830779" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" stiffness="0.25" />
+  <joint limb1="10" limb1anchor="-1.837945,-12.91255" limb2="11" limb2anchor="7.783974,5.812551" lowerlimit="45.68608" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" stiffness="0.25" />
 </Ragdoll>
