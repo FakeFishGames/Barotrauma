@@ -276,17 +276,28 @@ namespace Barotrauma
             doc.Save(filePath);
         }
 
-        private void CalculateHash()
+        public void CalculateHash(bool logging = false)
         {
             List<byte[]> hashes = new List<byte[]>();
-            
+
+            if (logging)
+            {
+                DebugConsole.NewMessage("****************************** Calculating cp hash " + Name);
+            }
+
             foreach (ContentFile file in Files)
             {
                 if (!multiplayerIncompatibleContent.Contains(file.Type)) continue;
 
-                try 
+                try
                 {
-                    hashes.Add(CalculateFileHash(file));
+                    var hash = CalculateFileHash(file);
+                    if (logging)
+                    {
+                        var fileMd5 = new Md5Hash(hash);
+                        DebugConsole.NewMessage("   " + file.Path + ": " + fileMd5.ShortHash);
+                    }                    
+                    hashes.Add(hash);
                 }
 
                 catch (Exception e)
@@ -302,6 +313,10 @@ namespace Barotrauma
             }
 
             md5Hash = new Md5Hash(bytes);
+            if (logging)
+            {
+                DebugConsole.NewMessage("****************************** Package hash: " + md5Hash.ShortHash);
+            }
         }
 
         private byte[] CalculateFileHash(ContentFile file)
