@@ -256,7 +256,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mudraptor\Animations\MudraptorWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mudraptor\Manta.html">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mudraptor\Mudraptor.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mudraptor\Mudraptor.png">
