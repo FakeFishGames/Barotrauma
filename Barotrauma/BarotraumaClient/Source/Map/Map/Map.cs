@@ -326,8 +326,8 @@ namespace Barotrauma
                     float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
 
                     Rectangle drawRect = location.Type.Sprite.SourceRect;
-                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom);
-                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom);
+                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
+                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
@@ -341,7 +341,6 @@ namespace Barotrauma
                     }
                 }
             }
-
 
             foreach (LocationConnection connection in connections)
             {

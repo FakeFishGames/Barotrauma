@@ -21,6 +21,7 @@ namespace Barotrauma
 
         public LocationType Type { get; private set; }
 
+        public int PortraitId { get; private set; }
 
         public int MissionsCompleted;
 
@@ -78,6 +79,8 @@ namespace Barotrauma
             this.Type = LocationType.Random("", zone);
             this.Name = RandomName(Type);
             this.MapPosition = mapPosition;
+
+            PortraitId = ToolBox.StringToInt(Name);
 
             Connections = new List<LocationConnection>();
         }
