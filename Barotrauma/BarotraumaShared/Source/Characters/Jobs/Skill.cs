@@ -31,7 +31,7 @@ namespace Barotrauma
             this.prefab = prefab;
             this.identifier = prefab.Identifier;
 
-            this.level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y);
+            this.level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y, Rand.RandSync.Server);
         }
 
         public Skill(string identifier, float level)

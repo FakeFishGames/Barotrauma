@@ -236,7 +236,7 @@
 
   </MonsterMission>
   
-  <MonsterMission
+  <!--<MonsterMission
   name="Terminate a Swarm"
   identifier="killswarm"
   type="Monster"
@@ -263,7 +263,7 @@
 
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
-  </MonsterMission>  
+  </MonsterMission>  -->
   
 
   <MonsterMission

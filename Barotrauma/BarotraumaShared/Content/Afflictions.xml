@@ -57,7 +57,7 @@
   <InternalDamage
     name="Internal Damage"
     identifier="internaldamage"
-    description="Trauma to bones, organs or other internal systems. Treated by morphine or fentanyl or Xenogland Extract."
+    description="The area is an ugly shade of purple, and apparently very painful to touch. You suspect a bone might be broken."
     type="damage"
     causeofdeathdescription="Died of internal injuries"
     selfcauseofdeathdescription="You have succumbed to your internal injuries."    
@@ -73,7 +73,7 @@
   <Bleeding
     name="Bleeding"
     identifier="bleeding"
-    description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents such as hemostop."
+    description="Blood pours freeling from this ragged and particularly nasty open wound"
     type="bleeding"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -90,7 +90,7 @@
   <Burn
     name="Burn"
     identifier="burn"
-    description="Thermal, chemical, electrical or radiological damage. Best treated with Fentanyl and bandages."
+    description="The area is blistered and red, and skin is already beginning to peel away in sheets. The patient is in a great deal of pain."
     type="burn"
     causeofdeathdescription="Burned to death"
     selfcauseofdeathdescription="You have burned to death."
@@ -106,7 +106,7 @@
   <OxygenLow
     name="Oxygen low"
     identifier="oxygenlow"
-    description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated. Best treated by CPR or Oxygenic Acid."
+    description="The skin is pale and clammy, and the lips turning blue."
     type="oxygenlow"
     causeofdeathdescription="Suffocated"
     selfcauseofdeathdescription="You have suffocated."
@@ -123,7 +123,7 @@
   <Bloodloss
     name="Bloodloss"
     identifier="bloodloss"
-    description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs. Treat with plasma infusions or Oxygenated Synthacells."
+    description="The patient is pale and cold. Their heart beats in an alarmingly rapid fashion."
     type="bloodloss"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -142,7 +142,7 @@
   <Stun
     name="Stun"
     identifier="stun"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="The patient is dazed and unresponsive."
     type="stun"
     limbspecific="false"
     indicatorlimb="Head"
@@ -159,7 +159,7 @@
   <Pressure
     name="Barotrauma"
     identifier="pressure"
-    description="Massive organ damage caused by hydrostatic pressure."
+    description="There is obvious massive organ damage and the blood vessels of the eye have burst, creating an unnerving red gaze."
     type="pressure"
     causeofdeathdescription="Crushed by water pressure"
     selfcauseofdeathdescription="You have been crushed by water pressure."
@@ -176,7 +176,7 @@
   <AfflictionHusk
     name="Husk infection"
     identifier="huskinfection"
-    description="Infection by the husk parasite. Left untreated this will eventually take over the patient. Treat with calyxanide."
+    description="Something dark and unpleasant moves in the mouth. They are rendered completely mute, save for occasional clicking sounds apparently emanating from deep within the throat."
     type="huskinfection"
     causeofdeathdescription="Taken over by a husk parasite"
     selfcauseofdeathdescription="You have been taken over by the husk parasite."
@@ -197,7 +197,7 @@
   <AfflictionPsychosis
     name="Psychosis"
     identifier="psychosis"
-    description="Is this the real life? Is this just fantasy?"
+    description="The patient rants and mutters in an aggitated fashion, a steady commentary of unseen events."
     type="psychosis"
     limbspecific="false"
     indicatorlimb="Head"
@@ -214,7 +214,7 @@
   <Affliction
     name="Drunk"
     identifier="drunk"
-    description="Ethanol intoxication leads to a loss of coordination, memory loss, euphoria, loss of conciousness and in extreme cases, death."
+    description="The smell of alcohol rises from them like a vapor, their speech slurs a little, and their eyes fail to focus."
     type="poison"
     causeofdeathdescription="Alcohol poisoning"
     selfcauseofdeathdescription="You have died of alcohol poisoning."
@@ -269,7 +269,7 @@
   <Affliction
     name="Opiate withdrawal"
     identifier="opiatewithdrawal"
-    description="While suffering from an opiate addiction, withdrawal symptoms are possible if opiate use is stopped. Treat with any opiate, or naloxone."
+    description="Aggitation and a tremor are obvious, as are the signs of nausea."
     type="poison"
     causeofdeathdescription="Died of opiate withdrawal"
     selfcauseofdeathdescription="You have died of opiate withdrawal."
@@ -321,7 +321,7 @@
   <Affliction
     name="Opiate overdose"
     identifier="opiateoverdose"
-    description="Opiate overdose may lead to respiratory failure and death. Treat promptly with naloxone"
+    description="The patient has pinpoint pupils and icy cold skin. They struggle to breathe and swallow."
     type="poison"
     causeofdeathdescription="Died of opiate overdose"
     selfcauseofdeathdescription="You have died of opiate overdose."
@@ -357,7 +357,7 @@
   <Affliction
     name="Opiate addiction"
     identifier="opiateaddiction"
-    description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction. Treated by discontinuing use of opiates, followed by treatment with naloxone."
+    description="The patient is happy enough... so long as they get what they need."
     type="poison"
     limbspecific="false"
     indicatorlimb="Head"    
@@ -392,7 +392,7 @@
   <AfflictionBleeding
     name="Gunshot wound"
     identifier="gunshotwound"
-    description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood. Bandages, and hemostop are appropriate treatments."
+    description="The entry site is a small, dark, bruised hole oozing a little blood. The exit wound however is a large ragged mess of exposed tissue and pouring blood."
     type="bleeding"
     causeofdeathdescription="Shot to death"
     selfcauseofdeathdescription="You have died of gunshot wounds."
@@ -410,7 +410,7 @@
   <Affliction
     name="Morbusine poisoning"
     identifier="morbusinepoisoning"
-    description="Acute morbusine poisoning quickly leads to respiratory failure if left untreated."
+    description="The patient can't breathe at all, and their heartrate is slowing rapidly."
     type="poison"
     causeofdeathdescription="Died of morbusine poisoning."
     selfcauseofdeathdescription="You have died of morbusine poisoning."

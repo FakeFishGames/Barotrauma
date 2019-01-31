@@ -1,7 +1,7 @@
-﻿<Ragdoll type="Manta" limbscale="0.2197" jointscale="0.2197" texturescale="1" colliderheightfromfloor="150" impacttolerance="50" canentersubmarine="True" draggable="True" spritesheetorientation="270">
+﻿<Ragdoll type="Mudraptor" limbscale="0.2197" jointscale="0.2197" texturescale="1" colliderheightfromfloor="150" impacttolerance="50" canentersubmarine="True" draggable="True" spritesheetorientation="270">
   <collider radius="200" height="250" name="Main Collider" width="0" />
   <limb id="0" name="Head" type="Head" width="268" height="200" notes="111cr_Head" flip="True" healthindex="0" attackpriority="0" steerforce="20" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" mouthpos="97,-76">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="0,0,331,243" origin="0.4839342,0.4924676" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="0,0,331,243" origin="0.4839342,0.4924676" depth="0.1" />
     <attack context="Ground" cooldown="2" afterattack="Pursue" range="120" damagerange="100" duration="0.25" structuredamage="20" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="-250" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0">
       <Affliction identifier="internaldamage" strength="10" />
       <Affliction identifier="bleeding" strength="50" />
@@ -9,7 +9,7 @@
     </attack>
   </limb>
   <limb id="1" name="Jaw" type="None" width="179" height="200" notes="1112br_Jaw" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="336,0,228,247" origin="0.4761672,0.4675852" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="336,0,228,247" origin="0.4761672,0.4675852" depth="0.1" />
     <attack context="Water" cooldown="2" afterattack="Pursue" range="100" damagerange="100" duration="0.25" structuredamage="20" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="0" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0">
       <Affliction identifier="internaldamage" strength="10" />
       <Affliction identifier="bleeding" strength="50" />
@@ -17,79 +17,79 @@
     </attack>
   </limb>
   <limb id="2" name="HeadArmor" type="None" width="336" height="150" notes="1111tr_HeadArmor" flip="True" healthindex="0" attackpriority="0" steerforce="10" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="557,0,418,263" origin="0.5009799,0.5003958" depth="0.08" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="557,0,418,263" origin="0.5009799,0.5003958" depth="0.08" />
   </limb>
   <limb id="3" name="TentacleMouthTop1" type="None" width="75" height="42" notes="1113tr_TentacleMouthTop1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="4" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1007,31,100,56" origin="0.5015433,0.4664803" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1007,31,100,56" origin="0.5015433,0.4664803" depth="0.1" />
   </limb>
   <limb id="4" name="TentacleMouthCenter1" type="None" width="71.25" height="45" notes="1114cr_TentacleMouthCenter1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="4" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1012,27,95,60" origin="0.5,0.5" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1012,27,95,60" origin="0.5,0.5" depth="0.1" />
   </limb>
   <limb id="5" name="TentacleJaw1" type="None" width="72.75" height="36.75" notes="11121cr_TentacleJaw1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="4" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1010,31,97,49" origin="0.4263428,0.5043318" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1010,31,97,49" origin="0.4263428,0.5043318" depth="0.1" />
   </limb>
   <limb id="6" name="TentacleMouthTop2" type="None" width="76.5" height="37.5" notes="11131cr_TentacleMouthTop2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="3" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1012,103,102,50" origin="0.4668974,0.5069979" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1012,103,102,50" origin="0.4668974,0.5069979" depth="0.1" />
   </limb>
   <limb id="7" name="TentacleMouthCenter2" type="None" width="72" height="39.75" notes="11141cr_TentacleMouthCenter2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="3" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1008,103,96,53" origin="0.5,0.5" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1008,103,96,53" origin="0.5,0.5" depth="0.1" />
   </limb>
   <limb id="8" name="TentacleJaw2" type="None" width="68.99999" height="37.5" notes="111211cr_TentacleJaw2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="3" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1010,103,92,50" origin="0.4445113,0.5389961" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1010,103,92,50" origin="0.4445113,0.5389961" depth="0.1" />
   </limb>
   <limb id="9" name="TentacleMouthTop3" type="None" width="83.25001" height="33" notes="111311cr_TentacleMouthTop3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1036,184,111,44" origin="0.5970114,0.4225785" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1036,184,111,44" origin="0.5970114,0.4225785" depth="0.1" />
   </limb>
   <limb id="10" name="TentacleMouthCenter3" type="None" width="86.25" height="42" notes="111411cr_TentacleMouthCenter3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1038,177,115,56" origin="0.5,0.5" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1038,177,115,56" origin="0.5,0.5" depth="0.1" />
   </limb>
   <limb id="11" name="TentacleJaw3" type="None" width="86.25" height="33" notes="1112111cr_TentacleJaw3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="2" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="1030,185,115,44" origin="0.4829268,0.3556231" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="1030,185,115,44" origin="0.4829268,0.3556231" depth="0.1" />
   </limb>
   <limb id="12" name="Hips" type="None" width="0" height="0" notes="0_Hips" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="180" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="817,282,334,484" origin="0.5086035,0.5091007" depth="0.45" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="817,282,334,484" origin="0.5086035,0.5091007" depth="0.45" />
   </limb>
   <limb id="13" name="Spine" type="Torso" width="235" height="268" notes="1cr_Spine" flip="True" healthindex="0" attackpriority="0" steerforce="1" stepoffset="0,0" radius="0" mass="0" density="12" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="2,239,301,338" origin="0.5032243,0.5113754" depth="0.4" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="2,239,301,338" origin="0.5032243,0.5113754" depth="0.4" />
   </limb>
   <limb id="14" name="Chest" type="None" width="0" height="0" notes="11cr_Chest" flip="True" healthindex="0" attackpriority="0" steerforce="5" stepoffset="0,0" radius="130" mass="0" density="12" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="334,242,308,295" origin="0.4924224,0.5230629" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="334,242,308,295" origin="0.4924224,0.5230629" depth="0.1" />
   </limb>
   <limb id="15" name="FrontUpperLeg" type="None" width="80.24999" height="0" notes="3bc_FrontUpperLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="101.625" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="31,576,378,271" origin="0.5,0.5" depth="0.09" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="31,576,378,271" origin="0.5,0.5" depth="0.09" />
   </limb>
   <limb id="16" name="ArmPalm" type="None" width="60" height="200" notes="1121rm_ArmPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="662,324,140,285" origin="0.5482009,0.4" depth="0.07" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="662,324,140,285" origin="0.5482009,0.4" depth="0.07" />
   </limb>
   <limb id="17" name="FrontLegPalm" type="RightFoot" width="50.25001" height="0" notes="311cr_FrontLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="60,0" radius="49.875" mass="0" density="5" pullpos="39.07472,-35.74048" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="620,628,200,133" origin="0.25,0.3470137" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="620,628,200,133" origin="0.25,0.3470137" depth="0.1" />
   </limb>
   <limb id="18" name="ArmLower" type="None" width="180" height="80" notes="112bc_ArmLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="870,1042,173,86" origin="0.4531075,0.5604911" depth="0.08" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="870,1042,173,86" origin="0.4531075,0.5604911" depth="0.08" />
   </limb>
   <limb id="19" name="FrontLegLower" type="None" width="144.75" height="90.75" notes="31cr_FrontLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="409,637,193,121" origin="0.4274307,0.37087" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="409,637,193,121" origin="0.4274307,0.37087" depth="0.1" />
   </limb>
   <limb id="20" name="BackUpper" type="None" width="147" height="0" notes="4bl_BackLegUpper" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="80.24999" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="400,765,410,214" origin="0.5643072,0.5556653" depth="0.51" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="400,765,410,214" origin="0.5643072,0.5556653" depth="0.51" />
   </limb>
   <limb id="21" name="BackLegLower" type="None" width="24.75" height="0" notes="41cr_BackLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="53.625" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="819,831,176,143" origin="0.4280843,0.4588513" depth="0.52" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="819,831,176,143" origin="0.4280843,0.4588513" depth="0.52" />
   </limb>
   <limb id="22" name="BackLegPalm" type="LeftFoot" width="80" height="0" notes="411cr_backLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="50,0" radius="40" mass="0" density="5" pullpos="68.81641,-29.82208" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="617,625,207,135" origin="0.25,0.3470137" depth="0.53" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="617,625,207,135" origin="0.25,0.3470137" depth="0.53" />
   </limb>
   <limb id="23" name="Tail1" type="Tail" width="324" height="204" notes="5cl_Tail1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="0,897,397,259" origin="0.5147893,0.5160481" depth="0.5" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="0,897,397,259" origin="0.5147893,0.5160481" depth="0.5" />
   </limb>
   <limb id="24" name="Tail2" type="None" width="180" height="134" notes="51cl_Tail2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="405,984,225,168" origin="0.5,0.5" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="405,984,225,168" origin="0.5,0.5" depth="0.1" />
   </limb>
   <limb id="25" name="Tail3" type="Tail" width="165" height="100" notes="511cl_Tail3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="630,984,213,163" origin="0.5262811,0.6016204" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="630,984,213,163" origin="0.5262811,0.6016204" depth="0.1" />
   </limb>
   <limb id="26" name="Tail4" type="Tail" width="128.25" height="62.99999" notes="5111cl_Tail4" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Manta/Manta.png" sourcerect="870,1042,171,84" origin="0.5042107,0.3883522" depth="0.1" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="870,1042,171,84" origin="0.5042107,0.3883522" depth="0.1" />
   </limb>
   <joint name="Joint Chest - Head" limb1="14" limb2="0" limb1anchor="138.932,-0.8007008" limb2anchor="-87.97721,56.0832" canbesevered="True" limitenabled="True" upperlimit="10.42033" lowerlimit="-39.29678" stiffness="0.25" />
   <joint name="Joint Head - Jaw" limb1="0" limb2="1" limb1anchor="-1.624528,-60.53897" limb2anchor="-27.54456,59.59686" canbesevered="True" limitenabled="True" upperlimit="68.22211" lowerlimit="0.8267807" stiffness="0.25" />

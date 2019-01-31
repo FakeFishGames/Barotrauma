@@ -1132,20 +1132,7 @@ namespace Barotrauma
             string name = element.Attribute("name").Value;
             string identifier = element.GetAttributeString("identifier", "");
 
-            StructurePrefab prefab;
-            if (string.IsNullOrEmpty(identifier))
-            {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
-            }
-            else
-            {
-                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
-            }
-
+            StructurePrefab prefab = FindPrefab(name, identifier);
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading structure - structure prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
@@ -1175,6 +1162,26 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
             SerializableProperty.DeserializeProperties(s, element);
             return s;
+        }
+
+        public static StructurePrefab FindPrefab(string name, string identifier)
+        {
+            StructurePrefab prefab = null;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+                //3. not found, attempt to find a prefab that uses the previous name as an identifier
+                if (prefab == null) prefab = MapEntityPrefab.Find(null, name) as StructurePrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
+            }
+            return prefab;
         }
 
         public override XElement Save(XElement parentElement)
