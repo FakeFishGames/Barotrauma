@@ -2,52 +2,68 @@
 <prefabs>
   <!-- INTERIOR WALLS FF -->
   <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,0,512,48" origin="0.5,0.5" />
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,0,512,48" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="0,0,512,48" depth="0.85" />
   </structure>
   <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" bodyheight="52" bodyoffset="0,12" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.05" sourcerect="0,55,512,74" origin="0.5,0.5" />
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,55,512,74" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="0,55,512,74" depth="0.85" />
   </structure>
   <structure name="InWall L 90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="464,135,48,512" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="464,135,48,512" depth="0.85" />
   </structure>
   <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" bodywidth="52" bodyoffset="12,0" castshadow="true" health="500">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="383,135,73,512" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,177,27,50" origin="0.5,0.5" />
+  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,177,27,50" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="0,177,27,50" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="57,178,52,48" origin="0.5,0.5" />
+  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="57,178,52,48" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="57,178,52,48" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="186,178,51,58" origin="0.5,0.5" />
+  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="186,178,51,58" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="186,178,51,58" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="309,182,49,52" origin="0.5,0.5" />
+  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="309,182,49,52" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="309,182,49,52" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="310,248,48,27" origin="0.5,0.5" />
+  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="310,248,48,27" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="310,248,48,27" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="299,329,59,50" origin="0.5,0.5" />
+  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="299,329,59,50" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="299,329,59,50" depth="0.85" />
   </structure>
-  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,235,74,48" origin="0.5,0.5" />
+  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,235,74,48" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="0,235,74,48" depth="0.85" />
   </structure>
-  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="75,251,73,17" origin="0.5,0.5" />
+  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="75,251,73,17" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="75,251,73,17" depth="0.85" />
   </structure>
-  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="5,298,111,54" origin="0.5,0.5" />
+  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="5,298,111,54" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="5,298,111,54" depth="0.85" />
   </structure>
-  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="301,397,48,72" origin="0.5,0.5" />
+  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="301,397,48,72" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="301,397,48,72" depth="0.85" />
   </structure>
-  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="316,471,16,72" origin="0.5,0.5" />
+  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="316,471,16,72" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="316,471,16,72" depth="0.85" />
   </structure>
-  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" castshadow="true" health="500">
-    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="223,267,53,110" origin="0.5,0.5" />
+  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" body="true" castshadow="true" health="500">
+    <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="223,267,53,110" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="223,267,53,110" depth="0.85" />
   </structure>
   <!-- BACK WALLS START -->
   <Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
@@ -80,9 +96,9 @@
   <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="0.98" />
   </Wall_E>
-  <!--<Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
-  </Wall_F>-->
+  </Wall_F>
   <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="0.98" />
   </Wall_G1>
@@ -97,9 +113,10 @@
   </Wall_H1>
   <!-- BACK WALLS ENDS -->
   <!-- TAIL -->
-  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="40" bodyheight="300" castshadow="false">
+  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="40" bodyheight="300" bodyoffset="-20,0" castshadow="false">
     <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="309,234,128,339" depth="0.01" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="309,234,128,339" depth="0.85" />
   </extA_Tail>
   <TailFin name="Tail Fin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.9" origin="0.5,0.5" />
@@ -113,9 +130,14 @@
   <TailFin name="Tail Fin D" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <extA_Front identifier="extA_Front" description="Submarine front temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="300" castshadow="false">
-    <sprite texture="Content/Map/SubRearBow.png" sourcerect="675,147,306,500" depth="0.01" origin="0.5,0.5" />
-  </extA_Front>
+  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="160" bodyheight="320" bodyoffset="-0,0" castshadow="false">
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="674,148,306,500" depth="0.01" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="675,147,306,500" depth="0.85" />
+  </Front>
+  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="false">
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="1093,3,271,975" depth="0.01" origin="0.238248,0.5" />
+    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="1093,3,271,975" depth="0.85" />
+  </Front>
   <!-- TAIL ENDS-->
   <shellA name="Shell A 90 deg" identifier="shella90deg" description="Submarine wall" body="true" castshadow="true" health="200" width="96" height="512" bodywidth="72" bodyoffset="12,0" resizevertical="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,0,96,512" depth="0.1" />
@@ -657,5 +679,4 @@
   <BGRock4 name="Background Rock 4" identifier="BGRock4" category="Misc" allowattachitems="true" width="322" height="511">
     <sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" depth="1" />
   </BGRock4>
-  
 </prefabs>
