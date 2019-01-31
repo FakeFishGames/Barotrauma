@@ -159,7 +159,7 @@
   <Pressure
     name="Barotrauma"
     identifier="pressure"
-    description="There is obvious massive organ damage and the blood vessels of the eye have burst, creating an annerving red gaze."
+    description="There is obvious massive organ damage and the blood vessels of the eye have burst, creating an unnerving red gaze."
     type="pressure"
     causeofdeathdescription="Crushed by water pressure"
     selfcauseofdeathdescription="You have been crushed by water pressure."
