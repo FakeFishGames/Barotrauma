@@ -251,7 +251,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return;
                 if (!MathUtils.IsValid(value)) return;
-                if (Prefab.Indestructible) return;
+                if (Indestructible) return;
 
                 float prev = condition;
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
@@ -282,6 +282,16 @@ namespace Barotrauma
         public float Health
         {
             get { return condition; }
+        }
+
+        private bool? indestructible;
+        /// <summary>
+        /// Per-instance value - if not set, the value of the prefab is used.
+        /// </summary>
+        public bool Indestructible
+        {
+            get { return indestructible ?? Prefab.Indestructible; }
+            set { indestructible = value; }
         }
 
         [Editable, Serialize("", true)]
@@ -911,7 +921,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
-            if (Prefab.Indestructible) return new AttackResult();
+            if (Indestructible) return new AttackResult();
 
             float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
