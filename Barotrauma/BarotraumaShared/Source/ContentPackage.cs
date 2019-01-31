@@ -142,12 +142,12 @@ namespace Barotrauma
             Files = new List<ContentFile>();
         }
 
-        public ContentPackage(string filePath)
+        public ContentPackage(string filePath, string setPath = "")
             : this()
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
 
-            Path = filePath;
+            Path = setPath == string.Empty ? filePath : setPath;
 
             if (doc?.Root == null)
             {
