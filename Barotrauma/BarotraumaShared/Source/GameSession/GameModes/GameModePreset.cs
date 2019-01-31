@@ -47,7 +47,7 @@ namespace Barotrauma
 
         public GameModePreset(string identifier, Type type, bool isSinglePlayer = false, bool votable = true)
         {
-            Name = TextManager.Get("GameMode."+identifier);
+            Name = TextManager.Get("GameMode." + identifier);
             Identifier = identifier;
 
             Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset), typeof(object) });
@@ -87,7 +87,7 @@ namespace Barotrauma
                 + "when the task is completed or everyone in the crew has died."
             };
 
-            new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
+            //new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
         }
     }
 }

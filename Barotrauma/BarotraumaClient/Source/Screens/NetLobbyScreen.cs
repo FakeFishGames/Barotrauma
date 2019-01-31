@@ -402,9 +402,15 @@ namespace Barotrauma
             //gamemode ------------------------------------------------------------------
 
             var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), TextManager.Get("GameMode"));
-            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), midInfoColumn.RectTransform))
+            modeList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), midInfoColumn.RectTransform))
             {
                 OnSelected = VotableClicked
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform),
+                "Coming up: Multiplayer campaign", textAlignment: Alignment.Center, style: "ListBoxElement")
+            {
+                ToolTip = "Multiplayer campaign mode is not available in this version of Barotrauma. Coming up in the Early Access release!"
             };
 
             voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
@@ -413,7 +419,7 @@ namespace Barotrauma
                 UserData = "modevotes",
                 Visible = false
             };
-
+            
             foreach (GameModePreset mode in GameModePreset.List)
             {
                 if (mode.IsSinglePlayer) continue;
