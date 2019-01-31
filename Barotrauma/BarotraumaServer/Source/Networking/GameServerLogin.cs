@@ -199,7 +199,7 @@ namespace Barotrauma.Networking
         {
             DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
 
-            if (GameMain.Config.RequireSteamAuthentication && steamID == 0)
+            if (GameMain.Config.RequireSteamAuthentication && connection!=OwnerConnection && steamID == 0)
             {
                 DebugConsole.Log("Disconnecting " + connection.RemoteEndPoint + ", Steam authentication required.");
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
