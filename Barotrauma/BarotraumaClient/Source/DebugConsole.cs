@@ -1260,48 +1260,7 @@ namespace Barotrauma
                 }
             );
 
-            commands.Add(new Command("reloadtextures|reloadtexture", "", (string[] args) =>
-            {
-                if (Screen.Selected is SubEditorScreen subScreen)
-                {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadTexture());
-                    }
-                }
-                else
-                {
-                    var character = Character.Controlled;
-                    var item = character?.FocusedItem;
-                    if (item != null)
-                    {
-                        item.Sprite.ReloadTexture();
-                    }
-                    else if (character != null)
-                    {
-                        foreach (var limb in character.AnimController.Limbs)
-                        {
-                            limb.Sprite?.ReloadTexture();
-                            limb.DamagedSprite?.ReloadTexture();
-                            limb.DeformSprite?.Sprite.ReloadTexture();
-                            // TODO: update specular
-                            limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
-                            limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
-                        }
-                    }
-                    else
-                    {
-                        ThrowError("Not controlling any character!");
-                        return;
-                    }
-                }
-            }, isCheat: true));
-
-            commands.Add(new Command("limbscale", "Note: the changes are not saved!", (string[] args) =>
+            commands.Add(new Command("limbscale", "Define the limbscale for the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
             {
                 var character = Character.Controlled;
                 if (character == null)
@@ -1326,7 +1285,7 @@ namespace Barotrauma
                 character.TeleportTo(pos);
             }, isCheat: true));
 
-            commands.Add(new Command("jointscale", "Note: the changes are not saved!", (string[] args) =>
+            commands.Add(new Command("jointscale", "Define the jointscale for the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
             {
                 var character = Character.Controlled;
                 if (character == null)
@@ -1351,7 +1310,7 @@ namespace Barotrauma
                 character.TeleportTo(pos);
             }, isCheat: true));
 
-            commands.Add(new Command("ragdollscale", "Note: the changes are not saved!", (string[] args) =>
+            commands.Add(new Command("ragdollscale", "Rescale the ragdoll of the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
             {
                 var character = Character.Controlled;
                 if (character == null)
@@ -1377,7 +1336,7 @@ namespace Barotrauma
                 character.TeleportTo(pos);
             }, isCheat: true));
 
-            commands.Add(new Command("recreateragdoll", "", (string[] args) =>
+            commands.Add(new Command("recreateragdoll", "Recreate the ragdoll of the controlled character. Provide id or name if you want to target another character.", (string[] args) =>
             {
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
@@ -1390,7 +1349,7 @@ namespace Barotrauma
                 character.TeleportTo(pos);
             }, isCheat: true));
 
-            commands.Add(new Command("resetragdoll", "", (string[] args) =>
+            commands.Add(new Command("resetragdoll", "Reset the ragdoll of the controlled character. Provide id or name if you want to target another character.", (string[] args) =>
             {
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
@@ -1401,9 +1360,43 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
             }, isCheat: true));
 
-            commands.Add(new Command("reloadwearables|reloadxml", "In game, reloads the xml where limbs and wearable sprites (clothing) of the character is defined. In subeditor, reloads the xml definition of the selected item(s)/structure(s).", args =>
+            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the xml(s) where limbs and wearable sprites (clothing) of the controlled character are defined. Also reloads textures. Provide id or name if you want to target another character.", args =>
             {
-                if (Screen.Selected is SubEditorScreen subScreen)
+                var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                foreach (var limb in character.AnimController.Limbs)
+                {
+                    limb.Sprite?.ReloadTexture();
+                    limb.DamagedSprite?.ReloadTexture();
+                    limb.DeformSprite?.Sprite.ReloadTexture();
+                    foreach (var wearable in limb.WearingItems)
+                    {
+                        wearable.Sprite.ReloadXML();
+                        wearable.Sprite.ReloadTexture();
+                    }
+                    foreach (var wearable in limb.OtherWearables)
+                    {
+                        wearable.Sprite.ReloadXML();
+                        wearable.Sprite.ReloadTexture();
+                    }
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("reloadxml", "Reloads the xml definition of the selected item(s)/structure(s) (SubEditor). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadxml id itemid. Example 2: reloadxml name \"Sprite name\"", args =>
+            {
+                if (Screen.Selected is SpriteEditorScreen)
+                {
+                    return;
+                }
+                else if (args.Length > 1)
+                {
+                    TryDoActionOnSprite(args[0], args[1], s => s.ReloadXML());
+                }
+                else if (Screen.Selected is SubEditorScreen subScreen)
                 {
                     if (!MapEntity.SelectedAny)
                     {
@@ -1416,19 +1409,115 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
-                    if (character == null)
-                    {
-                        ThrowError("Not controlling any character!");
-                        return;
-                    }
-                    foreach (var limb in character.AnimController.Limbs)
-                    {
-                        limb.WearingItems.ForEach(i => i.Sprite.ReloadXML());
-                        limb.OtherWearables.ForEach(w => w.Sprite.ReloadXML());
-                    }
+                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("reloadtexture|reloadtextures", "In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
+            {
+                if (Screen.Selected is SpriteEditorScreen)
+                {
+                    return;
+                }
+                else if (args.Length > 1)
+                {
+                    TryDoActionOnSprite(args[0], args[1], s => s.ReloadTexture());
+                }
+                else if (Screen.Selected is SubEditorScreen subScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadTexture());
+                    }
+                }
+                else
+                {
+                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("reloadsprite|reloadsprites", "Reload xml and texture of the given sprite(s). In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
+            {
+                if (Screen.Selected is SpriteEditorScreen)
+                {
+                    return;
+                }
+                else if (args.Length > 1)
+                {
+                    TryDoActionOnSprite(args[0], args[1], s =>
+                    {
+                        s.ReloadXML();
+                        s.ReloadTexture();
+                    });
+                }
+                else if (Screen.Selected is SubEditorScreen subScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        MapEntity.SelectedList.ForEach(e =>
+                        {
+                            if (e.Sprite != null)
+                            {
+                                e.Sprite.ReloadXML();
+                                e.Sprite.ReloadTexture();
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                }
+            }, isCheat: true));
+        }
+
+        private static bool TryDoActionOnSprite(string firstArg, string secondArg, Action<Sprite> action)
+        {
+            switch (firstArg)
+            {
+                case "name":
+                    var sprites = Sprite.LoadedSprites.Where(s => s.Name?.ToLowerInvariant() == secondArg.ToLowerInvariant());
+                    if (sprites.Any())
+                    {
+                        foreach (var s in sprites)
+                        {
+                            action(s);
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        ThrowError("Cannot find any matching sprites by the name: " + secondArg);
+                        return false;
+                    }
+                case "identifier":
+                case "id":
+                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID?.ToLowerInvariant() == secondArg.ToLowerInvariant());
+                    if (sprites.Any())
+                    {
+                        foreach (var s in sprites)
+                        {
+                            action(s);
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        ThrowError("Cannot find any matching sprites by the id: " + secondArg);
+                        return false;
+                    }
+                default:
+                    ThrowError("The first argument must be either 'name' or 'id'");
+                    return false;
+            }
         }
     }
 }

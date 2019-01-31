@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -388,6 +389,33 @@ namespace Barotrauma
         {
             IsOutpost = true;
             PhysicsBody.FarseerBody.IsStatic = true;
+            
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (me.Submarine != this) { continue; }
+                if (me is Item item)
+                {
+                    item.Indestructible = true;
+                    foreach (ItemComponent ic in item.components)
+                    {
+                        if (ic is ConnectionPanel connectionPanel)
+                        {
+                            //prevent rewiring
+                            connectionPanel.Locked = true;
+                        }
+                        else if (ic is Pickable pickable)
+                        {
+                            //prevent picking up (or deattaching) items
+                            pickable.CanBePicked = false;
+                            pickable.CanBeSelected = false;
+                        }
+                    }
+                }
+                else if (me is Structure structure)
+                {
+                    structure.Indestructible = true;
+                }
+            }
         }
 
         /// <summary>

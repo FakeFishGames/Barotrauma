@@ -273,6 +273,7 @@ namespace Barotrauma
                     DebugConsole.Update();
                     if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
+                    SteamManager.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;

@@ -1508,32 +1508,6 @@ namespace Barotrauma
                 {
                     EndOutpost = outpost;
                 }
-
-                foreach (MapEntity me in MapEntity.mapEntityList)
-                {
-                    if (me.Submarine != outpost) { continue; }
-                    if (me is Item item)
-                    {
-                        foreach (ItemComponent ic in item.components)
-                        {
-                            if (ic is ConnectionPanel connectionPanel)
-                            {
-                                //prevent rewiring
-                                connectionPanel.Locked = true;
-                            }
-                            else if (ic is Pickable pickable)
-                            {
-                                //prevent picking up (or deattaching) items
-                                pickable.CanBePicked = false;
-                                pickable.CanBeSelected = false;
-                            }
-                        }
-                    }
-                    else if (me is Structure structure)
-                    {
-                        structure.Indestructible = true;
-                    }
-                }
             }            
         }
 
