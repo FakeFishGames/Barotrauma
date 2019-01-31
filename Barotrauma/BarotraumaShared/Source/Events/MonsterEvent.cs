@@ -81,10 +81,12 @@ namespace Barotrauma
 
         public override bool CanAffectSubImmediately(Level level)
         {
+            float maxRange = Items.Components.Sonar.DefaultSonarRange * 0.8f;
+
             List<Vector2> positions = GetAvailableSpawnPositions();
             foreach (Vector2 position in positions)
             {
-                if (Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition) < 10000.0f * 10000.0f)
+                if (Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition) < maxRange * maxRange)
                 {
                     return true;
                 }
