@@ -524,7 +524,6 @@ namespace Barotrauma
             LightSource?.Remove();
             LightSource = null;
 
-            // TODO: remove wearing items?
             OtherWearables?.ForEach(w => w.Sprite.Remove());
             OtherWearables = null;
         }
