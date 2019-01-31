@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class BasicTutorial : Tutorial
+    class BasicTutorial : ScenarioTutorial
     {
         public BasicTutorial(XElement element)
             : base(element)
@@ -663,14 +663,14 @@ namespace Barotrauma.Tutorials
                 //TODO: reimplement
                 //enemy.Health = 50.0f;
 
-                enemy.AIController.State = AIController.AIState.None;
+                enemy.AIController.State = AIController.AIState.Idle;
 
                 Vector2 targetPos = Character.Controlled.WorldPosition + new Vector2(0.0f, 3000.0f);
 
                 Vector2 steering = targetPos - enemy.WorldPosition;
                 if (steering != Vector2.Zero) steering = Vector2.Normalize(steering);
 
-                enemy.AIController.Steering = steering * 2.0f;
+                enemy.AIController.Steering = steering * enemy.AnimController.GetCurrentSpeed(true);
 
                 yield return CoroutineStatus.Running;
             } while (capacitors.FirstOrDefault(c => c.Charge > 0.4f) == null);

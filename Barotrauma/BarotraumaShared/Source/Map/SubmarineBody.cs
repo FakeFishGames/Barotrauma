@@ -372,20 +372,23 @@ namespace Barotrauma
                 {
                     //if the character isn't inside the bounding box, continue
                     if (!Submarine.RectContains(worldBorders, limb.WorldPosition)) continue;
-                
+
                     //cast a line from the position of the character to the same direction as the translation of the sub
                     //and see where it intersects with the bounding box
-                    Vector2? intersection = MathUtils.GetLineRectangleIntersection(limb.WorldPosition,
-                        limb.WorldPosition + translateDir*100000.0f, worldBorders);
+                    if (!MathUtils.GetLineRectangleIntersection(limb.WorldPosition,
+                        limb.WorldPosition + translateDir * 100000.0f, worldBorders, out Vector2 intersection))
+                    {
+                        //should never happen when casting a line out from inside the bounding box
+                        Debug.Assert(false);
+                        continue;
+                    }
 
-                    //should never be null when casting a line out from inside the bounding box
-                    Debug.Assert(intersection != null);
 
                     //"+ translatedir" in order to move the character slightly away from the wall
-                    c.AnimController.SetPosition(ConvertUnits.ToSimUnits(c.WorldPosition + ((Vector2)intersection - limb.WorldPosition)) + translateDir);
+                    c.AnimController.SetPosition(ConvertUnits.ToSimUnits(c.WorldPosition + (intersection - limb.WorldPosition)) + translateDir);
 
                     return;
-                }                
+                }
 
             }
         }

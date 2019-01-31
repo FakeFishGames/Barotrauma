@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics;
@@ -242,8 +243,10 @@ namespace Barotrauma
 
             commands.Add(new Command("disablecrewai", "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
             {
-                HumanAIController.DisableCrewAI = true;
-                NewMessage("Crew AI disabled", Color.White);
+                ThrowError("Karma has not been fully implemented yet, and is disabled in this version of Barotrauma.");
+                return;
+                /*if (GameMain.Server == null) return;
+                GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;*/
             }));
 
             commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
@@ -610,6 +613,18 @@ namespace Barotrauma
                 new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos, null);
             }, isCheat: true));
 
+            commands.Add(new Command("showseed|showlevelseed", "showseed: Show the seed of the current level.", (string[] args) =>
+            {
+                if (Level.Loaded == null)
+                {
+                    ThrowError("No level loaded.");
+                }
+                else
+                {
+                    NewMessage("Level seed: " + Level.Loaded.Seed);
+                }
+            },null));
+
 #if DEBUG
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
@@ -622,6 +637,78 @@ namespace Barotrauma
                 Hull.WaveSpread = spread;
                 Hull.WaveDampening = damp;
             }, null));
+
+            commands.Add(new Command("testlevels", "testlevels", (string[] args) =>
+            {
+                CoroutineManager.StartCoroutine(TestLevels());
+            },
+            null));
+
+            IEnumerable<object> TestLevels()
+            {
+                Submarine selectedSub = null;
+                string subName = GameMain.Config.QuickStartSubmarineName;
+                if (!string.IsNullOrEmpty(subName))
+                {
+                    selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
+                }
+
+                int count = 0;
+                while (true)
+                {
+                    var gamesession = new GameSession(
+                        Submarine.SavedSubmarines.GetRandom(s => !s.HasTag(SubmarineTag.HideInMenus)),
+                        "Data/Saves/test.xml",
+                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
+                        missionPrefab: null);
+                    string seed = ToolBox.RandomSeed(16);
+                    gamesession.StartRound(seed);
+
+                    Rectangle subWorldRect = Submarine.MainSub.Borders;
+                    subWorldRect.Location += new Point((int)Submarine.MainSub.WorldPosition.X, (int)Submarine.MainSub.WorldPosition.Y);
+                    subWorldRect.Y -= subWorldRect.Height;
+                    foreach (var ruin in Level.Loaded.Ruins)
+                    {
+                        if (ruin.Area.Intersects(subWorldRect))
+                        {
+                            ThrowError("Ruins intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Name);
+                            yield return CoroutineStatus.Success;
+                        }
+                    }
+                    
+                    var levelCells = Level.Loaded.GetCells(
+                        Submarine.MainSub.WorldPosition,
+                        Math.Max(Submarine.MainSub.Borders.Width / Level.GridCellSize, 2));
+                    foreach (var cell in levelCells)
+                    {
+                        Vector2 minExtents = new Vector2(
+                            cell.Edges.Min(e => Math.Min(e.Point1.X, e.Point2.X)),
+                            cell.Edges.Min(e => Math.Min(e.Point1.Y, e.Point2.Y)));
+                        Vector2 maxExtents = new Vector2(
+                            cell.Edges.Max(e => Math.Max(e.Point1.X, e.Point2.X)),
+                            cell.Edges.Max(e => Math.Max(e.Point1.Y, e.Point2.Y)));
+                        Rectangle cellRect = new Rectangle(
+                            (int)minExtents.X, (int)minExtents.Y, 
+                            (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
+                        if (cellRect.Intersects(subWorldRect))
+                        {
+                            ThrowError("Level cells intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Name);
+                            yield return CoroutineStatus.Success;
+                        }
+                    }
+
+                    GameMain.GameSession.EndRound("");
+                    Submarine.Unload();
+
+                    count++;
+                    NewMessage("Level seed " + seed + " ok (test #" + count + ")");
+#if CLIENT
+                    //dismiss round summary and any other message boxes
+                    GUIMessageBox.CloseAll();
+#endif
+                    yield return CoroutineStatus.Running;
+                }
+            }
 #endif
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
@@ -773,6 +860,35 @@ namespace Barotrauma
                 GameSettings.VerboseLogging = !GameSettings.VerboseLogging;
                 NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
+
+
+            commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    string packageName = string.Join(" ", args).ToLower();
+                    var package = GameMain.Config.SelectedContentPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
+                    if (package == null)
+                    {
+                        ThrowError("Content package \"" + packageName + "\" not found.");
+                    }
+                    else
+                    {
+                        package.CalculateHash(logging: true);
+                    }
+                }
+                else
+                {
+                    GameMain.Config.SelectedContentPackages.First().CalculateHash(logging: true);
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    GameMain.Config.SelectedContentPackages.Select(cp => cp.Name).ToArray()
+                };
+            }));
 
 #if DEBUG
             commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>

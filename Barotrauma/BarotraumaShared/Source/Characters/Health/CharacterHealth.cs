@@ -449,6 +449,7 @@ namespace Barotrauma
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
                     affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    affliction.Source = newAffliction.Source;
                     CalculateVitality();
                     if (Vitality <= MinVitality) Kill();
                     return;
@@ -457,7 +458,11 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-            limbHealth.Afflictions.Add(newAffliction.Prefab.Instantiate(Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality))));
+
+            var copyAffliction = newAffliction.Prefab.Instantiate(
+                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
+                newAffliction.Source);
+            limbHealth.Afflictions.Add(copyAffliction);
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -472,8 +477,9 @@ namespace Barotrauma
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
                     float newStrength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
-                    if (affliction == stunAffliction) Character.SetStun(newStrength, true, true);
+                    if (affliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                     affliction.Strength = newStrength;
+                    affliction.Source = newAffliction.Source;
                     CalculateVitality();
                     if (Vitality <= MinVitality) Kill();
                     return;
@@ -482,7 +488,9 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-            afflictions.Add(newAffliction.Prefab.Instantiate(Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality))));
+            afflictions.Add(newAffliction.Prefab.Instantiate(
+                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
+                source: newAffliction.Source));
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -597,7 +605,7 @@ namespace Barotrauma
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
         }
 
-        public Pair<CauseOfDeathType, AfflictionPrefab> GetCauseOfDeath()
+        public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()
         {
             List<Affliction> currentAfflictions = GetAllAfflictions(true);
 
@@ -618,7 +626,7 @@ namespace Barotrauma
                 causeOfDeath = Character.AnimController.InWater ? CauseOfDeathType.Drowning : CauseOfDeathType.Suffocation;
             }
 
-            return new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeath, strongestAffliction.Prefab);
+            return new Pair<CauseOfDeathType, Affliction>(causeOfDeath, strongestAffliction);
         }
 
         private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions)

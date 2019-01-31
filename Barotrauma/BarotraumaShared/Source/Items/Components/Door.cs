@@ -42,6 +42,9 @@ namespace Barotrauma.Items.Components
 
         private bool isBroken;
 
+        //openState when the vertices of the convex hull were last calculated
+        private float lastConvexHullState;
+
         public bool IsBroken
         {
             get { return isBroken; }
@@ -150,14 +153,13 @@ namespace Barotrauma.Items.Components
         {
             get { return openState; }
             set 
-            {
-                
-                float prevValue = openState;
+            {                
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
-                if (openState == prevValue) return;
-
 #if CLIENT
+                float size = isHorizontal ? item.Rect.Width : item.Rect.Height;
+                if (Math.Abs(lastConvexHullState - openState) * size < 5.0f) { return; }
                 UpdateConvexHulls();
+                lastConvexHullState = openState;
 #endif
             }
         }

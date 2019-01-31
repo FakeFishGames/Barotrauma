@@ -128,7 +128,7 @@ namespace Barotrauma
 
             switch (enemyAI.State)
             {
-                case AIController.AIState.None:
+                case AIController.AIState.Idle:
                     if (attachToWalls && character.Submarine == null && Level.Loaded != null)
                     {
                         raycastTimer -= deltaTime;
@@ -144,12 +144,11 @@ namespace Barotrauma
                                 {
                                     foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                     {
-                                        Vector2? intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center);
-                                        if (intersection.HasValue)
+                                        if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
                                         {
                                             attachSurfaceNormal = edge.GetNormal(cell);
                                             attachTargetBody = cell.Body;
-                                            wallAttachPos = ConvertUnits.ToSimUnits(intersection.Value);
+                                            wallAttachPos = ConvertUnits.ToSimUnits(intersection);
                                             break;
                                         }
                                     }
@@ -181,18 +180,24 @@ namespace Barotrauma
                         {
                             //move closer to the wall
                             DeattachFromBody();
-                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
-                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, 2.0f);
+                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, character.AnimController.GetCurrentSpeed(false) * 0.1f);
+                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, character.AnimController.GetCurrentSpeed(true));
                         }
                     }
                     break;
                 case AIController.AIState.Attack:
                     if (enemyAI.AttackingLimb != null)
                     {
-                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null &&
-                            Vector2.DistanceSquared(transformedAttachPos, enemyAI.AttackingLimb.SimPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null)
                         {
-                            AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                            // is not attached or is attached to something else
+                            if (!IsAttached || IsAttached && attachJoints[0].BodyB == attachTargetBody)
+                            {
+                                if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                                {
+                                    AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
+                                }
+                            }
                         }
                     }
                     break;
@@ -253,14 +258,14 @@ namespace Barotrauma
                 KinematicBodyB = true,
                 CollideConnected = false,
             };
-
-            // Limb scale is already taken into account when creating the collider.
-            Vector2 colliderFront = collider.GetLocalFront(MathHelper.ToRadians(attachLimb.ragdoll.RagdollParams.SpritesheetOrientation));
-            if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
-            collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), angle);
-
             GameMain.World.AddJoint(limbJoint);
             attachJoints.Add(limbJoint);
+
+            // Limb scale is already taken into account when creating the collider.
+            Vector2 colliderFront = collider.GetLocalFront();
+            if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
+            collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2);
+
             var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
             {
                 FrequencyHz = 10.0f,

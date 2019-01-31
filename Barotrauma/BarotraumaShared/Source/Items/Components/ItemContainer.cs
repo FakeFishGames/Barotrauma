@@ -51,60 +51,10 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        //the position of the first item in the container
-        private Vector2 itemPos;
-        [Serialize("0.0,0.0", false)]
-        public Vector2 ItemPos
-        {
-            get { return itemPos; }
-            set { itemPos = value; }
-        }
-
-        //item[i].Pos = itemPos + itemInterval*i 
-        private Vector2 itemInterval;
-        [Serialize("0.0,0.0", false)]
-        public Vector2 ItemInterval
-        {
-            get { return itemInterval; }
-            set { itemInterval = value; }
-        }
-
-        private float itemRotation;
-        [Serialize(0.0f, false)]
-        public float ItemRotation
-        {
-            get { return MathHelper.ToDegrees(itemRotation); }
-            set { itemRotation = MathHelper.ToRadians(value); }
-        }
-
-
-        private Vector2 hudPos;
         [Serialize("0.5,0.5", false)]
-        public Vector2 HudPos
-        {
-            get { return hudPos; }
-            set 
-            { 
-                hudPos = value;
-            }
-        }
-
-        private int slotsPerRow;
+        public Vector2 HudPos { get; set; }
         [Serialize(5, false)]
-        public int SlotsPerRow
-        {
-            get { return slotsPerRow; }
-            set { slotsPerRow = value; }
-        }
-
-
-        private string uiLabel;
-        [Serialize(null, false)]
-        public string UILabel
-        {
-            get { return uiLabel; }
-            set { uiLabel = value; }
-        }
+        public int SlotsPerRow { get; set; }
 
         public List<RelatedItem> ContainableItems
         {
@@ -114,7 +64,7 @@ namespace Barotrauma.Items.Components
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            Inventory = new ItemInventory(item, this, capacity, hudPos, slotsPerRow);            
+            Inventory = new ItemInventory(item, this, capacity, HudPos, SlotsPerRow);            
             containableItems = new List<RelatedItem>();
             
             foreach (XElement subElement in element.Elements())
@@ -287,6 +237,11 @@ namespace Barotrauma.Items.Components
                 Item item = Entity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
 
+                if (i >= Inventory.Capacity)
+                {
+                    continue;
+                }
+
                 Inventory.TryPutItem(item, i, false, false, null, false);
             }
 
@@ -299,19 +254,53 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
-            foreach (Item item in Inventory.Items)
-            {
-                if (item == null) continue;
-                item.Drop();
-            }
-
 #if CLIENT
             inventoryTopSprite?.Remove();
             inventoryBackSprite?.Remove();
             inventoryBottomSprite?.Remove();
             ContainedStateIndicator?.Remove();
+
+            if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
+            {
+                string itemNames = string.Empty;
+
+                foreach (Item item in Inventory.Items)
+                {
+                    if (item == null) continue;
+                    itemNames += item.Name + "\n";
+                }
+
+                if (itemNames.Length > 0)
+                {
+                    var msgBox = new GUIMessageBox(Item.Name, TextManager.Get("DeletingContainerWithItems") + itemNames, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                    {
+                        Inventory.DeleteAllItems();
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    msgBox.Buttons[1].OnClicked = (btn, userdata) =>
+                    {
+                        foreach (Item item in Inventory.Items)
+                        {
+                            if (item == null) continue;
+                            item.Drop();
+                        }
+                        msgBox.Close();
+                        return true;
+                    };
+                }
+                return;
+            }
 #endif
-        }
+
+            foreach (Item item in Inventory.Items)
+            {
+                if (item == null) continue;
+                item.Drop();
+            }               
+        }        
 
         public override void Load(XElement componentElement)
         {

@@ -107,7 +107,7 @@ namespace Barotrauma
             //husk appendage already created, don't do anything
             if (huskAppendage != null) return;
 
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "huskappendage.xml"));
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "Huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
             var limbElement = doc.Root.Element("limb");
@@ -163,9 +163,8 @@ namespace Barotrauma
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (Strength < Prefab.MaxStrength * 0.5f || character.Removed) { return; }
 
             //don't turn the character into a husk if any of its limbs are severed
             if (character.AnimController?.LimbJoints != null)
@@ -194,7 +193,15 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
+            XDocument doc = XMLExtensions.TryLoadXml(configFile);
+            if (doc?.Root == null)
+            {
+                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - humanhusk config file ("+configFile+") could not be read.");
+                yield return CoroutineStatus.Success;
+            }
+            
             character.Info.Ragdoll = null;
+            character.Info.SourceElement = doc.Root;
             var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, false, true);
 
             foreach (Limb limb in husk.AnimController.Limbs)

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -12,20 +11,15 @@ namespace Barotrauma.Tutorials
         public static List<Tutorial> Tutorials;
 
         protected GUIComponent infoBox;
+        protected XElement configElement;
 
-        private XElement configElement;
-
-        private Character character;
-
-        private SpawnType spawnPointType;
-
-        private string submarinePath;
-        private string levelSeed;
+        private enum TutorialType { None, Scenario, Contextual };
+        private TutorialType tutorialType = TutorialType.None;
 
         public string Name
         {
             get;
-            private set;
+            protected set;
         }
 
         private bool completed;
@@ -110,63 +104,18 @@ namespace Barotrauma.Tutorials
         {
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
-            submarinePath = element.GetAttributeString("submarinepath", "");
-            levelSeed = element.GetAttributeString("levelseed", "tuto");
-
             Completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
-
-            Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
+            Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
         }
         
-        public void Initialize()
+        public virtual void Initialize()
         {
-            GameMain.Instance.ShowLoading(Loading());
-        }
 
-        private IEnumerable<object> Loading()
-        {
-            yield return CoroutineStatus.Running;
-
-            Submarine.MainSub = Submarine.Load(submarinePath, "", true);
-            yield return CoroutineStatus.Running;
-
-            GameMain.GameSession = new GameSession(Submarine.MainSub, "",
-                GameModePreset.List.Find(g => g.Identifier == "tutorial"));
-            (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
-            GameMain.GameSession.StartRound(levelSeed);
-            GameMain.GameSession.EventManager.Events.Clear();
-            GameMain.GameScreen.Select();
-
-            yield return CoroutineStatus.Success;
         }
 
         public virtual void Start()
         {
-            WayPoint wayPoint = WayPoint.GetRandom(spawnPointType, null);
-            if (wayPoint == null)
-            {
-                DebugConsole.ThrowError("A waypoint with the spawntype \"" + spawnPointType + "\" is required for the tutorial event");
-                return;
-            }
-
-            CharacterInfo charInfo = configElement.Element("Character") == null ?                
-                new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
-                new CharacterInfo(configElement.Element("Character"));
-            
-            character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
-            Character.Controlled = character;
-            character.GiveJobItems(null);
-
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            if (idCard == null)
-            {
-                DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
-                return;
-            }
-            idCard.AddTag("com");
-            idCard.AddTag("eng");
-            
-            CoroutineManager.StartCoroutine(UpdateState());
+           
         }
 
         public virtual void AddToGUIUpdateList()
@@ -176,45 +125,13 @@ namespace Barotrauma.Tutorials
 
         public virtual void Update(float deltaTime)
         {
-            if (character != null)
-            {
-                if (Character.Controlled == null)
-                {
-                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
-                    infoBox = null;
-                }
-                else if (Character.Controlled.IsDead)
-                {
-                    Character.Controlled = null;
-
-                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
-                    infoBox = null;
-                    CoroutineManager.StartCoroutine(Dead());
-                }
-            }
+           
         }
 
         public virtual IEnumerable<object> UpdateState()
         {
             yield return CoroutineStatus.Success;
         }
-
-        private IEnumerable<object> Dead()
-        {
-            yield return new WaitForSeconds(3.0f);
-
-            var messageBox = new GUIMessageBox("You have died", "Do you want to try again?", new string[] { "Yes", "No" });
-
-            messageBox.Buttons[0].OnClicked += Restart;
-            messageBox.Buttons[0].OnClicked += messageBox.Close;
-
-
-            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
-            messageBox.Buttons[1].OnClicked += messageBox.Close;
-
-            yield return CoroutineStatus.Success;
-        }
-
 
         protected bool CloseInfoFrame(GUIButton button, object userData)
         {
@@ -251,11 +168,51 @@ namespace Barotrauma.Tutorials
             return infoBlock;
         }
 
+        protected GUIComponent CreateInfoFrame(string title, string text, int width, int height, string anchorStr, bool hasButton = false)
+        {
+            if (hasButton) height += 30;
 
-        private bool Restart(GUIButton button, object obj)
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
+
+            height += wrappedText.Split('\n').Length * 25;
+
+            if (title.Length > 0)
+            {
+                height += 35;
+            }
+
+            Anchor anchor = Anchor.TopRight;
+            Enum.TryParse(anchorStr, out anchor);
+
+            var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
+            infoBlock.Flash(Color.Green);
+
+            if (title.Length > 0)
+            {
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1f, .35f), infoBlock.RectTransform, Anchor.TopCenter,
+                Pivot.TopCenter), title, font: GUI.LargeFont, textAlignment: Alignment.Center);
+            }
+
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
+                text, wrap: true);
+
+            if (hasButton)
+            {
+                var okButton = new GUIButton(new RectTransform(new Point(80, 25), infoBlock.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 5) },
+                    TextManager.Get("OK"))
+                {
+                    OnClicked = CloseInfoFrame
+                };
+            }
+
+            GUI.PlayUISound(GUISoundType.Message);
+
+            return infoBlock;
+        }
+
+        protected bool Restart(GUIButton button, object obj)
         {
             TutorialMode.StartTutorial(this);
-
             return true;
         }
     }

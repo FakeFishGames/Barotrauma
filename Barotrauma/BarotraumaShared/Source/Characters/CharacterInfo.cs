@@ -96,6 +96,22 @@ namespace Barotrauma
             }
         }
 
+        private Sprite clothingSprite;
+        public Sprite ClothingSprite
+        {
+            get
+            {
+                if (clothingSprite == null)
+                {
+                    if (Job != null && Job.Prefab.ClothingElement != null)
+                    {
+                        clothingSprite = new Sprite(Job.Prefab.ClothingElement.Element("sprite"));
+                    }
+                }
+                return clothingSprite;
+            }
+        }
+
         private Sprite portraitBackground;
         public Sprite PortraitBackground
         {
@@ -126,7 +142,7 @@ namespace Barotrauma
             }
         }
 
-        public XElement SourceElement { get; private set; }
+        public XElement SourceElement { get; set; }
 
         public XElement HairElement { get; private set; }
         public XElement BeardElement { get; private set; }
@@ -308,7 +324,7 @@ namespace Barotrauma
         }
 
         // Used for loading the data
-        public CharacterInfo(XElement element, string ragdollFileName = null)
+        public CharacterInfo(XElement element)
         {
             ID = idCounter;
             idCounter++;
@@ -319,10 +335,14 @@ namespace Barotrauma
             File = element.GetAttributeString("file", "");
             SourceElement = GetConfig(File).Root;
             Salary = element.GetAttributeInt("salary", 1000);
-            CalculateHeadSpriteRange();
-            HeadSpriteId = element.GetAttributeInt("headspriteid", 1);
+            headSpriteId = element.GetAttributeInt("headspriteid", 1);
+            HairIndex = element.GetAttributeInt("hairindex", -1);
+            BeardIndex = element.GetAttributeInt("beardindex", -1);
+            MoustacheIndex = element.GetAttributeInt("moustacheindex", -1);
+            FaceAttachmentIndex = element.GetAttributeInt("faceattachmentindex", -1);
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             string personalityName = element.GetAttributeString("personality", "");
+            ragdollFileName = element.GetAttributeString("ragdoll", string.Empty);
             if (!string.IsNullOrEmpty(personalityName))
             {
                 personalityTrait = NPCPersonalityTrait.List.Find(p => p.Name == personalityName);
@@ -333,10 +353,7 @@ namespace Barotrauma
                 Job = new Job(subElement);
                 break;
             }
-            if (ragdollFileName != null)
-            {
-                this.ragdollFileName = ragdollFileName;
-            }
+            LoadHeadAttachments();
         }
 
         public void LoadHeadSprite()
@@ -584,7 +601,7 @@ namespace Barotrauma
                     return true;
                 }
 
-                bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count - 1;
+                bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
                 IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
             }
         }
@@ -599,7 +616,7 @@ namespace Barotrauma
 
             foreach (Skill skill in Job.Skills)
             {
-                salary += (int)skill.Level * 10;
+                salary += (int)skill.Level * 50;
             }
 
             return salary;
@@ -649,7 +666,7 @@ namespace Barotrauma
             charElement.Add(
                 new XAttribute("name", Name),
                 new XAttribute("file", File),
-                new XAttribute("gender", gender == Gender.Male ? "m" : "f"),
+                new XAttribute("gender", gender == Gender.Male ? "male" : "female"),
                 new XAttribute("race", race.ToString()),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),

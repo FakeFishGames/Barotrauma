@@ -546,7 +546,10 @@ namespace Barotrauma
                     numberInput.IntValue = value.X;
                 else
                     numberInput.IntValue = value.Y;
-                
+
+                numberInput.MinValueInt = editableAttribute.MinValueInt;
+                numberInput.MaxValueInt = editableAttribute.MaxValueInt;
+
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
@@ -591,7 +594,10 @@ namespace Barotrauma
                     Font = GUI.SmallFont
                 };
 
+                numberInput.MinValueFloat = editableAttribute.MinValueFloat;
+                numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
+                numberInput.valueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;
@@ -642,7 +648,10 @@ namespace Barotrauma
                     Font = GUI.SmallFont
                 };
 
+                numberInput.MinValueFloat = editableAttribute.MinValueFloat;
+                numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
+                numberInput.valueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;
@@ -697,7 +706,10 @@ namespace Barotrauma
                     Font = GUI.SmallFont
                 };
 
+                numberInput.MinValueFloat = editableAttribute.MinValueFloat;
+                numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
+                numberInput.valueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;

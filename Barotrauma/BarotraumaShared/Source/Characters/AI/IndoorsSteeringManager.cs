@@ -53,7 +53,7 @@ namespace Barotrauma
             findPathTimer = Rand.Range(0.0f, 1.0f);
         }
 
-        public override void Update(float speed = 1)
+        public override void Update(float speed)
         {
             base.Update(speed);
 
@@ -68,7 +68,7 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
-        protected override Vector2 DoSteeringSeek(Vector2 target, float speed = 1)
+        protected override Vector2 DoSteeringSeek(Vector2 target, float speed)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (currentPath == null || Vector2.Distance(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
@@ -88,7 +88,7 @@ namespace Barotrauma
                     }
                 }
 
-                currentPath = pathFinder.FindPath(pos, target);
+                currentPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
 
                 findPathTimer = Rand.Range(1.0f, 1.2f);
 
@@ -188,6 +188,18 @@ namespace Barotrauma
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
+                        currentPath.SkipToNextNode();
+                    }
+                }
+                else
+                {
+                    //if the current node is below the character and the next one is above (or vice versa)
+                    //and both are on ladders, we can skip directly to the next one
+
+                    //e.g. no point in going down to reach the starting point of a path when we could go directly to the one above
+                    if (currentPath.CurrentNode.Ladders != null && currentPath.CurrentNode.Ladders == currentPath.NextNode?.Ladders &&
+                        Math.Sign(currentPath.CurrentNode.WorldPosition.Y - character.WorldPosition.Y) != Math.Sign(currentPath.NextNode.WorldPosition.Y - character.WorldPosition.Y))
+                    {
                         currentPath.SkipToNextNode();
                     }
                 }

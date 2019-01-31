@@ -26,6 +26,11 @@ namespace Barotrauma
             get { return false; }
         }
 
+        public int Winner
+        {
+            get { return winner; }
+        }
+
         public override string Description
         {
             get

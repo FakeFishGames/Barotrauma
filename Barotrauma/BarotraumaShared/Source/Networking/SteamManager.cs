@@ -154,7 +154,48 @@ namespace Barotrauma.Steam
             }
 
             DebugConsole.Log("Unlocked achievement \"" + achievementName + "\"");
-            return instance.client.Achievements.Trigger(achievementName);
+
+            bool unlocked = instance.client.Achievements.Trigger(achievementName);
+            if (!unlocked)
+            {
+                //can be caused by an incorrect identifier, but also happens during normal gameplay:
+                //SteamAchievementManager tries to unlock achievements that may or may not exist 
+                //(discovered[whateverbiomewasentered], kill[withwhateveritem], kill[somemonster] etc) so that we can add
+                //some types of new achievements without the need for client-side changes.
+#if DEBUG
+                DebugConsole.NewMessage("Failed to unlock achievement \"" + achievementName + "\".");
+#endif
+            }
+
+            return unlocked;
+        }
+
+        public static bool IncrementStat(string statName, int increment)
+        {
+            if (instance == null || !instance.isInitialized) { return false; }
+            DebugConsole.Log("Incremented stat \"" + statName + "\" by " + increment);
+            bool success = instance.client.Stats.Add(statName, increment);
+            if (!success)
+            {
+#if DEBUG
+                DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
+#endif
+            }
+            return success;
+        }
+
+        public static bool IncrementStat(string statName, float increment)
+        {
+            if (instance == null || !instance.isInitialized) { return false; }
+            DebugConsole.Log("Incremented stat \"" + statName + "\" by " + increment);
+            bool success = instance.client.Stats.Add(statName, increment);
+            if (!success)
+            {
+#if DEBUG
+                DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
+#endif
+            }
+            return success;
         }
 
         #region Connecting to servers
@@ -196,7 +237,10 @@ namespace Barotrauma.Steam
 
             foreach (ServerList.Server s in servers)
             {
-                if (query.Responded.Contains(s))
+                if (!ValidateServerInfo(s)) { continue; }
+
+                bool responded = query.Responded.Contains(s);
+                if (responded)
                 {
                     DebugConsole.Log(s.Name + " responded to server query.");
                 }
@@ -215,9 +259,14 @@ namespace Barotrauma.Steam
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
-                s.FetchRules();
-                s.OnReceivedRules += (_) =>
+                if (responded)
                 {
+                    s.FetchRules();
+                }
+                s.OnReceivedRules += (bool rulesReceived) =>
+                {
+                    if (!rulesReceived || s.Rules == null) { return; }
+
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
 
@@ -254,6 +303,14 @@ namespace Barotrauma.Steam
                 onServerFound(serverInfo);
             }
             query.Responded.Clear();
+        }
+
+        private static bool ValidateServerInfo(ServerList.Server server)
+        {
+            if (string.IsNullOrEmpty(server.Name)) { return false; }
+            if (server.Address == null) { return false; }
+
+            return true;
         }
 
         public static Auth.Ticket GetAuthSessionTicket()

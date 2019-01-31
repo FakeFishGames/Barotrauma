@@ -270,7 +270,14 @@ namespace Barotrauma
             }
             else
             {
-                IsHorizontal = (rect.Width > rect.Height);
+                if (BodyWidth > 0.0f && BodyHeight > 0.0f)
+                {
+                    IsHorizontal = BodyWidth > BodyHeight;
+                }
+                else
+                {
+                    IsHorizontal = (rect.Width > rect.Height);
+                }
             }
 
             StairDirection = prefab.StairDirection;
@@ -295,14 +302,7 @@ namespace Barotrauma
                     CreateStairBodies();
                 }
             }
-
-#if CLIENT
-            if (prefab.CastShadow)
-            {
-                GenerateConvexHull();
-            }
-#endif
-
+            
             InsertToList();
         }
 
@@ -571,12 +571,12 @@ namespace Barotrauma
 #endif
         }
 
-        public override bool IsVisible(Rectangle WorldView)
+        public override bool IsVisible(Rectangle worldView)
         {
             Rectangle worldRect = WorldRect;
 
-            if (worldRect.X > WorldView.Right || worldRect.Right < WorldView.X) return false;
-            if (worldRect.Y < WorldView.Y - WorldView.Height || worldRect.Y - worldRect.Height > WorldView.Y) return false;
+            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) return false;
+            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) return false;
 
             return true;
         }
@@ -585,8 +585,7 @@ namespace Barotrauma
         {
             if (prefab.Platform)
             {
-                Limb limb;
-                if ((limb = f2.Body.UserData as Limb) != null)
+                if (f2.Body.UserData is Limb limb)
                 {
                     if (limb.character.AnimController.IgnorePlatforms) return false;
                 }
@@ -840,9 +839,6 @@ namespace Barotrauma
                     Sections[sectionIndex].gap.Open = 0.0f;
                     Sections[sectionIndex].gap.Remove();
                     Sections[sectionIndex].gap = null;
-#if CLIENT
-                    if (CastShadow) GenerateConvexHull();
-#endif
                 }
             }
             else
@@ -911,9 +907,6 @@ namespace Barotrauma
                         GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 #endif
-#if CLIENT
-                    if (CastShadow) GenerateConvexHull();
-#endif
                 }
                 
                 float gapOpen = (damage / prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
@@ -967,7 +960,11 @@ namespace Barotrauma
             }
             Bodies.Clear();
             bodyDebugDimensions.Clear();
-            
+#if CLIENT
+            convexHulls?.ForEach(ch => ch.Remove());
+            convexHulls?.Clear();
+#endif
+
             bool hasHoles = false;
             var mergedSections = new List<WallSection>();
             for (int i = 0; i < Sections.Length; i++ )
@@ -980,7 +977,7 @@ namespace Barotrauma
                     if (!mergedSections.Any()) continue;
                     var mergedRect = GenerateMergedRect(mergedSections);
                     mergedSections.Clear();
-                    CreateRectBody(mergedRect);
+                    CreateRectBody(mergedRect, createConvexHull: true);
                 }
                 else
                 {
@@ -992,20 +989,20 @@ namespace Barotrauma
             if (mergedSections.Count > 0)
             {
                 var mergedRect = GenerateMergedRect(mergedSections);
-                CreateRectBody(mergedRect);
+                CreateRectBody(mergedRect, createConvexHull: true);
             }
 
             //if the section has holes (or is just one big hole with no bodies),
             //we need a sensor for repairtools to be able to target the structure
             if (hasHoles || !Bodies.Any())
             {
-                Body sensorBody = CreateRectBody(rect);
+                Body sensorBody = CreateRectBody(rect, createConvexHull: false);
                 sensorBody.CollisionCategories = Physics.CollisionRepair;
                 sensorBody.IsSensor = true;
             }
         }
 
-        private Body CreateRectBody(Rectangle rect)
+        private Body CreateRectBody(Rectangle rect, bool createConvexHull)
         {
             float diffFromCenter;
             if (IsHorizontal)
@@ -1050,12 +1047,18 @@ namespace Barotrauma
                 newBody.Position = structureCenter + (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) * ConvertUnits.ToSimUnits(diffFromCenter) + bodyOffset;
             }
 
-            //OffsetBody(newBody);            
+            if (createConvexHull)
+            {
+                CreateConvexHull(ConvertUnits.ToDisplayUnits(newBody.Position), rect.Size.ToVector2(), newBody.Rotation);
+            }
+
             Bodies.Add(newBody);
             bodyDebugDimensions.Add(new Vector2(ConvertUnits.ToSimUnits(rect.Width), ConvertUnits.ToSimUnits(rect.Height)));
 
             return newBody;
         }
+
+        partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation);
         
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
@@ -1130,20 +1133,7 @@ namespace Barotrauma
             string name = element.Attribute("name").Value;
             string identifier = element.GetAttributeString("identifier", "");
 
-            StructurePrefab prefab;
-            if (string.IsNullOrEmpty(identifier))
-            {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
-            }
-            else
-            {
-                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
-            }
-
+            StructurePrefab prefab = FindPrefab(name, identifier);
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading structure - structure prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
@@ -1172,10 +1162,27 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
             SerializableProperty.DeserializeProperties(s, element);
-#if CLIENT
-            if (s.FlippedX || s.FlippedY) s.GenerateConvexHull();            
-#endif
             return s;
+        }
+
+        public static StructurePrefab FindPrefab(string name, string identifier)
+        {
+            StructurePrefab prefab = null;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+                //3. not found, attempt to find a prefab that uses the previous name as an identifier
+                if (prefab == null) prefab = MapEntityPrefab.Find(null, name) as StructurePrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
+            }
+            return prefab;
         }
 
         public override XElement Save(XElement parentElement)

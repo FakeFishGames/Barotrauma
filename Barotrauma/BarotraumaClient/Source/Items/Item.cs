@@ -97,6 +97,18 @@ namespace Barotrauma
         partial void SetActiveSprite()
         {
             activeSprite = prefab.sprite;
+            if (Container != null)
+            {
+                foreach (ContainedItemSprite containedSprite in Prefab.ContainedSprites)
+                {
+                    if (containedSprite.MatchesContainer(Container))
+                    {
+                        activeSprite = containedSprite.Sprite;
+                        return;
+                    }
+                }
+            }
+
             foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
             {
                 if (condition <= brokenSprite.MaxCondition)
@@ -117,7 +129,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible) return;
+            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
             if (editing && !ShowItems) return;
             
             Color color = isHighlighted ? Color.Orange : GetSpriteColor();
@@ -175,7 +187,7 @@ namespace Barotrauma
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                             decorativeSprite.Sprite.DrawTiled(spriteBatch, 
                                 new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)), 
                                 new Vector2(rect.Width, rect.Height), color: color,
@@ -190,7 +202,7 @@ namespace Barotrauma
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                             float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, 
                                 SpriteRotation + rotation, Scale, activeSprite.effects,
                                 depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
@@ -228,7 +240,7 @@ namespace Barotrauma
                     {
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState);
+                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
 
                         var ca = (float)Math.Cos(-body.Rotation);
                         var sa = (float)Math.Sin(-body.Rotation);
@@ -313,7 +325,7 @@ namespace Barotrauma
             }
         }
 
-        partial void UpdateSpriteStates(float deltaTime)
+        public void UpdateSpriteStates(float deltaTime)
         {
             foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
             {
@@ -330,30 +342,46 @@ namespace Barotrauma
                             continue;
                         }
                     }
+
+                    //check if the sprite is active (whether it should be drawn or not)
                     var spriteState = spriteAnimState[decorativeSprite];
                     spriteState.IsActive = true;
-                    foreach (PropertyConditional conditional in decorativeSprite.Conditionals)
+                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
+                    {
+                        if (!ConditionalMatches(conditional))
+                        {
+                            spriteState.IsActive = false;
+                            break;
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+
+                    //check if the sprite should be animated
+                    bool animate = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
+                    {
+                        if (!ConditionalMatches(conditional)) { animate = false; break; }
+                    }
+                    if (!animate) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
+
+                    bool ConditionalMatches(PropertyConditional conditional)
                     {
                         if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
                         {
-                            if (conditional.Matches(this)) { continue; }                        
-                            spriteState.IsActive = false;
-                            break;                        
+                            if (!conditional.Matches(this)) { return false; }
                         }
                         else
                         {
                             foreach (ItemComponent component in components)
                             {
                                 if (component.Name != conditional.TargetItemComponentName) { continue; }
-                                if (conditional.Matches(component)) { continue; }
-                                spriteState.IsActive = false;
-                                break;
+                                if (!conditional.Matches(component)) { return false; }
                             }
                         }
+                        return true;
                     }
-                    if (!spriteState.IsActive) { continue; }
-                    spriteState.OffsetState += deltaTime;
-                    spriteState.RotationState += deltaTime;
                 }
             }
             
@@ -506,11 +534,11 @@ namespace Barotrauma
             if (editingHUD != null && editingHUD.UserData == this)
             {
                 elementsToMove.Add(editingHUD);
-            }
-
+            }       
+            
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.LinkUIToComponent > -1) continue;
+                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) continue;
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 elementsToMove.Add(ic.GuiFrame);
             }
@@ -530,10 +558,10 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.GuiFrame == null) continue;
-                if (ic.LinkUIToComponent < 0 || ic.LinkUIToComponent >= components.Count) continue;
-
-                ItemComponent linkedComponent = components[ic.LinkUIToComponent];
-                ic.GuiFrame.RectTransform.ScreenSpaceOffset = linkedComponent.GuiFrame.RectTransform.ScreenSpaceOffset;
+                var linkUIToComponent = ic.GetLinkUIToComponent();
+                if (linkUIToComponent == null) continue;
+                
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = linkUIToComponent.GuiFrame.RectTransform.ScreenSpaceOffset;
             }
         }
 
@@ -602,22 +630,25 @@ namespace Barotrauma
                 }
             }
 
-            if (itemInUseWarning != null) { itemInUseWarning.Visible = false; }
-            foreach (Character otherCharacter in Character.CharacterList)
+            if (itemInUseWarning != null && mergedHUDRect != Rectangle.Empty)
             {
-                if (otherCharacter != character &&
-                    otherCharacter.SelectedConstruction == character.SelectedConstruction)
+                itemInUseWarning.Visible = false;
+                foreach (Character otherCharacter in Character.CharacterList)
                 {
-                    ItemInUseWarning.Visible = true;
-                    if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
-                    itemInUseWarning.RectTransform.ScreenSpaceOffset = new Point(mergedHUDRect.X, mergedHUDRect.Bottom);
-                    itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
-                    if (itemInUseWarning.UserData != otherCharacter)
+                    if (otherCharacter != character &&
+                        otherCharacter.SelectedConstruction == character.SelectedConstruction)
                     {
-                        itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
-                        itemInUseWarning.UserData = otherCharacter;
+                        ItemInUseWarning.Visible = true;
+                        if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
+                        itemInUseWarning.RectTransform.ScreenSpaceOffset = new Point(mergedHUDRect.X, mergedHUDRect.Bottom);
+                        itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
+                        if (itemInUseWarning.UserData != otherCharacter)
+                        {
+                            itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
+                            itemInUseWarning.UserData = otherCharacter;
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }

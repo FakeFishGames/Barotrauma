@@ -58,6 +58,9 @@ namespace Barotrauma
         [Serialize("0.5, 0.1", true), Editable(DecimalCount = 2)]
         public Vector2 HandMoveAmount { get; set; }
 
+        [Serialize(0.5f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+        public float HandMoveStrength { get; set; }
+
         [Serialize(5.0f, true), Editable]
         public float HandCycleSpeed { get; set; }
 
@@ -87,14 +90,27 @@ namespace Barotrauma
         [Serialize(0.3f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "How much force is used to force the character upright.")]
         public float GetUpForce { get; set; }
         
+        // -- TODO: use a separate clip for crawling -> replace these when implemented.
+
         [Serialize(0.65f, true), Editable(MinValueFloat = 0, MaxValueFloat = 5, DecimalCount = 2, ToolTip = "Height of the torso when crouching.")]
         public float CrouchingTorsoPos { get; set; }
+
+        [Serialize(0.65f, true), Editable(MinValueFloat = 0, MaxValueFloat = 5, DecimalCount = 2, ToolTip = "Height of the head when crouching.")]
+        public float CrouchingHeadPos { get; set; }
 
         /// <summary>
         /// In degrees
         /// </summary>
         [Serialize(-10f, true), Editable(MinValueFloat = -360, MaxValueFloat = 360, ToolTip = "Angle of the torso when crouching.")]
         public float CrouchingTorsoAngle { get; set; }
+
+        /// <summary>
+        /// In degrees
+        /// </summary>
+        [Serialize(-10f, true), Editable(MinValueFloat = -360, MaxValueFloat = 360, ToolTip = "Angle of the head when crouching.")]
+        public float CrouchingHeadAngle { get; set; }
+
+        // --
 
         [Serialize(0.25f, true), Editable(DecimalCount = 2, ToolTip = "How much the character's head leans forwards when moving.")]
         public float HeadLeanAmount { get; set; }

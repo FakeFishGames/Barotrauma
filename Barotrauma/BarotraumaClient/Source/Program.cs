@@ -222,7 +222,10 @@ namespace Barotrauma
 
             sb.AppendLine("\n");
             sb.AppendLine("Exception: " + exception.Message);
-            sb.AppendLine("Target site: " + exception.TargetSite.ToString());
+            if (exception.TargetSite != null)
+            {
+                sb.AppendLine("Target site: " + exception.TargetSite.ToString());
+            }
             sb.AppendLine("Stack trace: ");
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");

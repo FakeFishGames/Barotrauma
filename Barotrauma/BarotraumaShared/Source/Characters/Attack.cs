@@ -22,7 +22,14 @@ namespace Barotrauma
     {
         Any,
         Character,
-        Structure
+        Structure   // Including hulls etc. Evaluated as anything but a character.
+    }
+
+    public enum AIBehaviorAfterAttack
+    {
+        FallBack,
+        PursueIfCanAttack,
+        Pursue
     }
 
     struct AttackResult
@@ -41,7 +48,7 @@ namespace Barotrauma
 
             foreach (Affliction affliction in afflictions)
             {
-                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength, affliction.Source));
             }
             AppliedDamageModifiers = appliedDamageModifiers;
             Damage = Afflictions.Sum(a => a.GetVitalityDecrease(null));
@@ -71,14 +78,23 @@ namespace Barotrauma
         [Serialize(HitDetection.Distance, true), Editable]
         public HitDetection HitDetectionType { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(AIBehaviorAfterAttack.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
+        public AIBehaviorAfterAttack AfterAttack { get; private set; }
+
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target before the AI tries to attack.")]
         public float Range { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target to do damage. In distance based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired.")]
         public float DamageRange { get; set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
+        [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2, ToolTip = "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time.")]
         public float Duration { get; private set; }
+
+        [Serialize(5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How long the AI waits between the attacks.")]
+        public float CoolDown { get; private set; } = 5;
+
+        [Serialize(0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0.")]
+        public float SecondaryCoolDown { get; private set; } = 0;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
@@ -86,7 +102,10 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage { get; private set; }
 
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 30.0f)]
+        /// <summary>
+        /// Legacy support. Use Afflictions.
+        /// </summary>
+        [Serialize(0.0f, false)]
         public float Stun { get; private set; }
 
         [Serialize(false, true), Editable]
@@ -113,34 +132,25 @@ namespace Barotrauma
             }
         }
 
-        //force applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)
-        //the direction of the force is towards the target that's being attacked
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs). The direction of the force is towards the target that's being attacked.")]
         public float Force { get; private set; }
 
-        //torque applied to the attacking limb
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the attacking limb.")]
         public float Torque { get; private set; }
 
         [Serialize(false, true), Editable]
         public bool ApplyForcesOnlyOnce { get; private set; }
 
-        //impulse applied to the target the attack hits
-        //the direction of the impulse is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f, ToolTip = "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer).")]
         public float TargetImpulse { get; private set; }
 
-        //impulse applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", true), Editable]
+        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards).")]
         public Vector2 TargetImpulseWorld { get; private set; }
 
-        //force applied to the target the attack hits 
-        //the direction of the force is from this limb towards the target (use negative values to pull the target closer)
-        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f)]
+        [Serialize(0.0f, true), Editable(-1000.0f, 1000.0f, ToolTip = "Applied to the target the attack hits. The direction of the force is from this limb towards the target (use negative values to pull the target closer).")]
         public float TargetForce { get; private set; }
 
-        //force applied to the target, in world space coordinates (i.e. 0,-1 pushes the target downwards)
-        [Serialize("0.0, 0.0", true), Editable]
+        [Serialize("0.0, 0.0", true), Editable(ToolTip = "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards).")]
         public Vector2 TargetForceWorld { get; private set; }
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
@@ -171,14 +181,28 @@ namespace Barotrauma
 
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
+        /// <summary>
+        /// Only affects ai decision making.
+        /// </summary>
+        public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
+
         private readonly List<StatusEffect> statusEffects;
+
+        public void SetUser(Character user)
+        {
+            if (statusEffects == null) { return; }
+            foreach (StatusEffect statusEffect in statusEffects)
+            {
+                statusEffect.SetUser(user);
+            }
+        }
         
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
             List<Affliction> multipliedAfflictions = new List<Affliction>();
             foreach (Affliction affliction in Afflictions)
             {
-                multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier));
+                multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier, affliction.Source));
             }
             return multipliedAfflictions;
         }
@@ -267,6 +291,12 @@ namespace Barotrauma
                         float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
                         Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
                         break;
+                    case "conditional":
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            Conditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
                 }
 
             }
@@ -292,6 +322,8 @@ namespace Barotrauma
             {
                 if (targetCharacter != null && targetCharacter.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
+
+            SetUser(attacker);
 
             DamageParticles(deltaTime, worldPosition);
             
@@ -338,6 +370,8 @@ namespace Barotrauma
                 if (targetLimb.character != null && targetLimb.character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
+            SetUser(attacker);
+
             DamageParticles(deltaTime, worldPosition);
 
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
@@ -368,6 +402,48 @@ namespace Barotrauma
             return attackResult;
         }
 
+        public float AttackTimer { get; private set; }
+        public float CoolDownTimer { get; set; }
+        public float SecondaryCoolDownTimer { get; set; }
+        public bool IsRunning { get; private set; }
+
+        public void UpdateCoolDown(float deltaTime)
+        {
+            CoolDownTimer -= deltaTime;
+            SecondaryCoolDownTimer -= deltaTime;
+            if (CoolDownTimer < 0) { CoolDownTimer = 0; }
+            if (SecondaryCoolDownTimer < 0) { SecondaryCoolDownTimer = 0; }
+        }
+
+        public void UpdateAttackTimer(float deltaTime)
+        {
+            IsRunning = true;
+            AttackTimer += deltaTime;
+            if (AttackTimer >= Duration)
+            {
+                ResetAttackTimer();
+                SetCoolDown();
+            }
+        }
+
+        public void ResetAttackTimer()
+        {
+            AttackTimer = 0;
+            IsRunning = false;
+        }
+
+        public void SetCoolDown()
+        {
+            CoolDownTimer = CoolDown;
+            SecondaryCoolDownTimer = SecondaryCoolDown;
+        }
+
+        public void ResetCoolDown()
+        {
+            CoolDownTimer = 0;
+            SecondaryCoolDownTimer = 0;
+        }
+
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
 
         public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
@@ -381,9 +457,7 @@ namespace Barotrauma
                 case AttackTarget.Character:
                     return target is Character;
                 case AttackTarget.Structure:
-                    // TODO: this does not work. We need to change the ai behaviour first -> target structures instead of characters inside the structures
-                    //return target is Structure;
-                    return true;
+                    return !(target is Character);
                 case AttackTarget.Any:
                 default:
                     return true;

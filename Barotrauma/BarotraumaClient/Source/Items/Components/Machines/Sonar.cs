@@ -953,8 +953,10 @@ namespace Barotrauma.Items.Components
 
             if (!GuiFrame.Children.First().Rect.Contains(markerPos))
             {
-                Vector2? intersection = MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children.First().Rect);
-                if (intersection.HasValue) markerPos = intersection.Value;                
+                if (MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children.First().Rect, out Vector2 intersection))
+                {
+                    markerPos = intersection;
+                }
             }
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), Color.Red, thickness: 2);

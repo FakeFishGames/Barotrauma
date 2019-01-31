@@ -10,6 +10,11 @@ namespace Barotrauma.Sounds
 
         public OggSound(SoundManager owner,string filename,bool stream) : base(owner,filename,stream,false)
         {
+            if (!ToolBox.IsProperFilenameCase(filename))
+            {
+                DebugConsole.ThrowError("Sound file \"" + filename + "\" has incorrect case!");
+            }
+
             reader = new VorbisReader(filename);
 
             ALFormat = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;

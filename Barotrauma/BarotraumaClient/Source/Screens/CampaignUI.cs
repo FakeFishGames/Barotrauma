@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class CampaignUI
     {
-        public enum Tab { None, Crew, Store }
+        public enum Tab { Map, Crew, Store }
         private Tab selectedTab;
         private GUIFrame[] tabs;
 
@@ -65,7 +65,7 @@ namespace Barotrauma
             var outpostBtn = new GUIButton(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), 
                 TextManager.Get("Outpost"), textAlignment: Alignment.Center, style: "GUISlopedHeader")
             {
-             OnClicked = (btn, userdata) => { SelectTab(Tab.None); return true; }   
+             OnClicked = (btn, userdata) => { SelectTab(Tab.Map); return true; }   
             };
             outpostBtn.TextBlock.Font = GUI.LargeFont;
             outpostBtn.TextBlock.AutoScale = true;
@@ -83,7 +83,7 @@ namespace Barotrauma
                 {
                     UserData = tab,
                     OnClicked = (btn, userdata) => { SelectTab((Tab)userdata); return true; },
-                    Selected = tab == Tab.None
+                    Selected = tab == Tab.Map
                 };
                 var buttonSprite = tabButton.Style.Sprites[GUIComponent.ComponentState.None][0];
                 tabButton.RectTransform.MaxSize = new Point(
@@ -234,7 +234,7 @@ namespace Barotrauma
 
             topPanel.RectTransform.SetAsLastChild();
 
-            SelectTab(Tab.None);
+            SelectTab(Tab.Map);
 
             UpdateLocationView(campaign.Map.CurrentLocation);
 
@@ -310,7 +310,7 @@ namespace Barotrauma
             if (selectedTab == Tab.Store && !purchaseableItemsFound)
             {
                 //switch out from store tab if there's nothing to buy
-                SelectTab(Tab.None);
+                SelectTab(Tab.Map);
             }
             else
             {
@@ -332,7 +332,7 @@ namespace Barotrauma
         
         public void UpdateCharacterLists()
         {
-            int placeIndex = 1;
+            //remove the player's crew from the listbox (everything between the "mycrew" and "hire" labels)
             foreach (GUIComponent child in characterList.Content.Children.ToList())
             {
                 if (child.UserData as string == "mycrew")
@@ -343,13 +343,13 @@ namespace Barotrauma
                 {
                     break;
                 }
-                placeIndex++;
                 characterList.RemoveChild(child);
             }
-            foreach (CharacterInfo c in GameMain.GameSession.CrewManager.GetCharacterInfos())
+            foreach (CharacterInfo c in GameMain.GameSession.CrewManager.GetCharacterInfos().Reverse())
             {
                 var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ") ", c);
-                frame.RectTransform.RepositionChildInHierarchy(placeIndex);
+                //add after the "mycrew" label
+                frame.RectTransform.RepositionChildInHierarchy(1);
             }
             characterList.UpdateScrollBarSize();
         }
@@ -368,7 +368,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.DisplayName);
 
-            Sprite portrait = location.Type.Background;
+            Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             new GUIImage(new RectTransform(new Vector2(1.0f, 0.6f),
                 container.RectTransform), portrait, scaleToFit: true);
 
@@ -676,13 +676,15 @@ namespace Barotrauma
                 characterInfo.CreateInfoFrame(characterPreviewFrame);
             }
 
-            if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(characterInfo))
+            var currentCrew = GameMain.GameSession.CrewManager.GetCharacterInfos();
+            if (currentCrew.Contains(characterInfo))
             {
                 new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
                     TextManager.Get("FireButton"))
                 {
                     Color = Color.Red,
                     UserData = characterInfo,
+                    Enabled = currentCrew.Count() > 1, //can't fire if there's only one character in the crew
                     OnClicked = (btn, obj) =>
                     {
                         var confirmDialog = new GUIMessageBox(
@@ -727,6 +729,7 @@ namespace Barotrauma
             {
                 UpdateLocationView(GameMain.GameSession.Map.CurrentLocation);
                 SelectCharacter(null, null);
+                characterList.Content.RemoveChild(characterList.Content.FindChild(characterInfo));
                 UpdateCharacterLists();
             }
 

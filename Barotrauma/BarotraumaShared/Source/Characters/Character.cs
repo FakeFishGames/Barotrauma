@@ -291,15 +291,7 @@ namespace Barotrauma
             }
         }
 
-        public float SoundRange
-        {
-            get { return aiTarget.SoundRange; }
-        }
-
-        public float SightRange
-        {
-            get { return aiTarget.SightRange; }
-        }
+        private float Noise { get; set; }
 
         private float pressureProtection;
         public float PressureProtection
@@ -590,7 +582,7 @@ namespace Barotrauma
             }
 #endif
             Character newCharacter = null;
-            if (file != humanConfigFile)
+            if (file.ToLower() != humanConfigFile.ToLower())
             {
                 var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, file, seed);
@@ -664,6 +656,7 @@ namespace Barotrauma
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
+            Noise = doc.Root.GetAttributeFloat("noise", 100f);
 
             //List<XElement> ragdollElements = new List<XElement>();
             //List<float> ragdollCommonness = new List<float>();
@@ -790,7 +783,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    humanConfigFile = GetConfigFile("human");
+                    humanConfigFile = GetConfigFile("Human");
                 }
                 return humanConfigFile; 
             }
@@ -1142,11 +1135,10 @@ namespace Barotrauma
                         }
                     }
 
-                    attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
+                    attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult);
 
-                    if (attackLimb.AttackTimer > attackLimb.attack.Duration)
+                    if (!attackLimb.attack.IsRunning)
                     {
-                        attackLimb.ResetAttack();
                         attackCoolDown = 1.0f;
                     }
                 }
@@ -1245,7 +1237,27 @@ namespace Barotrauma
                 return false;
             }
         }
-        
+
+        public bool CanSeeCharacter(Character character, Vector2 sourceWorldPos)
+        {
+            Vector2 diff = ConvertUnits.ToSimUnits(character.WorldPosition - sourceWorldPos);
+
+            Body closestBody = null;
+            if (character.Submarine == null)
+            {
+                closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
+                if (closestBody == null) return true;
+            }
+            else
+            {
+                closestBody = Submarine.CheckVisibility(character.WorldPosition, character.WorldPosition - diff);
+                if (closestBody == null) return true;
+            }
+
+            Structure wall = closestBody.UserData as Structure;
+            return wall == null || !wall.CastShadow;
+        }
+
         public bool HasEquippedItem(Item item)
         {
             for (int i = 0; i < Inventory.Capacity; i++)
@@ -1354,7 +1366,7 @@ namespace Barotrauma
         {
             distanceToItem = -1.0f;
 
-            if (!CanInteract) return false;
+            if (!CanInteract || item.HiddenInGame) return false;
 
             if (item.ParentInventory != null)
             {
@@ -1915,7 +1927,7 @@ namespace Barotrauma
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
             
             UpdateSightRange();
-            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
+            UpdateSoundRange();
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
             
@@ -1983,9 +1995,16 @@ namespace Barotrauma
 
         private void UpdateSightRange()
         {
-            if (aiTarget == null) return;
+            if (aiTarget == null) { return; }
+            float range = (float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f;
+            aiTarget.SightRange = MathHelper.Clamp(range, 2000.0f, 50000.0f);
+        }
 
-            aiTarget.SightRange = MathHelper.Clamp((float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f, 2000.0f, 50000.0f);
+        private void UpdateSoundRange()
+        {
+            if (aiTarget == null) { return; }
+            float range = (float)Math.Sqrt(Mass) * 100.0f + AnimController.Collider.LinearVelocity.Length() * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 2000f, 50000f);
         }
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
@@ -2296,7 +2315,7 @@ namespace Barotrauma
 
         partial void ImplodeFX();
 
-        public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
+        public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (IsDead || CharacterHealth.Unkillable) { return; }
             
@@ -2313,7 +2332,7 @@ namespace Barotrauma
 #if SERVER
             if (causeOfDeath == CauseOfDeathType.Affliction)
             {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Name + ")", ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
             }
             else
             {
@@ -2335,11 +2354,13 @@ namespace Barotrauma
                     characterType = "AICrew";
 
                 string causeOfDeathStr = causeOfDeathAffliction == null ?
-                    causeOfDeath.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
+                    causeOfDeath.ToString() : causeOfDeathAffliction.Prefab.Name.Replace(" ", "");
                 GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
             }
 
-            CauseOfDeath = new CauseOfDeath(causeOfDeath, causeOfDeathAffliction, LastAttacker, LastDamageSource);
+            CauseOfDeath = new CauseOfDeath(
+                causeOfDeath, causeOfDeathAffliction?.Prefab, 
+                causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);

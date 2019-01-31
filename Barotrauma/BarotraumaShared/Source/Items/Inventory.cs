@@ -115,6 +115,13 @@ namespace Barotrauma
 
         public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
+            if (i < 0 || i >= Items.Length)
+            {
+                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return false;
+            }
+
             if (Owner == null) return false;
             //there's already an item in the slot
             if (Items[i] != null && allowCombine)
@@ -145,6 +152,13 @@ namespace Barotrauma
 
         protected virtual void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
+            if (i < 0 || i >= Items.Length)
+            {
+                string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
             if (Owner == null) return;
 
             Inventory prevInventory = item.ParentInventory;

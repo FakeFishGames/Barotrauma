@@ -524,9 +524,11 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
+                    string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.ThrowError("Failed to read an incoming message. {" + e + "}\n" + e.StackTrace);
+                        DebugConsole.ThrowError(errorMsg);
                     }
                 }
             }
@@ -2245,6 +2247,7 @@ namespace Barotrauma.Networking
 
         public void GiveAchievement(Character character, string achievementIdentifier)
         {
+            achievementIdentifier = achievementIdentifier.ToLowerInvariant();
             foreach (Client client in connectedClients)
             {
                 if (client.Character == character)

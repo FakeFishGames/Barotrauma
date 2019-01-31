@@ -411,21 +411,26 @@ namespace Barotrauma
             });
             AssignRelayToServer("lighting|lights", false);
 
-            commands.Add(new Command("multiplylights [color]", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
+            commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given Vector4 value (for example, 1,1,1,0.5).", (string[] args) =>
             {
-                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1) return;
+                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1)
+                {
+                    ThrowError("The multiplylights command can only be used in the submarine editor.");
+                }
+                if (args.Length < 1) return;
 
-                Color color = XMLExtensions.ParseColor(args[0]);
+                //join args in case there's spaces between the components
+                Vector4 value = XMLExtensions.ParseVector4(string.Join("", args));
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.ParentInventory != null || item.body != null) continue;
                     var lightComponent = item.GetComponent<LightComponent>();
                     if (lightComponent != null) lightComponent.LightColor =
                         new Color(
-                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f),
-                            (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
-                            (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
-                            (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
+                            (lightComponent.LightColor.R / 255.0f) * value.X, 
+                            (lightComponent.LightColor.G / 255.0f) * value.Y,
+                            (lightComponent.LightColor.B / 255.0f) * value.Z,
+                            (lightComponent.LightColor.A / 255.0f) * value.W);
                 }
             }, isCheat: false));
 
@@ -481,7 +486,7 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: true));
-
+            
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
@@ -800,6 +805,46 @@ namespace Barotrauma
                 WaterRenderer.DistortionStrength = new Vector2(distortStrengthX, distortStrengthY);
                 WaterRenderer.BlurAmount = blurAmount;
             }));
+
+
+            commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
+            {
+                //TODO: maybe do this automatically during loading when possible?
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s) first!");
+                    }
+                    else
+                    {                        
+                        foreach (var mapEntity in MapEntity.SelectedList)
+                        {
+                            if (mapEntity is Item item)
+                            {
+                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y, 
+                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale), 
+                                    (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
+                            }
+                            else if (mapEntity is Structure structure)
+                            {
+                                if (!structure.ResizeHorizontal)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        (int)structure.Prefab.ScaledSize.X,
+                                        structure.Rect.Height);
+                                }
+                                if (!structure.ResizeVertical)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        structure.Rect.Width,
+                                        (int)structure.Prefab.ScaledSize.Y);
+                                }
+                            }
+                        }
+                    }
+                }
+            }, isCheat: false));
 #endif
 
             commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>

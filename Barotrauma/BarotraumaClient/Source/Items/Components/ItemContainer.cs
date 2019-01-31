@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -30,6 +31,40 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
+
+#if DEBUG
+        [Serialize("0.0,0.0", false), Editable]
+#else
+        [Serialize("0.0,0.0", false)]
+#endif
+        public Vector2 ItemPos { get; set; }
+
+#if DEBUG
+        [Serialize("0.0,0.0", false), Editable]
+#else
+        [Serialize("0.0,0.0", false)]
+#endif
+        public Vector2 ItemInterval { get; set; }
+        [Serialize(100, false)]
+        public int ItemsPerRow { get; set; }
+
+        /// <summary>
+        /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
+        /// </summary>
+        [Serialize(-1.0f, false)]
+        public float ContainedSpriteDepth { get; set; }
+
+
+        private float itemRotation;
+        [Serialize(0.0f, false)]
+        public float ItemRotation
+        {
+            get { return MathHelper.ToDegrees(itemRotation); }
+            set { itemRotation = MathHelper.ToRadians(value); }
+        }
+
+        [Serialize(null, false)]
+        public string UILabel { get; set; }
 
         [Serialize(false, false)]
         public bool ShowConditionInContainedStateIndicator
@@ -94,15 +129,15 @@ namespace Barotrauma.Items.Components
 
         public void DrawContainedItems(SpriteBatch spriteBatch)
         {
-            Vector2 transformedItemPos = itemPos * item.Scale;
-            Vector2 transformedItemInterval = itemInterval * item.Scale;
+            Vector2 transformedItemPos = ItemPos * item.Scale;
+            Vector2 transformedItemInterval = ItemInterval * item.Scale;
             float currentRotation = itemRotation;
 
             if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) transformedItemPos += item.Submarine.DrawPosition;
-                transformedItemPos = transformedItemPos + itemPos * item.Scale;
+                transformedItemPos = transformedItemPos + ItemPos * item.Scale;
             }
             else
             {
@@ -121,6 +156,9 @@ namespace Barotrauma.Items.Components
                 currentRotation += item.body.Rotation;
             }
 
+            Vector2 currentItemPos = transformedItemPos;
+
+            int i = 0;
             foreach (Item containedItem in Inventory.Items)
             {
                 if (containedItem == null) continue;
@@ -138,11 +176,12 @@ namespace Barotrauma.Items.Components
 
                 containedItem.Sprite.Draw(
                     spriteBatch,
-                    new Vector2(transformedItemPos.X, -transformedItemPos.Y),
+                    new Vector2(currentItemPos.X, -currentItemPos.Y),
                     containedItem.GetSpriteColor(),
                     -currentRotation,
                     containedItem.Scale,
-                    (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                    (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                    depth: ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth);
 
                 foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
                 {
@@ -150,7 +189,22 @@ namespace Barotrauma.Items.Components
                     ic.DrawContainedItems(spriteBatch);
                 }
 
-                transformedItemPos += transformedItemInterval;
+                i++;
+                if (Math.Abs(transformedItemInterval.X) > 0.001f && Math.Abs(transformedItemInterval.Y) > 0.001f)
+                {
+                    //interval set on both axes -> use a grid layout
+                    currentItemPos.X += transformedItemInterval.X;
+                    if (i % ItemsPerRow == 0)
+                    {
+                        currentItemPos.X = transformedItemPos.X;
+                        currentItemPos.Y += transformedItemInterval.Y;
+                    }
+
+                }
+                else
+                {
+                    currentItemPos += transformedItemInterval;
+                }
             }
         }
 
