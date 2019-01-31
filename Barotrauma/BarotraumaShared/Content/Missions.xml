@@ -156,7 +156,7 @@
     type="Monster"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
-    reward="1000"
+    reward="5000"
     sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/MolochBoss/Molochboss.xml">
@@ -183,7 +183,7 @@
     type="Monster"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
-    reward="800"
+    reward="1000"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml">
@@ -213,7 +213,7 @@
   type="Monster"
   description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of 400 credits has been promised to those who kill the creature."
   commonness="10"
-  reward="400"
+  reward="1000"
   sonarlabel="Hammerhead"
   successmessage="The Hammerhead has been killed."
   monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
@@ -292,7 +292,7 @@
     type="Monster"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
-    reward="1000"
+    reward="5000"
     sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/Moloch.xml">
@@ -375,7 +375,7 @@
     type="Cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="5"
-    reward="200"
+    reward="500"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
@@ -413,7 +413,7 @@
     type="Cargo"
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
     commonness="10"
-    reward="200"
+    reward="250"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered."
     requireddeliveryamount="20">
@@ -446,7 +446,7 @@
     type="Cargo"
     description="Local reseachers are offering 500 credits for delivering a container of husk parasite eggs to [location2]."
     commonness="10"
-    reward="500"
+    reward="250"
     achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
     <Items>
