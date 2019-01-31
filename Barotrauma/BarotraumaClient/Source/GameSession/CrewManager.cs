@@ -741,9 +741,9 @@ namespace Barotrauma
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
 
                 matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                matchingItems.RemoveAll(it => it.Submarine != null && it.Submarine.IsOutpost);
             }
-
-
+            
             //more than one target item -> create a minimap-like selection with a pic of the sub
             if (matchingItems.Count > 1)
             {
