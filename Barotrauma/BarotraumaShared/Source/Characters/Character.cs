@@ -588,7 +588,7 @@ namespace Barotrauma
             }
 #endif
             Character newCharacter = null;
-            if (file.ToLower() != humanConfigFile.ToLower())
+            if (file.ToLower() != HumanConfigFile?.ToLower())
             {
                 var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, file, seed);
