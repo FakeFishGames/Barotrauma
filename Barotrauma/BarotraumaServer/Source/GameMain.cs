@@ -284,6 +284,9 @@ namespace Barotrauma
             stopwatch.Stop();
 
             CloseServer();
+
+            SteamManager.ShutDown();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
         }
         
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
