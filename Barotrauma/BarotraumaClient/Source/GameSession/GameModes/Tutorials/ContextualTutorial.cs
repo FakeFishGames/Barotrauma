@@ -36,6 +36,8 @@ namespace Barotrauma.Tutorials
         private float tutorialTimer;
         private float degrading2ActivationCountdown;
 
+        private bool disableTutorialOnDeficiencyFound = true;
+
         private class TutorialSegment
         {
             public string Name;
@@ -180,9 +182,20 @@ namespace Barotrauma.Tutorials
                 return;
             }
 #endif
-            if (navConsole == null) segments[2].IsTriggered = true; // Disable navigation console usage tutorial
-            if (reactor == null) segments[5].IsTriggered = true; // Disable reactor usage tutorial
-            if (sonar == null) segments[6].IsTriggered = true; // Disable enemy on sonar tutorial
+            if (disableTutorialOnDeficiencyFound)
+            {
+                if (reactor == null || navConsole == null || sonar == null)
+                {
+                    Stop();
+                    return;
+                }
+            }
+            else
+            {
+                if (navConsole == null) segments[2].IsTriggered = true; // Disable navigation console usage tutorial
+                if (reactor == null) segments[5].IsTriggered = true; // Disable reactor usage tutorial
+                if (sonar == null) segments[6].IsTriggered = true; // Disable enemy on sonar tutorial
+            }
 
             crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
             started = true;
