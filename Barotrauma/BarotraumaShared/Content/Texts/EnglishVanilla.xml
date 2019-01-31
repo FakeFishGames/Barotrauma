@@ -449,6 +449,7 @@
   <ServerListRefresh>Refresh</ServerListRefresh>
   <ServerListJoin>Join</ServerListJoin>
   <ServerListUnknownVersion>Could not determine compatibility (unknown game version)</ServerListUnknownVersion>
+  <ServerListNoSteamQueryResponse>Could not determine compatibility with the server because it did not respond to queries. This may happen if the server is down or if the host has not forwarded their query port, but you may still attempt to connect to the server.</ServerListNoSteamQueryResponse>
   <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
   <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
   <ServerListIncompatibleContentPackage>Content package "[contentpackage]" (MD5: [hash]) required to play on this server.</ServerListIncompatibleContentPackage>

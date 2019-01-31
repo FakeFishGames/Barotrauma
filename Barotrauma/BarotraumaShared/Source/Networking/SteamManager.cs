@@ -250,7 +250,7 @@ namespace Barotrauma.Steam
                 {
                     DebugConsole.Log(s.Name + " did not respond to server query.");
                 }
-                var serverInfo = new Networking.ServerInfo()
+                var serverInfo = new ServerInfo()
                 {
                     ServerName = s.Name,
                     Port = s.ConnectionPort.ToString(),
@@ -258,6 +258,7 @@ namespace Barotrauma.Steam
                     PlayerCount = s.Players,
                     MaxPlayers = s.MaxPlayers,
                     HasPassword = s.Passworded,
+                    RespondedToSteamQuery = responded
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
