@@ -531,16 +531,16 @@
     <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.97" canflipx="false" />
   </medicalLabel>
   <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.99" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.97" />
   </arrowUp>
   <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.99" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.97" />
   </arrowDown>
   <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.99" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.97" />
   </arrowLeft>
   <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.99" />
+    <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.97" />
   </arrowRight>
   <leftwall name="Basic Wall Left" identifier="leftwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" fliphorizontal="true" />
