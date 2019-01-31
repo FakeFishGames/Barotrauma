@@ -53,58 +53,61 @@ namespace Barotrauma
             if (updateTimer > 0.0f) return;
             updateTimer = UpdateInterval;
             
-            if (GameMain.GameSession.EventManager.CurrentIntensity > 0.99f)
+            if (Level.Loaded != null)
             {
-                UnlockAchievement("maxintensity", true, c => c != null && !c.IsDead && !c.IsUnconscious);
-            }
-
-            foreach (Character c in Character.CharacterList)
-            {
-                if (c.IsDead) continue;
-                //achievement for descending below crush depth and coming back
-                if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
+                if (GameMain.GameSession.EventManager.CurrentIntensity > 0.99f)
                 {
-                    roundData.EnteredCrushDepth.Add(c);
+                    UnlockAchievement("maxintensity", true, c => c != null && !c.IsDead && !c.IsUnconscious);
                 }
-                else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
-                {
-                    //all characters that have entered crush depth and are still alive get an achievement
-                    if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
-                }
-            }
 
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                foreach (Reactor reactor in roundData.Reactors)
+                foreach (Character c in Character.CharacterList)
                 {
-                    if (reactor.Item.Condition <= 0.0f && reactor.Item.Submarine == sub)
+                    if (c.IsDead) continue;
+                    //achievement for descending below crush depth and coming back
+                    if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
                     {
-                        //characters that were inside the sub during a reactor meltdown 
-                        //get an achievement if they're still alive at the end of the round
-                        foreach (Character c in Character.CharacterList)
-                        {
-                            if (!c.IsDead && c.Submarine == sub) roundData.ReactorMeltdown.Add(c);
-                        }
+                        roundData.EnteredCrushDepth.Add(c);
+                    }
+                    else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
+                    {
+                        //all characters that have entered crush depth and are still alive get an achievement
+                        if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
                     }
                 }
-                
-                //convert submarine velocity to km/h
-                Vector2 submarineVel = Physics.DisplayToRealWorldRatio * ConvertUnits.ToDisplayUnits(sub.Velocity) * 3.6f;
-                //achievement for going > 100 km/h
-                if (Math.Abs(submarineVel.X) > 100.0f)
-                {
-                    //all conscious characters inside the sub get an achievement
-                    UnlockAchievement("subhighvelocity", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
-                }
 
-                //achievement for descending ridiculously deep
-                float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
-                if (realWorldDepth > 5000.0f)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    //all conscious characters inside the sub get an achievement
-                    UnlockAchievement("subdeep", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                    foreach (Reactor reactor in roundData.Reactors)
+                    {
+                        if (reactor.Item.Condition <= 0.0f && reactor.Item.Submarine == sub)
+                        {
+                            //characters that were inside the sub during a reactor meltdown 
+                            //get an achievement if they're still alive at the end of the round
+                            foreach (Character c in Character.CharacterList)
+                            {
+                                if (!c.IsDead && c.Submarine == sub) roundData.ReactorMeltdown.Add(c);
+                            }
+                        }
+                    }
+
+                    //convert submarine velocity to km/h
+                    Vector2 submarineVel = Physics.DisplayToRealWorldRatio * ConvertUnits.ToDisplayUnits(sub.Velocity) * 3.6f;
+                    //achievement for going > 100 km/h
+                    if (Math.Abs(submarineVel.X) > 100.0f)
+                    {
+                        //all conscious characters inside the sub get an achievement
+                        UnlockAchievement("subhighvelocity", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                    }
+
+                    //achievement for descending ridiculously deep
+                    float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                    if (realWorldDepth > 5000.0f)
+                    {
+                        //all conscious characters inside the sub get an achievement
+                        UnlockAchievement("subdeep", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                    }
                 }
-            }            
+            }                 
         }
 
         public static void OnBiomeDiscovered(Biome biome)
