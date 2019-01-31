@@ -1116,7 +1116,11 @@ namespace Barotrauma
 
             commands.Add(new Command("reloadxml", "Reloads the xml definition of the selected item(s)/structure(s) (SubEditor). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadxml id itemid. Example 2: reloadxml name \"Sprite name\"", args =>
             {
-                if (args.Length > 1)
+                if (Screen.Selected is SpriteEditorScreen)
+                {
+                    return;
+                }
+                else if (args.Length > 1)
                 {
                     TryDoActionOnSprite(args[0], args[1], s => s.ReloadXML());
                 }
@@ -1137,9 +1141,13 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("reloadtextures|reloadtexture", "In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
+            commands.Add(new Command("reloadtexture|reloadtextures", "In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
             {
-                if (args.Length > 1)
+                if (Screen.Selected is SpriteEditorScreen)
+                {
+                    return;
+                }
+                else if (args.Length > 1)
                 {
                     TryDoActionOnSprite(args[0], args[1], s => s.ReloadTexture());
                 }
@@ -1160,9 +1168,13 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("reloadsprite", "Reload xml and texture of the given sprite. In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
+            commands.Add(new Command("reloadsprite|reloadsprites", "Reload xml and texture of the given sprite(s). In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
             {
-                if (args.Length > 1)
+                if (Screen.Selected is SpriteEditorScreen)
+                {
+                    return;
+                }
+                else if (args.Length > 1)
                 {
                     TryDoActionOnSprite(args[0], args[1], s =>
                     {
@@ -1200,28 +1212,34 @@ namespace Barotrauma
             switch (firstArg)
             {
                 case "name":
-                    var sprite = Sprite.LoadedSprites.FirstOrDefault(s => s.Name?.ToLowerInvariant() == secondArg.ToLowerInvariant());
-                    if (sprite != null)
+                    var sprites = Sprite.LoadedSprites.Where(s => s.Name?.ToLowerInvariant() == secondArg.ToLowerInvariant());
+                    if (sprites.Any())
                     {
-                        action(sprite);
+                        foreach (var s in sprites)
+                        {
+                            action(s);
+                        }
                         return true;
                     }
                     else
                     {
-                        ThrowError("Cannot find a matching sprite by the name: " + secondArg);
+                        ThrowError("Cannot find any matching sprites by the name: " + secondArg);
                         return false;
                     }
                 case "identifier":
                 case "id":
-                    sprite = Sprite.LoadedSprites.FirstOrDefault(s => s.EntityID?.ToLowerInvariant() == secondArg.ToLowerInvariant());
-                    if (sprite != null)
+                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID?.ToLowerInvariant() == secondArg.ToLowerInvariant());
+                    if (sprites.Any())
                     {
-                        action(sprite);
+                        foreach (var s in sprites)
+                        {
+                            action(s);
+                        }
                         return true;
                     }
                     else
                     {
-                        ThrowError("Cannot find a matching sprite by the id: " + secondArg);
+                        ThrowError("Cannot find any matching sprites by the id: " + secondArg);
                         return false;
                     }
                 default:
