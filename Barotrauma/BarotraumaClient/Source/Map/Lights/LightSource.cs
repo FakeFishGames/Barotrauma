@@ -483,26 +483,26 @@ namespace Barotrauma.Lights
                         continue;
                     }
 
-                    Vector2? intersection = null;
+                    bool intersects;
+                    Vector2 intersection = Vector2.Zero;
                     if (visibleSegments[i].IsAxisAligned)
                     {
-                        intersection = MathUtils.GetAxisAlignedLineIntersection(p2a, p2b, p1a, p1b, visibleSegments[i].IsHorizontal);
+                        intersects = MathUtils.GetAxisAlignedLineIntersection(p2a, p2b, p1a, p1b, visibleSegments[i].IsHorizontal, out intersection);
                     }
                     else if (visibleSegments[j].IsAxisAligned)
                     {
-                        intersection = MathUtils.GetAxisAlignedLineIntersection(p1a, p1b, p2a, p2b, visibleSegments[j].IsHorizontal);
+                        intersects = MathUtils.GetAxisAlignedLineIntersection(p1a, p1b, p2a, p2b, visibleSegments[j].IsHorizontal, out intersection);
                     }
                     else
                     {
-                        intersection = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b);
+                        intersects = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b, out intersection);
                     }
 
-                    if (intersection != null)
+                    if (intersects)
                     {
-                        Vector2 intersectionVal = intersection.Value;
                         SegmentPoint start = visibleSegments[i].Start;
                         SegmentPoint end = visibleSegments[i].End;
-                        SegmentPoint mid = new SegmentPoint(intersectionVal, null);
+                        SegmentPoint mid = new SegmentPoint(intersection, null);
                         if (visibleSegments[i].ConvexHull?.ParentEntity?.Submarine != null)
                         {
                             mid.Pos -= visibleSegments[i].ConvexHull.ParentEntity.Submarine.DrawPosition;
@@ -685,13 +685,11 @@ namespace Barotrauma.Lights
                     if (s.Start.WorldPos.X > maxX) continue;
                 }
                 
-                Vector2? intersection = s.IsAxisAligned ?
-                    MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal) :
-                    MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
-
-                if (intersection.HasValue)
+                if (s.IsAxisAligned ?
+                  MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal, out Vector2 intersection) :
+                  MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, out intersection))
                 {
-                    float dist = Vector2.DistanceSquared(intersection.Value, rayStart);
+                    float dist = Vector2.DistanceSquared(intersection, rayStart);
                     if (dist < closestDist)
                     {
                         closestDist = dist;
@@ -725,7 +723,19 @@ namespace Barotrauma.Lights
 
             // Add a vertex for the center of the mesh
             vertices.Add(new VertexPositionColorTexture(new Vector3(position.X, position.Y, 0),
-                Color.White,new Vector2(0.5f, 0.5f) + uvOffset));
+                Color.White, new Vector2(0.5f, 0.5f) + uvOffset));
+
+            //hacky fix to exc excessively large light volumes (they used to be up to 4x the range of the light if there was nothing to block the rays).
+            //might want to tweak the raycast logic in a way that this isn't necessary
+            float boundRadius = Range * 1.1f / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
+            Rectangle boundArea = new Rectangle((int)(drawPos.X - boundRadius), (int)(drawPos.Y + boundRadius), (int)(boundRadius * 2), (int)(boundRadius * 2));
+            for (int i = 0; i < rayCastHits.Count; i++)
+            {
+                if (MathUtils.GetLineRectangleIntersection(drawPos, rayCastHits[i], boundArea, out Vector2 intersection))
+                {
+                    rayCastHits[i] = intersection;
+                }
+            }
 
             // Add all the other encounter points as vertices
             // storing their world position as UV coordinates
@@ -740,19 +750,6 @@ namespace Barotrauma.Lights
                 Vector2 nextVertex = rayCastHits[i < rayCastHits.Count - 1 ? i + 1 : 0];
                 
                 Vector2 rawDiff = vertex - drawPos;
-                Vector2 diff = rawDiff;
-                diff /= Range * 2.0f;
-                if (OverrideLightTexture != null)
-                {
-                    //calculate texture coordinates based on the light's rotation
-                    Vector2 originDiff = diff;
-
-                    diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
-                    diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
-                    diff *= (overrideTextureDims / OverrideLightTexture.size) * 2.0f;
-
-                    diff += uvOffset;
-                }
                 
                 //calculate normal of first segment
                 Vector2 nDiff1 = vertex - nextVertex;
@@ -775,6 +772,19 @@ namespace Barotrauma.Lights
                 Vector2 nDiff = nDiff1 + nDiff2;
                 nDiff /= Math.Max(Math.Abs(nDiff.X), Math.Abs(nDiff.Y));
                 nDiff *= 50.0f;
+
+                Vector2 diff = rawDiff;
+                diff /= Range * 2.0f;
+                if (OverrideLightTexture != null)
+                {
+                    //calculate texture coordinates based on the light's rotation
+                    Vector2 originDiff = diff;
+
+                    diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
+                    diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
+                    diff *= (overrideTextureDims / OverrideLightTexture.size);// / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
+                    diff += uvOffset;
+                }
 
                 //finally, create the vertices
                 VertexPositionColorTexture fullVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
@@ -905,16 +915,18 @@ namespace Barotrauma.Lights
             if (!CastShadows)
             {
                 Texture2D currentTexture = texture ?? LightTexture;
-                if (OverrideLightTexture != null) currentTexture = OverrideLightTexture.Texture;                
+                if (OverrideLightTexture != null) { currentTexture = OverrideLightTexture.Texture; }           
 
-                Vector2 center = new Vector2(currentTexture.Width / 2, currentTexture.Height / 2);
+                Vector2 center = OverrideLightTexture == null ? 
+                    new Vector2(currentTexture.Width / 2, currentTexture.Height / 2) : 
+                    OverrideLightTexture.Origin;
                 float scale = Range / (currentTexture.Width / 2.0f);
 
                 Vector2 drawPos = position;
                 if (ParentSub != null) drawPos += ParentSub.DrawPosition;
                 drawPos.Y = -drawPos.Y;  
 
-                spriteBatch.Draw(currentTexture, drawPos, null, Color * (Color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
+                spriteBatch.Draw(currentTexture, drawPos, null, Color, -rotation, center, scale, SpriteEffects.None, 1);
                 return;
             }
 

@@ -1,5 +1,6 @@
 using Barotrauma.Extensions;
 using Barotrauma.Sounds;
+using Barotrauma.Tutorials;
 using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -200,6 +201,8 @@ namespace Barotrauma
                     ScreenOverlayColor, true);
             }
 
+            if (DisableHUD) { return; }
+
             if (GameMain.ShowFPS || GameMain.DebugDraw)
             {
                 DrawString(spriteBatch, new Vector2(10, 10),
@@ -377,10 +380,7 @@ namespace Barotrauma
                 MouseOn.DrawToolTip(spriteBatch);
             }
             
-            if (!DisableHUD)
-            {
-                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
-            }
+            Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite)
@@ -934,7 +934,7 @@ namespace Barotrauma
                         Vector2 pos = new Vector2(radius - x, radius - y);
                         if (pos.LengthSquared() <= diameterSqr)
                         {
-                            data[y * outerRadius + x + 1] = Color.White;
+                            TrySetArray(data, y * outerRadius + x + 1, Color.White);
                         }
                     }
                 }
@@ -950,7 +950,7 @@ namespace Barotrauma
                     int x = (int)Math.Round(radius + radius * Math.Cos(angle));
                     int y = (int)Math.Round(radius + radius * Math.Sin(angle));
 
-                    data[y * outerRadius + x + 1] = Color.White;
+                    TrySetArray(data, y * outerRadius + x + 1, Color.White);
                 }
             }
 
@@ -961,8 +961,6 @@ namespace Barotrauma
 
         public static Texture2D CreateCapsule(int radius, int height)
         {
-            if (radius < 1) { radius = 1; }
-            if (height < 1) { height = 1; }
             int textureWidth = radius * 2, textureHeight = height + radius * 2;
 
             Texture2D texture = new Texture2D(GraphicsDevice, textureWidth, textureHeight);
@@ -983,14 +981,14 @@ namespace Barotrauma
                     int x = (int)Math.Round(radius + radius * Math.Cos(angle));
                     int y = (height - 1) * i + (int)Math.Round(radius + radius * Math.Sin(angle));
 
-                    data[y * textureWidth + x] = Color.White;
+                    TrySetArray(data, y * textureWidth + x, Color.White);
                 }
             }
 
             for (int y = radius; y < textureHeight - radius; y++)
             {
-                data[y * textureWidth] = Color.White;
-                data[y * textureWidth + (textureWidth - 1)] = Color.White;
+                TrySetArray(data, y * textureWidth, Color.White);
+                TrySetArray(data, y * textureWidth + (textureWidth - 1), Color.White);
             }
 
             texture.SetData(data);
@@ -1007,18 +1005,31 @@ namespace Barotrauma
 
             for (int y = 0; y < height; y++)
             {
-                data[y * width] = Color.White;
-                data[y * width + (width - 1)] = Color.White;
+                TrySetArray(data, y * width, Color.White);
+                TrySetArray(data, y * width + (width - 1), Color.White);
             }
 
             for (int x = 0; x < width; x++)
             {
-                data[x] = Color.White;
-                data[(height - 1) * width + x] = Color.White;
+                TrySetArray(data, x, Color.White);
+                TrySetArray(data, (height - 1) * width + x, Color.White);
             }
 
             texture.SetData(data);
             return texture;
+        }
+
+        private static bool TrySetArray(Color[] data, int index, Color value)
+        {
+            if (index >= 0 && index < data.Length)
+            {
+                data[index] = value;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -1526,6 +1537,11 @@ namespace Barotrauma
             
             if (GameMain.GameSession != null)
             {
+                if (ContextualTutorial.Initialized && GameMain.GameSession.GameMode is SinglePlayerCampaign)
+                {
+                    ((SinglePlayerCampaign)GameMain.GameSession.GameMode).ContextualTutorial.Stop();
+                }
+
                 if (GameSettings.SendUserStatistics)
                 {
                     Mission mission = GameMain.GameSession.Mission;

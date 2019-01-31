@@ -228,8 +228,9 @@ namespace Barotrauma
                 if (levelSeed == value) return;
 
                 levelSeed = value;
-                backgroundSprite = LocationType.Random(levelSeed)?.Background;
-                if (!seedBox.Selected) seedBox.Text = levelSeed;
+
+                backgroundSprite = LocationType.Random(levelSeed)?.GetPortrait(ToolBox.StringToInt(levelSeed));
+                seedBox.Text = levelSeed;
 
                 //lastUpdateID++;
             }

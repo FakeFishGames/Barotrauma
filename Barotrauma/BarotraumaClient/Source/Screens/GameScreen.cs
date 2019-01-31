@@ -135,12 +135,28 @@ namespace Barotrauma
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
-            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
             if (Character.Controlled != null)
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
 
+
+            //------------------------------------------------------------------------
+            graphics.SetRenderTarget(renderTarget);
+            graphics.Clear(Color.Transparent);
+            //Draw resizeable background structures (= background walls) and wall background sprites 
+            //(= the background texture that's revealed when a wall is destroyed) into the background render target
+            //These will be visible through the LOS effect.
+            //Could be drawn with one Submarine.DrawBack call, but we can avoid sorting by depth by doing it like this.
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure && s.ResizeVertical && s.ResizeHorizontal);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(s.ResizeVertical && s.ResizeHorizontal) && ((Structure)s).Prefab.BackgroundSprite != null);
+            spriteBatch.End();
+
+            graphics.SetRenderTarget(null);
+            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, renderTarget);
+
+            //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTargetBackground);
             if (Level.Loaded == null)
             {
@@ -169,10 +185,11 @@ namespace Barotrauma
             //(= the background texture that's revealed when a wall is destroyed) into the background render target
             //These will be visible through the LOS effect.
             //Could be drawn with one Submarine.DrawBack call, but we can avoid sorting by depth by doing it like this.
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure && s.ResizeVertical && s.ResizeHorizontal);
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(s.ResizeVertical && s.ResizeHorizontal) && ((Structure)s).Prefab.BackgroundSprite != null);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None);
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
+
+            //----------------------------------------------------------------------------
 
             //Start drawing to the normal render target (stuff that can't be seen through the LOS effect)
             graphics.SetRenderTarget(renderTarget);

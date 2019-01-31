@@ -62,6 +62,8 @@ namespace Barotrauma
 
         private Tutorials.EditorTutorial tutorial;
 
+        private DateTime editorSelectedTime;
+
         public override Camera Cam
         {
             get { return cam; }
@@ -517,6 +519,8 @@ namespace Barotrauma
         {
             base.Select();
 
+            editorSelectedTime = DateTime.Now;
+
             GUI.ForceMouseOn(null);
             SetCharacterMode(false);
 
@@ -549,6 +553,12 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+
+            TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                Steam.SteamManager.IncrementStat("hoursineditor", (float)timeInEditor.TotalHours);
+            }
 
             GUI.ForceMouseOn(null);
 
@@ -672,13 +682,19 @@ namespace Barotrauma
             };
                         
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogDescription"));
-
-            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform))
+            
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform));
+            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), font: GUI.SmallFont, wrap: true);
+            descriptionBox.OnTextChanged += (textBox, text) =>
             {
-                Wrap = true,
-                Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description
+                Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Rect.Height, (int)textSize.Y + 10));
+                descriptionContainer.UpdateScrollBarSize();
+                descriptionContainer.BarScroll = 1.0f;
+                ChangeSubDescription(textBox, text);
+                return true;
             };
-            descriptionBox.OnTextChanged += ChangeSubDescription;
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
 
             var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform), style: null);
             
@@ -1080,7 +1096,7 @@ namespace Barotrauma
                 if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
             }
 
-            if (selectedSub.GameVersion < new Version("0.9.0.0"))
+            if (selectedSub.GameVersion < new Version("0.8.9.0"))
             {
                 var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
                     new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
@@ -1898,7 +1914,10 @@ namespace Barotrauma
                         dummyCharacter.SelectedConstruction.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                     }
 
-                    if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.FocusedItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
+                    if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.FocusedItem != dummyCharacter.SelectedConstruction && GUI.KeyboardDispatcher.Subscriber == null)
+                    {
+                        dummyCharacter.SelectedConstruction = null;
+                    }
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

@@ -1,13 +1,13 @@
 <locationtypes>
   <None
     name="Natural Formation"
-    namefile="Content/Map/locationNames.txt"
-    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
+    namefile="Content/Map/locationNames.txt"    
     commonnessperzone="1: 5.0, 2: 5.0, 3: 5.0, 4: 5.0, 5: 5.0, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
     
     <nameformats f0="[name]"/>
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,768,256,256" color="236,200,159,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="514,806,253,196" color="236,200,159,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.jpg"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
 
@@ -33,11 +33,11 @@
   <City
     name="Colony"
     namefile="Content/Map/cityNames.txt"
-    background="Content/Map/LocationPortraits/WorkCamp_Mining1.jpg"
     commonnessperzone="1: 5.0"
     halo="0,1,0,0.3">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,512,256,256" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="520,527,244,228" color="198,252,222,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/Colony.jpg"/>
 
     <Hireable identifier="assistant" commonness="10"/>
     <Hireable identifier="engineer" commonness="3"/>
@@ -56,11 +56,11 @@
   <Outpost
     name="Habitation Outpost"
     namefile="Content/Map/cityNames.txt"
-    background="Content/Map/LocationPortraits/HabitationOutpost.jpg"
     commonnessperzone="2: 5.0, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="512,256,256,256" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="545,275,181,220" color="198,252,222,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.jpg"/>
     
     <Hireable identifier="assistant" commonness="10"/>
     <Hireable identifier="engineer" commonness="3"/>
@@ -83,11 +83,11 @@
   <Military
     name="Military Outpost"
     namefile="Content/Map/locationNames.txt"
-    background="Content/Map/LocationPortraits/WorkCampMilitary.jpg"
     commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
     halo="0,1,0,0.4">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,512,256,256" color="198,252,222,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary.jpg"/>
     
     <Hireable identifier="securityofficer" commonness="10"/>
     <Hireable identifier="captain" commonness="3"/>
@@ -107,11 +107,11 @@
     name="Research Outpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
     commonnessperzone="2: 1.25, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,256,256,256" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="803,265,190,241" color="198,252,222,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"/>
     
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
@@ -131,11 +131,12 @@
     name="Mining Outpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
     commonnessperzone="2: 1.25, 3: 2.5"
     halo="0,1,0,0.2">
 
-    <Symbol texture="Content/Map/mine.png" color="198,252,222,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="284,773,220,244" color="198,252,222,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining1.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining2.jpg"/>
     
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
@@ -151,11 +152,11 @@
   <Lair
     name="Breeding Grounds"
     namefile="Content/Map/alienNames.txt"
-    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     commonnessperzone="1: 0.5, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.4">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,0,256,256" color="216,91,80,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/EmptyLocation.jpg"/>
 
     <nameformats
       f0="[name] Breeding Grounds"
@@ -170,11 +171,11 @@
   <Ruins
     name="Alien Ruins"
     namefile="Content/Map/alienNames.txt"
-    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.2">
 
-    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,768,256,256" color="216,91,80,255"/>
+    <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="784,847,233,158" color="216,91,80,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/AlienRuins2.jpg"/>
     
     <nameformats
       f0="[name] Ruins"/>

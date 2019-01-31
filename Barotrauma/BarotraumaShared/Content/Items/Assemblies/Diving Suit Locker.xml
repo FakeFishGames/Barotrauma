@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="Diving Suit Locker" description="A diving suit locker with one dive-ready suit." hideinmenus="false">
+  <Item name="Diving Suit Locker" identifier="divingsuitlocker" ID="5" rect="-48,96,86,186" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="divingsuitcontainerwindow" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
+    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="6" />
+  </Item>
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="7" rect="138,-48,13,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  </Item>
+  <Item name="Diving Suit" identifier="divingsuit" ID="6" rect="113,-36,63,56" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="diving,divingsuit" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <LightComponent range="100" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="255,255,255,25" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Wearable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="7" />
+  </Item>
+</ItemAssembly>

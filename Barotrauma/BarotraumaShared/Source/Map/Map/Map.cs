@@ -394,7 +394,9 @@ namespace Barotrauma
         {
             if (!Locations.Contains(location))
             {
-                DebugConsole.ThrowError("Failed to select a location. " + location.Name + " not found in the map.");
+                string errorMsg = "Failed to select a location. " + (location?.Name ?? "null") + " not found in the map.";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -406,10 +408,18 @@ namespace Barotrauma
         public void SelectMission(int missionIndex)
         {
             if (SelectedConnection == null) { return; }
+            if (CurrentLocation == null)
+            {
+                string errorMsg = "Failed to select a mission (current location not set).";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Map.SelectMission:CurrentLocationNotSet", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
             CurrentLocation.SelectedMissionIndex = missionIndex;
 
             //the destination must be the same as the destination of the mission
-            if (CurrentLocation.SelectedMission.Locations[1] != SelectedLocation)
+            if (CurrentLocation.SelectedMission != null && 
+                CurrentLocation.SelectedMission.Locations[1] != SelectedLocation)
             {
                 SelectLocation(CurrentLocation.SelectedMission.Locations[1]);
             }

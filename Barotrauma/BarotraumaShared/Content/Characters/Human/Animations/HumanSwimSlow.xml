@@ -1,12 +1,15 @@
 ﻿<HumanSwimSlow
-  movementspeed="1"
+  movementspeed="1.429391"
   steertorque="25"
   headangle="42.5"
   torsoangle="0"
-  legmoveamount="0.6500002"
-  handmoveamount="0.7700002,0"
+  legmoveamount="0.4873754"
+  handmoveamount="0.6400239,0.1144197"
   handmoveoffset="0,0"
-  handcyclespeed="3.080001"
-  legcyclelength="6.800001"
-  cyclespeed="1"
-  animationtype="SwimSlow" />
+  handcyclespeed="2.560096"
+  legcyclelength="8.0442"
+  cyclespeed="1.429391"
+  animationtype="SwimSlow"
+  footangle="-40"
+  footrotatestrength="5"
+  handmovestrength="0.5999999" />

@@ -6,7 +6,7 @@
       <spritedeformation type="noise" resolution="3,3" frequency="2" amplitude="0.05" changespeed="2" blendmode="add" />
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply" row0="0,0 0,0 0,0" row1="0,0 0,0 1,1" row2="0,0 1,2 1,2" />
     </deformablesprite>
-    <attack context="Water" range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="5" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0">
+    <attack context="Water" cooldown="5" range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="10" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="5" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0">
       <Affliction identifier="bleeding" strength="30" />
       <Affliction identifier="stun" strength="0.25" />
       <Affliction identifier="internaldamage" strength="10" />
@@ -61,18 +61,18 @@
   <!-- Jaw -->
   <limb id="8" width="42" height="44" ignorecollisions="True" flip="True" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 8" notes="">
     <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="161,83,44,47" depth="0.06" origin="0.3677241,0.5077608" />
-    <attack context="Ground" range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="20" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0">
+    <attack context="Ground" cooldown="3" range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="10" itemdamage="10" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="20" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0">
       <Affliction identifier="bleeding" strength="30" />
       <Affliction identifier="stun" strength="0.25" />
       <Affliction identifier="internaldamage" strength="10" />
     </attack>
   </limb>
   <!-- ArmUpper -->
-  <limb id="9" width="60" height="60" type="RightLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 9" notes="">
+  <limb id="9" width="0" height="0" type="RightLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="30" mass="0" friction="0.3" restitution="0.05" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 9" notes="">
     <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,170,70,87" depth="0.11" origin="0.4472283,0.4274753" />
   </limb>
   <!-- ArmLower -->
-  <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="15" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="13.06022,-3.164046" refjoint="-1" ignorecollisions="False" name="Limb 10" notes="">
+  <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="10" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="16.03577,-9.425465" refjoint="8" ignorecollisions="False" name="Limb 10" notes="">
     <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="160,130,95,43" depth="0.1" origin="0.5264239,0.3615547" />
     <sound tag="footstep_armor_heavy" />
   </limb>
@@ -105,9 +105,9 @@
   <!--Head To Jaw-->
   <joint limb1="0" limb2="8" limb1anchor="-13.74361,-17.22302" limb2anchor="0.8587904,16.14077" canbesevered="True" limitenabled="True" upperlimit="23.76226" lowerlimit="-21.58732" name="Joint 0 - 8" stiffness="0.25" />
   <!--Shoulder-->
-  <joint limb1="1" limb2="9" limb1anchor="15.05702,-15.9578" limb2anchor="0.8482082,21.33283" canbesevered="True" limitenabled="True" upperlimit="358.7352" lowerlimit="247.4892" name="Joint 1 - 9" stiffness="0.25" />
+  <joint limb1="1" limb2="9" limb1anchor="15.05702,-15.9578" limb2anchor="0.8482082,21.33283" canbesevered="True" limitenabled="True" upperlimit="41.20124" lowerlimit="-57.19871" name="Joint 1 - 9" stiffness="0.25" />
   <!--Elbow-->
-  <joint limb1="9" limb2="10" limb1anchor="-4.953471,-29.06207" limb2anchor="-44.07518,9.280527" canbesevered="True" limitenabled="True" upperlimit="60.05338" lowerlimit="-65.67323" name="Joint 9 - 10" stiffness="0.25" />
+  <joint limb1="9" limb2="10" limb1anchor="-4.516037,-28.62164" limb2anchor="-44.07518,9.280527" canbesevered="True" limitenabled="True" upperlimit="97.67264" lowerlimit="9.157016" name="Joint 9 - 10" stiffness="0.1" />
   <!--FakeFeet-->
   <joint limb1="2" limb2="11" limb1anchor="-1.630605,-27.50153" limb2anchor="5.272902,20.79574" canbesevered="True" limitenabled="True" upperlimit="55.2636" lowerlimit="-71.75" name="Joint 2 - 11" stiffness="0.25" />
   <joint limb1="3" limb2="12" limb1anchor="12.48289,-22.7742" limb2anchor="10.91163,18.78148" canbesevered="True" limitenabled="True" upperlimit="30" lowerlimit="-57.98726" name="Joint 3 - 12" stiffness="0.25" />

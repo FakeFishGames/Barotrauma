@@ -33,12 +33,12 @@ namespace Barotrauma
             wanderAngle = Rand.Range(0.0f, MathHelper.TwoPi);
         }
 
-        public void SteeringSeek(Vector2 targetSimPos, float speed = 1.0f)
+        public void SteeringSeek(Vector2 targetSimPos, float speed)
         {
             steering += DoSteeringSeek(targetSimPos, speed);
         }
 
-        public void SteeringWander(float speed = 1.0f)
+        public void SteeringWander(float speed)
         {
             steering += DoSteeringWander(speed);
         }
@@ -68,7 +68,7 @@ namespace Barotrauma
             steering.Y = 0.0f;
         }
 
-        public virtual void Update(float speed = 1.0f)
+        public virtual void Update(float speed)
         {
             if (steering == Vector2.Zero || !MathUtils.IsValid(steering))
             {
@@ -86,7 +86,7 @@ namespace Barotrauma
             host.Steering = steering;
         }
 
-        protected virtual Vector2 DoSteeringSeek(Vector2 target, float speed = 1.0f)
+        protected virtual Vector2 DoSteeringSeek(Vector2 target, float speed)
         {
             Vector2 targetVel = target - host.SimPosition;
 
@@ -106,7 +106,7 @@ namespace Barotrauma
             return newSteering;
         }
 
-        protected virtual Vector2 DoSteeringWander(float speed = 1.0f)
+        protected virtual Vector2 DoSteeringWander(float speed)
         {
             Vector2 circleCenter = (host.Steering == Vector2.Zero) ? Rand.Vector(speed) : host.Steering;
             circleCenter = Vector2.Normalize(circleCenter) * CircleDistance;
@@ -130,7 +130,7 @@ namespace Barotrauma
             return newSteering;
         }
 
-        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float lookAheadDistance, float speed = 1.0f)
+        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float lookAheadDistance, float speed)
         {
             if (steering == Vector2.Zero || host.Steering == Vector2.Zero) return Vector2.Zero;
 

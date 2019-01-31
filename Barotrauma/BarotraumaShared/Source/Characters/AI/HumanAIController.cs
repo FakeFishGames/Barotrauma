@@ -129,11 +129,13 @@ namespace Barotrauma
                 Character.AnimController.TargetMovement = targetMovement;
             }
 
-            if (Character.SelectedConstruction != null && Character.SelectedConstruction.GetComponent<Items.Components.Ladder>()!=null)
+            if (Character.AnimController.Anim == AnimController.Animation.Climbing &&
+                Character.SelectedConstruction != null &&
+                Character.SelectedConstruction.GetComponent<Items.Components.Ladder>() != null)
             {
                 if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
                 {
-                    Character.AnimController.TargetMovement = new Vector2( 0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+                    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
                 }
             }
 
@@ -196,12 +198,20 @@ namespace Barotrauma
             float totalDamage = attackResult.Damage;
             if (totalDamage <= 0.0f || attacker == null) return;
 
-            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
+            if (attacker.AnimController.Anim == AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
+            {
+                // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
+                // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
+                return;
+            }
 
-            //the objective in the manager is not necessarily the same as the one we just instantiated,
-            //because the objective isn't added if there's already an identical objective in the manager
-            var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
-            combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
+            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1, Rand.RandSync.Unsynced), () =>
+            {
+                //the objective in the manager is not necessarily the same as the one we just instantiated,
+                //because the objective isn't added if there's already an identical objective in the manager
+                var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
+                combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
+            });
         }
 
         public void SetOrder(Order order, string option, Character orderGiver, bool speak = true)

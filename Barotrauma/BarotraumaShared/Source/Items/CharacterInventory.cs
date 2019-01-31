@@ -239,6 +239,13 @@ namespace Barotrauma
 
         public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
+            if (index < 0 || index >= Items.Length)
+            {
+                string errorMsg = "CharacterInventory.TryPutItem failed: index was out of range(" + index + ").\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return false;
+            }
+
             //there's already an item in the slot
             if (Items[index] != null)
             {

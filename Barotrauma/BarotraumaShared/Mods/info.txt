@@ -32,19 +32,19 @@ Example:
 
 	A very simple content package could be configured as follows:
 
-	<contentpackage name="BestModEver" path="Data\ContentPackages\BestModEver">
-		<Item file="Mods\BestModEver\items.xml" />
-		<Character file="Mods\BestModEver\Human\human.xml" />
-		<Character file="Mods\BestModEver\Cthulhu\cthulhu.xml" />
-		<Character file="Content\Characters\Crawler\crawler.xml" />
-		<Structure file="Content\Map\StructurePrefabs.xml" />
-		<Jobs file="Content\Jobs.xml" />
-		<RandomEvents file="Mods\BestModEver\randomevents.xml" />
+	<contentpackage name="BestModEver" path="Data/ContentPackages/BestModEver">
+		<Item file="Mods/BestModEver/items.xml" />
+		<Character file="Mods/BestModEver/Human/Human.xml" />
+		<Character file="Mods/BestModEver/Cthulhu/cthulhu.xml" />
+		<Character file="Content/Characters/Crawler/crawler.xml" />
+		<Structure file="Content/Map/StructurePrefabs.xml" />
+		<Jobs file="Content/Jobs.xml" />
+		<RandomEvents file="Mods/BestModEver/randomevents.xml" />
 		<Executable file="Barotrauma.exe" />
 	</contentpackage>
 
 	This content package would replace all the items in the game with whatever items are
-	configured in the "Mods\BestModEver\items.xml" file. It would also use a modified
+	configured in the "Mods/BestModEver/items.xml" file. It would also use a modified
 	version of the human characters and have all the monsters in the game replaced with
 	crawlers and Cthulhus. The random events have also been changed - perhaps by adding
 	a new event that spawns Cthulhu and removing the events that spawn monsters/items

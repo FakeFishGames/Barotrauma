@@ -1,7 +1,84 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tutorials>
-  <BasicTutorial name="Basic training" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
-    <Character file="Content/Characters/Human/human.xml">
+  <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
+    <Segment name="Welcome" contenttype="text" istriggered="false">
+      <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
+    </Segment>
+    <Segment name="ReactorCommand" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="9" empty="0"/>
+        <Sheet path="1_CommandReactor/Sheets2.png" columns="5" rows="6" empty="4"/>
+      </Video>
+    </Segment>
+    <Segment name="NavConsole" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="2_NavConsole/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="2_NavConsole/Sheets5.png" columns="5" rows="2" empty="4"/>
+      </Video>
+    </Segment>
+    <Segment name="DestinationObjective" contenttype="text" istriggered="false">
+      <Text tag="DestinationObjectiveText" width="300" height="80" anchor="Center"/>
+    </Segment>
+    <Segment name="Flood" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="3_Flood/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="3_Flood/Sheets5.png" columns="5" rows="5" empty="2"/>
+      </Video>
+    </Segment>
+    <Segment name="ReactorUse" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="4_Reactor/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="4_Reactor/Sheets5.png" columns="5" rows="2" empty="3"/>
+      </Video>
+    </Segment>
+    <Segment name="EnemyOnSonar" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="5_EnemyOnSonar/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="5_EnemyOnSonar/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="5_EnemyOnSonar/Sheets3.png" columns="5" rows="7" empty="1"/>
+      </Video>
+    </Segment>
+    <Segment name="Degrading1" contenttype="text" istriggered="false">
+      <Text tag="Degrading1Text" width="300" height="80" anchor="Center"/>
+    </Segment>
+    <Segment name="Degrading2" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="6_Degrading2/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="6_Degrading2/Sheets2.png" columns="5" rows="7"/>
+      </Video>
+    </Segment>
+    <Segment name="Medical" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="7_Medical/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="7_Medical/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="7_Medical/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="7_Medical/Sheets4.png" columns="5" rows="2" empty="3"/>
+      </Video>
+    </Segment>
+    <Segment name="Approach1" contenttype="video" istriggered="false">
+      <Video animationspeed="0.1">
+        <Sheet path="8_Approach1/Sheets1.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets2.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets3.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets4.png" columns="5" rows="9"/>
+        <Sheet path="8_Approach1/Sheets5.png" columns="5" rows="9"/>
+      </Video>
+    </Segment>
+    <Segment name="Approach2" contenttype="text" istriggered="false">
+      <Text tag="Approach2Text" width="300" height="80" anchor="Center"/>
+    </Segment>
+  </ContextualTutorial>
+  <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+    <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>
@@ -10,8 +87,8 @@
       </Job>
     </Character>
   </BasicTutorial>
-  <BasicTutorial name="Test 1" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
-    <Character file="Content/Characters/Human/human.xml">
+  <BasicTutorial name="Test 1"  tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+    <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>
@@ -20,8 +97,8 @@
       </Job>
     </Character>
   </BasicTutorial>
-  <BasicTutorial name="Test 2" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
-    <Character file="Content/Characters/Human/human.xml">
+  <BasicTutorial name="Test 2"  tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+    <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>

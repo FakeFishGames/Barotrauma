@@ -3,7 +3,7 @@ sampler TextureSampler = sampler_state { Texture = <xTexture>; };
 
 float4x4 xTransform;
 
-const int MaxDeformResolution = 15 * 15;
+static const int MaxDeformResolution = 15 * 15;
 
 float2 deformArray[15 * 15];
 
@@ -12,6 +12,8 @@ int deformArrayHeight;
 
 float2 uvTopLeft;
 float2 uvBottomRight;
+
+float4 tintColor;
 
 struct VertexShaderInput
 {
@@ -61,7 +63,7 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
     };
 
     output.Position = mul(input.Position + float4(vertexOffset, 0, 0), xTransform);
-	output.Color = input.Color;
+	output.Color = input.Color * tintColor;
 	output.TexCoords = input.TexCoords;
 
 	return output;

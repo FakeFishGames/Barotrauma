@@ -1,9 +1,10 @@
 using Barotrauma.Extensions;
 using Lidgren.Network;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -140,7 +141,7 @@ namespace Barotrauma
             BeardElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
             MoustacheElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
             HairElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
-            // TODO load class specific wearables
+            Job?.Prefab.ClothingElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
         }
 
         public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
@@ -163,7 +164,7 @@ namespace Barotrauma
                     foreach (var attachment in AttachmentsSprites)
                     {
                         DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, SpriteEffects.FlipHorizontally);
-                        depthStep += 0.000001f;
+                        depthStep += depthStep;
                     }
                 }
             }
@@ -181,14 +182,15 @@ namespace Barotrauma
                     foreach (var attachment in AttachmentsSprites)
                     {
                         DrawAttachmentSprite(spriteBatch, attachment, HeadSprite, screenPos, scale, depthStep);
-                        depthStep += 0.000001f;
+                        depthStep += depthStep;
                     }
                 }
             }
         }
-        
+
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
         {
+            var list = AttachmentsSprites.ToList();
             if (attachment.InheritSourceRect)
             {
                 if (attachment.SheetIndex.HasValue)
@@ -215,7 +217,6 @@ namespace Barotrauma
             if (attachment.InheritLimbDepth)
             {
                 depth = head.Depth - depthStep;
-
             }
             attachment.Sprite.Draw(spriteBatch, drawPos, Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }

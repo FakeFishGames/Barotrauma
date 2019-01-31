@@ -262,6 +262,15 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
+            float damageParticleAmount = Math.Min(damage / 10, 1.0f);
+            foreach (ParticleEmitter emitter in character.DamageEmitters)
+            {
+                if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
+                if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+
+                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
+            }
+
             float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
             float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
             foreach (ParticleEmitter emitter in character.BloodEmitters)
@@ -269,9 +278,9 @@ namespace Barotrauma
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
                 if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
 
-                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleAmount, amountMultiplier: bloodParticleAmount);                
+                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);                
             }
-            
+
             if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
             {
                 character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
@@ -515,7 +524,6 @@ namespace Barotrauma
             LightSource?.Remove();
             LightSource = null;
 
-            // TODO: remove wearing items?
             OtherWearables?.ForEach(w => w.Sprite.Remove());
             OtherWearables = null;
         }

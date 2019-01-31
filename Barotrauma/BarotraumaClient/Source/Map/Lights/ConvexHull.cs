@@ -160,11 +160,12 @@ namespace Barotrauma.Lights
             }
             if (penumbraEffect == null)
             {
-                penumbraEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
-                penumbraEffect.TextureEnabled = true;
-                //shadowEffect.VertexColorEnabled = true;
-                penumbraEffect.LightingEnabled = false;
-                penumbraEffect.Texture = TextureLoader.FromFile("Content/Lights/penumbra.png");
+                penumbraEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                {
+                    TextureEnabled = true,
+                    LightingEnabled = false,
+                    Texture = TextureLoader.FromFile("Content/Lights/penumbra.png")
+                };
             }
 
             parentEntity = parent;

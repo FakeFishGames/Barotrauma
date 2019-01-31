@@ -56,7 +56,7 @@ namespace Barotrauma
         private Rectangle borders;
         
         private MapTile[,] mapTiles;
-        
+        private bool messageBoxOpen;
 #if DEBUG
         private GUIComponent editor;
 
@@ -326,8 +326,8 @@ namespace Barotrauma
                     float iconScale = MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X;
 
                     Rectangle drawRect = location.Type.Sprite.SourceRect;
-                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom);
-                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom);
+                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
+                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
@@ -341,7 +341,6 @@ namespace Barotrauma
                     }
                 }
             }
-
 
             foreach (LocationConnection connection in connections)
             {
@@ -530,16 +529,15 @@ namespace Barotrauma
                         }
                         else
                         {
-                            Vector2? intersection = MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height));
-                            if (intersection != null)
+                            if (MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height), out Vector2 intersection))
                             {
                                 if (!rect.Contains(start))
                                 {
-                                    start = (Vector2)intersection;
+                                    start = intersection;
                                 }
                                 else
                                 {
-                                    end = (Vector2)intersection;
+                                    end = intersection;
                                 }
                             }
                         }
@@ -585,7 +583,7 @@ namespace Barotrauma
                         color *= 0.5f;
                     }
 
-                    float iconScale = 1.0f;
+                    float iconScale = location == CurrentLocation ? 1.2f : 1.0f;
                     if (location == highlightedLocation)
                     {
                         iconScale *= 1.1f;
@@ -598,7 +596,7 @@ namespace Barotrauma
                     location.Type.Sprite.Draw(spriteBatch, pos, color, 
                         scale: MapGenerationParams.Instance.LocationIconSize / location.Type.Sprite.size.X * iconScale * zoom);
                     MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, pos, color, 
-                        scale: MapGenerationParams.Instance.LocationIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * iconScale * zoom * 1.2f);            
+                        scale: MapGenerationParams.Instance.LocationIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * iconScale * zoom * 1.4f);            
                 }
 
                 //PLACEHOLDER until the stuff at the center of the map is implemented
@@ -613,9 +611,10 @@ namespace Barotrauma
                 MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, centerPos, centerColor,
                     scale: centerIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * zoom * 1.2f);
 
-                if (mouseOn && PlayerInput.LeftButtonClicked())
+                if (mouseOn && PlayerInput.LeftButtonClicked() && !messageBoxOpen)
                 {
-                    new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
+                    var messageBox = new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
+                    CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
                 }
             }
             
@@ -641,6 +640,14 @@ namespace Barotrauma
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred);
+        }
+
+        private IEnumerable<object> WaitForMessageBoxClosed(GUIMessageBox box)
+        {
+            messageBoxOpen = true;
+            while (GUIMessageBox.MessageBoxes.Contains(box)) yield return null;
+            yield return new WaitForSeconds(.1f);
+            messageBoxOpen = false;
         }
 
         private float hudOpenState;

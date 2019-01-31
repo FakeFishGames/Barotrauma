@@ -18,8 +18,8 @@
       springdampinglowskill="5" springdampinghighskill="5"
       rotationspeedlowskill="0.5" rotationspeedhighskill="0.5">
       <BarrelSprite texture="Content/Items/Legacy/SearchLight_legacy.png" origin="0.5, 0.55" />
-      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true" powerconsumption="50">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true" powerconsumption="50" drawbehindsubs="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0"/>
       </LightComponent>
     </Turret>
 

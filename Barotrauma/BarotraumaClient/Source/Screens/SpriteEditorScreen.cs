@@ -17,6 +17,8 @@ namespace Barotrauma
         private GUIFrame topPanel;
         private GUIFrame leftPanel;
         private GUIFrame rightPanel;
+        private GUIFrame bottomPanel;
+        private GUIFrame backgroundColorPanel;
 
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
@@ -31,6 +33,9 @@ namespace Barotrauma
         private float minZoom = 0.25f;
         private float maxZoom;
         private int spriteCount;
+
+        private bool editBackgroundColor;
+        private Color backgroundColor = new Color(0.051f, 0.149f, 0.271f, 1.0f);
 
         private readonly Camera cam;
         public override Camera Cam
@@ -128,6 +133,7 @@ namespace Barotrauma
                 OnMoved = (scrollBar, value) =>
                 {
                     zoom = MathHelper.Lerp(minZoom, maxZoom, value);
+                    viewAreaOffset = Point.Zero;
                     return true;
                 }
             };
@@ -234,6 +240,66 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            // Background color
+            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.05f), Frame.RectTransform, Anchor.BottomCenter), style: null, color: Color.Black * 0.5f);
+            new GUITickBox(new RectTransform(new Vector2(0.2f, 0.5f), bottomPanel.RectTransform, Anchor.Center), "Edit Background Color")
+            {
+                Selected = editBackgroundColor,
+                OnSelected = box =>
+                {
+                    editBackgroundColor = box.Selected;
+                    return true;
+                }
+            };
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Point(400, 80), Frame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, style: null, color: Color.Black * 0.4f);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), backgroundColorPanel.RectTransform) { MinSize = new Point(80, 26) }, "Background \nColor:", textColor: Color.WhiteSmoke);
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), backgroundColorPanel.RectTransform, Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(20, 0)
+            }, isHorizontal: true, childAnchor: Anchor.CenterRight)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+            var fields = new GUIComponent[4];
+            string[] colorComponentLabels = { "R", "G", "B" };
+            for (int i = 2; i >= 0; i--)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform)
+                {
+                    MinSize = new Point(40, 0),
+                    MaxSize = new Point(100, 50)
+                }, style: null, color: Color.Black * 0.6f);
+                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
+                    font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = GUI.SmallFont
+                };
+                numberInput.MinValueInt = 0;
+                numberInput.MaxValueInt = 255;
+                numberInput.Font = GUI.SmallFont;
+                switch (i)
+                {
+                    case 0:
+                        colorLabel.TextColor = Color.Red;
+                        numberInput.IntValue = backgroundColor.R;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)(numInput.IntValue);
+                        break;
+                    case 1:
+                        colorLabel.TextColor = Color.LightGreen;
+                        numberInput.IntValue = backgroundColor.G;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)(numInput.IntValue);
+                        break;
+                    case 2:
+                        colorLabel.TextColor = Color.DeepSkyBlue;
+                        numberInput.IntValue = backgroundColor.B;
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.B = (byte)(numInput.IntValue);
+                        break;
+                }
+            }
         }
 
         private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
@@ -265,6 +331,11 @@ namespace Barotrauma
                 element.Elements("Sprite").ForEach(s => CreateSprite(s));
                 element.Elements("brokensprite").ForEach(s => CreateSprite(s));
                 element.Elements("BrokenSprite").ForEach(s => CreateSprite(s));
+                element.Elements("containedsprite").ForEach(s => CreateSprite(s));
+                element.Elements("ContainedSprite").ForEach(s => CreateSprite(s));
+                //decorativesprites don't necessarily have textures (can be used to hide/disable other sprites)
+                element.Elements("decorativesprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
+                element.Elements("DecorativeSprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
                 element.Elements().ForEach(e => LoadSprites(e));
             }
 
@@ -315,6 +386,18 @@ namespace Barotrauma
         #endregion
 
         #region Public methods
+        public override void AddToGUIUpdateList()
+        {
+            leftPanel.AddToGUIUpdateList();
+            rightPanel.AddToGUIUpdateList();
+            topPanel.AddToGUIUpdateList();
+            bottomPanel.AddToGUIUpdateList();
+            if (editBackgroundColor)
+            {
+                backgroundColorPanel.AddToGUIUpdateList();
+            }
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
@@ -341,17 +424,26 @@ namespace Barotrauma
                     }
                 }
             }
-            if (PlayerInput.ScrollWheelSpeed != 0 && GetViewArea.Contains(PlayerInput.MousePosition))
+            if (GUI.MouseOn == null)
             {
-                zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
-                zoomBar.BarScroll = GetBarScrollValue();
+                if (PlayerInput.ScrollWheelSpeed != 0)
+                {
+                    zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
+                    zoomBar.BarScroll = GetBarScrollValue();
+                }
+                widgets.Values.ForEach(w => w.Update((float)deltaTime));
+                if (PlayerInput.MidButtonHeld())
+                {
+                    // "Camera" Pan
+                    Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f;
+                    viewAreaOffset += moveSpeed.ToPoint();
+                }
             }
-            widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
+            graphics.Clear(backgroundColor);
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable, samplerState: SamplerState.PointClamp);
 
             var viewArea = GetViewArea;
@@ -566,19 +658,21 @@ namespace Barotrauma
             var viewArea = GetViewArea;
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;
-            maxZoom = Math.Min(width, height);
-            zoom = Math.Min(1, maxZoom);
+            maxZoom = 10; // TODO: user-definable?
+            zoom = Math.Min(1, Math.Min(width, height));
             zoomBar.BarScroll = GetBarScrollValue();
+            viewAreaOffset = Point.Zero;
         }
         #endregion
 
         #region Helpers
+        private Point viewAreaOffset;
         private Rectangle GetViewArea
         {
             get
             {
                 int margin = 20;
-                var viewArea = new Rectangle(leftPanel.Rect.Right + margin, topPanel.Rect.Bottom + margin, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
+                var viewArea = new Rectangle(leftPanel.Rect.Right + margin + viewAreaOffset.X, topPanel.Rect.Bottom + margin + viewAreaOffset.Y, rightPanel.Rect.Left - leftPanel.Rect.Right - margin * 2, Frame.Rect.Height - topPanel.Rect.Height - margin * 2);
                 return viewArea;
             }
         }

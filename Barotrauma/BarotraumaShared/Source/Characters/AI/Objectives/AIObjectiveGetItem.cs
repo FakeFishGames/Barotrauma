@@ -49,8 +49,6 @@ namespace Barotrauma
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
-
-            CheckInventory();
         }
 
         public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false)
@@ -75,6 +73,11 @@ namespace Barotrauma
 
         private void CheckInventory()
         {
+            if (itemIdentifiers == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null || character.Inventory.Items[i].Condition <= 0.0f) continue;

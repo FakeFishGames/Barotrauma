@@ -1,9 +1,8 @@
 ﻿<HumanoidRun
-  AnimationType="Run"
   getupforce="0.35"
   cyclespeed="2.178893"
-  footmovestrength="15"
-  footrotatestrength="20"
+  footmovestrength="10"
+  footrotatestrength="50"
   stepsize="0.4229301,0.1518838"
   legcorrectiontorque="12"
   thighcorrectiontorque="5"
@@ -12,7 +11,7 @@
   handmovestrength="1.4"
   handclampy="-0.2"
   headposition="1.346125"
-  torsoposition="1.193129"
+  torsoposition="1.035229"
   headleanamount="0.3803026"
   torsoleanamount="0.2007057"
   footmoveoffset="0.2,0"
@@ -23,4 +22,6 @@
   crouchingtorsoangle="-10"
   backwardsmovementmultiplier="0.75"
   animationtype="Run"
-  legbendtorque="10" />
+  legbendtorque="50"
+  footangle="-90"
+  crouchingfootmoveoffset="0,0" />

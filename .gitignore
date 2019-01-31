@@ -20,5 +20,5 @@ bld/
 *.psess
 .vs/
 
-# macOS
-.DS_Store
+# Mac
+*.DS_Store

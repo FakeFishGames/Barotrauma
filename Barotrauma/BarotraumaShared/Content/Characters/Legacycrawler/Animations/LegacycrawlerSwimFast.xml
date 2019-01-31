@@ -1,10 +1,10 @@
 ﻿<LegacycrawlerSwimFast
   movementspeed="8"
   steertorque="20"
-  waveamplitude="0.08"
+  waveamplitude="0.1420578"
   wavelength="30"
   flip="True"
-  headangle="8.708887"
+  headangle="81.45164"
   torsoangle="4.429057"
   mirror="True"
   rotatetowardsmovement="True"
@@ -12,6 +12,8 @@
   headtorque="25"
   foottorque="25"
   tailtorque="50"
-  footangles="5: 0,7: 0,9: 0"
+  footangles="5: 0.9673765,7: 0.3874607,9: 0.3782401"
   cyclespeed="1"
-  animationtype="SwimFast" />
+  animationtype="SwimFast"
+  usesinemovement="False"
+  tailangle="NaN" />

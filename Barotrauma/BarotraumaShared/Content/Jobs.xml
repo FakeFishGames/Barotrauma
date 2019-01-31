@@ -25,6 +25,9 @@
         <Item identifier="revolverround"/>
       </Item>
     </Items>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
+    </PortraitClothing>
   </Job>
   
   <Job name="Engineer" identifier="engineer"
@@ -52,6 +55,9 @@
         <Item identifier="batterycell"/>
       </Item>
     </Items>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing Engineer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
+    </PortraitClothing>
   </Job>
 
   <Job name="Mechanic" identifier="mechanic"
@@ -79,6 +85,9 @@
         <Item identifier="batterycell"/>
       </Item>
     </Items>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing Mechanic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
+    </PortraitClothing>
   </Job>
 
   <Job name="Security Officer" identifier="securityofficer"
@@ -105,6 +114,9 @@
         <Item identifier="batterycell"/>
       </Item>      
     </Items>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
+    </PortraitClothing>
   </Job>
 
   <Job name="Medical Doctor" identifier="medicaldoctor"
@@ -127,6 +139,9 @@
         <Item identifier="batterycell"/>
       </Item>      
     </Items>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing Medic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,1"/>
+    </PortraitClothing>
   </Job>
 
   <Job name="Assistant" identifier="assistant"
@@ -141,28 +156,23 @@
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
+      <Item identifier="assistantclothes" equip="true"/>
       <Item identifier="wrench"/>
       <Item identifier="screwdriver"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>      
     </Items>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing Assistant" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,2"/>
+    </PortraitClothing>
   </Job>
 
   <Job name="Watchman" identifier="watchman"
        description=""
        minnumber="0" maxnumber="0" initialcount="0">
     <Items>
-      <Item identifier="captainscap" equip="true"/>
-      <Item identifier="captainsuniform" equip="true"/>
-      <Item identifier="revolver" equip="false">
-        <Item identifier="revolverround"/>
-        <Item identifier="revolverround"/>
-        <Item identifier="revolverround"/>
-        <Item identifier="revolverround"/>
-        <Item identifier="revolverround"/>
-        <Item identifier="revolverround"/>
-      </Item>
+      <Item identifier="watchmanclothes" equip="true"/>
     </Items>
   </Job>
 </Jobs>

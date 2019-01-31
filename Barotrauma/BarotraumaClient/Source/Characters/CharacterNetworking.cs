@@ -389,7 +389,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Kill(causeOfDeathType, causeOfDeathAffliction, true);
+                        Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
                     }
                 }
 

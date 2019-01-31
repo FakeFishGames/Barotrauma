@@ -37,8 +37,17 @@ namespace Barotrauma
         public static bool ShowLinks = true;
         
         private HashSet<string> tags;
-        
-        public Hull CurrentHull;
+
+        private Hull currentHull;
+        public Hull CurrentHull
+        {
+            get { return currentHull; }
+            set
+            {
+                currentHull = value;
+                ParentRuin = currentHull?.ParentRuin;
+            }
+        }
         
         public bool Visible = true;
 
@@ -108,10 +117,18 @@ namespace Barotrauma
             }
         }
 
+        private Item container;
         public Item Container
         {
-            get;
-            private set;
+            get { return container; }
+            private set
+            {
+                if (value != container)
+                {
+                    container = value;
+                    SetActiveSprite();
+                }
+            }
         }
                 
         public override string Name
@@ -125,6 +142,14 @@ namespace Barotrauma
         {
             get { return description ?? prefab.Description; }
             set { description = value; }
+        }
+
+        private bool hiddenInGame;
+        [Editable, Serialize(false, true)]
+        public bool HiddenInGame
+        {
+            get { return hiddenInGame; }
+            set { hiddenInGame = value; }
         }
 
         public float ImpactTolerance
@@ -193,13 +218,22 @@ namespace Barotrauma
             get;
             protected set;
         }
-
-
+        
         [Serialize("1.0,1.0,1.0,1.0", false), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
         public Color ContainerColor
         {
             get;
             protected set;
+        }
+
+        [Serialize("", false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to check what item this item is contained inside
+        /// </summary>
+        public string ContainerIdentifier
+        {
+            get { return Container?.prefab.Identifier ?? ""; }
+            set { /*do nothing*/ }
         }
 
         public Color Color
@@ -444,6 +478,7 @@ namespace Barotrauma
                     case "price":
                     case "levelcommonness":
                     case "suitabletreatment":
+                    case "containedsprite":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -904,9 +939,7 @@ namespace Barotrauma
                 aiTarget.SightRange -= deltaTime * 1000.0f;
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
-
-            UpdateSpriteStates(deltaTime);
-
+            
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)
@@ -975,9 +1008,7 @@ namespace Barotrauma
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
-
-        partial void UpdateSpriteStates(float deltaTime);
-        
+                
         public void UpdateTransform()
         {
             Submarine prevSub = Submarine;
@@ -1290,8 +1321,7 @@ namespace Barotrauma
 
                 if (!pickHit && !selectHit) continue;
 
-                Skill tempRequiredSkill;
-                if (!ic.HasRequiredSkills(picker, out tempRequiredSkill)) hasRequiredSkills = false;
+                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
@@ -1435,7 +1465,7 @@ namespace Barotrauma
                 ic.PlaySound(actionType, user.WorldPosition, user);
 #endif
                 ic.WasUsed = true;
-                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb);
+                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
 
                 if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
                 {

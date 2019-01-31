@@ -1,48 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-    <Item
-    name="Security Officer's Uniform"
-    identifier="securityuniform"
-    category="Equipment"    
-    tags="smallitem"
-    fireproof="false"
-    cargocontaineridentifier="metalcrate"
-    description="Obey my authority!"
-    scale="0.5">
-
+  <Item name="Security Officer's Uniform" identifier="securityuniform" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="Obey my authority!" scale="0.5">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64"/>
-    <Sprite texture="clothes.png" sourcerect="49,133,195,78" depth="0.6"/>
-
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" />
+    <Sprite texture="clothes.png" sourcerect="49,133,195,78" depth="0.6" />
     <Body width="52" height="17" density="30" />
-
     <Wearable slots="Any,InnerClothes">
-      <sprite name="Security Officer's Uniform Torso" texture="securityofficer_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      
-      <sprite name="Security Officer's Uniform Left Arm" texture="securityofficer_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Security Officer's Uniform Waist" texture="securityofficer_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Security Officer's Uniform Right Thigh" texture="securityofficer_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Security Officer's Uniform Left Thigh" texture="securityofficer_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Security Officer's Uniform Right Leg" texture="securityofficer_legs_[GENDER].png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Security Officer's Uniform Left Leg" texture="securityofficer_legs_[GENDER].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-
-      <sprite name="Security Officer's Uniform Right Shoe" texture="securityofficer_legs_[GENDER].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Security Officer's Uniform Left Shoe" texture="securityofficer_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      
-      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <sprite name="Security Officer's Uniform Torso" texture="securityofficer_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Left Arm" texture="securityofficer_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Right Lower Arm" texture="securityofficer_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Left Lower Arm" texture="securityofficer_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Waist" texture="securityofficer_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Right Thigh" texture="securityofficer_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Left Thigh" texture="securityofficer_legs_[GENDER].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Right Leg" texture="securityofficer_legs_[GENDER].png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Left Leg" texture="securityofficer_legs_[GENDER].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Right Shoe" texture="securityofficer_legs_[GENDER].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform Left Shoe" texture="securityofficer_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
-  </Item>  
+  </Item>
   <Item name="Body Armor" identifier="bodyarmor" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
-    <Price locationtype="Military" buyprice="150" />
-    <Price locationtype="City" buyprice="200" />
-    <Price locationtype="Outpost" buyprice="300" />
+    <Price locationtype="Military" buyprice="225" />
+    <Price locationtype="City" buyprice="300" />
+    <Price locationtype="Outpost" buyprice="500" />
     <Deconstruct time="40">
       <Item identifier="ballisticfiber" />
       <Item identifier="ballisticfiber" />
@@ -54,13 +39,13 @@
       <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
   <Item name="Ballistic Helmet" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
-    <Price locationtype="Military" buyprice="80" />
-    <Price locationtype="City" buyprice="100" />
-    <Price locationtype="Outpost" buyprice="150" />
+    <Price locationtype="Military" buyprice="125" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="200" />
     <Deconstruct time="10">
       <Item identifier="ballisticfiber" />
     </Deconstruct>
@@ -70,7 +55,7 @@
     <Wearable slots="Any,Head" armorvalue="20.0">
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite texture="securitygear.png" limb="Head" sourcerect="39,23,32,31" origin="0.51,0.9" />
+      <sprite texture="headgears.png" limb="Head" inherittexturescale="true" sourcerect="96,96,96,96" origin="0.5,0.5" />
     </Wearable>
   </Item>
   <Item name="Handcuffs" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
@@ -90,9 +75,9 @@
     </Wearable>
   </Item>
   <Item name="Riot Shield" identifier="riotshield" category="Equipment" tags="weapon">
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="City" buyprice="100" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="City" buyprice="225" />
+    <Price locationtype="Outpost" buyprice="225" />
     <Deconstruct time="10">
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>

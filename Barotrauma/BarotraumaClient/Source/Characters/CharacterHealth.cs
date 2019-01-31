@@ -48,8 +48,7 @@ namespace Barotrauma
         private float healthBarPulsateTimer;
         private float healthBarPulsatePhase;
 
-        private float damageOverlayTimer;
-        
+        private GUITextBlock characterName;
         private GUIFrame afflictionInfoFrame;
         private GUIListBox afflictionInfoContainer;
         private GUIListBox recommendedTreatmentContainer;
@@ -82,11 +81,8 @@ namespace Barotrauma
         private float damageIntensity;
         private float damageIntensityDropdownRate = 0.1f;
 
-        public float DamageOverlayTimer
-        {
-            get { return damageOverlayTimer; }
-        }
-        
+        public float DamageOverlayTimer { get; private set; }
+
         private static CharacterHealth openHealthWindow;
         public static CharacterHealth OpenHealthWindow
         {
@@ -111,7 +107,7 @@ namespace Barotrauma
                 Character.Controlled.ResetInteract = true;
                 if (openHealthWindow != null)
                 {
-                    OpenHealthWindow.healthWindow.GetChild(0).GetChild<GUITextBlock>().Text = value.Character.Name;
+                    openHealthWindow.characterName.Text = value.Character.Name;
                     Character.Controlled.SelectedConstruction = null;
                 }
             }
@@ -203,13 +199,27 @@ namespace Barotrauma
                 RelativeSpacing = 0.03f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedHealthWindow.RectTransform), "", textAlignment: Alignment.Center);
+            var nameContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedHealthWindow.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            characterName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.CenterLeft, font: GUI.LargeFont)
+            {
+                AutoScale = true
+            };
+            new GUICustomComponent(new RectTransform(new Vector2(0.4f, 1.0f), nameContainer.RectTransform),
+                onDraw: (spriteBatch, component) =>
+                {
+                    character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), component.Rect.Width);
+                });
+
             new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.9f), paddedHealthWindow.RectTransform),
-                (spriteBatch, component) => 
+                (spriteBatch, component) =>
                 {
                     DrawHealthWindow(spriteBatch, component.RectTransform.Rect, true, false);
                 },
-                (deltaTime, component) => 
+                (deltaTime, component) =>
                 {
                     UpdateLimbIndicators(deltaTime, component.RectTransform.Rect);
                 }
@@ -280,13 +290,16 @@ namespace Barotrauma
                 }
             };
 
-            foreach (XElement subElement in element.Elements())
+            if (element != null)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                foreach (XElement subElement in element.Elements())
                 {
-                    case "sprite":
-                        limbIndicatorOverlay = new SpriteSheet(subElement);
-                        break;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "sprite":
+                            limbIndicatorOverlay = new SpriteSheet(subElement);
+                            break;
+                    }
                 }
             }
         }
@@ -294,7 +307,7 @@ namespace Barotrauma
         private void OnAttacked(Character attacker, AttackResult attackResult)
         {
             if (Math.Abs(attackResult.Damage) < 0.01f && attackResult.Afflictions.Count == 0) return;
-            damageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, damageOverlayTimer, 1.0f);
+            DamageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, DamageOverlayTimer, 1.0f);
             if (healthShadowDelay <= 0.0f) healthShadowDelay = 1.0f;
 
             if (healthBarPulsateTimer <= 0.0f) healthBarPulsatePhase = 0.0f;
@@ -418,9 +431,9 @@ namespace Barotrauma
                 }
             }
 
-            if (damageOverlayTimer > 0.0f)
+            if (DamageOverlayTimer > 0.0f)
             {
-                damageOverlayTimer -= deltaTime;
+                DamageOverlayTimer -= deltaTime;
             }
             if (damageIntensity > 0)
             {
@@ -1110,6 +1123,8 @@ namespace Barotrauma
 
         private void DrawHealthWindow(SpriteBatch spriteBatch, Rectangle drawArea, bool allowHighlight, bool highlightAll)
         {
+            if (Character.Removed) { return; }
+
             int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {

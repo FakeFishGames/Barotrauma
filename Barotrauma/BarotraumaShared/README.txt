@@ -36,11 +36,17 @@ your google-fu skills.
 These are the values that you should use when forwarding a port to your
 Barotrauma server:
 
-Service/Application: barotrauma
-External Port: The port you have selected for your server (27015 by default)
-Internal Port: The port you have selected for your server (27015 by default)
-Protocol: UDP
-
+Game port (used to communicate with clients)
+	Service/Application: barotrauma
+	External Port: The port you have selected for your server (27015 by default)
+	Internal Port: The port you have selected for your server (27015 by default)
+	Protocol: UDP
+	
+Query port (used to communicate with Steam)
+	Service/Application: barotrauma
+	External Port: The port you have selected for your server (27016 by default)
+	Internal Port: The port you have selected for your server (27016 by default)
+	Protocol: UDP
 
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
@@ -54,7 +60,7 @@ Programming					- Juan Pablo Arce ("juanjp600")
 
 ------------------------------------------------------------------------
 
-"The Descent", "Enter the Maze", "Road to Hell", "Simplex", "Unseen Horrors"
+"Road to Hell"
 Kevin MacLeod (incompetech.com)
 Licensed under Creative Commons: By Attribution 3.0
 http://creativecommons.org/licenses/by/3.0/

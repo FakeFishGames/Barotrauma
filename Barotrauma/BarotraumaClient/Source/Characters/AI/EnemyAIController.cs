@@ -38,7 +38,7 @@ namespace Barotrauma
             switch (State)
             {
                 case AIState.Attack:
-                    stateColor = coolDownTimer > 0.0f ? Color.Orange : Color.Red;
+                    stateColor = IsCoolDownRunning ? Color.Orange : Color.Red;
                     break;
                 case AIState.Escape:
                     stateColor = Color.LightBlue;

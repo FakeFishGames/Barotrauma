@@ -1,4 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienFractalSpawnpoint" description="" hideinmenus="false">
+<ItemAssembly name="AlienFractalSpawnpoint" description="" hideinmenus="true">
   <WayPoint ID="3" x="-16" y="16" spawn="Enemy" />
 </ItemAssembly>

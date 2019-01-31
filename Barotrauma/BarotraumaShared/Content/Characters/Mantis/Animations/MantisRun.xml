@@ -18,4 +18,6 @@
   backwardsmovementmultiplier="0.75"
   cyclespeed="5"
   torsoangle="NaN"
-  animationtype="Run" />
+  animationtype="Run"
+  tailtorque="50"
+  tailangle="NaN" />

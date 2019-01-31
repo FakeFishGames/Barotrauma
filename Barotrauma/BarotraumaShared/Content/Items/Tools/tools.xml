@@ -1,28 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Welding Tool"
-        identifier="weldingtool"
-        category="Equipment"
-        Tags="smallitem,weldingtool"
-        cargocontaineridentifier="metalcrate"
-        description="One of the most crucial tools on board the submarine. Also works underwater."
-        Scale="0.32">
-    <Price locationtype="City" buyprice="140" />
-    <Price locationtype="Research" buyprice="140" />
-    <Price locationtype="Military" buyprice="140" />
-    <Price locationtype="Outpost" buyprice="200" />
+  <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32">
+    <Price locationtype="City" buyprice="75" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="Outpost" buyprice="75" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="0,117,152,118" depth="0.55" />
+    <Sprite texture="tools_new.png" sourcerect="0,116,221,123" depth="0.55" origin="0.5,0.5" />
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into steel and plastic -->
     <Deconstruct time="10">
       <Item identifier="steel" />
       <Item identifier="plastic" />
     </Deconstruct>
     <!-- physics body -->
-    <Body width="41" height="17" density="40" />
+    <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-50,-40" handle2="21,-27" />
-    <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" />
+    <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="35,13" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitter particle="weld" particlespersecond="50" />
@@ -52,26 +46,20 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
     </ItemContainer>
   </Item>
-  <Item name="Plasma Cutter"
-        identifier="plasmacutter"
-        category="Equipment"
-        Tags="smallitem"
-        cargocontaineridentifier="metalcrate"
-        description="Cuts through various materials using a jet of ionized oxygen."
-        Scale="0.32">
-    <Price locationtype="City" buyprice="140" />
-    <Price locationtype="Research" buyprice="140" />
-    <Price locationtype="Military" buyprice="140" />
-    <Price locationtype="Outpost" buyprice="200" />
+  <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32">
+    <Price locationtype="City" buyprice="75" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="Outpost" buyprice="75" />
     <Deconstruct time="10">
       <Item identifier="steel" />
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="0,0,157,116" depth="0.55" />
-    <Body width="42" height="31" density="40" />
-    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-60,-28" handle2="-5,-38" />
-    <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
+    <Sprite texture="tools_new.png" sourcerect="0,0,224,110" depth="0.55" origin="0.5,0.5" />
+    <Body width="220" height="105" density="40" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-25" handle2="-10,-27"/>
+    <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="45,10">
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygentank" Condition="-1.0" />
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygenitetank" Condition="-0.5" />
@@ -81,7 +69,7 @@
       <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
       <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <ParticleEmitterHitItem identifiers="ore" particle="iceshards" particlespersecond="5" anglemin="-40" anglemax="40" velocitymin="10" velocitymax="300" scalemin="0.5" scalemax="1.0"/>
+      <ParticleEmitterHitItem identifiers="ore" particle="iceshards" particlespersecond="5" anglemin="-40" anglemax="40" velocitymin="10" velocitymax="300" scalemin="0.5" scalemax="1.0" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <sound file="Content/Items/Tools/PlasmaCutterLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <Fixable identifier="structure" />
@@ -106,11 +94,11 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="52,31,12,33" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="52,31,14,34" depth="0.55" origin="0.5,0.5" />
     <Body width="12" height="33" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000" />
         <Explosion range="250.0" structuredamage="15" force="3.0">
           <Affliction identifier="burn" strength="25" />
@@ -120,10 +108,10 @@
     </Holdable>
   </Item>
   <Item name="Fire Extinguisher" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="A handheld carbon dioxide extinguisher.">
-    <Price locationtype="City" buyprice="140" />
-    <Price locationtype="Research" buyprice="140" />
-    <Price locationtype="Military" buyprice="150" />
-    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="City" buyprice="100" />
+    <Price locationtype="Research" buyprice="100" />
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="Outpost" buyprice="150" />
     <Deconstruct time="10">
       <Item identifier="aluminium" />
       <Item identifier="sodium" />
@@ -140,51 +128,51 @@
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="0,57,31,6" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="0,57,32,7" depth="0.55" origin="0.5,0.5" />
     <Body width="31" height="6" density="50" />
-    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" />
   </Item>
   <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="0,47,32,10" depth="0.55" origin="0.5,0.5" />
     <Body width="30" height="7" density="50" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0">
       <Attack structuredamage="5" stun="0.2">
-        <Affliction identifier="internaldamage" strength="4"/>
-        <Sound file="Content/Items/Weapons/smack2.ogg" range="800"/>
+        <Affliction identifier="internaldamage" strength="4" />
+        <Sound file="Content/Items/Weapons/smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
   </Item>
   <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="80" />
-    <Price locationtype="Research" buyprice="80" />
-    <Price locationtype="Military" buyprice="80" />
-    <Price locationtype="Outpost" buyprice="100" />
+    <Price locationtype="City" buyprice="20" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="Outpost" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="0,65,63,13" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="10" density="50" />
-    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
+    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1">
       <Attack structuredamage="10" stun="0.6">
-        <Affliction identifier="internaldamage" strength="8"/>
-        <Sound file="Content/Items/Weapons/smack2.ogg" range="800"/>
+        <Affliction identifier="internaldamage" strength="8" />
+        <Sound file="Content/Items/Weapons/smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
   </Item>
@@ -198,7 +186,7 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="42,6,22,11" depth="0.55" />
+    <Sprite texture="tools.png" sourcerect="41,6,24,12" depth="0.55" origin="0.5,0.5" />
     <Body width="31" height="6" density="40" />
     <AiTarget />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
@@ -217,12 +205,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Sonar Beacon"
-        identifier="sonarbeacon"
-        category="Equipment"
-        Tags="smallitem,sonar"
-        cargocontaineridentifier="metalcrate"
-        Scale="0.32">
+  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.32">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -232,7 +215,7 @@
       <Item identifier="plastic" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,320,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="485,29,27,63" depth="0.55" />
+    <Sprite texture="tools_new.png" sourcerect="485,29,27,63" depth="0.55" origin="0.5,0.5" />
     <Body width="31" height="6" density="12" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
     <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="true">
@@ -246,22 +229,17 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flashlight"
-        identifier="flashlight"
-        category="Equipment"
-        Tags="smallitem"
-        cargocontaineridentifier="metalcrate"
-        Scale="0.32">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="80" />
+  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" Scale="0.32">
+    <Price locationtype="City" buyprice="120" />
+    <Price locationtype="Research" buyprice="120" />
+    <Price locationtype="Military" buyprice="120" />
+    <Price locationtype="Outpost" buyprice="175" />
     <Deconstruct time="15">
       <Item identifier="aluminium" />
       <Item identifier="lightcomponent" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" />
+    <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" origin="0.5,0.5" />
     <Body width="27" height="10" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-26,0" handle2="-26,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
@@ -278,6 +256,29 @@
     </ItemContainer>
   </Item>
   <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="75" />
+    <Deconstruct time="10">
+      <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
+      <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64" />
+    <Sprite texture="tools.png" sourcerect="20,112,27,9" depth="0.55" origin="0.5,0.5" />
+    <Body width="21" height="7" density="12" />
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
+    <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">
+      <StatusEffect type="OnUse" target="This" IsOn="true" />
+      <StatusEffect type="OnActive" target="This" Condition="-1.0">
+        <ParticleEmitter particle="flare" particlespersecond="30" />
+        <ParticleEmitter particle="bubbles" particlespersecond="30" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This" IsOn="false" />
+      <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true" />
+    </LightComponent>
+  </Item>
+  <Item name="AlienFlare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -286,8 +287,8 @@
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="20,112,26,8" depth="0.55" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,896,64,64" />
+    <Sprite texture="tools.png" sourcerect="50,112,27,9" depth="0.55" origin="0.5,0.5" />
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
     <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">

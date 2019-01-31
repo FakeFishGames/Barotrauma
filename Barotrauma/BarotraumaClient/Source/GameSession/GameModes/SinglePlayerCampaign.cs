@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,8 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
+        public ContextualTutorial ContextualTutorial;
+
         private GUIButton endRoundButton;
                 
         private bool crewDead;
@@ -38,6 +41,13 @@ namespace Barotrauma
                     CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
                 }
             }
+
+            ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
+
+            if (ContextualTutorial.Selected && !ContextualTutorial.Initialized) // Selected when starting a new game -> initialize
+            {
+                ContextualTutorial.Initialize();
+            }
         }
 
         public override void Start()
@@ -51,9 +61,15 @@ namespace Barotrauma
                 savedOnStart = true;
             }
 
+            crewDead = false;
             endTimer = 5.0f;
             isRunning = true;
             CrewManager.InitSinglePlayerRound();
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Start();
+            }
         }
 
         public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
@@ -104,7 +120,7 @@ namespace Barotrauma
                 }
                 else if (outpost == Level.Loaded.EndOutpost)
                 {
-                    if (!closestSub.AtStartPosition) { return null; }
+                    if (!closestSub.AtEndPosition) { return null; }
                 }
                 return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;                
             }            
@@ -146,6 +162,11 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
@@ -153,6 +174,11 @@ namespace Barotrauma
             if (!isRunning) { return; }
 
             base.Update(deltaTime);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Update(deltaTime);
+            }
 
             if (!GUI.DisableHUD)
             {
@@ -200,6 +226,7 @@ namespace Barotrauma
             isRunning = false;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+            crewDead = false;
 
             if (success)
             {
@@ -281,6 +308,7 @@ namespace Barotrauma
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) => { if (ContextualTutorial.Initialized) ContextualTutorial.Stop(); return true; };
                 }
             }
 
@@ -326,17 +354,18 @@ namespace Barotrauma
         {
             isRunning = false;
             
-            var cinematic = new RoundEndCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
+            //var cinematic = new RoundEndCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
 
-            CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
-
+            //CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
+            End("");
+            
             return true;
         }
 
-        private IEnumerable<object> EndCinematic(RoundEndCinematic cinematic)
+        /*private IEnumerable<object> EndCinematic(RoundEndCinematic cinematic)
         {
             while (cinematic.Running)
             {
@@ -348,7 +377,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null) End("");
 
             yield return CoroutineStatus.Success;
-        }
+        }*/
 
         public static SinglePlayerCampaign Load(XElement element)
         {
@@ -363,6 +392,10 @@ namespace Barotrauma
                         break;
                     case "map":
                         campaign.map = Map.LoadNew(subElement);
+                        break;
+                    case "contextualtutorial":
+                        campaign.ContextualTutorial.Initialize(); // Initialize when saved element found
+                        campaign.ContextualTutorial.LoadPartiallyComplete(subElement);
                         break;
                 }
             }
@@ -399,6 +432,11 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.SavePartiallyComplete(modeElement);
+            }
 
             element.Add(modeElement);
         }

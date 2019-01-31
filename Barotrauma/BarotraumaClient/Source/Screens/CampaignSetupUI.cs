@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,11 +16,20 @@ namespace Barotrauma
         private GUIListBox saveList;
 
         private GUITextBox saveNameBox, seedBox;
+        private GUITickBox contextualTutorialBox;
 
         private GUIButton loadGameButton;
         
         public Action<Submarine, string, string> StartNewGame;
         public Action<string> LoadGame;
+        public bool TutorialSelected
+        {
+            get
+            {
+                if (contextualTutorialBox == null) return false;
+                return contextualTutorialBox.Selected;
+            }
+        }
 
         private bool isMultiplayer;
 
@@ -58,6 +68,13 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("MapSeed") + ":", textAlignment: Alignment.BottomLeft);
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), ToolBox.RandomSeed(8));
+
+            if (!isMultiplayer)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), "Tutorial active" + ":", textAlignment: Alignment.BottomLeft);
+                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(30, 30), rightColumn.RectTransform), string.Empty);
+                UpdateTutorialSelection();
+            }
 
             var startButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.13f), rightColumn.RectTransform, Anchor.BottomRight), TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
             {
@@ -276,6 +293,13 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
+        }
+
+        public void UpdateTutorialSelection()
+        {
+            if (isMultiplayer) return;
+            Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
+            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
         }
 
         private bool SelectSaveFile(GUIComponent component, object obj)

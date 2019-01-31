@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,6 +19,28 @@ namespace Barotrauma
             Sprite = sprite;
             MaxCondition = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
             FadeIn = fadeIn;
+        }
+    }
+
+    class ContainedItemSprite
+    {
+        public readonly Sprite Sprite;
+        public readonly string[] AllowedContainerIdentifiers;
+        public readonly string[] AllowedContainerTags;
+
+        public ContainedItemSprite(XElement element, string path = "")
+        {
+            Sprite = new Sprite(element, path);
+            AllowedContainerIdentifiers = element.GetAttributeStringArray("allowedcontaineridentifiers", new string[0], convertToLowerInvariant: true);
+            AllowedContainerTags = element.GetAttributeStringArray("allowedcontainertags", new string[0], convertToLowerInvariant: true);
+
+        }
+
+        public bool MatchesContainer(Item container)
+        {
+            if (container == null) { return false; }
+            return AllowedContainerIdentifiers.Contains(container.prefab.Identifier) ||
+                AllowedContainerTags.Any(t => container.prefab.Tags.Contains(t));
         }
     }
 
@@ -62,7 +85,7 @@ namespace Barotrauma
 
             [Serialize(AnimationType.None, false)]
             public AnimationType RotationAnim { get; private set; }
-
+            
             /// <summary>
             /// If > 0, only one sprite of the same group is used (chosen randomly)
             /// </summary>
@@ -72,7 +95,11 @@ namespace Barotrauma
             /// <summary>
             /// The sprite is only drawn if these conditions are fulfilled
             /// </summary>
-            public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
+            public List<PropertyConditional> IsActiveConditionals { get; private set; } = new List<PropertyConditional>();
+            /// <summary>
+            /// The sprite is only animated if these conditions are fulfilled
+            /// </summary>
+            public List<PropertyConditional> AnimationConditionals { get; private set; } = new List<PropertyConditional>();
 
             public DecorativeSprite(XElement element, string path = "")
             {
@@ -81,14 +108,24 @@ namespace Barotrauma
 
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional")
+                    List<PropertyConditional> conditionalList = null;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
                     {
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                            Conditionals.Add(new PropertyConditional(attribute));
-                        }
+                        case "conditional":
+                        case "isactiveconditional":
+                            conditionalList = IsActiveConditionals;
+                            break;
+                        case "animationconditional":
+                            conditionalList = AnimationConditionals;
+                            break;
+                        default:
+                            continue;
                     }
+                    foreach (XAttribute attribute in subElement.Attributes())
+                    {
+                        if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                        conditionalList.Add(new PropertyConditional(attribute));
+                    }                    
                 }
             }
 
@@ -143,6 +180,7 @@ namespace Barotrauma
 
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
         public List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
+        public List<ContainedItemSprite> ContainedSprites = new List<ContainedItemSprite>();
         public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
 

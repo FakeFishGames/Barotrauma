@@ -18,18 +18,19 @@ namespace Barotrauma.Items.Components
         private float range;
         private float flicker;
         private bool castShadows;
+        private bool drawBehindSubs;
 
         private float blinkTimer;
         
         public PhysicsBody ParentBody;
 
-        [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f), Serialize(100.0f, true)]
         public float Range
         {
             get { return range; }
             set
             {
-                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+                range = MathHelper.Clamp(value, 0.0f, 4096.0f);
 #if CLIENT
                 if (light != null) light.Range = range;
 #endif
@@ -48,6 +49,20 @@ namespace Barotrauma.Items.Components
                 castShadows = value;
 #if CLIENT
                 if (light != null) light.CastShadows = value;
+#endif
+            }
+        }
+
+        [Editable(ToolTip = "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. "+
+            "It's recommended to enable this on decorative lights outside the submarine's hull."), Serialize(false, true)]
+        public bool DrawBehindSubs
+        {
+            get { return drawBehindSubs; }
+            set
+            {
+                drawBehindSubs = value;
+#if CLIENT
+                if (light != null) light.IsBackground = drawBehindSubs;
 #endif
             }
         }
@@ -129,10 +144,13 @@ namespace Barotrauma.Items.Components
             : base (item, element)
         {
 #if CLIENT
-            light = new LightSource(element);
-            light.ParentSub = item.CurrentHull?.Submarine;
-            light.Position = item.Position;
-            light.CastShadows = castShadows;
+            light = new LightSource(element)
+            {
+                ParentSub = item.CurrentHull?.Submarine,
+                Position = item.Position,
+                CastShadows = castShadows,
+                IsBackground = drawBehindSubs
+            };
 #endif
 
             IsActive = IsOn;

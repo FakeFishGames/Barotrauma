@@ -2,20 +2,15 @@
   <Item
     name="Nuclear Reactor"
     identifier="reactor1"
+    tags="reactor"
     type ="Reactor"
     linkable="true"
     category="Machine">
     
     <trigger/>
 
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60" msg="ItemMsgRepairWrench" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="wrench" type="Equipped"/>
-    </Repairable>
-
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
-    <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="55" />
+    <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="50" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false">
@@ -60,6 +55,14 @@
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
       </Containable>
     </ItemContainer>
+    
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="10" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="30" />
+      <RequiredItem identifier="wrench" type="equipped" />
+      <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0"/>
+      <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0"/>
+    </Repairable>
   </Item>
 
   <Item
@@ -68,10 +71,10 @@
     Tags="smallitem,reactorfuel"
     cargocontaineridentifier="metalcrate">
     
-    <Price locationtype="Military" buyprice="170"/>
-    <Price locationtype="Research" buyprice="170"/>
-    <Price locationtype="City" buyprice="200"/>
-    <Price locationtype="Outpost" buyprice="500"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="City" buyprice="150"/>
+    <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
       <Item identifier="steel"/>

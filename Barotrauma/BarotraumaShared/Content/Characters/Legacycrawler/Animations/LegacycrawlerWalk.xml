@@ -1,7 +1,7 @@
 ﻿<LegacycrawlerWalk
   movementspeed="2"
   stepsize="0.12,0.2"
-  legtorque="10"
+  legtorque="1"
   colliderstandangle="90"
   flip="True"
   headposition="0.5087246"
@@ -10,11 +10,13 @@
   torsoangle="-90"
   headmoveforce="10"
   torsomoveforce="10"
-  footmoveforce="8"
+  footmoveforce="10"
   headtorque="50"
   torsotorque="50"
-  foottorque="25"
-  footangles="5: 1.777893,7: 1.844982,9: 1.859408"
+  foottorque="5"
+  footangles="5: 2.629647,7: 2.874903,9: 2.717025"
   backwardsmovementmultiplier="0.75"
   cyclespeed="6.253016"
-  animationtype="Walk" />
+  animationtype="Walk"
+  tailtorque="50"
+  tailangle="NaN" />

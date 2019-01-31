@@ -239,7 +239,7 @@ namespace Barotrauma
             get { return body.AngularVelocity; }
             set
             {
-                if (!IsValidValue(value, "angular velocity")) return;
+                if (!IsValidValue(value, "angular velocity", -1000f, 1000f)) return;
                 body.AngularVelocity = value;
             }
         }
@@ -272,6 +272,7 @@ namespace Barotrauma
 
         public BodyType BodyType
         {
+            get { return body.BodyType; }
             set { body.BodyType = value; }
         }
 
@@ -760,14 +761,19 @@ namespace Barotrauma
                 positionBuffer.RemoveAt(0);
             }
         }
-        
+
         /// <summary>
-        /// rotate the body towards the target rotation in the "shortest direction"
+        /// Rotate the body towards the target rotation in the "shortest direction", taking into account the current angular velocity to prevent overshooting.
         /// </summary>
-        public void SmoothRotate(float targetRotation, float force = 10.0f)
+        /// <param name="targetRotation">Desired rotation in radians</param>
+        /// <param name="force">How fast the body should be rotated. Does not represent any real unit, you may want to experiment with different values to get the desired effect.</param>
+        /// <param name="wrapAngle">Should the angles be wrapped. Set to false if it makes a difference whether the angle of the body is 0.0f or 360.0f.</param>
+        public void SmoothRotate(float targetRotation, float force = 10.0f, bool wrapAngle = true)
         {
             float nextAngle = body.Rotation + body.AngularVelocity * (float)Timing.Step;
-            float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
+            float angle = wrapAngle ? 
+                MathUtils.GetShortestAngle(nextAngle, targetRotation) : 
+                MathHelper.Clamp(targetRotation - nextAngle, -MathHelper.Pi, MathHelper.Pi);
             float torque = angle * 60.0f * (force / 100.0f);
 
             if (body.IsKinematic)

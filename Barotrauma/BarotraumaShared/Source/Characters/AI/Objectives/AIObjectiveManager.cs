@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,7 +19,7 @@ namespace Barotrauma
         /// When set above zero, the character will stand still doing nothing until the timer runs out (assuming they don't a high priority order active)
         /// </summary>
         public float WaitTimer;
-        
+
         public AIObjective CurrentOrder
         {
             get { return currentOrder; }
@@ -42,6 +43,23 @@ namespace Barotrauma
             if (objectives.Find(o => o.IsDuplicate(objective)) != null) return;
 
             objectives.Add(objective);
+        }
+
+        public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
+        public void AddObjective(AIObjective objective, float delay, Action callback = null)
+        {
+            if (DelayedObjectives.TryGetValue(objective, out CoroutineHandle coroutine))
+            {
+                CoroutineManager.StopCoroutines(coroutine);
+                DelayedObjectives.Remove(objective);
+            }
+            coroutine = CoroutineManager.InvokeAfter(() =>
+            {
+                DelayedObjectives.Remove(objective);
+                AddObjective(objective);
+                callback?.Invoke();
+            }, delay);
+            DelayedObjectives.Add(objective, coroutine);
         }
 
         public T GetObjective<T>() where T : AIObjective
