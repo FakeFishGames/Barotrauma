@@ -823,8 +823,8 @@
     <overridecommonness commonness="0.5" leveltype="WastesBasic" />
     <overridecommonness commonness="1.5" leveltype="RidgeBasic" />
     <Sound file="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,0" />
-    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Submarine" networksyncing="true" force="0,0.2" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" />
-    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Character" networksyncing="true" force="0,2.0" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="2.0" forcefluctuationinterval="20" />
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Submarine" networksyncing="true" force="0,0.15" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" forcefluctuationstrength="2.0" forcefluctuationinterval="20" />
+    <Trigger position="0,0" radius="5000" camerashake="1" triggeredby="Character" networksyncing="true" force="0,1.5" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="2.0" forcefluctuationinterval="20" />
   </watercurrent1>
   <!--
   <fallingicechunk spawnpos="Wall, RuinWall" minsurfacewidth="0"

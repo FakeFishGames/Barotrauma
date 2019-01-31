@@ -128,6 +128,12 @@ namespace Barotrauma
                     (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
                     0.0f, 1.0f);
 
+                if (Level.Loaded?.StartOutpost != null && 
+                    Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost))
+                {
+                    distanceTraveled = 0.0f;
+                }
+
                 if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
                     roundDuration < eventSet.MinMissionTime)
                 {
