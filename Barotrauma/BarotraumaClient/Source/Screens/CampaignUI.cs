@@ -368,7 +368,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.DisplayName);
 
-            Sprite portrait = location.Type.Background;
+            Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             new GUIImage(new RectTransform(new Vector2(1.0f, 0.6f),
                 container.RectTransform), portrait, scaleToFit: true);
 

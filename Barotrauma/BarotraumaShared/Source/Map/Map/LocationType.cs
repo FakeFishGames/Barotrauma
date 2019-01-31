@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private Sprite symbolSprite;
 
-        private Sprite backGround;
+        private readonly List<Sprite> portraits = new List<Sprite>();
 
         //<name, commonness>
         private List<Tuple<JobPrefab, float>> hireableJobs;
@@ -52,12 +52,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public Sprite Background
-        {
-            get { return backGround; }
-        }
-
+        
         private LocationType(XElement element)
         {
             Name = element.Name.ToString();
@@ -129,11 +124,15 @@ namespace Barotrauma
                     case "changeto":
                         CanChangeTo.Add(new LocationTypeChange(subElement));
                         break;
+                    case "portrait":
+                        var portrait = new Sprite(subElement);
+                        if (portrait != null)
+                        {
+                            portraits.Add(portrait);
+                        }
+                        break;
                 }
             }
-
-            string backgroundPath = element.GetAttributeString("background", "");
-            backGround = new Sprite(backgroundPath, Vector2.Zero);
         }
 
         public JobPrefab GetRandomHireable()
@@ -147,6 +146,12 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        public Sprite GetPortrait(int portraitId)
+        {
+            if (portraits.Count == 0) { return null; }
+            return portraits[Math.Abs(portraitId) % portraits.Count];
         }
 
         public string GetRandomName()
