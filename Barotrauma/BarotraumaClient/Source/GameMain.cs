@@ -28,7 +28,7 @@ namespace Barotrauma
         public static PerformanceCounter PerformanceCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-
+        
         public static GameScreen GameScreen;
         public static MainMenuScreen MainMenuScreen;
         public static LobbyScreen LobbyScreen;
@@ -272,7 +272,12 @@ namespace Barotrauma
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load());
+            GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
+            DebugConsole.Init();
+
+            SteamManager.Initialize();
+
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(),"",true);
 
 #if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
@@ -350,12 +355,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-                        
-            GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
-            DebugConsole.Init();
-
-            SteamManager.Initialize();
-
+            
             if (SelectedPackages.Count == 0)
             {
                 DebugConsole.Log("No content packages selected");
@@ -430,14 +430,16 @@ namespace Barotrauma
 
             TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
-
+            
             GameModePreset.Init();
 
             Submarine.RefreshSavedSubs();
             TitleScreen.LoadState = 80.0f;
-        yield return CoroutineStatus.Running;
-
-            GameScreen  = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
+            
+            yield return CoroutineStatus.Running;
+            
+            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
+            
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 

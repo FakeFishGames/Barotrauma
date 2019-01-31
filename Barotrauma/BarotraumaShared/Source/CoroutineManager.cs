@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -16,7 +17,9 @@ namespace Barotrauma
 
         public Exception Exception;
 
-        public CoroutineHandle(IEnumerator<object> coroutine, string name = "")
+        public Thread Thread;
+
+        public CoroutineHandle(IEnumerator<object> coroutine, string name = "", bool useSeparateThread = false)
         {
             Coroutine = coroutine;
             Name = string.IsNullOrWhiteSpace(name) ? coroutine.ToString() : name;
@@ -32,10 +35,20 @@ namespace Barotrauma
 
         public static float UnscaledDeltaTime, DeltaTime;
 
-        public static CoroutineHandle StartCoroutine(IEnumerable<object> func, string name = "")
+        public static CoroutineHandle StartCoroutine(IEnumerable<object> func, string name = "", bool useSeparateThread = false)
         {
             var handle = new CoroutineHandle(func.GetEnumerator(), name);
-            Coroutines.Add(handle);
+            lock (Coroutines)
+            {
+                Coroutines.Add(handle);
+            }
+
+            handle.Thread = null;
+            if (useSeparateThread)
+            {
+                handle.Thread = new Thread(() => { ExecuteCoroutineThread(handle); });
+                handle.Thread.Start();
+            }
 
             return handle;
         }
@@ -79,35 +92,81 @@ namespace Barotrauma
         {
             Coroutines.RemoveAll(c => c == handle);
         }
-        private static bool IsDone(CoroutineHandle handle)
+
+        public static void ExecuteCoroutineThread(CoroutineHandle handle)
         {
-#if !DEBUG
-            try
+            while (true)
             {
-#endif
                 if (handle.Coroutine.Current != null)
                 {
                     WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
                     if (wfs != null)
                     {
-                        if (!wfs.CheckFinished(UnscaledDeltaTime)) return false;
+                        Thread.Sleep((int)(wfs.TotalTime * 1000));
                     }
                     else
                     {
                         switch ((CoroutineStatus)handle.Coroutine.Current)
                         {
                             case CoroutineStatus.Success:
-                                return true;
+                                return;
 
                             case CoroutineStatus.Failure:
                                 DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
-                                return true;
+                                return;
                         }
                     }
                 }
 
-                handle.Coroutine.MoveNext();
-                return false;
+                Thread.Yield();
+                if (!handle.Coroutine.MoveNext()) return;
+            }
+        }
+
+        private static bool IsDone(CoroutineHandle handle)
+        {
+#if !DEBUG
+            try
+            {
+#endif
+                if (handle.Thread == null)
+                {
+                    if (handle.Coroutine.Current != null)
+                    {
+                        WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
+                        if (wfs != null)
+                        {
+                            if (!wfs.CheckFinished(UnscaledDeltaTime)) return false;
+                        }
+                        else
+                        {
+                            switch ((CoroutineStatus)handle.Coroutine.Current)
+                            {
+                                case CoroutineStatus.Success:
+                                    return true;
+
+                                case CoroutineStatus.Failure:
+                                    DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
+                                    return true;
+                            }
+                        }
+                    }
+
+                    handle.Coroutine.MoveNext();
+                    return false;
+                }
+                else
+                {
+                    if (handle.Thread.ThreadState.HasFlag(ThreadState.Stopped))
+                    {
+                        if ((CoroutineStatus)handle.Coroutine.Current == CoroutineStatus.Failure)
+                        {
+                            DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
+                        }
+                        return true;
+                    }
+                    return false;
+                }
 #if !DEBUG
             }
             catch (Exception e)
@@ -132,11 +191,14 @@ namespace Barotrauma
   
     class WaitForSeconds
     {
+        public readonly float TotalTime;
+
         float timer;
 
         public WaitForSeconds(float time)
         {
             timer = time;
+            TotalTime = time;
         }
 
         public bool CheckFinished(float deltaTime) 
