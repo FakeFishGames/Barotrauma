@@ -268,6 +268,7 @@ namespace Barotrauma
             floodingAmount = 0.0f;
             foreach (Hull hull in Hull.hullList)
             {
+                if (hull.Submarine == null || hull.Submarine.IsOutpost) { continue; }
                 foreach (Gap gap in hull.ConnectedGaps)
                 {
                     if (!gap.IsRoomToRoom) holeCount += gap.Open;
