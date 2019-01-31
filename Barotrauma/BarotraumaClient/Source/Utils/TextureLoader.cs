@@ -78,35 +78,18 @@ namespace Barotrauma
 
         private static void PreMultiplyAlpha(Texture2D texture)
         {
-            // Setup a render target to hold our final texture which will have premulitplied alpha values
-            using (RenderTarget2D renderTarget = new RenderTarget2D(_graphicsDevice, texture.Width, texture.Height))
+            Color[] data = new Color[texture.Width * texture.Height];
+            texture.GetData(data);
+            for (int y = 0; y < texture.Height; y++)
             {
-                Viewport viewportBackup = _graphicsDevice.Viewport;
-                _graphicsDevice.SetRenderTarget(renderTarget);
-                _graphicsDevice.Clear(Color.Black);
-
-                // Multiply each color by the source alpha, and write in just the color values into the final texture
-                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendColorBlendState);
-                _spriteBatch.Draw(texture, texture.Bounds, Color.White);
-                _spriteBatch.End();
-
-                // Now copy over the alpha values from the source texture to the final one, without multiplying them
-                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendAlphaBlendState);
-                _spriteBatch.Draw(texture, texture.Bounds, Color.White);
-                _spriteBatch.End();
-
-                // Release the GPU back to drawing to the screen
-                _graphicsDevice.SetRenderTarget(null);
-                _graphicsDevice.Viewport = viewportBackup;
-
-                // Store data from render target because the RenderTarget2D is volatile
-                Color[] data = new Color[texture.Width * texture.Height];
-                renderTarget.GetData(data);
-
-                // Unset texture from graphic device and set modified data back to it
-                _graphicsDevice.Textures[0] = null;
-                texture.SetData(data);
+                for (int x = 0; x < texture.Width; x++)
+                {
+                    data[x + (y * texture.Width)].R = (byte)(((float)data[x + (y * texture.Width)].R) * ((float)data[x + (y * texture.Width)].A / 255.0f));
+                    data[x + (y * texture.Width)].G = (byte)(((float)data[x + (y * texture.Width)].G) * ((float)data[x + (y * texture.Width)].A / 255.0f));
+                    data[x + (y * texture.Width)].B = (byte)(((float)data[x + (y * texture.Width)].B) * ((float)data[x + (y * texture.Width)].A / 255.0f));
+                }
             }
+            texture.SetData(data);
         }
        
         

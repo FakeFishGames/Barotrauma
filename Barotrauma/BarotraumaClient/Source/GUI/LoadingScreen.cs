@@ -44,10 +44,6 @@ namespace Barotrauma
             set 
             {
                 loadState = value;
-                if (GameSettings.VerboseLogging)
-                {
-                    DebugConsole.NewMessage("Loading: " + value.ToString() + "%", Color.Yellow);
-                }
                 DrawLoadingText = true;
             }
         }
