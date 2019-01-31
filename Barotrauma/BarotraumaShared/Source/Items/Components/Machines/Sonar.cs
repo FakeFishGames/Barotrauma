@@ -9,6 +9,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        public const float DefaultSonarRange = 10000.0f;
+
         class ConnectedTransducer
         {
             public readonly SonarTransducer Transducer;
@@ -58,7 +60,7 @@ namespace Barotrauma.Items.Components
             get { return connectedTransducers.Select(t => t.Transducer); }
         }
 
-        [Serialize(10000.0f, false)]
+        [Serialize(DefaultSonarRange, false)]
         public float Range
         {
             get { return range; }
