@@ -2662,6 +2662,9 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Muikku.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Orca.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub">
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\doorBreak1.ogg">
