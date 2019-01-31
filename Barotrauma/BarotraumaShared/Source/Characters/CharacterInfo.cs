@@ -619,7 +619,7 @@ namespace Barotrauma
 
             foreach (Skill skill in Job.Skills)
             {
-                salary += (int)skill.Level * 10;
+                salary += (int)skill.Level * 100;
             }
 
             return salary;
