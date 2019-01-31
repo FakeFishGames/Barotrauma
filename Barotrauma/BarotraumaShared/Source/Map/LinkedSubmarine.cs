@@ -116,10 +116,13 @@ namespace Barotrauma
 
             foreach (XElement element in rootElement.Elements())
             {
-                if (element.Name != "Structure") continue;
+                if (element.Name != "Structure") { continue; }
 
                 string name = element.GetAttributeString("name", "");
-                if (!wallPrefabs.Any(wp => wp.Name == name)) continue;
+                string identifier = element.GetAttributeString("identifier", "");
+
+                StructurePrefab prefab = Structure.FindPrefab(name, identifier);
+                if (prefab == null) { continue; }
 
                 var rect = element.GetAttributeVector4("rect", Vector4.Zero);
                 
