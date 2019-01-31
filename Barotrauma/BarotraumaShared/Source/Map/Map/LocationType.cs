@@ -138,7 +138,7 @@ namespace Barotrauma
 
         public JobPrefab GetRandomHireable()
         {
-            float randFloat = Rand.Range(0.0f, totalHireableWeight);
+            float randFloat = Rand.Range(0.0f, totalHireableWeight, Rand.RandSync.Server);
 
             foreach (Tuple<JobPrefab, float> hireable in hireableJobs)
             {
