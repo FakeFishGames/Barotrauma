@@ -490,6 +490,7 @@ namespace Barotrauma.Networking
                                 HandleOwnership(msgContent, inc.SenderConnection);
                             }
 
+                            DebugConsole.NewMessage(packetHeader.ToString(), Color.Lime);
                             if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
                             {
                                 inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
@@ -499,7 +500,7 @@ namespace Barotrauma.Networking
                                 inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
                             }
                             else
-                            {                                
+                            {
                                 if (packetHeader == ClientPacketHeader.REQUEST_AUTH)
                                 {
                                     inc.SenderConnection.Approve();
@@ -1815,7 +1816,7 @@ namespace Barotrauma.Networking
             if (senderConnection == OwnerConnection)
             {
                 DebugConsole.NewMessage("Owner disconnected: closing server", Color.Yellow);
-                GameMain.ShouldRun = false;
+                //GameMain.ShouldRun = false;
             }
             Client client = connectedClients.Find(x => x.Connection == senderConnection);
             if (client == null) return;
