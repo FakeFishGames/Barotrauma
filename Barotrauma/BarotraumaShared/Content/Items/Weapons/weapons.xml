@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.5">
+  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="75" />
@@ -8,7 +8,7 @@
       <Item identifier="steel" />
     </Deconstruct>
     <Sprite texture="weapons_new.png" sourcerect="4,133,241,16" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="241" height="16" density="20" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="20">
@@ -17,12 +17,12 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Alien Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.5">
+  <Item name="Alien Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
     <Deconstruct time="5">
       <Item identifier="steel" />
     </Deconstruct>
     <Sprite texture="weapons_new.png" sourcerect="4,173,241,16" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="241" height="16" density="20" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="20">
@@ -31,7 +31,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.5">
+  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -39,7 +39,7 @@
       <Item identifier="steel" />
     </Deconstruct>
     <Sprite texture="weapons_new.png" sourcerect="4,153,241,17" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="241" height="16" density="20" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2">
