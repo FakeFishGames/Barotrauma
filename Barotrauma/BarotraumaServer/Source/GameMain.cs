@@ -209,6 +209,9 @@ namespace Barotrauma
             stopwatch.Stop();
 
             CloseServer();
+
+            SteamManager.ShutDown();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
         }
         
         public void ProcessInput()
