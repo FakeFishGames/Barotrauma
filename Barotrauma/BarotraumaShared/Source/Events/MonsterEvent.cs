@@ -132,7 +132,7 @@ namespace Barotrauma
 
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
-            if (affectSubImmediately)
+            if (affectSubImmediately && spawnPosType != Level.PositionType.Ruin)
             {
                 if (availablePositions.Count == 0)
                 {
@@ -148,6 +148,7 @@ namespace Barotrauma
                     float dist = Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
+                        if (sub.IsOutpost) { continue; }
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist > minDistToSub * minDistToSub && dist < closestDist)
                         {
@@ -190,8 +191,8 @@ namespace Barotrauma
 
         private float GetMinDistanceToSub(Submarine submarine)
         {
-            //5000 units is slightly more than the default range of the sonar
-            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 5000.0f);
+            //12000 units is slightly more than the default range of the sonar
+            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 12000.0f);
         }
 
         public override void Update(float deltaTime)
@@ -211,6 +212,7 @@ namespace Barotrauma
                 //wait until there are no submarines at the spawnpos
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
+                    if (submarine.IsOutpost) { continue; }
                     float minDist = GetMinDistanceToSub(submarine);
                     if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos) < minDist * minDist) return;
                 }

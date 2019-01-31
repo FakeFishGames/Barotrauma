@@ -761,7 +761,7 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var newPackage = new ContentPackage(newContentPackagePath)
+            var newPackage = new ContentPackage(contentPackage.Path, newContentPackagePath)
             {
                 SteamWorkshopUrl = item.Url
             };
@@ -814,6 +814,8 @@ namespace Barotrauma.Steam
             }
             if (File.Exists(installedContentPackagePath)) { File.Delete(installedContentPackagePath); }
 
+            bool wasSub = item.Tags.Contains("Submarine") || contentPackage.Files.Any(f => f.Type == ContentType.Submarine);
+
             HashSet<string> directories = new HashSet<string>();
             try
             {
@@ -859,6 +861,12 @@ namespace Barotrauma.Steam
                 DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
+
+            if (wasSub)
+            {
+                Submarine.RefreshSavedSubs();
+            }
+
             errorMsg = "";
             return true;
         }
