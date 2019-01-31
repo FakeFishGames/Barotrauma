@@ -314,7 +314,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,150,164,40" depth="0.55" origin="0.5,0.5" />
     <Body width="150" height="30" density="50" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="2.0">
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75">
       <Attack stun="0.2">
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
