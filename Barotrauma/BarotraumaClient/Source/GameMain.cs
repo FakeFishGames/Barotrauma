@@ -411,20 +411,18 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
-            var soundLoadingCoroutine = CoroutineManager.StartCoroutine(SoundPlayer.Init());
 
             int i = 0;
-            while (!SoundPlayer.Initialized)
+            foreach (object crObj in SoundPlayer.Init())
             {
-                if (soundLoadingCoroutine.Exception != null)
-                {
-                    throw soundLoadingCoroutine.Exception;
-                }
+                CoroutineStatus status = (CoroutineStatus)crObj;
+                if (status == CoroutineStatus.Success) break;
 
                 i++;
-                TitleScreen.LoadState = SoundPlayer.SoundCount == 0 ? 
+                TitleScreen.LoadState = SoundPlayer.SoundCount == 0 ?
                     30.0f :
                     Math.Min(30.0f + 40.0f * i / Math.Max(SoundPlayer.SoundCount, 1), 70.0f);
+
                 yield return CoroutineStatus.Running;
             }
 
