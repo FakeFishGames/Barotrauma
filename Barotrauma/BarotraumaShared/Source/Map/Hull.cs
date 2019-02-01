@@ -594,7 +594,10 @@ namespace Barotrauma
         {
             FireSources.Remove(fire);
 
-            if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
+            if (GameMain.Server != null && !Removed && !IdFreed)
+            {
+                GameMain.Server.CreateEntityEvent(this);
+            }
         }
 
         public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
