@@ -277,7 +277,12 @@ namespace Barotrauma
 
             SteamManager.Initialize();
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(),"",true);
+            bool canLoadInSeparateThread = false;
+#if WINDOWS
+            canLoadInSeparateThread = true;
+#endif
+
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(),"",canLoadInSeparateThread);
 
 #if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
@@ -434,34 +439,37 @@ namespace Barotrauma
             Submarine.RefreshSavedSubs();
             TitleScreen.LoadState = 80.0f;
             
-            yield return CoroutineStatus.Running;
+        yield return CoroutineStatus.Running;
             
             GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
             
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
-            MainMenuScreen          = new MainMenuScreen(this); 
-            LobbyScreen             = new LobbyScreen();            
+            MainMenuScreen          = new MainMenuScreen(this);
+            LobbyScreen             = new LobbyScreen();
             ServerListScreen        = new ServerListScreen();
 
             if (SteamManager.USE_STEAM)
             {
                 SteamWorkshopScreen     = new SteamWorkshopScreen();
             }
-
+            
             SubEditorScreen         = new SubEditorScreen();
             ParticleEditorScreen    = new ParticleEditorScreen();
             LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
             CharacterEditorScreen   = new CharacterEditorScreen();
-
+            
         yield return CoroutineStatus.Running;
 
+            TitleScreen.LoadState = 95.0f;
             ParticleManager = new ParticleManager(GameScreen.Cam);
             ParticleManager.LoadPrefabs();
+            TitleScreen.LoadState = 97.0f;
             LevelObjectPrefab.LoadAll();
             DecalManager = new DecalManager();
+            TitleScreen.LoadState = 99.0f;
         yield return CoroutineStatus.Running;
 
             LocationType.Init();
