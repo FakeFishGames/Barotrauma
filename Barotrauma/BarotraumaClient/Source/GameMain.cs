@@ -84,12 +84,6 @@ namespace Barotrauma
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
 
-        public static int MainThreadID
-        {
-            get;
-            private set;
-        }
-
         public static World World;
 
         public static LoadingScreen TitleScreen;
@@ -166,8 +160,6 @@ namespace Barotrauma
 
         public GameMain()
         {
-            MainThreadID = Thread.CurrentThread.ManagedThreadId;
-
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             Window.Title = "Barotrauma";
@@ -290,7 +282,7 @@ namespace Barotrauma
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", true);//canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(),"",canLoadInSeparateThread);
 
 #if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
@@ -544,8 +536,6 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            Threading.CrossThread.ProcessRequestedTasks();
-
             Timing.TotalTime = gameTime.TotalGameTime.TotalSeconds;
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
             int updateIterations = (int)Math.Floor(Timing.Accumulator / Timing.Step);

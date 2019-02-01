@@ -79,9 +79,8 @@ namespace Barotrauma
 
         private static void PreMultiplyAlpha(Texture2D texture)
         {
-
             Color[] data = new Color[texture.Width * texture.Height];
-            Threading.CrossThread.RequestExecuteOnMainThread(() => { texture.GetData(data); });
+            texture.GetData(data);
             for (int y = 0; y < texture.Height; y++)
             {
                 for (int x = 0; x < texture.Width; x++)
