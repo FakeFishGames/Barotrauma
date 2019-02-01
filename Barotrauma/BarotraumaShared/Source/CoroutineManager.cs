@@ -47,6 +47,7 @@ namespace Barotrauma
             if (useSeparateThread)
             {
                 handle.Thread = new Thread(() => { ExecuteCoroutineThread(handle); });
+                handle.Thread.IsBackground = true;
                 handle.Thread.Start();
             }
 

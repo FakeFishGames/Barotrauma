@@ -22,6 +22,7 @@ namespace Barotrauma
 
         public Vector2 TitlePosition;
 
+        private object loadMutex = new object();
         private float? loadState;
 #if !(LINUX || OSX)
         Video splashScreenVideo;
@@ -40,11 +41,20 @@ namespace Barotrauma
 
         public float? LoadState
         {
-            get { return loadState; }        
+            get
+            {
+                lock (loadMutex)
+                {
+                    return loadState;
+                }
+            }        
             set 
             {
-                loadState = value;
-                DrawLoadingText = true;
+                lock (loadMutex)
+                {
+                    loadState = value;
+                    DrawLoadingText = true;
+                }
             }
         }
 
@@ -158,16 +168,16 @@ namespace Barotrauma
             if (DrawLoadingText)
             {
                 string loadText = "";
-                if (loadState == 100.0f)
+                if (LoadState == 100.0f)
                 {
                     loadText = TextManager.Get("PressAnyKey");
                 }
                 else
                 {
                     loadText = TextManager.Get("Loading");
-                    if (loadState != null)
+                    if (LoadState != null)
                     {
-                        loadText += " " + (int)loadState + " %";
+                        loadText += " " + (int)LoadState + " %";
                     }
                 }
 
@@ -254,7 +264,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            loadState = 100.0f;
+            LoadState = 100.0f;
 
             yield return CoroutineStatus.Success;
         }
