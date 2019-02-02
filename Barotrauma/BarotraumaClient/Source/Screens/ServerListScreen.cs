@@ -440,7 +440,15 @@ namespace Barotrauma
                 }
             }
 
-            if (string.IsNullOrEmpty(serverInfo.GameVersion) || !serverInfo.ContentPackageHashes.Any())
+            if (GameMain.Config.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
+            {
+                string toolTip = TextManager.Get("ServerListNoSteamQueryResponse");
+                compatibleBox.Selected = false;
+                serverContent.Children.ForEach(c => c.ToolTip = toolTip);
+                serverName.TextColor *= 0.8f;
+                serverPlayers.TextColor *= 0.8f;
+            }
+            else if (string.IsNullOrEmpty(serverInfo.GameVersion) || !serverInfo.ContentPackageHashes.Any())
             {
                 compatibleBox.Selected = false;
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), compatibleBox.Box.RectTransform, Anchor.Center), " ? ", Color.Yellow * 0.85f, textAlignment: Alignment.Center)

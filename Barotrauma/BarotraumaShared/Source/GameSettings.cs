@@ -471,7 +471,19 @@ namespace Barotrauma
                         break;
                 }
             }
-            
+
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
+            {
+                foreach (ContentFile file in contentPackage.Files)
+                {
+                    if (!System.IO.File.Exists(file.Path))
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
+                        continue;
+                    }
+                    ToolBox.IsProperFilenameCase(file.Path);
+                }
+            }
             if (!SelectedContentPackages.Any())
             {
                 var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);

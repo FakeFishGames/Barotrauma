@@ -34,6 +34,11 @@ namespace Barotrauma.Items.Components
 
         private bool docked;
 
+        private float forceLockTimer;
+        //if the submarine isn't in the correct position to lock within this time after docking has been activated,
+        //force the sub to the correct position
+        const float ForceLockDelay = 1.0f;
+
         public int DockingDir { get; private set; }
 
         [Serialize("32.0,32.0", false)]
@@ -148,7 +153,9 @@ namespace Barotrauma.Items.Components
         public void Dock(DockingPort target)
         {
             if (item.Submarine.DockedTo.Contains(target.item.Submarine)) return;
-                        
+
+            forceLockTimer = 0.0f;
+
             if (DockingTarget != null)
             {
                 Undock();
@@ -210,7 +217,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void Lock(bool isNetworkMessage)
+        public void Lock(bool isNetworkMessage, bool forcePosition = false)
         {
 #if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
@@ -224,15 +231,24 @@ namespace Barotrauma.Items.Components
 
             if (!(joint is WeldJoint))
             {
-
                 DockingDir = IsHorizontal ?
                     Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                     Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
                 DockingTarget.DockingDir = -DockingDir;
-
 #if CLIENT
                 PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 #endif
+                Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+                if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
+                    DockingTarget.item.Submarine.IsOutpost)
+                {
+                    item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
+                }
+                else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
+                   item.Submarine.IsOutpost)
+                {
+                    DockingTarget.item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                }
 
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
@@ -293,7 +309,6 @@ namespace Barotrauma.Items.Components
 
                 joint = distanceJoint;
             }
-
 
             joint.CollideConnected = true;
         }
@@ -521,6 +536,20 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                //difference between the edges of the hulls (to avoid a gap between the hulls)
+                //0 is lower
+                int midHullDiff = ((hullRects[1].Y - hullRects[1].Height) - hullRects[0].Y) + 2;
+                if (midHullDiff > 100)
+                {
+                    DebugConsole.ThrowError("Creating hulls between docking ports failed. The upper hull seems to be very far from the lower hull.");
+                }
+                else if (midHullDiff > 0)
+                {
+                    hullRects[0].Height += midHullDiff / 2 + 1;
+                    hullRects[1].Y -= midHullDiff / 2 + 1;
+                    hullRects[1].Height += midHullDiff / 2 + 1;
+                }
+
                 for (int i = 0; i < 2; i++)
                 {
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
@@ -642,6 +671,8 @@ namespace Barotrauma.Items.Components
         public void Undock()
         {
             if (DockingTarget == null || !docked) return;
+            
+            forceLockTimer = 0.0f;
 
 #if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition);
@@ -730,7 +761,7 @@ namespace Barotrauma.Items.Components
                 if (!docked)
                 {
                     Dock(DockingTarget);
-                    if (DockingTarget == null) return;
+                    if (DockingTarget == null) { return; }
                 }
 
                 if (joint is DistanceJoint)
@@ -738,9 +769,11 @@ namespace Barotrauma.Items.Components
                     item.SendSignal(0, "0", "state_out", null);
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
+                    forceLockTimer += deltaTime;
+
                     Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
 
-                    if (jointDiff.LengthSquared() > 0.04f * 0.04f)
+                    if (jointDiff.LengthSquared() > 0.04f * 0.04f && forceLockTimer < ForceLockDelay)
                     {
                         float totalMass = item.Submarine.PhysicsBody.Mass + DockingTarget.item.Submarine.PhysicsBody.Mass;
                         float massRatio1 = 1.0f;
@@ -763,14 +796,14 @@ namespace Barotrauma.Items.Components
                         }
 
                         Vector2 relativeVelocity = DockingTarget.item.Submarine.Velocity - item.Submarine.Velocity;
-                        Vector2 desiredRelativeVelocity = (jointDiff * 10.0f).ClampLength(10.0f);
+                        Vector2 desiredRelativeVelocity = Vector2.Normalize(jointDiff);
 
                         item.Submarine.Velocity += (relativeVelocity + desiredRelativeVelocity) * massRatio1;
                         DockingTarget.item.Submarine.Velocity += (-relativeVelocity - desiredRelativeVelocity) * massRatio2;
                     }
                     else
                     {
-                        Lock(false);
+                        Lock(isNetworkMessage: false, forcePosition: true);
                     }
                 }
                 else
@@ -931,7 +964,7 @@ namespace Barotrauma.Items.Components
 
                 if (isLocked)
                 {
-                    Lock(true);
+                    Lock(isNetworkMessage: true, forcePosition: true);
                 }
             }
             else

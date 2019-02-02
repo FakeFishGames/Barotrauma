@@ -15,8 +15,8 @@ namespace Barotrauma.Items.Components
         {
             uiElements.Clear();
 
-            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.7f), GuiFrame.RectTransform, Anchor.Center))
-            { RelativeSpacing = 0.1f, Stretch = true };
+            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center))
+            { RelativeSpacing = 0.05f, Stretch = true };
 
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {

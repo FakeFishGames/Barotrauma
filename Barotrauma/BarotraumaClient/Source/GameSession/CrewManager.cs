@@ -481,6 +481,7 @@ namespace Barotrauma
             var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
                 "", style: "UIToggleButton")
             {
+                UserData = "togglewrongorder",
                 CanBeFocused = false
             };
 
@@ -490,9 +491,12 @@ namespace Barotrauma
             wrongOrderList.RectTransform.SetAsLastChild();
 
             new GUIFrame(new RectTransform(new Point(
-                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2, 
-                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform), 
-                style: null);
+                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2,
+                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
+                style: null)
+            {
+                CanBeFocused = false
+            };
 
             //scale to fit the content
             orderButtonFrame.RectTransform.NonScaledSize = new Point(
@@ -746,9 +750,9 @@ namespace Barotrauma
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
 
                 matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                matchingItems.RemoveAll(it => it.Submarine != null && it.Submarine.IsOutpost);
             }
-
-
+            
             //more than one target item -> create a minimap-like selection with a pic of the sub
             if (matchingItems.Count > 1)
             {
@@ -1038,6 +1042,13 @@ namespace Barotrauma
                         bool toggleOpen = 
                             characterListBox.Content.Rect.Contains(PlayerInput.MousePosition) && 
                             hoverRect.Contains(PlayerInput.MousePosition);
+                        wrongOrderList.CanBeFocused = toggleOpen;
+                        wrongOrderList.Content.CanBeFocused = toggleOpen;
+                        var wrongOrderBtn = wrongOrderList.GetChildByUserData("togglewrongorderbtn");
+                        if (wrongOrderBtn != null)
+                        {
+                            wrongOrderBtn.CanBeFocused = toggleOpen;
+                        }
 
                         //order target frame open on this character, check if we're giving any of the orders in wrongOrderList
                         if (!toggleOpen && orderTargetFrame != null && orderTargetFrame.UserData == child.UserData)

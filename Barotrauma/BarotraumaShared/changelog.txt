@@ -17,28 +17,33 @@ there's a more quiet moment.
 - Improved difficulty system: now the difficulty level has a much more noticeable effect on the gameplay.
 - General difficulty balancing all across the board: we've tried to make the difficulty curve more approachable
 to new players while still keeping things challenging for more experienced players on higher difficulty levels.
-- More varied levels, environmental hazards
+- More varied levels, environmental hazards.
 - A new more detailed health system with things such as limb-specific injuries, addictions, overdoses, 
 mental issues... The system is also highly moddable, and makes it much easier to implement things such as
-hunger mechanics, more varied poisons or stat-boosting items and 
-- Completely redesigned in-game HUD (the inventory, crew command interface, chat, etc...)
-- Redesigned crafting system
-- Minerals scattered across the level (can be used for crafting)
+hunger mechanics, more varied poisons or stat-boosting items.
+- Completely redesigned in-game HUD (the inventory, crew command interface, chat, etc).
+- Redesigned crafting system.
+- Minerals scattered across the level (can be used for crafting).
 - A command/report system that can be used to communicate with your crew more effectively (in both single 
-player and multiplayer)
-- Tons of additions to alien ruins (traps, puzzles, non-flooded rooms)
-- Improved AI (both the crew AI and the enemy AIs)
+player and multiplayer).
+- Tons of additions to alien ruins (traps, puzzles, non-flooded rooms).
+- Improved AI (both the crew AI and the enemy AIs).
 - NPC dialog (including random chatter and context-specific lines that make it easier to keep track of 
-what the crew is doing)
-- Most of the device interfaces have been redesigned to make them easier to use (and nicer to look at!)
-- Many additions to the campaign mode (still a work in progress though)
-- New music composed specifically for the game
-- Overhauled audio
-- New monsters
-- New items (weapons, tools, medical items, alien items, crafting materials...)
-- A completely remade tutorial
-- Too many bugfixes to count
-- Additional tools for modders (character editor, sprite editor, level editor, additions to the submarine editor)
+what the crew is doing).
+- Most of the device interfaces have been redesigned to make them easier to use (and nicer to look at!).
+- Many additions to the campaign mode (still a work in progress though).
+- Overhauled the skill system: now every character can generally do anything (repair devices, fabricate 
+new items, apply medical treatments), but characters with higher skill levels will do things more efficiently.
+- Skill progression in the campaign mode: characters' skills gradually increase, making them more valuable with 
+each completed round.
+- New music composed specifically for the game.
+- Overhauled audio.
+- New monsters.
+- New items (weapons, tools, medical items, alien items, crafting materials, etc).
+- A completely remade tutorial.
+- Too many bugfixes to count.
+- Improved and much more stable ragdoll animations.
+- Additional tools for modders (character editor, sprite editor, level editor, additions to the submarine editor).
 - Steam functionality of course: full Workshop support, achievements, banning Steam IDs from servers...
 - Improved translation support: it's possible to translate texts in item/job/etc configuration files without
 breaking compatibility with existing subs or mods (see the EnglishVanilla file for some instructions).

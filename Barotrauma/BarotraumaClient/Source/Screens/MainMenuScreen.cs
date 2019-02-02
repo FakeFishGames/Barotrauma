@@ -112,12 +112,12 @@ namespace Barotrauma
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
+            /*new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.Tutorials,
                 OnClicked = SelectTab,
                 Enabled = false
-            };
+            };*/
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
 

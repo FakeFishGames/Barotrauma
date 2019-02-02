@@ -72,7 +72,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4");
+                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("splashscreen");
                 } 
 
                 catch (Exception e)
