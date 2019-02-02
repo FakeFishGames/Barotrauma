@@ -92,6 +92,7 @@
       <Attack structuredamage="200" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="100" />
         <Affliction identifier="bleeding" strength="10" />
+		<Affliction identifier="stun" strength="10" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
