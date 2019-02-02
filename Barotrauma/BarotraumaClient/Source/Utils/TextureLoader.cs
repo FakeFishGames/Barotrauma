@@ -79,15 +79,20 @@ namespace Barotrauma
 
         private static void PreMultiplyAlpha(Texture2D texture)
         {
-            Color[] data = new Color[texture.Width * texture.Height];
+            UInt32[] data = new UInt32[texture.Width * texture.Height];
             texture.GetData(data);
             for (int y = 0; y < texture.Height; y++)
             {
                 for (int x = 0; x < texture.Width; x++)
                 {
-                    data[x + (y * texture.Width)].R = (byte)(((float)data[x + (y * texture.Width)].R) * ((float)data[x + (y * texture.Width)].A / 255.0f));
-                    data[x + (y * texture.Width)].G = (byte)(((float)data[x + (y * texture.Width)].G) * ((float)data[x + (y * texture.Width)].A / 255.0f));
-                    data[x + (y * texture.Width)].B = (byte)(((float)data[x + (y * texture.Width)].B) * ((float)data[x + (y * texture.Width)].A / 255.0f));
+                    uint a = (data[x + (y * texture.Width)] & 0xff000000) >> 24;
+                    uint r = (data[x + (y * texture.Width)] & 0x00ff0000) >> 16;
+                    uint g = (data[x + (y * texture.Width)] & 0x0000ff00) >> 8;
+                    uint b = (data[x + (y * texture.Width)] & 0x000000ff);
+                    b *= a; b /= 255;
+                    g *= a; g /= 255;
+                    r *= a; r /= 255;
+                    data[x + (y * texture.Width)] = (a<<24) | (r<<16) | (g<<8) | b;
                 }
             }
             texture.SetData(data);
