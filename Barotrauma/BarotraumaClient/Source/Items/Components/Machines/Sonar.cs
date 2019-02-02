@@ -603,6 +603,7 @@ namespace Barotrauma.Items.Components
             float worldPrevPingRadiusSqr = worldPrevPingRadius * worldPrevPingRadius;
 
             disruptedDirections.Clear();
+            if (Level.Loaded == null) { return; }
 
             foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(pingSource, range * pingState))
             {

@@ -1252,6 +1252,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Particles\UnderwaterExplosionSheet.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\splashscreen.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts\EnglishVanillaLoadingTips.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1801,9 +1804,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\UI_Atlas2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\utg_4.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Effects\waterbump.png">
@@ -2383,6 +2383,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Music\Somethings outside.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\splashscreen.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Tutorials\TutorialSub.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2638,9 +2641,6 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Water\WaterAmbience2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\utg_4.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Effects\watershader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2664,8 +2664,6 @@
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Orca.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub">
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\doorBreak1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2732,7 +2730,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\AnimationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\FishAnimations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Params\Animation\HumanoidAnimations.cs" />
@@ -2742,62 +2739,84 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CauseOfDeath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Affliction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionBleeding.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionHusk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPsychosis.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\EventManagerSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\MalfunctionEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\StringFormatter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\IEnumerableExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\PointExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\RectangleExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CharacterCampaignData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ElectricalDischarger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\LevelResource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs">
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\SmokeDetector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\RoundEndCinematic.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Memento.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AdderComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Skill.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\SkillPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Limb.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\PropertyConditional.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ContentPackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\CoroutineManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\DebugConsole.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ArtifactEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\EventManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\EventManagerSettings.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\MalfunctionEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\CargoMission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\CombatMission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\Mission.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MonsterMission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\SalvageMission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\MonsterEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEvent.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventSet.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\IEnumerableExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\PointExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\RectangleExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\StringFormatter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\FrameCounter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CargoManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CampaignMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MissionMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\HireManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\SteamAchievementManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\TextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\DockingPort.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Door.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ElectricalDischarger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\Holdable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\LevelResource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\MeleeWeapon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\Pickable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\Propulsion.cs" />
@@ -2815,22 +2834,18 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\MiniMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\OxygenGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Pump.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Reactor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Sonar.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\SonarTransducer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Reactor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Steering.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Vent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Power\PowerContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Power\Powered.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Power\PowerTransfer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Projectile.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Rope.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AdderComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AndComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Connection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ConnectionPanel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\DelayComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\LightComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MotionSensor.cs" />
@@ -2841,7 +2856,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\RegExFindComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\RelayComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\SignalCheckComponent.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\SmokeDetector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\WaterDetector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Wire.cs" />
@@ -2860,43 +2874,36 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\IDamageable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelGenerationParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObjectManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObjectPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelTrigger.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelWall.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\BTRoom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\Corridor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerationParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\Voronoi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\VoronoiElements.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelWall.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\LinkedSubmarine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntityPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\Location.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationType.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\Map.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Md5Hash.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\RoundEndCinematic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Structure.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\StructurePrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Submarine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\SubmarineBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\WayPoint.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Memento.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\BanList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Client.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ClientPermissions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\INetSerializable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetConfig.cs" />
@@ -2904,36 +2911,21 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetIdUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetworkMember.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipConfig.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voting.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\WhiteList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\Physics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\PhysicsBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\PlayerInput.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\Voronoi.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\VoronoiElements.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\GameScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\Screen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\ISerializableEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\SerializableProperty.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\XMLExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\PropertyConditional.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\SteamAchievementManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\TextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\TextPack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Timing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Homoglyphs.cs" />
@@ -2943,5 +2935,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\HireManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
   </ItemGroup>
 </Project>

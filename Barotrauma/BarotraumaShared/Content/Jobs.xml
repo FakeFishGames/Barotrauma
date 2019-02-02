@@ -173,6 +173,14 @@
        minnumber="0" maxnumber="0" initialcount="0">
     <Items>
       <Item identifier="watchmanclothes" equip="true"/>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+      </Item>
     </Items>
   </Job>
 </Jobs>

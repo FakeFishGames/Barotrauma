@@ -85,7 +85,7 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
     </ItemContainer>
   </Item>
-  <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate">
+  <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -94,8 +94,8 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="52,31,14,34" depth="0.55" origin="0.5,0.5" />
-    <Body width="12" height="33" density="5" />
+    <Sprite texture="tools_new.png" sourcerect="356,223,39,110" depth="0.55" origin="0.5,0.5" />
+    <Body width="39" height="110" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" selectionmode="All" />

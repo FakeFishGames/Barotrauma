@@ -13,11 +13,6 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin utg_4.mp4
-/importer:H264Importer
-/processor:VideoProcessor
-/build:utg_4.mp4
-
 #begin Effects/blurshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -53,4 +48,9 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/watershader.fx
+
+#begin splashscreen.mp4
+/importer:H264Importer
+/processor:VideoProcessor
+/build:splashscreen.mp4
 

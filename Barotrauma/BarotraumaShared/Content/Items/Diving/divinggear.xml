@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="smallitem,oxygensource" cargocontaineridentifier="metalcrate">
+  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="smallitem,oxygensource" cargocontaineridentifier="metalcrate" scale="0.3">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -9,8 +9,8 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" />
-    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="38,31,13,33" depth="0.55" />
-    <Body width="12" height="33" density="5" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
+    <Body width="38" height="109" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 25" />
@@ -24,15 +24,16 @@
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true" />
     </Holdable>
   </Item>
-  <Item name="Oxygenite Tank" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" description="A Tank containing liquid Oxygenite.">
+  <Item name="Oxygenite Tank" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" description="A Tank containing liquid Oxygenite." scale="0.3">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
       <Item identifier="liquidoxygenite" mincondition="0.5" />
       <Item identifier="liquidoxygenite" mincondition="0.9" />
     </Deconstruct>
-    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="1,91,13,33" depth="0.55" />
-    <Body width="12" height="33" density="9.9" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="473,223,39,112" depth="0.55" />
+    <Body width="39" height="112" density="9.9" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 20" />

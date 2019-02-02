@@ -27,6 +27,8 @@ namespace Barotrauma.Networking
         public YesNoMaybe? TraitorsEnabled;
         public string GameMode;
 
+        public bool? RespondedToSteamQuery = null;
+
         public string GameVersion;
         public List<string> ContentPackageNames
         {
