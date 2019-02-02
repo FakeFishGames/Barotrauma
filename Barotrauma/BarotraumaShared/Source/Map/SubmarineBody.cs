@@ -113,7 +113,7 @@ namespace Barotrauma
                           ConvertUnits.ToSimUnits(wall.BodyHeight),
                           50.0f,
                           -wall.BodyRotation,
-                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
+                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset),
                           farseerBody, this);
 
                     minExtents.X = Math.Min(rect.X, minExtents.X);
