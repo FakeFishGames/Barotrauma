@@ -73,7 +73,7 @@
   <Bleeding
     name="Bleeding"
     identifier="bleeding"
-    description="Blood pours freeling from this ragged and particularly nasty open wound"
+    description="Blood pours freely from this ragged and particularly nasty open wound"
     type="bleeding"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
