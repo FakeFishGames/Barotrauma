@@ -61,7 +61,7 @@ namespace Barotrauma
 
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
-        public static Submarine[] MainSubs = new Submarine[2];
+        public static readonly Submarine[] MainSubs = new Submarine[2];
         public static Submarine MainSub
         {
             get { return MainSubs[0]; }
