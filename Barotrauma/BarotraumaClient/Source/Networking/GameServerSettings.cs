@@ -546,11 +546,14 @@ namespace Barotrauma.Networking
 
         private bool SwitchSubSelection(GUITickBox tickBox)
         {
-            subSelectionMode = (SelectionMode)tickBox.UserData;
-            Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
-            if (subSelectionMode == SelectionMode.Random)
+            if (tickBox.Selected)
             {
-                GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
+                subSelectionMode = (SelectionMode)tickBox.UserData;
+                Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
+                if (subSelectionMode == SelectionMode.Random)
+                {
+                    GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
+                }
             }
             return true;
         }
@@ -569,11 +572,14 @@ namespace Barotrauma.Networking
 
         private bool SwitchModeSelection(GUITickBox tickBox)
         {
-            modeSelectionMode = (SelectionMode)tickBox.UserData;
-            Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
-            if (modeSelectionMode == SelectionMode.Random)
+            if (tickBox.Selected)
             {
-                GameMain.NetLobbyScreen.ModeList.Select(Rand.Range(0, GameMain.NetLobbyScreen.ModeList.CountChildren));
+                modeSelectionMode = (SelectionMode)tickBox.UserData;
+                Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+                if (modeSelectionMode == SelectionMode.Random)
+                {
+                    GameMain.NetLobbyScreen.ModeList.Select(Rand.Range(0, GameMain.NetLobbyScreen.ModeList.CountChildren));
+                }
             }
             return true;
         }
