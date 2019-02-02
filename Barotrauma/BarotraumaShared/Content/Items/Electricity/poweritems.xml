@@ -7,7 +7,7 @@
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="146,0,73,123" depth="0.8" maxcondition="0" />
     <PowerTransfer canbeselected="true">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
-      <StatusEffect type="InWater" target="This" condition="-0.5">
+      <StatusEffect type="InWater" target="This" condition="-0.25">
         <Conditional currPowerConsumption="lt -10" />
       </StatusEffect>
     </PowerTransfer>
