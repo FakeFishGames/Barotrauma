@@ -354,26 +354,25 @@ namespace Barotrauma
 
             if (matchingAfflictions.Count == 0) return;
 
-            do
+            float reduceAmount = amount / matchingAfflictions.Count;
+            for (int i = matchingAfflictions.Count - 1; i >= 0; i--)
             {
-                float reduceAmount = amount / matchingAfflictions.Count;
-                for (int i = matchingAfflictions.Count - 1; i >= 0; i--)
+                var matchingAffliction = matchingAfflictions[i];
+                if (matchingAffliction.Strength < reduceAmount)
                 {
-                    var matchingAffliction = matchingAfflictions[i];
-                    if (matchingAffliction.Strength < reduceAmount)
-                    {
-                        amount -= matchingAffliction.Strength;
-                        matchingAffliction.Strength = 0.0f;
-                        matchingAfflictions.RemoveAt(i);
-                        SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
-                    }
-                    else
-                    {
-                        matchingAffliction.Strength -= reduceAmount;
-                        amount -= reduceAmount;
-                    }
+                    float surplus = reduceAmount - matchingAffliction.Strength;
+                    if (i > 0) reduceAmount += surplus / i;
+                    amount -= matchingAffliction.Strength;
+                    matchingAffliction.Strength = 0.0f;
+                    matchingAfflictions.RemoveAt(i);
+                    SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
                 }
-            } while (matchingAfflictions.Count > 0 && amount > 0.0f);
+                else
+                {
+                    matchingAffliction.Strength -= reduceAmount;
+                    amount -= reduceAmount;
+                }
+            }
             
         }
 
