@@ -92,6 +92,7 @@ namespace Barotrauma.Networking
                 if (GameMain.Config.RequireSteamAuthentication)
                 {
                     unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString());
+                    Log("Disconnected unauthenticated client (Steam ID: " + steamID + "). Steam authentication failed.", ServerLog.MessageType.ServerMessage);
                 }
                 else
                 {
@@ -119,12 +120,14 @@ namespace Barotrauma.Networking
                 {
                     case Facepunch.Steamworks.ServerAuth.Status.OK:
                         ////steam authentication done, check password next
+                        Log("Successfully authenticated client via Steam (Steam ID: " + steamID + ").", ServerLog.MessageType.ServerMessage);
                         HandleClientAuthRequest(unauthClient.Connection, unauthClient.SteamID);
                         break;
                     default:
                         unauthenticatedClients.Remove(unauthClient);
                         if (GameMain.Config.RequireSteamAuthentication)
                         {
+                            Log("Disconnected unauthenticated client (Steam ID: " + steamID + "). Steam authentication failed, (" + status + ").", ServerLog.MessageType.ServerMessage);
                             unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString() + "; (" + status.ToString() + ")");
                         }
                         else
@@ -148,6 +151,7 @@ namespace Barotrauma.Networking
                 var connectedClient = connectedClients.Find(c => c.SteamID == ownerID);
                 if (connectedClient != null)
                 {
+                    Log("Disconnecting client " + connectedClient.Name + " (Steam ID: " + steamID + "). Steam authentication no longer valid (" + status + ").", ServerLog.MessageType.ServerMessage);
                     KickClient(connectedClient, TextManager.Get("DisconnectMessage.SteamAuthNoLongerValid").Replace("[status]", status.ToString()));
                 }
             }
