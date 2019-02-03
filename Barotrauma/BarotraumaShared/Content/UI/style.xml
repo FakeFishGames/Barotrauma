@@ -513,12 +513,15 @@
     </GUIFrame>
 
     <Slider
-      color="255,255,255,255"
+      color="200,200,200,255"
       hovercolor="255,255,255,255"
-      selectedcolor="255,255,255,255">
+      selectedcolor="255,255,255,255"
+      pressedcolor="100,100,100,255">
 
-      <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" sourcerect ="0, 276, 859, 37"/>
-      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" sourcerect ="0, 276, 859, 37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" sourcerect="0,276,859,37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" sourcerect="0,276,859,37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" tile="false" sourcerect="0,276,859,37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" tile="false" sourcerect="0,276,859,37"/>
     </Slider>    
   </GUIProgressBar>
 
@@ -787,7 +790,8 @@
     <GUIButtonHorizontal
       color="230,230,230,255"
       hovercolor="255,255,255,255"
-      selectedcolor="230,230,230,255">
+      selectedcolor="230,230,230,255"
+      pressedcolor="200,200,200,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="123,230,53,36" slice="132,235,165,260"/>
       <GUITextBlock
         textcolor="153,166,179,255"
@@ -797,7 +801,8 @@
     <GUIButtonVertical
       color="230,230,230,255"
       hovercolor="255,255,255,255"
-      selectedcolor="230,230,230,255">
+      selectedcolor="230,230,230,255"
+      pressedcolor="150,150,150,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="473,2,37,54" slice="479,10,505,47"/>
       <GUITextBlock
         textcolor="153,166,179,255"

@@ -54,6 +54,9 @@
     </ItemContainer>
   </Item>
   <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Machine" linkable="true">
+    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="200" />
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
@@ -71,9 +74,6 @@
     </ItemContainer>
   </Item>
   <Item name="Coilgun Bolt" identifier="coilgunbolt" category="Misc" sonarsize="2">
-    <Price locationtype="Outpost" buyprice="300" />
-    <Price locationtype="Military" buyprice="200" />
-    <Price locationtype="City" buyprice="300" />
     <Sprite texture="weapons.png" sourcerect="0,48,65,9" depth="0.55" />
     <Body width="64" height="5" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />

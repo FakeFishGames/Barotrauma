@@ -419,7 +419,7 @@
     requireddeliveryamount="20">
     <Items>
       <Item identifier="chemicalcrate">
-        <Item identifier="auxiliorizine" amount="5"/>
+        <Item identifier="antidama2" amount="5"/>
         <Item identifier="sulphuricacid" amount="5"/>
       </Item>
       <Item identifier="chemicalcrate">

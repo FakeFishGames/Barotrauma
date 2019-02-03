@@ -353,6 +353,13 @@
         <RequiredItem identifier="incendium"/>
       </FabricableItem>
 
+      <FabricableItem identifier="coilgunammobox" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="25"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+      
       <FabricableItem identifier="railgunshell" requiredtime="20">
         <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="steel"/>

@@ -37,7 +37,6 @@ namespace Barotrauma
 
     public static partial class ToolBox
     {
-        private static List<string> contentPath = new List<string>(5);
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
@@ -49,29 +48,6 @@ namespace Barotrauma
             char[] delimiters = { '/', '\\' };
             string[] subDirs = filename.Split(delimiters);
             string originalFilename = filename;
-
-            // Only take the game content directory into account
-
-            // The algorithm
-            //var contentPath = subDirs.Reverse().TakeWhile(d => d != "Content").ToList();
-            //contentPath.Add("Content");
-            //subDirs = subDirs.Where(d => contentPath.Contains(d)).ToArray();
-
-            // Optimized but quite unreadable (and error-prone) implementation, which should in practice do the same that the one above.
-            // I usually avoid this kind of code, but here it's possible that the check is performed very often when loading a lot of files.
-            contentPath.Clear();
-            for (int i = subDirs.Length - 1; i >= 0; i--)
-            {
-                string subDir = subDirs[i];
-                contentPath.Add(subDir);
-                if (subDir == "Content") { break; }
-            }
-            subDirs = new string[contentPath.Count];
-            for (int i = 0; i < subDirs.Length; i++)
-            {
-                subDirs[i] = contentPath[subDirs.Length - (i + 1)];
-            }
-
             filename = "";
 
             for (int i = 0; i < subDirs.Length - 1; i++)
