@@ -181,7 +181,7 @@ namespace Barotrauma.Networking
 
             return message;
         }
-        
+
         public int EstimateLengthBytesClient()
         {
             int length =    1 + //(byte)ServerNetObject.CHAT_MESSAGE

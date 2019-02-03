@@ -1480,6 +1480,12 @@ namespace Barotrauma
             }
             for (int i = 0; i < 2; i++)
             {
+                //no outposts at either side of the level when there's more than one main sub (combat missions)
+                if (Submarine.MainSubs.Length > 1 && Submarine.MainSubs[0] != null && Submarine.MainSubs[1] != null)
+                {
+                    continue;
+                }
+
                 //only create a starting outpost in campaign mode
                 if (GameMain.GameSession?.GameMode as CampaignMode == null && ((i == 0) == !Mirrored))
                 {

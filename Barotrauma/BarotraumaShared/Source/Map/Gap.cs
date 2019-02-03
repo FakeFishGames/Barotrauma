@@ -12,6 +12,8 @@ namespace Barotrauma
     {
         public static List<Gap> GapList = new List<Gap>();
 
+        const float MaxFlowForce = 500.0f;
+
         public static bool ShowGaps = true;
 
         const float OutsideColliderRaycastInterval = 0.1f;
@@ -259,6 +261,8 @@ namespace Barotrauma
                 UpdateRoomToRoom(deltaTime);
             }
 
+            flowForce.X = MathHelper.Clamp(flowForce.X, -MaxFlowForce, MaxFlowForce);
+            flowForce.Y = MathHelper.Clamp(flowForce.Y, -MaxFlowForce, MaxFlowForce);
             lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
 
             EmitParticles(deltaTime);
@@ -463,7 +467,7 @@ namespace Barotrauma
 
                     flowForce = new Vector2(
                         hull1.WaveY[hull1.GetWaveIndex(rect.X)] - hull1.WaveY[hull1.GetWaveIndex(rect.Right)],
-                        Math.Max(Math.Max((hull2.Pressure + subOffset.Y - hull1.Pressure) * 10.0f, -200.0f), -delta));
+                        MathHelper.Clamp(-delta, -200.0f, 0.0f));
 
                     if (hull2.WaterVolume > hull2.Volume)
                     {
