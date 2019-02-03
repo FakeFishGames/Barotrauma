@@ -53,7 +53,7 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
-  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Machine" linkable="true">
+  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true">
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />
