@@ -146,6 +146,8 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
+            if (item.Container != null) { return false; }
+
             if (AutoInteractWithContained)
             {
                 foreach (Item contained in Inventory.Items)
