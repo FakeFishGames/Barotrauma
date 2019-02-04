@@ -1355,6 +1355,7 @@ namespace Barotrauma
                     "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
                 return;
             }
+            if (MainLimb == null) { return; }
 
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 

@@ -990,43 +990,7 @@
   </Deliriumine>
   <!-- legacy **************************************************************************************** -->
   <!-- Medical items -->
-  <MedicalSyringe name="Medical Syringe" identifier="medicalsyringe" category="Equipment" Tags="smallitem,medical,syringe" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" usecontainedspritecolor="true" usecontainedinventoryiconcolor="true" description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
-    <Price locationtype="Research" buyprice="25" />
-    <Price locationtype="Military" buyprice="30" />
-    <Price locationtype="City" buyprice="30" />
-    <Price locationtype="Outpost" buyprice="30" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,0,64,64" />
-    <Sprite texture="med.png" sourcerect="0,0,25,5" depth="0.6" />
-    <Body width="25" height="5" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-      <RequiredSkill identifier="medical" level="40" />
-      <StatusEffect type="OnUse" target="Contained, Limb, Character" Condition="-33.4" disabledeltatime="true">
-        <sound file="Content/Items/Medical/syringe.ogg" range="500" />
-        <RequiredItem identifier="chem" type="Contained" />
-        <Use />
-      </StatusEffect>
-      <!-- If usage fails due to a low medical skill, reduce the condition of the contained med and make the target bleed slightly-->
-      <StatusEffect type="OnFailure" target="Limb, Contained" Condition="-50" disabledeltatime="true">
-        <sound file="Content/Items/Medical/syringe.ogg" range="500" />
-        <Affliction identifier="bleeding" amount="5" />
-        <RequiredItem identifier="chem" type="Contained" />
-      </StatusEffect>
-    </MeleeWeapon>
-    <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
-      <Containable identifiers="chem" />
-    </ItemContainer>
-    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="1" stun="0.1" targetforce="5">
-        <Affliction identifier="bleeding" strength="1" />
-      </Attack>
-      <StatusEffect type="OnImpact" target="Contained, Limb, Character" Condition="-100.0" disabledeltatime="true">
-        <sound file="Content/Items/Medical/syringe.ogg" range="500" />
-        <RequiredItem identifiers="chem" type="Contained" />
-        <Use />
-      </StatusEffect>
-    </Projectile>
-  </MedicalSyringe>
+
   <!--
   <Item
     name="Oxygenic Acid"

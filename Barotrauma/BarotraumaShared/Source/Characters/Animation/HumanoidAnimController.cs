@@ -311,6 +311,7 @@ namespace Barotrauma
         public override void UpdateAnim(float deltaTime)
         {
             if (Frozen) return;
+            if (MainLimb == null) { return; }
 
             levitatingCollider = true;
             ColliderIndex = Crouching ? 1 : 0;
@@ -335,8 +336,7 @@ namespace Barotrauma
             else
             {
                 deathAnimTimer = 0.0f;
-            }
-            
+            } 
 
             if (!character.AllowInput)
             {

@@ -130,6 +130,7 @@ namespace Barotrauma
         public override void UpdateAnim(float deltaTime)
         {
             if (Frozen) return;
+            if (MainLimb == null) { return; }
 
             if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
             {
