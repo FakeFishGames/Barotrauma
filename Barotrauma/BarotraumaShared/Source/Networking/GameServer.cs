@@ -1081,7 +1081,7 @@ namespace Barotrauma.Networking
                     if (!character.Enabled) continue;
                     if (c.Character != null &&
                         Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.CharacterIgnoreDistanceSqr)
+                        NetConfig.DisableCharacterDistSqr)
                     {
                         continue;
                     }
