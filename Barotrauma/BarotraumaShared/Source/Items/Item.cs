@@ -262,6 +262,7 @@ namespace Barotrauma
                     {
                         ic.PlaySound(ActionType.OnBroken, WorldPosition);
                     }
+                    if (Screen.Selected == GameMain.SubEditorScreen) return;
 #endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                 }
