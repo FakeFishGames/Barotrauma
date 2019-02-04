@@ -290,24 +290,29 @@ namespace Barotrauma.Networking
 
                 if (ip == null || (!ip.CanBeBought && !ip.Tags.Contains("smallitem"))) continue;
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) },
-                    ip.Name, font: GUI.SmallFont)
+                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
-                    Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f),
                     UserData = cargoFrame,
-                    CanBeFocused = false
+                    RelativeSpacing = 0.05f
                 };
+
 
                 if (ip.sprite != null)
                 {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(textBlock.Rect.Height), textBlock.RectTransform), ip.sprite, scaleToFit: true)
+                    GUIImage img = new GUIImage(new RectTransform(new Point(itemFrame.Rect.Height), itemFrame.RectTransform), ip.sprite, scaleToFit: true)
                     {
+                        CanBeFocused = false,
                         Color = ip.SpriteColor
                     };
                 }
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), itemFrame.RectTransform),
+                    ip.Name, font: GUI.SmallFont)
+                {
+                    CanBeFocused = false
+                };
 
                 extraCargo.TryGetValue(ip, out int cargoVal);
-                var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
+                var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), itemFrame.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
