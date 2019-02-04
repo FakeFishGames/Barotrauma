@@ -109,7 +109,7 @@ namespace Barotrauma
             set { name = value; }
         }
 
-        public bool OnSonar = true;
+        public bool ShowSonarMarker = true;
 
         public string Description
         {
@@ -388,6 +388,7 @@ namespace Barotrauma
         public void MakeOutpost()
         {
             IsOutpost = true;
+            ShowSonarMarker = false;
             PhysicsBody.FarseerBody.IsStatic = true;
             
             foreach (MapEntity me in MapEntity.mapEntityList)
