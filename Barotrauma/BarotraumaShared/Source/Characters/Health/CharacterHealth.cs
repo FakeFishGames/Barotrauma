@@ -364,7 +364,7 @@ namespace Barotrauma
                     amount -= matchingAffliction.Strength;
                     matchingAffliction.Strength = 0.0f;
                     matchingAfflictions.RemoveAt(i);
-                    if (i == 0) i = matchingAfflictions.Count-1;
+                    if (i == 0) i = matchingAfflictions.Count;
                     if (i > 0) reduceAmount += surplus / i;
                     SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
                 }
