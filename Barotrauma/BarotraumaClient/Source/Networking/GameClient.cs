@@ -1061,6 +1061,8 @@ namespace Barotrauma.Networking
 
                         if (lobbyUpdated)
                         {
+                            var prevDispatcher = GUI.KeyboardDispatcher.Subscriber;
+
                             UInt16 updateID     = inc.ReadUInt16();
                             string serverName   = inc.ReadString();
                             string serverText   = inc.ReadString();
@@ -1162,9 +1164,10 @@ namespace Barotrauma.Networking
                                         ConnectedClients.RemoveAt(i);
                                     }
                                 }
-                                
+
                                 Voting.AllowSubVoting = allowSubVoting;
                                 Voting.AllowModeVoting = allowModeVoting;
+                                GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
                         }
 
