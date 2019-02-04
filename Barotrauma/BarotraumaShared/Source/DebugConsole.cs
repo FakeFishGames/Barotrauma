@@ -2388,6 +2388,18 @@ namespace Barotrauma
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
                 }
             }));
+
+            commands.Add(new Command("money", "", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                {
+                    if (int.TryParse(args[0], out int money))
+                    {
+                        campaign.Money += money;
+                    }
+                }
+            }, isCheat: true));
 #endif
             InitProjectSpecific();
 
