@@ -311,6 +311,11 @@ namespace Barotrauma
         public override void CreateSnapshot()
         {
             Serialize();
+            if (doc == null)
+            {
+                DebugConsole.ThrowError("[RagdollParams] The source XML Document is null!");
+                return;
+            }
             var copy = new RagdollParams
             {
                 IsLoaded = true,
