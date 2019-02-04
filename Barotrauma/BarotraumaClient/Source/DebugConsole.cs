@@ -249,13 +249,19 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
                 {
                     ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
-                        (option) => {
-                            if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull();
+                        (option) => 
+                        {
+                            ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
+                                (option2) => 
+                                {
+                                    if (option2.ToLower() == "y") { GameMain.SubEditorScreen.AutoHull(); }
+                                });
                         });
                 }
                 else
                 {
-                    GameMain.SubEditorScreen.AutoHull();
+                    ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
+                        (option) => { if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull(); });
                 }
             }));
 
