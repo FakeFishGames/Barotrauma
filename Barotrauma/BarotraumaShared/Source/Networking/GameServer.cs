@@ -1325,6 +1325,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
+            initiatedStartGame = true;
             CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
 
             return true;
