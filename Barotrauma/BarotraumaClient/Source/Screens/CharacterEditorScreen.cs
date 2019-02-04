@@ -126,6 +126,8 @@ namespace Barotrauma
                 isEndlessRunner = false;
                 if (character != null)
                 {
+                    AnimParams.ForEach(a => a.Reset(true));
+                    RagdollParams.Reset(true);
                     RagdollParams.ClearHistory();
                     CurrentAnimation.ClearHistory();
                     if (!character.Removed)
