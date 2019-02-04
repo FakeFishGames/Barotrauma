@@ -3036,7 +3036,7 @@ namespace Barotrauma
                 }
             }
 
-            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {
@@ -3044,7 +3044,7 @@ namespace Barotrauma
             }
 
             string filePath = Path.Combine(SavePath, fileName);
-            if (File.Exists(filePath))
+            if (File.Exists(filePath + ".txt"))
             {
                 int fileNum = 2;
                 while (File.Exists(filePath + " (" + fileNum + ")"))
@@ -3056,7 +3056,7 @@ namespace Barotrauma
 
             try
             {
-                File.WriteAllLines(filePath, unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+                File.WriteAllLines(filePath + ".txt", unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
             }
             catch (Exception e)
             {

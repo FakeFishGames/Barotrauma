@@ -2252,11 +2252,14 @@ namespace Barotrauma
                 element.Add(new XAttribute("condition", condition.ToString("G", CultureInfo.InvariantCulture)));
             }
 
-            System.Diagnostics.Debug.Assert(Submarine != null);
+            Item rootContainer = GetRootContainer() ?? this;
+            System.Diagnostics.Debug.Assert(Submarine != null || rootContainer.ParentInventory?.Owner is Character);
+
+            Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
 
             element.Add(new XAttribute("rect",
-                (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                (int)(rect.X - subPosition.X) + "," +
+                (int)(rect.Y - subPosition.Y) + "," +
                 rect.Width + "," + rect.Height));
             
             if (linkedTo != null && linkedTo.Count > 0)
