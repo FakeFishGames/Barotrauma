@@ -455,14 +455,14 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine sub in Submarine.Loaded)
             {
-                if (!sub.OnSonar) continue;
+                if (!sub.ShowSonarMarker) { continue; }
                 if (UseTransducers ?
                     connectedTransducers.Any(t => sub == t.Transducer.Item.Submarine || sub.DockedTo.Contains(t.Transducer.Item.Submarine)) :
                     (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)))
                 {
                     continue;
                 }
-                if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
+                if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                              
                 DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
             }
