@@ -1781,19 +1781,47 @@ namespace Barotrauma
                     if (GameMain.Server != null)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        c.Enabled =
-                            c == controlled ||
-                            c.IsRemotePlayer ||
-                            CharacterList.Any(c2 => 
-                                c != c2 &&
-                                (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
-                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                        if (c == controlled || c.IsRemotePlayer)
+                        {
+                            c.Enabled = true;
+                        }
+                        else
+                        {
+                            float distSqr = float.MaxValue;
+                            foreach (Character otherCharacter in CharacterList)
+                            {
+                                if (otherCharacter == c) { continue; }
+                                if (!otherCharacter.IsRemotePlayer && otherCharacter != GameMain.NetworkMember.Character) { continue; }
+                                distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, c.WorldPosition));
+                            }
+
+                            if (distSqr > NetConfig.DisableCharacterDistSqr)
+                            {
+                                c.Enabled = false;
+                            }
+                            else if (distSqr < NetConfig.EnableCharacterDistSqr)
+                            {
+                                c.Enabled = true;
+                            }
+                        }                        
                     }
                     else if (Submarine.MainSub != null)
                     {
                         //disable AI characters that are far away from the sub and the controlled character
-                        c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
-                            (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                        float distSqr = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition);
+                        if (Controlled != null)
+                        {
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition));
+                        }
+                        
+                        if (distSqr > NetConfig.DisableCharacterDistSqr)
+                        {
+                            c.Enabled = false;
+                        }
+                        else if ( distSqr < NetConfig.EnableCharacterDistSqr)
+                        {
+                            c.Enabled = true;
+                        }
                     }
                 }
             }
