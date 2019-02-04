@@ -333,7 +333,9 @@
 
   <!-- Misc -->
   <Yes>Yes</Yes>
+  <YesToAll>Yes to All</YesToAll>
   <No>No</No>
+  <NoToAll>No to All</NoToAll>
   <OK>OK</OK>
   <Skills>Skills</Skills>
   <PersonalityTrait>Trait</PersonalityTrait>
