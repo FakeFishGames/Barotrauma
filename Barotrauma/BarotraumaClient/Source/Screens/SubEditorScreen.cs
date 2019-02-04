@@ -1937,7 +1937,7 @@ namespace Barotrauma
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
             
-            cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);       
+            cam.MoveCamera((float)deltaTime, true);       
             if (PlayerInput.MidButtonHeld())
             {
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;
