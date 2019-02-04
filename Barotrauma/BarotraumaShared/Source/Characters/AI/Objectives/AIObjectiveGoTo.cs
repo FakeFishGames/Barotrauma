@@ -121,7 +121,7 @@ namespace Barotrauma
                 {
                     //if path is up-to-date and contains outdoors nodes, this path is unreachable
                     var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                    if (pathSteering.CurrentPath != null && 
+                    if (pathSteering?.CurrentPath != null && 
                         Vector2.Distance(pathSteering.CurrentTarget, currTargetPos) < 1.0f && 
                         pathSteering.CurrentPath.HasOutdoorsNodes)
                     {
