@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private Entity Submarine;
 
+        private bool removed;
+
 #if CLIENT
         private List<Decal> burnDecals = new List<Decal>();
 #endif
@@ -150,7 +152,11 @@ namespace Barotrauma
             DamageCharacters(deltaTime);
             DamageItems(deltaTime);
 
-            if (hull.WaterVolume > 0.0f) HullWaterExtinguish(deltaTime);
+            if (hull.WaterVolume > 0.0f)
+            {
+                HullWaterExtinguish(deltaTime);
+                if (removed) { return; }
+            }
 
             hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
 
@@ -319,15 +325,16 @@ namespace Barotrauma
         public void Remove()
         {
 #if CLIENT
-            lightSource.Remove();
+            lightSource?.Remove();
+            lightSource = null;
             
             foreach (Decal d in burnDecals)
             {
                 d.StopFadeIn();
             }
 #endif
-
-            hull.RemoveFire(this);
+            hull?.RemoveFire(this);
+            removed = true;
         }
     }
 }
