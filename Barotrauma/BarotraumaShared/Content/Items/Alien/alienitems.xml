@@ -392,7 +392,7 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien">
+  <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien,artifactholder">
     <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true">
       <Containable identifiers="alien" />
