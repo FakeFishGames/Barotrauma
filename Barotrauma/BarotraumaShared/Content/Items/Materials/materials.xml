@@ -213,10 +213,6 @@
     <Sprite texture="CraftingElements1.png" sourcerect="110,14,46,90" depth="0.6" origin="0.5,0.5" />
     <Body width="29" height="57" density="20" />
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
-        <RequiredItem identifier="medicalsyringe" type="Container" />
-        <Affliction identifier="internaldamage" amount="0.5" />
-      </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
