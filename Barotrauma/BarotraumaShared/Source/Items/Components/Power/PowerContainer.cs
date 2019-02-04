@@ -219,6 +219,9 @@ namespace Barotrauma.Items.Components
                 {
                     item.CreateServerEvent(this);
                     RechargeSpeed = maxRechargeSpeed * 0.5f;
+#if CLIENT
+                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+#endif
                     character.Speak(TextManager.Get("DialogChargeBatteries")
                         .Replace("[itemname]", item.Name)
                         .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
@@ -230,6 +233,9 @@ namespace Barotrauma.Items.Components
                 {
                     item.CreateServerEvent(this);
                     RechargeSpeed = 0.0f;
+#if CLIENT
+                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+#endif
                     character.Speak(TextManager.Get("DialogStopChargingBatteries")
                         .Replace("[itemname]", item.Name)
                         .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
