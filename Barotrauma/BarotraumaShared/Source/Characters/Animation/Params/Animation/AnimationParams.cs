@@ -382,6 +382,11 @@ namespace Barotrauma
         protected void CreateSnapshot<T>() where T : AnimationParams, new()
         {
             Serialize();
+            if (doc == null)
+            {
+                DebugConsole.ThrowError("[AnimationParams] The source XML Document is null!");
+                return;
+            }
             var copy = new T
             {
                 IsLoaded = true,
