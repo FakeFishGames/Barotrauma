@@ -438,9 +438,6 @@
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
-      <FabricableItem identifier="medicalsyringe" requiredtime="10">
-        <RequiredItem identifier="steel"/>
-      </FabricableItem>
       <FabricableItem identifier="chloralhydrate" requiredtime="20">
         <RequiredSkill identifier="medical" level="30"/>
         <RequiredItem identifier="chlorine"/>
