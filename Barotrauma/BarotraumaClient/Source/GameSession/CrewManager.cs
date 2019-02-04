@@ -109,7 +109,7 @@ namespace Barotrauma
                 Spacing = (int)(3 * GUI.Scale),
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
-                CanBeFocused = false
+                CanBeFocused = true
             };
 
             scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
