@@ -264,7 +264,7 @@ namespace Barotrauma
                     }
                 }
                  
-                if (allowZoom)
+                if (allowZoom && GUI.MouseOn == null)
                 {
                     Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
                     Vector2 diffViewCenter;
