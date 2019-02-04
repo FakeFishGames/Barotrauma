@@ -64,6 +64,8 @@ namespace Barotrauma
 
         private DateTime editorSelectedTime;
 
+        private readonly string containerDeleteTag = "containerdelete";
+
         public override Camera Cam
         {
             get { return cam; }
@@ -579,6 +581,143 @@ namespace Barotrauma
                 dummyCharacter.Remove();
                 dummyCharacter = null;
                 GameMain.World.ProcessChanges();
+            }
+
+            if (GUIMessageBox.MessageBoxes.Any(mbox => (mbox as GUIMessageBox).Tag == containerDeleteTag))
+            {
+                for (int i = 0; i < GUIMessageBox.MessageBoxes.Count; i++)
+                {
+                    GUIMessageBox box = GUIMessageBox.MessageBoxes[i] as GUIMessageBox;
+                    if (box.Tag != containerDeleteTag) continue;
+                    box.Close();
+                    i--; // Take into account the message boxes removing themselves from the list when closed
+                }
+            }
+        }
+
+        public void HandleContainerContentsDeletion(Item itemToDelete, Inventory itemInventory)
+        {
+            string itemNames = string.Empty;
+
+            foreach (Item item in itemInventory.Items)
+            {
+                if (item == null) continue;
+                itemNames += item.Name + "\n";
+            }
+
+            if (itemNames.Length > 0)
+            {
+                // Multiple prompts open
+                if (GUIMessageBox.MessageBoxes.Any(mbox => (mbox as GUIMessageBox).Tag == containerDeleteTag))
+                {
+                    var msgBox = new GUIMessageBox(itemToDelete.Name, TextManager.Get("DeletingContainerWithItems") + itemNames, new string[] { TextManager.Get("Yes"), TextManager.Get("No"), TextManager.Get("YesToAll"), TextManager.Get("NoToAll") }, tag: containerDeleteTag);
+
+                    // Yes
+                    msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                    {
+                        itemInventory.DeleteAllItems();
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    // No
+                    msgBox.Buttons[1].OnClicked = (btn, userdata) =>
+                    {
+                        if (Selected == GameMain.SubEditorScreen)
+                        {
+                            foreach (Item item in itemInventory.Items)
+                            {
+                                if (item == null) continue;
+                                item.Drop();
+                            }
+                        }
+                        else // If current screen is not subeditor, delete anyway to avoid lingering objects
+                        {
+                            itemInventory.DeleteAllItems();
+                        }
+
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    // Yes to All
+                    msgBox.Buttons[2].OnClicked = (btn, userdata) =>
+                    {
+                        for (int i = 0; i < GUIMessageBox.MessageBoxes.Count; i++)
+                        {
+                            GUIMessageBox box = GUIMessageBox.MessageBoxes[i] as GUIMessageBox;
+                            if (box.Tag != msgBox.Tag || box == msgBox) continue;
+                            GUIButton button = box.Buttons[0];
+                            button.OnClicked(button, button.UserData);
+                            i--; // Take into account the message boxes removing themselves from the list when closed
+                        }
+
+                        itemInventory.DeleteAllItems();
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    // No to all
+                    msgBox.Buttons[3].OnClicked = (btn, userdata) =>
+                    {
+                        for (int i = 0; i < GUIMessageBox.MessageBoxes.Count; i++)
+                        {
+                            GUIMessageBox box = GUIMessageBox.MessageBoxes[i] as GUIMessageBox;
+                            if (box.Tag != msgBox.Tag || box == msgBox) continue;
+                            GUIButton button = box.Buttons[1];
+                            button.OnClicked(button, button.UserData);
+                            i--; // Take into account the message boxes removing themselves from the list when closed
+                        }
+
+                        if (Selected == GameMain.SubEditorScreen)
+                        {
+                            foreach (Item item in itemInventory.Items)
+                            {
+                                if (item == null) continue;
+                                item.Drop();
+                            }
+                        }
+                        else // If current screen is not subeditor, delete anyway to avoid lingering objects
+                        {
+                            itemInventory.DeleteAllItems();
+                        }
+
+                        msgBox.Close();
+                        return true;
+                    };
+                }
+                else // Single prompt
+                {
+                    var msgBox = new GUIMessageBox(itemToDelete.Name, TextManager.Get("DeletingContainerWithItems") + itemNames, new string[] { TextManager.Get("Yes"), TextManager.Get("No") }, tag: containerDeleteTag);
+
+                    // Yes
+                    msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                    {
+                        itemInventory.DeleteAllItems();
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    // No
+                    msgBox.Buttons[1].OnClicked = (btn, userdata) =>
+                    {
+                        if (Selected == GameMain.SubEditorScreen)
+                        {
+                            foreach (Item item in itemInventory.Items)
+                            {
+                                if (item == null) continue;
+                                item.Drop();
+                            }
+                        }
+                        else // If current screen is not subeditor, delete anyway to avoid lingering objects
+                        {
+                            itemInventory.DeleteAllItems();
+                        }
+
+                        msgBox.Close();
+                        return true;
+                    };
+                }
             }
         }
 
