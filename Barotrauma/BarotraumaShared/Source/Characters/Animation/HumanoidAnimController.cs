@@ -1834,6 +1834,8 @@ namespace Barotrauma
                 }
             }
 
+            if (!character.Enabled) { return; }
+
             Vector2 handSimPos = ConvertUnits.ToSimUnits(handWorldPos);
             if (character.Submarine != null)
             {
