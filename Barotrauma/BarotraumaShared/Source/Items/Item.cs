@@ -2326,7 +2326,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError("Attempting to remove an already removed item\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempting to remove an already removed item (" + Name + ")\n" + Environment.StackTrace);
                 return;
             }
             DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");
