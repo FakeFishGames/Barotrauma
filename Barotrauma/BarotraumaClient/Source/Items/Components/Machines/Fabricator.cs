@@ -321,6 +321,12 @@ namespace Barotrauma.Items.Components
         private bool StartButtonClicked(GUIButton button, object obj)
         {
             if (selectedItem == null) { return false; }
+            if (!outputContainer.Inventory.IsEmpty())
+            {
+                outputInventoryHolder.Flash(Color.Red);
+                return false;
+            }
+
             if (fabricatedItem == null)
             {
                 StartFabricating(selectedItem, Character.Controlled);
