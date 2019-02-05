@@ -183,6 +183,7 @@ namespace Barotrauma.Networking
                 {
                     //server is full, can't allow new connection
                     connection.Disconnect(DisconnectReason.ServerFull.ToString());
+                    if (steamID > 0) { Steam.SteamManager.StopAuthSession(steamID); }
                     return;
                 }
 
@@ -224,6 +225,7 @@ namespace Barotrauma.Networking
             {
                 //client did not ask for nonce first, can't authorize
                 inc.SenderConnection.Disconnect(DisconnectReason.AuthenticationRequired.ToString());
+                if (unauthClient.SteamID > 0) { Steam.SteamManager.StopAuthSession(unauthClient.SteamID); }
                 return;
             }
 
@@ -450,7 +452,7 @@ namespace Barotrauma.Networking
         private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, DisconnectReason reason, string message)
         {
             inc.SenderConnection.Disconnect(reason.ToString() + "; " + message);
-
+            if (unauthClient.SteamID > 0) { Steam.SteamManager.StopAuthSession(unauthClient.SteamID); }
             if (unauthClient != null)
             {
                 unauthenticatedClients.Remove(unauthClient);
