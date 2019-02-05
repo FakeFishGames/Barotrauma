@@ -52,6 +52,11 @@
   
   <LoadingScreenTip>It's possible to build voice-controlled systems by linking wifi components to the radio chat in the submarine editor.</LoadingScreenTip>
 
+  <LoadingScreenTip>When deploying a decoy, be sure to deactivate active sonar for best results.</LoadingScreenTip>
+  <LoadingScreenTip>Europa is rich in natural resources, and an enterprising captain with a sharp eye and a plasma cutter may stand to make a tidy profit.</LoadingScreenTip>
+  <LoadingScreenTip>If the reactor on a sub is not able to produce sufficient power to run all onboard systems, try reducing the charge rate for the onboard batteries and supercapacitors, or regulate the times when the sub is running at full speed.</LoadingScreenTip>
+  <LoadingScreenTip>The electrical and mechanical systems on a sub will gradually degrade due to the harsh conditions and constant wear and tear. Be sure to have mechanics and engineers perform maintenance from time to time in order to avoid breakdowns at inopportune moments.</LoadingScreenTip>
+
   <!-- Lore -->
   <LoadingScreenTip>The radiation belts around Jupiter make it impracticable to establish permanent settlements above Europa's surface, and as such almost all Europan outposts are located below its icy crust.</LoadingScreenTip>
   <LoadingScreenTip>The dynamics of Europa's underwater ecosystem are still not fully understood, but it is believed that the base of the food chain is mostly formed by chemosynthetic bacteria.</LoadingScreenTip>
