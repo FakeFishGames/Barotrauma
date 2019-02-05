@@ -302,7 +302,7 @@
     <Price locationtype="Outpost" buyprice="20" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="265,441,74,71" depth="0.55" origin="1,1" />
-    <Body width="24" height="12" density="20" />
+    <Body width="24" height="12" density="8" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
   <Item name="Flash Powder" identifier="flashpowder" category="Material" 
