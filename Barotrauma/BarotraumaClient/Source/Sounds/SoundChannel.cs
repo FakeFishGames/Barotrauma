@@ -460,7 +460,7 @@ namespace Barotrauma.Sounds
                         unqueuedBuffers = new int[4];
                         for (int i = 0; i < 4; i++)
                         {
-                            unqueuedBuffers[i] = streamBuffers[i];
+                            unqueuedBuffers[i] = (int)streamBuffers[i];
                         }
                     }
 
