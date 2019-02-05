@@ -2018,8 +2018,9 @@ namespace Barotrauma
         private void UpdateSightRange()
         {
             if (aiTarget == null) { return; }
+            // TODO: the formula might need some tweaking
             float range = (float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f;
-            aiTarget.SightRange = MathHelper.Clamp(range, 2000.0f, 50000.0f);
+            aiTarget.SightRange = MathHelper.Clamp(range, 0, 15000.0f);
         }
 
         private void UpdateSoundRange()
