@@ -875,7 +875,9 @@
       </StatusEffect>
     </MeleeWeapon>
   </Hyperzine>
+  
   <!-- poisons and harmful chemicals **************************************************************************************** -->
+  
   <Morbusine name="Morbusine" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="450" />
     <Price locationtype="Military" buyprice="1000" />
@@ -893,6 +895,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Morbusine>
+  
   <ChloralHydrate name="Chloral Hydrate" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A sedative that can be used to knock someone out for a short period of time." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="Military" buyprice="200" />
