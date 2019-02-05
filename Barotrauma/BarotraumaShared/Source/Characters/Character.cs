@@ -2025,8 +2025,8 @@ namespace Barotrauma
         private void UpdateSoundRange()
         {
             if (aiTarget == null) { return; }
-            float range = (float)Math.Sqrt(Mass) * 100.0f + AnimController.Collider.LinearVelocity.Length() * Noise;
-            aiTarget.SoundRange = MathHelper.Clamp(range, 2000f, 50000f);
+            float range = Mass / 5 * AnimController.TargetMovement.Length() * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 0f, 5000f);
         }
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
