@@ -176,6 +176,7 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
+            Console.WriteLine(""); Console.CursorTop--;
             int consoleWidth = Console.WindowWidth;
             if (consoleWidth < 5) consoleWidth = 5;
             int consoleHeight = Console.WindowHeight;

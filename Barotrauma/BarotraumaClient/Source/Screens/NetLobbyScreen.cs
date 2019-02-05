@@ -1182,27 +1182,27 @@ namespace Barotrauma
             return true;
         }
         
-        public void AddPlayer(string name)
+        public void AddPlayer(Client client)
         {
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playerList.Content.RectTransform),
-                name, textAlignment: Alignment.CenterLeft)
+                client.Name, textAlignment: Alignment.CenterLeft)
             {
-                UserData = name
+                UserData = client
             };
         }
 
-        public void RemovePlayer(string name)
+        public void RemovePlayer(Client client)
         {
-            GUIComponent child = playerList.Content.GetChildByUserData(name);
+            GUIComponent child = playerList.Content.GetChildByUserData(client);
             if (child != null) playerList.RemoveChild(child);
         }
 
         private bool SelectPlayer(GUIComponent component, object obj)
         {
-            var selectedClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.Name == obj.ToString());
+            var selectedClient = component.UserData as Client;
             if (selectedClient == null) return false;
 
-            if (GameMain.Client != null)
+            /*if (GameMain.Client != null)
             {
                 if (selectedClient.ID == GameMain.Client.ID) return false;
 
@@ -1212,7 +1212,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-            }
+            }*/
 
             playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
@@ -1266,7 +1266,7 @@ namespace Barotrauma
                         GameMain.Client.UpdateClientPermissions(client);
 
                         playerFrame = null;
-                        SelectPlayer(null, client.Name);
+                        SelectPlayer(null, client);
                     }
                     return true;
                 };
@@ -1407,6 +1407,9 @@ namespace Barotrauma
                 kickButton.OnClicked = KickPlayer;
                 kickButton.OnClicked += ClosePlayerFrame;
             }
+
+            var muteTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
+                                             "Mute");
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))

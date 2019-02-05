@@ -1141,7 +1141,7 @@ namespace Barotrauma.Networking
                     {
                         existingClient = new Client(tc.Name, tc.ID);
                         ConnectedClients.Add(existingClient);
-                        GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
+                        GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
                     existingClient.Character = null;
                     if (tc.CharacterID > 0)
@@ -1159,7 +1159,7 @@ namespace Barotrauma.Networking
                 {
                     if (!currentClients.Contains(ConnectedClients[i]))
                     {
-                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i]);
                         ConnectedClients[i].Dispose();
                         ConnectedClients.RemoveAt(i);
                     }
