@@ -669,7 +669,7 @@ namespace Barotrauma
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), ChatMessageType.Order);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), null);
             }
             else if (orderGiver != null)
             {
