@@ -987,21 +987,25 @@ namespace Barotrauma
                 chatBox.Update(deltaTime);
                 chatBox.InputBox.Visible = Character.Controlled != null;
 
-                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                    !DebugConsole.IsOpen && chatBox.InputBox.Visible)
+                if (!DebugConsole.IsOpen && chatBox.InputBox.Visible)
                 {
-                    if (chatBox.InputBox.Selected)
+                    if (PlayerInput.KeyHit(InputType.Chat))
                     {
-                        chatBox.InputBox.Text = "";
-                        chatBox.InputBox.Deselect();
+                        if (chatBox.InputBox.Selected)
+                        {
+                            chatBox.InputBox.Text = "";
+                            chatBox.InputBox.Deselect();
+                        }
+                        else
+                        {
+                            chatBox.InputBox.Select();
+                        }
                     }
-                    else
+
+                    if (PlayerInput.KeyHit(InputType.RadioChat) && !chatBox.InputBox.Selected)
                     {
                         chatBox.InputBox.Select();
-                        if (PlayerInput.KeyHit(InputType.RadioChat))
-                        {
-                            chatBox.InputBox.Text = "r; ";
-                        }
+                        chatBox.InputBox.Text = "r; ";                        
                     }
                 }
             }
