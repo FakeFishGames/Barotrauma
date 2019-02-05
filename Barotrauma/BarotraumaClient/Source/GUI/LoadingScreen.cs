@@ -23,10 +23,7 @@ namespace Barotrauma
         public Vector2 TitlePosition;
 
         private float? loadState;
-#if !(LINUX || OSX)
-        Video splashScreenVideo;
-        VideoPlayer videoPlayer;
-#endif
+
         public Vector2 TitleSize
         {
             get { return new Vector2(titleTexture.Width, titleTexture.Height); }
@@ -60,22 +57,10 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
-#if !(LINUX || OSX)
-
             if (GameMain.Config.EnableSplashScreen)
             {
-                try
-                {
-                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("splashscreen");
-                } 
-
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to load splashscreen", e);
-                    GameMain.Config.EnableSplashScreen = false;
-                }
+                throw new NotImplementedException();
             }
-#endif
 
 
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
@@ -96,14 +81,11 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
-#if !(LINUX || OSX)
-            if (GameMain.Config.EnableSplashScreen && splashScreenVideo != null)
+            if (GameMain.Config.EnableSplashScreen)
             {
                 try
                 {
                     DrawSplashScreen(spriteBatch);
-                    if (videoPlayer != null && videoPlayer.State == MediaState.Playing)
-                        return;
                 }
                 catch (Exception e)
                 {
@@ -111,7 +93,6 @@ namespace Barotrauma
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
-#endif
             
             drawn = true;
 
@@ -198,56 +179,10 @@ namespace Barotrauma
 
         }
 
-#if !(LINUX || OSX)
         private void DrawSplashScreen(SpriteBatch spriteBatch)
         {
-            bool vsync = GameMain.Config.VSyncEnabled;
-            if (videoPlayer == null)
-            {
-                // Enforce the vsync so that the video player doesn't eat all the vram
-                if (!GameMain.Config.VSyncEnabled)
-                {
-                    GameMain.Config.VSyncEnabled = true;
-                    GameMain.Instance.ApplyGraphicsSettings();
-                }
-                videoPlayer = new VideoPlayer();
-                videoPlayer.Play(splashScreenVideo);
-                videoPlayer.Volume = GameMain.Config.SoundVolume;
-            }
-            else
-            {
-                Texture2D videoTexture = null;
-
-                if (videoPlayer.State == MediaState.Stopped)
-                {
-                    videoPlayer.Dispose();
-                    videoPlayer = null;
-
-                    splashScreenVideo.Dispose();
-                    splashScreenVideo = null;
-                    // If the vsync was enforced, restore the user preference
-                    if (GameMain.Config.VSyncEnabled != vsync)
-                    {
-                        GameMain.Config.VSyncEnabled = vsync;
-                        GameMain.Instance.ApplyGraphicsSettings();
-                    }
-                }
-                else
-                {
-                    videoTexture = videoPlayer.GetTexture();
-
-                    spriteBatch.Begin();
-                    spriteBatch.Draw(videoTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-                    spriteBatch.End();
-
-                    if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
-                    {
-                        videoPlayer.Stop();
-                    }
-                }
-            }
+            throw new NotImplementedException();
         }
-#endif
  
         bool drawn;
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
