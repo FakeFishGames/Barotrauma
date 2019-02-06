@@ -486,22 +486,25 @@ namespace Barotrauma
             }
         }
 
+        private bool canBeDragged = true;
         public bool CanBeDragged
         {
             get
             {
-                if (Removed || !AnimController.Draggable) return false;
+                if (!canBeDragged) { return false; }
+                if (Removed || !AnimController.Draggable) { return false; }
                 return IsDead || Stun > 0.0f || LockHands || IsUnconscious;
             }
+            set { canBeDragged = value; }
         }
-        
+
         //can other characters access the inventory of this character
+        private bool canInventoryBeAccessed = true;
         public bool CanInventoryBeAccessed
         {
             get
             {
-                if (Removed || Inventory == null) return false;
-
+                if (!canInventoryBeAccessed || Removed || Inventory == null) { return false; }
                 if (!Inventory.AccessibleWhenAlive)
                 {
                     return IsDead;
@@ -511,6 +514,7 @@ namespace Barotrauma
                     return (IsDead || Stun > 0.0f || LockHands || IsUnconscious);
                 }
             }
+            set { canInventoryBeAccessed = value; }
         }
 
         public override Vector2 SimPosition
@@ -1580,12 +1584,12 @@ namespace Barotrauma
                 if (!CanInteractWith(c)) continue;
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
-                if (dist < maxDist*maxDist && (closestCharacter == null || dist < closestDist))
+                if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))
                 {
                     closestCharacter = c;
                     closestDist = dist;
                 }
-                
+
                 /*FarseerPhysics.Common.Transform transform;
                 c.AnimController.Collider.FarseerBody.GetTransform(out transform);
                 for (int i = 0; i < c.AnimController.Collider.FarseerBody.FixtureList.Count; i++)
@@ -1717,7 +1721,7 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Health))
+            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow)
             {
                 if (focusedCharacter == SelectedCharacter)
                 {
@@ -2018,15 +2022,16 @@ namespace Barotrauma
         private void UpdateSightRange()
         {
             if (aiTarget == null) { return; }
+            // TODO: the formula might need some tweaking
             float range = (float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f;
-            aiTarget.SightRange = MathHelper.Clamp(range, 2000.0f, 50000.0f);
+            aiTarget.SightRange = MathHelper.Clamp(range, 0, 15000.0f);
         }
 
         private void UpdateSoundRange()
         {
             if (aiTarget == null) { return; }
-            float range = (float)Math.Sqrt(Mass) * 100.0f + AnimController.Collider.LinearVelocity.Length() * Noise;
-            aiTarget.SoundRange = MathHelper.Clamp(range, 2000f, 50000f);
+            float range = Mass / 5 * AnimController.TargetMovement.Length() * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 0f, 5000f);
         }
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
@@ -2306,15 +2311,17 @@ namespace Barotrauma
 
         private void Implode(bool isNetworkMessage = false)
         {
+            if (CharacterHealth.Unkillable) { return; }
+
             if (!isNetworkMessage)
             {
-                if (GameMain.Client != null) return; 
+                if (GameMain.Client != null) return;
             }
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
             CharacterHealth.SetAllDamage(200.0f, 0.0f, 0.0f);
-            BreakJoints();            
+            BreakJoints();
         }
 
         public void BreakJoints()
