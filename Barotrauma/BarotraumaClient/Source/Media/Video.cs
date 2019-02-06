@@ -149,6 +149,8 @@ namespace Barotrauma.Media
             //just waiting for callbacks to be done
             Monitor.Exit(mutex);
 
+            Marshal.FreeHGlobal(unmanagedData);
+
             //sound.Dispose();
 
             LibVlcWrapper.LibVlcMethods.libvlc_media_release(media);
