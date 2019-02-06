@@ -206,6 +206,9 @@ namespace Barotrauma
             OxygenPercentage = 100.0f;
 
             FireSources = new List<FireSource>();
+            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
+
+            
 
             properties = SerializableProperty.GetProperties(this);
 
