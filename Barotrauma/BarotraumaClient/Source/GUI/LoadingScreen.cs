@@ -184,7 +184,7 @@ namespace Barotrauma
                 if (SplashScreen.IsPlaying)
                 {
                     spriteBatch.Begin();
-                    spriteBatch.Draw(SplashScreen.GetTexture(), new Rectangle(0, 0, 1280, 720), Color.White);
+                    spriteBatch.Draw(SplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
                     spriteBatch.End();
 
                     if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
