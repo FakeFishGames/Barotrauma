@@ -1511,14 +1511,16 @@ namespace Barotrauma
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
 
+        // TODO: remember the previous head(s), check that the next is unique
         private bool ToggleHead(GUIButton button, object userData)
         {
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
-
             int dir = (int)userData;
-            GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
-            GameMain.NetworkMember.CharacterInfo.LoadHeadAttachments();
-            GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
+            var info = GameMain.NetworkMember.CharacterInfo;
+            info.SetRandomRace();
+            info.SetRandomHead();
+            info.LoadHeadAttachments();
+            info.LoadHeadSprite();
             StoreHead();
             GameMain.Config.Save();
             return true;
@@ -1527,26 +1529,27 @@ namespace Barotrauma
         private bool SwitchGender(GUIButton button, object obj)
         {
             Gender gender = (Gender)obj;
-            GameMain.NetworkMember.CharacterInfo.Gender = gender;
-            GameMain.NetworkMember.CharacterInfo.SetRandomHead();
-            GameMain.NetworkMember.CharacterInfo.LoadHeadAttachments();
-            GameMain.NetworkMember.CharacterInfo.LoadHeadSprite();
+            var info = GameMain.NetworkMember.CharacterInfo;
+            info.Gender = gender;
+            info.SetRandomHead();
+            info.LoadHeadAttachments();
+            info.LoadHeadSprite();
             StoreHead();
             GameMain.Config.Save();
             return true;
         }
 
-        // TODO: switch race
-
         private void StoreHead()
         {
-            GameMain.Config.CharacterRace = GameMain.NetworkMember.CharacterInfo.Race;
-            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
-            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
-            GameMain.Config.CharacterHairIndex = GameMain.NetworkMember.CharacterInfo.HairIndex;
-            GameMain.Config.CharacterBeardIndex = GameMain.NetworkMember.CharacterInfo.BeardIndex;
-            GameMain.Config.CharacterMoustacheIndex = GameMain.NetworkMember.CharacterInfo.MoustacheIndex;
-            GameMain.Config.CharacterFaceAttachmentIndex = GameMain.NetworkMember.CharacterInfo.FaceAttachmentIndex;
+            var info = GameMain.NetworkMember.CharacterInfo;
+            var config = GameMain.Config;
+            config.CharacterRace = info.Race;
+            config.CharacterGender = info.Gender;
+            config.CharacterHeadIndex = info.HeadSpriteId;
+            config.CharacterHairIndex = info.HairIndex;
+            config.CharacterBeardIndex = info.BeardIndex;
+            config.CharacterMoustacheIndex = info.MoustacheIndex;
+            config.CharacterFaceAttachmentIndex = info.FaceAttachmentIndex;
         }
 
         public void SelectMode(int modeIndex)

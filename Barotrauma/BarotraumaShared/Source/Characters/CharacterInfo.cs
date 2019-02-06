@@ -200,12 +200,9 @@ namespace Barotrauma
                 if (headSpriteId < (int)spriteRange.X) headSpriteId = (int)(spriteRange.Y);
                 if (headSpriteId > (int)spriteRange.Y) headSpriteId = (int)(spriteRange.X);
 
-                if (headSpriteId != oldId)
-                {
-                    headSprite = null;
-                    attachmentSprites = null;
-                    ResetHeadAttachments();
-                }
+                headSprite = null;
+                attachmentSprites = null;
+                ResetHeadAttachments();
             }
         }
 
@@ -282,12 +279,15 @@ namespace Barotrauma
             SourceElement = doc.Root;
             if (doc.Root.GetAttributeBool("genders", false))
             {
-                this.gender = gender == Gender.None ? SetRandomGender() : gender;
+                this.gender = gender == Gender.None ? GetRandomGender() : gender;
             }
-            Enum.TryParse(doc.Root.GetAttributeString("race", "None"), true, out race);
+            if (!Enum.TryParse(doc.Root.GetAttributeString("race", "None"), true, out race))
+            {
+                race = GetRandomRace();
+            }
             if (race == Race.None)
             {
-                SetRandomRace();
+                race = GetRandomRace();
             }
             CalculateHeadSpriteRange();
             SetRandomHeadID();
@@ -403,10 +403,6 @@ namespace Barotrauma
             }
         }
 
-        public Gender SetRandomGender() => gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
-        public Race SetRandomRace() => race = new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(Rand.RandSync.Server);
-        public int SetRandomHead() => HeadSpriteId = SetRandomHeadID();
-
         private XDocument GetConfig(string file)
         {
             if (!cachedConfigs.TryGetValue(file, out XDocument doc))
@@ -417,6 +413,12 @@ namespace Barotrauma
             }
             return doc;
         }
+
+        public Gender SetRandomGender() => Gender = GetRandomGender();
+        public Race SetRandomRace() => Race = GetRandomRace();
+        public int SetRandomHead() => HeadSpriteId = SetRandomHeadID();
+        public Gender GetRandomGender() => (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
+        public Race GetRandomRace() => new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(Rand.RandSync.Server);
 
         private int SetRandomHeadID()
         {
