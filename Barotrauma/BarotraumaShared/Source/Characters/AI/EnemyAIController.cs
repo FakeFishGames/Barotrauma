@@ -432,6 +432,20 @@ namespace Barotrauma
                 attackSimPosition = ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition - Character.Submarine.Position);
             }
 
+            if (selectedAiTarget.Entity is Item item)
+            {
+                // If the item is held by a character, attack the character instead.
+                var pickable = item.components.Select(c => c as Pickable).FirstOrDefault();
+                if (pickable != null)
+                {
+                    var target = pickable.Picker.AiTarget;
+                    if (target != null)
+                    {
+                        selectedAiTarget = target;
+                    }
+                }
+            }
+
             if (wallTarget != null)
             {
                 attackSimPosition = ConvertUnits.ToSimUnits(wallTarget.Position);
