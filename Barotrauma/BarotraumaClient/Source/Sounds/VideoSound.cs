@@ -65,7 +65,6 @@ namespace Barotrauma.Sounds
 
         public override SoundChannel Play(float gain)
         {
-            DebugConsole.NewMessage("e", Color.Lime);
             SoundChannel chn = null;
             lock (mutex)
             {

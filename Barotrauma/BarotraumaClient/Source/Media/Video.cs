@@ -15,27 +15,35 @@ namespace Barotrauma.Media
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate IntPtr LibVLCVideoLockCb(IntPtr opaque, IntPtr planes);
+        private static LibVLCVideoLockCb VideoLockDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCVideoUnlockCb(IntPtr opaque, IntPtr picture, IntPtr planes);
+        private static LibVLCVideoUnlockCb VideoUnlockDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCVideoDisplayCb(IntPtr opaque, IntPtr picture);
+        private static LibVLCVideoDisplayCb VideoDisplayDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCAudioPlayCb(IntPtr data, IntPtr samples, uint count, long pts);
+        private static LibVLCAudioPlayCb AudioPlayDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCAudioPauseCb(IntPtr data, long pts);
+        private static LibVLCAudioPauseCb AudioPauseDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCAudioResumeCb(IntPtr data, long pts);
+        private static LibVLCAudioResumeCb AudioResumeDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCAudioFlushCb(IntPtr data, long pts);
+        private static LibVLCAudioFlushCb AudioFlushDelegate;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LibVLCAudioDrainCb(IntPtr data);
+        private static LibVLCAudioDrainCb AudioDrainDelegate;
 
 
         private static IntPtr lib = IntPtr.Zero;
@@ -54,6 +62,16 @@ namespace Barotrauma.Media
 
                 videos = new Dictionary<int, Video>();
                 latestVideoId = 0;
+
+                VideoLockDelegate = VideoLockCallback;
+                VideoUnlockDelegate = VideoUnlockCallback;
+                VideoDisplayDelegate = VideoDisplayCallback;
+
+                AudioPlayDelegate = AudioPlayCallback;
+                AudioPauseDelegate = AudioPauseCallback;
+                AudioResumeDelegate = AudioResumeCallback;
+                AudioFlushDelegate = AudioFlushCallback;
+                AudioDrainDelegate = AudioDrainCallback;
             }
         }
 
@@ -81,7 +99,11 @@ namespace Barotrauma.Media
         private Texture2D texture;
         private byte[] textureData;
         private object mutex;
-        //private VideoSound sound;
+        private VideoSound sound;
+
+        private IntPtr videoLockDelegate;
+        private IntPtr videoUnlockDelegate;
+        private IntPtr videoDisplayDelegate;
 
         public uint Width { get; private set; }
         public uint Height { get; private set; }
@@ -91,13 +113,17 @@ namespace Barotrauma.Media
             Init();
 
             mutex = new object();
-            //sound = new VideoSound(soundManager, filename, 44100, this);
+            sound = new VideoSound(soundManager, filename, 44100, this);
             videos.Add(latestVideoId, this);
             videoId = latestVideoId; latestVideoId++;
 
             /*using (var stream = File.OpenRead(filename))
             {*/
-            media = LibVlcWrapper.LibVlcMethods.libvlc_media_new_path(lib, Encoding.UTF8.GetBytes(filename));
+            byte[] filenameBytes = Encoding.UTF8.GetBytes(filename);
+            byte[] filenameBytesNullTerminated = new byte[filenameBytes.Length + 1];
+            filenameBytesNullTerminated[filenameBytes.Length] = 0;
+            Array.Copy(filenameBytes, filenameBytesNullTerminated, filenameBytes.Length);
+            media = LibVlcWrapper.LibVlcMethods.libvlc_media_new_path(lib, filenameBytesNullTerminated);
             LibVlcWrapper.LibVlcMethods.libvlc_media_parse(media);
 
             mediaPlayer = LibVlcWrapper.LibVlcMethods.libvlc_media_player_new(lib);
@@ -117,20 +143,19 @@ namespace Barotrauma.Media
                 textureData[i] = 0;
             }
 
-            IntPtr videoLockDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCVideoLockCb)VideoLockCallback);
-            IntPtr videoUnlockDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCVideoUnlockCb)VideoUnlockCallback);
-            IntPtr videoDisplayDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCVideoDisplayCb)VideoDisplayCallback);
-            LibVlcWrapper.LibVlcMethods.libvlc_video_set_callbacks(mediaPlayer, videoLockDelegate, videoUnlockDelegate, videoDisplayDelegate, unmanagedData);
+            IntPtr videoLockDelegatePtr = Marshal.GetFunctionPointerForDelegate(VideoLockDelegate);
+            IntPtr videoUnlockDelegatePtr = Marshal.GetFunctionPointerForDelegate(VideoUnlockDelegate);
+            IntPtr videoDisplayDelegatePtr = Marshal.GetFunctionPointerForDelegate(VideoDisplayDelegate);
+            LibVlcWrapper.LibVlcMethods.libvlc_video_set_callbacks(mediaPlayer, videoLockDelegatePtr, videoUnlockDelegatePtr, videoDisplayDelegatePtr, unmanagedData);
             LibVlcWrapper.LibVlcMethods.libvlc_video_set_format(mediaPlayer, Encoding.UTF8.GetBytes("RV24"), (int)width, (int)height, (int)width * 3);
 
-            IntPtr audioPlayDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCAudioPlayCb)AudioPlayCallback);
-            IntPtr audioPauseDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCAudioPauseCb)AudioPauseCallback);
-            IntPtr audioResumeDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCAudioResumeCb)AudioResumeCallback);
-            IntPtr audioFlushDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCAudioFlushCb)AudioFlushCallback);
-            IntPtr audioDrainDelegate = Marshal.GetFunctionPointerForDelegate((LibVLCAudioDrainCb)AudioDrainCallback);
-            //TODO: figure out how to get audio callbacks to not crash
-            //right now we're relying on vlc to handle it gracefully for us
-            //LibVlcWrapper.LibVlcMethods.libvlc_audio_set_callbacks(mediaPlayer, audioPlayDelegate, audioPauseDelegate, audioResumeDelegate, audioFlushDelegate, audioDrainDelegate, IntPtr.Zero);//unmanagedData);
+            IntPtr audioPlayDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioPlayDelegate);
+            IntPtr audioPauseDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioPauseDelegate);
+            IntPtr audioResumeDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioResumeDelegate);
+            IntPtr audioFlushDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioFlushDelegate);
+            IntPtr audioDrainDelegatePtr = Marshal.GetFunctionPointerForDelegate(AudioDrainDelegate);
+
+            LibVlcWrapper.LibVlcMethods.libvlc_audio_set_callbacks(mediaPlayer, audioPlayDelegatePtr, audioPauseDelegatePtr, audioResumeDelegatePtr, audioFlushDelegatePtr, audioDrainDelegatePtr, unmanagedData);
             LibVlcWrapper.LibVlcMethods.libvlc_audio_set_format(mediaPlayer, Encoding.UTF8.GetBytes("S16N"), 44100, 2);
 
             LibVlcWrapper.LibVlcMethods.libvlc_audio_set_delay(mediaPlayer, 0);
@@ -151,7 +176,7 @@ namespace Barotrauma.Media
 
             Marshal.FreeHGlobal(unmanagedData);
 
-            //sound.Dispose();
+            sound.Dispose();
 
             LibVlcWrapper.LibVlcMethods.libvlc_media_release(media);
             LibVlcWrapper.LibVlcMethods.libvlc_media_player_release(mediaPlayer);
@@ -195,7 +220,7 @@ namespace Barotrauma.Media
                 Marshal.Copy(arr, 0, changedPtr, 1);
             }
 
-            //if (!sound.IsPlaying) videos[videoId].sound.Play();
+            if (!sound.IsPlaying) videos[videoId].sound.Play();
 
             Monitor.Exit(mutex);
 
@@ -234,7 +259,7 @@ namespace Barotrauma.Media
             //Assert(picture == IntPtr.Zero);
         }
 
-        void AudioPlayCallback(IntPtr data, IntPtr samples, uint count, long pts)
+        static void AudioPlayCallback(IntPtr data, IntPtr samples, uint count, long pts)
         {
             short[] buf = new short[count*2];
             Marshal.Copy(samples, buf, 0, (int)count*2);
@@ -244,27 +269,27 @@ namespace Barotrauma.Media
 
             Monitor.Enter(videos[mutexIndex].mutex);
 
-            //videos[mutexIndex].sound.Enqueue(buf);
+            videos[mutexIndex].sound.Enqueue(buf);
 
             Monitor.Exit(videos[mutexIndex].mutex);
         }
 
-        void AudioPauseCallback(IntPtr data, long pts)
+        static void AudioPauseCallback(IntPtr data, long pts)
         {
 
         }
 
-        void AudioResumeCallback(IntPtr data, long pts)
+        static void AudioResumeCallback(IntPtr data, long pts)
         {
 
         }
 
-        void AudioFlushCallback(IntPtr data, long pts)
+        static void AudioFlushCallback(IntPtr data, long pts)
         {
 
         }
 
-        void AudioDrainCallback(IntPtr data)
+        static void AudioDrainCallback(IntPtr data)
         {
 
         }
