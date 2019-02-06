@@ -93,8 +93,11 @@ namespace Barotrauma
                 {
                     if (entity == this || !entity.IsHighlighted) continue;
                     if (!entity.IsMouseOn(position)) continue;
-                    
-                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                    if (entity.Linkable && entity.linkedTo != null)
+                    {
+                        entity.linkedTo.Add(this);
+                        linkedTo.Add(entity);
+                    }
                 }
             }
             else
@@ -103,8 +106,12 @@ namespace Barotrauma
                 {
                     if (entity == this || !entity.IsHighlighted) continue;
                     if (!entity.IsMouseOn(position)) continue;
-                    
-                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
+                    if (entity.linkedTo != null && entity.linkedTo.Contains(this))
+                    {
+                        entity.linkedTo.Remove(this);
+                        linkedTo.Remove(entity);
+
+                    }
                 }
             }
         }
@@ -248,6 +255,33 @@ namespace Barotrauma
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),
                     new Vector2(rect.Width - 10, rect.Height - 10),
                     isHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+            }
+
+            foreach (MapEntity e in linkedTo)
+            {
+                if (e is Hull)
+                {
+                    Hull linkedHull = (Hull)e;
+                    Rectangle connectedHullRect = e.Submarine == null ? 
+                        linkedHull.rect : 
+                        new Rectangle(
+                            (int)(Submarine.DrawPosition.X + linkedHull.WorldPosition.X),
+                            (int)(Submarine.DrawPosition.Y + linkedHull.WorldPosition.Y), 
+                            linkedHull.WorldRect.Width, linkedHull.WorldRect.Height);
+
+                    //center of the hull
+                    Rectangle currentHullRect = Submarine == null ?
+                        WorldRect :
+                        new Rectangle(
+                            (int)(Submarine.DrawPosition.X + WorldPosition.X),
+                            (int)(Submarine.DrawPosition.Y + WorldPosition.Y), 
+                            WorldRect.Width, WorldRect.Height);
+
+                    GUI.DrawLine(spriteBatch,
+                    new Vector2(currentHullRect.X, -currentHullRect.Y),
+                    new Vector2(connectedHullRect.X, -connectedHullRect.Y),
+                    Color.Green, width: 2);
+                }
             }
         }
 

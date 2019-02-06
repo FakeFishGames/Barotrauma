@@ -14,8 +14,11 @@ namespace Barotrauma.Items.Components
 
             public bool Distort;
             public float DistortionTimer;
+
+            public int? GroupId = null;
         }
-        
+        private List<int> HullDataGroupIds = new List<int>();
+
         private DateTime resetDataTime;
 
         private bool hasPower;
