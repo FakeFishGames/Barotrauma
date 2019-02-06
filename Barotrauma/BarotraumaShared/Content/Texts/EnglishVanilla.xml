@@ -18,8 +18,8 @@
       Can be used to update old translation text files without having to manually check what's new in the updated text file.
     
   - Item/structure names and descriptions can be translated using the identifier of the item:
-    <EntityName.weldingtool>Eldingway Ooltay</ItemName.weldingtool>
-    <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</ItemDescription.weldingtool>
+    <EntityName.weldingtool>Eldingway Ooltay</EntityName.weldingtool>
+    <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</EntityDescription.weldingtool>
   
   - Job names and descriptions can be translated using the identifier of the job:
     <JobName.captain>капитан</JobName.captain>
