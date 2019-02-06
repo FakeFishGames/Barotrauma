@@ -1559,6 +1559,7 @@ namespace Barotrauma
             };
             void UpdateJointScale(float value)
             {
+                freezeToggle.Selected = false;
                 TryUpdateRagdollParam("jointscale", value);
                 jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}";
                 character.AnimController.ResetJoints();
