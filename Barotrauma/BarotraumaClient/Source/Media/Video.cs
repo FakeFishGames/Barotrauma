@@ -159,7 +159,6 @@ namespace Barotrauma.Media
             LibVlcWrapper.LibVlcMethods.libvlc_audio_set_format(mediaPlayer, Encoding.UTF8.GetBytes("S16N"), 44100, 2);
 
             LibVlcWrapper.LibVlcMethods.libvlc_audio_set_delay(mediaPlayer, 0);
-            LibVlcWrapper.LibVlcMethods.libvlc_audio_set_volume(mediaPlayer, (int)(GameMain.Config.SoundVolume * 100.0f));
 
             LibVlcWrapper.LibVlcMethods.libvlc_media_player_play(mediaPlayer);
 
