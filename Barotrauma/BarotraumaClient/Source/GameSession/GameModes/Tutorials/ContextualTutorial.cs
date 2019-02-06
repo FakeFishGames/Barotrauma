@@ -224,13 +224,9 @@ namespace Barotrauma.Tutorials
 
         public override void Update(float deltaTime)
         {
-            if (!started) return;
-            deltaTime *= 0.5f;
+            if (!started || ContentRunning) return;
 
-            if (ContentRunning) // Content is running, wait until dismissed
-            {
-                return;
-            }
+            deltaTime *= 0.5f;
 
             for (int i = 0; i < segments.Count; i++)
             {
