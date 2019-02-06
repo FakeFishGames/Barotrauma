@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using System;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;

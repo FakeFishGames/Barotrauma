@@ -11,7 +11,7 @@ namespace Barotrauma.Tutorials
         public static List<Tutorial> Tutorials;
 
         protected GUIComponent infoBox;
-        private Action infoBoxClosedcallback;
+        private Action infoBoxClosedCallback;
         protected XElement configElement;
 
         private enum TutorialType { None, Scenario, Contextual };
@@ -137,7 +137,7 @@ namespace Barotrauma.Tutorials
         protected bool CloseInfoFrame(GUIButton button, object userData)
         {
             infoBox = null;
-            infoBoxClosedcallback?.Invoke();
+            infoBoxClosedCallback?.Invoke();
             return true;
         }
 
@@ -156,7 +156,7 @@ namespace Barotrauma.Tutorials
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.7f), infoBlock.RectTransform, Anchor.Center),
                 text, wrap: true);
 
-            infoBoxClosedcallback = callback;
+            infoBoxClosedCallback = callback;
 
             if (hasButton)
             {
@@ -200,7 +200,7 @@ namespace Barotrauma.Tutorials
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
                 text, wrap: true);
 
-            infoBoxClosedcallback = callback;
+            infoBoxClosedCallback = callback;
 
             if (hasButton)
             {
