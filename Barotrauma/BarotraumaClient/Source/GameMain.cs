@@ -375,7 +375,10 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
-            (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
+            if (Config.EnableSplashScreen)
+            {
+                (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
+            }
 
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
