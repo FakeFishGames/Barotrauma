@@ -133,8 +133,10 @@ namespace Barotrauma
             CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
-            spawnedCharacter.CharacterHealth.Unkillable = true;
             spawnedCharacter.CharacterHealth.UseHealthWindow = false;
+            spawnedCharacter.CharacterHealth.Unkillable = true;
+            spawnedCharacter.CanInventoryBeAccessed = false;
+            spawnedCharacter.CanBeDragged = false;
             spawnedCharacter.SetCustomInteract(
                 WatchmanInteract,
                 hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
