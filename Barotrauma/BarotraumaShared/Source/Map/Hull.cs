@@ -941,7 +941,18 @@ namespace Barotrauma
                 waterVolume = element.GetAttributeFloat("pressure", 0.0f),
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
-            
+
+            hull.linkedToID = new List<ushort>();
+            string linkedToString = element.GetAttributeString("linked", "");
+            if (linkedToString != "")
+            {
+                string[] linkedToIds = linkedToString.Split(',');
+                for (int i = 0; i < linkedToIds.Length; i++)
+                {
+                    hull.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
+                }
+            }
+
             SerializableProperty.DeserializeProperties(hull, element);
             if (element.Attribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
 
@@ -968,6 +979,12 @@ namespace Barotrauma
                     rect.Width + "," + rect.Height),
                 new XAttribute("water", waterVolume)
             );
+
+            if (linkedTo != null && linkedTo.Count > 0)
+            {
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
+            }
             SerializableProperty.SerializeProperties(this, element);
             parentElement.Add(element);
             return element;

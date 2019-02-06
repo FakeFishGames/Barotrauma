@@ -98,31 +98,26 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            Hull mouseOnHull = null;
             hullInfoFrame.Visible = false;
-            int? groupId = null;
-            if (item.Submarine == null || !hasPower)
+
+            foreach (Hull hull in Hull.hullList)
             {
-                InitializeHullDatas();
-                foreach (Hull hull in Hull.hullList)
+                var hullFrame = submarineContainer.Children.First().FindChild(hull);
+                if (hullFrame == null) { continue; }
+
+                if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn))
                 {
-                    var hullFrame = submarineContainer.Children.First().FindChild(hull);
-                    if (hullFrame == null) continue;
-
-                    if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn))
-                    {
-                        hullDatas.TryGetValue(hull, out HullData hullData);
-                        groupId = hullData == null ? null : hullData.GroupId;
-                    }
-
+                    mouseOnHull = hull;
+                }
+                if (item.Submarine == null || !hasPower)
+                {
                     hullFrame.Color = Color.DarkCyan * 0.3f;
                     hullFrame.Children.First().Color = Color.DarkCyan * 0.3f;
                 }
             }
 
             float scale = 1.0f;
-            float? totalGap = null,
-                totalOxygen = null,
-                totalWater = null;
             HashSet<Submarine> subs = new HashSet<Submarine>();
             foreach (Hull hull in Hull.hullList)
             {
@@ -134,6 +129,7 @@ namespace Barotrauma.Items.Components
                 if (hullData == null)
                 {
                     hullData = new HullData();
+                    GetLinkedHulls(hull, hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
 
@@ -182,58 +178,46 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn))
+                if (mouseOnHull == hull ||
+                    hullData.LinkedHulls.Contains(mouseOnHull))
                 {
-                    hullInfoFrame.RectTransform.ScreenSpaceOffset = hullFrame.Rect.Center;
-                    hullInfoFrame.Visible = true;
-                    hullNameText.Text = hull.RoomName;
-                }
-
-                if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn) ||
-                    (groupId != null && hullData.GroupId == groupId))
-                {                    
                     borderColor = Color.Lerp(borderColor, Color.White, 0.5f);
                     hullFrame.Children.First().Color = Color.White;
                     hullFrame.Color = borderColor;
-
-                    if (groupId != null && hullData.GroupId == groupId)
-                    {
-                        totalGap += hull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
-                        totalOxygen += RequireOxygenDetectors ? hullData.Oxygen : hull.OxygenPercentage;
-                        totalWater += RequireWaterDetectors ? hullData.Water : Math.Min(hull.WaterVolume / hull.Volume, 1.0f);
-                    }
-                    else
-                    {
-                        hullBreachText.Text = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : "";
-                        hullBreachText.TextColor = Color.Red;
-
-                        hullAirQualityText.Text = oxygenAmount == null ? TextManager.Get("MiniMapAirQualityUnavailable") : TextManager.Get("MiniMapAirQuality") + ": " + (int)oxygenAmount + " %";
-                        hullAirQualityText.TextColor = oxygenAmount == null ? Color.Red : Color.Lerp(Color.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
-
-                        hullWaterText.Text = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : TextManager.Get("MiniMapWaterLevel") + ": " + (int)(waterAmount * 100.0f) + " %";
-                        hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
-                    }
                 }
                 else
                 {
                     hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
                 }
+
+                if (mouseOnHull == hull)
+                {                    
+                    hullInfoFrame.RectTransform.ScreenSpaceOffset = hullFrame.Rect.Center;
+                    hullInfoFrame.Visible = true;
+                    hullNameText.Text = hull.RoomName;
+
+                    foreach (Hull linkedHull in hullData.LinkedHulls)
+                    {
+                        gapOpenSum += linkedHull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
+                        oxygenAmount += linkedHull.OxygenPercentage;
+                        waterAmount += Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                    }
+                    oxygenAmount /= (hullData.LinkedHulls.Count + 1);
+                    waterAmount /= (hullData.LinkedHulls.Count + 1);
+
+                    hullBreachText.Text = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : "";
+                    hullBreachText.TextColor = Color.Red;
+
+                    hullAirQualityText.Text = oxygenAmount == null ? TextManager.Get("MiniMapAirQualityUnavailable") : TextManager.Get("MiniMapAirQuality") + ": " + (int)oxygenAmount + " %";
+                    hullAirQualityText.TextColor = oxygenAmount == null ? Color.Red : Color.Lerp(Color.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
+
+                    hullWaterText.Text = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : TextManager.Get("MiniMapWaterLevel") + ": " + (int)(waterAmount * 100.0f) + " %";
+                    hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
+                }
                 
                 hullFrame.Color = borderColor;
             }
-            //connected hulls
-            if (groupId != null)
-            {
-                hullBreachText.Text = totalGap > 0.1f ? TextManager.Get("MiniMapHullBreach") : "";
-                hullBreachText.TextColor = Color.Red;
-
-                hullAirQualityText.Text = totalOxygen == null ? TextManager.Get("MiniMapAirQualityUnavailable") : TextManager.Get("MiniMapAirQuality") + ": " + (int)totalOxygen + " %";
-                hullAirQualityText.TextColor = totalOxygen == null ? Color.Red : Color.Lerp(Color.Red, Color.LightGreen, (float)totalOxygen / 100.0f);
-
-                hullWaterText.Text = totalWater == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : TextManager.Get("MiniMapWaterLevel") + ": " + (int)(totalWater * 100.0f) + " %";
-                hullWaterText.TextColor = totalWater == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)totalWater);
-            }
-
+            
             foreach (Submarine sub in subs)
             {
                 if (sub.HullVertices == null) { continue; }
@@ -260,59 +244,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        /// <summary>
-        /// Assigns same group id to connected hulls
-        /// </summary>
-        private void InitializeHullDatas()
+        private void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)
         {
-            foreach (Hull hull in Hull.hullList)
+            foreach (var linkedEntity in hull.linkedTo)
             {
-                if (hull.linkedTo.Count == 0)
-                    continue;
-
-                hullDatas.TryGetValue(hull, out HullData hullData1);
-                if (hullData1 != null)
-                    hullData1.GroupId = hullData1.GroupId ?? GetNewGroupId();
-
-                foreach (Hull subHull in hull.linkedTo)
+                if (linkedEntity is Hull linkedHull)
                 {
-                    if (subHull == hull)
-                        continue;
-
-                    hullDatas.TryGetValue(subHull, out HullData hullData2);
-                    if (hullData2.GroupId == null)
-                        hullData2.GroupId = hullData1.GroupId;
-                    else if (hullData2.GroupId != hullData1.GroupId)
-                        ChangeGroupId((int)hullData2.GroupId, (int)hullData1.GroupId);
+                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    linkedHulls.Add(linkedHull);
+                    GetLinkedHulls(linkedHull, linkedHulls);
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns new unique id and records it to HullDataGroupIds
-        /// </summary>
-        /// <returns></returns>
-        private int? GetNewGroupId()
-        {
-            int rand;
-            while (true)
-            {
-                int max = HullDataGroupIds.Count != 0 ? HullDataGroupIds.Count : 1;
-                rand = Rand.Int(max * 2);
-                if (!HullDataGroupIds.Contains(rand))
-                    break;
-            }
-            HullDataGroupIds.Add(rand);
-            return rand;
-        }
-
-        private void ChangeGroupId(int oldId, int newId)
-        {
-            foreach (HullData data in hullDatas.Values)
-            {
-                data.GroupId = data.GroupId == oldId ? newId : data.GroupId;
-            }
-            HullDataGroupIds.Remove(oldId);
         }
     }
 }
