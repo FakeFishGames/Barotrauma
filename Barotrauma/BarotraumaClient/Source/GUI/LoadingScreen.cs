@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Barotrauma.Media;
 
 namespace Barotrauma
 {
@@ -13,6 +14,8 @@ namespace Barotrauma
         private Texture2D backgroundTexture, monsterTexture, titleTexture;
 
         private RenderTarget2D renderTarget;
+
+        public Video SplashScreen;
 
         private float state;
         
@@ -57,12 +60,6 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
-            if (GameMain.Config.EnableSplashScreen)
-            {
-                throw new NotImplementedException();
-            }
-
-
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             monsterTexture = TextureLoader.FromFile("Content/UI/titleMonster.png");
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
@@ -86,6 +83,7 @@ namespace Barotrauma
                 try
                 {
                     DrawSplashScreen(spriteBatch);
+                    if (SplashScreen!=null && SplashScreen.IsPlaying) return;
                 }
                 catch (Exception e)
                 {
@@ -181,7 +179,25 @@ namespace Barotrauma
 
         private void DrawSplashScreen(SpriteBatch spriteBatch)
         {
-            throw new NotImplementedException();
+            if (SplashScreen != null)
+            {
+                if (SplashScreen.IsPlaying)
+                {
+                    spriteBatch.Begin();
+                    spriteBatch.Draw(SplashScreen.GetTexture(), new Rectangle(0, 0, 1280, 720), Color.White);
+                    spriteBatch.End();
+
+                    if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
+                    {
+                        SplashScreen.Dispose(); SplashScreen = null;
+                    }
+                }
+                else
+                {
+                    SplashScreen.Dispose(); SplashScreen = null;
+                }
+            }
+
         }
  
         bool drawn;
