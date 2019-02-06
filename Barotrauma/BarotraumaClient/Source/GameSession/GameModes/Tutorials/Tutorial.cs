@@ -11,6 +11,7 @@ namespace Barotrauma.Tutorials
         public static List<Tutorial> Tutorials;
 
         protected GUIComponent infoBox;
+        private Action infoBoxClosedcallback;
         protected XElement configElement;
 
         private enum TutorialType { None, Scenario, Contextual };
@@ -136,10 +137,11 @@ namespace Barotrauma.Tutorials
         protected bool CloseInfoFrame(GUIButton button, object userData)
         {
             infoBox = null;
+            infoBoxClosedcallback?.Invoke();
             return true;
         }
 
-        protected GUIComponent CreateInfoFrame(string text, bool hasButton = false)
+        protected GUIComponent CreateInfoFrame(string text, bool hasButton = false, Action callback = null)
         {
             int width = 300;
             int height = hasButton ? 110 : 80;
@@ -154,9 +156,11 @@ namespace Barotrauma.Tutorials
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.7f), infoBlock.RectTransform, Anchor.Center),
                 text, wrap: true);
 
+            infoBoxClosedcallback = callback;
+
             if (hasButton)
             {
-                var okButton = new GUIButton(new RectTransform(new Point(80, 25), infoBlock.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 5) },
+                var okButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
                     TextManager.Get("OK"))
                 {
                     OnClicked = CloseInfoFrame
@@ -168,7 +172,7 @@ namespace Barotrauma.Tutorials
             return infoBlock;
         }
 
-        protected GUIComponent CreateInfoFrame(string title, string text, int width, int height, string anchorStr, bool hasButton = false)
+        protected GUIComponent CreateInfoFrame(string title, string text, int width, int height, string anchorStr, bool hasButton = false, Action callback = null)
         {
             if (hasButton) height += 30;
 
@@ -196,9 +200,11 @@ namespace Barotrauma.Tutorials
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
                 text, wrap: true);
 
+            infoBoxClosedcallback = callback;
+
             if (hasButton)
             {
-                var okButton = new GUIButton(new RectTransform(new Point(80, 25), infoBlock.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 5) },
+                var okButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
                     TextManager.Get("OK"))
                 {
                     OnClicked = CloseInfoFrame
