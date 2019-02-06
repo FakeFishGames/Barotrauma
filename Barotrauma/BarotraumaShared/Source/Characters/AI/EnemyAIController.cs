@@ -438,7 +438,7 @@ namespace Barotrauma
                 var pickable = item.components.Select(c => c as Pickable).FirstOrDefault();
                 if (pickable != null)
                 {
-                    var target = pickable.Picker.AiTarget;
+                    var target = pickable.Picker?.AiTarget;
                     if (target != null)
                     {
                         selectedAiTarget = target;
