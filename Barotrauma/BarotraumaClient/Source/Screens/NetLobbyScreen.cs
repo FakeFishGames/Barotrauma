@@ -692,6 +692,7 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) return;
             spectateButton.Visible = true;
+            spectateButton.Enabled = true;
         }
 
         public void SetCampaignCharacterInfo(CharacterInfo characterInfo)
