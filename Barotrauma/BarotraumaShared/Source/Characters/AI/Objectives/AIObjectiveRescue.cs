@@ -21,8 +21,13 @@ namespace Barotrauma
         {
             get
             {
-                if (targetCharacter.Removed) return false;
-                if (goToObjective != null && !goToObjective.CanBeCompleted) return false;
+                if (targetCharacter.Removed || 
+                    targetCharacter.IsDead || 
+                    targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold)
+                {
+                    return false;
+                }
+                if (goToObjective != null && !goToObjective.CanBeCompleted) { return false; }
 
                 return true;
             }
@@ -208,7 +213,8 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            bool isCompleted = !targetCharacter.IsUnconscious || targetCharacter.IsDead;
+            bool isCompleted = 
+                targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold;
 
             if (isCompleted)
             {
@@ -216,14 +222,19 @@ namespace Barotrauma
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
             }
 
-            return isCompleted;
+            return isCompleted || targetCharacter.IsDead;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (targetCharacter.AnimController.CurrentHull == null) return 0.0f;
-            float distance = Vector2.DistanceSquared(character.WorldPosition, targetCharacter.WorldPosition);
-            return targetCharacter.IsDead ? 1000.0f / distance : 10000.0f / distance;
+            if (targetCharacter.AnimController.CurrentHull == null || targetCharacter.IsDead) { return 0.0f; }
+
+            Vector2 diff = targetCharacter.WorldPosition - character.WorldPosition;
+            float distance = Math.Abs(diff.X) + Math.Abs(diff.Y);
+
+            float vitalityFactor = (targetCharacter.MaxVitality - targetCharacter.Vitality) / targetCharacter.MaxVitality;
+
+            return 1000.0f * vitalityFactor / distance;
         }
     }
 }
