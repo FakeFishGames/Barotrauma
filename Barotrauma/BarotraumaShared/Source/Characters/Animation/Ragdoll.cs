@@ -903,7 +903,10 @@ namespace Barotrauma
                 else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
                 {
                     character.MemLocalState?.Clear();
-                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position - newHull.Submarine.Position),
+                    Vector2 newSubPos = newHull.Submarine == null ? Vector2.Zero : newHull.Submarine.Position;
+                    Vector2 prevSubPos = currentHull.Submarine == null ? Vector2.Zero : currentHull.Submarine.Position;
+
+                    Teleport(ConvertUnits.ToSimUnits(prevSubPos - newSubPos),
                         Vector2.Zero);
                 }
             }
