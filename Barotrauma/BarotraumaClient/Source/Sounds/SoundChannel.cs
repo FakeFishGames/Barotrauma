@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
@@ -232,6 +233,7 @@ namespace Barotrauma.Sounds
         private bool startedPlaying;
         private bool reachedEndSample;
         private uint[] streamBuffers;
+        private List<uint> emptyBuffers;
 
         private object mutex;
 
@@ -311,6 +313,7 @@ namespace Barotrauma.Sounds
                     }
 
                     streamBuffers = new uint[4];
+                    emptyBuffers = new List<uint>();
                     for (int i=0;i<4;i++)
                     {
                         AL.GenBuffer(out streamBuffers[i]);
@@ -445,8 +448,14 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to determine processed buffers from streamed source: " + AL.GetErrorString(alError));
                         }
 
-                        unqueuedBuffers = new int[buffersToUnqueue];
+                        unqueuedBuffers = new int[buffersToUnqueue+emptyBuffers.Count];
                         AL.SourceUnqueueBuffers((int)alSource, buffersToUnqueue, unqueuedBuffers);
+                        for (int i = 0; i < emptyBuffers.Count; i++)
+                        {
+                            unqueuedBuffers[buffersToUnqueue + i] = (int)emptyBuffers[i];
+                        }
+                        buffersToUnqueue += emptyBuffers.Count;
+                        emptyBuffers.Clear();
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
@@ -468,16 +477,20 @@ namespace Barotrauma.Sounds
                     {
                         short[] buffer = new short[STREAM_BUFFER_SIZE];
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
-                        streamSeekPos += readSamples;
-                        if (readSamples < STREAM_BUFFER_SIZE)
+
+                        if (Sound.StreamsReliably)
                         {
-                            if (looping)
+                            streamSeekPos += readSamples;
+                            if (readSamples < STREAM_BUFFER_SIZE)
                             {
-                                streamSeekPos = 0;
-                            }
-                            else
-                            {
-                                reachedEndSample = true;
+                                if (looping)
+                                {
+                                    streamSeekPos = 0;
+                                }
+                                else
+                                {
+                                    reachedEndSample = true;
+                                }
                             }
                         }
                         if (readSamples > 0)
@@ -497,6 +510,14 @@ namespace Barotrauma.Sounds
                             {
                                 throw new Exception("Failed to queue buffer[" + i.ToString() + "] to stream: " + AL.GetErrorString(alError));
                             }
+                        }
+                        else if (readSamples < 0)
+                        {
+                            reachedEndSample = true;
+                        }
+                        else
+                        {
+                            emptyBuffers.Add((uint)unqueuedBuffers[i]);
                         }
                     }
 
