@@ -31,7 +31,7 @@ namespace Barotrauma.Tutorials
             {
                 if (completed == value) return;
                 completed = value;
-                GameMain.Config.Save();
+                GameMain.Config.SaveNewPlayerConfig();
             }
         }
 
