@@ -404,7 +404,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            int projectileCount = 0;
+            int usableProjectileCount = 0;
             int maxProjectileCount = 0;
             foreach (MapEntity e in item.linkedTo)
             {
@@ -416,11 +416,22 @@ namespace Barotrauma.Items.Components
                 {
                     var container = projectileContainer.GetComponent<ItemContainer>();
                     if (containedItems != null) maxProjectileCount += container.Capacity;
-                    projectileCount += containedItems.Length;
+
+                    int projectiles = 0;
+
+                    for (int i = 0; i < containedItems.Length; i++)
+                    {
+                        if (containedItems[i].Condition > 0.0f)
+                        {
+                            projectiles++;
+                        }
+                    }
+
+                    usableProjectileCount += projectiles;
                 }
             }
 
-            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
+            if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -434,11 +445,17 @@ namespace Barotrauma.Items.Components
 
                 if (container == null || container.ContainableItems.Count == 0) return true;
 
+                if (container.Inventory.Items[0] != null && container.Inventory.Items[0].Condition <= 0.0f)
+                {
+                    var removeShellObjective = new AIObjectiveDecontainItem(character, container.Inventory.Items[0], container);
+                    objective.AddSubObjective(removeShellObjective);
+                }
+
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
-                containShellObjective.MinContainedAmount = projectileCount + 1;
+                containShellObjective.MinContainedAmount = usableProjectileCount + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;
-                objective.AddSubObjective(containShellObjective);
+                objective.AddSubObjective(containShellObjective);                
                 return false;
             }
 
