@@ -421,7 +421,7 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) => 
                 {
-                    if (GameMain.Config.UnsavedSettings) GameMain.Config.Load("config.xml");
+                    if (GameMain.Config.UnsavedSettings) GameMain.Config.LoadDefaultConfig("config.xml");
                     if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.SelectTab(0);
                     GUI.SettingsMenuOpen = false;
                     return true;
@@ -563,7 +563,7 @@ namespace Barotrauma
         
         private bool ApplyClicked(GUIButton button, object userData)
         {
-            Save();
+            SaveNewPlayerConfig();
 
             settingsFrame.Flash(Color.Green);
             

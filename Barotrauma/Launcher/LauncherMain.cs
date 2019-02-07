@@ -256,7 +256,7 @@ namespace Launcher
 
             settings.GraphicsWidth = selectedMode.Width;
             settings.GraphicsHeight = selectedMode.Height;
-            settings.Save();
+            settings.SaveNewPlayerConfig();
 
             return true;
         }

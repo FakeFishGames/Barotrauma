@@ -62,14 +62,8 @@ namespace Barotrauma
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
-            Config = new GameSettings("config.xml");
-            if (Config.WasGameUpdated)
-            {
-                UpdaterUtil.CleanOldFiles();
-                Config.WasGameUpdated = false;
-                Config.Save();
-            }
-            
+            Config = new GameSettings();
+
             SteamManager.Initialize();
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
             

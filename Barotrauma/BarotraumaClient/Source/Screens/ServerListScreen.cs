@@ -591,7 +591,7 @@ namespace Barotrauma
             }
 
             GameMain.Config.DefaultPlayerName = clientNameBox.Text;
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
             string ip = null;
             if (ipBox.UserData is ServerInfo serverInfo)

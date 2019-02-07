@@ -334,7 +334,7 @@ namespace Barotrauma
 
         private bool ApplySettings(GUIButton button, object userData)
         {
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
             if (userData is Tab) SelectTab((Tab)userData);
 
@@ -350,7 +350,7 @@ namespace Barotrauma
 
         private bool DiscardSettings(GUIButton button, object userData)
         {
-            GameMain.Config.Load("config.xml");
+            GameMain.Config.LoadDefaultConfig("config.xml");
             if (userData is Tab) SelectTab((Tab)userData);
 
             return true;

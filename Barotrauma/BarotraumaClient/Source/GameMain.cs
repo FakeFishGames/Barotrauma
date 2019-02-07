@@ -169,15 +169,7 @@ namespace Barotrauma
             Window.Title = "Barotrauma";
 
             Instance = this;
-
-            Config = new GameSettings("config.xml");
-            if (Config.WasGameUpdated)
-            {
-                UpdaterUtil.CleanOldFiles();
-                Config.WasGameUpdated = false;
-                Config.Save();
-            }
-                        
+            Config = new GameSettings();
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
