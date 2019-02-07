@@ -101,6 +101,7 @@
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\Health\AfflictionPsychosis.cs" />
+    <Compile Include="Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ContextualTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ScenarioTutorial.cs" />
