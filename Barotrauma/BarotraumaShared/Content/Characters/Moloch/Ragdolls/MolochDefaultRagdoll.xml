@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Moloch" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True" spritesheetorientation="0">
+﻿<Ragdoll type="Moloch" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" draggable="True" spritesheetorientation="90">
   <collider radius="309" width="635" name="Main Collider" height="0" />
   <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="36,0,1588,669" origin="0.4949142,0.4817872" depth="0.1" subdivisions="15,15"></deformablesprite>
@@ -6,8 +6,8 @@
       <Affliction identifier="internaldamage" strength="200" />
       <Affliction identifier="stun" strength="5" />
     </attack>
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="-90,90" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="-90,90" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
   <limb id="16" name="Blatter" type="None" radius="457" width="311" notes="1bc_Blatter" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <!--<sprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="423,1025,1226,915" origin="0.5,0.5" depth="0" />-->
@@ -17,6 +17,7 @@
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="2" amplitude="0.2" blendmode="add" row0="0,0 0,0 0,0 0,0 0," row1="0,0 0,0.5 0,0.5 0,0 0,0" row2="0,0 0,0.75 0,1 0,0.75 0,0" row3="0,1 0,1 0,1 0,1 0,1" row4="0,0.5 0,0.25 0,0.75 0,0.25 0,0.5" usemovementsine="true" sineoffset="0.75" />
     </deformablesprite>
+    <damagemodifier isarmor="false" armorsector="90,270" afflictiontypes="bleeding,damage" damagemultiplier="1.5" damagesound="LimbSlash" deflectprojectiles="false" />
   </limb>
   <limb id="7" name="TentacleArm11" type="LeftArm" width="100" height="300" notes="2bl_TentacleArm11" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <!--!<sprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,663,147,327" origin="0.5,0.5" depth="0" />-->
