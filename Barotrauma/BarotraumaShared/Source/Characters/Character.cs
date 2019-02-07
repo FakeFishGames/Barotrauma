@@ -754,7 +754,7 @@ namespace Barotrauma
             if (head == null) { return; }
             if (headId.HasValue)
             {
-                Info.HeadSpriteId = headId.Value;
+                Info.Head.HeadSpriteId = headId.Value;
                 Info.LoadHeadSprite();
                 Info.HairIndex = hairIndex ?? -1;
                 Info.BeardIndex = beardIndex ?? -1;

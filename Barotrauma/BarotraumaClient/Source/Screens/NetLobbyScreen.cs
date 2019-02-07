@@ -69,6 +69,9 @@ namespace Barotrauma
 
         private GUITextBox serverMessage;
 
+        private GUIButton faceSelectionLeft;
+        private GUIButton faceSelectionRight;
+
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -715,17 +718,15 @@ namespace Barotrauma
             if (!playYourself.Selected) return;
             if (characterInfo == null)
             {
-                characterInfo =
-                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
-                    {
-                        Race = GameMain.Config.CharacterRace,
-                        HeadSpriteId = GameMain.Config.CharacterHeadIndex,
-                        HairIndex = GameMain.Config.CharacterHairIndex,
-                        BeardIndex = GameMain.Config.CharacterBeardIndex,
-                        MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
-                        FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
-                    };
-                // Need to reload the attachments because the indices may have changed
+                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
+                {
+                    Race = GameMain.Config.CharacterRace,
+                    HairIndex = GameMain.Config.CharacterHairIndex,
+                    BeardIndex = GameMain.Config.CharacterBeardIndex,
+                    MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
+                    FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
+                };
+                characterInfo.Head.HeadSpriteId = GameMain.Config.CharacterHeadIndex;
                 characterInfo.LoadHeadAttachments();
                 GameMain.NetworkMember.CharacterInfo = characterInfo;
             }
@@ -744,11 +745,13 @@ namespace Barotrauma
 
             if (allowEditing)
             {
-                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), "", style: "GUIButtonHorizontalArrow")
+                faceSelectionLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), "", style: "GUIButtonHorizontalArrow")
                 {
+                    Enabled = generatedHeads.UndoCount > 1,
                     UserData = -1,
-                    OnClicked = ToggleHead
-                }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
+                    OnClicked = SwitchHead
+                };
+                faceSelectionLeft.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
             }
 
             new GUICustomComponent(new RectTransform(new Vector2(0.3f, 1.0f), headContainer.RectTransform), 
@@ -756,10 +759,10 @@ namespace Barotrauma
 
             if (allowEditing)
             {
-                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), style: "GUIButtonHorizontalArrow")
+                faceSelectionRight = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), headContainer.RectTransform), style: "GUIButtonHorizontalArrow")
                 {
                     UserData = 1,
-                    OnClicked = ToggleHead
+                    OnClicked = SwitchHead
                 };
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), infoContainer.RectTransform),
@@ -1511,29 +1514,66 @@ namespace Barotrauma
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
 
-        // TODO: remember the previous head(s), check that the next is unique
-        private bool ToggleHead(GUIButton button, object userData)
+        private Memento<CharacterInfo.HeadInfo> generatedHeads = new Memento<CharacterInfo.HeadInfo>();
+
+        private bool SwitchHead(GUIButton button, object userData)
         {
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
             int dir = (int)userData;
             var info = GameMain.NetworkMember.CharacterInfo;
-            info.SetRandomRace();
-            info.SetRandomHead();
-            info.LoadHeadAttachments();
-            info.LoadHeadSprite();
+            if (generatedHeads.Current == null)
+            {
+                // Add the current head in the memory
+                generatedHeads.Store(info.Head);
+            }
+            if (dir == 1)
+            {
+                // Try redo, if not possible, generate new
+                var previousHead = generatedHeads.Redo();
+                if (previousHead == info.Head || previousHead == null)
+                {
+                    // Generate new and add to the list
+                    // If the head id is the same, regenerate until it's not
+                    // The counter is there to prevent stack overflow if we for some reason cannot get unique ids (e.g. an issue with the head id range or simply if there is no heads defined).
+                    int newHeadId = previousHead.HeadSpriteId;
+                    int counter = 0;
+                    while (newHeadId == previousHead.HeadSpriteId && counter < 10)
+                    {
+                        newHeadId = info.GetRandomHeadID();
+                        counter++;
+                    }
+                    info.Head = new CharacterInfo.HeadInfo(newHeadId) { gender = GameMain.Config.CharacterGender };
+                    generatedHeads.Store(info.Head);
+                }
+                else
+                {
+                    info.Head = previousHead;
+                }
+            }
+            else
+            {
+                // Undo, if not possible, the button should be disabled
+                var previousHead = generatedHeads.Undo();
+                if (previousHead != info.Head && previousHead != null)
+                {
+                    info.Head = previousHead;
+                }
+            }
+            info.ReloadHeadAttachments();
             StoreHead();
             GameMain.Config.Save();
+            faceSelectionLeft.Enabled = generatedHeads.UndoCount > 0;
             return true;
         }
 
         private bool SwitchGender(GUIButton button, object obj)
         {
+            generatedHeads.Clear();
             Gender gender = (Gender)obj;
             var info = GameMain.NetworkMember.CharacterInfo;
             info.Gender = gender;
             info.SetRandomHead();
             info.LoadHeadAttachments();
-            info.LoadHeadSprite();
             StoreHead();
             GameMain.Config.Save();
             return true;
