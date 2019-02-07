@@ -17,6 +17,10 @@
     hearing="1.0"
     aggressiveboarding="true"
     fleehealththreshold="20">
+
+    <Inventory slots="Any, Any" accessiblewhenalive="false">
+      <Item identifier="hydroxyapatite"/>
+    </Inventory>
     
     <latchonto
       attachtowalls="true"/>

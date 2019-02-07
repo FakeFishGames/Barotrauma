@@ -15,6 +15,12 @@
   <sound file="Content/Characters/Legacymoloch/attack2.ogg" state="Attack" range="3000"/>
   <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="None" range="3000"/>
   <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="None" range="3000"/>
+  
+  <Inventory slots="Any, Any, Any" accessiblewhenalive="false">
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="brockite"/>
+  </Inventory>
 
   <ai
     combatstrength="1200"
