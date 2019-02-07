@@ -58,8 +58,8 @@
       <sprite texture="clownpants.png" limb="RightFoot" sound="footstep_clown" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true" />
       <sprite texture="clownpants.png" limb="LeftFoot" sound="footstep_clown" sourcerect="66,42,14,38" origin="0.5,0.35" depth="0.15" hidelimb="true" />
       <!-- HENK -->
-      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="1.0" damagesound="LimbClown" />
-      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="1.0" damagesound="LimbClown" />
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown" />
+      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown" />
     </Wearable>
   </Item>
   <Item name="Assistant Clothes" identifier="assistantclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="Even the assistant needs clothing." scale="0.5">
