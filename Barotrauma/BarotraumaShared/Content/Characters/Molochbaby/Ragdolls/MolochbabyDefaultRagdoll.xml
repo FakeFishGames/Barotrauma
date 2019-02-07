@@ -299,7 +299,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <joint name="Joint Torso - Blatter" limb1="3" limb2="16" limb1anchor="36.95913,117.7716" limb2anchor="20.72723,333.17" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0" />
+  <joint name="Joint Torso - Blatter" limb1="3" limb2="16" limb1anchor="36.95913,117.7716" limb2anchor="20.72723,333.17" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0" />
   <joint name="Joint Torso - Skirt11" limb1="3" limb2="0" limb1anchor="8.091979,-501.8178" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="30.42601" lowerlimit="-29.72463" stiffness="0" />
   <joint name="Joint Torso - Skirt21" limb1="3" limb2="1" limb1anchor="-307.8923,-199.8343" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="30.42601" lowerlimit="-29.72463" stiffness="0" />
   <joint name="Joint Torso - Skirt31" limb1="3" limb2="2" limb1anchor="-208.6266,-396.8431" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="30.42601" lowerlimit="-29.72463" stiffness="0" />
