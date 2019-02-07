@@ -7,6 +7,9 @@ namespace Barotrauma
     {
         public T Current { get; private set; }
 
+        public int UndoCount => undoStack.Count;
+        public int RedoCount => redoStack.Count;
+
         private Stack<T> undoStack = new Stack<T>();
         private Stack<T> redoStack = new Stack<T>();
 
