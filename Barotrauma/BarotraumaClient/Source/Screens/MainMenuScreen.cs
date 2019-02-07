@@ -455,6 +455,10 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+#else
+            joinServerButton.Enabled = true;
+            hostServerButton.Enabled = true;
+            steamWorkshopButton.Enabled = true;
 #endif
         }
 
