@@ -355,6 +355,7 @@ namespace Barotrauma.Items.Components
         {
             float desiredTurbineOutput = (optimalTurbineOutput.X + optimalTurbineOutput.Y) / 2.0f;
             targetTurbineOutput += MathHelper.Clamp(desiredTurbineOutput - targetTurbineOutput, -speed, speed) * deltaTime;
+            targetTurbineOutput = MathHelper.Clamp(targetTurbineOutput, 0.0f, 100.0f);
 
             float desiredFissionRate = (optimalFissionRate.X + optimalFissionRate.Y) / 2.0f;
             targetFissionRate += MathHelper.Clamp(desiredFissionRate - targetFissionRate, -speed, speed) * deltaTime;
@@ -367,6 +368,7 @@ namespace Barotrauma.Items.Components
             {
                 targetFissionRate = Math.Min(targetFissionRate + speed * 2 * deltaTime, allowedFissionRate.Y);
             }
+            targetFissionRate = MathHelper.Clamp(targetFissionRate, 0.0f, 100.0f);
         }
         
         public override void UpdateBroken(float deltaTime, Camera cam)

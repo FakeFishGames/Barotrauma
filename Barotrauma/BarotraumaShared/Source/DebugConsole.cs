@@ -1909,11 +1909,20 @@ namespace Barotrauma
 
             commands.Add(new Command("fixhulls|fixwalls", "fixwalls/fixhulls: Fixes all walls.", (string[] args) =>
             {
-                foreach (Structure w in Structure.WallList)
+                var walls = new List<Structure>(Structure.WallList);
+                foreach (Structure w in walls)
                 {
-                    for (int i = 0; i < w.SectionCount; i++)
+                    try
                     {
-                        w.AddDamage(i, -100000.0f);
+                        for (int i = 0; i < w.SectionCount; i++)
+                        {
+                            w.AddDamage(i, -100000.0f);
+                        }
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     }
                 }
             }, null, null, isCheat: true));

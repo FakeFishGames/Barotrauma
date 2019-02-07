@@ -5,6 +5,9 @@ namespace Barotrauma
 {
     class AIObjectiveRescueAll : AIObjective
     {
+        //only treat characters whose vitality is below this (0.8 = 80% of max vitality)
+        public const float VitalityThreshold = 0.8f;
+
         private List<Character> rescueTargets;
         
         public AIObjectiveRescueAll(Character character)
@@ -38,7 +41,8 @@ namespace Barotrauma
             rescueTargets = Character.CharacterList.FindAll(c => 
                 c.AIController is HumanAIController &&
                 c != character &&
-                c.IsUnconscious);
+                !c.IsDead &&
+                c.Vitality / c.MaxVitality < VitalityThreshold);
         }
 
         protected override void Act(float deltaTime)
@@ -52,7 +56,6 @@ namespace Barotrauma
         public override bool IsCompleted()
         {
             return false;
-        }
-        
+        }        
     }
 }
