@@ -23,7 +23,6 @@ namespace Launcher
     {
         string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
-        private const string configPath = "config.xml";
         private GameSettings settings;
 
         private string latestVersionFileList, latestVersionFolder;
@@ -77,7 +76,7 @@ namespace Launcher
         protected override void Initialize()
         {
             ContentPackage.LoadAll(ContentPackage.Folder);
-            settings = new GameSettings(configPath);
+            settings = new GameSettings();
 
             base.Initialize();
         }
@@ -245,7 +244,7 @@ namespace Launcher
             if (updateCheckState == 1) updateCheckState = 2;
         }
 
-        private bool TrySaveSettings(string filePath)
+        private bool TrySaveSettings()
         {
             DisplayMode selectedMode = resolutionDD.SelectedItemData as DisplayMode;
             if (selectedMode == null)
@@ -299,7 +298,7 @@ namespace Launcher
 
         private bool LaunchClick(GUIButton button, object obj)
         {
-            if (!TrySaveSettings(configPath)) return false;
+            if (!TrySaveSettings()) return false;
             
             var executables = ContentPackage.GetFilesOfType(settings.SelectedContentPackages, ContentType.Executable);
             if (!executables.Any())

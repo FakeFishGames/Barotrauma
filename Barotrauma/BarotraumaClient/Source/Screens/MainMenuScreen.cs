@@ -350,7 +350,7 @@ namespace Barotrauma
 
         private bool DiscardSettings(GUIButton button, object userData)
         {
-            GameMain.Config.LoadDefaultConfig("config.xml");
+            GameMain.Config.LoadPlayerConfig();
             if (userData is Tab) SelectTab((Tab)userData);
 
             return true;
@@ -548,8 +548,7 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods
-      
+        #region UI Methods      
         private void CreateHostServerFields()
         {
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);

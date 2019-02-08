@@ -28,6 +28,7 @@ namespace Barotrauma
     {
         const string savePath = "config.xml";
         const string playerSavePath = "config_player.xml";
+        const string vanillaContentPackagePath = "Data/ContentPackages/Vanilla";
 
         public int GraphicsWidth { get; set; }
         public int GraphicsHeight { get; set; }
@@ -233,7 +234,7 @@ namespace Barotrauma
             ContentPackage.LoadAll(ContentPackage.Folder);
             CompletedTutorialNames = new List<string>();
 
-            LoadDefaultConfig(savePath);
+            LoadDefaultConfig();
 
             if (WasGameUpdated)
             {
@@ -246,9 +247,9 @@ namespace Barotrauma
         }
 
         #region Load DefaultConfig
-        public void LoadDefaultConfig(string filePath)
+        public void LoadDefaultConfig()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(savePath);
             
             Language = doc.Root.GetAttributeString("language", "English");
 
@@ -283,8 +284,8 @@ namespace Barotrauma
             }
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
-            GraphicsWidth   = graphicsMode.GetAttributeInt("width", 0);
-            GraphicsHeight  = graphicsMode.GetAttributeInt("height", 0);
+            GraphicsWidth   = 0;
+            GraphicsHeight  = 0;
             VSyncEnabled    = graphicsMode.GetAttributeBool("vsync", true);
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
@@ -543,8 +544,11 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                doc.Root.Add(new XElement("contentpackage",
-                    new XAttribute("path", contentPackage.Path)));
+                if (contentPackage.Path.Contains(vanillaContentPackagePath))
+                {
+                    doc.Root.Add(new XElement("contentpackage", new XAttribute("path", contentPackage.Path)));
+                    break;
+                }
             }
 
             var keyMappingElement = new XElement("keymapping");
@@ -612,20 +616,14 @@ namespace Barotrauma
 
             if (doc == null || doc.Root == null)
             {
+                ShowUserStatisticsPrompt = true;
                 SaveNewPlayerConfig();
                 return;
             }
 
             Language = doc.Root.GetAttributeString("language", Language);
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
-            if (doc.Root.Attribute("senduserstatistics") == null)
-            {
-                ShowUserStatisticsPrompt = true;
-            }
-            else
-            {
-                sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
-            }
+            sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
             GraphicsWidth = graphicsMode.GetAttributeInt("width", GraphicsWidth);
@@ -950,6 +948,12 @@ namespace Barotrauma
             }
         }
         #endregion
+
+        public void ResetToDefault()
+        {
+            LoadDefaultConfig();
+            SaveNewPlayerConfig();
+        }
 
         public KeyOrMouse KeyBind(InputType inputType)
         {
