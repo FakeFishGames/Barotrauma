@@ -95,7 +95,7 @@
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="532,740,230,142" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <LevelResource deattachduration="10">
-      <Commonness commonness="3" />
+      <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
@@ -349,7 +349,7 @@
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="271,158,222,138" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <LevelResource deattachduration="10">
-      <Commonness commonness="6" />
+      <Commonness commonness="7" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
@@ -402,13 +402,14 @@
   <Item name="Cryolite" identifier="cryolite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing sodium." cargocontaineridentifier="metalcrate" scale="0.5">
     <Deconstruct time="5">
       <Item identifier="sodium" />
+      <Item identifier="sodium" />
     </Deconstruct>
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="22,160,227,136" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <LevelResource deattachduration="10">
-      <Commonness commonness="7" />
+      <Commonness commonness="6" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />

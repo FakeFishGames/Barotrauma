@@ -469,6 +469,7 @@
       <FabricableItem identifier="antibloodloss1" requiredtime="10">
         <RequiredSkill identifier="medical" level="30"/>
         <RequiredItem identifier="sodium"/>
+        <RequiredItem identifier="chlorine"/>
       </FabricableItem>
       <FabricableItem identifier="antibloodloss2" requiredtime="10">
         <RequiredSkill identifier="medical" level="60"/>
