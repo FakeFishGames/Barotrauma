@@ -318,6 +318,7 @@ namespace Barotrauma
                     GameSettings.ShowUserStatisticsPrompt = false;
                     GameSettings.SendUserStatistics = true;
                     GameAnalyticsManager.Init();
+                    Config.SaveNewPlayerConfig();
                     return true;
                 };
                 userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
@@ -325,6 +326,7 @@ namespace Barotrauma
                 {
                     GameSettings.ShowUserStatisticsPrompt = false;
                     GameSettings.SendUserStatistics = false;
+                    Config.SaveNewPlayerConfig();
                     return true;
                 };
                 userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
