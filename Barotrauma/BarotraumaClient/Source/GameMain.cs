@@ -177,7 +177,7 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-                        
+            
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
@@ -279,6 +279,16 @@ namespace Barotrauma
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
+            SteamManager.Initialize();
+            if (Config.AutoUpdateWorkshopItems)
+            {
+                if (SteamManager.AutoUpdateWorkshopItems())
+                {
+                    ContentPackage.LoadAll(ContentPackage.Folder);
+                    Config.ReloadContentPackages();
+                }
+            }
+
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
 #if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
@@ -358,9 +368,7 @@ namespace Barotrauma
                         
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
-
-            SteamManager.Initialize();
-
+            
             if (SelectedPackages.Count == 0)
             {
                 DebugConsole.Log("No content packages selected");
