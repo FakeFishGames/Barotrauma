@@ -144,6 +144,11 @@ namespace Barotrauma
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
                         }
                         textbox.Deselect();
                         textbox.Text = "";
