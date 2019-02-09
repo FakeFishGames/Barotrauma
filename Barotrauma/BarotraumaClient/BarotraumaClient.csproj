@@ -434,6 +434,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="libvlc.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
