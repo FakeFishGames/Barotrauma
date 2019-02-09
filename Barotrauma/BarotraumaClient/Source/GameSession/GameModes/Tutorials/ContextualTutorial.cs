@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using System;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
@@ -30,9 +29,7 @@ namespace Barotrauma.Tutorials
 
         private bool started = false;
         private string playableContentPath;
-
-        private float inputGracePeriodTimer;
-        private const float inputGracePeriod = .5f;
+        
         private float tutorialTimer;
         private float degrading2ActivationCountdown;
 
@@ -161,7 +158,6 @@ namespace Barotrauma.Tutorials
 
             activeSegment = null;
             tutorialTimer = 0.0f;
-            inputGracePeriodTimer = 0.0f;
             degrading2ActivationCountdown = -1;
             subStartingPosition = Vector2.Zero;
             characterTimeOnSonar.Clear();
@@ -228,35 +224,9 @@ namespace Barotrauma.Tutorials
 
         public override void Update(float deltaTime)
         {
-            if (!started) return;
+            if (!started || ContentRunning) return;
+
             deltaTime *= 0.5f;
-
-            if (ContentRunning) // Content is running, wait until dismissed
-            {
-                if (inputGracePeriodTimer < inputGracePeriod)
-                {
-                    inputGracePeriodTimer += deltaTime;
-                }
-                else if (Keyboard.GetState().GetPressedKeys().Length > 0 || Mouse.GetState().LeftButton == ButtonState.Pressed || Mouse.GetState().RightButton == ButtonState.Pressed)
-                {
-                    switch (activeSegment.ContentType)
-                    {
-                        case ContentTypes.None:
-                            break;
-                        case ContentTypes.Video:
-                            spriteSheetPlayer.Stop();
-                            break;
-                        case ContentTypes.Text:
-                            infoBox = null;
-                            break;
-                    }
-
-                    activeSegment = null;
-                    ContentRunning = false;
-                    inputGracePeriodTimer = 0.0f;
-                }
-                return;
-            }
 
             for (int i = 0; i < segments.Count; i++)
             {
@@ -266,6 +236,12 @@ namespace Barotrauma.Tutorials
                     break;
                 }
             }
+        }
+
+        private void CurrentSegmentStopCallback()
+        {
+            activeSegment = null;
+            ContentRunning = false;
         }
 
         private bool CheckContextualTutorials(int index, float deltaTime)
@@ -485,13 +461,13 @@ namespace Barotrauma.Tutorials
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true);
+                    spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
                     break;
                 case ContentTypes.Text:
                     infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
                                               activeSegment.Content.GetAttributeInt("width", 300),
                                               activeSegment.Content.GetAttributeInt("height", 80),
-                                              activeSegment.Content.GetAttributeString("anchor", "Center"), false);
+                                              activeSegment.Content.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);
                     break;
             }
 

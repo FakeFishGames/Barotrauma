@@ -178,8 +178,6 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-
-            TextManager.LoadTextPacks();
             
             ApplyGraphicsSettings();
 
@@ -361,6 +359,14 @@ namespace Barotrauma
             DebugConsole.Init();
 
             SteamManager.Initialize();
+            if (Config.AutoUpdateWorkshopItems)
+            {
+                if (SteamManager.AutoUpdateWorkshopItems())
+                {
+                    ContentPackage.LoadAll(ContentPackage.Folder);
+                    Config.ReloadContentPackages();
+                }
+            }
 
             if (SelectedPackages.Count == 0)
             {

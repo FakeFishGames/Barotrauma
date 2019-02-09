@@ -95,15 +95,18 @@ namespace Barotrauma
                 if (openHealthWindow == value) return;
                 if (value != null && !value.UseHealthWindow) return;
 
+                openHealthWindow = value;
+                toggledThisFrame = true;
+                if (Character.Controlled == null) { return; }
+
                 if (value == null &&
-                    Character.Controlled?.SelectedCharacter?.CharacterHealth == openHealthWindow &&
+                    Character.Controlled?.SelectedCharacter?.CharacterHealth != null &&
+                    Character.Controlled.SelectedCharacter.CharacterHealth == openHealthWindow &&
                     !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
                 {
                     Character.Controlled.DeselectCharacter();
                 }
 
-                openHealthWindow = value;
-                toggledThisFrame = true;
                 Character.Controlled.ResetInteract = true;
                 if (openHealthWindow != null)
                 {

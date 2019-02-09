@@ -1909,11 +1909,20 @@ namespace Barotrauma
 
             commands.Add(new Command("fixhulls|fixwalls", "fixwalls/fixhulls: Fixes all walls.", (string[] args) =>
             {
-                foreach (Structure w in Structure.WallList)
+                var walls = new List<Structure>(Structure.WallList);
+                foreach (Structure w in walls)
                 {
-                    for (int i = 0; i < w.SectionCount; i++)
+                    try
                     {
-                        w.AddDamage(i, -100000.0f);
+                        for (int i = 0; i < w.SectionCount; i++)
+                        {
+                            w.AddDamage(i, -100000.0f);
+                        }
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     }
                 }
             }, null, null, isCheat: true));
@@ -2226,32 +2235,6 @@ namespace Barotrauma
             }));
 
 #if DEBUG
-            commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
-            {
-                if (Submarine.MainSub == null) return;
-                SteamManager.SaveToWorkshop(Submarine.MainSub);
-            },
-            null, null));
-            
-            commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
-            {
-                void itemsReceived(IList<Facepunch.Steamworks.Workshop.Item> items)
-                {
-                    foreach (var item in items)
-                    {
-                        Log("*********************************");
-                        Log(item.Title);
-                        Log(item.Description);
-                        Log("Size: " + item.Size / 1024 +" kB");
-                        Log("Directory: " + item.Directory);
-                        Log("Installed: " + item.Installed);
-                    }
-                }
-
-                SteamManager.GetSubscribedWorkshopItems(itemsReceived);
-            },
-            null, null));
-
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {
                 foreach (Item item in Item.ItemList)

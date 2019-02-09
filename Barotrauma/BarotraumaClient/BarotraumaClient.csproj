@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">ReleaseLinux</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{008C0F83-E914-4966-9135-EA885059EDD8}</ProjectGuid>
@@ -101,6 +101,7 @@
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\Health\AfflictionPsychosis.cs" />
+    <Compile Include="Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ContextualTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ScenarioTutorial.cs" />
@@ -228,6 +229,7 @@
     <Compile Include="Source\Map\StructurePrefab.cs" />
     <Compile Include="Source\Map\Submarine.cs" />
     <Compile Include="Source\Map\WayPoint.cs" />
+    <Compile Include="Source\Media\Video.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\EntitySpawner.cs" />
@@ -242,6 +244,7 @@
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
+    <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
@@ -276,6 +279,7 @@
     <Compile Include="Source\Sounds\SoundChannel.cs" />
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
+    <Compile Include="Source\Sounds\VideoSound.cs" />
     <Compile Include="Source\Sprite\DeformableSprite.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\CustomDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
@@ -288,8 +292,6 @@
     <Compile Include="Source\Utils\MathUtils.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />
     <Compile Include="Source\Utils\ToolBox.cs" />
-    <Compile Include="Source\Media\Video.cs" />
-    <Compile Include="Source\Sounds\VideoSound.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, processorArchitecture=MSIL">
@@ -300,6 +302,9 @@
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\NLog.4.3.8\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="nVLC, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\nVLC.3.0.0\lib\net40\nVLC.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="PresentationCore" />
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
@@ -326,9 +331,6 @@
     <Reference Include="RestSharp">
       <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="nVLC">
-      <HintPath>..\..\Libraries\NuGet\nVLC.3.0.0\lib\net40\nVLC.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="freetype6.dll">
@@ -341,39 +343,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="oalinst.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\access\libfilesystem_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\audio_filter\libaudio_format_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\audio_filter\libugly_resampler_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\audio_output\libamem_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\codec\libavcodec_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\demux\libmp4_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\packetizer\libpacketizer_mpeg4audio_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\packetizer\libpacketizer_mpeg4video_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\video_chroma\librv32_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\video_chroma\libswscale_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\video_output\libvmem_plugin.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="wrap_oal.dll">
@@ -439,7 +408,6 @@
     </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup />
   <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

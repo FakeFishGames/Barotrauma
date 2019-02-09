@@ -98,14 +98,20 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            Hull mouseOnHull = null;
             hullInfoFrame.Visible = false;
-            if (item.Submarine == null || !hasPower)
-            {
-                foreach (Hull hull in Hull.hullList)
-                {
-                    var hullFrame = submarineContainer.Children.First().FindChild(hull);
-                    if (hullFrame == null) continue;
 
+            foreach (Hull hull in Hull.hullList)
+            {
+                var hullFrame = submarineContainer.Children.First().FindChild(hull);
+                if (hullFrame == null) { continue; }
+
+                if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn))
+                {
+                    mouseOnHull = hull;
+                }
+                if (item.Submarine == null || !hasPower)
+                {
                     hullFrame.Color = Color.DarkCyan * 0.3f;
                     hullFrame.Children.First().Color = Color.DarkCyan * 0.3f;
                 }
@@ -123,6 +129,7 @@ namespace Barotrauma.Items.Components
                 if (hullData == null)
                 {
                     hullData = new HullData();
+                    GetLinkedHulls(hull, hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
 
@@ -171,12 +178,32 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn))
+                if (mouseOnHull == hull ||
+                    hullData.LinkedHulls.Contains(mouseOnHull))
                 {
-                    hullInfoFrame.RectTransform.ScreenSpaceOffset = hullFrame.Rect.Center;
+                    borderColor = Color.Lerp(borderColor, Color.White, 0.5f);
+                    hullFrame.Children.First().Color = Color.White;
+                    hullFrame.Color = borderColor;
+                }
+                else
+                {
+                    hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
+                }
 
+                if (mouseOnHull == hull)
+                {                    
+                    hullInfoFrame.RectTransform.ScreenSpaceOffset = hullFrame.Rect.Center;
                     hullInfoFrame.Visible = true;
                     hullNameText.Text = hull.RoomName;
+
+                    foreach (Hull linkedHull in hullData.LinkedHulls)
+                    {
+                        gapOpenSum += linkedHull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
+                        oxygenAmount += linkedHull.OxygenPercentage;
+                        waterAmount += Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                    }
+                    oxygenAmount /= (hullData.LinkedHulls.Count + 1);
+                    waterAmount /= (hullData.LinkedHulls.Count + 1);
 
                     hullBreachText.Text = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : "";
                     hullBreachText.TextColor = Color.Red;
@@ -186,17 +213,11 @@ namespace Barotrauma.Items.Components
 
                     hullWaterText.Text = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : TextManager.Get("MiniMapWaterLevel") + ": " + (int)(waterAmount * 100.0f) + " %";
                     hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
-
-                    borderColor = Color.Lerp(borderColor, Color.White, 0.5f);
-                    hullFrame.Children.First().Color = Color.White;
                 }
-                else
-                {
-                    hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
-                }
+                
                 hullFrame.Color = borderColor;
             }
-
+            
             foreach (Submarine sub in subs)
             {
                 if (sub.HullVertices == null) { continue; }
@@ -219,6 +240,19 @@ namespace Barotrauma.Items.Components
                     Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] + offset) * displayScale;
                     end.Y = -end.Y;
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
+                }
+            }
+        }
+
+        private void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)
+        {
+            foreach (var linkedEntity in hull.linkedTo)
+            {
+                if (linkedEntity is Hull linkedHull)
+                {
+                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    linkedHulls.Add(linkedHull);
+                    GetLinkedHulls(linkedHull, linkedHulls);
                 }
             }
         }

@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class DamageModifier
+    partial class DamageModifier
     {
         [Serialize(1.0f, false)]
         public float DamageMultiplier
@@ -45,17 +45,6 @@ namespace Barotrauma
             private set;
         }
 
-
-
-#if CLIENT
-        [Serialize("", false)]
-        public string DamageSound
-        {
-            get;
-            private set;
-        }
-#endif
-
         public DamageModifier(XElement element, string parentDebugName)
         {
             SerializableProperty.DeserializeProperties(this, element);
@@ -80,6 +69,8 @@ namespace Barotrauma
 
         public bool MatchesAffliction(Affliction affliction)
         {
+            if (AfflictionIdentifiers.Length == 0) { return true; }
+
             foreach (string afflictionName in AfflictionIdentifiers)
             {
                 if (affliction.Prefab.Identifier.ToLowerInvariant() == afflictionName) return true;
