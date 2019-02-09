@@ -128,10 +128,10 @@
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -141,10 +141,10 @@
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" />
   </Item>
   <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -159,10 +159,10 @@
     </MeleeWeapon>
   </Item>
   <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>

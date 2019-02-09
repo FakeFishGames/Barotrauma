@@ -1326,7 +1326,7 @@ namespace Barotrauma.Networking
             }
 
             initiatedStartGame = true;
-            CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
+            startGameCoroutine = CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
 
             return true;
         }
@@ -2423,13 +2423,12 @@ namespace Barotrauma.Networking
             sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
             {
                 Race = race,
-                HeadSpriteId = headSpriteId,
                 HairIndex = hairIndex,
                 BeardIndex = beardIndex,
                 MoustacheIndex = moustacheIndex,
                 FaceAttachmentIndex = faceAttachmentIndex
             };
-            // Need to reload the attachments because the indices may have changed
+            sender.CharacterInfo.Head.HeadSpriteId = headSpriteId;
             sender.CharacterInfo.LoadHeadAttachments();
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor

@@ -14,8 +14,10 @@ namespace Barotrauma.Items.Components
 
             public bool Distort;
             public float DistortionTimer;
+
+            public List<Hull> LinkedHulls = new List<Hull>();
         }
-        
+
         private DateTime resetDataTime;
 
         private bool hasPower;

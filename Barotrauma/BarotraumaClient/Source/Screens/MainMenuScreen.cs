@@ -163,6 +163,7 @@ namespace Barotrauma
             {
                 steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
                 {
+                    Enabled = false,
                     OnClicked = SteamWorkshopClicked
                 };
             }
@@ -363,6 +364,7 @@ namespace Barotrauma
 
         private bool SteamWorkshopClicked(GUIButton button, object obj)
         {
+            if (!Steam.SteamManager.IsInitialized) { return false; }
             GameMain.SteamWorkshopScreen.Select();
             return true;
         }
@@ -453,6 +455,10 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+#else
+            joinServerButton.Enabled = true;
+            hostServerButton.Enabled = true;
+            steamWorkshopButton.Enabled = true;
 #endif
         }
 

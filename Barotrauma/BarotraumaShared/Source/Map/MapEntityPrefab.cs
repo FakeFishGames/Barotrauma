@@ -111,8 +111,10 @@ namespace Barotrauma
                 Description = TextManager.Get("EntityDescription.hull"),
                 constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
                 ResizeHorizontal = true,
-                ResizeVertical = true
+                ResizeVertical = true,
+                Linkable = true
             };
+            ep.AllowedLinks.Add("hull");
             List.Add(ep);
 
             ep = new MapEntityPrefab

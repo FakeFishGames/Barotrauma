@@ -1559,6 +1559,7 @@ namespace Barotrauma
             };
             void UpdateJointScale(float value)
             {
+                freezeToggle.Selected = false;
                 TryUpdateRagdollParam("jointscale", value);
                 jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}";
                 character.AnimController.ResetJoints();
@@ -4301,11 +4302,15 @@ namespace Barotrauma
                                 };
                                 break;
                             case 1:
-                                new GUITextBlock(leftElement, "Is Humanoid?");
+                                new GUITextBlock(leftElement, "Is Humanoid?")
+                                {
+                                    TextColor = Color.White * 0.3f
+                                };
                                 new GUITickBox(rightElement, string.Empty)
                                 {
                                     Selected = IsHumanoid,
-                                    OnSelected = (tB) => IsHumanoid = tB.Selected
+                                    OnSelected = (tB) => IsHumanoid = tB.Selected,
+                                    Enabled = false
                                 };
                                 break;
                             case 2:

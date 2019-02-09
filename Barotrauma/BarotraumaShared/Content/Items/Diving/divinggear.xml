@@ -146,7 +146,7 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" description="A battery-powered underwater propulsion device." Scale="0.32">
+  <Item name="Underwater Scooter" identifier="underwaterscooter" category="Equipment" Tags="smallitem,provocative" cargocontaineridentifier="metalcrate" description="A battery-powered underwater propulsion device." Scale="0.32">
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Military" buyprice="150" />
@@ -171,5 +171,6 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell" />
     </ItemContainer>
+    <AiTarget maxsoundrange="2000" minsoundrange="0"/>
   </Item>
 </Items>

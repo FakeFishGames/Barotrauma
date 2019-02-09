@@ -21,7 +21,7 @@
   <sound file="Content/Characters/Legacycrawler/idle2.ogg" state="None" range="500"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
-    <Item identifier="swimbladder"/>
+    <Item identifier="alienblood"/>
   </Inventory>
 
   <ai
