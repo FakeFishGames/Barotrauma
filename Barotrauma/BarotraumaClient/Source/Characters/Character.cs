@@ -39,7 +39,6 @@ namespace Barotrauma
                 if (controlled == value) return;
                 controlled = value;
                 if (controlled != null) controlled.Enabled = true;
-                GameMain.GameSession?.CrewManager?.SetCharacterSelected(controlled);
                 CharacterHealth.OpenHealthWindow = null;
                 
             }

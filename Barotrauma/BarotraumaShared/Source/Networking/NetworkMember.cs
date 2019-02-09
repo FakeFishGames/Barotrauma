@@ -192,6 +192,8 @@ namespace Barotrauma.Networking
 
         public void AddChatMessage(ChatMessage message)
         {
+            if (string.IsNullOrEmpty(message.Text)) { return; }
+
             GameServer.Log(message.TextWithSender, ServerLog.MessageType.Chat);
             
             if (message.Sender != null && !message.Sender.IsDead)
