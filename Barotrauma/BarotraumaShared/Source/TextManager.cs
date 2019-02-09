@@ -41,6 +41,8 @@ namespace Barotrauma
         
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
+            availableLanguages.Clear();
+            textPacks.Clear();
             var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
 
             foreach (string file in textFiles)

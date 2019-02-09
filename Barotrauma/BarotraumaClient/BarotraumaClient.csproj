@@ -243,6 +243,7 @@
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
+    <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
