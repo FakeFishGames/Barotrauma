@@ -255,6 +255,8 @@ namespace Barotrauma
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
+                        // TODO: define, damage is way too low range to hear anything (Math.Max(damage, bleedingDamage))
+                        SoundPlayer.PlayDamageSound(damageSoundType, 5000, WorldPosition);
                         break;
                     }
                 }
