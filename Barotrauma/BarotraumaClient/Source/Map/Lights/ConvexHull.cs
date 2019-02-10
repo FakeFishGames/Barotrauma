@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Barotrauma.Lights
 {
@@ -112,11 +113,11 @@ namespace Barotrauma.Lights
 
         public int shadowVertexCount;
 
-        private Entity parentEntity;
+        private MapEntity parentEntity;
 
         private Rectangle boundingBox;
 
-        public Entity ParentEntity
+        public MapEntity ParentEntity
         {
             get { return parentEntity; }
 
@@ -151,7 +152,7 @@ namespace Barotrauma.Lights
             get { return boundingBox; }
         }
                 
-        public ConvexHull(Vector2[] points, Color color, Entity parent)
+        public ConvexHull(Vector2[] points, Color color, MapEntity parent)
         {
             if (shadowEffect == null)
             {
@@ -567,8 +568,18 @@ namespace Barotrauma.Lights
                 else
                 {
                     //light is inside, convexhull outside
-                    if (chList.Submarine == null) continue;
-
+                    if (chList.Submarine == null)
+                    {
+                        lightPos += (ParentSub.WorldPosition - ParentSub.HiddenSubPosition);
+                        HashSet<RuinGeneration.Ruin> visibleRuins = new HashSet<RuinGeneration.Ruin>();
+                        foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
+                        {
+                            if (!MathUtils.CircleIntersectsRectangle(lightPos, range, ruin.Area)) { continue; }
+                            visibleRuins.Add(ruin);
+                        }
+                        list.AddRange(chList.List.FindAll(ch => ch.ParentEntity?.ParentRuin != null && visibleRuins.Contains(ch.ParentEntity.ParentRuin)));
+                        continue;
+                    }
                     //light and convexhull are both inside the same sub
                     if (chList.Submarine == ParentSub)
                     {

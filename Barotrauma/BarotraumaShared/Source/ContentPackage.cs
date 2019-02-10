@@ -99,6 +99,7 @@ namespace Barotrauma
         }
 
         public string SteamWorkshopUrl;
+        public DateTime? InstallTime;
 
         public bool HideInWorkshopMenu
         {
@@ -160,6 +161,10 @@ namespace Barotrauma
             CorePackage = doc.Root.GetAttributeBool("corepackage", false);
             SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
             GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+            if (doc.Root.Attribute("installtime") != null)
+            {
+                InstallTime = ToolBox.Epoch.ToDateTime(doc.Root.GetAttributeUInt("installtime", 0));
+            }
             
             List<string> errorMsgs = new List<string>();
             foreach (XElement subElement in doc.Root.Elements())
@@ -195,9 +200,9 @@ namespace Barotrauma
                 return true;
             }
 
-            //content package compatibility checks were added in 0.9
-            //0.9 is not compatible with older content packages
-            if (GameVersion < new Version(0, 9))
+            //content package compatibility checks were added in 0.8.9.1
+            //v0.8.9.1 is not compatible with older content packages
+            if (GameVersion < new Version(0, 8, 9, 1))
             {
                 return false;
             }
@@ -266,6 +271,11 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(SteamWorkshopUrl))
             {
                 doc.Root.Add(new XAttribute("steamworkshopurl", SteamWorkshopUrl));
+            }
+
+            if (InstallTime != null)
+            {
+                doc.Root.Add(new XAttribute("installtime", ToolBox.Epoch.FromDateTime(InstallTime.Value)));
             }
 
             foreach (ContentFile file in Files)

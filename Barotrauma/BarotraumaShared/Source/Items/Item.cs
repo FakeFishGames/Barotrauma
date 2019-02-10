@@ -264,6 +264,7 @@ namespace Barotrauma
                     {
                         ic.PlaySound(ActionType.OnBroken, WorldPosition);
                     }
+                    if (Screen.Selected == GameMain.SubEditorScreen) return;
 #endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                 }
@@ -1915,22 +1916,20 @@ namespace Barotrauma
                 element.Add(new XAttribute("condition", condition.ToString("G", CultureInfo.InvariantCulture)));
             }
 
-            System.Diagnostics.Debug.Assert(Submarine != null);
+            Item rootContainer = GetRootContainer() ?? this;
+            System.Diagnostics.Debug.Assert(Submarine != null || rootContainer.ParentInventory?.Owner is Character);
+
+            Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
 
             element.Add(new XAttribute("rect",
-                (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                (int)(rect.X - subPosition.X) + "," +
+                (int)(rect.Y - subPosition.Y) + "," +
                 rect.Width + "," + rect.Height));
             
             if (linkedTo != null && linkedTo.Count > 0)
             {
                 var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
-                string[] linkedToIDs = new string[saveableLinked.Count];
-                for (int i = 0; i < saveableLinked.Count; i++)
-                {
-                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
-                }
-                element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
+                element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
 
             SerializableProperty.SerializeProperties(this, element);
@@ -1980,7 +1979,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError("Attempting to remove an already removed item\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempting to remove an already removed item (" + Name + ")\n" + Environment.StackTrace);
                 return;
             }
             DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");

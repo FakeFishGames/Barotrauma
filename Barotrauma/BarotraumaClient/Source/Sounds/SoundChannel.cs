@@ -550,7 +550,11 @@ namespace Barotrauma.Sounds
                     {
                         startedPlaying = false;
                         buffersToUnqueue = 4;
-                        unqueuedBuffers = (int[])streamBuffers.Clone();
+                        unqueuedBuffers = new int[4];
+                        for (int i = 0; i < 4; i++)
+                        {
+                            unqueuedBuffers[i] = (int)streamBuffers[i];
+                        }
                     }
                     
                     for (int i = 0; i < buffersToUnqueue; i++)

@@ -25,8 +25,7 @@ namespace Barotrauma
         
         public override void Start(Level level)
         {
-            Vector2 spawnPos;
-            Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out spawnPos);
+            Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
 
             bool isClient = false;
 #if CLIENT

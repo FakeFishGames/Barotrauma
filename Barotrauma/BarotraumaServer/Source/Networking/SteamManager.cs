@@ -84,6 +84,14 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        public static void StopAuthSession(ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.server == null) return;
+
+            DebugConsole.Log("SteamManager ending auth session with Steam client " + clientSteamID);
+            instance.server.Auth.EndSession(clientSteamID);
+        }
+
         public static bool CloseServer()
         {
             if (instance == null || !instance.isInitialized || instance.server == null) return false;

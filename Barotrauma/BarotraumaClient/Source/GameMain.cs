@@ -174,9 +174,9 @@ namespace Barotrauma
                 Config.Save();
             }
             
-            TextManager.LoadTextPacks();
-
             ApplyGraphicsSettings();
+
+            GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
             Content.RootDirectory = "Content";
 
@@ -272,11 +272,6 @@ namespace Barotrauma
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
-            GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
-            DebugConsole.Init();
-
-            SteamManager.Initialize();
-
             bool canLoadInSeparateThread = false;
 #if WINDOWS
             canLoadInSeparateThread = true;
@@ -360,7 +355,20 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            
+         
+            GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
+            DebugConsole.Init();
+
+            SteamManager.Initialize();
+            if (Config.AutoUpdateWorkshopItems)
+            {
+                if (SteamManager.AutoUpdateWorkshopItems())
+                {
+                    ContentPackage.LoadAll(ContentPackage.Folder);
+                    Config.ReloadContentPackages();
+                }
+            }
+
             if (SelectedPackages.Count == 0)
             {
                 DebugConsole.Log("No content packages selected");

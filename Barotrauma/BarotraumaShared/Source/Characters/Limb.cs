@@ -445,6 +445,7 @@ namespace Barotrauma
             float rot = body.Rotation;
             if (Dir == -1) rot -= MathHelper.Pi;
 
+            // TODO: test that this is in sync with the debug info.
             Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
 
             float mid = (armorLimits.X + armorLimits.Y) / 2.0f;

@@ -721,11 +721,20 @@ namespace Barotrauma
 
             commands.Add(new Command("fixhulls|fixwalls", "fixwalls/fixhulls: Fixes all walls.", (string[] args) =>
             {
-                foreach (Structure w in Structure.WallList)
+                var walls = new List<Structure>(Structure.WallList);
+                foreach (Structure w in walls)
                 {
-                    for (int i = 0; i < w.SectionCount; i++)
+                    try
                     {
-                        w.AddDamage(i, -100000.0f);
+                        for (int i = 0; i < w.SectionCount; i++)
+                        {
+                            w.AddDamage(i, -100000.0f);
+                        }
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     }
                 }
             }, null, true));
@@ -891,30 +900,6 @@ namespace Barotrauma
             }));
 
 #if DEBUG
-            commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
-            {
-                if (Submarine.MainSub == null) return;
-                SteamManager.SaveToWorkshop(Submarine.MainSub);
-            }));
-
-            commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
-            {
-                void itemsReceived(IList<Facepunch.Steamworks.Workshop.Item> items)
-                {
-                    foreach (var item in items)
-                    {
-                        Log("*********************************");
-                        Log(item.Title);
-                        Log(item.Description);
-                        Log("Size: " + item.Size / 1024 +" kB");
-                        Log("Directory: " + item.Directory);
-                        Log("Installed: " + item.Installed);
-                    }
-                }
-                
-                SteamManager.GetSubscribedWorkshopItems(itemsReceived);
-            }));
-
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
             {
                 if (args.Count() < 2 || (GameMain.NetworkMember == null)) return;
@@ -1027,6 +1012,18 @@ namespace Barotrauma
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
                 }
             }));
+
+            commands.Add(new Command("money", "", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                {
+                    if (int.TryParse(args[0], out int money))
+                    {
+                        campaign.Money += money;
+                    }
+                }
+            }, isCheat: true));
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
@@ -1645,7 +1642,7 @@ namespace Barotrauma
                 }
             }
 
-            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {
@@ -1653,7 +1650,7 @@ namespace Barotrauma
             }
 
             string filePath = Path.Combine(SavePath, fileName);
-            if (File.Exists(filePath))
+            if (File.Exists(filePath + ".txt"))
             {
                 int fileNum = 2;
                 while (File.Exists(filePath + " (" + fileNum + ")"))
@@ -1665,7 +1662,7 @@ namespace Barotrauma
 
             try
             {
-                File.WriteAllLines(filePath, unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+                File.WriteAllLines(filePath + ".txt", unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
             }
             catch (Exception e)
             {

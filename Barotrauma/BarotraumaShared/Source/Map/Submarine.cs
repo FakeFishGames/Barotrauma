@@ -109,7 +109,7 @@ namespace Barotrauma
             set { name = value; }
         }
 
-        public bool OnSonar = true;
+        public bool ShowSonarMarker = true;
 
         public string Description
         {
@@ -388,6 +388,7 @@ namespace Barotrauma
         public void MakeOutpost()
         {
             IsOutpost = true;
+            ShowSonarMarker = false;
             PhysicsBody.FarseerBody.IsStatic = true;
             
             foreach (MapEntity me in MapEntity.mapEntityList)
@@ -750,7 +751,50 @@ namespace Barotrauma
             
             return closestBody;
         }
-        
+
+        public static List<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        {
+            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
+            {
+                rayEnd += Vector2.UnitX * 0.001f;
+            }
+
+            float closestFraction = 1.0f;
+            List<Body> bodies = new List<Body>();
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
+            {
+                if (fixture == null ||
+                    (ignoreSensors && fixture.IsSensor) ||
+                    fixture.CollisionCategories == Category.None ||
+                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
+
+                if (customPredicate != null && !customPredicate(fixture)) return -1;
+
+                if (collisionCategory != null &&
+                    !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
+                    !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
+
+                if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
+
+                if (fixture.Body.UserData is Structure structure)
+                {
+                    if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
+                }
+
+                bodies.Add(fixture.Body);
+                if (fraction < closestFraction)
+                {
+                    lastPickedPosition = rayStart + (rayEnd - rayStart) * fraction;
+                    lastPickedFraction = fraction;
+                    lastPickedNormal = normal;
+                }
+
+                return fraction;
+            }, rayStart, rayEnd);
+            
+            return bodies;
+        }
+
         /// <summary>
         /// check visibility between two points (in sim units)
         /// </summary>

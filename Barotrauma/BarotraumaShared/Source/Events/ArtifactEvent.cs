@@ -64,19 +64,14 @@ namespace Barotrauma
             item = new Item(itemPrefab, spawnPos, null);
             item.body.FarseerBody.IsKinematic = true;
 
-            //try to find a nearby artifact holder (or any alien itemcontainer) and place the artifact inside it
+            //try to find an artifact holder and place the artifact inside it
             foreach (Item it in Item.ItemList)
             {
-                if (it.Submarine != null || !it.HasTag("alien")) continue;
-
-                if (Math.Abs(item.WorldPosition.X - it.WorldPosition.X) > 2000.0f) continue;
-                if (Math.Abs(item.WorldPosition.Y - it.WorldPosition.Y) > 2000.0f) continue;
+                if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
 
                 var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                 if (itemContainer == null) continue;
-
-                itemContainer.Combine(item);
-                break;
+                if (itemContainer.Combine(item)) break; // Placement successful
             }
 
             if (GameSettings.VerboseLogging)

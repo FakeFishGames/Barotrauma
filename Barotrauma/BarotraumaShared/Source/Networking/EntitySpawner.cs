@@ -185,5 +185,11 @@ namespace Barotrauma
                 removedEntity.Remove();
             }
         }
+
+        public void Reset()
+        {
+            removeQueue.Clear();
+            spawnQueue.Clear();
+        }
     }
 }

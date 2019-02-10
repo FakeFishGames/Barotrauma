@@ -58,7 +58,7 @@ namespace Barotrauma
         private static GUIFrame pauseMenu;
         private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
 
-        public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
+        public static KeyboardDispatcher KeyboardDispatcher { get; set; }
 
         /// <summary>
         /// Has the selected Screen changed since the last time the GUI was drawn.
@@ -136,7 +136,6 @@ namespace Barotrauma
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GUI.graphicsDevice = graphicsDevice;
-            KeyboardDispatcher = new KeyboardDispatcher(window);
             var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
             if (uiStyles.Count == 0)
             {

@@ -480,22 +480,25 @@ namespace Barotrauma
             }
         }
 
+        private bool canBeDragged = true;
         public bool CanBeDragged
         {
             get
             {
-                if (Removed || !AnimController.Draggable) return false;
+                if (!canBeDragged) { return false; }
+                if (Removed || !AnimController.Draggable) { return false; }
                 return IsDead || Stun > 0.0f || LockHands || IsUnconscious;
             }
+            set { canBeDragged = value; }
         }
-        
+
         //can other characters access the inventory of this character
+        private bool canInventoryBeAccessed = true;
         public bool CanInventoryBeAccessed
         {
             get
             {
-                if (Removed || Inventory == null) return false;
-
+                if (!canInventoryBeAccessed || Removed || Inventory == null) { return false; }
                 if (!Inventory.AccessibleWhenAlive)
                 {
                     return IsDead;
@@ -505,6 +508,7 @@ namespace Barotrauma
                     return (IsDead || Stun > 0.0f || LockHands || IsUnconscious);
                 }
             }
+            set { canInventoryBeAccessed = value; }
         }
 
         public override Vector2 SimPosition
@@ -519,7 +523,11 @@ namespace Barotrauma
 
         public override Vector2 DrawPosition
         {
-            get { return AnimController.MainLimb.body.DrawPosition; }
+            get
+            {
+                if (AnimController.MainLimb == null) { return Vector2.Zero; }
+                return AnimController.MainLimb.body.DrawPosition;
+            }
         }
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
@@ -742,7 +750,7 @@ namespace Barotrauma
             if (head == null) { return; }
             if (headId.HasValue)
             {
-                Info.HeadSpriteId = headId.Value;
+                Info.Head.HeadSpriteId = headId.Value;
                 Info.LoadHeadSprite();
                 Info.HairIndex = hairIndex ?? -1;
                 Info.BeardIndex = beardIndex ?? -1;
@@ -1579,12 +1587,12 @@ namespace Barotrauma
                 if (!CanInteractWith(c)) continue;
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
-                if (dist < maxDist*maxDist && (closestCharacter == null || dist < closestDist))
+                if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))
                 {
                     closestCharacter = c;
                     closestDist = dist;
                 }
-                
+
                 /*FarseerPhysics.Common.Transform transform;
                 c.AnimController.Collider.FarseerBody.GetTransform(out transform);
                 for (int i = 0; i < c.AnimController.Collider.FarseerBody.FixtureList.Count; i++)
@@ -1718,7 +1726,7 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Health))
+            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow)
             {
                 if (focusedCharacter == SelectedCharacter)
                 {
@@ -1783,18 +1791,46 @@ namespace Barotrauma
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        c.Enabled =
-                            c.IsRemotePlayer ||
-                            CharacterList.Any(c2 =>
-                                c != c2 &&
-                                (c2.IsRemotePlayer) &&
-                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                        if (c == Controlled || c.IsRemotePlayer)
+                        {
+                            c.Enabled = true;
+                        }
+                        else
+                        {
+                            float distSqr = float.MaxValue;
+                            foreach (Character otherCharacter in CharacterList)
+                            {
+                                if (otherCharacter == c || !otherCharacter.IsRemotePlayer) { continue; }
+                                distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, c.WorldPosition));
+                            }
+
+                            if (distSqr > NetConfig.DisableCharacterDistSqr)
+                            {
+                                c.Enabled = false;
+                            }
+                            else if (distSqr < NetConfig.EnableCharacterDistSqr)
+                            {
+                                c.Enabled = true;
+                            }
+                        }                        
                     }
                     else if (Submarine.MainSub != null)
                     {
                         //disable AI characters that are far away from the sub and the controlled character
-                        c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
-                            (Controlled != null && Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                        float distSqr = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition);
+                        if (Controlled != null)
+                        {
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition));
+                        }
+                        
+                        if (distSqr > NetConfig.DisableCharacterDistSqr)
+                        {
+                            c.Enabled = false;
+                        }
+                        else if ( distSqr < NetConfig.EnableCharacterDistSqr)
+                        {
+                            c.Enabled = true;
+                        }
                     }
 
                 }
@@ -1996,15 +2032,16 @@ namespace Barotrauma
         private void UpdateSightRange()
         {
             if (aiTarget == null) { return; }
+            // TODO: the formula might need some tweaking
             float range = (float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f;
-            aiTarget.SightRange = MathHelper.Clamp(range, 2000.0f, 50000.0f);
+            aiTarget.SightRange = MathHelper.Clamp(range, 0, 15000.0f);
         }
 
         private void UpdateSoundRange()
         {
             if (aiTarget == null) { return; }
-            float range = (float)Math.Sqrt(Mass) * 100.0f + AnimController.Collider.LinearVelocity.Length() * Noise;
-            aiTarget.SoundRange = MathHelper.Clamp(range, 2000f, 50000f);
+            float range = Mass / 5 * AnimController.TargetMovement.Length() * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 0f, 5000f);
         }
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
@@ -2273,6 +2310,8 @@ namespace Barotrauma
 
         private void Implode(bool isNetworkMessage = false)
         {
+            if (CharacterHealth.Unkillable) { return; }
+
             if (!isNetworkMessage)
             {
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return; 
@@ -2281,7 +2320,7 @@ namespace Barotrauma
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
             CharacterHealth.SetAllDamage(200.0f, 0.0f, 0.0f);
-            BreakJoints();            
+            BreakJoints();
         }
 
         public void BreakJoints()

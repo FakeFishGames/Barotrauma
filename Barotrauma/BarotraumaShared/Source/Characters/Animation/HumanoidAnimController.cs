@@ -311,6 +311,7 @@ namespace Barotrauma
         public override void UpdateAnim(float deltaTime)
         {
             if (Frozen) return;
+            if (MainLimb == null) { return; }
 
             levitatingCollider = true;
             ColliderIndex = Crouching ? 1 : 0;
@@ -335,8 +336,7 @@ namespace Barotrauma
             else
             {
                 deathAnimTimer = 0.0f;
-            }
-            
+            } 
 
             if (!character.AllowInput)
             {
@@ -1708,26 +1708,33 @@ namespace Barotrauma
 
             if (holdable.Pusher != null)
             {
-                if (!holdable.Pusher.Enabled)
+                if (character.IsUnconscious || character.Stun > 0.0f)
                 {
-                    holdable.Pusher.Enabled = true;
-                    holdable.Pusher.ResetDynamics();
-                    holdable.Pusher.SetTransform(currItemPos, itemAngle);
-                    foreach (Character character in Character.CharacterList)
-                    {
-                        holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
-                    }
-                    holdable.Pusher.FarseerBody.IgnoreCollisionWith(Collider.FarseerBody);
+                    holdable.Pusher.Enabled = false;
                 }
                 else
                 {
-                    holdable.Pusher.TargetPosition = currItemPos;
-                    holdable.Pusher.TargetRotation = character.IsUnconscious || character.Stun > 0.0f ? itemAngle : holdAngle * Dir;
+                    if (!holdable.Pusher.Enabled)
+                    {
+                        holdable.Pusher.Enabled = true;
+                        holdable.Pusher.ResetDynamics();
+                        holdable.Pusher.SetTransform(currItemPos, itemAngle);
+                        foreach (Character character in Character.CharacterList)
+                        {
+                            holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
+                        }
+                        holdable.Pusher.FarseerBody.IgnoreCollisionWith(Collider.FarseerBody);
+                    }
+                    else
+                    {
+                        holdable.Pusher.TargetPosition = currItemPos;
+                        holdable.Pusher.TargetRotation = character.IsUnconscious || character.Stun > 0.0f ? itemAngle : holdAngle * Dir;
 
-                    holdable.Pusher.MoveToTargetPosition(true);
+                        holdable.Pusher.MoveToTargetPosition(true);
 
-                    currItemPos = holdable.Pusher.SimPosition;
-                    itemAngle = holdable.Pusher.Rotation;
+                        currItemPos = holdable.Pusher.SimPosition;
+                        itemAngle = holdable.Pusher.Rotation;
+                    }
                 }
             }
 
@@ -1847,6 +1854,8 @@ namespace Barotrauma
                     TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false);
                 }
             }
+
+            if (!character.Enabled) { return; }
 
             Vector2 handSimPos = ConvertUnits.ToSimUnits(handWorldPos);
             if (character.Submarine != null)

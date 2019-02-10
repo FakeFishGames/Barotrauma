@@ -209,6 +209,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            textBlock.TextDepth = item.SpriteDepth - 0.0001f;
             textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + new Vector2(scrollAmount + scrollPadding, 0.0f);
             textBlock.DrawManually(spriteBatch);
         }

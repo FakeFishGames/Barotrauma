@@ -395,8 +395,16 @@ namespace Barotrauma
             msg.Write(ConfigPath);
             msg.Write(seed);
 
-            msg.Write(WorldPosition.X);
-            msg.Write(WorldPosition.Y);
+            if (Removed)
+            {
+                msg.Write(0.0f);
+                msg.Write(0.0f);
+            }
+            else
+            {
+                msg.Write(WorldPosition.X);
+                msg.Write(WorldPosition.Y);
+            }
 
             msg.Write(Enabled);
 
