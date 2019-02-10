@@ -179,6 +179,8 @@ namespace Barotrauma.Media
 
             LibVlcWrapper.LibVlcMethods.libvlc_media_release(media);
             LibVlcWrapper.LibVlcMethods.libvlc_media_player_release(mediaPlayer);
+            
+            texture.Dispose();
 
             videos.Remove(videoId);
         }
