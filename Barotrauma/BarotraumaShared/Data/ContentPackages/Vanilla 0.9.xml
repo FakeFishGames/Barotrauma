@@ -60,6 +60,7 @@
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
+  <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
   <Character file="Content/Characters/Molochboss/Molochboss.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml" />
@@ -69,6 +70,7 @@
   <Submarine file="Submarines/Orca.sub" />
   <Submarine file="Submarines/Typhon.sub" />
   <Submarine file="Submarines/Muikku.sub" />
+  <Submarine file="Submarines/Bunyip.sub" />
   <Submarine file="Submarines/Humpback.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
   <Text file="Content/Texts/EnglishVanillaLoadingTips.xml" />

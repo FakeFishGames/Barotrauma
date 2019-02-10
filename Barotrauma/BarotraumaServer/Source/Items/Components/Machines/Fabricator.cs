@@ -10,7 +10,6 @@ namespace Barotrauma.Items.Components
 {
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
-
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
@@ -29,9 +28,6 @@ namespace Barotrauma.Items.Components
                 if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
                 if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
 
-#if CLIENT
-                SelectItem(null, fabricableItems[itemIndex]);
-#endif
                 StartFabricating(fabricableItems[itemIndex], c.Character);
             }
         }

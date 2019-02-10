@@ -16,7 +16,7 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" />
-    <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="35,13" particles="weld">
+    <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="35,13" particles="weld" repairthroughwalls="true">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitter particle="weld" particlespersecond="50" />
@@ -29,7 +29,7 @@
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-1.0" />
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="20.0" Condition="3.0" />
+      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable identifier="structure" />
       <!-- mechanic skill 20 required to use the item -->
@@ -128,10 +128,10 @@
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -141,10 +141,10 @@
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" />
   </Item>
   <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -159,10 +159,10 @@
     </MeleeWeapon>
   </Item>
   <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="20" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>

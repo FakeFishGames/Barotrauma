@@ -8,21 +8,37 @@
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
 
+    <SuitableTreatment identifier="bloodloss" suitability="20" />
+
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,768,64,64" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="238,0,76,144" depth="0.6" origin="0.5,0.5" />
     <Body width="76" height="144" density="20" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
-      <StatusEffect tags="poison" type="OnUse" target="Character" delay="20" duration="20.0">
-        <Affliction identifier="psychosis" amount="1" />
-        <Affliction identifier="internaldamage" amount="0.2" />
+     
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+
+      <RequiredSkill identifier="medical" level="40" />
+      
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="5.0">
+        <Affliction identifier="psychosis" amount="5" />
+        <ReduceAffliction identifier="bloodloss" amount="6" />
       </StatusEffect>
+
+      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5.0">
+        <Affliction identifier="psychosis" amount="10" />
+        <ReduceAffliction identifier="bloodloss" amount="4" />
+      </StatusEffect>
+      
+      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
   </Item>
+  
+  
   <Item name="Velonaceps Calyx Eggs" identifier="huskeggs" category="Material" 
         cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" 
         description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'." 
@@ -33,7 +49,7 @@
     <Sprite texture="Content/Items/Medical/Medicines.png" sourcerect="435,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="62" height="115" density="20" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
         <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
         <Conditional HuskInfectionState="lt 0.01" />
@@ -44,6 +60,8 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
+  
+  
   <Item name="Swim Bladder" identifier="swimbladder" 
         description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline." 
         category="Misc" scale="0.2">

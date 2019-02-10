@@ -106,7 +106,7 @@ namespace Barotrauma
 
             characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
             {
-                Spacing = (int)(3 * GUI.Scale),
+                //Spacing = (int)(3 * GUI.Scale),
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
                 CanBeFocused = false
@@ -144,6 +144,11 @@ namespace Barotrauma
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
                         }
                         textbox.Deselect();
                         textbox.Text = "";
@@ -341,6 +346,7 @@ namespace Barotrauma
 
             int iconSize = (int)(height * 0.8f);
 
+
             var frame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, height), parent.RectTransform), style: "InnerFrame")
             {
                 UserData = character,
@@ -350,6 +356,15 @@ namespace Barotrauma
             frame.SelectedColor = Color.Lerp(frame.Color, Color.White, 0.5f);
             frame.HoverColor = Color.Lerp(frame.Color, Color.White, 0.9f);
 
+            new GUIFrame(new RectTransform(new Point(characterInfoWidth, (int)(frame.Rect.Height * 1.3f)), frame.RectTransform, Anchor.CenterLeft), style: "OuterGlow")
+            {
+                UserData = "highlight",
+                Color = frame.SelectedColor,
+                HoverColor = frame.SelectedColor,
+                PressedColor = frame.SelectedColor,
+                SelectedColor = frame.SelectedColor,
+                CanBeFocused = false
+            };
             //---------------- character area ----------------
 
             string characterToolTip = character.Info.Name;
@@ -526,23 +541,6 @@ namespace Barotrauma
             return true;
         }
 
-        /// <summary>
-        /// Sets which character is selected in the crew UI (highlight effect etc)
-        /// </summary>
-        public void SetCharacterSelected(Character character)
-        {
-            if (character != null && !characters.Contains(character)) return;
-
-            //GUIComponent selectedCharacterFrame = null;
-            foreach (GUIComponent child in characterListBox.Content.Children)
-            {
-                GUIButton button = child.Children.FirstOrDefault(c => c.UserData is Character) as GUIButton;
-                if (button == null) continue;
-
-                child.Visible = (Character)button.UserData != character;
-            }
-        }
-
         public void ReviveCharacter(Character revivedCharacter)
         {
             if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
@@ -616,6 +614,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
                 return;
             }
+            if (string.IsNullOrEmpty(text)) { return; }
 
             chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
@@ -661,7 +660,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
-                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName), ChatMessageType.Order);
+                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
@@ -674,11 +673,11 @@ namespace Barotrauma
                 return;
             }
 
-            character.SetOrder(order, option, orderGiver);
+            character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), ChatMessageType.Order);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
             }
             else if (orderGiver != null)
             {
@@ -805,6 +804,12 @@ namespace Barotrauma
                         style: "InnerFrame");
                     optionFrames.Add(optionFrame);
 
+                    new GUIFrame(new RectTransform(Vector2.One, optionFrame.RectTransform, Anchor.Center),
+                        style: "OuterGlow")
+                    {
+                        Color = Color.Black * 0.7f
+                    };
+
                     var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, Anchor.Center))
                     {
                         Stretch = true,
@@ -873,7 +878,9 @@ namespace Barotrauma
             }
             int shadowSize = (int)(200 * GUI.Scale);
             orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
-                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, style: "OuterGlow", color: Color.Black * 0.65f);
+                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, 
+                style: "OuterGlow",
+                color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
         
 #region Updating and drawing the UI
@@ -992,21 +999,25 @@ namespace Barotrauma
                 chatBox.Update(deltaTime);
                 chatBox.InputBox.Visible = Character.Controlled != null;
 
-                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                    !DebugConsole.IsOpen && chatBox.InputBox.Visible)
+                if (!DebugConsole.IsOpen && chatBox.InputBox.Visible)
                 {
-                    if (chatBox.InputBox.Selected)
+                    if (PlayerInput.KeyHit(InputType.Chat))
                     {
-                        chatBox.InputBox.Text = "";
-                        chatBox.InputBox.Deselect();
+                        if (chatBox.InputBox.Selected)
+                        {
+                            chatBox.InputBox.Text = "";
+                            chatBox.InputBox.Deselect();
+                        }
+                        else
+                        {
+                            chatBox.InputBox.Select();
+                        }
                     }
-                    else
+
+                    if (PlayerInput.KeyHit(InputType.RadioChat) && !chatBox.InputBox.Selected)
                     {
                         chatBox.InputBox.Select();
-                        if (PlayerInput.KeyHit(InputType.RadioChat))
-                        {
-                            chatBox.InputBox.Text = "r; ";
-                        }
+                        chatBox.InputBox.Text = "r; ";                        
                     }
                 }
             }
@@ -1019,12 +1030,15 @@ namespace Barotrauma
 
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
+                Character character = (Character)child.UserData;
                 child.Visible = 
                     Character.Controlled == null || 
-                    (Character.Controlled != ((Character)child.UserData) && Character.Controlled.TeamID == ((Character)child.UserData).TeamID);
+                    (Character.Controlled.TeamID == character.TeamID);
 
                 if (child.Visible)
                 {
+                    child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
+
                     GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
                     if (wrongOrderList != null)
                     {

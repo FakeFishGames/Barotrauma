@@ -207,8 +207,15 @@ namespace Barotrauma
 #if !(LINUX || OSX)
         private void DrawSplashScreen(SpriteBatch spriteBatch)
         {
+            bool vsync = GameMain.Config.VSyncEnabled;
             if (videoPlayer == null)
             {
+                // Enforce the vsync so that the video player doesn't eat all the vram
+                if (!GameMain.Config.VSyncEnabled)
+                {
+                    GameMain.Config.VSyncEnabled = true;
+                    GameMain.Instance.ApplyGraphicsSettings();
+                }
                 videoPlayer = new VideoPlayer();
                 videoPlayer.Play(splashScreenVideo);
                 videoPlayer.Volume = GameMain.Config.SoundVolume;
@@ -224,6 +231,12 @@ namespace Barotrauma
 
                     splashScreenVideo.Dispose();
                     splashScreenVideo = null;
+                    // If the vsync was enforced, restore the user preference
+                    if (GameMain.Config.VSyncEnabled != vsync)
+                    {
+                        GameMain.Config.VSyncEnabled = vsync;
+                        GameMain.Instance.ApplyGraphicsSettings();
+                    }
                 }
                 else
                 {
@@ -238,7 +251,6 @@ namespace Barotrauma
                         videoPlayer.Stop();
                     }
                 }
-
             }
         }
 #endif

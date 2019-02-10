@@ -212,6 +212,8 @@ namespace Barotrauma.Networking
 
         public virtual void AddChatMessage(ChatMessage message)
         {
+            if (string.IsNullOrEmpty(message.Text)) { return; }
+                        
             if (message.Sender != null && !message.Sender.IsDead)
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);

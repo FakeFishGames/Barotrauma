@@ -14,24 +14,28 @@
   <LoadingScreenTip>Supercapacitors can deliver large bursts of power, but cannot store as much energy as batteries. They are often used to power railguns and other devices that require brief bursts of high current.</LoadingScreenTip>
   <LoadingScreenTip>Nuclear reactors are equipped with an automatic control system that adjusts the power output to a suitable level when enabled. However, the system is not always fast enough to react to large fluctuations in power consumption.</LoadingScreenTip>
   <LoadingScreenTip>The sonar imaging on the navigation terminal may become inaccurate if the terminal is damaged - make sure your engineers keep the terminal in a good condition!</LoadingScreenTip>
+  <LoadingScreenTip>When deploying a decoy, be sure to deactivate your active sonar for best results.</LoadingScreenTip>
   
   <LoadingScreenTip>Attempting to rewire powered devices without adequate electrical engineering skills may get you electrocuted.</LoadingScreenTip>
   <LoadingScreenTip>Welding tools are simple enough to be used by any submariner, but trained mechanics are generally faster welders and have a lower risk of injuring themselves with the tool.</LoadingScreenTip>
   <LoadingScreenTip>All submariners have been trained to do basic repairs on electrical devices, but electrical engineers get the job done much faster.</LoadingScreenTip>
   <LoadingScreenTip>All submariners have been trained to do basic repairs on mechanical devices, but mechanics get the job done much faster.</LoadingScreenTip>
   <LoadingScreenTip>Captains are generally much more adept at manouvering the submarine than the average sailor.</LoadingScreenTip>
+  <LoadingScreenTip>If the reactor on a sub is not able to produce sufficient power to run all onboard systems, try reducing the charge rate for the onboard batteries and supercapacitors, or regulate the times when the sub is running at full speed.</LoadingScreenTip>
+  <LoadingScreenTip>The electrical and mechanical systems on a sub will gradually degrade due to the harsh conditions and constant wear and tear. Be sure to have mechanics and engineers perform maintenance from time to time in order to avoid breakdowns at inopportune moments.</LoadingScreenTip>
 
   <LoadingScreenTip>Breaking down alien artifacts in a deconstructor may provide you with exotic raw materials.</LoadingScreenTip>  
   <LoadingScreenTip>Some of the alien structures on Europa have been constructed of a metamaterial that's outstandingly resistant to physical damage, and as such has become an important subject of research to Europan scientists.</LoadingScreenTip>
   <LoadingScreenTip>Special caution must be taken when bringing alien artifacts on board the submarine.</LoadingScreenTip>
   <LoadingScreenTip>Very little is known of the presumably extinct alien civilization that built the ruins scattered all across Europa. The age of the ruins is also a mystery, since the self-repairing properties of the structures and devices make chronological dating methods wildly inaccurate.</LoadingScreenTip>
   <LoadingScreenTip>No remains of the alien lifeforms that built the ruins scattered all across Europa have ever been discovered. The only life encountered inside the structures are the biomechanical entities that maintain and guard them.</LoadingScreenTip>
+  <LoadingScreenTip>While exploring ruins or caves, drop flares as often as possible to help mark a path out, should you need to make a hasty exit for some reason.</LoadingScreenTip>
 
   <LoadingScreenTip>The cephalopod-like watchers are generally docile, but may attack when provoked.</LoadingScreenTip>
   <LoadingScreenTip>Cannibalistic behavior is very common among crawlers. Killing one in a swarm may distract the rest as they enter into a feeding frenzy.</LoadingScreenTip>
   <LoadingScreenTip>Mud raptors can easily tear their way through metal doors with their sharp beak.</LoadingScreenTip>
   <LoadingScreenTip>The so-called husk parasites slowly take over and consume the body of their host, eventually turning them into nothing but an empty exoskeleton controlled by the parasite.</LoadingScreenTip>
-  <LoadingScreenTip>Many creatures on Europa are protected by a strong shell, and are difficult to damage with conventional weapons unless hit from below.</LoadingScreenTip>
+  <LoadingScreenTip>Many creatures on Europa are protected by a strong shell, and are difficult to damage with conventional weapons, though there may be weak points in their armor.</LoadingScreenTip>
   <LoadingScreenTip>Loud devices and sonar pings may alert nearby creatures.</LoadingScreenTip>
   
   <LoadingScreenTip>Performing CPR without adequate medical skills may cause internal damage to the patient.</LoadingScreenTip>
@@ -40,6 +44,8 @@
   <LoadingScreenTip>Bleeding wounds can be treated with bandages and hemostatic agents. The patient may also need saline or blood packs to replace the lost blood.</LoadingScreenTip>
   <LoadingScreenTip>Mental disorders such as psychosis are unfortunately common among submarine crews, particularly after ruin expeditions. If your crewmates start seeing or hearing things others don't see or hear, report it to a medical doctor immediately.</LoadingScreenTip>
   <LoadingScreenTip>The Medical Doctors' main task is to keep the crew in a good shape, but a medic with a syringe gun and a bit of knowhow on poisons can also be very useful in fending off intruders.</LoadingScreenTip>
+  <LoadingScreenTip>Administering drugs without sufficient medical knowledge may reduce the number of doses a single syringe provides, and may also reduce the quality of the effects of the drug.</LoadingScreenTip>
+  <LoadingScreenTip>Many drugs may have unintended side effects, keep an eye on the patient and be ready to administer additional medications to counteract these side effects if necessary.</LoadingScreenTip>
   
   <LoadingScreenTip>When using a diving mask, be careful not to mix up welding fuel tanks and oxygen tanks.</LoadingScreenTip>
   <LoadingScreenTip>Diving masks let you breathe underwater, but don't offer any protection against the bone-crushing pressure outside the submarine. If there's a major hull breach, find a diving suit immediately.</LoadingScreenTip>
@@ -47,10 +53,12 @@
   <LoadingScreenTip>Traversing the so-called Hydrothermal Wastes requires special caution. Not only are they abundant in wildlife, but the water currents caused by geothermal activity make navigation even more hazardous.</LoadingScreenTip>
   <LoadingScreenTip>Some of the sessile lifeforms in Europa emit low-frequency sounds that may disrupt the submarine's sonar.</LoadingScreenTip>
   <LoadingScreenTip>Be careful not to dive too deep. Most submarine hulls will start collapsing at the depth of approximately 2000 meters.</LoadingScreenTip>
+  <LoadingScreenTip>Europa is rich in natural resources, and an enterprising captain with a sharp eye and a plasma cutter may stand to make a tidy profit.</LoadingScreenTip>
 
   <LoadingScreenTip>You can disguise yourself as someone else by wearing their ID card and something that covers your face.</LoadingScreenTip>
   
   <LoadingScreenTip>It's possible to build voice-controlled systems by linking wifi components to the radio chat in the submarine editor.</LoadingScreenTip>
+
 
   <!-- Lore -->
   <LoadingScreenTip>The radiation belts around Jupiter make it impracticable to establish permanent settlements above Europa's surface, and as such almost all Europan outposts are located below its icy crust.</LoadingScreenTip>

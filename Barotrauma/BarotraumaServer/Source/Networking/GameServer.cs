@@ -1098,7 +1098,7 @@ namespace Barotrauma.Networking
                     if (!character.Enabled) continue;
                     if (c.Character != null &&
                         Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.CharacterIgnoreDistanceSqr)
+                        NetConfig.DisableCharacterDistSqr)
                     {
                         continue;
                     }
@@ -1342,7 +1342,8 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
+            initiatedStartGame = true;
+            startGameCoroutine = CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
 
             return true;
         }
@@ -1728,6 +1729,7 @@ namespace Barotrauma.Networking
 
         public override void AddChatMessage(ChatMessage message)
         {
+            if (string.IsNullOrEmpty(message.Text)) { return; }
             Log(message.TextWithSender, ServerLog.MessageType.Chat);
             base.AddChatMessage(message);
         }
@@ -1842,6 +1844,8 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
 
             Log(msg, ServerLog.MessageType.ServerMessage);
+
+            if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
 
             client.Connection.Disconnect(targetmsg);
             client.Dispose();

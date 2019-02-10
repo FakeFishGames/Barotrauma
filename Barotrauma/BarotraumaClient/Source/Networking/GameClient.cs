@@ -1181,6 +1181,8 @@ namespace Barotrauma.Networking
 
                         if (lobbyUpdated)
                         {
+                            var prevDispatcher = GUI.KeyboardDispatcher.Subscriber;
+
                             UInt16 updateID     = inc.ReadUInt16();
 
                             UInt16 settingsLen = inc.ReadUInt16();
@@ -1249,9 +1251,11 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetBotCount(botCount);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
-                                
+
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
+
+                                GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
                         }
 
@@ -1700,6 +1704,8 @@ namespace Barotrauma.Networking
         public override void AddChatMessage(ChatMessage message)
         {
             base.AddChatMessage(message);
+
+            if (string.IsNullOrEmpty(message.Text)) { return; }
 
             GameMain.NetLobbyScreen.NewChatMessage(message);
             chatBox.AddMessage(message);

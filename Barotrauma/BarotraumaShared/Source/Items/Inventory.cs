@@ -189,6 +189,16 @@ namespace Barotrauma
             }
         }
 
+        public bool IsEmpty()
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (Items[i] != null) return false;
+            }
+
+            return true;
+        }
+
         protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent)
         {
             if (item?.ParentInventory == null || Items[index] == null) return false;

@@ -102,7 +102,7 @@
     </RangedWeapon>
     <ItemContainer capacity="4" itempos="0,10" hideitems="false">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
-      <Containable identifiers="syringe,medicalsyringe" />
+      <Containable identifiers="syringe" />
     </ItemContainer>
   </Item>
   <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem">

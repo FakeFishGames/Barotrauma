@@ -244,6 +244,7 @@
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\ServerSettings.cs" />
+    <Compile Include="Source\Networking\SteamManager.cs" />
     <Compile Include="Source\Networking\Voip\VoipCapture.cs" />
     <Compile Include="Source\Networking\Voip\VoipClient.cs" />
     <Compile Include="Source\Networking\Voip\VoipConfig.cs" />

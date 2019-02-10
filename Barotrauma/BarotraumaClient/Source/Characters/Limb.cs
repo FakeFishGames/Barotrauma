@@ -415,6 +415,8 @@ namespace Barotrauma
                     Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
                 }
+                var bodyDrawPos = body.DrawPosition;
+                bodyDrawPos.Y = -bodyDrawPos.Y;
                 if (IsStuck)
                 {
                     Vector2 from = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorA);
@@ -424,9 +426,7 @@ namespace Barotrauma
                     var localFront = body.GetLocalFront(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
-                    var drawPos = body.DrawPosition;
-                    drawPos.Y = -drawPos.Y;
-                    GUI.DrawLine(spriteBatch, drawPos, front, Color.Yellow, width: 2);
+                    GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);
                     GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 1);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
@@ -440,7 +440,23 @@ namespace Barotrauma
                     //mainLimbDrawPos.Y = -mainLimbDrawPos.Y;
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
-
+                }
+                foreach (var modifier in damageModifiers)
+                {
+                    float rot = body.Rotation;
+                    rot = MathUtils.WrapAngleTwoPi(rot);
+                    if (Dir == -1) { rot -= MathHelper.Pi; }
+                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
+                    float x = modifier.ArmorSector.X;
+                    float y = modifier.ArmorSector.Y;
+                    float from = Math.Min(x, y);
+                    float to = Math.Max(x, y);
+                    float angle = to - from;
+                    angle *= Dir;
+                    //float o = (-MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation) - MathHelper.PiOver2) * Dir;
+                    float offset = -rot - from * Dir - MathHelper.PiOver2 * Dir;
+                    Color c = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, -angle, 40, c, offset, thickness: 2 / cam.Zoom);
                 }
             }
         }

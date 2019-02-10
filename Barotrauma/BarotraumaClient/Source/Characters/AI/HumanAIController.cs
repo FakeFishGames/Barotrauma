@@ -52,7 +52,8 @@ namespace Barotrauma
                     Color.LightGreen);
             }
         }
-        
+
+        //TODO: move this to the shared project, otherwise bots won't be able to report things in multiplayer
         partial void ReportProblems()
         {
             if (GameMain.Client != null) return;
@@ -94,16 +95,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
-
-#if SERVER
-                    //TODO: fix?
-                    if (GameMain.Server != null)
-                    {
-                        OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
-#endif
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
                 }
             }
         }

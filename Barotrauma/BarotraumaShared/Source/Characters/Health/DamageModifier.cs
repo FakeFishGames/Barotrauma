@@ -69,6 +69,8 @@ namespace Barotrauma
 
         public bool MatchesAffliction(Affliction affliction)
         {
+            if (AfflictionIdentifiers.Length == 0) { return true; }
+
             foreach (string afflictionName in AfflictionIdentifiers)
             {
                 if (affliction.Prefab.Identifier.ToLowerInvariant() == afflictionName) return true;

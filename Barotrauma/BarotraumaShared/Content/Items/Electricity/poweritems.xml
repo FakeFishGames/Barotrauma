@@ -24,7 +24,7 @@
       <output name="signal_2" />
       <output name="signal_3" />
     </ConnectionPanel>
-	<Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="15" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+	<Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="15" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
@@ -57,7 +57,7 @@
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
       <Containable identifiers="loadable" />
     </ItemContainer>
-	<Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.25" mindeteriorationdelay="120" maxdeteriorationdelay="420" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+	  <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
@@ -111,7 +111,7 @@
       <input name="power_out" />
       <input name="power_in" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.25" mindeteriorationdelay="120" maxdeteriorationdelay="420" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
@@ -121,12 +121,13 @@
   </Item>
   
   <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
-    <Price locationtype="City" buyprice="50" />
-    <Price locationtype="Outpost" buyprice="50" />
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="City" buyprice="125" />
+    <Price locationtype="Outpost" buyprice="125" />
+    <Price locationtype="Military" buyprice="125" />
+    <Price locationtype="Research" buyprice="125" />
     <Deconstruct time="10">
       <Item identifier="zinc" mincondition="0.5"/>
+      <Item identifier="lithium" mincondition="0.5"/>
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
@@ -139,6 +140,7 @@
       <Item identifier="zinc" mincondition="0.5"/>
       <Item identifier="fulgurium" mincondition="0.5"/>
     </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
     <Body width="23" height="17" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" />
@@ -163,7 +165,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power_in" />
     </ConnectionPanel>
-    <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="9,9" iteminterval="14,0" itemrotation="90" uilabel="Charging Dock">
+    <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="Charging Dock" containedspritedepth="0.81">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" style="ItemUI" />
       <Containable identifiers="loadable" />
     </ItemContainer>

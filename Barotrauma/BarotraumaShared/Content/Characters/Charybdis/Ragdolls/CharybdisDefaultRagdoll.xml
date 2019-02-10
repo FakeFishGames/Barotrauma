@@ -14,7 +14,7 @@
   <!-- lower yaw -->
   <limb id = "1" radius="70" height="100">
     <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
-    <attack range="500" damagerange="250" duration="0.5" structuredamage="500" structuresoundtype="StructureSlash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0">
+    <attack range="500" damagerange="65" duration="0.5" structuredamage="250" structuresoundtype="StructureSlash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0">
       <Affliction identifier="internaldamage" strength="10"/>
       <Affliction identifier="bleeding" strength="100"/>
     </attack>

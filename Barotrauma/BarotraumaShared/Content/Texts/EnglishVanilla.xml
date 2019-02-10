@@ -18,9 +18,10 @@
       Can be used to update old translation text files without having to manually check what's new in the updated text file.
 
   - Item/structure names and descriptions can be translated using the identifier of the item:
-    <EntityName.weldingtool>Eldingway Ooltay</ItemName.weldingtool>
-    <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</ItemDescription.weldingtool>
 
+    <EntityName.weldingtool>Eldingway Ooltay</EntityName.weldingtool>
+    <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</EntityDescription.weldingtool>
+  
   - Job names and descriptions can be translated using the identifier of the job:
     <JobName.captain>капитан</JobName.captain>
     <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
@@ -372,7 +373,9 @@
 
   <!-- Misc -->
   <Yes>Yes</Yes>
+  <YesToAll>Yes to All</YesToAll>
   <No>No</No>
+  <NoToAll>No to All</NoToAll>
   <OK>OK</OK>
   <Skills>Skills</Skills>
   <PersonalityTrait>Trait</PersonalityTrait>
@@ -1019,46 +1022,73 @@
   <DialogTargetHealed>[targetname] is alright!</DialogTargetHealed>
   <DialogTargetHealed>[targetname] has been resuscitated!</DialogTargetHealed>
   <OrderDialog.follow>[name], follow me!</OrderDialog.follow>
+  <OrderDialogSelf.follow>Lead the way!</OrderDialogSelf.follow>
   <OrderDialog.wait>[name], wait there!</OrderDialog.wait>
   <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>
+  <OrderDialogSelf.wait>I'll wait here!</OrderDialogSelf.wait>
   <OrderDialog.dismissed>[name], you are dismissed!</OrderDialog.dismissed>
+  <OrderDialogSelf.dismissed><!--say nothing--></OrderDialogSelf.dismissed> 
   <OrderDialog.operatereactor>[name], operate the reactor!</OrderDialog.operatereactor>
   <OrderDialog.operatereactor>[name], man the reactor!</OrderDialog.operatereactor>
+  <OrderDialogSelf.operatereactor>I'll operate the reactor!</OrderDialogSelf.operatereactor>
+  <OrderDialogSelf.operatereactor>I'll take care of the reactor!</OrderDialogSelf.operatereactor>
   <OrderDialog.operatereactor.powerup>[name], power up the reactor!</OrderDialog.operatereactor.powerup>
+  <OrderDialogSelf.operatereactor.powerup>I'll power up the reactor!</OrderDialogSelf.operatereactor.powerup>
   <OrderDialog.operatereactor.shutdown>[name], shut down the reactor!</OrderDialog.operatereactor.shutdown>
+  <OrderDialogSelf.operatereactor.shutdown>I'll shut down the reactor!</OrderDialogSelf.operatereactor.shutdown>
   <OrderDialog.operateweapons>[name], operate the weapons!</OrderDialog.operateweapons>
   <OrderDialog.operateweapons>[name], man the weapons!</OrderDialog.operateweapons>
   <OrderDialog.operateweapons>[name], man the guns!</OrderDialog.operateweapons>
+  <OrderDialogSelf.operateweapons>I'll man the guns!</OrderDialogSelf.operateweapons>
   <OrderDialog.operateweapons.fireatwill>[name], fire at will!</OrderDialog.operateweapons.fireatwill>
+  <OrderDialogSelf.operateweapons.fireatwill>I'm ready to fire!</OrderDialogSelf.operateweapons.fireatwill>
   <OrderDialog.operateweapons.holdfire>[name], hold fire!</OrderDialog.operateweapons.holdfire>
+  <OrderDialogSelf.operateweapons.holdfire>Holding fire!</OrderDialogSelf.operateweapons.holdfire>
   <OrderDialog.steer>[name], man the helm!</OrderDialog.steer>
   <OrderDialog.steer>[name], steer the submarine!</OrderDialog.steer>
+  <OrderDialogSelf.steer>I'll steer the submarine!</OrderDialogSelf.steer>
+  <OrderDialogSelf.steer>I'll man the helm!</OrderDialogSelf.steer>
   <OrderDialog.steer.maintainposition>[name], maintain position!</OrderDialog.steer.maintainposition>
   <OrderDialog.steer.maintainposition>[name], hold our position!</OrderDialog.steer.maintainposition>
+  <OrderDialogSelf.steer.maintainposition>I'll maintain our position!</OrderDialogSelf.steer.maintainposition>
   <OrderDialog.steer.navigateback>[name], set the course back!</OrderDialog.steer.navigateback>
+  <OrderDialogSelf.steer.navigateback>I'll set the course back!</OrderDialogSelf.steer.navigateback>
   <OrderDialog.steer.navigatetodestination>[name], navigate onwards!</OrderDialog.steer.navigatetodestination>
   <OrderDialog.steer.navigatetodestination>[name], set the course  onwards!</OrderDialog.steer.navigatetodestination>
   <OrderDialog.steer.navigatetodestination>[name], set the course to our destination!</OrderDialog.steer.navigatetodestination>
+  <OrderDialogSelf.steer.navigatetodestination>I'll set the course onwards!</OrderDialogSelf.steer.navigatetodestination>
   <OrderDialog.fixleaks>[name], start fixing leaks!</OrderDialog.fixleaks>
   <OrderDialog.fixleaks>[name], take care of any leaks!</OrderDialog.fixleaks>
+  <OrderDialogSelf.fixleaks>I'll take care of leaks!</OrderDialogSelf.fixleaks>
   <OrderDialog.extinguishfires>[name], extinguish the fire!</OrderDialog.extinguishfires>
+  <OrderDialogSelf.extinguishfires>I'll extinguish the fires!</OrderDialogSelf.extinguishfires>
   <OrderDialog.chargebatteries>[name], operate the batteries!</OrderDialog.chargebatteries>
+  <OrderDialogSelf.chargebatteries>I'll operate the batteries!</OrderDialogSelf.chargebatteries>
   <OrderDialog.chargebatteries.charge>[name], charge the batteries!</OrderDialog.chargebatteries.charge>
   <OrderDialog.chargebatteries.charge>[name], make sure all batteries are charged!</OrderDialog.chargebatteries.charge>
+  <OrderDialogSelf.chargebatteries.charge>I'll charge the batteries!</OrderDialogSelf.chargebatteries.charge>
   <OrderDialog.chargebatteries.stopcharging>[name], stop charging the batteries!</OrderDialog.chargebatteries.stopcharging>
+  <OrderDialogSelf.chargebatteries.stopcharging>I'll stop charging the batteries!</OrderDialogSelf.chargebatteries.stopcharging>
   <OrderDialog.pumpwater>[name], start pumping out water!</OrderDialog.pumpwater>
+  <OrderDialogSelf.pumpwater>I'll start pumping out water!</OrderDialogSelf.pumpwater>
   <OrderDialog.pumpwater.pumpout>[name], start pumping out water!</OrderDialog.pumpwater.pumpout>
+  <OrderDialogSelf.pumpwater.pumpout>I'll start pumping out water!</OrderDialogSelf.pumpwater.pumpout>
   <OrderDialog.pumpwater.stoppumping>[name], shut down the pumps!</OrderDialog.pumpwater.stoppumping>
   <OrderDialog.pumpwater.stoppumping>[name], stop the pumps!</OrderDialog.pumpwater.stoppumping>
+  <OrderDialogSelf.pumpwater.stoppumping>I'll stop the pumps!</OrderDialogSelf.pumpwater.stoppumping>
   <OrderDialog.rescue>[name], rescue anyone in distress!</OrderDialog.rescue>
   <OrderDialog.rescue>[name], give medical aid to anyone in need!</OrderDialog.rescue>
+  <OrderDialogSelf.rescue>I'll give medical aid to anyone in need!</OrderDialogSelf.rescue>
   <OrderDialog.repairsystems>[name], repair damaged systems!</OrderDialog.repairsystems>
   <OrderDialog.repairsystems>[name], take care of broken devices!</OrderDialog.repairsystems>
+  <OrderDialogSelf.repairsystems>I'll take care of broken devices!</OrderDialogSelf.repairsystems>
   <OrderDialog.repairsystems.jobspecific>[name], repair damaged systems!</OrderDialog.repairsystems.jobspecific>
   <OrderDialog.repairsystems.jobspecific>[name], take care of broken devices!</OrderDialog.repairsystems.jobspecific>
+  <OrderDialogSelf.repairsystems.jobspecific>I'll take care of broken devices!</OrderDialogSelf.repairsystems.jobspecific>
   <OrderDialog.repairsystems.all>[name], repair any damaged systems! I don't care if you don't have the skills, do your best!</OrderDialog.repairsystems.all>
   <OrderDialog.repairsystems.all>[name], try to fix any broken devices, even if it's something you're not trained for!</OrderDialog.repairsystems.all>
   <OrderDialog.repairsystems.all>[name], repair any damaged devices! Anything you can, I don't care about your training now!</OrderDialog.repairsystems.all>
+  <OrderDialogSelf.repairsystems.all>I'll take care of broken devices!</OrderDialogSelf.repairsystems.all>
 
   <OrderDialog.reportfire>Fire in [roomname]!</OrderDialog.reportfire>
   <OrderDialog.reportfire>[roomname] is on fire!</OrderDialog.reportfire>
@@ -1164,10 +1194,6 @@
   <Approach2>Approach II</Approach2>
   <Approach2Text>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2Text>
   
-  <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:  
-  <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
-  <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
-  -->
 
 
 

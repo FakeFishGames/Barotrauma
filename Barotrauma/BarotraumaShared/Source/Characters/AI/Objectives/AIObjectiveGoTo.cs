@@ -24,8 +24,9 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (Target != null && Target.Removed) return 0.0f;
-            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) return 0.0f;
+            if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
+            if (Target != null && Target.Removed) { return 0.0f; }
+            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }
                         
             if (objectiveManager.CurrentOrder == this)
             {
@@ -39,15 +40,17 @@ namespace Barotrauma
         {
             get
             {
-                if (Target != null && Target.Removed) return false;
+                if (FollowControlledCharacter && Character.Controlled == null) { return false; }
 
-                if (repeat || waitUntilPathUnreachable > 0.0f) return true;
+                if (Target != null && Target.Removed) { return false; }
+
+                if (repeat || waitUntilPathUnreachable > 0.0f) { return true; }
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
                 //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
-                if (pathSteering?.CurrentPath == null) return true;
+                if (pathSteering?.CurrentPath == null) { return true; }
 
-                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) return false;
+                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { return false; }
 
                 return !pathSteering.CurrentPath.Unreachable;
             }
@@ -55,13 +58,15 @@ namespace Barotrauma
 
         public Entity Target { get; private set; }
 
+        public bool FollowControlledCharacter;
+
         public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
             : base (character, "")
         {
             this.Target = target;
             this.repeat = repeat;
 
-            waitUntilPathUnreachable = 5.0f;
+            waitUntilPathUnreachable = 1.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
         }
 
@@ -78,12 +83,18 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (FollowControlledCharacter)
+            {
+                if (Character.Controlled == null) { return; }
+                Target = Character.Controlled;
+            }
+
             if (Target == character)
             {
                 character.AIController.SteeringManager.Reset();
                 return;
             }
-
+            
             waitUntilPathUnreachable -= deltaTime;
 
             if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
@@ -91,7 +102,7 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
-            if (Target != null) character.AIController.SelectTarget(Target.AiTarget);
+            if (Target != null) { character.AIController.SelectTarget(Target.AiTarget); }
 
             Vector2 currTargetPos = Vector2.Zero;
 
@@ -117,6 +128,20 @@ namespace Barotrauma
             }
             else
             {
+                if (!AllowGoingOutside)
+                {
+                    //if path is up-to-date and contains outdoors nodes, this path is unreachable
+                    var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                    if (pathSteering?.CurrentPath != null && 
+                        Vector2.Distance(pathSteering.CurrentTarget, currTargetPos) < 1.0f && 
+                        pathSteering.CurrentPath.HasOutdoorsNodes)
+                    {
+                        waitUntilPathUnreachable = 0.0f;
+                        character.AIController.SteeringManager.Reset();
+                        return;
+                    }
+                }
+
                 float normalSpeed = character.AnimController.GetCurrentSpeed(false);
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
                 if (getDivingGearIfNeeded && Target?.Submarine == null && AllowGoingOutside)

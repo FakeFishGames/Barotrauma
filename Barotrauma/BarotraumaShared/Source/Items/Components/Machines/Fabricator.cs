@@ -210,6 +210,7 @@ namespace Barotrauma.Items.Components
         private void StartFabricating(FabricableItem selectedItem, Character user)
         {
             if (selectedItem == null) return;
+            if (!outputContainer.Inventory.IsEmpty()) return;
 
 #if SERVER
             if (user != null)

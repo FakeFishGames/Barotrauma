@@ -86,12 +86,12 @@
       
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="60.0">
         <ReduceAffliction identifier="huskinfection" amount="0.5" />
-        <Affliction identifier="internaldamage" amount="0.75" />        
+        <Affliction identifier="internaldamage" amount="0.55" />        
       </StatusEffect>
 
       <StatusEffect tags="medical" type="OnFailure" target="Limb" duration="60.0">
         <ReduceAffliction identifier="huskinfection" amount="0.25" />
-        <Affliction identifier="internaldamage" amount="1.5" />      
+        <Affliction identifier="internaldamage" amount="1.0" />      
       </StatusEffect>
       
       <!-- Remove the item when fully used -->
@@ -290,7 +290,7 @@
     </MeleeWeapon>
   </Plastiseal>
   
-  <AntibioticGlue name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively." useinhealthinterface="true" scale="0.3">
+  <AntibioticGlue name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream." useinhealthinterface="true" scale="0.3">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
@@ -316,14 +316,13 @@
       
       <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
-        <Affliction identifier="internaldamage" amount="5" />
         <ReduceAffliction identifier="bleeding" amount="20"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="20" />
       </StatusEffect>
       
       <StatusEffect type="OnFailure" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/bandage1.ogg" range="500" />
-        <Affliction identifier="internaldamage" amount="7" />
+        <Affliction identifier="internaldamage" amount="5" />
         <ReduceAffliction identifier="bleeding" amount="10"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="10" />
       </StatusEffect>
@@ -429,7 +428,7 @@
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="5">
         <ReduceAffliction identifier="damage" amount="15" />
         <ReduceAffliction identifier="burn" amount="15" />
-        <Affliction identifier="oxygenlow" amount="15" />
+        <Affliction identifier="oxygenlow" amount="10" />
         <Affliction identifier="opiateaddiction" amount="0.3" />
         <Affliction identifier="opiateoverdose" amount="0.3" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
@@ -438,7 +437,7 @@
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <ReduceAffliction identifier="damage" amount="7.5" />
         <ReduceAffliction identifier="burn" amount="7.5" />
-        <Affliction identifier="oxygenlow" amount="18" />
+        <Affliction identifier="oxygenlow" amount="15" />
         <Affliction identifier="opiateaddiction" amount="0.3" />
         <Affliction identifier="opiateoverdose" amount="5" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
@@ -812,8 +811,8 @@
   </TonicLiquid>
   
   <Methamphetamine name="Methamphetamine" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A potent nervous system stimulant." useinhealthinterface="true" scale="0.3">
-    <Price locationtype="Research" buyprice="150" />
-    <Price locationtype="Military" buyprice="200" />
+    <Price locationtype="Research" buyprice="40" />
+    <Price locationtype="Military" buyprice="50" />
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64" />
     <Sprite texture="Medicines.png" sourcerect="124,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -875,7 +874,9 @@
       </StatusEffect>
     </MeleeWeapon>
   </Hyperzine>
+  
   <!-- poisons and harmful chemicals **************************************************************************************** -->
+  
   <Morbusine name="Morbusine" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="450" />
     <Price locationtype="Military" buyprice="1000" />
@@ -893,11 +894,12 @@
       </StatusEffect>
     </MeleeWeapon>
   </Morbusine>
+  
   <ChloralHydrate name="Chloral Hydrate" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A sedative that can be used to knock someone out for a short period of time." useinhealthinterface="true" scale="0.3">
-    <Price locationtype="Research" buyprice="150" />
-    <Price locationtype="Military" buyprice="200" />
-    <Price locationtype="City" buyprice="200" />
-    <Price locationtype="Outpost" buyprice="200" />
+    <Price locationtype="Research" buyprice="30" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="50" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="126,232,67,124" depth="0.6" origin="0.5,0.5" />
     <Body width="65" height="120" density="20" />
@@ -990,43 +992,7 @@
   </Deliriumine>
   <!-- legacy **************************************************************************************** -->
   <!-- Medical items -->
-  <MedicalSyringe name="Medical Syringe" identifier="medicalsyringe" category="Equipment" Tags="smallitem,medical,syringe" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" usecontainedspritecolor="true" usecontainedinventoryiconcolor="true" description="In most cases injection is often a much more effective method of administering drugs than taking them orally.">
-    <Price locationtype="Research" buyprice="25" />
-    <Price locationtype="Military" buyprice="30" />
-    <Price locationtype="City" buyprice="30" />
-    <Price locationtype="Outpost" buyprice="30" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,0,64,64" />
-    <Sprite texture="med.png" sourcerect="0,0,25,5" depth="0.6" />
-    <Body width="25" height="5" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-      <RequiredSkill identifier="medical" level="40" />
-      <StatusEffect type="OnUse" target="Contained, Limb, Character" Condition="-33.4" disabledeltatime="true">
-        <sound file="Content/Items/Medical/syringe.ogg" range="500" />
-        <RequiredItem identifier="chem" type="Contained" />
-        <Use />
-      </StatusEffect>
-      <!-- If usage fails due to a low medical skill, reduce the condition of the contained med and make the target bleed slightly-->
-      <StatusEffect type="OnFailure" target="Limb, Contained" Condition="-50" disabledeltatime="true">
-        <sound file="Content/Items/Medical/syringe.ogg" range="500" />
-        <Affliction identifier="bleeding" amount="5" />
-        <RequiredItem identifier="chem" type="Contained" />
-      </StatusEffect>
-    </MeleeWeapon>
-    <ItemContainer capacity="1" hideitems="true">
-      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,29,120,35" />
-      <Containable identifiers="chem" />
-    </ItemContainer>
-    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="1" stun="0.1" targetforce="5">
-        <Affliction identifier="bleeding" strength="1" />
-      </Attack>
-      <StatusEffect type="OnImpact" target="Contained, Limb, Character" Condition="-100.0" disabledeltatime="true">
-        <sound file="Content/Items/Medical/syringe.ogg" range="500" />
-        <RequiredItem identifiers="chem" type="Contained" />
-        <Use />
-      </StatusEffect>
-    </Projectile>
-  </MedicalSyringe>
+
   <!--
   <Item
     name="Oxygenic Acid"

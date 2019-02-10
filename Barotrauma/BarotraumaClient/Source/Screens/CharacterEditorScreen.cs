@@ -126,6 +126,8 @@ namespace Barotrauma
                 isEndlessRunner = false;
                 if (character != null)
                 {
+                    AnimParams.ForEach(a => a.Reset(true));
+                    RagdollParams.Reset(true);
                     RagdollParams.ClearHistory();
                     CurrentAnimation.ClearHistory();
                     if (!character.Removed)
@@ -415,7 +417,7 @@ namespace Barotrauma
                 GameMain.World.Step((float)deltaTime);
             }
             // Camera
-            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
+            Cam.MoveCamera((float)deltaTime, allowMove: false);
             bool movementInput = PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down) || PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right);
             // 0.2f, because we want to allow the user to pan when the character is floating in the water without actively moving
             if (!isFreezed && (character.AnimController.Collider.LinearVelocity.LengthSquared() > 0.2f || movementInput))
@@ -833,12 +835,12 @@ namespace Barotrauma
                     break;
                 }
                 var limb = selectedLimbs[i];
-                if (limb == character.AnimController.MainLimb)
-                {
-                    // TODO: this should be possible now -> test
-                    DebugConsole.ThrowError("Can't remove the main limb, because it will crash the game.");
-                    continue;
-                }
+                //if (limb == character.AnimController.MainLimb)
+                //{
+                //    // TODO: this should be possible now -> test
+                //    DebugConsole.ThrowError("Can't remove the main limb, because it will crash the game.");
+                //    continue;
+                //}
                 removedIDs.Add(limb.limbParams.ID);
                 limb.limbParams.Element.Remove();
                 RagdollParams.Limbs.Remove(limb.limbParams);
@@ -1557,6 +1559,7 @@ namespace Barotrauma
             };
             void UpdateJointScale(float value)
             {
+                freezeToggle.Selected = false;
                 TryUpdateRagdollParam("jointscale", value);
                 jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatDoubleDecimal()}";
                 character.AnimController.ResetJoints();
@@ -4299,11 +4302,15 @@ namespace Barotrauma
                                 };
                                 break;
                             case 1:
-                                new GUITextBlock(leftElement, "Is Humanoid?");
+                                new GUITextBlock(leftElement, "Is Humanoid?")
+                                {
+                                    TextColor = Color.White * 0.3f
+                                };
                                 new GUITickBox(rightElement, string.Empty)
                                 {
                                     Selected = IsHumanoid,
-                                    OnSelected = (tB) => IsHumanoid = tB.Selected
+                                    OnSelected = (tB) => IsHumanoid = tB.Selected,
+                                    Enabled = false
                                 };
                                 break;
                             case 2:

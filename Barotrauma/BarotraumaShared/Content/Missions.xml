@@ -10,7 +10,7 @@
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
-    successmessage="The artifact has been succesfully retrieved"
+    successmessage="The artifact has been successfully retrieved"
     spawntype="ruin"
     itemidentifier="skyholderartifact">
 
@@ -40,7 +40,7 @@
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
-    successmessage="The artifact has been succesfully retrieved"
+    successmessage="The artifact has been successfully retrieved"
     spawntype="ruin"
     itemidentifier="thermalartifact">
 
@@ -70,7 +70,7 @@
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
-    successmessage="The artifact has been succesfully retrieved"
+    successmessage="The artifact has been successfully retrieved"
     spawntype="cave"
     itemidentifier="thermalartifact">
 
@@ -100,7 +100,7 @@
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
-    successmessage="The artifact has been succesfully retrieved"
+    successmessage="The artifact has been successfully retrieved"
     spawntype="ruin"
     itemidentifier="nasonovartifact">
 
@@ -130,7 +130,7 @@
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
-    successmessage="The artifact has been succesfully retrieved"
+    successmessage="The artifact has been successfully retrieved"
     spawntype="cave"
     itemidentifier="nasonovartifact">
 
@@ -444,7 +444,7 @@
     name="Biohazard"
     identifier="cargohuskeggs"
     type="Cargo"
-    description="Local reseachers are offering 250 credits for delivering a container of husk parasite eggs to [location2]."
+    description="Local researchers are offering 250 credits for delivering a container of husk parasite eggs to [location2]."
     commonness="10"
     reward="250"
     achievementidentifier="cargomission"
@@ -470,7 +470,7 @@
     name="Handle with care"
     identifier="cargonitroglycerin"
     type="Cargo"
-    description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
+    description="Local researchers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
     commonness="15"
     reward="2000"
     achievementidentifier="cargomission"

@@ -39,9 +39,11 @@ namespace Barotrauma
             }
         }
         
-        public static void LoadTextPacks()
+        public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
-            var textFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Text);
+            availableLanguages.Clear();
+            textPacks.Clear();
+            var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
 
             foreach (string file in textFiles)
             {

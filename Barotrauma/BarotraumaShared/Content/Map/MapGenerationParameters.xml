@@ -18,6 +18,7 @@
   VoronoiSiteInterval="20"
   VoronoiSitePlacementProbability="0.3"
   VoronoiSitePlacementMinVal="0.1"
+  MinLocationDistance="15"
   MinConnectionDistance="50"
   ConnectionIterationMultiplier="0.2"
   ConnectionDisplacementMultiplier="0.5"
