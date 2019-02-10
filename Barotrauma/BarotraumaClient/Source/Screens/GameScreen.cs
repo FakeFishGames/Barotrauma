@@ -51,7 +51,7 @@ namespace Barotrauma
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
-            
+
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
             postProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
         }

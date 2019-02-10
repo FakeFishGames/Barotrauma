@@ -15,6 +15,7 @@ using GameAnalyticsSDK.Net;
 using System.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
+using Barotrauma.Media;
 
 namespace Barotrauma
 {
@@ -310,8 +311,6 @@ namespace Barotrauma
             }
         }
 
-
-
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
@@ -355,7 +354,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-                        
+
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
@@ -382,6 +381,11 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
+            if (Config.EnableSplashScreen)
+            {
+                (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
+            }
+
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
             WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
@@ -390,6 +394,7 @@ namespace Barotrauma
 
             GUI.LoadContent();
             TitleScreen.LoadState = 2.0f;
+
         yield return CoroutineStatus.Running;
 
             MissionPrefab.Init();
@@ -447,15 +452,17 @@ namespace Barotrauma
             GameModePreset.Init();
 
             Submarine.RefreshSavedSubs();
+
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
 
             GameScreen  = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
             TitleScreen.LoadState = 90.0f;
+
         yield return CoroutineStatus.Running;
 
-            MainMenuScreen          = new MainMenuScreen(this); 
-            LobbyScreen             = new LobbyScreen();            
+            MainMenuScreen          = new MainMenuScreen(this);
+            LobbyScreen             = new LobbyScreen();
             ServerListScreen        = new ServerListScreen();
 
             if (SteamManager.USE_STEAM)
@@ -523,6 +530,7 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
+            Video.Close();
             SoundManager.Dispose();
         }
 
@@ -673,6 +681,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
                 spriteBatch.End();
             }
+
 
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
