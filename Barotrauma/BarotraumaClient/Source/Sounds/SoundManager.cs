@@ -454,7 +454,7 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
-                Thread.Sleep(300);
+                Thread.Sleep(50);
             }
         }
 
