@@ -840,6 +840,12 @@ namespace Barotrauma
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+                        if (new FileInfo(ofd.FileName).Length > 1024 * 1024)
+                        {
+                            new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                            return false;
+                        }
+                        
                         if (ofd.FileName != previewImagePath)
                         {
                             File.Copy(ofd.FileName, previewImagePath, overwrite: true);
