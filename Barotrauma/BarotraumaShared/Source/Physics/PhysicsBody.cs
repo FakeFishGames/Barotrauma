@@ -540,7 +540,9 @@ namespace Barotrauma
 
         public void ApplyLinearImpulse(Vector2 impulse)
         {
+            if (!IsValidValue(impulse / body.Mass, "new velocity", -1000f, 1000f)) return;
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
+
             body.ApplyLinearImpulse(impulse);
         }
 
@@ -549,6 +551,7 @@ namespace Barotrauma
         /// </summary>
         public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
         {
+            if (!IsValidValue(impulse / body.Mass, "new velocity")) return;
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             if (!IsValidValue(maxVelocity, "max velocity")) return;
 
@@ -563,6 +566,8 @@ namespace Barotrauma
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
         {
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
+            if (!IsValidValue(point, "point")) return;
+            if (!IsValidValue(impulse / body.Mass, "new velocity")) return;
             body.ApplyLinearImpulse(impulse, point);
         }
 
@@ -577,6 +582,9 @@ namespace Barotrauma
         /// </summary>
         public void ApplyForce(Vector2 force, float maxVelocity)
         {
+            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
+            if (!IsValidValue(maxVelocity, "max velocity")) return;
+
             float currSpeed = body.LinearVelocity.Length();
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
