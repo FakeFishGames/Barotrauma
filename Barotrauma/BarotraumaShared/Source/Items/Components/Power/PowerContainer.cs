@@ -83,7 +83,8 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;
                 charge = MathHelper.Clamp(value, 0.0f, capacity); 
 
-                if (Math.Abs(charge - lastSentCharge) / capacity > 1.0f)
+                //send a network event if the charge has changed by more than 5%
+                if (Math.Abs(charge - lastSentCharge) / capacity > 0.05f)
                 {
                     if (GameMain.Server != null) item.CreateServerEvent(this);
                     lastSentCharge = charge;
@@ -219,6 +220,9 @@ namespace Barotrauma.Items.Components
                 {
                     item.CreateServerEvent(this);
                     RechargeSpeed = maxRechargeSpeed * 0.5f;
+#if CLIENT
+                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+#endif
                     character.Speak(TextManager.Get("DialogChargeBatteries")
                         .Replace("[itemname]", item.Name)
                         .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
@@ -230,6 +234,9 @@ namespace Barotrauma.Items.Components
                 {
                     item.CreateServerEvent(this);
                     RechargeSpeed = 0.0f;
+#if CLIENT
+                    rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
+#endif
                     character.Speak(TextManager.Get("DialogStopChargingBatteries")
                         .Replace("[itemname]", item.Name)
                         .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);

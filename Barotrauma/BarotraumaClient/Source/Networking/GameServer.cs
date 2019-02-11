@@ -237,6 +237,7 @@ namespace Barotrauma.Networking
 
         public bool StartGameClicked(GUIButton button, object obj)
         {
+            if (initiatedStartGame || gameStarted) { return false; }
             return StartGame();
         }
     }

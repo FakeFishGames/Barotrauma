@@ -195,9 +195,9 @@ namespace Barotrauma
                 return true;
             }
 
-            //content package compatibility checks were added in 0.9
-            //0.9 is not compatible with older content packages
-            if (GameVersion < new Version(0, 9))
+            //content package compatibility checks were added in 0.8.9.1
+            //v0.8.9.1 is not compatible with older content packages
+            if (GameVersion < new Version(0, 8, 9, 1))
             {
                 return false;
             }

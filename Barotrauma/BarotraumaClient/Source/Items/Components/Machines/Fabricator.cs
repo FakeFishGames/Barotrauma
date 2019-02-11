@@ -36,7 +36,12 @@ namespace Barotrauma.Items.Components
 
             itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
             {
-                OnSelected = SelectItem
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    selectedItem = userdata as FabricableItem;
+                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
+                    return true;
+                }
             };
 
             inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.15f), paddedFrame.RectTransform), style: null);
@@ -252,11 +257,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool SelectItem(GUIComponent component, object obj)
+        private bool SelectItem(Character user, FabricableItem selectedItem)
         {
-            selectedItem = obj as FabricableItem;
-            if (selectedItem == null) return false;
-
             selectedItemFrame.ClearChildren();
             
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f, Stretch = true };
@@ -288,9 +290,9 @@ namespace Barotrauma.Items.Components
             }
             
             List<Skill> inadequateSkills = new List<Skill>();
-            if (Character.Controlled != null)
+            if (user != null)
             {
-                inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Identifier) < skill.Level);
+                inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => user.GetSkillLevel(skill.Identifier) < skill.Level);
             }
             
             if (selectedItem.RequiredSkills.Any())
@@ -305,10 +307,10 @@ namespace Barotrauma.Items.Components
                     textColor: inadequateSkills.Any() ? Color.Red : Color.LightGreen, font: GUI.SmallFont);
             }
 
-            float degreeOfSuccess = DegreeOfSuccess(Character.Controlled, selectedItem.RequiredSkills);
+            float degreeOfSuccess = user == null ? 0.0f : DegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
-            float requiredTime = GetRequiredTime(selectedItem, Character.Controlled);
+            float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
             string requiredTimeText = TextManager.Get("FabricatorRequiredTime") + ": " + ToolBox.SecondsToReadableTime(requiredTime);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
@@ -319,6 +321,12 @@ namespace Barotrauma.Items.Components
         private bool StartButtonClicked(GUIButton button, object obj)
         {
             if (selectedItem == null) { return false; }
+            if (!outputContainer.Inventory.IsEmpty())
+            {
+                outputInventoryHolder.Flash(Color.Red);
+                return false;
+            }
+
             if (fabricatedItem == null)
             {
                 StartFabricating(selectedItem, Character.Controlled);
@@ -387,7 +395,7 @@ namespace Barotrauma.Items.Components
                 if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
                 if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
 
-                SelectItem(null, fabricableItems[itemIndex]);
+                SelectItem(user, fabricableItems[itemIndex]);
                 StartFabricating(fabricableItems[itemIndex], user);
             }
         }

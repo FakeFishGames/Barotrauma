@@ -216,6 +216,9 @@ namespace Barotrauma
                     {
                         if (limb.IsSevered) continue;
                         limb.body.SetTransform(Collider.SimPosition, Collider.Rotation);
+                        //reset pull joints (they may be somewhere far away if the character has moved from the position where animations were last updated)
+                        limb.PullJointEnabled = false;
+                        limb.PullJointWorldAnchorB = limb.SimPosition;
                     }
                 }
             }
@@ -903,7 +906,10 @@ namespace Barotrauma
                 else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
                 {
                     character.MemLocalState?.Clear();
-                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position - newHull.Submarine.Position),
+                    Vector2 newSubPos = newHull.Submarine == null ? Vector2.Zero : newHull.Submarine.Position;
+                    Vector2 prevSubPos = currentHull.Submarine == null ? Vector2.Zero : currentHull.Submarine.Position;
+
+                    Teleport(ConvertUnits.ToSimUnits(prevSubPos - newSubPos),
                         Vector2.Zero);
                 }
             }
@@ -1355,6 +1361,7 @@ namespace Barotrauma
                     "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
                 return;
             }
+            if (MainLimb == null) { return; }
 
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 

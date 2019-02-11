@@ -174,6 +174,7 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + c.LastRecvEntityEventID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
+                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " + c.LastRecvEntityEventID.ToString() + ").", ServerLog.MessageType.ServerMessage);
                         server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
                     }
                     );
@@ -187,14 +188,18 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected " + c.LastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
+                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected " + c.LastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
                         server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
-                    }
-                    );
+                    });
                 }
             }
             
             var timedOutClients = clients.FindAll(c => c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
-            timedOutClients.ForEach(c => GameMain.Server.DisconnectClient(c, "", "You have been disconnected because syncing your client with the server took too long."));
+            foreach (Client timedOutClient in timedOutClients)
+            {
+                GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.ServerMessage);
+                GameMain.Server.DisconnectClient(timedOutClient, "", "You have been disconnected because syncing your client with the server took too long.");
+            }
             
             bufferedEvents.RemoveAll(b => b.IsProcessed);           
         }

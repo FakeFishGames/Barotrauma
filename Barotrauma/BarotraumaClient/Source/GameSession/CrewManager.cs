@@ -106,7 +106,7 @@ namespace Barotrauma
 
             characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
             {
-                Spacing = (int)(3 * GUI.Scale),
+                //Spacing = (int)(3 * GUI.Scale),
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
                 CanBeFocused = false
@@ -669,7 +669,7 @@ namespace Barotrauma
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), ChatMessageType.Order);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), null);
             }
             else if (orderGiver != null)
             {
@@ -987,21 +987,25 @@ namespace Barotrauma
                 chatBox.Update(deltaTime);
                 chatBox.InputBox.Visible = Character.Controlled != null;
 
-                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                    !DebugConsole.IsOpen && chatBox.InputBox.Visible)
+                if (!DebugConsole.IsOpen && chatBox.InputBox.Visible)
                 {
-                    if (chatBox.InputBox.Selected)
+                    if (PlayerInput.KeyHit(InputType.Chat))
                     {
-                        chatBox.InputBox.Text = "";
-                        chatBox.InputBox.Deselect();
+                        if (chatBox.InputBox.Selected)
+                        {
+                            chatBox.InputBox.Text = "";
+                            chatBox.InputBox.Deselect();
+                        }
+                        else
+                        {
+                            chatBox.InputBox.Select();
+                        }
                     }
-                    else
+
+                    if (PlayerInput.KeyHit(InputType.RadioChat) && !chatBox.InputBox.Selected)
                     {
                         chatBox.InputBox.Select();
-                        if (PlayerInput.KeyHit(InputType.RadioChat))
-                        {
-                            chatBox.InputBox.Text = "r; ";
-                        }
+                        chatBox.InputBox.Text = "r; ";                        
                     }
                 }
             }

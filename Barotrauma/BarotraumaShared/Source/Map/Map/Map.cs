@@ -208,16 +208,16 @@ namespace Barotrauma
             }
 
             //remove connections that are too short
-            float minDistance = generationParams.MinConnectionDistance;
+            float minConnectionDistanceSqr = generationParams.MinConnectionDistance * generationParams.MinConnectionDistance;
             for (int i = connections.Count - 1; i >= 0; i--)
             {
                 LocationConnection connection = connections[i];
 
-                if (Vector2.Distance(connection.Locations[0].MapPosition, connection.Locations[1].MapPosition) > minDistance)
+                if (Vector2.DistanceSquared(connection.Locations[0].MapPosition, connection.Locations[1].MapPosition) > minConnectionDistanceSqr)
                 {
                     continue;
                 }
-
+                
                 //locations.Remove(connection.Locations[0]);
                 connections.Remove(connection);
 
@@ -227,7 +227,7 @@ namespace Barotrauma
                     if (connection2.Locations[1] == connection.Locations[0]) connection2.Locations[1] = connection.Locations[1];
                 }
             }
-
+            
             HashSet<Location> connectedLocations = new HashSet<Location>();
             foreach (LocationConnection connection in connections)
             {
@@ -240,13 +240,39 @@ namespace Barotrauma
 
             //remove orphans
             Locations.RemoveAll(c => !connectedLocations.Contains(c));
-            
+
+            //remove locations that are too close to each other
+            float minLocationDistanceSqr = generationParams.MinLocationDistance * generationParams.MinLocationDistance;
+            for (int i = Locations.Count - 1; i >= 0; i--)
+            {
+                for (int j = Locations.Count - 1; j > i; j--)
+                {
+                    float dist = Vector2.DistanceSquared(Locations[i].MapPosition, Locations[j].MapPosition);
+                    if (dist > minLocationDistanceSqr)
+                    {
+                        continue;
+                    }
+                    //move connections from Locations[j] to Locations[i]
+                    foreach (LocationConnection connection in Locations[j].Connections)
+                    {
+                        if (connection.Locations[0] == Locations[j])
+                        {
+                            connection.Locations[0] = Locations[i];
+                        }
+                        else
+                        {
+                            connection.Locations[1] = Locations[i];
+                        }
+                        Locations[i].Connections.Add(connection);
+                    }
+                    Locations.RemoveAt(j);
+                }
+            }
+
             for (int i = connections.Count - 1; i >= 0; i--)
             {
                 i = Math.Min(i, connections.Count - 1);
-
                 LocationConnection connection = connections[i];
-
                 for (int n = Math.Min(i - 1, connections.Count - 1); n >= 0; n--)
                 {
                     if (connection.Locations.Contains(connections[n].Locations[0])

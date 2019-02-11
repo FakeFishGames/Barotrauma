@@ -1360,27 +1360,51 @@ namespace Barotrauma
                 return false;
             }
 
-            var matchingPositions = positionsOfInterest.FindAll(p => positionType.HasFlag(p.PositionType));
-
-            if (minDistFromSubs > 0.0f)
+            List<InterestingPosition> suitablePositions = positionsOfInterest.FindAll(p => positionType.HasFlag(p.PositionType));
+            if (!suitablePositions.Any())
             {
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    matchingPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), sub.WorldPosition) < minDistFromSubs * minDistFromSubs);
-                }
-            }
-
-            if (!matchingPositions.Any())
-            {
+                string errorMsg = "Could not find a suitable position of interest. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:PositionTypeNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 #if DEBUG
-                DebugConsole.ThrowError("Could not find a suitable position of interest. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + "\n" + Environment.StackTrace);
+                DebugConsole.ThrowError(errorMsg);
 #endif
-
                 position = positionsOfInterest[Rand.Int(positionsOfInterest.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))].Position;
                 return false;
             }
 
-            position = matchingPositions[Rand.Int(matchingPositions.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))].Position;
+            List<InterestingPosition> farEnoughPositions = new List<InterestingPosition>(suitablePositions);
+            if (minDistFromSubs > 0.0f)
+            {
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    if (sub.IsOutpost) { continue; }
+                    farEnoughPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), sub.WorldPosition) < minDistFromSubs * minDistFromSubs);
+                }
+            }
+            if (!farEnoughPositions.Any())
+            {
+                string errorMsg = "Could not find a position of interest far enough from the submarines. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:TooCloseToSubs", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+                float maxDist = 0.0f;
+                position = suitablePositions.First().Position;
+                foreach (InterestingPosition pos in suitablePositions)
+                {
+                    float dist = Submarine.Loaded.Sum(s => 
+                        Submarine.MainSubs.Contains(s) ? Vector2.DistanceSquared(s.WorldPosition, pos.Position.ToVector2()) : 0.0f);
+                    if (dist > maxDist)
+                    {
+                        position = pos.Position;
+                        maxDist = dist;
+                    }
+                }
+
+                return false;
+            }
+
+            position = farEnoughPositions[Rand.Int(farEnoughPositions.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))].Position;
             return true;
         }
 
