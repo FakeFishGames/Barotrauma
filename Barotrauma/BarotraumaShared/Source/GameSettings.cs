@@ -92,6 +92,8 @@ namespace Barotrauma
         }
 #endif
 
+        public bool AutoUpdateWorkshopItems;
+
         public WindowMode WindowMode
         {
             get { return windowMode; }
@@ -179,6 +181,8 @@ namespace Barotrauma
         }
 
         public HashSet<ContentPackage> SelectedContentPackages { get; set; }
+
+        private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
         public string   MasterServerUrl { get; set; }
         public bool     AutoCheckUpdates { get; set; }
@@ -320,6 +324,7 @@ namespace Barotrauma
 
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
+            AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", true);
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
@@ -621,8 +626,6 @@ namespace Barotrauma
                 return;
             }
 
-            UnsavedSettings = false;
-
             Language = doc.Root.GetAttributeString("language", Language);
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
@@ -732,47 +735,55 @@ namespace Barotrauma
                     keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 }
             }
-            
-            List<string> missingPackagePaths = new List<string>();
-            List<ContentPackage> incompatiblePackages = new List<ContentPackage>();
+
+            UnsavedSettings = false;
+
+            selectedContentPackagePaths = new HashSet<string>();
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
                         string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
-                        var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
-                        if (matchingContentPackage == null)
-                        {
-                            missingPackagePaths.Add(path);
-                        }
-                        else if (!matchingContentPackage.IsCompatible())
-                        {
-                            incompatiblePackages.Add(matchingContentPackage);
-                        }
-                        else
-                        {
-                            SelectedContentPackages.Add(matchingContentPackage);
-                        }
+                        selectedContentPackagePaths.Add(path);
                         break;
-                }                
+                }
             }
-            
+
+            LoadContentPackages(selectedContentPackagePaths);
+        }
+
+        public void ReloadContentPackages()
+        {
+            LoadContentPackages(selectedContentPackagePaths);            
+        }
+
+        private void LoadContentPackages(IEnumerable<string> contentPackagePaths)
+        {
+            var missingPackagePaths = new List<string>();
+            var incompatiblePackages = new List<ContentPackage>();
+            SelectedContentPackages.Clear();
+            foreach (string path in contentPackagePaths)
+            {
+                var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
+                        
+                if (matchingContentPackage == null)
+                {
+                    missingPackagePaths.Add(path);
+                }
+                else if (!matchingContentPackage.IsCompatible())
+                {
+                    incompatiblePackages.Add(matchingContentPackage);
+                }
+                else
+                {
+                    SelectedContentPackages.Add(matchingContentPackage);
+                }
+            }
+
             TextManager.LoadTextPacks(SelectedContentPackages);
 
-            //display error messages after all content packages have been loaded
-            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
-            foreach (string missingPackagePath in missingPackagePaths)
-            {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
                 foreach (ContentFile file in contentPackage.Files)
@@ -796,6 +807,20 @@ namespace Barotrauma
 
             //save to get rid of the invalid selected packages in the config file
             if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+
+            //display error messages after all content packages have been loaded
+            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
+            foreach (string missingPackagePath in missingPackagePaths)
+            {
+                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
+            }
+            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
+            {
+                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                .Replace("[packagename]", incompatiblePackage.Name)
+                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
+                                .Replace("[gameversion]", GameMain.Version.ToString()));
+            }
         }
         #endregion
 
@@ -822,6 +847,7 @@ namespace Barotrauma
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
                 new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)

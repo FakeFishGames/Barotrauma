@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             }
 
             var progressBar = user.UpdateHUDProgressBar(
-                targetStructure,
+                targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
                 progressBarPos,
                 1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
                 Color.Red, Color.Green);

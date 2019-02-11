@@ -465,14 +465,21 @@ namespace Barotrauma.Items.Components
             foreach (Character enemy in Character.CharacterList)
             {
                 //ignore humans and characters that are inside the sub
-                if (enemy.IsDead || enemy.SpeciesName == "human" || enemy.AnimController.CurrentHull != null) continue;
-
+                if (enemy.IsDead|| enemy.AnimController.CurrentHull != null || !enemy.Enabled) { continue; }
+                if (enemy.SpeciesName == character.SpeciesName && enemy.TeamID == character.TeamID) { continue; }
+                
                 float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
-                if (dist < closestDist)
-                {
-                    closestEnemy = enemy;
-                    closestDist = dist;
-                }
+                if (dist > closestDist) { continue; }
+                
+                float angle = -MathUtils.VectorToAngle(enemy.WorldPosition - item.WorldPosition);
+                float midRotation = (minRotation + maxRotation) / 2.0f;
+                while (midRotation - angle < -MathHelper.Pi) { angle -= MathHelper.TwoPi; }
+                while (midRotation - angle > MathHelper.Pi) { angle += MathHelper.TwoPi; }
+
+                if (angle < minRotation || angle > maxRotation) { continue; }
+
+                closestEnemy = enemy;
+                closestDist = dist;                
             }
 
             if (closestEnemy == null) return false;
@@ -486,7 +493,7 @@ namespace Barotrauma.Items.Components
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
 
-            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.1f) return false;
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) return false;
 
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;

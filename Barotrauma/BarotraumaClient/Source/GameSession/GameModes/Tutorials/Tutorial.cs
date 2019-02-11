@@ -167,7 +167,7 @@ namespace Barotrauma.Tutorials
                 };
             }
             
-            GUI.PlayUISound(GUISoundType.Message);
+            GUI.PlayUISound(GUISoundType.UIMessage);
 
             return infoBlock;
         }
@@ -211,7 +211,7 @@ namespace Barotrauma.Tutorials
                 };
             }
 
-            GUI.PlayUISound(GUISoundType.Message);
+            GUI.PlayUISound(GUISoundType.UIMessage);
 
             return infoBlock;
         }

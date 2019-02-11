@@ -241,28 +241,27 @@ namespace Barotrauma
             DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
 
-        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
+        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
         {
             float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-
+            float damageMultiplier = 1;
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
+                        SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
+                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
-
-                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
-            float damageParticleAmount = Math.Min(damage / 10, 1.0f);
+            float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
             foreach (ParticleEmitter emitter in character.DamageEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -271,8 +270,9 @@ namespace Barotrauma
                 emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
             }
 
-            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
+            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
             float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
+
             foreach (ParticleEmitter emitter in character.BloodEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -415,6 +415,8 @@ namespace Barotrauma
                     Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
                 }
+                var bodyDrawPos = body.DrawPosition;
+                bodyDrawPos.Y = -bodyDrawPos.Y;
                 if (IsStuck)
                 {
                     Vector2 from = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorA);
@@ -424,9 +426,7 @@ namespace Barotrauma
                     var localFront = body.GetLocalFront(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
-                    var drawPos = body.DrawPosition;
-                    drawPos.Y = -drawPos.Y;
-                    GUI.DrawLine(spriteBatch, drawPos, front, Color.Yellow, width: 2);
+                    GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);
                     GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 1);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
@@ -440,7 +440,24 @@ namespace Barotrauma
                     //mainLimbDrawPos.Y = -mainLimbDrawPos.Y;
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
-
+                }
+                foreach (var modifier in damageModifiers)
+                {
+                    float rot = body.Rotation;
+                    if (Dir == -1) { rot -= MathHelper.Pi; }
+                    rot = MathUtils.WrapAngleTwoPi(rot);
+                    float x = modifier.ArmorSector.X;
+                    float y = modifier.ArmorSector.Y;
+                    float from = Math.Min(x, y);
+                    float to = Math.Max(x, y);
+                    float midAngle = MathUtils.GetMidAngle(x * Dir, y * Dir);
+                    float angle = to - from;
+                    angle *= Dir;
+                    float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+                    float offset = -rot + midAngle - spritesheetOrientation * Dir;
+                    Color c = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
+                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, -angle, 40, c, offset, thickness: 2 / cam.Zoom);
                 }
             }
         }
