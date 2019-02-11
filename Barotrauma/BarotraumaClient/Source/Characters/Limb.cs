@@ -245,26 +245,23 @@ namespace Barotrauma
         {
             float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-
+            float damageMultiplier = 1;
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
-                        // TODO: define, damage is way too low range to hear anything (Math.Max(damage, bleedingDamage))
-                        SoundPlayer.PlayDamageSound(damageSoundType, 5000, WorldPosition);
+                        SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
+                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
-
-                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
-            float damageParticleAmount = Math.Min(damage / 10, 1.0f);
+            float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
             foreach (ParticleEmitter emitter in character.DamageEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -273,8 +270,9 @@ namespace Barotrauma
                 emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
             }
 
-            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
+            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
             float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
+
             foreach (ParticleEmitter emitter in character.BloodEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
