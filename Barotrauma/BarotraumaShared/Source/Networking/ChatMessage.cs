@@ -103,6 +103,19 @@ namespace Barotrauma.Networking
             return command;
         }
 
+        public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
+        {
+            if (listener.WorldPosition == sender.WorldPosition) { return 1.0f; }
+
+            float dist = Vector2.Distance(listener.WorldPosition, sender.WorldPosition);
+            if (dist > range) { return 0.0f; }
+
+            if (Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
+            if (dist > range) { return 0.0f; }
+
+            return dist / range;
+        }
+
         public string ApplyDistanceEffect(Character listener)
         {
             if (Sender == null) return Text;
@@ -110,17 +123,9 @@ namespace Barotrauma.Networking
             return ApplyDistanceEffect(listener, Sender, Text, SpeakRange);
         }
 
-        public static string ApplyDistanceEffect(Entity listener, Entity Sender, string text, float range, float obstructionmult = 2.0f)
+        public static string ApplyDistanceEffect(Entity listener, Entity sender, string text, float range, float obstructionmult = 2.0f)
         {
-            if (listener.WorldPosition == Sender.WorldPosition) return text;
-
-            float dist = Vector2.Distance(listener.WorldPosition, Sender.WorldPosition);
-            if (dist > range) return "";
-
-            if (Submarine.CheckVisibility(listener.SimPosition, Sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
-            if (dist > range) return "";
-            
-            return ApplyDistanceEffect(text, dist / range);
+            return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionmult));
         }
 
         public static string ApplyDistanceEffect(string text, float garbleAmount)
@@ -193,10 +198,18 @@ namespace Barotrauma.Networking
 
         public static bool CanUseRadio(Character sender)
         {
-            if (sender == null) return false;
-            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            return senderItem != null && sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit();
+            return CanUseRadio(sender, out _);
         }
 
+        public static bool CanUseRadio(Character sender, out WifiComponent radio)
+        {
+            radio = null;
+
+            if (sender == null) return false;
+            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+
+            radio = senderItem.GetComponent<WifiComponent>();
+            return senderItem != null && sender.HasEquippedItem(senderItem) && radio.CanTransmit();
+        }
     }
 }
