@@ -15,4 +15,10 @@
     <ReferencePath>
     </ReferencePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x64'">
+    <StartAction>Project</StartAction>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
+    <StartAction>Project</StartAction>
+  </PropertyGroup>
 </Project>

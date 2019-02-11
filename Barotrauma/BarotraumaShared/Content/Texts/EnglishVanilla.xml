@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 
 <!-- Notes to modders/translators:
   - The file must be encoded using UTF-8 for special symbols (e.g. non-english alphabets) to work.
@@ -269,6 +269,7 @@
   <ServerSettingsTraitorRatio>Traitor ratio: </ServerSettingsTraitorRatio>
   <ServerSettingsTraitorCount>Traitor count: </ServerSettingsTraitorCount>
   <ServerSettingsUseKarma>Use Karma</ServerSettingsUseKarma>
+  <ServerSettingsRandomPreferences>Random Preferences</ServerSettingsRandomPreferences>
   <WhiteListEnabled>Enabled</WhiteListEnabled>
   <WhiteListName>Name</WhiteListName>
   <WhiteListIP>IP Address</WhiteListIP>
@@ -532,6 +533,7 @@
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
   <JobPreferences>Job preferences</JobPreferences>
+  <RandomPreferences>Random Preferences</RandomPreferences>
   <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
   <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
   <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
