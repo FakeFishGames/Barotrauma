@@ -454,8 +454,9 @@ namespace Barotrauma
             float x = armorSector.X;
             float y = armorSector.Y;
             Vector2 hitDir = simPosition - SimPosition;
-            float midAngle = MathUtils.GetMidAngle(x, y);
-            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(rot - midAngle));
+            float midAngle = MathUtils.GetMidAngle(x * Dir, y * Dir);
+            float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(rot - midAngle + spritesheetOrientation * Dir));
             float hitAngle = VectorExtensions.Angle(forward, hitDir);
             float min = MathHelper.ToDegrees(Math.Min(x, y));
             float max = MathHelper.ToDegrees(Math.Max(x, y));

@@ -450,9 +450,11 @@ namespace Barotrauma
                     float y = modifier.ArmorSector.Y;
                     float from = Math.Min(x, y);
                     float to = Math.Max(x, y);
+                    float midAngle = MathUtils.GetMidAngle(x * Dir, y * Dir);
                     float angle = to - from;
                     angle *= Dir;
-                    float offset = -rot - from * Dir - MathHelper.PiOver2 * Dir;
+                    float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+                    float offset = -rot + midAngle - spritesheetOrientation * Dir;
                     Color c = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
                     float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
                     ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, -angle, 40, c, offset, thickness: 2 / cam.Zoom);
