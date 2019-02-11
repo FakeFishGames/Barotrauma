@@ -237,6 +237,24 @@ namespace Barotrauma
             return val;
         }
 
+        public static uint GetAttributeUInt(this XElement element, string name, uint defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            uint val = defaultValue;
+
+            try
+            {
+                val = UInt32.Parse(element.Attribute(name).Value);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "! ", e);
+            }
+
+            return val;
+        }
+
         public static int[] GetAttributeIntArray(this XElement element, string name, int[] defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;

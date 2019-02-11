@@ -57,7 +57,7 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
             
-            if (Character.Submarine != null || selectedAiTarget?.Entity?.Submarine != null)
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
             {
                 if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
@@ -214,7 +214,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
 
                     if (GameMain.Server != null)
                     {
@@ -277,7 +277,7 @@ namespace Barotrauma
 
         public override void SelectTarget(AITarget target)
         {
-            selectedAiTarget = target;
+            SelectedAiTarget = target;
         }
 
         private void CheckCrouching(float deltaTime)

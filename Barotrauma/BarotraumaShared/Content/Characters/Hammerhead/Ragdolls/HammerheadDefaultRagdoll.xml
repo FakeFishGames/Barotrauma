@@ -14,6 +14,7 @@
       <Affliction identifier="stun" strength="5" />
       <Conditional stun="lte 0"></Conditional>
     </attack>
+    <damagemodifier armorsector="0,360" afflictiontypes="damage,bleeding" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="false" />
   </limb>
   <limb id="2" name="22CL_FinFront" type="None" radius="95" width="77" notes="7cl_22CL_FinFront" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="3" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="593,0,268,191" origin="0.5,0.5" subdivisions="3,3" depth="0.1">

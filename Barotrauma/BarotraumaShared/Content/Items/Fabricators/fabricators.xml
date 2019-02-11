@@ -233,6 +233,7 @@
 
       <FabricableItem identifier="batterycell" requiredtime="10">
         <RequiredItem identifier="zinc"/>
+        <RequiredItem identifier="lithium"/>
       </FabricableItem>
       
       <FabricableItem identifier="fulguriumbatterycell" requiredtime="10">
@@ -469,6 +470,7 @@
       <FabricableItem identifier="antibloodloss1" requiredtime="10">
         <RequiredSkill identifier="medical" level="30"/>
         <RequiredItem identifier="sodium"/>
+        <RequiredItem identifier="chlorine"/>
       </FabricableItem>
       <FabricableItem identifier="antibloodloss2" requiredtime="10">
         <RequiredSkill identifier="medical" level="60"/>

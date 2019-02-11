@@ -144,6 +144,11 @@ namespace Barotrauma
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
                         }
                         textbox.Deselect();
                         textbox.Text = "";
@@ -341,6 +346,7 @@ namespace Barotrauma
 
             int iconSize = (int)(height * 0.8f);
 
+
             var frame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, height), parent.RectTransform), style: "InnerFrame")
             {
                 UserData = character,
@@ -350,6 +356,15 @@ namespace Barotrauma
             frame.SelectedColor = Color.Lerp(frame.Color, Color.White, 0.5f);
             frame.HoverColor = Color.Lerp(frame.Color, Color.White, 0.9f);
 
+            new GUIFrame(new RectTransform(new Point(characterInfoWidth, (int)(frame.Rect.Height * 1.3f)), frame.RectTransform, Anchor.CenterLeft), style: "OuterGlow")
+            {
+                UserData = "highlight",
+                Color = frame.SelectedColor,
+                HoverColor = frame.SelectedColor,
+                PressedColor = frame.SelectedColor,
+                SelectedColor = frame.SelectedColor,
+                CanBeFocused = false
+            };
             //---------------- character area ----------------
 
             string characterToolTip = character.Info.Name;
@@ -526,23 +541,6 @@ namespace Barotrauma
             return true;
         }
 
-        /// <summary>
-        /// Sets which character is selected in the crew UI (highlight effect etc)
-        /// </summary>
-        public void SetCharacterSelected(Character character)
-        {
-            if (character != null && !characters.Contains(character)) return;
-
-            //GUIComponent selectedCharacterFrame = null;
-            foreach (GUIComponent child in characterListBox.Content.Children)
-            {
-                GUIButton button = child.Children.FirstOrDefault(c => c.UserData is Character) as GUIButton;
-                if (button == null) continue;
-
-                child.Visible = (Character)button.UserData != character;
-            }
-        }
-
         public void ReviveCharacter(Character revivedCharacter)
         {
             if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
@@ -617,6 +615,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
                 return;
             }
+            if (string.IsNullOrEmpty(text)) { return; }
 
             chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
@@ -648,7 +647,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
-                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName), ChatMessageType.Order);
+                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
@@ -665,11 +664,11 @@ namespace Barotrauma
                 return;
             }
 
-            character.SetOrder(order, option, orderGiver);
+            character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), null);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
             }
             else if (orderGiver != null)
             {
@@ -1026,12 +1025,15 @@ namespace Barotrauma
 
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
+                Character character = (Character)child.UserData;
                 child.Visible = 
                     Character.Controlled == null || 
-                    (Character.Controlled != ((Character)child.UserData) && Character.Controlled.TeamID == ((Character)child.UserData).TeamID);
+                    (Character.Controlled.TeamID == character.TeamID);
 
                 if (child.Visible)
                 {
+                    child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
+
                     GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
                     if (wrongOrderList != null)
                     {

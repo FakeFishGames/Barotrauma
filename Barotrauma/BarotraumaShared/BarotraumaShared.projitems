@@ -2400,6 +2400,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Music\Somethings outside.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\UImsg.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\splashscreen.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2586,10 +2589,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\radiomsg.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\tap-zipper.ogg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\UImsg.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\chatmsg.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Water\BlackSmoker.ogg">
@@ -2718,6 +2718,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveChargeBatteries.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveCombat.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveContainItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveDecontainItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveExtinguishFire.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveExtinguishFires.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveFindDivingGear.cs" />
@@ -2734,7 +2735,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRepairItems.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescueAll.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveDecontainItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Order.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\PathFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\SteeringManager.cs" />

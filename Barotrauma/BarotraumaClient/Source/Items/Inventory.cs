@@ -675,7 +675,7 @@ namespace Barotrauma
             foreach (var slot in highlightedSubInventorySlots)
             {
                 int slotIndex = Array.IndexOf(slot.ParentInventory.slots, slot.Slot);
-                if (slotIndex > 0 && slotIndex < slot.ParentInventory.slots.Length)
+                if (slotIndex > -1 && slotIndex < slot.ParentInventory.slots.Length)
                 {
                     slot.ParentInventory.DrawSubInventory(spriteBatch, slotIndex);
                 }

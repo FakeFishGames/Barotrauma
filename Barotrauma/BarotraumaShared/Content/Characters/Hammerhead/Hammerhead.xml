@@ -12,6 +12,11 @@
     vitality="375"
     doesbleed="true"/>
 
+  <Inventory slots="Any, Any" accessiblewhenalive="false">
+    <Item identifier="swimbladder"/>
+    <Item identifier="alienblood"/>
+  </Inventory>
+
   <ai
     combatstrength="400"
     sight="1.0"

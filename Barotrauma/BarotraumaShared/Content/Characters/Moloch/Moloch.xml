@@ -4,6 +4,7 @@
   <ragdolls folder="default"/>
   <animations folder="default"/>
 
+  <bloodemitter particle="blackwaterblood" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
   <gibemitter particle="blackwaterblood" particleamount="40" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
 
   <health
@@ -15,6 +16,12 @@
   <sound file="Content/Characters/Legacymoloch/attack2.ogg" state="Attack" range="3000"/>
   <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="None" range="3000"/>
   <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="None" range="3000"/>
+  
+  <Inventory slots="Any, Any, Any" accessiblewhenalive="false">
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="brockite"/>
+  </Inventory>
 
   <ai
     combatstrength="1200"
