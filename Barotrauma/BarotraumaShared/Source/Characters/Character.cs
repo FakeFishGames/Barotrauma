@@ -2264,15 +2264,15 @@ namespace Barotrauma
             if (Removed) return new AttackResult();
 
             SetStun(stun);
-
+            Vector2 dir = hitLimb.WorldPosition - worldPosition;
             if (Math.Abs(attackImpulse) > 0.0f)
             {
-                Vector2 diff = hitLimb.WorldPosition - worldPosition;
+                Vector2 diff = dir;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
                 hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
             }
-
-            AttackResult attackResult = hitLimb.AddDamage(worldPosition, afflictions, playSound);
+            Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
+            AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
             if (attacker != this) { OnAttacked?.Invoke(attacker, attackResult); };
             AdjustKarma(attacker, attackResult);

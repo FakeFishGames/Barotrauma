@@ -390,17 +390,17 @@ namespace Barotrauma
             pullJoint.LocalAnchorA = new Vector2(-pullJoint.LocalAnchorA.X, pullJoint.LocalAnchorA.Y);
         }
         
-        public AttackResult AddDamage(Vector2 position, float damage, float bleedingDamage, float burnDamage, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, float damage, float bleedingDamage, float burnDamage, bool playSound)
         {
             List<Affliction> afflictions = new List<Affliction>();
             if (damage > 0.0f) afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage));
             if (bleedingDamage > 0.0f) afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));
             if (burnDamage > 0.0f) afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage));
 
-            return AddDamage(position, afflictions, playSound);
+            return AddDamage(simPosition, afflictions, playSound);
         }
 
-        public AttackResult AddDamage(Vector2 position, List<Affliction> afflictions, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, List<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
             //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
@@ -410,7 +410,7 @@ namespace Barotrauma
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
-                    if (SectorHit(damageModifier.ArmorSector, position))
+                    if (SectorHit(damageModifier.ArmorSector, simPosition))
                     {
                         afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
@@ -422,7 +422,7 @@ namespace Barotrauma
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
                         if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
-                        if (SectorHit(damageModifier.ArmorSector, position))
+                        if (SectorHit(damageModifier.ArmorSector, simPosition))
                         {
                             afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);
@@ -431,27 +431,36 @@ namespace Barotrauma
                 }
             }
 
-            AddDamageProjSpecific(position, afflictions, playSound, appliedDamageModifiers);
+            AddDamageProjSpecific(simPosition, afflictions, playSound, appliedDamageModifiers);
 
             return new AttackResult(afflictions, this, appliedDamageModifiers);
         }
 
-        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
+        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
 
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
-            if (armorSector == Vector2.Zero) return false;
-            
+            if (armorSector == Vector2.Zero) { return false; }
             float rot = body.Rotation;
-            if (Dir == -1) rot -= MathHelper.Pi;
 
-            // TODO: test that this is in sync with the debug info.
-            Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
+            // Can't get this to work properly.
+            //if (Dir == -1) { rot -= MathHelper.Pi; }
+            //Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
+            //float mid = (armorLimits.X + armorLimits.Y) / 2;
+            //float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
+            //return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2);
 
-            float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
-            float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
-
-            return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2.0f);
+            // Alternative implementation
+            float x = armorSector.X;
+            float y = armorSector.Y;
+            Vector2 hitDir = simPosition - SimPosition;
+            float midAngle = MathUtils.GetMidAngle(x, y);
+            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(rot - midAngle));
+            float hitAngle = VectorExtensions.Angle(forward, hitDir);
+            float min = MathHelper.ToDegrees(Math.Min(x, y));
+            float max = MathHelper.ToDegrees(Math.Max(x, y));
+            float sectorSize = max - min;
+            return hitAngle < sectorSize / 2;
         }
 
         public void Update(float deltaTime)
