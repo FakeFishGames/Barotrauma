@@ -105,7 +105,7 @@ namespace Barotrauma.Tutorials
         {
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
-            Completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
+            completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
             Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
         }
         
