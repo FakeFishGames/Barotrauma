@@ -58,7 +58,7 @@ namespace Barotrauma
             GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("Back"))
             {
-                OnClicked = GameMain.MainMenuScreen.SelectTab
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
             backButton.SelectedColor = backButton.Color;
 

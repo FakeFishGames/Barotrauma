@@ -621,6 +621,8 @@ namespace Barotrauma
                 return;
             }
 
+            UnsavedSettings = false;
+
             Language = doc.Root.GetAttributeString("language", Language);
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
@@ -730,8 +732,6 @@ namespace Barotrauma
                     keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 }
             }
-
-            UnsavedSettings = false;
             
             List<string> missingPackagePaths = new List<string>();
             List<ContentPackage> incompatiblePackages = new List<ContentPackage>();
@@ -802,9 +802,8 @@ namespace Barotrauma
         #region Save PlayerConfig
         public void SaveNewPlayerConfig()
         {
-            UnsavedSettings = false;
-
             XDocument doc = new XDocument();
+            UnsavedSettings = false;
 
             if (doc.Root == null)
             {
