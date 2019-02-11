@@ -7,6 +7,12 @@ namespace Barotrauma.Sounds
 {
     public abstract class Sound : IDisposable
     {
+        protected bool disposed;
+        public bool Disposed
+        {
+            get { return disposed; }
+        }
+
         public SoundManager Owner
         {
             get;
@@ -66,8 +72,8 @@ namespace Barotrauma.Sounds
         public float BaseGain;
         public float BaseNear;
         public float BaseFar;
-        
-        public Sound(SoundManager owner,string filename,bool stream,bool filledByNetwork)
+
+        public Sound(SoundManager owner, string filename, bool stream, bool filledByNetwork)
         {
             Owner = owner;
             Filename = Path.GetFullPath(filename);
@@ -149,6 +155,8 @@ namespace Barotrauma.Sounds
 
         public virtual void Dispose()
         {
+            if (disposed) { return; }
+
             Owner.KillChannels(this);
             if (alBuffer != 0)
             {
@@ -166,6 +174,7 @@ namespace Barotrauma.Sounds
                 }
             }
             Owner.RemoveSound(this);
+            disposed = true;
         }
     }
 }
