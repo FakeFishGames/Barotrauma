@@ -9,7 +9,7 @@
 
   <health
     vitality="1000"
-    doesbleed="false"/>
+    doesbleed="true"/>
 
   <!-- TODO: new sounds -->
   <sound file="Content/Characters/Legacymoloch/attack1.ogg" state="Attack" range="3000"/>
