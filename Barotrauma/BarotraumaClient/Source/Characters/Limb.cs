@@ -241,28 +241,27 @@ namespace Barotrauma
             DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
 
-        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
+        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
         {
             float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-
+            float damageMultiplier = 1;
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
+                        SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
+                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
-
-                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
-            float damageParticleAmount = Math.Min(damage / 10, 1.0f);
+            float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
             foreach (ParticleEmitter emitter in character.DamageEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -271,8 +270,9 @@ namespace Barotrauma
                 emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
             }
 
-            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
+            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
             float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
+
             foreach (ParticleEmitter emitter in character.BloodEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -444,18 +444,17 @@ namespace Barotrauma
                 foreach (var modifier in damageModifiers)
                 {
                     float rot = body.Rotation;
-                    rot = MathUtils.WrapAngleTwoPi(rot);
                     if (Dir == -1) { rot -= MathHelper.Pi; }
-                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
+                    rot = MathUtils.WrapAngleTwoPi(rot);
                     float x = modifier.ArmorSector.X;
                     float y = modifier.ArmorSector.Y;
                     float from = Math.Min(x, y);
                     float to = Math.Max(x, y);
                     float angle = to - from;
                     angle *= Dir;
-                    //float o = (-MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation) - MathHelper.PiOver2) * Dir;
                     float offset = -rot - from * Dir - MathHelper.PiOver2 * Dir;
                     Color c = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
                     ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, -angle, 40, c, offset, thickness: 2 / cam.Zoom);
                 }
             }
