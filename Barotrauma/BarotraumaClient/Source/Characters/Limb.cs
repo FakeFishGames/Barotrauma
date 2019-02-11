@@ -448,21 +448,16 @@ namespace Barotrauma
                 }
                 foreach (var modifier in damageModifiers)
                 {
-                    float rot = body.Rotation;
-                    if (Dir == -1) { rot -= MathHelper.Pi; }
-                    rot = MathUtils.WrapAngleTwoPi(rot);
-                    float x = modifier.ArmorSector.X;
-                    float y = modifier.ArmorSector.Y;
-                    float from = Math.Min(x, y);
-                    float to = Math.Max(x, y);
-                    float midAngle = MathUtils.GetMidAngle(x * Dir, y * Dir);
-                    float angle = to - from;
-                    angle *= Dir;
-                    float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
-                    float offset = -rot + midAngle - spritesheetOrientation * Dir;
-                    Color c = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    //float midAngle = MathUtils.GetMidAngle(modifier.ArmorSector.X, modifier.ArmorSector.Y);
+                    //float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+                    //float offset = -body.Rotation - (midAngle + spritesheetOrientation) * Dir;
+                    float offset = GetArmorSectorRotationOffset(modifier.ArmorSector, -body.Rotation);
+                    Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
                     float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
-                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, -angle, 40, c, offset, thickness: 2 / cam.Zoom);
+                    color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
+                    if (Dir == -1) { offset += MathHelper.Pi; }
+                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSector) * Dir, 40, color, offset + MathHelper.Pi, thickness: 2 / cam.Zoom);
                 }
             }
         }

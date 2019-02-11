@@ -441,9 +441,9 @@ namespace Barotrauma
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
             if (armorSector == Vector2.Zero) { return false; }
-            float rot = body.Rotation;
 
             // Can't get this to work properly.
+            //float rot = body.Rotation;
             //if (Dir == -1) { rot -= MathHelper.Pi; }
             //Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
             //float mid = (armorLimits.X + armorLimits.Y) / 2;
@@ -451,17 +451,25 @@ namespace Barotrauma
             //return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2);
 
             // Alternative implementation
-            float x = armorSector.X;
-            float y = armorSector.Y;
-            Vector2 hitDir = simPosition - SimPosition;
-            float midAngle = MathUtils.GetMidAngle(x * Dir, y * Dir);
-            float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
-            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(rot - midAngle + spritesheetOrientation * Dir));
-            float hitAngle = VectorExtensions.Angle(forward, hitDir);
-            float min = MathHelper.ToDegrees(Math.Min(x, y));
-            float max = MathHelper.ToDegrees(Math.Max(x, y));
-            float sectorSize = max - min;
+            float offset = GetArmorSectorRotationOffset(armorSector, body.Rotation);
+            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
+            float hitAngle = VectorExtensions.Angle(forward, simPosition - SimPosition);
+            float sectorSize = MathHelper.ToDegrees(GetArmorSectorSize(armorSector));
             return hitAngle < sectorSize / 2;
+        }
+
+        protected float GetArmorSectorRotationOffset(Vector2 armorSector, float bodyRotation)
+        {
+            float midAngle = MathUtils.GetMidAngle(armorSector.X, armorSector.Y);
+            float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+            return bodyRotation + (midAngle + spritesheetOrientation) * Dir;
+        }
+
+        protected float GetArmorSectorSize(Vector2 armorSector)
+        {
+            float min = Math.Min(armorSector.X, armorSector.Y);
+            float max = Math.Max(armorSector.X, armorSector.Y);
+            return max - min;
         }
 
         public void Update(float deltaTime)
