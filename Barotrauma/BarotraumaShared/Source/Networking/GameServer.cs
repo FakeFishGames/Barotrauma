@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.IO.Compression;
 using System.IO;
+using Barotrauma.Extensions;
 using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
@@ -1325,9 +1326,13 @@ namespace Barotrauma.Networking
                 return false;
             }
 
+            if (GameMain.Server.RandomPreferences)
+            {
+                GameMain.Config.JobPreferences = (new List<string>(collection: GameMain.Config.JobPreferences.Randomize()));
+            }
+
             initiatedStartGame = true;
             CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
-
             return true;
         }
 

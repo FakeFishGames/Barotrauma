@@ -521,6 +521,16 @@ namespace Barotrauma.Networking
                 }
             };
 
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsRandomPreferences"))
+            {
+                Selected = RandomPreferences,
+                OnSelected = (GUITickBox) =>
+                {
+                    RandomPreferences = GUITickBox.Selected;
+                    return true;
+                }
+            };
+
             //--------------------------------------------------------------------------------
             //                              banlist
             //--------------------------------------------------------------------------------
