@@ -5,6 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Facepunch.Steamworks;
+using Client = Barotrauma.Networking.Client;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
@@ -834,6 +837,20 @@ namespace Barotrauma
                         Rotation = MathHelper.Pi
                     };
                 }
+                 GUITickBox randPrefTickBox = new GUITickBox(
+                        new RectTransform(new Vector2(0.05f, 0.05f), infoContainer.RectTransform)
+                            {RelativeOffset = new Vector2(-0.5f, 0.1f)},
+                        TextManager.Get("RandomPreferences"))
+                    {
+                        OnSelected = (tickBox) =>
+                        {
+                            if (tickBox.Selected)
+                            {
+                                GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
+                            }
+                            return true;
+                        }
+                    };
 
                 UpdateJobPreferences(jobList);
             }
