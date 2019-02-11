@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Items.Components;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -32,11 +33,11 @@ namespace Barotrauma.Networking
         public void SendToClients(List<Client> clients)
         {
             foreach (VoipQueue queue in queues) {
-                if (queue.LastReadTime < DateTime.Now - VoipConfig.SEND_INTERVAL) continue;
+                if (queue.LastReadTime < DateTime.Now - VoipConfig.SEND_INTERVAL) { continue; }
 
                 if (lastSendTime.ContainsKey(queue))
                 {
-                    if ((lastSendTime[queue] + VoipConfig.SEND_INTERVAL) > DateTime.Now) continue;
+                    if ((lastSendTime[queue] + VoipConfig.SEND_INTERVAL) > DateTime.Now) { continue; }
                     lastSendTime[queue] = DateTime.Now;
                 }
                 else
@@ -44,34 +45,14 @@ namespace Barotrauma.Networking
                     lastSendTime.Add(queue, DateTime.Now);
                 }
 
-                Client currClient = clients.Find(c => c.VoipQueue == queue);
+                Client sender = clients.Find(c => c.VoipQueue == queue);
 
-                foreach (Client client in clients)
+                foreach (Client recipient in clients)
                 {
-                    if (client == currClient) continue;
-                    
-                    if (Screen.Selected == GameMain.GameScreen)
-                    {
-                        if (client.Character == null || client.Character.IsDead) //client is spectating
-                        {
-                            if (currClient.Character != null && !currClient.Character.IsDead) //currClient is not spectating
-                            {
-                                continue;
-                            }
-                        }
-                        else //client is not spectating
-                        {
-                            if (currClient.Character == null || client.Character.IsDead) //currClient is spectating
-                            {
-                                continue;
-                            }
-                            else if (Vector2.Distance(currClient.Character.Position,client.Character.Position)>500.0f) //clients are too far away from each other
-                            {
-                                //TODO: account for radio
-                                continue;
-                            }
-                        }
-                    }
+                    if (recipient == sender) { continue; }
+
+                    //TODO: some muffling/garbling when far away from the speaker
+                    if (!CanReceive(sender, recipient)) { continue; }
 
                     NetOutgoingMessage msg = netServer.CreateMessage();
 
@@ -81,9 +62,36 @@ namespace Barotrauma.Networking
 
                     GameMain.Server.CompressOutgoingMessage(msg);
 
-                    netServer.SendMessage(msg, client.Connection, NetDeliveryMethod.Unreliable);
+                    netServer.SendMessage(msg, recipient.Connection, NetDeliveryMethod.Unreliable);
                 }
             }
+        }
+
+        private bool CanReceive(Client sender, Client recipient)
+        {
+            if (Screen.Selected != GameMain.GameScreen) { return true; }
+
+            bool recipientSpectating = recipient.Character == null || recipient.Character.IsDead;
+            bool senderSpectating = sender.Character == null || sender.Character.IsDead;
+
+            //spectators cannot speak with in-game players or vice versa
+            if (recipientSpectating != senderSpectating) { return false; }
+
+            //both spectating, no need to do radio/distance checks
+            if (recipientSpectating && senderSpectating) { return true; }
+
+            //sender can't speak
+            if (sender.Character.SpeechImpediment >= 100.0f) { return false; }
+
+            //check if the message can be sent via radio
+            if (ChatMessage.CanUseRadio(sender.Character, out WifiComponent senderRadio) && 
+                ChatMessage.CanUseRadio(recipient.Character, out WifiComponent recipientRadio))
+            {
+                if (recipientRadio.CanReceive(senderRadio)) { return true; }
+            }
+
+            //otherwise do a distance check
+            return ChatMessage.GetGarbleAmount(recipient.Character, sender.Character, ChatMessage.SpeakRange) < 1.0f;
         }
     }
 }
