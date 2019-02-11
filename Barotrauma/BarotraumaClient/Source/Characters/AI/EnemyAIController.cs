@@ -14,9 +14,9 @@ namespace Barotrauma
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
 
-            if (selectedAiTarget?.Entity != null)
+            if (SelectedAiTarget?.Entity != null)
             {
-                GUI.DrawLine(spriteBatch, pos, new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red * 0.3f, 0, 5);
+                GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red * 0.3f, 0, 5);
 
                 if (wallTarget != null)
                 {
@@ -27,7 +27,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
 
-                GUI.Font.DrawString(spriteBatch, $"{selectedAiTarget.Entity.ToString()} ({targetValue.ToString()})", pos - Vector2.UnitY * 20.0f, Color.Red);
+                GUI.Font.DrawString(spriteBatch, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.ToString()})", pos - Vector2.UnitY * 20.0f, Color.Red);
             }
 
             /*GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
