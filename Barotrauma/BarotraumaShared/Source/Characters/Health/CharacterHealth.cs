@@ -96,7 +96,7 @@ namespace Barotrauma
         private Affliction oxygenLowAffliction;
         private Affliction pressureAffliction;
         private Affliction stunAffliction;
-                
+
         public bool IsUnconscious
         {
             get { return Vitality <= 0.0f; }
@@ -222,10 +222,21 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element, Character character);
 
-        public IEnumerable<Affliction> GetAllAfflictions()
+        public IEnumerable<Affliction> GetAllAfflictions(Func<Affliction, bool> limbHealthFilter = null)
         {
-            return afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions).ToList());
+            // TODO: If there can be duplicates, we should use Union instead.
+            return limbHealthFilter == null
+                ? afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions))
+                : afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
+
+        private LimbHealth GetMathingLimbHealth(Affliction affliction) => limbHealths[Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb).HealthIndex];
+
+        /// <summary>
+        /// Returns the limb afflictions and non-limbspecific afflictions that are set to be displayed on this limb.
+        /// </summary>
+        private IEnumerable<Affliction> GetMatchingAfflictions(LimbHealth limb, Func<Affliction, bool> predicate)
+            => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMathingLimbHealth(a) == limb));
 
         public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
         {
@@ -354,26 +365,26 @@ namespace Barotrauma
 
             if (matchingAfflictions.Count == 0) return;
 
-            do
+            float reduceAmount = amount / matchingAfflictions.Count;
+            for (int i = matchingAfflictions.Count - 1; i >= 0; i--)
             {
-                float reduceAmount = amount / matchingAfflictions.Count;
-                for (int i = matchingAfflictions.Count - 1; i >= 0; i--)
+                var matchingAffliction = matchingAfflictions[i];
+                if (matchingAffliction.Strength < reduceAmount)
                 {
-                    var matchingAffliction = matchingAfflictions[i];
-                    if (matchingAffliction.Strength < reduceAmount)
-                    {
-                        amount -= matchingAffliction.Strength;
-                        matchingAffliction.Strength = 0.0f;
-                        matchingAfflictions.RemoveAt(i);
-                        SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
-                    }
-                    else
-                    {
-                        matchingAffliction.Strength -= reduceAmount;
-                        amount -= reduceAmount;
-                    }
+                    float surplus = reduceAmount - matchingAffliction.Strength;
+                    amount -= matchingAffliction.Strength;
+                    matchingAffliction.Strength = 0.0f;
+                    matchingAfflictions.RemoveAt(i);
+                    if (i == 0) i = matchingAfflictions.Count;
+                    if (i > 0) reduceAmount += surplus / i;
+                    SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
                 }
-            } while (matchingAfflictions.Count > 0 && amount > 0.0f);
+                else
+                {
+                    matchingAffliction.Strength -= reduceAmount;
+                    amount -= reduceAmount;
+                }
+            }
             
         }
 
@@ -466,8 +477,10 @@ namespace Barotrauma
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
+#if CLIENT
+            selectedLimbIndex = -1;
+#endif
         }
-
 
         private void AddAffliction(Affliction newAffliction)
         {
@@ -675,7 +688,7 @@ namespace Barotrauma
 
             return allAfflictions;
         }
-        
+
         public void ServerWrite(NetBuffer msg)
         {
             List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);

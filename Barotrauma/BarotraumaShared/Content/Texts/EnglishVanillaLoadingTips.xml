@@ -22,7 +22,6 @@
   <LoadingScreenTip>Captains are generally much more adept at manouvering the submarine than the average sailor.</LoadingScreenTip>
 
   <LoadingScreenTip>Breaking down alien artifacts in a deconstructor may provide you with exotic raw materials.</LoadingScreenTip>  
-  <LoadingScreenTip>Special caution must be taken when bringing alien artifacts on board the submarine.</LoadingScreenTip>
   <LoadingScreenTip>Some of the alien structures on Europa have been constructed of a metamaterial that's outstandingly resistant to physical damage, and as such has become an important subject of research to Europan scientists.</LoadingScreenTip>
   <LoadingScreenTip>Special caution must be taken when bringing alien artifacts on board the submarine.</LoadingScreenTip>
   <LoadingScreenTip>Very little is known of the presumably extinct alien civilization that built the ruins scattered all across Europa. The age of the ruins is also a mystery, since the self-repairing properties of the structures and devices make chronological dating methods wildly inaccurate.</LoadingScreenTip>
@@ -52,6 +51,11 @@
   <LoadingScreenTip>You can disguise yourself as someone else by wearing their ID card and something that covers your face.</LoadingScreenTip>
   
   <LoadingScreenTip>It's possible to build voice-controlled systems by linking wifi components to the radio chat in the submarine editor.</LoadingScreenTip>
+
+  <LoadingScreenTip>When deploying a decoy, be sure to deactivate active sonar for best results.</LoadingScreenTip>
+  <LoadingScreenTip>Europa is rich in natural resources, and an enterprising captain with a sharp eye and a plasma cutter may stand to make a tidy profit.</LoadingScreenTip>
+  <LoadingScreenTip>If the reactor on a sub is not able to produce sufficient power to run all onboard systems, try reducing the charge rate for the onboard batteries and supercapacitors, or regulate the times when the sub is running at full speed.</LoadingScreenTip>
+  <LoadingScreenTip>The electrical and mechanical systems on a sub will gradually degrade due to the harsh conditions and constant wear and tear. Be sure to have mechanics and engineers perform maintenance from time to time in order to avoid breakdowns at inopportune moments.</LoadingScreenTip>
 
   <!-- Lore -->
   <LoadingScreenTip>The radiation belts around Jupiter make it impracticable to establish permanent settlements above Europa's surface, and as such almost all Europan outposts are located below its icy crust.</LoadingScreenTip>

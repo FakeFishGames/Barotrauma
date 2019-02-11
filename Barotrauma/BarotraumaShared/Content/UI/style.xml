@@ -244,7 +244,8 @@
   <GUIButtonServerListInfo
     color="102,150,175,255"
     hovercolor="255,255,255,255"
-    selectedcolor="255,255,255,255">
+    selectedcolor="255,255,255,255"
+    pressedcolor="100,100,100,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>
@@ -255,7 +256,8 @@
   <GUIButtonRefresh
     color="204,204,204,255"
     hovercolor="77,77,204,255"
-    selectedcolor="255,255,255,255">
+    selectedcolor="255,255,255,255"
+    pressedcolor="100,100,150,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" maintainaspectratio="true" sourcerect="983,353,39,39"/>
@@ -267,6 +269,7 @@
     color="204,204,204,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,230"
+    pressedcolor="150,150,150,255"
     textcolor="0,0,0,255">
     <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect ="96,366,32,352" slice="101,371,123,713"/>
     <Sprite texture="Content/UI/UI_Atlas2.png" tile="false" maintainaspectratio="true" sourcerect="128,399,32,37"/>
@@ -275,7 +278,8 @@
   <GUIButtonHorizontalArrow
     color="204,204,204,204"
     hovercolor="255,255,255,255"
-    selectedcolor="204,204,204,204">
+    selectedcolor="204,204,204,204"
+    pressedcolor="150,150,150,255">
 
     <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="471,947,24,69"/>
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="471,947,24,69"/>
@@ -290,7 +294,8 @@
   <GUIButtonVerticalArrow
     color="204,204,204,204"
     hovercolor="255,255,255,255"
-    selectedcolor="204,204,204,204">
+    selectedcolor="204,204,204,204"
+    pressedcolor="150,150,150,255">
 
     <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="584,972,69,24"/>
     <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="584,972,69,24"/>
@@ -725,7 +730,7 @@
       hovercolor="255,255,255,255"
       selectedcolor="255,255,255,255"
       textcolor="255,255,255,255"
-      padding="0.0, 0.0, 0.0, 0.0">
+      pressedcolor="150,150,150,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="0,229,119,39" tile="false"/>
     </GUIFrameHorizontal>
 
@@ -733,7 +738,8 @@
       color="230,230,230,255"
       hovercolor="255,255,255,255"
       selectedcolor="230,230,230,255"
-      textcolor="255,255,255,255">
+      textcolor="255,255,255,255"
+      pressedcolor="150,150,150,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="122,229,55,38" tile="false"/>
     </GUIButtonHorizontal>
   </OnOffSlider>
@@ -759,6 +765,7 @@
       hovercolor="255,255,255,255"
       selectedcolor="255,255,255,255"
       textcolor="255,255,255,255"
+      pressedcolor="150,150,150,255"
       padding="0.0, 0.0, 0.0, 0.0">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="230,197,63,132" tile="false"/>
     </GUIFrameVertical>
@@ -767,7 +774,8 @@
       color="230,230,230,255"
       hovercolor="255,255,255,255"
       selectedcolor="230,230,230,255"
-      textcolor="255,255,255,255">
+      textcolor="255,255,255,255"
+      pressedcolor="150,150,150,255">
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="0,268,104,24" tile="false"/>
     </GUIButtonVertical>
   </OnOffLever>

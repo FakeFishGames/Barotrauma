@@ -61,7 +61,7 @@ namespace Barotrauma
             this.Target = target;
             this.repeat = repeat;
 
-            waitUntilPathUnreachable = 5.0f;
+            waitUntilPathUnreachable = 1.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
         }
 
@@ -91,7 +91,7 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
-            if (Target != null) character.AIController.SelectTarget(Target.AiTarget);
+            if (Target != null) { character.AIController.SelectTarget(Target.AiTarget); }
 
             Vector2 currTargetPos = Vector2.Zero;
 
@@ -117,6 +117,20 @@ namespace Barotrauma
             }
             else
             {
+                if (!AllowGoingOutside)
+                {
+                    //if path is up-to-date and contains outdoors nodes, this path is unreachable
+                    var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                    if (pathSteering?.CurrentPath != null && 
+                        Vector2.Distance(pathSteering.CurrentTarget, currTargetPos) < 1.0f && 
+                        pathSteering.CurrentPath.HasOutdoorsNodes)
+                    {
+                        waitUntilPathUnreachable = 0.0f;
+                        character.AIController.SteeringManager.Reset();
+                        return;
+                    }
+                }
+
                 float normalSpeed = character.AnimController.GetCurrentSpeed(false);
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
                 if (getDivingGearIfNeeded && Target?.Submarine == null && AllowGoingOutside)

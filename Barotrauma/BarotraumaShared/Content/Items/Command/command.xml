@@ -48,7 +48,7 @@
       <output name="signal_out2" />
       <output name="signal_out3" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="180" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="equipped" />

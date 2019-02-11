@@ -29,7 +29,7 @@
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-1.0" />
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="20.0" Condition="3.0" />
+      <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable identifier="structure" />
       <!-- mechanic skill 20 required to use the item -->
@@ -268,7 +268,7 @@
     <Sprite texture="tools.png" sourcerect="20,112,27,9" depth="0.55" origin="0.5,0.5" />
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
-    <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">
+    <LightComponent LightColor="255,0.0,0.0,255" Flicker="0.5" range="600" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true" />
       <StatusEffect type="OnActive" target="This" Condition="-1.0">
         <ParticleEmitter particle="flare" particlespersecond="30" />
@@ -278,11 +278,7 @@
       <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
   </Item>
-  <Item name="AlienFlare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
-    <Price locationtype="City" buyprice="10" />
-    <Price locationtype="Research" buyprice="10" />
-    <Price locationtype="Military" buyprice="10" />
-    <Price locationtype="Outpost" buyprice="20" />
+  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
@@ -291,9 +287,9 @@
     <Sprite texture="tools.png" sourcerect="50,112,27,9" depth="0.55" origin="0.5,0.5" />
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
-    <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">
+    <LightComponent LightColor="0,162,232,255" Flicker="0.5" range="1000" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true" />
-      <StatusEffect type="OnActive" target="This" Condition="-1.0">
+      <StatusEffect type="OnActive" target="This" Condition="-0.2">
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
       </StatusEffect>

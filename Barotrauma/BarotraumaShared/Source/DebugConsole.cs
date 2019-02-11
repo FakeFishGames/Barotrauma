@@ -1909,11 +1909,20 @@ namespace Barotrauma
 
             commands.Add(new Command("fixhulls|fixwalls", "fixwalls/fixhulls: Fixes all walls.", (string[] args) =>
             {
-                foreach (Structure w in Structure.WallList)
+                var walls = new List<Structure>(Structure.WallList);
+                foreach (Structure w in walls)
                 {
-                    for (int i = 0; i < w.SectionCount; i++)
+                    try
                     {
-                        w.AddDamage(i, -100000.0f);
+                        for (int i = 0; i < w.SectionCount; i++)
+                        {
+                            w.AddDamage(i, -100000.0f);
+                        }
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     }
                 }
             }, null, null, isCheat: true));
@@ -2388,6 +2397,18 @@ namespace Barotrauma
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
                 }
             }));
+
+            commands.Add(new Command("money", "", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                {
+                    if (int.TryParse(args[0], out int money))
+                    {
+                        campaign.Money += money;
+                    }
+                }
+            }, isCheat: true));
 #endif
             InitProjectSpecific();
 
@@ -3036,7 +3057,7 @@ namespace Barotrauma
                 }
             }
 
-            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {
@@ -3044,7 +3065,7 @@ namespace Barotrauma
             }
 
             string filePath = Path.Combine(SavePath, fileName);
-            if (File.Exists(filePath))
+            if (File.Exists(filePath + ".txt"))
             {
                 int fileNum = 2;
                 while (File.Exists(filePath + " (" + fileNum + ")"))
@@ -3056,7 +3077,7 @@ namespace Barotrauma
 
             try
             {
-                File.WriteAllLines(filePath, unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+                File.WriteAllLines(filePath + ".txt", unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
             }
             catch (Exception e)
             {

@@ -197,7 +197,7 @@
   <AfflictionPsychosis
     name="Psychosis"
     identifier="psychosis"
-    description="The patient rants and mutters in an aggitated fashion, a steady commentary of unseen events."
+    description="The patient rants and mutters in an agitated fashion, a steady commentary of unseen events."
     type="psychosis"
     limbspecific="false"
     indicatorlimb="Head"
@@ -269,7 +269,7 @@
   <Affliction
     name="Opiate withdrawal"
     identifier="opiatewithdrawal"
-    description="Aggitation and a tremor are obvious, as are the signs of nausea."
+    description="Agitation and a tremor are obvious, as are the signs of nausea."
     type="poison"
     causeofdeathdescription="Died of opiate withdrawal"
     selfcauseofdeathdescription="You have died of opiate withdrawal."

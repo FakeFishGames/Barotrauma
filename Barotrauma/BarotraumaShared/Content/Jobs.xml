@@ -134,7 +134,6 @@
       <Item identifier="idcard" equip="true"/>
       <Item identifier="doctorsuniform" equip="true"/>
       <Item identifier="healthscanner"/>
-      <Item identifier="medicalsyringe"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>      

@@ -353,6 +353,13 @@
         <RequiredItem identifier="incendium"/>
       </FabricableItem>
 
+      <FabricableItem identifier="coilgunammobox" requiredtime="20">
+        <RequiredSkill identifier="mechanical" level="25"/>
+        <RequiredItem identifier="steel"/>
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="aluminium"/>
+      </FabricableItem>
+      
       <FabricableItem identifier="railgunshell" requiredtime="20">
         <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="steel"/>
@@ -400,11 +407,10 @@
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" name="Electrical repairs"
-        fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="840" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
-      <RequiredSkill identifier="electrical" level="40"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="wrench" type="Equipped" />
 	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
@@ -431,9 +437,6 @@
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
-      <FabricableItem identifier="medicalsyringe" requiredtime="10">
-        <RequiredItem identifier="steel"/>
-      </FabricableItem>
       <FabricableItem identifier="chloralhydrate" requiredtime="20">
         <RequiredSkill identifier="medical" level="30"/>
         <RequiredItem identifier="chlorine"/>
@@ -574,7 +577,7 @@
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="60" maxdeteriorationdelay="480" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="840" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -612,7 +615,7 @@
       <output name="power_in"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="60" maxdeteriorationdelay="480" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="840" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />

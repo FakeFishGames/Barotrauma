@@ -358,7 +358,8 @@ namespace Barotrauma.Networking
                 unauthClient.AuthTimer -= deltaTime;
                 if (unauthClient.AuthTimer <= 0.0f)
                 {
-                    unauthClient.Connection.Disconnect("Connection timed out");
+                    unauthClient.Connection.Disconnect("Authentication timed out.");
+                    Log("Disconnected unauthenticated client (authentication timed out).", ServerLog.MessageType.ServerMessage);
                 }
             }
 
@@ -1081,7 +1082,7 @@ namespace Barotrauma.Networking
                     if (!character.Enabled) continue;
                     if (c.Character != null &&
                         Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.CharacterIgnoreDistanceSqr)
+                        NetConfig.DisableCharacterDistSqr)
                     {
                         continue;
                     }
@@ -1330,6 +1331,7 @@ namespace Barotrauma.Networking
                 GameMain.Config.JobPreferences = (new List<string>(collection: GameMain.Config.JobPreferences.Randomize()));
             }
 
+            initiatedStartGame = true;
             CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
             return true;
         }
@@ -1899,6 +1901,8 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
 
             Log(msg, ServerLog.MessageType.ServerMessage);
+
+            if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
 
             client.Connection.Disconnect(targetmsg);
             connectedClients.Remove(client);
