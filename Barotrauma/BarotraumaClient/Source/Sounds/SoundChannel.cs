@@ -13,7 +13,7 @@ namespace Barotrauma.Sounds
             private set;
         }
 
-        public SoundSourcePool(int sourceCount=SoundManager.SOURCE_COUNT)
+        public SoundSourcePool(int sourceCount = SoundManager.SOURCE_COUNT)
         {
             ALError alError = ALError.NoError;
 
@@ -312,8 +312,8 @@ namespace Barotrauma.Sounds
         private int streamSeekPos;
         private bool startedPlaying;
         private bool reachedEndSample;
-        private uint[] streamBuffers;
-        private List<uint> emptyBuffers;
+        private readonly uint[] streamBuffers;
+        private readonly List<uint> emptyBuffers;
 
         private object mutex;
 
@@ -327,7 +327,7 @@ namespace Barotrauma.Sounds
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to determine playing state from source: "+AL.GetErrorString(alError));
+                    throw new Exception("Failed to determine playing state from source: " + AL.GetErrorString(alError));
                 }
                 return playing;
             }
@@ -345,85 +345,87 @@ namespace Barotrauma.Sounds
 
             mutex = new object();
 
-            ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
-
-            if (ALSourceIndex>=0)
+            lock (mutex)
             {
-                if (!IsStream)
+                ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
+                if (ALSourceIndex >= 0)
                 {
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), 0);
-                    ALError alError = AL.GetError();
-                    if (alError != ALError.NoError)
+                    if (!IsStream)
                     {
-                        throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
-                    }
+                        AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), 0);
+                        ALError alError = AL.GetError();
+                        if (alError != ALError.NoError)
+                        {
+                            throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
+                        }
 
-                    if (!AL.IsBuffer(sound.ALBuffer))
-                    {
-                        throw new Exception(sound.Filename + " has an invalid buffer!");    
-                    }
+                        if (!AL.IsBuffer(sound.ALBuffer))
+                        {
+                            throw new Exception(sound.Filename + " has an invalid buffer!");
+                        }
 
-                    uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), alBuffer);
-                    alError = AL.GetError();
-                    if (alError != ALError.NoError)
-                    {
-                        throw new Exception("Failed to bind buffer to source (" +ALSourceIndex.ToString()+":"+sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) +"," +sound.ALBuffer.ToString()+"): " + AL.GetErrorString(alError));
-                    }
-
-                    AL.SourcePlay(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
-                    alError = AL.GetError();
-                    if (alError != ALError.NoError)
-                    {
-                        throw new Exception("Failed to play source: " + AL.GetErrorString(alError));
-                    }
-                }
-                else
-                {
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), (uint)sound.ALBuffer);
-                    ALError alError = AL.GetError();
-                    if (alError != ALError.NoError)
-                    {
-                        throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
-                    }
-                
-                    AL.Source(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), ALSourceb.Looping, false);
-                    alError = AL.GetError();
-                    if (alError != ALError.NoError)
-                    {
-                        throw new Exception("Failed to set stream looping state: " + AL.GetErrorString(alError));
-                    }
-
-                    streamShortBuffer = new short[STREAM_BUFFER_SIZE];
-
-                    streamBuffers = new uint[4];
-                    emptyBuffers = new List<uint>();
-                    for (int i=0;i<4;i++)
-                    {
-                        AL.GenBuffer(out streamBuffers[i]);
-
+                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
+                        AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), alBuffer);
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
-                            throw new Exception("Failed to generate stream buffers: " + AL.GetErrorString(alError));
+                            throw new Exception("Failed to bind buffer to source (" + ALSourceIndex.ToString() + ":" + sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) + "," + sound.ALBuffer.ToString() + "): " + AL.GetErrorString(alError));
                         }
 
-                        if (!AL.IsBuffer(streamBuffers[i]))
+                        AL.SourcePlay(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
+                        alError = AL.GetError();
+                        if (alError != ALError.NoError)
                         {
-                            throw new Exception("Generated streamBuffer[" + i.ToString() + "] is invalid!");
+                            throw new Exception("Failed to play source: " + AL.GetErrorString(alError));
                         }
                     }
+                    else
+                    {
+                        AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), (uint)sound.ALBuffer);
+                        ALError alError = AL.GetError();
+                        if (alError != ALError.NoError)
+                        {
+                            throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
+                        }
 
-                    Sound.Owner.InitStreamThread();
+                        AL.Source(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), ALSourceb.Looping, false);
+                        alError = AL.GetError();
+                        if (alError != ALError.NoError)
+                        {
+                            throw new Exception("Failed to set stream looping state: " + AL.GetErrorString(alError));
+                        }
+
+                        streamShortBuffer = new short[STREAM_BUFFER_SIZE];
+
+                        streamBuffers = new uint[4];
+                        emptyBuffers = new List<uint>();
+                        for (int i = 0; i < 4; i++)
+                        {
+                            AL.GenBuffer(out streamBuffers[i]);
+
+                            alError = AL.GetError();
+                            if (alError != ALError.NoError)
+                            {
+                                throw new Exception("Failed to generate stream buffers: " + AL.GetErrorString(alError));
+                            }
+
+                            if (!AL.IsBuffer(streamBuffers[i]))
+                            {
+                                throw new Exception("Generated streamBuffer[" + i.ToString() + "] is invalid!");
+                            }
+                        }
+
+                        Sound.Owner.InitStreamThread();
+                    }
                 }
-            }
-
-            this.Position = position;
-            this.Gain = gain;
-            this.Looping = false;
-            this.Near = near;
-            this.Far = far;
-            this.Category = category;
+                
+                this.Position = position;
+                this.Gain = gain;
+                this.Looping = false;
+                this.Near = near;
+                this.Far = far;
+                this.Category = category;
+            }            
         }
         
         public void Dispose()

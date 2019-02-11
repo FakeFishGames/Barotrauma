@@ -171,8 +171,8 @@ namespace Barotrauma.Steam
         
         public static void Update(float deltaTime)
         {
-            if (instance == null || !instance.isInitialized) return;
-            
+            if (instance == null || !instance.isInitialized) { return; }
+
             instance.client?.Update();
             instance.server?.Update();
 
@@ -181,6 +181,8 @@ namespace Barotrauma.Steam
 
         public static void ShutDown()
         {
+            if (instance == null) { return; }
+
             instance.client?.Dispose();
             instance.client = null;
             instance.server?.Dispose();

@@ -23,7 +23,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public bool IsPlaying
+        public new bool IsPlaying
         {
             get
             {
@@ -36,18 +36,18 @@ namespace Barotrauma.Sounds
         
         private SoundChannel soundChannel;
 
-        public VoipSound(SoundManager owner,VoipQueue q) : base(owner, "voip", true, true)
+        public VoipSound(SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
         {
             VoipConfig.SetupEncoding();
 
             ALFormat = ALFormat.Mono16;
             SampleRate = VoipConfig.FREQUENCY;
-            
+
             queue = q;
             bufferID = queue.LatestBufferID;
 
             soundChannel = null;
-            
+
             SoundChannel chn = new SoundChannel(this, 1.0f, null, 0.4f, 1.0f, "voip", false);
             soundChannel = chn;
         }
@@ -100,6 +100,7 @@ namespace Barotrauma.Sounds
             if (soundChannel != null)
             {
                 soundChannel.Dispose();
+                soundChannel = null;
             }
             base.Dispose();
         }

@@ -289,7 +289,7 @@ namespace Barotrauma
                     {
                         Color clr = Color.White;
                         string soundStr = i + ": ";
-                        SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
+                        SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
                         if (playingSoundChannel == null)
                         {
                             soundStr += "none";
