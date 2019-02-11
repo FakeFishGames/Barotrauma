@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Buffs>
+  <!-- Basic buffs. 
+  These afflictions are required by the vanilla game; 
+  modifying them may require modifications to the code. -->
+
+  <DurationIncrease
+    name="Duration Increase"
+    identifier="durationincrease"
+    description="Increases the duration of all buffs."
+    type="duration"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </DurationIncrease>
+
+  <Haste
+    name="Haste"
+    identifier="haste"
+    description="Gotta go fast."
+    type="haste"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </Haste>
+
+  <HuskInfectionResistance
+    name="Husk Infection Resistance"
+    identifier="huskinfectionresistance"
+    description="Husk be gone."
+    type="huskinfectionresistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </HuskInfectionResistance>
+
+  <PsychosisResistance
+    name="Psychosis Resistance"
+    identifier="psychosisresistance"
+    description="Psychosis be gone."
+    type="psychosisresistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </PsychosisResistance>
+  
+  <PressureResistance
+    name="Pressure Resistance"
+    identifier="pressureresistance"
+    description="Pressure be gone."
+    type="pressureresistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </PressureResistance>
+  
+  <Strengthen
+    name="Strengthen"
+    identifier="strengthen"
+    description="Rawr."
+    type="strengthen"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </Strengthen>  
+</Buffs>
