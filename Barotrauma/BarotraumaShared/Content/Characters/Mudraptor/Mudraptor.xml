@@ -5,7 +5,7 @@
   
   <health
     vitality="200"
-    doesbleed="false"/>
+    doesbleed="true"/>
 
   <bloodemitter particle="blood" particleamount="1"/>
   <bloodemitter particle="waterblood" particleamount="1"/>
