@@ -421,8 +421,11 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) => 
                 {
-                    if (GameMain.Config.UnsavedSettings) GameMain.Config.LoadPlayerConfig();
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.SelectTab(0);
+                    if (UnsavedSettings)
+                    {
+                        LoadPlayerConfig();
+                    }
+                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
                     GUI.SettingsMenuOpen = false;
                     return true;
                 }
@@ -436,6 +439,7 @@ namespace Barotrauma
             };
             applyButton.OnClicked = ApplyClicked;
 
+            UnsavedSettings = false; // Reset unsaved settings to false once the UI has been created
             SelectTab(Tab.General);
         }
 
