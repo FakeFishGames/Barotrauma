@@ -92,6 +92,7 @@
   <ServerSettingsTraitorRatio>Petturi suhde:</ServerSettingsTraitorRatio>
   <ServerSettingsTraitorCount>Poliittisten määrä:</ServerSettingsTraitorCount>
   <ServerSettingsUseKarma>Käytä Karmaa</ServerSettingsUseKarma>
+  <ServerSettingsRandomPreferences>Satunnaiset Asetukset</ServerSettingsRandomPreferences>
   <WhiteListEnabled>Käytössä</WhiteListEnabled>
   <WhiteListName>Nimi</WhiteListName>
   <WhiteListIP>IP-osoite</WhiteListIP>
@@ -307,6 +308,7 @@
   <SpectateButton>Katsomoon</SpectateButton>
   <Gender>sukupuoli</Gender>
   <JobPreferences>Tyäasetukset</JobPreferences>
+  <RandomPreferences>Satunnaiset Asetuksets</RandomPreferences>
   <PlayingAsSpectator>Näyttelijä</PlayingAsSpectator>
   <SubNotFound>Sukellusveneitä ei löydy sukellusveneen kansioista</SubNotFound>
   <SubDoesntMatch>Sukellusveneen versio ei vastaa palvelinversiota</SubDoesntMatch>

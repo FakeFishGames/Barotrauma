@@ -89,6 +89,8 @@ namespace Barotrauma.Networking
 
         private int maxPlayers;
 
+        private bool randomPreferences;
+
         private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
 
         [Serialize(true, true)]
@@ -316,6 +318,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool RandomPreferences
+        {
+            get;
+            set;
+        }
+        
         [Serialize("sandbox", true)]
         public string GameModeIdentifier
         {
