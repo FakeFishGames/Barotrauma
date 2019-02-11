@@ -57,7 +57,7 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
             
-            if (Character.Submarine != null || selectedAiTarget?.Entity?.Submarine != null)
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
             {
                 if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
@@ -277,7 +277,7 @@ namespace Barotrauma
 
         public override void SelectTarget(AITarget target)
         {
-            selectedAiTarget = target;
+            SelectedAiTarget = target;
         }
 
         private void CheckCrouching(float deltaTime)
