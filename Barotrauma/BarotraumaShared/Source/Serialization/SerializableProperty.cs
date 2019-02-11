@@ -558,7 +558,7 @@ namespace Barotrauma
         {
             var saveProperties = GetProperties<Serialize>(obj);
             foreach (var property in saveProperties)
-            { 
+            {
                 object value = property.GetValue();
                 if (value == null) continue;
 
