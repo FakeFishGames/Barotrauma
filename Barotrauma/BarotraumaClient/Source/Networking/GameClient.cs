@@ -623,7 +623,11 @@ namespace Barotrauma.Networking
                 if (updateTimer > DateTime.Now) return;
                 SendLobbyUpdate();
             }
-            VoipClient?.SendToServer();
+
+            if (serverSettings.VoiceChatEnabled)
+            {
+                VoipClient?.SendToServer();
+            }
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
@@ -1207,6 +1211,8 @@ namespace Barotrauma.Networking
                             bool allowSubVoting         = inc.ReadBoolean();
                             bool allowModeVoting        = inc.ReadBoolean();
 
+                            bool voiceChatEnabled       = inc.ReadBoolean();
+
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
@@ -1252,6 +1258,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
+                                serverSettings.VoiceChatEnabled = voiceChatEnabled;
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
 

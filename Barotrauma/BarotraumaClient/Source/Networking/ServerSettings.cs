@@ -552,6 +552,14 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.02f
             };
 
+            //***********************************************
+
+            var voiceChatEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform),
+                TextManager.Get("ServerSettingsVoiceChatEnabled"));
+            GetPropertyData("VoiceChatEnabled").AssignGUIComponent(voiceChatEnabled);
+
+            //***********************************************
+
             string autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay");
             var startIntervalText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), autoRestartDelayLabel);
             var startIntervalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), barSize: 0.1f)

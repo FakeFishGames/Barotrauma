@@ -297,6 +297,7 @@
   <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
   <ServerSettingsStartWhenClientsReady>Start when players are ready</ServerSettingsStartWhenClientsReady>
   <ServerSettingsStartWhenClientsReadyRatio>[percentage] % need to be ready</ServerSettingsStartWhenClientsReadyRatio>
+  <ServerSettingsVoiceChatEnabled>Enable voice chat</ServerSettingsVoiceChatEnabled>
   <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
   <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
   <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
