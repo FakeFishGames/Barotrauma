@@ -209,7 +209,6 @@
   <Credit>Krediitti</Credit>
   <PlayerCredits>Varat: [credits] krediittiä</PlayerCredits>
   <!-- Ingame menus -->
-  <InfoButton>Tiedot</InfoButton>
   <EndRound>Lopeta kierros</EndRound>
   <EnterLocation>Anna [sijaintiin nimi]</EnterLocation>
   <LeaveSubBehind>Yksi alistasi ei ole vielä poistumassa. Haluatko jättää sen takana?</LeaveSubBehind>
@@ -613,7 +612,7 @@
   <DialogSonarTargetLarge>Jotain isoa sonarissa [suuntaan]!</DialogSonarTargetLarge>
   <DialogSonarTargetMultiple>[count] tavoitteet sonarissa [suuntaan]!</DialogSonarTargetMultiple>
   <DialogSonarTargetMultiple>Meillä on [määrä] tavoitteita [suuntaan]!</DialogSonarTargetMultiple>
-  
+
   <OrderName.follow>Seuraa</OrderName.follow>
   <OrderNameDoing.follow>Seuraa</OrderNameDoing.follow>
   <OrderDialog.follow>[name], seuraa minua!</OrderDialog.follow>
@@ -704,7 +703,7 @@
   <HuskDormant>Lihakset ovat tuskallisia</HuskDormant>
   <HuskCantSpeak>Tunnet jotain liikkeestä kurkussa. Yrität huutaa, mutta mitään ääntä ei tule ulos.</HuskCantSpeak>
   <HuskActivate>Outoinen kitininen liite puhkeaa suustasi. Käytä sitä injektoimaan munat eläväksi elimistäksi painamalla [Attack] -painiketta.</HuskActivate>
-  
+
   <!-- Missions -->
   <MissionName.salvageskyholderartifactruins>Artefaktin etsintä</MissionName.salvageskyholderartifactruins>
   <MissionDescription.salvageskyholderartifactruins>[location1]:n tutkijat ovat poimineet infraäänisignaalin, joka on hyvin samankaltainen kuin aiemmin havaitut vieraiden artefaktien lähettämät Euroopassa. Tutki signaali ja nouta potentiaalinen artefakti.</MissionDescription.salvageskyholderartifactruins>
@@ -805,7 +804,7 @@
 
 
 
-  
-  
-  
+
+
+
 </infotexts>

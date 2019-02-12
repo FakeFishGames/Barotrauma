@@ -6,8 +6,11 @@ namespace Barotrauma
     partial class GameSession
     {
         private InfoFrameTab selectedTab;
-        private GUIButton infoButton;
         private GUIButton infoFrame;
+        /// <summary>
+        /// Determines whether the hotkey for the info button was held down in the previous frame.
+        /// </summary>
+        private bool prevInfoKey;
 
         private GUIFrame infoFrameContent;
 
@@ -15,6 +18,11 @@ namespace Barotrauma
         public RoundSummary RoundSummary
         {
             get { return roundSummary; }
+        }
+
+        partial void InitProjSpecific()
+        {
+            prevInfoKey = false;
         }
 
         private bool ToggleInfoFrame(GUIButton button, object obj)
@@ -127,7 +135,6 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             if (GUI.DisableHUD) return;
-            infoButton.AddToGUIUpdateList();
             GameMode?.AddToGUIUpdateList();
             infoFrame?.AddToGUIUpdateList();
         }
@@ -135,16 +142,13 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime)
         {
             if (GUI.DisableHUD) return;
-            
-            infoButton?.UpdateManually(deltaTime);
+
             infoFrame?.UpdateManually(deltaTime);
         }
-        
+
         public void Draw(SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD) return;
-
-            infoButton.DrawManually(spriteBatch);
 
             GameMode?.Draw(spriteBatch);
             infoFrame?.DrawManually(spriteBatch);

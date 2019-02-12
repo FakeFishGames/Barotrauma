@@ -21,7 +21,7 @@
 
     <EntityName.weldingtool>Eldingway Ooltay</EntityName.weldingtool>
     <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</EntityDescription.weldingtool>
-  
+
   - Job names and descriptions can be translated using the identifier of the job:
     <JobName.captain>капитан</JobName.captain>
     <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
@@ -114,7 +114,7 @@
   <GameMode.sandbox>Sandbox</GameMode.sandbox>
   <GameMode.mission>Mission</GameMode.mission>
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
-  
+
   <!-- Steam Workshop menu -->
   <DownloadButton>Download</DownloadButton>
   <SubscribedMods>Mods</SubscribedMods>
@@ -166,7 +166,7 @@
   <WorkshopItemPublished>"[itemname]" is now available in the Steam Workshop!</WorkshopItemPublished>
   <WorkshopItemPublishFailed>Publishing "[itemname]" in the Steam Workshop failed.</WorkshopItemPublishFailed>
   <WorkshopItemPreviewImageDialogTitle>Select the preview image for the Steam Workshop item.</WorkshopItemPreviewImageDialogTitle>
-  <WorkshopItemPreviewImageTooLarge>The file size of the preview image has to be less than 1 MB.</WorkshopItemPreviewImageTooLarge>  
+  <WorkshopItemPreviewImageTooLarge>The file size of the preview image has to be less than 1 MB.</WorkshopItemPreviewImageTooLarge>
   <WorkshopErrorInstallRequiredToEdit>Cannot edit the workshop item "[itemname]" because it has not been installed.</WorkshopErrorInstallRequiredToEdit>
   <WorkshopErrorInstallRequiredToEnable>Cannot enable the workshop item "[itemname]" because it has not been installed.</WorkshopErrorInstallRequiredToEnable>
   <WorkshopErrorOverwriteOnEnable>Cannot enable workshop item "[itemname]". The file "[filename]" would be overwritten by the item.</WorkshopErrorOverwriteOnEnable>
@@ -174,7 +174,7 @@
   <WorkshopErrorEnableFailed>Enabling the workshop item "[itemname]" failed.</WorkshopErrorEnableFailed>
   <WorkshopItemIncompatible>Incompatible</WorkshopItemIncompatible>
   <WorkshopItemIncompatibleTooltip>This Workshop item is not compatible with your version of Barotrauma.</WorkshopItemIncompatibleTooltip>
-  
+
   <!-- Settings menu -->
   <Settings>Settings</Settings>
   <ApplySettingsButton>Apply</ApplySettingsButton>
@@ -439,7 +439,7 @@
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
   <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
-  
+
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
@@ -466,7 +466,6 @@
   <PlayerCredits>Credits: [credits]</PlayerCredits>
 
   <!-- Ingame menus -->
-  <InfoButton>Info</InfoButton>
   <EndRound>End round</EndRound>
   <EnterLocation>Enter [locationname]</EnterLocation>
   <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
@@ -1030,7 +1029,7 @@
   <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>
   <OrderDialogSelf.wait>I'll wait here!</OrderDialogSelf.wait>
   <OrderDialog.dismissed>[name], you are dismissed!</OrderDialog.dismissed>
-  <OrderDialogSelf.dismissed><!--say nothing--></OrderDialogSelf.dismissed> 
+  <OrderDialogSelf.dismissed><!--say nothing--></OrderDialogSelf.dismissed>
   <OrderDialog.operatereactor>[name], operate the reactor!</OrderDialog.operatereactor>
   <OrderDialog.operatereactor>[name], man the reactor!</OrderDialog.operatereactor>
   <OrderDialogSelf.operatereactor>I'll operate the reactor!</OrderDialogSelf.operatereactor>
@@ -1178,11 +1177,11 @@
 
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
-  
+
   <!-- Contextual tutorial -->
   <Welcome>Welcome</Welcome>
   <WelcomeText>"Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?"</WelcomeText>
-  <ReactorCommand>Command Reactor</ReactorCommand>  
+  <ReactorCommand>Command Reactor</ReactorCommand>
   <NavConsole>Navigation Console</NavConsole>
   <DestinationObjective>Destination</DestinationObjective>
   <DestinationObjectiveText>"Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up."</DestinationObjectiveText>
@@ -1193,10 +1192,10 @@
   <Degrading1Text>"This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this."</Degrading1Text>
   <Degrading2>Command Repair</Degrading2>
   <Medical>Medical</Medical>
-  <Approach1>Approach I</Approach1>  
+  <Approach1>Approach I</Approach1>
   <Approach2>Approach II</Approach2>
   <Approach2Text>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2Text>
-  
+
 
 
 

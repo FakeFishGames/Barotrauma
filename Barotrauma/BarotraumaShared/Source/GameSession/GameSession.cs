@@ -11,7 +11,7 @@ namespace Barotrauma
         public enum InfoFrameTab { Crew, Mission, ManagePlayers };
 
         public readonly EventManager EventManager;
-        
+
         public GameMode GameMode;
 
         //two locations used as the start and end in the MP mode
@@ -20,7 +20,7 @@ namespace Barotrauma
         private string savePath;
 
         private Submarine submarine;
-        
+
         public CrewManager CrewManager;
 
         public double RoundStartTime;
@@ -78,8 +78,8 @@ namespace Barotrauma
 
                 return dummyLocations[1];
             }
-        }  
-     
+        }
+
         public Submarine Submarine
         {
             get { return submarine; }
@@ -92,6 +92,7 @@ namespace Barotrauma
             set { savePath = value; }
         }
 
+        partial void InitProjSpecific();
 
         public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionType missionType = MissionType.None)
             : this(submarine, savePath)
@@ -109,18 +110,12 @@ namespace Barotrauma
 
         private GameSession(Submarine submarine, string savePath)
         {
+            InitProjSpecific();
             Submarine.MainSub = submarine;
             this.submarine = submarine;
             GameMain.GameSession = this;
             EventManager = new EventManager(this);
             this.savePath = savePath;
-            
-#if CLIENT
-            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
-            infoButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), GUICanvas.Instance),
-                TextManager.Get("InfoButton"), textAlignment: Alignment.Center);
-            infoButton.OnClicked = ToggleInfoFrame;
-#endif
         }
 
 
@@ -131,7 +126,7 @@ namespace Barotrauma
 
             GameMain.GameSession = this;
             selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
-            
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -171,7 +166,7 @@ namespace Barotrauma
                 dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null);
             }
         }
-        
+
         public void LoadPrevious()
         {
             Submarine.Unload();
@@ -282,29 +277,29 @@ namespace Barotrauma
             if (GameMode != null)
             {
                 GameMode.MsgBox();
-                
+
                 if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     mpCampaign.CargoManager.CreateItems();
                 }
             }
-            
+
             GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);
             GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
             GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
                     GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
-            
-            
+
+
 #if CLIENT
-            if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);            
+            if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
 
             if (!(GameMode is TutorialMode))
             {
-                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);   
-                GUI.AddMessage(level.Biome.Name, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);            
+                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);
+                GUI.AddMessage(level.Biome.Name, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);
                 GUI.AddMessage(TextManager.Get("Destination") + ": " + EndLocation.Name, Color.CadetBlue, playSound: false);
                 GUI.AddMessage(TextManager.Get("Mission") + ": " + (Mission == null ? TextManager.Get("None") : Mission.Name), Color.CadetBlue, playSound: false);
             }
@@ -329,8 +324,8 @@ namespace Barotrauma
             if (Mission != null) Mission.End();
             GameAnalyticsManager.AddProgressionEvent(
                 (Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
-                GameMode.Preset.Identifier, 
-                (Mission == null ? "None" : Mission.GetType().ToString()));            
+                GameMode.Preset.Identifier,
+                (Mission == null ? "None" : Mission.GetType().ToString()));
 
 #if CLIENT
             if (roundSummary != null)
@@ -352,7 +347,7 @@ namespace Barotrauma
 
             StatusEffect.StopAll();
         }
-        
+
         public void KillCharacter(Character character)
         {
 #if CLIENT
