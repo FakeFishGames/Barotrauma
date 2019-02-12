@@ -948,11 +948,22 @@ namespace Barotrauma
                         foreach (string file in ofd.FileNames)
                         {
                             string filePathRelativeToStagingFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, SteamManager.WorkshopItemStagingFolder));
-                            //file is not inside the staging folder -> copy it
+                            string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
+                            //file is not inside the staging folder
                             if (filePathRelativeToStagingFolder.StartsWith(".."))
                             {
-                                string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
-                                itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                                //submarines can be included in the content package directly
+                                string basePath = Path.GetDirectoryName(filePathRelativeToBaseFolder.Replace("..", ""));
+                                if (basePath == "Submarines")
+                                {
+                                    string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(file));
+                                    File.Copy(file, destinationPath);
+                                    itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.Submarine);
+                                }
+                                else
+                                {
+                                    itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                                }
                             }
                             else
                             {
@@ -1122,6 +1133,7 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) =>
                     {
                         itemContentPackage.RemoveFile(contentFile);
+                        RefreshCreateItemFileList();
                         return true;
                     }
                 };
