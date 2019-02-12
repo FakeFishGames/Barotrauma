@@ -124,6 +124,30 @@ namespace Barotrauma
             return AllowInput && mouseState.MiddleButton == ButtonState.Pressed;
         }
 
+        public static bool Mouse4ButtonClicked()
+        {
+            return (AllowInput &&
+                oldMouseState.XButton1 == ButtonState.Pressed
+                && mouseState.XButton1 == ButtonState.Released);
+        }
+
+        public static bool Mouse4ButtonHeld()
+        {
+            return AllowInput && mouseState.XButton1 == ButtonState.Pressed;
+        }
+
+        public static bool Mouse5ButtonClicked()
+        {
+            return (AllowInput &&
+                oldMouseState.XButton2 == ButtonState.Pressed
+                && mouseState.XButton2 == ButtonState.Released);
+        }
+
+        public static bool Mouse5ButtonHeld()
+        {
+            return AllowInput && mouseState.XButton2 == ButtonState.Pressed;
+        }
+
         public static bool DoubleClicked()
         {
             return AllowInput && doubleClicked;

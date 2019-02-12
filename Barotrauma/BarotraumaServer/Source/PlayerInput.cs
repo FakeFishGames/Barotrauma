@@ -96,6 +96,26 @@ namespace Barotrauma
             return false;
         }
 
+        public static bool Mouse4ButtonClicked()
+        {
+            return false;
+        }
+
+        public static bool Mouse4ButtonHeld()
+        {
+            return false;
+        }
+
+        public static bool Mouse5ButtonClicked()
+        {
+            return false;
+        }
+
+        public static bool Mouse5ButtonHeld()
+        {
+            return false;
+        }
+
         public static bool DoubleClicked()
         {
             return false;
@@ -133,7 +153,7 @@ namespace Barotrauma
 
         public static void Update(double deltaTime)
         {
-            
+
         }
 
         public static void UpdateVariable()

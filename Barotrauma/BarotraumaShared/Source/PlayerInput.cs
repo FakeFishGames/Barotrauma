@@ -3,9 +3,9 @@ using Microsoft.Xna.Framework.Input;
 namespace Barotrauma
 {
 
-    public enum InputType 
-    { 
-        Select, 
+    public enum InputType
+    {
+        Select,
         Use,
         Aim,
         Up, Down, Left, Right,
@@ -45,8 +45,12 @@ namespace Barotrauma
                     return PlayerInput.RightButtonHeld();
                 case 2:
                     return PlayerInput.MidButtonHeld();
+                case 3:
+                    return PlayerInput.Mouse4ButtonHeld();
+                case 4:
+                    return PlayerInput.Mouse5ButtonHeld();
             }
-            
+
             return false;
         }
 
@@ -62,6 +66,10 @@ namespace Barotrauma
                     return PlayerInput.RightButtonClicked();
                 case 2:
                     return PlayerInput.MidButtonClicked();
+                case 3:
+                    return PlayerInput.Mouse4ButtonClicked();
+                case 4:
+                    return PlayerInput.Mouse5ButtonClicked();
             }
 
             return false;
@@ -79,6 +87,10 @@ namespace Barotrauma
                     return "Mouse2";
                 case 2:
                     return "Mouse3";
+                case 3:
+                    return "Mouse4";
+                case 4:
+                    return "Mouse5";
             }
 
             return "None";
@@ -89,7 +101,7 @@ namespace Barotrauma
     {
         private bool hit, hitQueue;
         private bool held, heldQueue;
-        
+
 #if CLIENT
         private InputType inputType;
 
@@ -101,7 +113,7 @@ namespace Barotrauma
         private KeyOrMouse binding
         {
             get { return GameMain.Config.KeyBind(inputType); }
-        }        
+        }
 #else
         private KeyOrMouse binding;
 
@@ -118,9 +130,9 @@ namespace Barotrauma
 
         public bool Hit
         {
-            get 
+            get
             {
-                return hit; 
+                return hit;
             }
             set
             {
@@ -139,7 +151,7 @@ namespace Barotrauma
                 held = value;
             }
         }
-        
+
         public void SetState()
         {
             hit = binding.IsHit();
@@ -159,14 +171,14 @@ namespace Barotrauma
         {
             bool value = hitQueue;
             hitQueue = false;
-            return value;            
+            return value;
         }
 
         public bool DequeueHeld()
         {
             bool value = heldQueue;
             heldQueue = false;
-            return value;            
+            return value;
         }
 
         public bool GetHeldQueue

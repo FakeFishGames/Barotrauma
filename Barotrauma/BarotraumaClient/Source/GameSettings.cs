@@ -305,7 +305,7 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
-            
+
             /// Audio tab ----------------------------------------------------------------
 
             var audioSliders = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
@@ -742,6 +742,16 @@ namespace Barotrauma
             {
                 keyMapping[keyIndex] = new KeyOrMouse(2);
                 keyBox.Text = "Mouse3";
+            }
+            else if (PlayerInput.Mouse4ButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(3);
+                keyBox.Text = "Mouse4";
+            }
+            else if (PlayerInput.Mouse5ButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(4);
+                keyBox.Text = "Mouse5";
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
