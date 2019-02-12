@@ -4367,6 +4367,12 @@ namespace Barotrauma
                     // Next
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
+                        if (!File.Exists(TexturePath))
+                        {
+                            GUI.AddMessage("The texture file does not exist!", Color.Red);
+                            texturePathElement.Flash(Color.Red);
+                            return false;
+                        }
                         Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };
