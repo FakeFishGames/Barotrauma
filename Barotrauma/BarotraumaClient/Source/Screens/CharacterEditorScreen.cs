@@ -4622,7 +4622,7 @@ namespace Barotrauma
                     var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
-                    var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 0, 1, 1), elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                    var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 0, 2, 2), elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
                     new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
                     {
