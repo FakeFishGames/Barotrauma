@@ -86,6 +86,8 @@ namespace Barotrauma.Networking
             if (queue.Read(msg))
             {
                 Client client = gameClient.ConnectedClients.Find(c => c.VoipQueue == queue);
+                if (client.Muted) { return; }
+
                 if (client.VoipSound == null)
                 {
                     DebugConsole.Log("Recreating voipsound " + queueId);

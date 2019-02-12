@@ -71,6 +71,9 @@ namespace Barotrauma.Networking
         {
             if (Screen.Selected != GameMain.GameScreen) { return true; }
 
+            //no-one can hear muted players
+            if (sender.Muted) { return false; }
+
             bool recipientSpectating = recipient.Character == null || recipient.Character.IsDead;
             bool senderSpectating = sender.Character == null || sender.Character.IsDead;
 
