@@ -216,14 +216,7 @@ namespace Barotrauma.Networking
         partial void InitProjSpecific();
 
         public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
-        {
-            ServerName = serverName;
-            Port = port;
-            QueryPort = queryPort;
-            //EnableUPnP = enableUPnP;
-            this.maxPlayers = maxPlayers;
-            this.isPublic = isPublic;
-            
+        {            
             ServerLog = new ServerLog(serverName);
             
             Voting = new Voting();
@@ -234,6 +227,13 @@ namespace Barotrauma.Networking
             ExtraCargo = new Dictionary<ItemPrefab, int>();
 
             InitProjSpecific();
+
+            ServerName = serverName;
+            Port = port;
+            QueryPort = queryPort;
+            //EnableUPnP = enableUPnP;
+            this.maxPlayers = maxPlayers;
+            this.isPublic = isPublic;
 
             netProperties = new Dictionary<UInt32, NetPropertyData>();
 
