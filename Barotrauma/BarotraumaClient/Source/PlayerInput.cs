@@ -19,7 +19,7 @@ namespace Barotrauma
 
         static bool allowInput;
         static bool wasWindowActive;
-        
+
         public static Vector2 MousePosition
         {
             get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
@@ -199,7 +199,7 @@ namespace Barotrauma
                 }
                 lastClickPosition = mouseState.Position;
                 timeSinceClick = 0.0;
-            }            
+            }
         }
 
         public static void UpdateVariable()
