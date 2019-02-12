@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
             {
                 if (!VoipSound.IsPlaying)
                 {
-                    DebugConsole.NewMessage("destroying voipsound", Color.Lime);
+                    DebugConsole.Log("Destroying voipsound");
                     VoipSound.Dispose();
                     VoipSound = null;
                     return;
