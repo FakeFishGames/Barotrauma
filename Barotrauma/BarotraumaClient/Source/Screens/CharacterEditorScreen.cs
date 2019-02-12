@@ -2253,6 +2253,11 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
+                    editLimbsToggle.Selected = false;
+                    editAnimsToggle.Selected = false;
+                    spritesheetToggle.Selected = false;
+                    jointsToggle.Selected = false;
+                    paramsToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
