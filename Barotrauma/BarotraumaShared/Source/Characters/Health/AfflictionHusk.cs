@@ -107,7 +107,8 @@ namespace Barotrauma
             //husk appendage already created, don't do anything
             if (huskAppendage != null) return;
 
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "Huskappendage.xml"));
+            // TODO: Currently it's not possible to rename the huskappendage -> define the appendage path in xml
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(Path.GetDirectoryName(Character.HumanConfigFile), "Huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
             var limbElement = doc.Root.Element("limb");
