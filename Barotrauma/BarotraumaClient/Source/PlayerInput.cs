@@ -148,6 +148,16 @@ namespace Barotrauma
             return AllowInput && mouseState.XButton2 == ButtonState.Pressed;
         }
 
+        public static bool MouseWheelUpClicked()
+        {
+            return (AllowInput && ScrollWheelSpeed > 0);
+        }
+
+        public static bool MouseWheelDownClicked()
+        {
+            return (AllowInput && ScrollWheelSpeed < 0);
+        }
+
         public static bool DoubleClicked()
         {
             return AllowInput && doubleClicked;

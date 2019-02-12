@@ -753,6 +753,16 @@ namespace Barotrauma
                 keyMapping[keyIndex] = new KeyOrMouse(4);
                 keyBox.Text = "Mouse5";
             }
+            else if (PlayerInput.MouseWheelUpClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(5);
+                keyBox.Text = "MouseWheelUp";
+            }
+            else if (PlayerInput.MouseWheelDownClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(6);
+                keyBox.Text = "MouseWheelDown";
+            }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
                 Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];

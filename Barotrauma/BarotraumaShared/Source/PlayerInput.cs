@@ -49,6 +49,10 @@ namespace Barotrauma
                     return PlayerInput.Mouse4ButtonHeld();
                 case 4:
                     return PlayerInput.Mouse5ButtonHeld();
+                case 5: // No real way of "holding" a mouse wheel key, but then again it makes no sense to bind the key to this kind of task.
+                    return PlayerInput.MouseWheelUpClicked();
+                case 6:
+                    return PlayerInput.MouseWheelDownClicked();
             }
 
             return false;
@@ -70,6 +74,10 @@ namespace Barotrauma
                     return PlayerInput.Mouse4ButtonClicked();
                 case 4:
                     return PlayerInput.Mouse5ButtonClicked();
+                case 5:
+                    return PlayerInput.MouseWheelUpClicked();
+                case 6:
+                    return PlayerInput.MouseWheelDownClicked();
             }
 
             return false;
@@ -91,6 +99,10 @@ namespace Barotrauma
                     return "Mouse4";
                 case 4:
                     return "Mouse5";
+                case 5:
+                    return "MouseWheelUp";
+                case 6:
+                    return "MouseWheelDown";
             }
 
             return "None";
