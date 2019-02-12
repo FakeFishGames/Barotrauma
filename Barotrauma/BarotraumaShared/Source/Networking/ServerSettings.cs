@@ -379,6 +379,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(true, true)]
+        public bool VoiceChatEnabled
+        {
+            get;
+            set;
+        }
+
         [Serialize(800, true)]
         private int LinesPerLogFile
         {

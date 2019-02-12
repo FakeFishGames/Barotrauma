@@ -338,7 +338,10 @@ namespace Barotrauma.Networking
 
             fileSender.Update(deltaTime);
 
-            VoipServer.SendToClients(connectedClients);
+            if (serverSettings.VoiceChatEnabled)
+            {
+                VoipServer.SendToClients(connectedClients);
+            }
 
             if (gameStarted)
             {
@@ -638,14 +641,17 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPacketHeader.VOICE:
-                    byte id = inc.ReadByte();
-                    if (connectedClient.ID != id)
+                    if (serverSettings.VoiceChatEnabled)
                     {
-                        DebugConsole.ThrowError(
-                            "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
-                        return;
+                        byte id = inc.ReadByte();
+                        if (connectedClient.ID != id)
+                        {
+                            DebugConsole.ThrowError(
+                                "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
+                            return;
+                        }
+                        connectedClient.VoipQueue.Read(inc);
                     }
-                    connectedClient.VoipQueue.Read(inc);
                     break;
                 case ClientPacketHeader.SERVER_SETTINGS:
                     serverSettings.ServerRead(inc, ConnectedClients.First(c=>c.Connection == inc.SenderConnection));
@@ -1220,6 +1226,8 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(serverSettings.Voting.AllowSubVoting);
                 outmsg.Write(serverSettings.Voting.AllowModeVoting);
+
+                outmsg.Write(serverSettings.VoiceChatEnabled);
 
                 outmsg.Write(serverSettings.AllowSpectating);
 
