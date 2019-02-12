@@ -11,6 +11,43 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
+        private SteamManager()
+        {
+            try
+            {
+                client = new Facepunch.Steamworks.Client(AppID);
+                isInitialized = client.IsSubscribed && client.IsValid;
+
+                if (isInitialized)
+                {
+                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                isInitialized = false;
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamDllNotFound"));
+            }
+            catch (Exception)
+            {
+                isInitialized = false;
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamClientInitFailed"));
+            }
+
+            if (!isInitialized)
+            {
+                try
+                {
+
+                    Facepunch.Steamworks.Client.Instance.Dispose();
+                }
+                catch (Exception e)
+                {
+                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
+                }
+            }
+        }
+
         public static ulong GetSteamID()
         {
             if (instance == null || !instance.isInitialized)

@@ -9,10 +9,7 @@ namespace Barotrauma.Steam
 
         public static bool CreateServer(Networking.GameServer server, bool isPublic)
         {
-            if (instance == null || !instance.isInitialized)
-            {
-                return false;
-            }
+            Instance.isInitialized = true;
 
             ServerInit options = new ServerInit("Barotrauma", "Barotrauma")
             {
