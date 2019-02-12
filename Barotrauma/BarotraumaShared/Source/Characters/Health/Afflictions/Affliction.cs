@@ -115,6 +115,71 @@ namespace Barotrauma
             }
         }
 
+        public float GetPsychosisResistance()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxPsychosisResistance - currentEffect.MinPsychosisResistance <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinPsychosisResistance,
+                currentEffect.MaxPsychosisResistance,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetHuskInfectionResistance()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxHuskInfectionResistance - currentEffect.MinHuskInfectionResistance <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinHuskInfectionResistance,
+                currentEffect.MaxHuskInfectionResistance,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetPressureResistance()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxPressureResistance - currentEffect.MinPressureResistance <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinPressureResistance,
+                currentEffect.MaxPressureResistance,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetPoisonResistance()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxDamageResistance - currentEffect.MinDamageResistance <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinDamageResistance,
+                currentEffect.MaxDamageResistance,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetDamageResistance()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxDamageResistance - currentEffect.MinDamageResistance <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinDamageResistance,
+                currentEffect.MaxDamageResistance,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);

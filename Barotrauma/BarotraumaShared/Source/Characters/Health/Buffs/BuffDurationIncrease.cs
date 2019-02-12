@@ -4,7 +4,11 @@ using System.Text;
 
 namespace Barotrauma
 {
-    class BuffDurationIncrease
+    class BuffDurationIncrease : Buff
     {
+        public BuffDurationIncrease(AfflictionPrefab prefab, float strength) : base(prefab, strength)
+        {
+
+        }
     }
 }

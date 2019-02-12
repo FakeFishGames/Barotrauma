@@ -463,4 +463,75 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
   
+  <!-- Basic buffs. -->
+   <!--<BuffDurationIncrease
+    name="Duration Increase"
+    identifier="durationincrease"
+    description="Increases the duration of all buffs."
+    type="duration"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"/>
+  </BuffDurationIncrease>-->
+
+  <Affliction
+    name="Haste"
+    identifier="haste"
+    description="Gotta go fast."
+    type="haste"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100">
+          <StatusEffect target="Character" SpeedMultiplier="2.0" setvalue="true"/>
+    </Effect>
+  </Affliction>
+
+  <Affliction
+    name="Husk Infection Resistance"
+    identifier="huskinfectionresistance"
+    description="Husk be gone."
+    type="resistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      minhuskinfectionresistance="0"
+      maxhuskinfectionresistance="1"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Psychosis Resistance"
+    identifier="psychosisresistance"
+    description="Psychosis be gone."
+    type="resistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      minpsychosisresistance="0"
+      maxpsychosisresistance="1"/>
+  </Affliction>
+
+  <Affliction
+    name="Pressure Resistance"
+    identifier="pressureresistance"
+    description="Pressure be gone."
+    type="resistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      minpressureresistance="0"
+      maxpressureresistance="1"/>
+  </Affliction>
+
+  <Affliction
+    name="Strengthen"
+    identifier="strengthen"
+    description="Damage be gone."
+    type="resistance"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      mindamageresistance="0"
+      maxdamageresistance="1"/>
+  </Affliction>  
 </Afflictions>
