@@ -66,56 +66,7 @@ namespace Barotrauma.Steam
             if (!USE_STEAM) return;
             instance = new SteamManager();
         }
-
-        private SteamManager()
-        {
-#if SERVER
-            return;
-#endif
-
-            try
-            {
-                client = new Facepunch.Steamworks.Client(AppID);
-                isInitialized = client.IsSubscribed && client.IsValid;
-
-                if (isInitialized)
-                {
-                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
-                }
-            }
-            catch (DllNotFoundException e)
-            {
-                isInitialized = false;
-#if CLIENT
-                new Barotrauma.GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamDllNotFound"));
-#else
-                DebugConsole.ThrowError("Initializing Steam client failed (steam_api64.dll not found).", e);
-#endif
-            }
-            catch (Exception e)
-            {
-                isInitialized = false;
-#if CLIENT
-                new Barotrauma.GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamClientInitFailed"));
-#else
-                DebugConsole.ThrowError("Initializing Steam client failed.", e);
-#endif
-            }
-
-            if (!isInitialized)
-            {
-                try
-                {
-
-                    Facepunch.Steamworks.Client.Instance.Dispose();
-                }
-                catch (Exception e)
-                {
-                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
-                }
-            }
-        }
-
+        
         public static bool UnlockAchievement(string achievementName)
         {
             if (instance == null || !instance.isInitialized)
