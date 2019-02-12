@@ -88,8 +88,13 @@ namespace Barotrauma.Networking
                 Client client = gameClient.ConnectedClients.Find(c => c.VoipQueue == queue);
                 if (client.VoipSound == null)
                 {
-                    DebugConsole.NewMessage("recreating voipsound", Color.Lime);
+                    DebugConsole.Log("Recreating voipsound " + queueId);
                     client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
+                }
+                if (client.Character != null && !client.Character.IsDead && !client.Character.IsDead && client.Character.SpeechImpediment <= 100.0f)
+                {
+                    var messageType = ChatMessage.CanUseRadio(client.Character) ? ChatMessageType.Radio : ChatMessageType.Default;
+                    client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
                 }
             }
         }
