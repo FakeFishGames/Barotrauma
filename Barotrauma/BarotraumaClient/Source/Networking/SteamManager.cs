@@ -613,7 +613,7 @@ namespace Barotrauma.Steam
                 GameMain.Config.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage);
             }
             GameMain.Config.SelectedContentPackages.Add(newPackage);
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
             if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
             {
@@ -693,7 +693,7 @@ namespace Barotrauma.Steam
 
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
                 GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
-                GameMain.Config.Save();
+                GameMain.Config.SaveNewPlayerConfig();
             }
             catch (Exception e)
             {

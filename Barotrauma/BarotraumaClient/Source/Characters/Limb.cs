@@ -241,28 +241,28 @@ namespace Barotrauma
             DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
 
-        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
+        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
         {
-            float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
+            float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-
+            float damageMultiplier = 1;
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
+                        SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
+                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
-
-                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
-            float damageParticleAmount = Math.Min(damage / 10, 1.0f);
+            // Always spawn damage particles
+            float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
             foreach (ParticleEmitter emitter in character.DamageEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -271,20 +271,25 @@ namespace Barotrauma
                 emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
             }
 
-            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
-            float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
-            foreach (ParticleEmitter emitter in character.BloodEmitters)
+            if (bleedingDamage > 0)
             {
-                if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
-                if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+                float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
+                float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
 
-                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);                
+                foreach (ParticleEmitter emitter in character.BloodEmitters)
+                {
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+
+                    emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);
+                }
+
+                if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
+                {
+                    character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
+                }
             }
-
-            if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
-            {
-                character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
-            }            
+           
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -443,20 +448,16 @@ namespace Barotrauma
                 }
                 foreach (var modifier in damageModifiers)
                 {
-                    float rot = body.Rotation;
-                    rot = MathUtils.WrapAngleTwoPi(rot);
-                    if (Dir == -1) { rot -= MathHelper.Pi; }
+                    //float midAngle = MathUtils.GetMidAngle(modifier.ArmorSector.X, modifier.ArmorSector.Y);
+                    //float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+                    //float offset = -body.Rotation - (midAngle + spritesheetOrientation) * Dir;
+                    float offset = GetArmorSectorRotationOffset(modifier.ArmorSector, -body.Rotation);
+                    Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
                     float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
-                    float x = modifier.ArmorSector.X;
-                    float y = modifier.ArmorSector.Y;
-                    float from = Math.Min(x, y);
-                    float to = Math.Max(x, y);
-                    float angle = to - from;
-                    angle *= Dir;
-                    //float o = (-MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation) - MathHelper.PiOver2) * Dir;
-                    float offset = -rot - from * Dir - MathHelper.PiOver2 * Dir;
-                    Color c = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
-                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, -angle, 40, c, offset, thickness: 2 / cam.Zoom);
+                    color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
+                    if (Dir == -1) { offset += MathHelper.Pi; }
+                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSector) * Dir, 40, color, offset + MathHelper.Pi, thickness: 2 / cam.Zoom);
                 }
             }
         }

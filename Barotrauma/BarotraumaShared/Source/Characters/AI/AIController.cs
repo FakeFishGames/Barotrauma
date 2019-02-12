@@ -12,7 +12,17 @@ namespace Barotrauma
 
         private AIState state;
 
-        protected AITarget selectedAiTarget;
+        protected AITarget _previousAiTarget;
+        protected AITarget _selectedAiTarget;
+        public AITarget SelectedAiTarget
+        {
+            get { return _selectedAiTarget; }
+            protected set
+            {
+                _previousAiTarget = _selectedAiTarget;
+                _selectedAiTarget = value;
+            }
+        }
 
         protected SteeringManager steeringManager;
 
@@ -55,11 +65,6 @@ namespace Barotrauma
         public virtual AIObjectiveManager ObjectiveManager
         {
             get { return null; }
-        }
-
-        public AITarget SelectedAiTarget
-        {
-            get { return selectedAiTarget; }
         }
 
         public AIState State

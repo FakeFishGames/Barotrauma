@@ -13,7 +13,8 @@ namespace Barotrauma
 {
     public enum GUISoundType
     {
-        Message,
+        UIMessage,
+        ChatMessage,
         RadioMessage,
         DeadMessage,
         Click,
@@ -156,7 +157,7 @@ namespace Barotrauma
             {
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
 
-                sounds[(int)GUISoundType.Message] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.UIMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
                 sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/radiomsg.ogg", false);
                 sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/deadmsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/beep-shinymetal.ogg", false);
@@ -1562,13 +1563,13 @@ namespace Barotrauma
         {
             if (messages.Any(msg => msg.Text == message)) { return; }
             messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
-            if (playSound) PlayUISound(GUISoundType.Message);
+            if (playSound) PlayUISound(GUISoundType.UIMessage);
         }
 
         public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true)
         {
             messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
-            if (playSound) PlayUISound(GUISoundType.Message);
+            if (playSound) PlayUISound(GUISoundType.UIMessage);
         }
 
         public static void ClearMessages()

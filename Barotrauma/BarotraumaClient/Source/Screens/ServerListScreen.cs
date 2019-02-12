@@ -129,7 +129,7 @@ namespace Barotrauma
             GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
                 TextManager.Get("Back"), style: "GUIButtonLarge")
             {
-                OnClicked = GameMain.MainMenuScreen.SelectTab
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
 
 			var refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
@@ -591,7 +591,7 @@ namespace Barotrauma
             }
 
             GameMain.Config.DefaultPlayerName = clientNameBox.Text;
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
             string ip = null;
             if (ipBox.UserData is ServerInfo serverInfo)

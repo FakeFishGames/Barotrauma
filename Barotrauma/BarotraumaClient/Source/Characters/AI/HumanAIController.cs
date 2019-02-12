@@ -23,11 +23,11 @@ namespace Barotrauma
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (selectedAiTarget?.Entity != null)
+            if (SelectedAiTarget?.Entity != null)
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                    new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
+                    new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
             }
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;

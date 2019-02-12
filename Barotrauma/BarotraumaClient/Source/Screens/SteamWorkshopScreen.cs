@@ -58,7 +58,7 @@ namespace Barotrauma
             GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("Back"))
             {
-                OnClicked = GameMain.MainMenuScreen.SelectTab
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
             backButton.SelectedColor = backButton.Color;
 
@@ -840,6 +840,12 @@ namespace Barotrauma
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+                        if (new FileInfo(ofd.FileName).Length > 1024 * 1024)
+                        {
+                            new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                            return false;
+                        }
+                        
                         if (ofd.FileName != previewImagePath)
                         {
                             File.Copy(ofd.FileName, previewImagePath, overwrite: true);

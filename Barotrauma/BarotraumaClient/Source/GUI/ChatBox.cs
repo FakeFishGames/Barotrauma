@@ -245,7 +245,7 @@ namespace Barotrauma
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
 
-            GUISoundType soundType = GUISoundType.Message;
+            GUISoundType soundType = GUISoundType.ChatMessage;
             if (message.Type == ChatMessageType.Radio)
             {
                 soundType = GUISoundType.RadioMessage;

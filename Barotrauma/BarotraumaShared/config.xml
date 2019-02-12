@@ -9,7 +9,7 @@
   savedebugconsolelogs="false"
   enablesplashscreen="true"
   usesteammatchmaking="true"
-  quickstartsub = "Turso" 
+  quickstartsub = "Humpback" 
   requiresteamauthentication="true">
   <graphicsmode displaymode="BorderlessWindowed" vsync="true" />
   <graphicssettings

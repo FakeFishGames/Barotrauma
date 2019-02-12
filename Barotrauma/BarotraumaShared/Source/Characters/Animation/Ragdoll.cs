@@ -314,16 +314,16 @@ namespace Barotrauma
             {
                 if (!PhysicsBody.IsValidShape(limbParams.Radius, limbParams.Height, limbParams.Width))
                 {
-                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on limb: " + limbParams.Name);
-                    return;
+                    DebugConsole.ThrowError($"Invalid collider dimensions (r: {limbParams.Radius}, h: {limbParams.Height}, w: {limbParams.Width}) on limb: {limbParams.Name}. Fixing.");
+                    limbParams.Radius = 10;
                 }
             }
             foreach (var colliderParams in RagdollParams.ColliderParams)
             {
                 if (!PhysicsBody.IsValidShape(colliderParams.Radius, colliderParams.Height, colliderParams.Width))
                 {
-                    DebugConsole.ThrowError("Cannot create the ragdoll: invalid collider dimensions on collider: " + colliderParams.Name);
-                    return;
+                    DebugConsole.ThrowError($"Invalid collider dimensions (r: {colliderParams.Radius}, h: {colliderParams.Height}, w: {colliderParams.Width}) on collider: {colliderParams.Name}. Fixing.");
+                    colliderParams.Radius = 10;
                 }
             }
             CreateColliders();
