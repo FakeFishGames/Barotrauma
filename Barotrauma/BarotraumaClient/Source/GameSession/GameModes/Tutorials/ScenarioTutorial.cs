@@ -101,7 +101,7 @@ namespace Barotrauma.Tutorials
             messageBox.Buttons[0].OnClicked += messageBox.Close;
 
 
-            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
+            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu;
             messageBox.Buttons[1].OnClicked += messageBox.Close;
 
             yield return CoroutineStatus.Success;

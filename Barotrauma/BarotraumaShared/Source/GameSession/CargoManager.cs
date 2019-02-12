@@ -141,10 +141,12 @@ namespace Barotrauma
                             continue;
                         }
                         availableContainers.Add(itemContainer, itemContainer.Capacity);
+#if SERVER
                         if (GameMain.Server != null)
                         {
                             Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
                         }
+#endif
                     }                    
                 }
                 for (int i = 0; i < pi.Quantity; i++)
@@ -152,14 +154,18 @@ namespace Barotrauma
                     if (itemContainer == null)
                     {
                         //no container, place at the waypoint
+#if SERVER
                         if (GameMain.Server != null)
                         {
                             Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine);
                         }
                         else
                         {
+#endif
                             new Item(pi.ItemPrefab, position, wp.Submarine);
+#if SERVER
                         }
+#endif
                         continue;
                     }
                     //if the intial container has been removed due to it running out of space, add a new container
@@ -169,22 +175,28 @@ namespace Barotrauma
                         Item containerItemOverFlow = new Item(containerPrefab, position, wp.Submarine);
                         itemContainer = containerItemOverFlow.GetComponent<ItemContainer>();
                         availableContainers.Add(itemContainer, itemContainer.Capacity);
+#if SERVER
                         if (GameMain.Server != null)
                         {
                             Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
                         }
+#endif
                     }
 
                     //place in the container
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory);
                     }
                     else
                     {
+#endif
                         var item = new Item(pi.ItemPrefab, position, wp.Submarine);
                         itemContainer.Inventory.TryPutItem(item, null);
+#if SERVER
                     }
+#endif
 
                     //reduce the number of available slots in the container
                     //if there is a container

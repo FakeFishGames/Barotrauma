@@ -36,15 +36,20 @@ namespace Barotrauma
             get
             {
                 if (descriptions == null) return "";
-                
-                if (GameMain.NetworkMember == null || GameMain.NetworkMember.Character == null)
+
+#if CLIENT
+                if (GameMain.Client == null || GameMain.Client.Character == null)
                 {
                     //non-team-specific description
                     return descriptions[0];
                 }
 
                 //team specific
-                return descriptions[GameMain.NetworkMember.Character.TeamID];
+                return descriptions[GameMain.Client.Character.TeamID];
+#elif SERVER
+                //non-team-specific description
+                return descriptions[0];
+#endif
             }
         }
 
@@ -200,11 +205,13 @@ namespace Barotrauma
                     }
                 }
 
+#if CLIENT
                 if (GameMain.Client != null)
                 {
                     //no characters in one of the teams, the client may not have received all spawn messages yet
                     if (crews[0].Count == 0 || crews[1].Count == 0) return;
                 }
+#endif
 
                 initialized = true;
             }
@@ -241,7 +248,9 @@ namespace Barotrauma
 #if CLIENT
                     GameMain.GameSession.CrewManager.WinningTeam = winner + 1;
 #endif
+#if SERVER
                     if (GameMain.Server != null) GameMain.Server.EndGame();
+#endif
                 }
             }
 
@@ -251,7 +260,9 @@ namespace Barotrauma
                 GameMain.GameSession.CrewManager.WinningTeam = 0;
 #endif
                 winner = -1;
+#if SERVER
                 if (GameMain.Server != null) GameMain.Server.EndGame();
+#endif
             }
         }
 

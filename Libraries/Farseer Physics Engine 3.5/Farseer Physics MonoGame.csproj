@@ -22,7 +22,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
-    <ReleaseVersion>0.7.0.1</ReleaseVersion>
+    <ReleaseVersion>0.9.0.0</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>

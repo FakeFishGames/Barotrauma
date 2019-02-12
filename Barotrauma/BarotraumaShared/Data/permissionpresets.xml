@@ -8,7 +8,7 @@
   <Preset 
     name="Moderator" 
     description="Allowed to manage round settings, kick players and access server logs." 
-    permissions="EndRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog">
+    permissions="ManageRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog">
     <Command name="clientlist"/>
     <Command name="autorestart"/>
     <Command name="autorestartinterval"/>
@@ -23,7 +23,7 @@
   <Preset 
     name="Admin" 
     description="Allowed to ban and kick players, manage round settings, access server logs and use nearly all console commands." 
-    permissions="EndRound,Kick,Ban,Unban,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog">
+    permissions="ManageRound,Kick,Ban,Unban,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog,ManagePermissions">
     <Command name="clientlist"/>
     <Command name="autorestart"/>
     <Command name="autorestartinterval"/>

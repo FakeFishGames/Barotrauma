@@ -189,6 +189,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (lightComponent != null) 
                 {
+                    lightComponent.Parent = null;
                     lightComponent.Rotation = rotation;
                     lightComponent.Light.Rotation = -rotation;
                 }
@@ -258,7 +259,9 @@ namespace Barotrauma.Items.Components
 
         private bool TryLaunch(float deltaTime, Character character = null)
         {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
             if (reload > 0.0f) return false;
 
@@ -313,14 +316,17 @@ namespace Barotrauma.Items.Components
 
                 battery.Charge -= takePower / 3600.0f;
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     battery.Item.CreateServerEvent(battery);
                 }
+#endif
             }
 
             Launch(projectiles[0].Item, character);
 
+#if SERVER
             if (character != null)
             {
                 string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
@@ -334,6 +340,7 @@ namespace Barotrauma.Items.Components
                 }
                 GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
             return true;
         }
@@ -359,10 +366,10 @@ namespace Barotrauma.Items.Components
             }
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
-
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
+                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, user: user);
@@ -660,12 +667,9 @@ namespace Barotrauma.Items.Components
                     break;
                 case "toggle":
                 case "toggle_light":
-                    foreach (ItemComponent component in item.components)
+                    if (lightComponent != null)
                     {
-                        if (component.Parent == this && component is LightComponent lightComponent)
-                        {
-                            lightComponent.IsOn = !lightComponent.IsOn;
-                        }
+                        lightComponent.IsOn = !lightComponent.IsOn;
                     }
                     break;
             }

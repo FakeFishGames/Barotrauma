@@ -313,17 +313,11 @@ namespace Barotrauma
 
         protected virtual void CreateNetworkEvent()
         {
-            if (GameMain.Server != null)
+            if (GameMain.NetworkMember != null)
             {
-                GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
+                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState });
             }
-#if CLIENT
-            else if (GameMain.Client != null)
-            {            
-                syncItemsDelay = 1.0f;
-                GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState });
-            }
-#endif
         }
 
         public Item FindItemByTag(string tag)
@@ -364,6 +358,14 @@ namespace Barotrauma
             }
         }
 
+        public void SharedWrite(NetBuffer msg, object[] extraData = null)
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
+            }
+        }
+        
         /// <summary>
         /// Deletes all items inside the inventory (and also recursively all items inside the items)
         /// </summary>
@@ -379,139 +381,12 @@ namespace Barotrauma
                 Items[i].Remove();
             }
         }
-            
+        
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
-            ServerWrite(msg, null);
-        }
+            SharedWrite(msg, extraData);
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            List<Item> prevItems = new List<Item>(Items);
-            ushort[] newItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
-            {
-                newItemIDs[i] = msg.ReadUInt16();
-            }
-
-            
-            if (c == null || c.Character == null) return;
-
-            bool accessible = c.Character.CanAccessInventory(this);
-            if (this is CharacterInventory && accessible)
-            {
-                if (Owner == null || !(Owner is Character))
-                {
-                    accessible = false;
-                }
-                else if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead)
-                {
-                    accessible = false;
-                }
-            }
-
-            if (!accessible)
-            {
-                //create a network event to correct the client's inventory state
-                //otherwise they may have an item in their inventory they shouldn't have been able to pick up,
-                //and receiving an event for that inventory later will cause the item to be dropped
-                CreateNetworkEvent();
-                for (int i = 0; i < capacity; i++)
-                {
-                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
-                    if (item == null) continue;
-                    if (item.ParentInventory != null && item.ParentInventory != this)
-                    {
-                        item.ParentInventory.CreateNetworkEvent();
-                    }
-                }
-                return;
-            }
-            
-            List<Inventory> prevItemInventories = new List<Inventory>(Items.Select(i => i?.ParentInventory));
-
-            for (int i = 0; i < capacity; i++)
-            {
-                Item newItem = newItemIDs[i] == 0 ? null : Entity.FindEntityByID(newItemIDs[i]) as Item;
-                prevItemInventories.Add(newItem?.ParentInventory);
-
-                if (newItemIDs[i] == 0 || (newItem != Items[i]))
-                {
-                    if (Items[i] != null) Items[i].Drop();
-                    System.Diagnostics.Debug.Assert(Items[i] == null);
-                }
-            }
-
-            for (int i = 0; i < capacity; i++)
-            {
-                if (newItemIDs[i] > 0)
-                {
-                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
-                    if (item == null || item == Items[i]) continue;
-
-                    if (GameMain.Server != null)
-                    {
-                        var holdable = item.GetComponent<Holdable>();
-                        if (holdable != null && !holdable.CanBeDeattached()) continue;
-
-                        if (!item.CanClientAccess(c)) continue;
-                    }
-                    TryPutItem(item, i, true, true, c.Character, false);
-                    for (int j = 0; j < capacity; j++)
-                    {
-                        if (Items[j] == item && newItemIDs[j] != item.ID)
-                        {
-                            Items[j] = null;
-                        }
-                    }
-                }
-            }
-
-            CreateNetworkEvent();
-            foreach (Inventory prevInventory in prevItemInventories.Distinct())
-            {
-                if (prevInventory != this) prevInventory?.CreateNetworkEvent();
-            }
-
-            foreach (Item item in Items.Distinct())
-            {
-                if (item == null) continue;
-                if (!prevItems.Contains(item))
-                {
-                    if (Owner == c.Character)
-                    {
-                        GameServer.Log(c.Character.LogName+ " picked up " + item.Name, ServerLog.MessageType.Inventory);
-                    }
-                    else
-                    {
-                        GameServer.Log(c.Character.LogName + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
-                    }
-                }
-            }
-            foreach (Item item in prevItems.Distinct())
-            {
-                if (item == null) continue;
-                if (!Items.Contains(item))
-                {
-                    if (Owner == c.Character)
-                    {
-                        GameServer.Log(c.Character.LogName + " dropped " + item.Name, ServerLog.MessageType.Inventory);
-                    }
-                    else
-                    {
-                        GameServer.Log(c.Character.LogName + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
-                    }
-                }
-            }
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            for (int i = 0; i < capacity; i++)
-            {
-                msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
-            }
+            syncItemsDelay = 1.0f;
         }
     }
 }

@@ -66,8 +66,10 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+#if CLIENT
             //clients don't create items until the server says so
             if (GameMain.Client != null) return;
+#endif
 
             foreach (XElement subElement in element.Elements())
             {
@@ -86,7 +88,7 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific(XElement element);
-                
+
         public int FindLimbSlot(InvSlotType limbSlot)
         {
             for (int i = 0; i < Items.Length; i++)

@@ -58,7 +58,7 @@ namespace Barotrauma
             GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("Back"))
             {
-                OnClicked = GameMain.MainMenuScreen.SelectTab
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
             backButton.SelectedColor = backButton.Color;
 
@@ -840,6 +840,12 @@ namespace Barotrauma
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+                        if (new FileInfo(ofd.FileName).Length > 1024 * 1024)
+                        {
+                            new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                            return false;
+                        }
+                        
                         if (ofd.FileName != previewImagePath)
                         {
                             File.Copy(ofd.FileName, previewImagePath, overwrite: true);
@@ -942,11 +948,22 @@ namespace Barotrauma
                         foreach (string file in ofd.FileNames)
                         {
                             string filePathRelativeToStagingFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, SteamManager.WorkshopItemStagingFolder));
-                            //file is not inside the staging folder -> copy it
+                            string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
+                            //file is not inside the staging folder
                             if (filePathRelativeToStagingFolder.StartsWith(".."))
                             {
-                                string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
-                                itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                                //submarines can be included in the content package directly
+                                string basePath = Path.GetDirectoryName(filePathRelativeToBaseFolder.Replace("..", ""));
+                                if (basePath == "Submarines")
+                                {
+                                    string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(file));
+                                    File.Copy(file, destinationPath);
+                                    itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.Submarine);
+                                }
+                                else
+                                {
+                                    itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                                }
                             }
                             else
                             {
@@ -1116,6 +1133,7 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) =>
                     {
                         itemContentPackage.RemoveFile(contentFile);
+                        RefreshCreateItemFileList();
                         return true;
                     }
                 };

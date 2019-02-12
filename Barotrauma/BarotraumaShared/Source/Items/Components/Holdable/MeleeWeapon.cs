@@ -294,8 +294,9 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            if (GameMain.Client != null) return true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return true;
 
+#if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
 
@@ -315,6 +316,7 @@ namespace Barotrauma.Items.Components
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
+#endif
 
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {

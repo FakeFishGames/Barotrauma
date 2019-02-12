@@ -2,12 +2,12 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">ReleaseLinux</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{85232B20-074D-4723-B0C6-91495391E448}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BarotraumaServer</RootNamespace>
-    <AssemblyName>BarotraumaServer</AssemblyName>
+    <RootNamespace>Barotrauma</RootNamespace>
+    <AssemblyName>DedicatedServer</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -27,7 +27,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <ReleaseVersion>0.7.0.1</ReleaseVersion>
+    <ReleaseVersion>0.9.0.0</ReleaseVersion>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -113,17 +113,47 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Camera.cs" />
     <Compile Include="Source\Characters\Character.cs" />
+    <Compile Include="Source\Characters\CharacterInfo.cs" />
+    <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\GameMain.cs" />
-    <Compile Include="Source\GameSession\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\GameSession\CrewManager.cs" />
+    <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
+    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
+    <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
+    <Compile Include="Source\Items\Components\Machines\Engine.cs" />
+    <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
+    <Compile Include="Source\Items\Components\Machines\Pump.cs" />
     <Compile Include="Source\Items\Components\Machines\Steering.cs" />
+    <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
+    <Compile Include="Source\Items\Components\Repairable.cs" />
+    <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
+    <Compile Include="Source\Items\Components\Signal\CustomInterface.cs" />
+    <Compile Include="Source\Items\Components\Signal\Wire.cs" />
+    <Compile Include="Source\Items\Inventory.cs" />
+    <Compile Include="Source\Items\Item.cs" />
     <Compile Include="Source\Map\Hull.cs" />
-    <Compile Include="Source\Networking\GameClient.cs" />
+    <Compile Include="Source\Map\Structure.cs" />
+    <Compile Include="Source\Networking\BanList.cs" />
+    <Compile Include="Source\Networking\ChatMessage.cs" />
+    <Compile Include="Source\Networking\Client.cs" />
+    <Compile Include="Source\Networking\EntitySpawner.cs" />
+    <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />
+    <Compile Include="Source\Networking\GameServerLogin.cs" />
+    <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="Source\Networking\RespawnManager.cs" />
+    <Compile Include="Source\Networking\ServerSettings.cs" />
+    <Compile Include="Source\Networking\SteamManager.cs" />
+    <Compile Include="Source\Networking\Voip\VoipServer.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
+    <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />

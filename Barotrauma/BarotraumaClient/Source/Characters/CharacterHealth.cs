@@ -1110,7 +1110,7 @@ namespace Barotrauma
 
             return medicalItems.Distinct().ToList();
         }
-   
+
         private void UpdateLimbIndicators(float deltaTime, Rectangle drawArea)
         {
             limbIndicatorOverlayAnimState += deltaTime * 8.0f;

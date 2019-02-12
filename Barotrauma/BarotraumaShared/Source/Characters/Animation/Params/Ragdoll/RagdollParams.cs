@@ -64,7 +64,7 @@ namespace Barotrauma
 
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
-        public static string GetDefaultFile(string speciesName) => $"{GetDefaultFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
+        public static string GetDefaultFile(string speciesName) => $"{GetFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
 
         private static readonly object[] dummyParams = new object[]
         {

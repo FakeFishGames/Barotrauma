@@ -9,10 +9,88 @@ namespace Barotrauma
 {
     partial class Character
     {
+        partial void UpdateNetInput()
+        {
+            if (GameMain.Client != null)
+            {
+                if (this != Controlled)
+                {
+                    //freeze AI characters if more than 1 seconds have passed since last update from the server
+                    if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
+                    {
+                        AnimController.Frozen = true;
+                        memState.Clear();
+                        //hide after 2 seconds
+                        if (lastRecvPositionUpdateTime < NetTime.Now - 2.0f)
+                        {
+                            Enabled = false;
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    var posInfo = new CharacterStateInfo(
+                    SimPosition,
+                    AnimController.Collider.Rotation,
+                    LastNetworkUpdateID,
+                    AnimController.TargetDir,
+                    SelectedCharacter == null ? (Entity)SelectedConstruction : (Entity)SelectedCharacter,
+                    AnimController.Anim);
+
+                    memLocalState.Add(posInfo);
+
+                    InputNetFlags newInput = InputNetFlags.None;
+                    if (IsKeyDown(InputType.Left)) newInput |= InputNetFlags.Left;
+                    if (IsKeyDown(InputType.Right)) newInput |= InputNetFlags.Right;
+                    if (IsKeyDown(InputType.Up)) newInput |= InputNetFlags.Up;
+                    if (IsKeyDown(InputType.Down)) newInput |= InputNetFlags.Down;
+                    if (IsKeyDown(InputType.Run)) newInput |= InputNetFlags.Run;
+                    if (IsKeyDown(InputType.Crouch)) newInput |= InputNetFlags.Crouch;
+                    if (IsKeyHit(InputType.Select)) newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                    if (IsKeyHit(InputType.Health)) newInput |= InputNetFlags.Health;
+                    if (IsKeyHit(InputType.Grab)) newInput |= InputNetFlags.Grab;
+                    if (IsKeyDown(InputType.Use)) newInput |= InputNetFlags.Use;
+                    if (IsKeyDown(InputType.Aim)) newInput |= InputNetFlags.Aim;
+                    if (IsKeyDown(InputType.Attack)) newInput |= InputNetFlags.Attack;
+                    if (IsKeyDown(InputType.Ragdoll)) newInput |= InputNetFlags.Ragdoll;
+
+                    if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
+
+                    Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
+                    relativeCursorPos.Normalize();
+                    UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
+
+                    NetInputMem newMem = new NetInputMem
+                    {
+                        states = newInput,
+                        intAim = intAngle
+                    };
+                    if (focusedItem != null && (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
+                    {
+                        newMem.interact = focusedItem.ID;
+                    }
+                    else if (focusedCharacter != null)
+                    {
+                        newMem.interact = focusedCharacter.ID;
+                    }
+
+                    memInput.Insert(0, newMem);
+                    LastNetworkUpdateID++;
+                    if (memInput.Count > 60)
+                    {
+                        memInput.RemoveRange(60, memInput.Count - 60);
+                    }
+                }
+            }
+            else //this == Character.Controlled && GameMain.Client == null
+            {
+                AnimController.Frozen = false;
+            }
+        }
+
         public virtual void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
-            if (GameMain.Server != null) return;
-
             if (extraData != null)
             {
                 switch ((NetEntityEvent.Type)extraData[0])
@@ -63,8 +141,6 @@ namespace Barotrauma
 
         public virtual void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            if (GameMain.Server != null) return;
-
             switch (type)
             {
                 case ServerNetObject.ENTITY_POSITION:
@@ -147,7 +223,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this && AllowInput)
+                    if (GameMain.Client.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
@@ -198,10 +274,13 @@ namespace Barotrauma
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
                             }
-                            else if (controlled == this)
+                            else
                             {
-                                Controlled = null;
-                                IsRemotePlayer = ownerID > 0;
+                                if (controlled == this)
+                                {
+                                    Controlled = null;
+                                    IsRemotePlayer = ownerID > 0;
+                                }
                             }
                             break;
                         case 2:
@@ -221,16 +300,17 @@ namespace Barotrauma
                     break;
             }
         }
+
         public static Character ReadSpawnData(NetBuffer inc, bool spawn = true)
         {
             DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
 
-            if (GameMain.Server != null) return null;
+            if (GameMain.Client == null) return null;
 
-            bool noInfo         = inc.ReadBoolean();
-            ushort id           = inc.ReadUInt16();
-            string configPath   = inc.ReadString();
-            string seed         = inc.ReadString();
+            bool noInfo = inc.ReadBoolean();
+            ushort id = inc.ReadUInt16();
+            string configPath = inc.ReadString();
+            string seed = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
@@ -248,11 +328,11 @@ namespace Barotrauma
             }
             else
             {
-                bool hasOwner       = inc.ReadBoolean();
-                int ownerId         = hasOwner ? inc.ReadByte() : -1;                
-                byte teamID         = inc.ReadByte();
-                bool hasAi          = inc.ReadBoolean();
-                
+                bool hasOwner = inc.ReadBoolean();
+                int ownerId = hasOwner ? inc.ReadByte() : -1;
+                byte teamID = inc.ReadByte();
+                bool hasAi = inc.ReadBoolean();
+
                 if (!spawn) return null;
 
                 CharacterInfo info = CharacterInfo.ClientRead(configPath, inc);
@@ -267,7 +347,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
-                
+
                 if (GameMain.Client.ID == ownerId)
                 {
                     GameMain.Client.HasSpawned = true;
@@ -286,7 +366,7 @@ namespace Barotrauma
 
             return character;
         }
-
+        
         private void ReadStatus(NetBuffer msg)
         {
             bool isDead = msg.ReadBoolean();

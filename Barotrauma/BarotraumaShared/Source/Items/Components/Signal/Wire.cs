@@ -202,10 +202,12 @@ namespace Barotrauma.Items.Components
 
             if (sendNetworkEvent)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     CreateNetworkEvent();
                 }
+#endif
                 //the wire is active if only one end has been connected
                 IsActive = connections[0] == null ^ connections[1] == null;
             }
@@ -294,12 +296,21 @@ namespace Barotrauma.Items.Components
 
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
                         user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * 200.0f);
-                        if (currLength > MaxLength * 1.5f && GameMain.Client == null)
+#if CLIENT
+                        if (GameMain.Client == null)
                         {
-                            ClearConnections();
-                            CreateNetworkEvent();
-                            return;
+#endif
+                            if (currLength > MaxLength * 1.5f)
+                            {
+                                ClearConnections();
+#if SERVER
+                                CreateNetworkEvent();
+#endif
+                                return;
+                            }
+#if CLIENT
                         }
+#endif
                     }
                 }
             }
@@ -313,7 +324,9 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
+#if CLIENT
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
+#endif
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
@@ -328,10 +341,12 @@ namespace Barotrauma.Items.Components
                 Drawable = true;
                 newNodePos = Vector2.Zero;
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     CreateNetworkEvent();
                 }
+#endif
             }
             return true;
         }
@@ -404,7 +419,8 @@ namespace Barotrauma.Items.Components
         {
             nodes.Clear();
             sections.Clear();
-            
+
+#if SERVER
             if (user != null)
             {
                 if (connections[0] != null && connections[1] != null)
@@ -424,6 +440,7 @@ namespace Barotrauma.Items.Components
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
             }
+#endif
             
             SetConnectedDirty();
 
@@ -625,33 +642,6 @@ namespace Barotrauma.Items.Components
             ClearConnections();
 
             base.RemoveComponentSpecific();
-        }
-
-        private void CreateNetworkEvent()
-        {
-            if (GameMain.Server == null) return;
-            //split into multiple events because one might not be enough to fit all the nodes
-            int eventCount = Math.Max((int)Math.Ceiling(nodes.Count / (float)MaxNodesPerNetworkEvent), 1);
-            for (int i = 0; i < eventCount; i++)
-            {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), i });
-            }
-
-        }
-                
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            int eventIndex = (int)extraData[2];
-            int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
-            int nodeCount = MathHelper.Clamp(nodes.Count - nodeStartIndex, 0, MaxNodesPerNetworkEvent);
-
-            msg.WriteRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent), eventIndex);
-            msg.WriteRangedInteger(0, MaxNodesPerNetworkEvent, nodeCount);
-            for (int i = nodeStartIndex; i < nodeStartIndex + nodeCount; i++)
-            {
-                msg.Write(nodes[i].X);
-                msg.Write(nodes[i].Y);
-            }
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)

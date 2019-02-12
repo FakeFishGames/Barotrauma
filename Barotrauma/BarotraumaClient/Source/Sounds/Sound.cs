@@ -7,6 +7,12 @@ namespace Barotrauma.Sounds
 {
     public abstract class Sound : IDisposable
     {
+        protected bool disposed;
+        public bool Disposed
+        {
+            get { return disposed; }
+        }
+
         public SoundManager Owner
         {
             get;
@@ -23,6 +29,20 @@ namespace Barotrauma.Sounds
         {
             get;
             protected set;
+        }
+
+        public bool StreamsReliably
+        {
+            get;
+            protected set;
+        }
+
+        public virtual SoundManager.SourcePoolIndex SourcePoolIndex
+        {
+            get
+            {
+                return SoundManager.SourcePoolIndex.Default;
+            }
         }
 
         private uint alBuffer;
@@ -48,16 +68,17 @@ namespace Barotrauma.Sounds
             get;
             protected set;
         }
-
+        
         public float BaseGain;
         public float BaseNear;
         public float BaseFar;
-        
-        public Sound(SoundManager owner,string filename,bool stream)
+
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably)
         {
             Owner = owner;
             Filename = Path.GetFullPath(filename);
             Stream = stream;
+            StreamsReliably = streamsReliably;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;
@@ -105,35 +126,49 @@ namespace Barotrauma.Sounds
             return Owner.IsPlaying(this);
         }
 
-        public SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
+        public virtual SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
             return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), range * 0.4f, range, "default", muffle);
         }
-        
-        public SoundChannel Play(Vector3? position, float gain, bool muffle = false)
+
+        public virtual SoundChannel Play(Vector3? position, float gain, bool muffle = false)
         {
             return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default", muffle);
         }
 
-        public SoundChannel Play(float gain)
+        public virtual SoundChannel Play(float gain)
         {
             return Play(null, gain);
         }
 
-        public SoundChannel Play()
+        public virtual SoundChannel Play()
         {
             return Play(BaseGain);
         }
 
-        public SoundChannel Play(float? gain, string category)
+        public virtual SoundChannel Play(float? gain, string category)
         {
             return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
+        }
+
+        static protected void CastBuffer(float[] inBuffer, short[] outBuffer, int length)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                float fval = Math.Max(Math.Min(inBuffer[i], 1.0f), -1.0f);
+                int temp = (int)(32767f * fval);
+                if (temp > short.MaxValue) temp = short.MaxValue;
+                else if (temp < short.MinValue) temp = short.MinValue;
+                outBuffer[i] = (short)temp;
+            }
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);
 
         public virtual void Dispose()
         {
+            if (disposed) { return; }
+
             Owner.KillChannels(this);
             if (alBuffer != 0)
             {
@@ -151,6 +186,7 @@ namespace Barotrauma.Sounds
                 }
             }
             Owner.RemoveSound(this);
+            disposed = true;
         }
     }
 }

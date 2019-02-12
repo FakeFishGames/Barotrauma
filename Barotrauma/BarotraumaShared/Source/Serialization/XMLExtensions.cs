@@ -38,6 +38,21 @@ namespace Barotrauma
             return doc;
         }
 
+        public static XDocument LoadXml(string filePath)
+        {
+            XDocument doc = null;
+
+            ToolBox.IsProperFilenameCase(filePath);
+
+            if (File.Exists(filePath))
+            {
+                doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
+                if (doc.Root == null) return null;
+            }
+
+            return doc;
+        }
+
         public static object GetAttributeObject(XAttribute attribute)
         {
             if (attribute == null) return null;

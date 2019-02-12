@@ -93,8 +93,11 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+
+#if SERVER
             //let the clients know the initial deterioration delay
             item.CreateServerEvent(this);
+#endif
         }
 
         partial void InitProjSpecific(XElement element);
@@ -119,10 +122,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (deteriorationTimer > 0.0f)
                     {
-                        if (GameMain.Client == null)
+                        if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             deteriorationTimer -= deltaTime;
+#if SERVER
                             if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
+#endif
                         }
                         return;
                     }
@@ -144,7 +149,9 @@ namespace Barotrauma.Items.Components
 
             UpdateFixAnimation(CurrentFixer);
 
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
             foreach (Skill skill in requiredSkills)
@@ -166,7 +173,7 @@ namespace Barotrauma.Items.Components
             {
                 item.Condition += deltaTime / (fixDuration / item.Prefab.Health);
             }
-            
+
             if (wasBroken && item.Condition >= item.Prefab.Health)
             {
                 SteamAchievementManager.OnItemRepaired(item, currentFixer);
