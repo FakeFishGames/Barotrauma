@@ -1577,7 +1577,7 @@ namespace Barotrauma
             }
             info.ReloadHeadAttachments();
             StoreHead();
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
             faceSelectionLeft.Enabled = generatedHeads.UndoCount > 0;
             return true;
         }
@@ -1593,7 +1593,7 @@ namespace Barotrauma
             info.LoadHeadAttachments();
 
             StoreHead();
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
             return true;
         }
 
@@ -1770,7 +1770,7 @@ namespace Barotrauma
             if (!GameMain.Config.JobPreferences.SequenceEqual(jobNamePreferences))
             {
                 GameMain.Config.JobPreferences = jobNamePreferences;
-                GameMain.Config.Save();
+                GameMain.Config.SaveNewPlayerConfig();
             }
         }
 

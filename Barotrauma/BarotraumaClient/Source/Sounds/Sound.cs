@@ -68,7 +68,7 @@ namespace Barotrauma.Sounds
             get;
             protected set;
         }
-
+        
         public float BaseGain;
         public float BaseNear;
         public float BaseFar;
@@ -146,9 +146,21 @@ namespace Barotrauma.Sounds
             return Play(BaseGain);
         }
 
-        public SoundChannel Play(float? gain, string category)
+        public virtual SoundChannel Play(float? gain, string category)
         {
             return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
+        }
+
+        static protected void CastBuffer(float[] inBuffer, short[] outBuffer, int length)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                float fval = Math.Max(Math.Min(inBuffer[i], 1.0f), -1.0f);
+                int temp = (int)(32767f * fval);
+                if (temp > short.MaxValue) temp = short.MaxValue;
+                else if (temp < short.MinValue) temp = short.MinValue;
+                outBuffer[i] = (short)temp;
+            }
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

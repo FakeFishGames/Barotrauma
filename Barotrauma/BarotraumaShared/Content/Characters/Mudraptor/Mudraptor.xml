@@ -5,8 +5,10 @@
   
   <health
     vitality="200"
-    doesbleed="false"/>
+    doesbleed="true"/>
 
+  <bloodemitter particle="blood" particleamount="1"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
   <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3"/>
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>

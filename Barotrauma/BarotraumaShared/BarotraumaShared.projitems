@@ -2400,6 +2400,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Music\Somethings outside.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\UImsg.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\splashscreen.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2586,10 +2589,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\radiomsg.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\tap-zipper.ogg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\UImsg.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\UI\chatmsg.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Water\BlackSmoker.ogg">

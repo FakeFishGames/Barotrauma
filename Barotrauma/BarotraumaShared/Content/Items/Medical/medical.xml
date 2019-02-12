@@ -538,7 +538,11 @@
     </Holdable>
   </BloodPack>
   
-  <Deusizine name="Deusizine" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true">
+  <Deusizine name="Deusizine" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate"
+             Tags="smallitem,chem,medical" 
+             description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." 
+             useinhealthinterface="true"
+             scale="0.3">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="Military" buyprice="200" />

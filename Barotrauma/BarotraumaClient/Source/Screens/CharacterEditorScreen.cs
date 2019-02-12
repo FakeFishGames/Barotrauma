@@ -1299,6 +1299,8 @@ namespace Barotrauma
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox jointsToggle;
+        private GUITickBox editAnimsToggle;
+        private GUITickBox editLimbsToggle;
 
         private void CreateGUI()
         {
@@ -1353,7 +1355,7 @@ namespace Barotrauma
                     MinSize = new Point(40, 0),
                     MaxSize = new Point(100, 50)
                 }, style: null, color: Color.Black * 0.6f);
-                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i], 
+                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
                     font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
@@ -1611,7 +1613,7 @@ namespace Barotrauma
             animSelection.OnSelected += (element, data) =>
             {
                 AnimationType previousAnim = character.AnimController.ForceSelectAnimationType;
-                character.AnimController.ForceSelectAnimationType = (AnimationType)data;               
+                character.AnimController.ForceSelectAnimationType = (AnimationType)data;
                 switch (character.AnimController.ForceSelectAnimationType)
                 {
                     case AnimationType.Walk:
@@ -1719,8 +1721,8 @@ namespace Barotrauma
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Ragdoll") { Selected = showRagdoll };
-            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };       
-            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = editLimbs };
+            editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };
+            editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = editLimbs };
             jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = editJoints };
             var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
@@ -2251,6 +2253,11 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
+                    editLimbsToggle.Selected = false;
+                    editAnimsToggle.Selected = false;
+                    spritesheetToggle.Selected = false;
+                    jointsToggle.Selected = false;
+                    paramsToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -2270,7 +2277,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
-            else if (editJoints || editLimbs || editIK)
+            else
             {
                 if (selectedJoints.Any())
                 {
@@ -4360,6 +4367,12 @@ namespace Barotrauma
                     // Next
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
+                        if (!File.Exists(TexturePath))
+                        {
+                            GUI.AddMessage("The texture file does not exist!", Color.Red);
+                            texturePathElement.Flash(Color.Red);
+                            return false;
+                        }
                         Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };

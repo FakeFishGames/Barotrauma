@@ -343,6 +343,9 @@ namespace Barotrauma.Sounds
             streamSeekPos = 0; reachedEndSample = false;
             startedPlaying = true;
 
+            streamBuffers = new uint[4];
+            emptyBuffers = new List<uint>();
+
             mutex = new object();
 
             lock (mutex)
@@ -536,7 +539,7 @@ namespace Barotrauma.Sounds
 
                         unqueuedBuffers = new int[buffersToUnqueue+emptyBuffers.Count];
                         AL.SourceUnqueueBuffers((int)alSource, buffersToUnqueue, unqueuedBuffers);
-                        for (int i=0;i<emptyBuffers.Count;i++)
+                        for (int i = 0; i < emptyBuffers.Count; i++)
                         {
                             unqueuedBuffers[buffersToUnqueue + i] = (int)emptyBuffers[i];
                         }
@@ -611,6 +614,10 @@ namespace Barotrauma.Sounds
                             {
                                 throw new Exception("Failed to queue buffer[" + i.ToString() + "] to stream: " + AL.GetErrorString(alError));
                             }
+                        }
+                        else if (readSamples < 0)
+                        {
+                            reachedEndSample = true;
                         }
                         else
                         {

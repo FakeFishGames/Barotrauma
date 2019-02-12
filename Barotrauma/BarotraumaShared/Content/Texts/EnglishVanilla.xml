@@ -166,6 +166,7 @@
   <WorkshopItemPublished>"[itemname]" is now available in the Steam Workshop!</WorkshopItemPublished>
   <WorkshopItemPublishFailed>Publishing "[itemname]" in the Steam Workshop failed.</WorkshopItemPublishFailed>
   <WorkshopItemPreviewImageDialogTitle>Select the preview image for the Steam Workshop item.</WorkshopItemPreviewImageDialogTitle>
+  <WorkshopItemPreviewImageTooLarge>The file size of the preview image has to be less than 1 MB.</WorkshopItemPreviewImageTooLarge>  
   <WorkshopErrorInstallRequiredToEdit>Cannot edit the workshop item "[itemname]" because it has not been installed.</WorkshopErrorInstallRequiredToEdit>
   <WorkshopErrorInstallRequiredToEnable>Cannot enable the workshop item "[itemname]" because it has not been installed.</WorkshopErrorInstallRequiredToEnable>
   <WorkshopErrorOverwriteOnEnable>Cannot enable workshop item "[itemname]". The file "[filename]" would be overwritten by the item.</WorkshopErrorOverwriteOnEnable>
