@@ -1413,7 +1413,10 @@ namespace Barotrauma
             }
 
             var muteTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
-                                             "Mute");
+                TextManager.Get("Mute"))
+            {
+                OnSelected = (tickBox) => { selectedClient.Muted = tickBox.Selected; return true; }
+            };
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))

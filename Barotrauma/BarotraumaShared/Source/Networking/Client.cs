@@ -34,6 +34,8 @@ namespace Barotrauma.Networking
             }
         }
 
+        public bool Muted;
+
         public VoipQueue VoipQueue
         {
             get;

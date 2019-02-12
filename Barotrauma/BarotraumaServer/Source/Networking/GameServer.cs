@@ -641,7 +641,7 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPacketHeader.VOICE:
-                    if (serverSettings.VoiceChatEnabled)
+                    if (serverSettings.VoiceChatEnabled && !connectedClient.Muted)
                     {
                         byte id = inc.ReadByte();
                         if (connectedClient.ID != id)
