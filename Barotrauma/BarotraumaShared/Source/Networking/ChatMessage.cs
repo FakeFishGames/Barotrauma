@@ -207,9 +207,8 @@ namespace Barotrauma.Networking
 
             if (sender == null) return false;
             var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-
-            radio = senderItem.GetComponent<WifiComponent>();
-            return senderItem != null && sender.HasEquippedItem(senderItem) && radio.CanTransmit();
+            
+            return senderItem != null && sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit();
         }
     }
 }
