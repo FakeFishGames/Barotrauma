@@ -8,7 +8,7 @@ namespace Barotrauma.Sounds
     {
         private VorbisReader reader;
 
-        public OggSound(SoundManager owner, string filename, bool stream) : base(owner, filename, stream, false)
+        public OggSound(SoundManager owner, string filename, bool stream) : base(owner, filename, stream, true)
         {
             if (!ToolBox.IsProperFilenameCase(filename))
             {

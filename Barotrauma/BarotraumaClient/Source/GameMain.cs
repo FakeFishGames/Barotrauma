@@ -272,7 +272,7 @@ namespace Barotrauma
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(),"",canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", canLoadInSeparateThread);
 
 #if WINDOWS
             var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
@@ -351,6 +351,10 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
+            if (Config.EnableSplashScreen)
+            {
+                (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, SoundManager, "Content/splashscreen.mp4", 1280, 720);
+            }
 
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
@@ -378,10 +382,6 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
-            if (Config.EnableSplashScreen)
-            {
-                (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
-            }
 
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 

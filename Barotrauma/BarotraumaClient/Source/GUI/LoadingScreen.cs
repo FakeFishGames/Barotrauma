@@ -14,7 +14,24 @@ namespace Barotrauma
 
         private RenderTarget2D renderTarget;
 
-        public Video SplashScreen;
+        private Video splashScreen;
+        public Video SplashScreen
+        {
+            get
+            {
+                lock (loadMutex)
+                {
+                    return splashScreen;
+                }
+            }
+            set
+            {
+                lock (loadMutex)
+                {
+                    splashScreen = value;
+                }
+            }
+        }
 
         private float state;
         
@@ -201,8 +218,7 @@ namespace Barotrauma
                 {
                     SplashScreen.Dispose(); SplashScreen = null;
                 }
-            }
-
+            }            
         }
  
         bool drawn;
