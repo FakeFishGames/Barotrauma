@@ -189,6 +189,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (lightComponent != null) 
                 {
+                    lightComponent.Parent = null;
                     lightComponent.Rotation = rotation;
                     lightComponent.Light.Rotation = -rotation;
                 }
@@ -666,12 +667,9 @@ namespace Barotrauma.Items.Components
                     break;
                 case "toggle":
                 case "toggle_light":
-                    foreach (ItemComponent component in item.components)
+                    if (lightComponent != null)
                     {
-                        if (component.Parent == this && component is LightComponent lightComponent)
-                        {
-                            lightComponent.IsOn = !lightComponent.IsOn;
-                        }
+                        lightComponent.IsOn = !lightComponent.IsOn;
                     }
                     break;
             }
