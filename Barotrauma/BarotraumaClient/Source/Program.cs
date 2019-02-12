@@ -21,9 +21,7 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
-#if !DEBUG
         private static int restartAttempts;
-#endif
 
         /// <summary>
         /// The main entry point for the application.
