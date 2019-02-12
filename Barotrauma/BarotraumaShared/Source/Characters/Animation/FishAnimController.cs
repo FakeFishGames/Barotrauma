@@ -496,7 +496,7 @@ namespace Barotrauma
             Vector2 colliderBottom = GetColliderBottom();
 
             float movementAngle = 0.0f;
-            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle ?? 0 : HeadAngle ?? 0) * Dir;
             while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
             {
                 movementAngle += MathHelper.TwoPi;
