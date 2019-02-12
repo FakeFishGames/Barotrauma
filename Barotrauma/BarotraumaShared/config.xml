@@ -33,6 +33,7 @@
     Attack="R"
     Run="LeftShift"
     Crouch="LeftControl"
+    InfoTab="Tab"
     Chat="T"
     RadioChat="Y"
     CrewOrders="C"
