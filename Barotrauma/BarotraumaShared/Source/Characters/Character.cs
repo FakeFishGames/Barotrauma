@@ -550,7 +550,7 @@ namespace Barotrauma
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
-        /// <param name="ragdoll">Ragdoll configuration file. If null, will select randomly.</param>
+        /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
         public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
             return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
@@ -566,7 +566,7 @@ namespace Barotrauma
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
-        /// <param name="ragdoll">Ragdoll configuration file. If null, will select randomly.</param>
+        /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
         public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
 #if LINUX
