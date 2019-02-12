@@ -25,7 +25,7 @@ namespace Barotrauma
             prevInfoKey = false;
         }
 
-        private bool ToggleInfoFrame(GUIButton button, object obj)
+        private bool ToggleInfoFrame()
         {
             if (infoFrame == null)
             {
@@ -44,10 +44,7 @@ namespace Barotrauma
         {
             int width = 600, height = 400;
 
-            infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
-            {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleInfoFrame(btn, userdata); return true; }
-            };
+            infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
@@ -80,11 +77,6 @@ namespace Barotrauma
                     OnClicked = SelectInfoFrameTab
                 };
             }*/
-
-            var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.08f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
-            {
-                OnClicked = ToggleInfoFrame
-            };
 
         }
 
@@ -142,6 +134,12 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime)
         {
             if (GUI.DisableHUD) return;
+
+            if (prevInfoKey != PlayerInput.KeyDown(InputType.InfoTab))
+            {
+                ToggleInfoFrame();
+                prevInfoKey = PlayerInput.KeyDown(InputType.InfoTab);
+            }
 
             infoFrame?.UpdateManually(deltaTime);
         }
