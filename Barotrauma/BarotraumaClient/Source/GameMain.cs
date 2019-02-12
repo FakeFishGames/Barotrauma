@@ -617,7 +617,7 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(Keys.Escape))
                     {
-                        // Check is a text input is selected.
+                        // Check if a text input is selected.
                         if (GUI.KeyboardDispatcher.Subscriber != null)
                         {
                             GUI.KeyboardDispatcher.Subscriber = null;
