@@ -158,6 +158,7 @@ namespace Barotrauma
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
 
                 sounds[(int)GUISoundType.UIMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.ChatMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/chatmsg.ogg", false);
                 sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/radiomsg.ogg", false);
                 sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/deadmsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/beep-shinymetal.ogg", false);

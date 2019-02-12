@@ -31,7 +31,7 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
-        public bool FilledByNetwork
+        public bool StreamsReliably
         {
             get;
             protected set;
@@ -73,12 +73,12 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
-        public Sound(SoundManager owner, string filename, bool stream, bool filledByNetwork)
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably)
         {
             Owner = owner;
             Filename = Path.GetFullPath(filename);
             Stream = stream;
-            FilledByNetwork = filledByNetwork;
+            StreamsReliably = streamsReliably;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;

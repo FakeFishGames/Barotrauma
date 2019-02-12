@@ -217,7 +217,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public bool FilledByNetwork
+        public bool StreamsReliably
         {
             get;
             private set;
@@ -338,7 +338,7 @@ namespace Barotrauma.Sounds
             Sound = sound;
 
             IsStream = sound.Stream;
-            FilledByNetwork = sound.FilledByNetwork;
+            StreamsReliably = sound.StreamsReliably;
             decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
             startedPlaying = true;
@@ -566,7 +566,7 @@ namespace Barotrauma.Sounds
                     {
                         short[] buffer = streamShortBuffer;
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
-                        if (!FilledByNetwork)
+                        if (StreamsReliably)
                         {
                             streamSeekPos += readSamples;
                             if (readSamples < STREAM_BUFFER_SIZE)
