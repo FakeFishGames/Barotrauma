@@ -53,6 +53,11 @@ namespace Barotrauma
             public float MinScreenDistortStrength, MaxScreenDistortStrength;
             public float MinRadialDistortStrength, MaxRadialDistortStrength;
             public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
+            public float MinPsychosisResistance, MaxPsychosisResistance;
+            public float MinHuskInfectionResistance, MaxHuskInfectionResistance;
+            public float MinPressureResistance, MaxPressureResistance;
+            public float MinDamageResistance, MaxDamageResistance;
+            public float MinPoisonResistance, MaxPoisonResistance;
 
             public string DialogFlag;
 
@@ -85,6 +90,26 @@ namespace Barotrauma
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
+
+                MinPsychosisResistance = element.GetAttributeFloat("minpsychosisresistance", 0.0f);
+                MaxPsychosisResistance = element.GetAttributeFloat("maxpsychosisresistance", 0.0f);
+                MaxPsychosisResistance = Math.Max(MinPsychosisResistance, MaxPsychosisResistance);
+
+                MinHuskInfectionResistance = element.GetAttributeFloat("minhuskinfectionresistance", 0.0f);
+                MaxHuskInfectionResistance = element.GetAttributeFloat("maxhuskinfectionresistance", 0.0f);
+                MaxHuskInfectionResistance = Math.Max(MinHuskInfectionResistance, MaxHuskInfectionResistance);
+
+                MinPressureResistance = element.GetAttributeFloat("minpressureresistance", 0.0f);
+                MaxPressureResistance = element.GetAttributeFloat("maxpressureresistance", 0.0f);
+                MaxPressureResistance = Math.Max(MinPressureResistance, MaxPressureResistance);
+
+                MinDamageResistance = element.GetAttributeFloat("mindamageresistance", 0.0f);
+                MaxDamageResistance = element.GetAttributeFloat("maxdamageresistance", 0.0f);
+                MaxDamageResistance = Math.Max(MinPressureResistance, MaxDamageResistance);
+
+                MinPoisonResistance = element.GetAttributeFloat("minpoisonresistance", 0.0f);
+                MaxPoisonResistance = element.GetAttributeFloat("maxpoisonresistance", 0.0f);
+                MaxPoisonResistance = Math.Max(MinPoisonResistance, MaxPoisonResistance);
 
                 DialogFlag = element.GetAttributeString("dialogflag", "");
 
