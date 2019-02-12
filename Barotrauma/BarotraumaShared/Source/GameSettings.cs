@@ -36,12 +36,26 @@ namespace Barotrauma
         public bool VSyncEnabled { get; set; }
 
         public bool EnableSplashScreen { get; set; }
-        
+
         public int ParticleLimit { get; set; }
 
         public float LightMapScale { get; set; }
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
+
+        public bool MuteOnFocusLost { get; set; }
+
+        public enum VoiceMode
+        {
+            Disabled,
+            PushToTalk,
+            Activity
+        };
+
+        public VoiceMode VoiceSetting { get; set; }
+        public string VoiceCaptureDevice { get; set; }
+
+        public float NoiseGateThreshold { get; set; } = -45;
 
         private KeyOrMouse[] keyMapping;
 
@@ -97,7 +111,18 @@ namespace Barotrauma
         public WindowMode WindowMode
         {
             get { return windowMode; }
-            set { windowMode = value; }
+            set
+            {
+#if (OSX)
+                // Fullscreen doesn't work on macOS, so just force any usage of it to borderless windowed.
+                if (value == WindowMode.Fullscreen)
+                {
+                    windowMode = WindowMode.BorderlessWindowed;
+                    return;
+                }
+#endif
+                windowMode = value;
+            }
         }
 
         public List<string> JobPreferences
@@ -254,7 +279,7 @@ namespace Barotrauma
         public void LoadDefaultConfig()
         {
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
-            
+
             Language = doc.Root.GetAttributeString("language", "English");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
@@ -314,10 +339,12 @@ namespace Barotrauma
 #endif
 
             var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
-            if (!Enum.TryParse<WindowMode>(windowModeStr, out windowMode))
+            WindowMode wm = 0;
+            if (!Enum.TryParse(windowModeStr, out wm))
             {
-                windowMode = WindowMode.Fullscreen;
+                wm = WindowMode.Fullscreen;
             }
+            WindowMode = wm;
 
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
@@ -326,7 +353,11 @@ namespace Barotrauma
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", true);
 
+#if DEBUG
+            EnableSplashScreen = false;
+#else
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
+#endif
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
             
@@ -345,6 +376,8 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
             keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+
+            keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);

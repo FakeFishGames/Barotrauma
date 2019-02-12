@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Reflection;
 using System.Text;
 
@@ -284,6 +285,20 @@ namespace Barotrauma
             return default(T);
         }
 
+        public static UInt32 StringToUInt32Hash(string str, MD5 md5)
+        {
+            //calculate key based on MD5 hash instead of string.GetHashCode
+            //to ensure consistent results across platforms
+            byte[] inputBytes = Encoding.ASCII.GetBytes(str);
+            byte[] hash = md5.ComputeHash(inputBytes);
+
+            UInt32 key = (UInt32)((str.Length & 0xff) << 24); //could use more of the hash here instead?
+            key |= (UInt32)(hash[hash.Length - 3] << 16);
+            key |= (UInt32)(hash[hash.Length - 2] << 8);
+            key |= (UInt32)(hash[hash.Length - 1]);
+
+            return key;
+        }
         /// <summary>
         /// Returns a new instance of the class with all properties and fields copied.
         /// </summary>

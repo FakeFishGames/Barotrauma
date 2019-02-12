@@ -313,6 +313,8 @@ namespace Barotrauma.Items.Components
             if (!item.CanClientAccess(c)) return; 
 
             IsActive = isActive;
+
+            //TODO: cleanup
 #if CLIENT
             activeTickBox.Selected = IsActive;
 #endif
@@ -331,8 +333,9 @@ namespace Barotrauma.Items.Components
                 directionalSlider.BarScroll = pingDirectionT;
 #endif
             }
-
+#if SERVER
             item.CreateServerEvent(this);
+#endif
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)

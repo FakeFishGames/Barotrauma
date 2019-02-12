@@ -92,5 +92,5 @@
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <Executable file="Barotrauma.exe" />
-  <ServerExecutable file="BarotraumaServer.exe" />
+  <ServerExecutable file="DedicatedServer.exe" />
 </contentpackage>

@@ -510,6 +510,8 @@ namespace Barotrauma
             if (Vitality <= MinVitality) Kill();
         }
         
+        partial void UpdateLimbAfflictionOverlays();
+
         public void Update(float deltaTime)
         {
             UpdateOxygen(deltaTime);
@@ -550,22 +552,8 @@ namespace Barotrauma
                 afflictions[i].Update(this, null, deltaTime);
                 afflictions[i].DamagePerSecondTimer += deltaTime;
             }
-
-#if CLIENT
-            foreach (Limb limb in Character.AnimController.Limbs)
-            {            
-                limb.BurnOverlayStrength = 0.0f;
-                limb.DamageOverlayStrength = 0.0f;
-                if (limbHealths[limb.HealthIndex].Afflictions.Count == 0) continue;
-                foreach (Affliction a in limbHealths[limb.HealthIndex].Afflictions)
-                {
-                    limb.BurnOverlayStrength += a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha;
-                    limb.DamageOverlayStrength +=  a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha;
-                }
-                limb.BurnOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
-                limb.DamageOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
-            }
-#endif
+            
+            UpdateLimbAfflictionOverlays();
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();

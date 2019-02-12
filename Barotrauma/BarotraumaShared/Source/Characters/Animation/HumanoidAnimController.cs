@@ -498,7 +498,8 @@ namespace Barotrauma
             }
 
             aiming = false;
-            if (character.IsRemotePlayer && GameMain.Server == null) Collider.LinearVelocity = Vector2.Zero;
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) return;
+            if (character.IsRemotePlayer) Collider.LinearVelocity = Vector2.Zero;
         }
 
         void UpdateStanding()
@@ -569,8 +570,11 @@ namespace Barotrauma
             movement.Y = 0.0f;
 
             if (torso == null) { return; }
+            
+            bool isNotRemote = true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
 
-            if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
+            if (onGround && isNotRemote)
             {
                 //move slower if collider isn't upright
                 float rotationFactor = (float)Math.Abs(Math.Cos(Collider.Rotation));
@@ -783,7 +787,7 @@ namespace Barotrauma
             {
                 Collider.LinearVelocity = movement;
             }
-            else if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
+            else if (onGround && (!character.IsRemotePlayer || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)))
             {
                 Collider.LinearVelocity = new Vector2(
                         movement.X,
@@ -976,7 +980,10 @@ namespace Barotrauma
                 movement.Y = movement.Y - (surfaceLimiter - 1.0f) * 0.01f;
             }
 
-            if (!character.IsRemotePlayer || GameMain.Server != null)
+            bool isNotRemote = true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
+            if (isNotRemote)
             {
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, movementLerp);
             }
@@ -1165,7 +1172,11 @@ namespace Barotrauma
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             bool notClimbing = false;
-            if (character.IsRemotePlayer && GameMain.Server == null)
+
+            bool isNotRemote = true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
+            if (isNotRemote)
             {
                 notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
             }
@@ -1263,9 +1274,9 @@ namespace Barotrauma
 
             bool wasCritical = target.Vitality < 0.0f;
             
-            if (GameMain.Client == null) //Serverside code
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
             {
-                target.Oxygen += deltaTime * 0.5f; //Stabilize them                
+                target.Oxygen += deltaTime * 0.5f; //Stabilize them        
             }
            
             int skill = (int)character.GetSkillLevel("medical");
@@ -1279,15 +1290,18 @@ namespace Barotrauma
                 torso.PullJointEnabled = true;
 
                 //Serverside code
-                if (GameMain.Client == null && target.Oxygen < -10.0f)
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                    float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
-                    stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
-                    character.Oxygen -= (1.0f / stabilizationAmount) * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) target.Oxygen += stabilizationAmount * deltaTime; //we didn't suffocate yet did we    
+                    if (target.Oxygen < -10.0f)
+                    {
+                        //stabilize the oxygen level but don't allow it to go positive and revive the character yet
+                        float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
+                        stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
+                        character.Oxygen -= (1.0f / stabilizationAmount) * deltaTime; //Worse skill = more oxygen required
+                        if (character.Oxygen > 0.0f) target.Oxygen += stabilizationAmount * deltaTime; //we didn't suffocate yet did we    
 
-                    //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
+                        //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
+                    }
                 }
             }
             else
@@ -1319,7 +1333,7 @@ namespace Barotrauma
                             },
                             0.0f, true, 0.0f, character);
                     }
-                    if (GameMain.Client == null) //Serverside code
+                    if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
                     {
                         float reviveChance = skill * CPRSettings.ReviveChancePerSkill;
                         reviveChance = (float)Math.Pow(reviveChance, CPRSettings.ReviveChanceExponent);
@@ -1330,7 +1344,7 @@ namespace Barotrauma
                             //increase oxygen and clamp it above zero 
                             // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
                             target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
-                        }                        
+                        }
                     }
                 }
                 cprPump += deltaTime;
@@ -1380,7 +1394,7 @@ namespace Barotrauma
             if (Anim == Animation.Climbing)
             {
                 //cannot drag up ladders if the character is conscious
-                if (target.AllowInput && GameMain.Client == null)
+                if (target.AllowInput && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient))
                 {
                     character.DeselectCharacter();
                     return;
@@ -1459,7 +1473,7 @@ namespace Barotrauma
 
                     Limb pullLimb = i == 0 ? leftHand : rightHand;
 
-                    if (GameMain.Client == null)
+                    if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                     {
                         //stop dragging if there's something between the pull limb and the target limb
                         Vector2 sourceSimPos = pullLimb.SimPosition;
@@ -1541,7 +1555,7 @@ namespace Barotrauma
 
                 float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
                 //let the target break free if it's moving away and gets far enough
-                if (GameMain.Client == null && dist > 1.4f && target.AllowInput &&
+                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && dist > 1.4f && target.AllowInput &&
                     Vector2.Dot(target.WorldPosition - WorldPosition, target.AnimController.TargetMovement) > 0)
                 {
                     character.DeselectCharacter();

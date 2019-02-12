@@ -14,7 +14,24 @@ namespace Barotrauma
 
         private RenderTarget2D renderTarget;
 
-        public Video SplashScreen;
+        private Video splashScreen;
+        public Video SplashScreen
+        {
+            get
+            {
+                lock (loadMutex)
+                {
+                    return splashScreen;
+                }
+            }
+            set
+            {
+                lock (loadMutex)
+                {
+                    splashScreen = value;
+                }
+            }
+        }
 
         private float state;
         
@@ -24,6 +41,7 @@ namespace Barotrauma
 
         public Vector2 TitlePosition;
 
+        private object loadMutex = new object();
         private float? loadState;
 
         public Vector2 TitleSize
@@ -39,15 +57,20 @@ namespace Barotrauma
 
         public float? LoadState
         {
-            get { return loadState; }        
+            get
+            {
+                lock (loadMutex)
+                {
+                    return loadState;
+                }
+            }        
             set 
             {
-                loadState = value;
-                if (GameSettings.VerboseLogging)
+                lock (loadMutex)
                 {
-                    DebugConsole.NewMessage("Loading: " + value.ToString() + "%", Color.Yellow);
+                    loadState = value;
+                    DrawLoadingText = true;
                 }
-                DrawLoadingText = true;
             }
         }
 
@@ -140,16 +163,16 @@ namespace Barotrauma
             if (DrawLoadingText)
             {
                 string loadText = "";
-                if (loadState == 100.0f)
+                if (LoadState == 100.0f)
                 {
                     loadText = TextManager.Get("PressAnyKey");
                 }
                 else
                 {
                     loadText = TextManager.Get("Loading");
-                    if (loadState != null)
+                    if (LoadState != null)
                     {
-                        loadText += " " + (int)loadState + " %";
+                        loadText += " " + (int)LoadState + " %";
                     }
                 }
 
@@ -195,8 +218,7 @@ namespace Barotrauma
                 {
                     SplashScreen.Dispose(); SplashScreen = null;
                 }
-            }
-
+            }            
         }
  
         bool drawn;
@@ -220,7 +242,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            loadState = 100.0f;
+            LoadState = 100.0f;
 
             yield return CoroutineStatus.Success;
         }

@@ -123,6 +123,11 @@ namespace Barotrauma
             return default(T);
         }
 
+        public void SetValue(object val)
+        {
+            propertyInfo.SetValue(obj, val);
+        }
+
         public bool TrySetValue(string value)
         {
             if (value == null) return false;
@@ -391,6 +396,17 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
                 return false;
             }
+        }
+
+        public static string GetSupportedTypeName(Type type)
+        {
+            string typeName = null;
+            if (type.IsEnum) return "Enum";
+            if (!supportedTypes.TryGetValue(type, out typeName))
+            {
+                return null;
+            }
+            return typeName;
         }
 
         /// <summary>

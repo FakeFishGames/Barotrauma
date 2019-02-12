@@ -604,7 +604,6 @@ namespace Barotrauma
         #endregion
 
         #region Dialog
-        
         /// <summary>
         /// Adds the message to the single player chatbox.
         /// </summary>
@@ -629,6 +628,20 @@ namespace Barotrauma
             if (requireEquipped && !character.HasEquippedItem(radioItem)) return null;
 
             return radioItem.GetComponent<WifiComponent>();
+        }
+
+        partial void CreateRandomConversation()
+        {
+            if (GameMain.Client != null)
+            {
+                //let the server create random conversations in MP
+                return;
+            }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c => 
+                c.AIController is HumanAIController && 
+                !c.IsDead && 
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
         }
 
         #endregion
@@ -656,10 +669,6 @@ namespace Barotrauma
                     {
                         GameMain.Client.SendChatMessage(msg);
                     }
-                    else if (GameMain.Server != null)
-                    {
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
                 }
                 return;
             }
@@ -676,10 +685,6 @@ namespace Barotrauma
                 if (GameMain.Client != null)
                 {
                     GameMain.Client.SendChatMessage(msg);
-                }
-                else if (GameMain.Server != null)
-                {
-                    GameMain.Server.SendOrderChatMessage(msg);
                 }
             }
             DisplayCharacterOrder(character, order);
@@ -877,6 +882,8 @@ namespace Barotrauma
                 style: "OuterGlow",
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
+        
+#region Updating and drawing the UI
 
         private void DrawMiniMapOverlay(SpriteBatch spriteBatch, GUICustomComponent container)
         {
@@ -904,8 +911,6 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
             }            
         }
-
-        #region Updating and drawing the UI
 
         public void AddToGUIUpdateList()
         {
@@ -1094,7 +1099,6 @@ namespace Barotrauma
             }
 
             UpdateReports(deltaTime);
-            UpdateConversations(deltaTime);
 
             if (orderTargetFrame != null)
             {
@@ -1113,7 +1117,7 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Creates a listbox that includes all the characters in the crew, can be used externally (round info menus etc)
@@ -1153,7 +1157,7 @@ namespace Barotrauma
                     GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), crewList.Content.RectTransform), style: "ListBoxElement")
                     {
                         UserData = character,
-                        Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent
+                        Color = (GameMain.NetworkMember != null && GameMain.Client.Character == character) ? Color.Gold * 0.2f : Color.Transparent
                     };
 
                     var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
@@ -1196,12 +1200,12 @@ namespace Barotrauma
 
             character.Info.CreateInfoFrame(previewPlayer);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(character, previewPlayer);
+            if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
 
             return true;
         }
 
-        #region Reports
+#region Reports
 
         /// <summary>
         /// Enables/disables report buttons when needed
@@ -1219,7 +1223,7 @@ namespace Barotrauma
             {
                 reportButtonFrame.Visible = true;
 
-                var reportButtonParent = chatBox ?? GameMain.NetworkMember.ChatBox;
+                var reportButtonParent = chatBox ?? GameMain.Client.ChatBox;
                 reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
                     reportButtonParent.GUIFrame.Rect.Y);
@@ -1291,7 +1295,7 @@ namespace Barotrauma
             }            
         }
 
-        #endregion
+#endregion
 
         public void InitSinglePlayerRound()
         {

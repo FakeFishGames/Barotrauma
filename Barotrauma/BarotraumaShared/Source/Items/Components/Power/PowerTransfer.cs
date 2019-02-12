@@ -169,9 +169,11 @@ namespace Barotrauma.Items.Components
                 pt.Item.SendSignal(0, "", "power", null, voltage);
                 pt.Item.SendSignal(0, "", "power_out", null, voltage);
 
+#if CLIENT
                 //damage the item if voltage is too high 
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
+#endif
 
                 //items in a bad condition are more sensitive to overvoltage
                 float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / 100.0f);
