@@ -268,6 +268,7 @@
   <InputType.Run>Run</InputType.Run>
   <InputType.Crouch>Crouch</InputType.Crouch>
   <InputType.Chat>Chat</InputType.Chat>
+  <InputType.InfoTab>Info tab</InputType.InfoTab>
   <InputType.RadioChat>Radio chat</InputType.RadioChat>
   <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
   <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
