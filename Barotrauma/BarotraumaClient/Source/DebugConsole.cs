@@ -656,7 +656,10 @@ namespace Barotrauma
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
             });
             AssignRelayToServer("toggleaitargets|aitargets", false);
-
+            
+            AssignRelayToServer("water|editwater", false);
+            AssignRelayToServer("fire|editfire", false);
+            
             commands.Add(new Command("checkcrafting", "checkcrafting: Checks item deconstruction & crafting recipes for inconsistencies.", (string[] args) =>
             {
                 List<FabricableItem> fabricableItems = new List<FabricableItem>();

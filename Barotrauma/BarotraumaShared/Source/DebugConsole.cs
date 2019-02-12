@@ -585,20 +585,14 @@ namespace Barotrauma
 
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
-                {
-                    Hull.EditWater = !Hull.EditWater;
-                    NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
-                }
+                Hull.EditWater = !Hull.EditWater;
+                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
             }, isCheat: true));
 
             commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
-                {
-                    Hull.EditFire = !Hull.EditFire;
-                    NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);
-                }
+                Hull.EditFire = !Hull.EditFire;
+                NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
             }, isCheat: true));
 
             commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", (string[] args) =>

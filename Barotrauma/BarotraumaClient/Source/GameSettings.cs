@@ -441,7 +441,7 @@ namespace Barotrauma
             GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"));
             noiseGateText.TextGetter = () =>
             {
-                return TextManager.Get("NoiseGateThreshold") + " " + NoiseGateThreshold.ToString() + " dB";
+                return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
             };
             var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
