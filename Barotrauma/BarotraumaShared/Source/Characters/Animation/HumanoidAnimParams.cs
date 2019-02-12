@@ -23,15 +23,8 @@ namespace Barotrauma
             private set;
         }
 
-        public static HumanoidAnimParams WalkInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimWalk.xml");
-        public static HumanoidAnimParams RunInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimRun.xml");
-
-        private string filePath;
-
         public HumanoidAnimParams(string file)
         {
-            this.filePath = file;
-
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
