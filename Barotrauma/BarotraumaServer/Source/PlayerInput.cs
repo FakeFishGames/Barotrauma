@@ -116,6 +116,16 @@ namespace Barotrauma
             return false;
         }
 
+        public static bool MouseWheelUpClicked()
+        {
+            return false;
+        }
+
+        public static bool MouseWheelDownClicked()
+        {
+            return false;
+        }
+
         public static bool DoubleClicked()
         {
             return false;
