@@ -72,10 +72,11 @@ namespace Barotrauma
                     GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     wrap: true);
 
+                /*TODO: whoops this definitely does not belong here
                 if (GameMain.GameSession.Mission.Completed)
                 {
                     GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
-                }
+                }*/
 
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
@@ -83,10 +84,14 @@ namespace Barotrauma
                         TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                 }  
             }
+#if SERVER
+            //TODO: fix?
             else
             {
                 GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
+#endif
+
             foreach (GUIComponent child in infoTextBox.Content.Children)
             {
                 child.CanBeFocused = false;

@@ -76,8 +76,10 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (GameMain.Client != null || !IsRunning) { return; }
-
+            if (!IsRunning) { return; }
+#if CLIENT
+            if (GameMain.Client != null) { return; }
+#endif
             if (!watchmenSpawned)
             {
                 if (Level.Loaded.StartOutpost != null) { startWatchman = SpawnWatchman(Level.Loaded.StartOutpost); }

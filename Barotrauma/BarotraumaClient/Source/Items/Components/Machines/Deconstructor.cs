@@ -79,12 +79,8 @@ namespace Barotrauma.Items.Components
             SetActive(!IsActive, Character.Controlled);
 
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
-
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
-            }
-            else if (GameMain.Client != null)
+            
+            if (GameMain.Client != null)
             {
                 item.CreateClientEvent(this);
             }

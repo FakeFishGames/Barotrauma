@@ -617,17 +617,18 @@ namespace Barotrauma
         
         private IEnumerable<object> ConnectToServer(string ip)
         {
+#if !DEBUG
             try
             {
-                GameMain.NetworkMember = new GameClient(clientNameBox.Text);
-                GameMain.Client.ConnectToServer(ip);             
+#endif
+                GameMain.Client = new GameClient(clientNameBox.Text, ip);
+#if !DEBUG
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start the client", e);
             }
-
+#endif
 
             yield return CoroutineStatus.Success;
         }

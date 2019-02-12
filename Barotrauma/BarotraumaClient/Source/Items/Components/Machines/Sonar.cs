@@ -11,6 +11,12 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        enum Mode
+        {
+            Active,
+            Passive
+        };
+
         private bool unsentChanges;
         private float networkUpdateTimer;
 
@@ -86,17 +92,12 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
                 {
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    IsActive = box.Selected;
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
-                    IsActive = box.Selected;
-
                     return true;
                 }
             };
@@ -111,11 +112,7 @@ namespace Barotrauma.Items.Components
                 OnMoved = (scrollbar, scroll) =>
                 {
                     zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
@@ -136,11 +133,7 @@ namespace Barotrauma.Items.Components
                 OnSelected = (tickBox) =>
                 {
                     useDirectionalPing = tickBox.Selected;
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
@@ -154,11 +147,7 @@ namespace Barotrauma.Items.Components
                 {
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
@@ -168,9 +157,12 @@ namespace Barotrauma.Items.Components
             };
             
             signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
-            
-            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox>() { activeTickBox, passiveTickBox });
 
+            GUIRadioButtonGroup sonarMode = new GUIRadioButtonGroup();
+            sonarMode.AddRadioButton(Mode.Active, activeTickBox);
+            sonarMode.AddRadioButton(Mode.Passive, passiveTickBox);
+            sonarMode.Selected = Mode.Passive;
+            
             GuiFrame.CanBeFocused = false;
         }
 
@@ -183,27 +175,20 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (unsentChanges)
+            if (GameMain.Client != null)
             {
-                if (networkUpdateTimer <= 0.0f)
+                if (unsentChanges)
                 {
-#if CLIENT
-                    if (GameMain.Client != null)
+                    if (networkUpdateTimer <= 0.0f)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
+                        networkUpdateTimer = 0.1f;
+                        unsentChanges = false;
                     }
-#endif
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                    }
-
-                    networkUpdateTimer = 0.1f;
-                    unsentChanges = false;
                 }
+                networkUpdateTimer -= deltaTime;
             }
-            networkUpdateTimer -= deltaTime;
 
             if (sonarView.Rect.Contains(PlayerInput.MousePosition))
             {

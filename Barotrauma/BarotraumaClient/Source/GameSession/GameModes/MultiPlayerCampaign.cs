@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
-        public static GUIComponent StartCampaignSetup()
+        public static GUIComponent StartCampaignSetup(IEnumerable<string> saveFiles)
         {
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
@@ -31,7 +31,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
-            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer);
+            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"))
@@ -56,60 +56,47 @@ namespace Barotrauma
             };
 
             loadCampaignContainer.Visible = false;
-
-            campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
-            {
-                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, 
-                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
-                var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
-                campaign.GenerateMap(mapSeed);
-                campaign.SetDelegates();
-
-                background.Visible = false;
-
-                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                campaign.Map.SelectRandomLocation(true);
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                campaign.LastSaveID++;
-            };
-
-            campaignSetupUI.LoadGame = (string fileName) =>
-            {
-                SaveUtil.LoadGame(fileName);
-                if (!(GameMain.GameSession.GameMode is MultiPlayerCampaign))
-                {
-                    DebugConsole.ThrowError("Failed to load the campaign. The save file appears to be for a single player campaign.");
-                    return;
-                }
-
-                var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
-                campaign.LastSaveID++;
-
-                background.Visible = false;
-
-                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                campaign.Map.SelectRandomLocation(true);
-            };
+            
+            campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
+            campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
 
             var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), paddedFrame.RectTransform, Anchor.BottomLeft), TextManager.Get("Cancel"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    //find the first mode that's not multiplayer campaign and switch to that
                     background.Visible = false;
-                    int otherModeIndex = 0;
-                    for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Content.CountChildren; otherModeIndex++)
-                    {
-                        if (GameMain.NetLobbyScreen.ModeList.Content.GetChild(otherModeIndex).UserData is MultiPlayerCampaign) continue;
-                        break;
-                    }
 
-                    GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
                     return true;
                 }
             };
 
             return background;
+        }
+
+        
+        protected override void WatchmanInteract(Character watchman, Character interactor)
+        {
+            if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
+                (watchman.Submarine == Level.Loaded.EndOutpost && !Submarine.MainSub.AtEndPosition))
+            {
+                return;
+            }
+
+            if (GameMain.Client != null && interactor == Character.Controlled && 
+                    (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || GameMain.Client.HasPermission(ClientPermissions.ManageCampaign)))
+            {
+                var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
+                    .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    GameMain.Client.RequestRoundEnd();
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            
+            }
         }
 
         public void ClientWrite(NetBuffer msg)
@@ -167,10 +154,9 @@ namespace Barotrauma
                 campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.CampaignID = campaignID;
                 campaign.GenerateMap(mapSeed);
+                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             }
 
-            GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-            if (NetIdUtils.IdMoreRecent(campaign.lastUpdateID, updateID)) return;
 
             //server has a newer save file
             if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID))
@@ -187,8 +173,8 @@ namespace Barotrauma
                 GameMain.Client.RequestFile(FileTransferType.CampaignSave, null, null);*/
                 campaign.PendingSaveID = saveID;
             }
-            //we've got the latest save file
-            else if (!NetIdUtils.IdMoreRecent(saveID, campaign.lastSaveID))
+            
+            if (NetIdUtils.IdMoreRecent(updateID, campaign.lastUpdateID))
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
@@ -199,7 +185,7 @@ namespace Barotrauma
 
                 if (myCharacterInfo != null)
                 {
-                    GameMain.NetworkMember.CharacterInfo = myCharacterInfo;
+                    GameMain.Client.CharacterInfo = myCharacterInfo;
                     GameMain.NetLobbyScreen.SetCampaignCharacterInfo(myCharacterInfo);
                 }
                 else

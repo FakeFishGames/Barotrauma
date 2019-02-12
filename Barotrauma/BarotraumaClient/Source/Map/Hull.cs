@@ -7,14 +7,20 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using System.Linq;
+using Lidgren.Network;
 
 namespace Barotrauma
 {
-    partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
+    partial class Hull : MapEntity, ISerializableEntity, IServerSerializable, IClientSerializable
     {
         public const int MaxDecalsPerHull = 10;
         
         private List<Decal> decals = new List<Decal>();
+
+        private float serverUpdateDelay;
+
+        private bool networkUpdatePending;
+        private float networkUpdateTimer;
 
         public override bool SelectableInEditor
         {
@@ -118,6 +124,19 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            serverUpdateDelay -= deltaTime;
+
+            if (networkUpdatePending)
+            {
+                networkUpdateTimer += deltaTime;
+                if (networkUpdateTimer > 0.2f)
+                {
+                    GameMain.NetworkMember?.CreateEntityEvent(this);
+                    networkUpdatePending = false;
+                    networkUpdateTimer = 0.0f;
+                }
+            }
+
             if (EditWater)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -126,10 +145,14 @@ namespace Barotrauma
                     if (PlayerInput.LeftButtonHeld())
                     {
                         WaterVolume += 1500.0f;
+                        networkUpdatePending = true;
+                        serverUpdateDelay = 0.5f;
                     }
                     else if (PlayerInput.RightButtonHeld())
                     {
                         WaterVolume -= 1500.0f;
+                        networkUpdatePending = true;
+                        serverUpdateDelay = 0.5f;
                     }
                 }
             }
@@ -140,7 +163,9 @@ namespace Barotrauma
                 {
                     if (PlayerInput.LeftButtonClicked())
                     {
-                        new FireSource(position, this);
+                        new FireSource(position, this, isNetworkMessage: true);
+                        networkUpdatePending = true;
+                        serverUpdateDelay = 0.5f;
                     }
                 }
             }
@@ -483,6 +508,84 @@ namespace Barotrauma
                     width -= (int)Math.Max((x + WaveWidth) - (Submarine == null ? rect.Right : (rect.Right + Submarine.DrawPosition.X)), 0);
                 }
             }
-        }        
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+
+            msg.Write(FireSources.Count > 0);
+            if (FireSources.Count > 0)
+            {
+                msg.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
+                for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
+                {
+                    var fireSource = FireSources[i];
+                    Vector2 normalizedPos = new Vector2(
+                        (fireSource.Position.X - rect.X) / rect.Width,
+                        (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
+
+                    msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                    msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                    msg.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
+                }
+            }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
+        {
+            float newWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+            float newOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
+
+            bool hasFireSources = message.ReadBoolean();
+            int fireSourceCount = 0;
+            List<Vector3> newFireSources = new List<Vector3>();
+            if (hasFireSources)
+            {
+                fireSourceCount = message.ReadRangedInteger(0, 16);
+                for (int i = 0; i < fireSourceCount; i++)
+                {
+                    newFireSources.Add(new Vector3(
+                        MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
+                        MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
+                        message.ReadRangedSingle(0.0f, 1.0f, 8)));
+                }
+            }
+
+            if (serverUpdateDelay > 0.0f) { return; }
+
+            WaterVolume = newWaterVolume;
+            OxygenPercentage = newOxygenPercentage;
+            
+            for (int i = 0; i < fireSourceCount; i++)
+            {
+                Vector2 pos = new Vector2(
+                    rect.X + rect.Width * newFireSources[i].X,
+                    rect.Y - rect.Height + (rect.Height * newFireSources[i].Y));
+                float size = newFireSources[i].Z * rect.Width;
+
+                var newFire = i < FireSources.Count ?
+                    FireSources[i] :
+                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                newFire.Position = pos;
+                newFire.Size = new Vector2(size, newFire.Size.Y);
+
+                //ignore if the fire wasn't added to this room (invalid position)?
+                if (!FireSources.Contains(newFire))
+                {
+                    newFire.Remove();
+                    continue;
+                }
+            }
+
+            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
+            {
+                FireSources[i].Remove();
+                if (i < FireSources.Count)
+                {
+                    FireSources.RemoveAt(i);
+                }
+            }
+        }
     }
 }
