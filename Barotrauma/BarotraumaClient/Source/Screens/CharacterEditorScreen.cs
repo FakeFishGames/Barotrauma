@@ -1030,7 +1030,7 @@ namespace Barotrauma
             {
                 if (vanillaCharacters == null)
                 {
-                    vanillaCharacters = GameMain.VanillaContent.GetFilesOfType(ContentType.Character).ToList();
+                    vanillaCharacters = GameMain.VanillaContent?.GetFilesOfType(ContentType.Character).ToList();
                 }
                 return vanillaCharacters;
             }
@@ -1205,10 +1205,16 @@ namespace Barotrauma
 
         private bool CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
         {
-            // TODO: there should be a way to choose the content package?
-            var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+            var contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
+            if (contentPackage == null)
+            {
+                // This should not normally happen.
+                DebugConsole.ThrowError("No content package selected!");
+                return false;
+            }
+            var vanilla = GameMain.VanillaContent;
 #if !DEBUG
-            if (contentPackage == GameMain.VanillaContent)
+            if (vanilla != null && contentPackage == vanilla)
             {
                 GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                 return false;
@@ -1238,6 +1244,7 @@ namespace Barotrauma
                 // Add to the selected content package
                 contentPackage.AddFile(configFilePath, ContentType.Character);
                 contentPackage.Save(contentPackage.Path);
+                DebugConsole.NewMessage("Content package saved: " + contentPackage.Path);
             }
             // Ragdoll
             string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
@@ -1848,7 +1855,7 @@ namespace Barotrauma
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
-                if (VanillaCharacters.Contains(currentCharacterConfig))
+                if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
                     GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                     return false;
@@ -1863,7 +1870,7 @@ namespace Barotrauma
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
-                if (VanillaCharacters.Contains(currentCharacterConfig))
+                if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
                     GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                     return false;
@@ -1935,7 +1942,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
 #if !DEBUG
-                    if (VanillaCharacters.Contains(currentCharacterConfig))
+                    if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
                         GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                         box.Close();
@@ -2068,7 +2075,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
 #if !DEBUG
-                    if (VanillaCharacters.Contains(currentCharacterConfig))
+                    if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
                         GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                         box.Close();
