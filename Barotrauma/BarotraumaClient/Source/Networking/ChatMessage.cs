@@ -99,7 +99,7 @@ namespace Barotrauma.Networking
                         {
                             return;
                         }
-                        GameMain.Client.ServerLog?.WriteLine(txt, messageType);
+                        GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);

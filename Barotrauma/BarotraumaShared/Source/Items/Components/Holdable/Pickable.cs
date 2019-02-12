@@ -66,7 +66,9 @@ namespace Barotrauma.Items.Components
             {
                 if (picker.PickingItem == null && PickingTime <= float.MaxValue)
                 {
+#if SERVER
                     item.CreateServerEvent(this);
+#endif
                     CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
                 }
                 return false;
@@ -143,7 +145,11 @@ namespace Barotrauma.Items.Components
 
             StopPicking(picker);
 
-            if (!picker.IsRemotePlayer || GameMain.Server != null) OnPicked(picker);
+            bool isNotRemote = true;
+#if CLIENT
+            isNotRemote = !picker.IsRemotePlayer;
+#endif
+            if (isNotRemote) OnPicked(picker);
 
             yield return CoroutineStatus.Success;
         }

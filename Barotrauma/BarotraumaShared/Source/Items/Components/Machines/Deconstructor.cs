@@ -94,7 +94,7 @@ namespace Barotrauma.Items.Components
                         Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition);
                     }
                 }
-
+                
                 inputContainer.Inventory.RemoveItem(targetItem);
                 Entity.Spawner.AddToRemoveQueue(targetItem);
                 MoveInputQueue();
@@ -109,7 +109,7 @@ namespace Barotrauma.Items.Components
 
         private void PutItemsToLinkedContainer()
         {
-            if (GameMain.Client != null) { return; }
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (outputContainer.Inventory.Items.All(it => it == null)) return;
             
             foreach (MapEntity linkedTo in item.linkedTo)
@@ -153,10 +153,12 @@ namespace Barotrauma.Items.Components
 
             IsActive = active;
 
+#if SERVER
             if (user != null)
             {
                 GameServer.Log(user.LogName + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+#endif
 
             if (!IsActive) { progressState = 0.0f; }
 
@@ -173,23 +175,6 @@ namespace Barotrauma.Items.Components
 #endif
 
             inputContainer.Inventory.Locked = IsActive;            
-        }
-        
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            bool active = msg.ReadBoolean();
-
-            item.CreateServerEvent(this);
-
-            if (item.CanClientAccess(c))
-            {
-                SetActive(active, c.Character);
-            }
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(IsActive);
         }
     }
 }

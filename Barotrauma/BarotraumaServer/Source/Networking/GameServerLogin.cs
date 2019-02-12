@@ -28,20 +28,31 @@ namespace Barotrauma.Networking
         }
     }
     
-    partial class GameServer : NetworkMember, ISerializableEntity
+    partial class GameServer : NetworkMember
     {
+        private Int32 ownerKey = 0;
+
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
-        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, out ulong clientSteamID)
+        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, NetConnection senderConnection, out ulong clientSteamID)
         {
             clientSteamID = 0;
             if (!Steam.SteamManager.USE_STEAM)
             {
+                DebugConsole.Log("Received a Steam auth request from " + senderConnection.RemoteEndPoint + ". Steam authentication not required, handling auth normally.");
                 //not using steam, handle auth normally
-                HandleClientAuthRequest(inc.SenderConnection, 0);
+                HandleClientAuthRequest(senderConnection, 0);
                 return;
             }
             
+            if (senderConnection == OwnerConnection)
+            {
+                //the client is the owner of the server, no need for authentication
+                //(it would fail with a "duplicate request" error anyway)
+                HandleClientAuthRequest(senderConnection, 0);
+                return;
+            }
+
             clientSteamID = inc.ReadUInt64();
             int authTicketLength = inc.ReadInt32();
             inc.ReadBytes(authTicketLength, out byte[] authTicketData);
@@ -52,11 +63,10 @@ namespace Barotrauma.Networking
             DebugConsole.Log("  Auth ticket data: " + 
                 ((authTicketData == null) ? "null" : ToolBox.LimitString(string.Concat(authTicketData.Select(b => b.ToString("X2"))), 16)));
 
-            if (banList.IsBanned("", clientSteamID))
+            if (senderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
             {
                 return;
             }
-
             ulong steamID = clientSteamID;
             if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection))
             {
@@ -79,8 +89,8 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            unauthenticatedClients.RemoveAll(uc => uc.Connection == inc.SenderConnection);
-            var unauthClient = new UnauthenticatedClient(inc.SenderConnection, 0, clientSteamID)
+            unauthenticatedClients.RemoveAll(uc => uc.Connection == senderConnection);
+            var unauthClient = new UnauthenticatedClient(senderConnection, 0, clientSteamID)
             {
                 AuthTimer = 20
             };
@@ -97,7 +107,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     DebugConsole.Log("Steam authentication failed, skipping to basic auth...");
-                    HandleClientAuthRequest(inc.SenderConnection);
+                    HandleClientAuthRequest(senderConnection);
                     return;
                 }
             }
@@ -157,12 +167,45 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool IsServerOwner(NetIncomingMessage inc, NetConnection senderConnection)
+        {
+            string address = senderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
+            int incKey = inc.ReadInt32();
+
+            if (ownerKey == 0)
+            {
+                return false; //ownership key has been destroyed or has never existed
+            }
+            if (address.ToString() != "127.0.0.1")
+            {
+                return false; //not localhost
+            }
+
+            if (incKey != ownerKey)
+            {
+                return false; //incorrect owner key, how did this even happen
+            }
+            return true;
+        }
+        
+        private void HandleOwnership(NetIncomingMessage inc, NetConnection senderConnection)
+        {
+            DebugConsole.Log("HandleOwnership (" + senderConnection.RemoteEndPoint.Address + ")");
+            if (IsServerOwner(inc, senderConnection))
+            {
+                ownerKey = 0; //destroy owner key so nobody else can take ownership of the server
+                OwnerConnection = senderConnection;
+                DebugConsole.NewMessage("Successfully set up server owner", Color.Lime);
+            }
+        }
+
         private void HandleClientAuthRequest(NetConnection connection, ulong steamID = 0)
         {
             DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
 
-            if (GameMain.Config.RequireSteamAuthentication && steamID == 0)
+            if (GameMain.Config.RequireSteamAuthentication && connection!=OwnerConnection && steamID == 0)
             {
+                DebugConsole.Log("Disconnecting " + connection.RemoteEndPoint + ", Steam authentication required.");
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
                 return;
             }
@@ -179,7 +222,7 @@ namespace Barotrauma.Networking
             {
                 DebugConsole.Log("Unauthed client, generating a nonce...");
                 //new client, generate nonce and add to unauth queue
-                if (ConnectedClients.Count >= maxPlayers)
+                if (ConnectedClients.Count >= serverSettings.MaxPlayers)
                 {
                     //server is full, can't allow new connection
                     connection.Disconnect(DisconnectReason.ServerFull.ToString());
@@ -195,7 +238,7 @@ namespace Barotrauma.Networking
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
-            if (string.IsNullOrEmpty(password))
+            if (!serverSettings.HasPassword)
             {
                 nonceMsg.Write(false); //false = no password
             }
@@ -229,20 +272,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (!string.IsNullOrEmpty(password))
+            if (serverSettings.HasPassword)
             {
                 //decrypt message and compare password
-                string saltedPw = password;
-                saltedPw = saltedPw + Convert.ToString(unauthClient.Nonce);
-                saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
                 string clPw = inc.ReadString();
-                if (clPw != saltedPw)
+                if (!serverSettings.IsPasswordCorrect(clPw,unauthClient.Nonce))
                 {
                     unauthClient.FailedAttempts++;
                     if (unauthClient.FailedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
-                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
+                        serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
                         DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
@@ -376,7 +416,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
@@ -390,7 +430,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
-            if (Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
+            if (inc.SenderConnection != OwnerConnection && Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);
@@ -428,13 +468,20 @@ namespace Barotrauma.Networking
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);
+            LastClientListUpdateID++;
 
-#if CLIENT
-            GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
-#endif
+            if (newClient.Connection == OwnerConnection)
+            {
+                newClient.GivePermission(ClientPermissions.All);
+                newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
+
+                GameMain.Server.UpdateClientPermissions(newClient);
+                GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
+            }
+            
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
-            var savedPermissions = clientPermissions.Find(cp => 
+            var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 
                 cp.SteamID == newClient.SteamID :            
                 cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());

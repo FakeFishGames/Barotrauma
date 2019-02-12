@@ -20,39 +20,30 @@ namespace Barotrauma
             string moreAgentsMessage = TextManager.Get("TraitorMoreAgentsMessage")
                 .Replace("[codewords]", codeWords)
                 .Replace("[coderesponse]", codeResponse);
+            
+            var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
+            var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
 
-            if (server.Character != Character)
+            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
+            var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
+
+            Client client = server.ConnectedClients.Find(c => c.Character == Character);
+            GameMain.Server.SendDirectChatMessage(greetingChatMsg, client);
+            GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, client);
+            GameMain.Server.SendDirectChatMessage(greetingMsgBox, client);
+            GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, client);
+
+            Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);
+            if (client != ownerClient)
             {
-                var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
-                var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
-
-                var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
-                var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
-                
-                Client client = server.ConnectedClients.Find(c => c.Character == Character);
-                GameMain.Server.SendDirectChatMessage(greetingChatMsg, client);
-                GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, client);
-                GameMain.Server.SendDirectChatMessage(greetingMsgBox, client);
-                GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, client);
+                var ownerMsg = ChatMessage.Create(
+                    null,//TextManager.Get("NewTraitor"),
+                    TextManager.Get("TraitorStartMessageServer").Replace("[targetname]", TargetCharacter.Name).Replace("[traitorname]", Character.Name),
+                    ChatMessageType.MessageBox,
+                    null
+                );
+                GameMain.Server.SendDirectChatMessage(ownerMsg, ownerClient);
             }
-
-#if CLIENT
-            if (server.Character == null)
-            {
-                new GUIMessageBox(
-                    TextManager.Get("NewTraitor"), 
-                    TextManager.Get("TraitorStartMessageServer").Replace("[targetname]", TargetCharacter.Name).Replace("[traitorname]", Character.Name));
-            }
-            else if (server.Character == Character)
-            {
-                new GUIMessageBox("", greetingMessage);
-                new GUIMessageBox("", moreAgentsMessage);
-
-                GameMain.NetworkMember.AddChatMessage(greetingMessage, ChatMessageType.Server);
-                GameMain.NetworkMember.AddChatMessage(moreAgentsMessage, ChatMessageType.Server);
-                return;
-            }
-#endif
         }
     }
 

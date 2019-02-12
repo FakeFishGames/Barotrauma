@@ -424,7 +424,7 @@ namespace Barotrauma
                     };
                     missionTickBoxes.Add(tickBox);
                 }
-                GUITickBox.CreateRadioButtonGroup(missionTickBoxes);
+                
                 RefreshMissionTab(selectedMission);
 
                 startButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
@@ -448,6 +448,11 @@ namespace Barotrauma
                 GameMain.GameSession.Map.CurrentLocation.AvailableMissions.Contains(selectedMission)));
             
             GameMain.GameSession.Map.CurrentLocation.SelectedMission = selectedMission;
+
+            foreach (GUITickBox missionTickBox in missionTickBoxes)
+            {
+                missionTickBox.Selected = missionTickBox.UserData == selectedMission;
+            }
 
             selectedMissionInfo.ClearChildren();
             var container = selectedMissionInfo.Content;

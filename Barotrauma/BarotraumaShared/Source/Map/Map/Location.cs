@@ -7,7 +7,7 @@ namespace Barotrauma
     partial class Location
     {
         public List<LocationConnection> Connections;
-
+        
         private string baseName;
         private int nameFormatIndex;
 

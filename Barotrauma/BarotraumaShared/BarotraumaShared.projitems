@@ -2702,6 +2702,15 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Effects\deformshader_opengl.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)libsteam_api.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)libsteam_api64.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)libSDL2-2.0.0.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
@@ -2821,7 +2830,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MissionMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\SteamAchievementManager.cs" />
@@ -2917,16 +2925,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Client.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ClientPermissions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileSender.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServerLogin.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\INetSerializable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetIdUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetworkMember.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
@@ -2954,5 +2957,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\HireManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
   </ItemGroup>
 </Project>

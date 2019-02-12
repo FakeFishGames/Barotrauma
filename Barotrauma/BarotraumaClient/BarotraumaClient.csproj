@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">ReleaseLinux</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{008C0F83-E914-4966-9135-EA885059EDD8}</ProjectGuid>
@@ -14,7 +14,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile />
-    <ReleaseVersion>0.7.0.1</ReleaseVersion>
+    <ReleaseVersion>0.9.0.0</ReleaseVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -100,12 +100,15 @@
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Characters\Health\AfflictionHusk.cs" />
     <Compile Include="Source\Characters\Health\AfflictionPsychosis.cs" />
+    <Compile Include="Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ContextualTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ScenarioTutorial.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
+    <Compile Include="Source\GUI\GUIRadioButtonGroup.cs" />
     <Compile Include="Source\GUI\ParamsEditor.cs" />
     <Compile Include="Source\GUI\ShapeExtensions.cs" />
     <Compile Include="Source\GUI\Graph.cs" />
@@ -155,7 +158,6 @@
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\Tutorial.cs" />
     <Compile Include="Source\GameSession\GameSession.cs" />
-    <Compile Include="Source\GameSession\HireManager.cs" />
     <Compile Include="Source\GameSession\RoundSummary.cs" />
     <Compile Include="Source\GameSettings.cs" />
     <Compile Include="Source\GUI\ComponentStyle.cs" />
@@ -232,19 +234,21 @@
     <Compile Include="Source\Media\Video.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
+    <Compile Include="Source\Networking\Client.cs" />
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
-    <Compile Include="Source\Networking\GameServer.cs" />
-    <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
-    <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
+    <Compile Include="Source\Networking\ServerSettings.cs" />
     <Compile Include="Source\Networking\SteamManager.cs" />
+    <Compile Include="Source\Networking\Voip\VoipCapture.cs" />
+    <Compile Include="Source\Networking\Voip\VoipClient.cs" />
+    <Compile Include="Source\Networking\Voip\VoipConfig.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
@@ -279,6 +283,7 @@
     <Compile Include="Source\Sounds\SoundChannel.cs" />
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
+    <Compile Include="Source\Sounds\VoipSound.cs" />
     <Compile Include="Source\Sounds\VideoSound.cs" />
     <Compile Include="Source\Sprite\DeformableSprite.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\CustomDeformation.cs" />
@@ -294,6 +299,9 @@
     <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Concentus, Version=1.1.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\Concentus.1.1.7\lib\portable-net45+win+wpa81+wp80\Concentus.dll</HintPath>
+    </Reference>
     <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\lib\net45\GameAnalytics.Mono.dll</HintPath>
     </Reference>
@@ -340,9 +348,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="libvlccore.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="oalinst.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="plugins\access\libfilesystem_plugin.dll">

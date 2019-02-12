@@ -671,7 +671,10 @@ namespace Barotrauma
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody)
             {
-                if (!character.IsRemotePlayer || GameMain.Server != null)
+                bool isNotRemote = true;
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+
+                if (isNotRemote)
                 {
                     if (impact > ImpactTolerance)
                     {
@@ -689,7 +692,7 @@ namespace Barotrauma
 
             ImpactProjSpecific(impact, f1.Body);
         }
-
+        
         public void SeverLimbJoint(LimbJoint limbJoint)
         {
             if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
@@ -713,9 +716,9 @@ namespace Barotrauma
 
             SeverLimbJointProjSpecific(limbJoint);
 
-            if (GameMain.Server != null)
+            if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
             {
-                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
+                GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
         }
 
@@ -1445,7 +1448,8 @@ namespace Barotrauma
                 prevCollisionCategory = Category.None;
             }
         }
-        
+
+        partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos);
         private void UpdateNetPlayerPosition(float deltaTime)
         {
             if (GameMain.NetworkMember == null) return;
@@ -1467,214 +1471,8 @@ namespace Barotrauma
                         character.MemState[i].TransformOutToInside(currentHull.Submarine);
                 }
             }
-
-            if (GameMain.Server != null) return; //the server should not be trying to correct any positions, it's authoritative
             
-            if (character != GameMain.NetworkMember.Character || !character.AllowInput)
-            {
-                //remove states without a timestamp (there may still be ID-based states 
-                //in the list when the controlled character switches to timestamp-based interpolation)
-                character.MemState.RemoveAll(m => m.Timestamp == 0.0f);
-
-                //use simple interpolation for other players' characters and characters that can't move
-                if (character.MemState.Count > 0)
-                {
-                    CharacterStateInfo serverPos = character.MemState.Last();
-                    if (!character.isSynced)
-                    {
-                        SetPosition(serverPos.Position, false);
-                        Collider.LinearVelocity = Vector2.Zero;
-                        character.MemLocalState.Clear();
-                        character.LastNetworkUpdateID = serverPos.ID;
-                        character.isSynced = true;
-                        return;
-                    }
-
-                    if (character.MemState[0].Interact == null || character.MemState[0].Interact.Removed)
-                    {
-                        character.DeselectCharacter();
-                        character.SelectedConstruction = null;
-                    }
-                    else if (character.MemState[0].Interact is Character)
-                    {
-                        character.SelectCharacter((Character)character.MemState[0].Interact);
-                    }
-                    else if (character.MemState[0].Interact is Item newSelectedConstruction)
-                    {
-                        if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
-                        {
-                            foreach (var ic in newSelectedConstruction.components)
-                            {
-                                if (ic.CanBeSelected) ic.Select(character);
-                            }
-                        }
-                        character.SelectedConstruction = newSelectedConstruction;
-                    }
-
-                    if (character.MemState[0].Animation == AnimController.Animation.CPR)
-                    {
-                        character.AnimController.Anim = AnimController.Animation.CPR;
-                    }
-                    else if (character.AnimController.Anim == AnimController.Animation.CPR)
-                    {
-                        character.AnimController.Anim = AnimController.Animation.None;
-                    }
-
-                    Vector2 newVelocity = Vector2.Zero;
-                    Vector2 newPosition = Collider.SimPosition;
-                    Collider.CorrectPosition(character.MemState, deltaTime, out newVelocity, out newPosition);
-
-                    newVelocity = newVelocity.ClampLength(100.0f);
-                    if (!MathUtils.IsValid(newVelocity)) newVelocity = Vector2.Zero;
-                    overrideTargetMovement = newVelocity;
-                    Collider.LinearVelocity = newVelocity;
-
-                    float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    if (distSqrd > 10.0f)
-                    {
-                        SetPosition(newPosition);
-                    }
-                    else if (distSqrd > 0.01f)
-                    {
-                        Collider.SetTransform(newPosition, Collider.Rotation);
-                    }
-
-                    //unconscious/dead characters can't correct their position using AnimController movement
-                    // -> we need to correct it manually
-                    if (!character.AllowInput)
-                    {
-                        Collider.LinearVelocity = overrideTargetMovement;
-                        MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                        MainLimb.PullJointEnabled = true;
-                    }
-                }
-                character.MemLocalState.Clear();
-            }
-            else
-            {
-                //remove states with a timestamp (there may still timestamp-based states 
-                //in the list if the controlled character switches from timestamp-based interpolation to ID-based)
-                character.MemState.RemoveAll(m => m.Timestamp > 0.0f);
-                
-                for (int i = 0; i < character.MemLocalState.Count; i++)
-                {
-                    if (character.Submarine == null)
-                    {
-                        //transform in-sub coordinates to outside coordinates
-                        if (character.MemLocalState[i].Position.Y > lowestSubPos)
-                        {                            
-                            character.MemLocalState[i].TransformInToOutside();
-                        }
-                    }
-                    else if (currentHull?.Submarine != null)
-                    {
-                        //transform outside coordinates to in-sub coordinates
-                        if (character.MemLocalState[i].Position.Y < lowestSubPos)
-                        {
-                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);
-                        }
-                    }
-                }
-
-                if (character.MemState.Count < 1) return;
-
-                overrideTargetMovement = Vector2.Zero;
-
-                CharacterStateInfo serverPos = character.MemState.Last();
-
-                if (!character.isSynced)
-                {
-                    SetPosition(serverPos.Position, false);
-                    Collider.LinearVelocity = Vector2.Zero;
-                    character.MemLocalState.Clear();
-                    character.LastNetworkUpdateID = serverPos.ID;
-                    character.isSynced = true;
-                    return;
-                }
-
-                int localPosIndex = character.MemLocalState.FindIndex(m => m.ID == serverPos.ID);
-                if (localPosIndex > -1)
-                {
-                    CharacterStateInfo localPos = character.MemLocalState[localPosIndex];
-                    
-                    //the entity we're interacting with doesn't match the server's
-                    if (localPos.Interact != serverPos.Interact)
-                    {
-                        if (serverPos.Interact == null || serverPos.Interact.Removed)
-                        {
-                            character.DeselectCharacter();
-                            character.SelectedConstruction = null;
-                        }
-                        else if (serverPos.Interact is Character)
-                        {
-                            character.SelectCharacter((Character)serverPos.Interact);
-                        }
-                        else
-                        {
-                            var newSelectedConstruction = (Item)serverPos.Interact;
-                            if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
-                            {
-                                newSelectedConstruction.TryInteract(character, true, true);
-                            }
-                            character.SelectedConstruction = newSelectedConstruction;
-                        }
-                    }
-
-                    if (localPos.Animation != serverPos.Animation)
-                    {
-                        if (serverPos.Animation == AnimController.Animation.CPR)
-                        {
-                            character.AnimController.Anim = AnimController.Animation.CPR;
-                        }
-                        else if (character.AnimController.Anim == AnimController.Animation.CPR) 
-                        {
-                            character.AnimController.Anim = AnimController.Animation.None;
-                        }
-                    }
-
-                    Hull serverHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(serverPos.Position), character.CurrentHull, serverPos.Position.Y < lowestSubPos);
-                    Hull clientHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(localPos.Position), serverHull, localPos.Position.Y < lowestSubPos);
-                    
-                    if (serverHull != null && clientHull != null && serverHull.Submarine != clientHull.Submarine)
-                    {
-                        //hull subs don't match => teleport the camera to the other sub
-                        character.Submarine = serverHull.Submarine;
-                        character.CurrentHull = currentHull = serverHull;
-                        SetPosition(serverPos.Position);
-                        character.MemLocalState.Clear();
-                    }
-                    else
-                    {
-                        Vector2 positionError = serverPos.Position - localPos.Position;
-                        float rotationError = serverPos.Rotation - localPos.Rotation;
-
-                        for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
-                        {
-                            Hull pointHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(character.MemLocalState[i].Position), clientHull, character.MemLocalState[i].Position.Y < lowestSubPos);
-                            if (pointHull != clientHull && ((pointHull == null) || (clientHull == null) || (pointHull.Submarine == clientHull.Submarine))) break;
-                            character.MemLocalState[i].Translate(positionError, rotationError);
-                        }
-
-                        float errorMagnitude = positionError.Length();
-                        if (errorMagnitude > 0.01f)
-                        {
-                            Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
-                            if (errorMagnitude > 0.5f)
-                            {
-                                character.MemLocalState.Clear();                 
-                                foreach (Limb limb in Limbs)
-                                {
-                                    limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
-                                }
-                            }
-                        }
-                    }
-
-                }
-
-                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
-                character.MemState.Clear();
-            }
+            UpdateNetPlayerPositionProjSpecific(deltaTime, lowestSubPos);
         }
         
         private Vector2 GetFlowForce()

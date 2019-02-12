@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
+using System.Threading;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
@@ -78,35 +79,23 @@ namespace Barotrauma
 
         private static void PreMultiplyAlpha(Texture2D texture)
         {
-            // Setup a render target to hold our final texture which will have premulitplied alpha values
-            using (RenderTarget2D renderTarget = new RenderTarget2D(_graphicsDevice, texture.Width, texture.Height))
+            UInt32[] data = new UInt32[texture.Width * texture.Height];
+            texture.GetData(data);
+            for (int y = 0; y < texture.Height; y++)
             {
-                Viewport viewportBackup = _graphicsDevice.Viewport;
-                _graphicsDevice.SetRenderTarget(renderTarget);
-                _graphicsDevice.Clear(Color.Black);
-
-                // Multiply each color by the source alpha, and write in just the color values into the final texture
-                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendColorBlendState);
-                _spriteBatch.Draw(texture, texture.Bounds, Color.White);
-                _spriteBatch.End();
-
-                // Now copy over the alpha values from the source texture to the final one, without multiplying them
-                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendAlphaBlendState);
-                _spriteBatch.Draw(texture, texture.Bounds, Color.White);
-                _spriteBatch.End();
-
-                // Release the GPU back to drawing to the screen
-                _graphicsDevice.SetRenderTarget(null);
-                _graphicsDevice.Viewport = viewportBackup;
-
-                // Store data from render target because the RenderTarget2D is volatile
-                Color[] data = new Color[texture.Width * texture.Height];
-                renderTarget.GetData(data);
-
-                // Unset texture from graphic device and set modified data back to it
-                _graphicsDevice.Textures[0] = null;
-                texture.SetData(data);
+                for (int x = 0; x < texture.Width; x++)
+                {
+                    uint a = (data[x + (y * texture.Width)] & 0xff000000) >> 24;
+                    uint r = (data[x + (y * texture.Width)] & 0x00ff0000) >> 16;
+                    uint g = (data[x + (y * texture.Width)] & 0x0000ff00) >> 8;
+                    uint b = (data[x + (y * texture.Width)] & 0x000000ff);
+                    b *= a; b /= 255;
+                    g *= a; g /= 255;
+                    r *= a; r /= 255;
+                    data[x + (y * texture.Width)] = (a<<24) | (r<<16) | (g<<8) | b;
+                }
             }
+            texture.SetData(data);
         }
        
         

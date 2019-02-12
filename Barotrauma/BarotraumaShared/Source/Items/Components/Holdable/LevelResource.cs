@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
             {
                 deattachTimer = Math.Max(0.0f, value);
                 //clients don't deattach the item until the server says so (handled in ClientRead)
-                if (GameMain.Client == null && deattachTimer >= DeattachDuration)
+                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && deattachTimer >= DeattachDuration)
                 {
                     holdable.DeattachFromWall();
                 }

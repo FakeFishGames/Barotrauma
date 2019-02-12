@@ -11,7 +11,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         [Serialize("0.0,360", false)]
         public Vector2 ArmorSector
         {
