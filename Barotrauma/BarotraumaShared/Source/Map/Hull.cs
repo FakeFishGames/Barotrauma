@@ -407,7 +407,10 @@ namespace Barotrauma
         {
             FireSources.Add(fireSource);
 
-            if (GameMain.Server != null && !IdFreed) GameMain.Server.CreateEntityEvent(this);
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !IdFreed)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -421,24 +424,6 @@ namespace Barotrauma
             aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 500.0f, 500.0f);
             aiTarget.SoundRange -= deltaTime * 1000.0f;
          
-            //update client hulls if the amount of water has changed by >10%
-            //or if oxygen percentage has changed by 5%
-            if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
-                Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
-            {
-                if (GameMain.Server != null && !IdFreed)
-                {
-                    sendUpdateTimer -= deltaTime;
-                    if (sendUpdateTimer < 0.0f)
-                    {
-                        GameMain.Server.CreateEntityEvent(this);
-                        lastSentVolume = waterVolume;
-                        lastSentOxygen = OxygenPercentage;
-                        sendUpdateTimer = NetworkUpdateInterval;
-                    }
-                }
-            }
-
             if (!update)
             {
                 lethalPressure = 0.0f;
@@ -597,9 +582,9 @@ namespace Barotrauma
         {
             FireSources.Remove(fire);
 
-            if (GameMain.Server != null && !Removed && !IdFreed)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !Removed && !IdFreed)
             {
-                GameMain.Server.CreateEntityEvent(this);
+                GameMain.NetworkMember.CreateEntityEvent(this);
             }
         }
 
@@ -845,78 +830,6 @@ namespace Barotrauma
                 roomPos |= Alignment.Right;
 
             return TextManager.Get("Sub" + roomPos.ToString());
-        }
-
-        public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)
-        {
-            message.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
-
-            message.Write(FireSources.Count > 0);
-            if (FireSources.Count > 0)
-            {
-                message.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
-                for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
-                {
-                    var fireSource = FireSources[i];
-                    Vector2 normalizedPos = new Vector2(
-                        (fireSource.Position.X - rect.X) / rect.Width,
-                        (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
-
-                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-                    message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
-                }
-            }
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
-        {
-            WaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
-            OxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
-
-            bool hasFireSources = message.ReadBoolean();
-            int fireSourceCount = 0;
-            
-            if (hasFireSources)
-            {
-                fireSourceCount = message.ReadRangedInteger(0, 16);
-                for (int i = 0; i < fireSourceCount; i++)
-                {
-                    Vector2 pos = Vector2.Zero;
-                    float size = 0.0f;
-                    pos.X = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
-                    pos.Y = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
-                    size = message.ReadRangedSingle(0.0f, 1.0f, 8);
-
-                    pos = new Vector2(
-                        rect.X + rect.Width * pos.X, 
-                        rect.Y - rect.Height + (rect.Height * pos.Y));
-                    size = size * rect.Width;
-                    
-                    var newFire = i < FireSources.Count ? 
-                        FireSources[i] : 
-                        new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
-                    newFire.Position = pos;
-                    newFire.Size = new Vector2(size, newFire.Size.Y);
-
-                    //ignore if the fire wasn't added to this room (invalid position)?
-                    if (!FireSources.Contains(newFire))
-                    {
-                        newFire.Remove();
-                        continue;
-                    }                    
-                }
-            }
-
-            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
-            {
-                FireSources[i].Remove();
-                if (i < FireSources.Count)
-                {
-                    FireSources.RemoveAt(i);
-                }
-            }
         }
 
         public static Hull Load(XElement element, Submarine submarine)

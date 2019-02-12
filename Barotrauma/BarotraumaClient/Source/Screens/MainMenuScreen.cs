@@ -8,6 +8,9 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using System.Diagnostics;
+using Lidgren.Network;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -218,10 +221,10 @@ namespace Barotrauma
         {
             base.Select();
 
-            if (GameMain.NetworkMember != null)
+            if (GameMain.Client != null)
             {
-                GameMain.NetworkMember.Disconnect();
-                GameMain.NetworkMember = null;
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
             }
 
             Submarine.Unload();
@@ -485,15 +488,41 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
-            }
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
 
+                string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -port " + port.ToString() +
+                                   " -queryport " + queryPort.ToString() +
+                                   " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -upnp " + useUpnpBox.Selected +
+                                   " -playercount " + maxPlayersBox.Text +
+                                    " -ownerkey " + ownerKey.ToString();
+
+                string filename = "DedicatedServer.exe";
+#if LINUX
+                filename = "mono";
+                arguments = "./DedicatedServer.exe " + arguments;
+#endif
+
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = filename,
+                    Arguments = arguments,
+#if !DEBUG
+                    WindowStyle = ProcessWindowStyle.Hidden
+#endif
+                };
+                GameMain.ServerChildProcess = Process.Start(processInfo);
+
+                Thread.Sleep(1000); //wait until the server is ready before connecting
+
+                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
+            }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start server", e);
             }
 
-            GameMain.NetLobbyScreen.IsServer = true;
             return true;
         }
 

@@ -59,7 +59,7 @@ namespace Barotrauma
         private static GUIFrame pauseMenu;
         private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
 
-        public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
+        public static KeyboardDispatcher KeyboardDispatcher { get; set; }
 
         /// <summary>
         /// Has the selected Screen changed since the last time the GUI was drawn.
@@ -137,7 +137,6 @@ namespace Barotrauma
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GUI.graphicsDevice = graphicsDevice;
-            KeyboardDispatcher = new KeyboardDispatcher(window);
             var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
             if (uiStyles.Count == 0)
             {
@@ -159,6 +158,7 @@ namespace Barotrauma
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
 
                 sounds[(int)GUISoundType.UIMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.ChatMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/chatmsg.ogg", false);
                 sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/radiomsg.ogg", false);
                 sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/deadmsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/beep-shinymetal.ogg", false);
@@ -291,7 +291,7 @@ namespace Barotrauma
                     {
                         Color clr = Color.White;
                         string soundStr = i + ": ";
-                        SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
+                        SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
                         if (playingSoundChannel == null)
                         {
                             soundStr += "none";
@@ -364,7 +364,7 @@ namespace Barotrauma
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
+            if (GameMain.Client != null) GameMain.Client.Draw(spriteBatch);
 
             if (Character.Controlled?.Inventory != null)
             {
@@ -1528,10 +1528,10 @@ namespace Barotrauma
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 
-            if (GameMain.NetworkMember != null)
+            if (GameMain.Client != null)
             {
-                GameMain.NetworkMember.Disconnect();
-                GameMain.NetworkMember = null;
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
             }
 
             CoroutineManager.StopCoroutines("EndCinematic");

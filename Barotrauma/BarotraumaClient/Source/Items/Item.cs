@@ -891,6 +891,106 @@ namespace Barotrauma
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
+        
+        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
+        {
+            string itemName = msg.ReadString();
+            string itemIdentifier = msg.ReadString();
+            bool descriptionChanged = msg.ReadBoolean();
+            string itemDesc = "";
+            if (descriptionChanged)
+            {
+                itemDesc = msg.ReadString();
+            }
+            ushort itemId = msg.ReadUInt16();
+            ushort inventoryId = msg.ReadUInt16();
+
+            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
+
+            Vector2 pos = Vector2.Zero;
+            Submarine sub = null;
+            int itemContainerIndex = -1;
+            int inventorySlotIndex = -1;
+
+            if (inventoryId > 0)
+            {
+                itemContainerIndex = msg.ReadByte();
+                inventorySlotIndex = msg.ReadByte();
+            }
+            else
+            {
+                pos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+
+                ushort subID = msg.ReadUInt16();
+                if (subID > 0)
+                {
+                    sub = Submarine.Loaded.Find(s => s.ID == subID);
+                }
+            }
+
+            byte teamID = msg.ReadByte();
+            bool tagsChanged = msg.ReadBoolean();
+            string tags = "";
+            if (tagsChanged)
+            {
+                tags = msg.ReadString();
+            }
+
+            if (!spawn) return null;
+
+            //----------------------------------------
+
+            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
+            if (itemPrefab == null) return null;
+
+            Inventory inventory = null;
+
+            var inventoryOwner = FindEntityByID(inventoryId);
+            if (inventoryOwner != null)
+            {
+                if (inventoryOwner is Character)
+                {
+                    inventory = (inventoryOwner as Character).Inventory;
+                }
+                else if (inventoryOwner is Item)
+                {
+                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
+                    {
+                        inventory = container.Inventory;
+                    }
+                }
+            }
+
+            var item = new Item(itemPrefab, pos, sub)
+            {
+                ID = itemId
+            };
+
+            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+            {
+                wifiComponent.TeamID = teamID;
+            }
+            if (descriptionChanged) item.Description = itemDesc;
+            if (tagsChanged) item.Tags = tags;
+
+            if (sub != null)
+            {
+                item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
+                item.Submarine = item.CurrentHull?.Submarine;
+            }
+
+            if (inventory != null)
+            {
+                if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
+                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
+                {
+                    return null;
+                }
+                inventory.TryPutItem(item, null, item.AllowedSlots, false);
+            }
+
+            return item;
+        }
 
         partial void RemoveProjSpecific()
         {

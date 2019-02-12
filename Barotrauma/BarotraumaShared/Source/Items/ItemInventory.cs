@@ -97,18 +97,12 @@ namespace Barotrauma
                 DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
                 return;
             }
-
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null)
             {
-                GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
+                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
+                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }
-#if CLIENT
-            else if (GameMain.Client != null)
-            {
-                syncItemsDelay = 1.0f;
-                GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
-            }
-#endif
         }    
 
         public override void RemoveItem(Item item)

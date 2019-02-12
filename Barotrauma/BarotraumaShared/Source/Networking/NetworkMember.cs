@@ -15,7 +15,13 @@ namespace Barotrauma.Networking
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 
+        SERVER_SETTINGS, //change server settings
+        
+        CAMPAIGN_SETUP_INFO,
+
         FILE_REQUEST,   //request a (submarine) file from the server
+
+        VOICE,
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
@@ -47,8 +53,13 @@ namespace Barotrauma.Networking
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
+        CHEATS_ENABLED,     //tell the clients whether cheats are on or off
+
+        CAMPAIGN_SETUP_INFO,
 
         FILE_TRANSFER,
+
+        VOICE,
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
@@ -60,6 +71,7 @@ namespace Barotrauma.Networking
         SYNC_IDS,
         CHAT_MESSAGE,
         VOTE,
+        CLIENT_LIST,
         ENTITY_POSITION,
         ENTITY_EVENT,
         ENTITY_EVENT_INITIAL,
@@ -98,6 +110,24 @@ namespace Barotrauma.Networking
 
     abstract partial class NetworkMember
     {
+        public UInt16 LastClientListUpdateID
+        {
+            get;
+            set;
+        }
+
+        public virtual bool IsServer
+        {
+            get { return false; }
+        }
+
+        public virtual bool IsClient
+        {
+            get { return false; }
+        }
+
+        public abstract void CreateEntityEvent(INetSerializable entity, object[] extraData = null);
+
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
@@ -110,6 +140,8 @@ namespace Barotrauma.Networking
 
         protected string name;
 
+        protected ServerSettings serverSettings;
+        
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
 
@@ -117,12 +149,8 @@ namespace Barotrauma.Networking
 
         protected bool gameStarted;
 
-        public Dictionary<string, bool> monsterEnabled;
-
         protected RespawnManager respawnManager;
 
-        public Voting Voting;
-        
         public int Port
         {
             get;
@@ -154,25 +182,17 @@ namespace Barotrauma.Networking
             get { return respawnManager; }
         }
 
-        public ServerLog ServerLog
+        public ServerSettings ServerSettings
         {
-            get;
-            protected set;
+            get { return serverSettings; }
         }
-
+        
         public NetPeerConfiguration NetPeerConfiguration
         {
             get;
             protected set;
         }
-
-        public NetworkMember()
-        {
-            InitProjSpecific();
-            
-            Voting = new Voting();
-        }
-
+        
         public bool CanUseRadio(Character sender)
         {
             if (sender == null) return false;
@@ -190,21 +210,14 @@ namespace Barotrauma.Networking
             AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter));
         }
 
-        public void AddChatMessage(ChatMessage message)
+        public virtual void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
-
-            GameServer.Log(message.TextWithSender, ServerLog.MessageType.Chat);
-            
+                        
             if (message.Sender != null && !message.Sender.IsDead)
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
-
-#if CLIENT
-            GameMain.NetLobbyScreen.NewChatMessage(message);
-            chatBox.AddMessage(message);
-#endif
         }
 
         public virtual void KickPlayer(string kickedName, string reason) { }
@@ -213,12 +226,7 @@ namespace Barotrauma.Networking
 
         public virtual void UnbanPlayer(string playerName, string playerIP) { }
 
-        public virtual void Update(float deltaTime) 
-        {
-#if CLIENT
-            UpdateHUD(deltaTime);            
-#endif
-        }
+        public virtual void Update(float deltaTime) { }
 
         public virtual void Disconnect() { }
     }

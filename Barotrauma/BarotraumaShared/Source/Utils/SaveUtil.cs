@@ -184,7 +184,7 @@ namespace Barotrauma
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
 
-            if (!Directory.Exists(SaveFolder))
+            if (!Directory.Exists(folder))
             {
                 DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);

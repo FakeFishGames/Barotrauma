@@ -163,16 +163,23 @@ namespace Launcher
                         
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 50) }, "Display mode");
             displayModeDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 70) });
-#if !OSX
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
-            displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
+#if (!OSX)
+            // Fullscreen option just sets itself to borderless on macOS.
+            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
+            displayModeDD.SelectItem(settings.WindowMode);
 #else
-            // Force borderless on macOS.
-            displayModeDD.AddItem("Fullscreen", WindowMode.BorderlessWindowed);
-            displayModeDD.AddItem("Windowed", WindowMode.Windowed);
+            if (settings.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(settings.WindowMode);
+            }
 #endif
-
+            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };
 
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 100) }, "Content packages");
             contentPackageList = new GUIListBox(new RectTransform(new Point(200, 120), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 120) });
@@ -186,10 +193,6 @@ namespace Launcher
                     Selected = settings.SelectedContentPackages.Contains(contentPackage)
                 };
             }
-
-            displayModeDD.SelectItem(settings.WindowMode);
-
-            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };            
         }
 
         protected override void Update(GameTime gameTime)

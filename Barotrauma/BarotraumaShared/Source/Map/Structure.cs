@@ -676,7 +676,14 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage, attacker);
+#if CLIENT
+            if (GameMain.Client == null)
+            {
+#endif
+                SetDamage(sectionIndex, section.damage + damage, attacker);
+#if CLIENT
+            }
+#endif
         }
 
         public int FindSectionIndex(Vector2 displayPos, bool world = false, bool clamp = false)
@@ -754,26 +761,7 @@ namespace Barotrauma
 
         }
 
-        private void AdjustKarma(IDamageable attacker, float amount)
-        {
-            if (GameMain.Server != null)
-            {
-                if (Submarine == null) return;
-                if (attacker == null) return;
-                if (attacker is Character)
-                {
-                    Character attackerCharacter = attacker as Character;
-                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
-                    if (attackerClient != null)
-                    {
-                        if (attackerCharacter.TeamID == Submarine.TeamID)
-                        {
-                            attackerClient.Karma -= amount * 0.001f;
-                        }
-                    }
-                }
-            }
-        }
+        partial void AdjustKarma(IDamageable attacker, float amount);
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -815,11 +803,13 @@ namespace Barotrauma
             if (!MathUtils.IsValid(damage)) return;
 
             damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
-
+            
+#if SERVER
             if (GameMain.Server != null && createNetworkEvent && damage != Sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
+#endif
 
             bool noGaps = true;
             for (int i = 0; i < Sections.Length; i++)
@@ -835,11 +825,13 @@ namespace Barotrauma
             {
                 if (Sections[sectionIndex].gap != null)
                 {
+#if SERVER
                     //the structure doesn't have any other gap, log the structure being fixed
                     if (noGaps && attacker != null)
                     {
                         GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
+#endif
 
                     DebugConsole.Log("Removing gap (ID " + Sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
 
@@ -908,11 +900,13 @@ namespace Barotrauma
                     DebugConsole.Log("Created gap (ID " + Sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") on wall " + ID);
                     //AdjustKarma(attacker, 300);
 
+#if SERVER
                     //the structure didn't have any other gaps yet, log the breach
                     if (noGaps && attacker != null)
                     {
                         GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
+#endif
                 }
                 
                 float gapOpen = (damage / prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
@@ -927,12 +921,19 @@ namespace Barotrauma
             if (attacker != null && damageDiff != 0.0f)
             {
                 AdjustKarma(attacker, damageDiff);
-                if (damageDiff < 0.0f && GameMain.Client == null)
+#if CLIENT
+                if (GameMain.Client == null)
                 {
-                    attacker.Info.IncreaseSkillLevel("mechanical", 
-                        -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
-                        SectionPosition(sectionIndex, true));                                    
+#endif
+                    if (damageDiff < 0.0f)
+                    {
+                        attacker.Info.IncreaseSkillLevel("mechanical", 
+                            -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
+                            SectionPosition(sectionIndex, true));                                    
+                    }
+#if CLIENT
                 }
+#endif
             }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
