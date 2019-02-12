@@ -68,30 +68,34 @@ namespace Barotrauma
 
         private string CalculateHash(FileStream stream)
         {
-            MD5 md5 = MD5.Create();
-            byte[] byteHash = md5.ComputeHash(stream);
-            // step 2, convert byte array to hex string
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < byteHash.Length; i++)
+            using (MD5 md5 = MD5.Create())
             {
-                sb.Append(byteHash[i].ToString("X2"));
-            }
+                byte[] byteHash = md5.ComputeHash(stream);
+                // step 2, convert byte array to hex string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < byteHash.Length; i++)
+                {
+                    sb.Append(byteHash[i].ToString("X2"));
+                }
 
-            return sb.ToString();
+                return sb.ToString();
+            }
         }
 
         private string CalculateHash(byte[] bytes)
         {
-            MD5 md5 = MD5.Create();
-            byte[] byteHash = md5.ComputeHash(bytes);
-            // step 2, convert byte array to hex string
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < byteHash.Length; i++)
+            using (MD5 md5 = MD5.Create())
             {
-                sb.Append(byteHash[i].ToString("X2"));
-            }
+                byte[] byteHash = md5.ComputeHash(bytes);
+                // step 2, convert byte array to hex string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < byteHash.Length; i++)
+                {
+                    sb.Append(byteHash[i].ToString("X2"));
+                }
 
-            return sb.ToString();
+                return sb.ToString();
+            }
         }
 
         public static string GetShortHash(string fullHash)

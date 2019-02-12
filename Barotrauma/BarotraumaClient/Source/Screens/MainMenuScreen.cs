@@ -8,12 +8,15 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using System.Diagnostics;
+using Lidgren.Network;
+using System.Threading;
 
 namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10 }
 
         private GUIComponent buttonsParent;
 
@@ -30,6 +33,7 @@ namespace Barotrauma
 
         private Tab selectedTab;
 
+        #region Creation
         public MainMenuScreen(GameMain game)
         {
             buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
@@ -46,61 +50,12 @@ namespace Barotrauma
 #if DEBUG
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, -40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
-            {
+            { 
                 IgnoreLayoutGroups = true,
+                UserData = Tab.QuickStartDev,
                 OnClicked = (tb, userdata) =>
                 {
-                    Submarine selectedSub = null;
-                    string subName = GameMain.Config.QuickStartSubmarineName;
-                    if (!string.IsNullOrEmpty(subName))
-                    {
-                        DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
-                        selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => 
-                            s.Name.ToLower() == subName.ToLower());
-
-                        if (selectedSub == null)
-                        {
-                            DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
-                        }
-                    }
-                    if (selectedSub == null)
-                    {
-                        DebugConsole.NewMessage("Loading a random sub.", Color.White);
-                        var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
-                        selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
-                    }
-                    var gamesession = new GameSession(
-                        selectedSub,
-                        "Data/Saves/test.xml",
-                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
-                        missionPrefab: null);
-                    //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-                    gamesession.StartRound(ToolBox.RandomSeed(8));
-                    GameMain.GameScreen.Select();
-
-                    string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
-                    for (int i = 0; i < 3; i++)
-                    {
-                        var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
-                        if (spawnPoint == null)
-                        {
-                            DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
-                            GameMain.MainMenuScreen.Select();
-                            return true;
-                        }
-                        var characterInfo = new CharacterInfo(
-                            Character.HumanConfigFile, 
-                            jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
-                        if (characterInfo.Job == null)
-                        {
-                            DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
-                        }
-
-                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
-                        newCharacter.GiveJobItems(spawnPoint);
-                        gamesession.CrewManager.AddCharacter(newCharacter);
-                        Character.Controlled = newCharacter;
-                    }
+                    SelectTab(tb, userdata);
                     return true;
                 }
             };
@@ -121,24 +76,41 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("NewGameButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.NewGame,
-                OnClicked = SelectTab
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("LoadGameButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.LoadGame,
-                OnClicked = SelectTab
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
 
             joinServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("JoinServerButton"), style: "GUIButtonLarge")
             {
-                OnClicked = JoinServerClicked
+                UserData = Tab.JoinServer,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
             hostServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("HostServerButton"), style: "GUIButtonLarge")
             {
                 UserData = Tab.HostServer,
-                OnClicked = SelectTab
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
 
 
@@ -146,15 +118,20 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SubEditorButton"), style: "GUIButtonLarge")
             {
-                OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; }
+                UserData = Tab.SubmarineEditor,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("CharacterEditorButton"), style: "GUIButtonLarge")
             {
-                OnClicked = (btn, userdata) =>
+                UserData = Tab.CharacterEditor,
+                OnClicked = (tb, userdata) =>
                 {
-                    Submarine.MainSub = null;
-                    GameMain.CharacterEditorScreen.Select();
+                    SelectTab(tb, userdata);
                     return true;
                 }
             };
@@ -164,7 +141,8 @@ namespace Barotrauma
                 steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
                 {
                     Enabled = false,
-                    OnClicked = SteamWorkshopClicked
+                    UserData = Tab.SteamWorkshop,
+                    OnClicked = SelectTab
                 };
             }
 
@@ -236,15 +214,17 @@ namespace Barotrauma
 
             this.game = game;
         }
+        #endregion
 
+        #region Selection
         public override void Select()
         {
             base.Select();
 
-            if (GameMain.NetworkMember != null)
+            if (GameMain.Client != null)
             {
-                GameMain.NetworkMember.Disconnect();
-                GameMain.NetworkMember = null;
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
             }
 
             Submarine.Unload();
@@ -253,16 +233,76 @@ namespace Barotrauma
 
             campaignSetupUI.UpdateSubList();
 
-            SelectTab(null, 0);
+            ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
         }
 
-        public bool SelectTab(GUIButton button, object obj)
+        private bool SelectTab(GUIButton button, object obj)
         {
             if (obj is Tab)
             {
-                SelectTab((Tab)obj);
+                if (GameMain.Config.UnsavedSettings)
+                {
+                    var applyBox = new GUIMessageBox(
+                        TextManager.Get("ApplySettingsLabel"),
+                        TextManager.Get("ApplySettingsQuestion"),
+                        new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
+                    applyBox.Buttons[0].UserData = (Tab)obj;
+                    applyBox.Buttons[0].OnClicked = (tb, userdata) =>
+                    {
+                        applyBox.Close(button, userdata);
+                        ApplySettings(button, userdata);
+                        return true;
+                    };
+
+                    applyBox.Buttons[1].UserData = (Tab)obj;
+                    applyBox.Buttons[1].OnClicked = (tb, userdata) =>
+                    {
+                        applyBox.Close(button, userdata);
+                        DiscardSettings(button, userdata);
+                        return true;
+                    };
+                    return false;
+                }
+
+                selectedTab = (Tab)obj;
+
+                switch (selectedTab)
+                {
+                    case Tab.NewGame:
+                        campaignSetupUI.CreateDefaultSaveName();
+                        campaignSetupUI.UpdateTutorialSelection();
+                        break;
+                    case Tab.LoadGame:
+                        campaignSetupUI.UpdateLoadMenu();
+                        break;
+                    case Tab.Settings:
+                        GameMain.Config.ResetSettingsFrame();
+                        menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
+                        break;
+                    case Tab.JoinServer:
+                        GameMain.ServerListScreen.Select();
+                        break;
+                    case Tab.HostServer:
+                        break;
+                    case Tab.Tutorials:
+                        break;
+                    case Tab.CharacterEditor:
+                        Submarine.MainSub = null;
+                        GameMain.CharacterEditorScreen.Select();
+                        break;
+                    case Tab.SubmarineEditor:
+                        GameMain.SubEditorScreen.Select();
+                        break;
+                    case Tab.QuickStartDev:
+                        QuickStart();
+                        break;
+                    case Tab.SteamWorkshop:
+                        if (!Steam.SteamManager.IsInitialized) return false;
+                        GameMain.SteamWorkshopScreen.Select();
+                        break;
+                }
             }
             else
             { 
@@ -270,7 +310,29 @@ namespace Barotrauma
             }
 
             if (button != null) button.Selected = true;
+            ResetButtonStates(button);
 
+            return true;
+        }
+
+        public bool ReturnToMainMenu(GUIButton button, object obj)
+        {
+            if (Selected != this)
+            {
+                Select();
+            }
+            else
+            {
+                ResetButtonStates(button);
+            }
+
+            SelectTab(null, 0);
+
+            return true;
+        }
+
+        private void ResetButtonStates(GUIButton button)
+        {
             foreach (GUIComponent child in buttonsParent.Children)
             {
                 GUIButton otherButton = child as GUIButton;
@@ -278,46 +340,62 @@ namespace Barotrauma
 
                 otherButton.Selected = false;
             }
-
-            if (Selected != this) Select();
-
-            return true;
         }
+        #endregion
 
-        public void SelectTab(Tab tab)
+        private void QuickStart()
         {
-            if (GameMain.Config.UnsavedSettings)
+            Submarine selectedSub = null;
+            string subName = GameMain.Config.QuickStartSubmarineName;
+            if (!string.IsNullOrEmpty(subName))
             {
-                var applyBox = new GUIMessageBox(
-                    TextManager.Get("ApplySettingsLabel"),
-                    TextManager.Get("ApplySettingsQuestion"),
-                    new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
-                applyBox.Buttons[0].OnClicked += applyBox.Close;
-                applyBox.Buttons[0].OnClicked += ApplySettings;
-                applyBox.Buttons[0].UserData = tab;
-                applyBox.Buttons[1].OnClicked += applyBox.Close;
-                applyBox.Buttons[1].OnClicked += DiscardSettings;
-                applyBox.Buttons[1].UserData = tab;
+                DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
+                selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s =>
+                    s.Name.ToLower() == subName.ToLower());
 
-                return;
+                if (selectedSub == null)
+                {
+                    DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
+                }
             }
-
-            selectedTab = tab;
-
-            switch (selectedTab)
+            if (selectedSub == null)
             {
-                case Tab.NewGame:
-                    campaignSetupUI.CreateDefaultSaveName();
-                    campaignSetupUI.UpdateTutorialSelection();
-                    break;
-                case Tab.LoadGame:
-                    campaignSetupUI.UpdateLoadMenu();
-                    break;
-                case Tab.Settings:
-                    GameMain.Config.ResetSettingsFrame();
-                    menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
-                    break;
+                DebugConsole.NewMessage("Loading a random sub.", Color.White);
+                var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
+                selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
             }
+            var gamesession = new GameSession(
+                selectedSub,
+                "Data/Saves/test.xml",
+                GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
+                missionPrefab: null);
+            //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
+            gamesession.StartRound(ToolBox.RandomSeed(8));
+            GameMain.GameScreen.Select();
+
+            string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
+            for (int i = 0; i < 3; i++)
+            {
+                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                if (spawnPoint == null)
+                {
+                    DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
+                    GameMain.MainMenuScreen.Select();
+                    return;
+                }
+                var characterInfo = new CharacterInfo(
+                    Character.HumanConfigFile,
+                    jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                if (characterInfo.Job == null)
+                {
+                    DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
+                }
+
+                var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
+                newCharacter.GiveJobItems(spawnPoint);
+                gamesession.CrewManager.AddCharacter(newCharacter);
+                Character.Controlled = newCharacter;
+            }         
         }
 
         private void UpdateTutorialList()
@@ -334,9 +412,9 @@ namespace Barotrauma
 
         private bool ApplySettings(GUIButton button, object userData)
         {
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
-            if (userData is Tab) SelectTab((Tab)userData);
+            if (userData is Tab) SelectTab(button, (Tab)userData);
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
@@ -350,8 +428,8 @@ namespace Barotrauma
 
         private bool DiscardSettings(GUIButton button, object userData)
         {
-            GameMain.Config.Load("config.xml");
-            if (userData is Tab) SelectTab((Tab)userData);
+            GameMain.Config.LoadPlayerConfig();
+            if (userData is Tab) SelectTab(button, (Tab)userData);
 
             return true;
         }
@@ -410,15 +488,41 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
-            }
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
 
+                string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -port " + port.ToString() +
+                                   " -queryport " + queryPort.ToString() +
+                                   " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -upnp " + useUpnpBox.Selected +
+                                   " -playercount " + maxPlayersBox.Text +
+                                    " -ownerkey " + ownerKey.ToString();
+
+                string filename = "DedicatedServer.exe";
+#if LINUX
+                filename = "mono";
+                arguments = "./DedicatedServer.exe " + arguments;
+#endif
+
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = filename,
+                    Arguments = arguments,
+#if !DEBUG
+                    WindowStyle = ProcessWindowStyle.Hidden
+#endif
+                };
+                GameMain.ServerChildProcess = Process.Start(processInfo);
+
+                Thread.Sleep(1000); //wait until the server is ready before connecting
+
+                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
+            }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start server", e);
             }
 
-            GameMain.NetLobbyScreen.IsServer = true;
             return true;
         }
 
@@ -432,7 +536,7 @@ namespace Barotrauma
         {
             Frame.AddToGUIUpdateList(ignoreChildren: true);
             buttonsParent.AddToGUIUpdateList();
-            if (selectedTab > 0)
+            if (selectedTab > 0 && menuTabs[(int)selectedTab] != null)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
             }
@@ -548,8 +652,7 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods
-      
+        #region UI Methods      
         private void CreateHostServerFields()
         {
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);

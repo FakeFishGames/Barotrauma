@@ -23,7 +23,6 @@ namespace Launcher
     {
         string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
-        private const string configPath = "config.xml";
         private GameSettings settings;
 
         private string latestVersionFileList, latestVersionFolder;
@@ -77,7 +76,7 @@ namespace Launcher
         protected override void Initialize()
         {
             ContentPackage.LoadAll(ContentPackage.Folder);
-            settings = new GameSettings(configPath);
+            settings = new GameSettings();
 
             base.Initialize();
         }
@@ -164,16 +163,23 @@ namespace Launcher
                         
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 50) }, "Display mode");
             displayModeDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 70) });
-#if !OSX
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
-            displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
+#if (!OSX)
+            // Fullscreen option just sets itself to borderless on macOS.
+            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
+            displayModeDD.SelectItem(settings.WindowMode);
 #else
-            // Force borderless on macOS.
-            displayModeDD.AddItem("Fullscreen", WindowMode.BorderlessWindowed);
-            displayModeDD.AddItem("Windowed", WindowMode.Windowed);
+            if (settings.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(settings.WindowMode);
+            }
 #endif
-
+            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };
 
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 100) }, "Content packages");
             contentPackageList = new GUIListBox(new RectTransform(new Point(200, 120), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 120) });
@@ -187,10 +193,6 @@ namespace Launcher
                     Selected = settings.SelectedContentPackages.Contains(contentPackage)
                 };
             }
-
-            displayModeDD.SelectItem(settings.WindowMode);
-
-            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };            
         }
 
         protected override void Update(GameTime gameTime)
@@ -245,7 +247,7 @@ namespace Launcher
             if (updateCheckState == 1) updateCheckState = 2;
         }
 
-        private bool TrySaveSettings(string filePath)
+        private bool TrySaveSettings()
         {
             DisplayMode selectedMode = resolutionDD.SelectedItemData as DisplayMode;
             if (selectedMode == null)
@@ -256,7 +258,7 @@ namespace Launcher
 
             settings.GraphicsWidth = selectedMode.Width;
             settings.GraphicsHeight = selectedMode.Height;
-            settings.Save();
+            settings.SaveNewPlayerConfig();
 
             return true;
         }
@@ -299,7 +301,7 @@ namespace Launcher
 
         private bool LaunchClick(GUIButton button, object obj)
         {
-            if (!TrySaveSettings(configPath)) return false;
+            if (!TrySaveSettings()) return false;
             
             var executables = ContentPackage.GetFilesOfType(settings.SelectedContentPackages, ContentType.Executable);
             if (!executables.Any())

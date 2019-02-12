@@ -152,7 +152,6 @@ namespace Barotrauma.Tutorials
             if (!Initialized) return;
 
             PreloadVideoContent();
-            Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
 
             base.Start();
 
@@ -194,6 +193,7 @@ namespace Barotrauma.Tutorials
             }
 
             crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
+            Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
             started = true;
         }
 

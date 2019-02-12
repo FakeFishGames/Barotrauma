@@ -108,10 +108,6 @@ namespace Barotrauma.Items.Components
                     {
                         panel.Item.CreateClientEvent(panel);
                     }
-                    else if (GameMain.Server != null)
-                    {
-                        panel.Item.CreateServerEvent(panel);
-                    }
 
                     draggingConnected = null;
                 }
@@ -173,6 +169,8 @@ namespace Barotrauma.Items.Components
                         if (draggingConnected.Connect(this, !alreadyConnected, true))
                         {
                             var otherConnection = draggingConnected.OtherConnection(this);
+#if SERVER
+                            //TODO: ffs
                             if (otherConnection == null)
                             {
                                 GameServer.Log(Character.Controlled.LogName + " connected a wire to " +
@@ -183,6 +181,7 @@ namespace Barotrauma.Items.Components
                                 GameServer.Log(Character.Controlled.LogName + " connected a wire from " +
                                     Item.Name + " (" + Name + ") to " + otherConnection.item.Name + " (" + otherConnection.Name + ")", ServerLog.MessageType.ItemInteraction);
                             }
+#endif
 
                             SetWire(index, draggingConnected);
                         }

@@ -188,7 +188,7 @@ namespace Barotrauma
         public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false, bool mirrorLevel = false)
         {
 #if CLIENT
-            GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
             if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
 #endif
             this.level = level;
@@ -282,7 +282,8 @@ namespace Barotrauma
             if (GameMode != null)
             {
                 GameMode.MsgBox();
-                if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.Server != null)
+                
+                if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     mpCampaign.CargoManager.CreateItems();
                 }

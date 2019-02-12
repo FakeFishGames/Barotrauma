@@ -57,7 +57,7 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
             
-            if (Character.Submarine != null || selectedAiTarget?.Entity?.Submarine != null)
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
             {
                 if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
@@ -172,58 +172,8 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
         }
-        
-        private void ReportProblems()
-        {
-            if (GameMain.Client != null) return;
 
-            Order newOrder = null;
-            if (Character.CurrentHull != null)
-            {
-                if (Character.CurrentHull.FireSources.Count > 0)
-                {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
-                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
-                {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
-                    {
-                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                    }
-                }
-            }
-
-            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
-            {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-            }
-
-            if (newOrder != null)
-            {
-                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
-                {
-                    Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
-
-                    if (GameMain.Server != null)
-                    {
-                        OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
-                }
-            }
-        }
+        partial void ReportProblems();
 
         private void UpdateSpeaking()
         {
@@ -277,7 +227,7 @@ namespace Barotrauma
 
         public override void SelectTarget(AITarget target)
         {
-            selectedAiTarget = target;
+            SelectedAiTarget = target;
         }
 
         private void CheckCrouching(float deltaTime)

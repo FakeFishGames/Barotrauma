@@ -15,11 +15,16 @@ namespace Barotrauma.Sounds
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
-        private List<string> alcCaptureDeviceNames;
-        private uint[] alSources;
-
+        
+        public enum SourcePoolIndex
+        {
+            Default = 0,
+            Voice = 1
+        }
+        private SoundSourcePool[] sourcePools;
+        
         private List<Sound> loadedSounds;
-        private SoundChannel[] playingChannels;
+        private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
 
         private Thread streamingThread;
 
@@ -99,7 +104,6 @@ namespace Barotrauma.Sounds
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
-            playingChannels = new SoundChannel[SOURCE_COUNT];
 
             streamingThread = null;
 
@@ -147,50 +151,13 @@ namespace Barotrauma.Sounds
 
             ALError alError = ALError.NoError;
 
-            alSources = new uint[SOURCE_COUNT];
-            for (int i=0;i<SOURCE_COUNT;i++)
-            {
-                AL.GenSource(out alSources[i]);
-                alError = AL.GetError();
-                if (alError!=ALError.NoError)
-                {
-                    throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
-                }
+            sourcePools = new SoundSourcePool[2];
+            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
+            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
 
-                if (!AL.IsSource(alSources[i]))
-                {
-                    throw new Exception("Generated alSource["+i.ToString()+"] is invalid!");
-                }
-                
-                AL.SourceStop(alSources[i]);
-                alError = AL.GetError();
-                if (alError!=ALError.NoError)
-                {
-                    throw new Exception("Error stopping newly generated alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
-                }
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(8);
+            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[8];
 
-                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Error setting min gain: " + AL.GetErrorString(alError));
-                }
-
-                AL.Source(alSources[i], ALSourcef.MaxGain, 1.0f);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Error setting max gain: " + AL.GetErrorString(alError));
-                }
-
-                AL.Source(alSources[i], ALSourcef.RolloffFactor, 1.0f);
-                alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Error setting rolloff factor: " + AL.GetErrorString(alError));
-                }
-            }
-            
             AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
             
             alError = AL.GetError();
@@ -198,21 +165,11 @@ namespace Barotrauma.Sounds
             {
                 throw new Exception("Error setting distance model: " + AL.GetErrorString(alError));
             }
-
-            if (Alc.IsExtensionPresent(IntPtr.Zero, "ALC_EXT_CAPTURE"))
-            {
-                alcCaptureDeviceNames = new List<string>(Alc.GetString(IntPtr.Zero, AlcGetStringList.CaptureDeviceSpecifier));
-            }
-            else
-            {
-                alcCaptureDeviceNames = null;
-            }
-
+            
             listenerOrientation = new float[6];
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
-
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -248,22 +205,22 @@ namespace Barotrauma.Sounds
             return newSound;
         }
 
-        public SoundChannel GetSoundChannelFromIndex(int ind)
+        public SoundChannel GetSoundChannelFromIndex(SourcePoolIndex poolIndex, int ind)
         {
-            if (ind < 0 || ind >= SOURCE_COUNT) return null;
-            return playingChannels[ind];
+            if (ind < 0 || ind >= playingChannels[(int)poolIndex].Length) return null;
+            return playingChannels[(int)poolIndex][ind];
         }
 
-        public uint GetSourceFromIndex(int ind)
+        public uint GetSourceFromIndex(SourcePoolIndex poolIndex, int srcInd)
         {
-            if (ind < 0 || ind >= SOURCE_COUNT) return 0;
+            if (srcInd < 0 || srcInd >= sourcePools[(int)poolIndex].ALSources.Length) return 0;
 
-            if (!AL.IsSource(alSources[ind]))
+            if (!AL.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
             {
-                throw new Exception("alSources[" + ind.ToString() + "] is invalid!");
+                throw new Exception("alSources[" + srcInd.ToString() + "] is invalid!");
             }
 
-            return alSources[ind];
+            return sourcePools[(int)poolIndex].ALSources[srcInd];
         }
 
         public int AssignFreeSourceToChannel(SoundChannel newChannel)
@@ -272,21 +229,17 @@ namespace Barotrauma.Sounds
             {
                 //remove a channel that has stopped
                 //or hasn't even been assigned
-                for (int i = 0; i < SOURCE_COUNT; i++)
+                int poolIndex = (int)newChannel.Sound.SourcePoolIndex;
+                for (int i = 0; i < playingChannels[poolIndex].Length; i++)
                 {
-                    if (playingChannels[i]==null || !playingChannels[i].IsPlaying)
+                    if (playingChannels[poolIndex][i] == null || !playingChannels[poolIndex][i].IsPlaying)
                     {
-                        if (playingChannels[i]!=null) playingChannels[i].Dispose();
-                        playingChannels[i] = newChannel;
-
-                        if (!AL.IsSource(alSources[i]))
-                        {
-                            throw new Exception("alSources[" + i.ToString() + "] is invalid!");
-                        }
-                        
+                        if (playingChannels[poolIndex][i] != null) { playingChannels[poolIndex][i].Dispose(); }
+                        playingChannels[poolIndex][i] = newChannel;
                         return i;
                     }
                 }
+
                 //we couldn't get a free source to assign to this channel!
                 return -1;
             }
@@ -295,10 +248,10 @@ namespace Barotrauma.Sounds
 #if DEBUG
         public void DebugSource(int ind)
         {
-            for (int i=0;i<SOURCE_COUNT;i++)
+            for (int i = 0; i < sourcePools[0].ALSources.Length; i++)
             {
-                AL.Source(alSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
-                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
+                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
+                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MinGain, 0.0f);
             }
         }
 #endif
@@ -307,11 +260,12 @@ namespace Barotrauma.Sounds
         {
             lock (playingChannels)
             {
-                for (int i = 0; i < SOURCE_COUNT; i++)
+                for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
-                    if (playingChannels[i] != null && playingChannels[i].Sound == sound)
+                    if (playingChannels[(int)sound.SourcePoolIndex][i] != null && 
+                        playingChannels[(int)sound.SourcePoolIndex][i].Sound == sound)
                     {
-                        if (playingChannels[i].IsPlaying) return true;
+                        if (playingChannels[(int)sound.SourcePoolIndex][i].IsPlaying) return true;
                     }
                 }
             }
@@ -322,11 +276,12 @@ namespace Barotrauma.Sounds
         {
             lock (playingChannels)
             {
-                for (int i = 0; i < SOURCE_COUNT; i++)
+                for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
-                    if (playingChannels[i] != null && playingChannels[i].Sound == sound)
+                    if (playingChannels[(int)sound.SourcePoolIndex][i] != null && 
+                        playingChannels[(int)sound.SourcePoolIndex][i].Sound == sound)
                     {
-                        if (playingChannels[i].IsPlaying) return playingChannels[i];
+                        if (playingChannels[(int)sound.SourcePoolIndex][i].IsPlaying) return playingChannels[(int)sound.SourcePoolIndex][i];
                     }
                 }
             }
@@ -337,12 +292,12 @@ namespace Barotrauma.Sounds
         {
             lock (playingChannels)
             {
-                for (int i = 0; i < SOURCE_COUNT; i++)
+                for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
                 {
-                    if (playingChannels[i]!=null && playingChannels[i].Sound == sound)
+                    if (playingChannels[(int)sound.SourcePoolIndex][i]!=null && playingChannels[(int)sound.SourcePoolIndex][i].Sound == sound)
                     {
-                        playingChannels[i].Dispose();
-                        playingChannels[i] = null;
+                        playingChannels[(int)sound.SourcePoolIndex][i]?.Dispose();
+                        playingChannels[(int)sound.SourcePoolIndex][i] = null;
                     }
                 }
             }
@@ -350,9 +305,9 @@ namespace Barotrauma.Sounds
 
         public void RemoveSound(Sound sound)
         {
-            for (int i=0;i<loadedSounds.Count;i++)
+            for (int i = 0; i < loadedSounds.Count; i++)
             {
-                if (loadedSounds[i]==sound)
+                if (loadedSounds[i] == sound)
                 {
                     loadedSounds.RemoveAt(i);
                     return;
@@ -372,11 +327,14 @@ namespace Barotrauma.Sounds
             {
                 categoryModifiers[category].First = gain;
             }
-            for (int i = 0; i < SOURCE_COUNT; i++)
+            for (int i = 0; i < playingChannels.Length; i++)
             {
-                if (playingChannels[i] != null && playingChannels[i].IsPlaying)
+                for (int j = 0; j < playingChannels[i].Length; j++)
                 {
-                    playingChannels[i].Gain = playingChannels[i].Gain; //force all channels to recalculate their gain
+                    if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                    {
+                        playingChannels[i][j].Gain = playingChannels[i][j].Gain; //force all channels to recalculate their gain
+                    }
                 }
             }
         }
@@ -402,11 +360,14 @@ namespace Barotrauma.Sounds
                 categoryModifiers[category].Second = muffle;
             }
 
-            for (int i = 0; i < SOURCE_COUNT; i++)
+            for (int i = 0; i < playingChannels.Length; i++)
             {
-                if (playingChannels[i] != null && playingChannels[i].IsPlaying)
+                for (int j = 0; j < playingChannels[i].Length; j++)
                 {
-                    if (playingChannels[i].Category.ToLower() == category) playingChannels[i].Muffled = muffle;
+                    if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                    {
+                        if (playingChannels[i][j].Category.ToLower() == category) playingChannels[i][j].Muffled = muffle;
+                    }
                 }
             }
         }
@@ -424,6 +385,7 @@ namespace Barotrauma.Sounds
             {
                 streamingThread = new Thread(UpdateStreaming)
                 {
+                    Name = "SoundManager Streaming Thread",
                     IsBackground = true //this should kill the thread if the game crashes
                 };
                 streamingThread.Start();
@@ -438,36 +400,42 @@ namespace Barotrauma.Sounds
                 areStreamsPlaying = false;
                 lock (playingChannels)
                 {
-                    for (int i=0;i<SOURCE_COUNT;i++)
+                    for (int i = 0; i < playingChannels.Length; i++)
                     {
-                        if (playingChannels[i]!=null && playingChannels[i].IsStream)
+                        for (int j = 0; j < playingChannels[i].Length; j++)
                         {
-                            if (playingChannels[i].IsPlaying)
+                            if (playingChannels[i][j] != null && playingChannels[i][j].IsStream)
                             {
-                                areStreamsPlaying = true;
-                                playingChannels[i].UpdateStream();
-                            }
-                            else
-                            {
-                                playingChannels[i].Dispose();
+                                if (playingChannels[i][j].IsPlaying)
+                                {
+                                    areStreamsPlaying = true;
+                                    playingChannels[i][j].UpdateStream();
+                                }
+                                else
+                                {
+                                    playingChannels[i][j].Dispose();
+                                }
                             }
                         }
                     }
                 }
-                Thread.Sleep(300);
+                Thread.Sleep(50); //TODO: use a separate thread for network audio?
             }
         }
-
+        
         public void Dispose()
         {
             lock (playingChannels)
             {
-                for (int i=0;i<SOURCE_COUNT;i++)
+                for (int i = 0; i < playingChannels.Length; i++)
                 {
-                    if (playingChannels[i]!=null) playingChannels[i].Dispose();
+                    for (int j = 0; j < playingChannels[i].Length; j++)
+                    {
+                        if (playingChannels[i][j] != null) playingChannels[i][j].Dispose();
+                    }
                 }
             }
-            if (streamingThread != null && streamingThread.ThreadState == ThreadState.Running)
+            if (streamingThread != null && !streamingThread.ThreadState.HasFlag(ThreadState.Stopped))
             {
                 streamingThread.Join();
             }
@@ -475,16 +443,9 @@ namespace Barotrauma.Sounds
             {
                 loadedSounds[i].Dispose();
             }
-            for (int i = 0; i < SOURCE_COUNT; i++)
-            {
-                AL.DeleteSource(ref alSources[i]);
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
-                {
-                    throw new Exception("Failed to delete alSources[" + i.ToString() + "]: " + AL.GetErrorString(alError));
-                }
-            }
-            
+            sourcePools[(int)SourcePoolIndex.Default].Dispose();
+            sourcePools[(int)SourcePoolIndex.Voice].Dispose();
+
             if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
             {
                 throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");

@@ -1030,7 +1030,7 @@ namespace Barotrauma
             {
                 if (vanillaCharacters == null)
                 {
-                    vanillaCharacters = GameMain.VanillaContent.GetFilesOfType(ContentType.Character).ToList();
+                    vanillaCharacters = GameMain.VanillaContent?.GetFilesOfType(ContentType.Character).ToList();
                 }
                 return vanillaCharacters;
             }
@@ -1205,10 +1205,16 @@ namespace Barotrauma
 
         private bool CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
         {
-            // TODO: there should be a way to choose the content package?
-            var contentPackage = GameMain.Config.SelectedContentPackages.Last();
+            var contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
+            if (contentPackage == null)
+            {
+                // This should not normally happen.
+                DebugConsole.ThrowError("No content package selected!");
+                return false;
+            }
+            var vanilla = GameMain.VanillaContent;
 #if !DEBUG
-            if (contentPackage == GameMain.VanillaContent)
+            if (vanilla != null && contentPackage == vanilla)
             {
                 GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                 return false;
@@ -1238,6 +1244,7 @@ namespace Barotrauma
                 // Add to the selected content package
                 contentPackage.AddFile(configFilePath, ContentType.Character);
                 contentPackage.Save(contentPackage.Path);
+                DebugConsole.NewMessage("Content package saved: " + contentPackage.Path);
             }
             // Ragdoll
             string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
@@ -1299,6 +1306,8 @@ namespace Barotrauma
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox jointsToggle;
+        private GUITickBox editAnimsToggle;
+        private GUITickBox editLimbsToggle;
 
         private void CreateGUI()
         {
@@ -1353,7 +1362,7 @@ namespace Barotrauma
                     MinSize = new Point(40, 0),
                     MaxSize = new Point(100, 50)
                 }, style: null, color: Color.Black * 0.6f);
-                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i], 
+                var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
                     font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
                     GUINumberInput.NumberType.Int)
@@ -1611,7 +1620,7 @@ namespace Barotrauma
             animSelection.OnSelected += (element, data) =>
             {
                 AnimationType previousAnim = character.AnimController.ForceSelectAnimationType;
-                character.AnimController.ForceSelectAnimationType = (AnimationType)data;               
+                character.AnimController.ForceSelectAnimationType = (AnimationType)data;
                 switch (character.AnimController.ForceSelectAnimationType)
                 {
                     case AnimationType.Walk:
@@ -1719,8 +1728,8 @@ namespace Barotrauma
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Ragdoll") { Selected = showRagdoll };
-            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };       
-            var editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = editLimbs };
+            editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = editAnimations };
+            editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Limbs") { Selected = editLimbs };
             jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = editJoints };
             var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit IK Targets") { Selected = editIK };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
@@ -1846,7 +1855,7 @@ namespace Barotrauma
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
-                if (VanillaCharacters.Contains(currentCharacterConfig))
+                if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
                     GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                     return false;
@@ -1861,7 +1870,7 @@ namespace Barotrauma
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
-                if (VanillaCharacters.Contains(currentCharacterConfig))
+                if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
                     GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                     return false;
@@ -1933,7 +1942,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
 #if !DEBUG
-                    if (VanillaCharacters.Contains(currentCharacterConfig))
+                    if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
                         GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                         box.Close();
@@ -2066,7 +2075,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
 #if !DEBUG
-                    if (VanillaCharacters.Contains(currentCharacterConfig))
+                    if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
                         GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
                         box.Close();
@@ -2251,6 +2260,11 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
+                    editLimbsToggle.Selected = false;
+                    editAnimsToggle.Selected = false;
+                    spritesheetToggle.Selected = false;
+                    jointsToggle.Selected = false;
+                    paramsToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -2270,7 +2284,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             }
-            else if (editJoints || editLimbs || editIK)
+            else
             {
                 if (selectedJoints.Any())
                 {
@@ -4360,6 +4374,12 @@ namespace Barotrauma
                     // Next
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
+                        if (!File.Exists(TexturePath))
+                        {
+                            GUI.AddMessage("The texture file does not exist!", Color.Red);
+                            texturePathElement.Flash(Color.Red);
+                            return false;
+                        }
                         Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };
@@ -4609,7 +4629,7 @@ namespace Barotrauma
                     var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                     var limbTypeField = GUI.CreateEnumField(limbType, elementSize, "Limb Type", group.RectTransform, font: GUI.Font);
-                    var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 0, 1, 1), elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
+                    var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 0, 2, 2), elementSize, "Source Rect", group.RectTransform, font: GUI.Font);
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), "ID");
                     new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
                     {

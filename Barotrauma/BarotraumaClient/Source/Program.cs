@@ -112,7 +112,7 @@ namespace Barotrauma
                                 {
                                     DebugConsole.NewMessage("Failed to set fullscreen mode, switching configuration to borderless windowed.", Microsoft.Xna.Framework.Color.Red);
                                     GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
-                                    GameMain.Config.Save();
+                                    GameMain.Config.SaveNewPlayerConfig();
                                 }
                                 return false;
                             default:
@@ -184,12 +184,8 @@ namespace Barotrauma
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
-
-            if (GameMain.Server != null)
-            {
-                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hadn't been started)"));
-            }
-            else if (GameMain.Client != null)
+            
+            if (GameMain.Client != null)
             {
                 sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
@@ -261,4 +257,4 @@ namespace Barotrauma
         }
     }
 #endif
-}
+        }

@@ -15,20 +15,12 @@ namespace Barotrauma
             {
                 if (value == allowSubVoting) return;
                 allowSubVoting = value;
-                GameMain.NetLobbyScreen.SubList.Enabled = value || GameMain.Server != null ||
+                GameMain.NetLobbyScreen.SubList.Enabled = value ||
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("subvotes", true).Visible = value;
 
-                if (GameMain.Server != null)
-                {
-                    UpdateVoteTexts(value ? GameMain.Server.ConnectedClients : null, VoteType.Sub);
-                    GameMain.Server.UpdateVoteStatus();
-                }
-                else
-                {
-                    UpdateVoteTexts(null, VoteType.Sub);
-                    GameMain.NetLobbyScreen.SubList.Deselect();
-                }
+                UpdateVoteTexts(null, VoteType.Sub);
+                GameMain.NetLobbyScreen.SubList.Deselect();
             }
         }
         public bool AllowModeVoting
@@ -39,7 +31,7 @@ namespace Barotrauma
                 if (value == allowModeVoting) return;
                 allowModeVoting = value;
                 GameMain.NetLobbyScreen.ModeList.Enabled = 
-                    value || GameMain.Server != null || 
+                    value || 
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
 
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
@@ -51,17 +43,9 @@ namespace Barotrauma
                         new Color(comp.TextColor.R, comp.TextColor.G, comp.TextColor.B, 
                             !allowModeVoting || ((GameModePreset)comp.UserData).Votable ? (byte)255 : (byte)100);
                 }
-
-                if (GameMain.Server != null)
-                {
-                    UpdateVoteTexts(value ? GameMain.Server.ConnectedClients : null, VoteType.Mode);
-                    GameMain.Server.UpdateVoteStatus();
-                }
-                else
-                {
-                    UpdateVoteTexts(null, VoteType.Mode);
-                    GameMain.NetLobbyScreen.ModeList.Deselect();
-                }
+                
+                UpdateVoteTexts(null, VoteType.Mode);
+                GameMain.NetLobbyScreen.ModeList.Deselect();
             }
         }
 
@@ -140,8 +124,6 @@ namespace Barotrauma
 
         public void ClientWrite(NetBuffer msg, VoteType voteType, object data)
         {
-            if (GameMain.Server != null) return;
-
             msg.Write((byte)voteType);
 
             switch (voteType)
@@ -176,10 +158,8 @@ namespace Barotrauma
             msg.WritePadBits();
         }
         
-        public void ClientRead(NetIncomingMessage inc)
+        public void ClientRead(NetBuffer inc)
         {
-            if (GameMain.Server != null) return;
-
             AllowSubVoting = inc.ReadBoolean();
             if (allowSubVoting)
             {

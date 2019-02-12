@@ -209,15 +209,19 @@ namespace Barotrauma.Items.Components
             
             CreateJoint(false);
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 item.CreateServerEvent(this);
             }
+#endif
         }
 
         public void Lock(bool isNetworkMessage, bool forcePosition = false)
         {
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
+#endif
 
             if (DockingTarget == null)
             {
@@ -249,10 +253,12 @@ namespace Barotrauma.Items.Components
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
                 }
+#endif
             }
 
 
@@ -730,10 +736,12 @@ namespace Barotrauma.Items.Components
                 bodies = null;
             }
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 item.CreateServerEvent(this);
             }
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -866,7 +874,9 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;
@@ -882,6 +892,7 @@ namespace Barotrauma.Items.Components
                     break;
             }
 
+#if SERVER
             if (sender != null && docked != wasDocked)
             {
                 if (docked)
@@ -895,6 +906,7 @@ namespace Barotrauma.Items.Components
                         GameServer.Log(sender.LogName + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
+#endif
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)

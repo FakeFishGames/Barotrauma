@@ -24,8 +24,9 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (Target != null && Target.Removed) return 0.0f;
-            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) return 0.0f;
+            if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
+            if (Target != null && Target.Removed) { return 0.0f; }
+            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }
                         
             if (objectiveManager.CurrentOrder == this)
             {
@@ -39,21 +40,25 @@ namespace Barotrauma
         {
             get
             {
-                if (Target != null && Target.Removed) return false;
+                if (FollowControlledCharacter && Character.Controlled == null) { return false; }
 
-                if (repeat || waitUntilPathUnreachable > 0.0f) return true;
+                if (Target != null && Target.Removed) { return false; }
+
+                if (repeat || waitUntilPathUnreachable > 0.0f) { return true; }
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
                 //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
-                if (pathSteering?.CurrentPath == null) return true;
+                if (pathSteering?.CurrentPath == null) { return true; }
 
-                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) return false;
+                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { return false; }
 
                 return !pathSteering.CurrentPath.Unreachable;
             }
         }
 
         public Entity Target { get; private set; }
+
+        public bool FollowControlledCharacter;
 
         public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
             : base (character, "")
@@ -78,12 +83,18 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (FollowControlledCharacter)
+            {
+                if (Character.Controlled == null) { return; }
+                Target = Character.Controlled;
+            }
+
             if (Target == character)
             {
                 character.AIController.SteeringManager.Reset();
                 return;
             }
-
+            
             waitUntilPathUnreachable -= deltaTime;
 
             if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)

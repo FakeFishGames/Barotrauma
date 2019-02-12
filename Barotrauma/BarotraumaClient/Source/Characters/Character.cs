@@ -39,7 +39,6 @@ namespace Barotrauma
                 if (controlled == value) return;
                 controlled = value;
                 if (controlled != null) controlled.Enabled = true;
-                GameMain.GameSession?.CrewManager?.SetCharacterSelected(controlled);
                 CharacterHealth.OpenHealthWindow = null;
                 
             }
@@ -140,6 +139,13 @@ namespace Barotrauma
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }
 
+        partial void UpdateLimbLightSource(Limb limb)
+        {
+            if (limb.LightSource != null)
+            {
+                limb.LightSource.Enabled = enabled;
+            }
+        }
 
         /// <summary>
         /// Control the Character according to player input
@@ -229,7 +235,7 @@ namespace Barotrauma
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
-
+            
             ControlLocalPlayer(deltaTime, cam);
 
             Lights.LightManager.ViewTarget = this;
@@ -285,7 +291,7 @@ namespace Barotrauma
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
             
-            if (GameMain.NetworkMember?.Character == this) GameMain.NetworkMember.Character = null;
+            if (GameMain.Client?.Character == this) GameMain.Client.Character = null;
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }

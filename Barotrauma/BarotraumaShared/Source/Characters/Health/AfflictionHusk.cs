@@ -1,7 +1,4 @@
-﻿#if CLIENT
-using Microsoft.Xna.Framework;
-#endif
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -59,30 +56,7 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateMessages(float prevStrength, Character character)
-        {
-#if CLIENT
-            if (Strength < Prefab.MaxStrength * 0.5f)
-            {
-                if (prevStrength % 10.0f > 0.05f && Strength % 10.0f < 0.05f)
-                {
-                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red);
-                }
-            }
-            else if (Strength < Prefab.MaxStrength)
-            {
-                if (state == InfectionState.Dormant && Character.Controlled == character)
-                {
-                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), Color.Red);
-                }
-            }
-            else if (state != InfectionState.Active && Character.Controlled == character)
-            {
-                GUI.AddMessage(TextManager.Get("HuskActivate").Replace("[Attack]", GameMain.Config.KeyBind(InputType.Attack).ToString()), 
-                    Color.Red);
-            }
-#endif
-        }
+        partial void UpdateMessages(float prevStrength, Character character);
 
         private void UpdateDormantState(float deltaTime, Character character)
         {
@@ -133,7 +107,8 @@ namespace Barotrauma
             //husk appendage already created, don't do anything
             if (huskAppendage != null) return;
 
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "Huskappendage.xml"));
+            // TODO: Currently it's not possible to rename the huskappendage -> define the appendage path in xml
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(Path.GetDirectoryName(Character.HumanConfigFile), "Huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
             var limbElement = doc.Root.Element("limb");
@@ -189,7 +164,7 @@ namespace Barotrauma
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
-            if (GameMain.Client != null) { return; }
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (Strength < Prefab.MaxStrength * 0.5f || character.Removed) { return; }
 
             //don't turn the character into a husk if any of its limbs are severed

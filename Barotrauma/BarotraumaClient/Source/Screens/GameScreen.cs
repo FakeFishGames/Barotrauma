@@ -38,11 +38,11 @@ namespace Barotrauma
             };
 
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
+            //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
             damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
             postProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
 #else
-            var blurEffect = content.Load<Effect>("Effects/blurshader");
+            //var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
             postProcessEffect = content.Load<Effect>("Effects/postprocess");
 #endif
@@ -51,7 +51,7 @@ namespace Barotrauma
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
-            
+
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
             postProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
         }

@@ -336,11 +336,7 @@ namespace Barotrauma.Items.Components
                 CancelFabricating(Character.Controlled);
             }
 
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
-            }
-            else if (GameMain.Client != null)
+            if (GameMain.Client != null)
             {
                 item.CreateClientEvent(this);
             }

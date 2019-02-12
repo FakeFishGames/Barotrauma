@@ -11,6 +11,43 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
+        private SteamManager()
+        {
+            try
+            {
+                client = new Facepunch.Steamworks.Client(AppID);
+                isInitialized = client.IsSubscribed && client.IsValid;
+
+                if (isInitialized)
+                {
+                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                isInitialized = false;
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamDllNotFound"));
+            }
+            catch (Exception)
+            {
+                isInitialized = false;
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamClientInitFailed"));
+            }
+
+            if (!isInitialized)
+            {
+                try
+                {
+
+                    Facepunch.Steamworks.Client.Instance.Dispose();
+                }
+                catch (Exception e)
+                {
+                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
+                }
+            }
+        }
+
         public static ulong GetSteamID()
         {
             if (instance == null || !instance.isInitialized)
@@ -613,7 +650,7 @@ namespace Barotrauma.Steam
                 GameMain.Config.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage);
             }
             GameMain.Config.SelectedContentPackages.Add(newPackage);
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
             if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
             {
@@ -693,7 +730,7 @@ namespace Barotrauma.Steam
 
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
                 GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
-                GameMain.Config.Save();
+                GameMain.Config.SaveNewPlayerConfig();
             }
             catch (Exception e)
             {

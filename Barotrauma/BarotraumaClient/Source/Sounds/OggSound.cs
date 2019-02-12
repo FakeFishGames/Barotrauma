@@ -8,7 +8,7 @@ namespace Barotrauma.Sounds
     {
         private VorbisReader reader;
 
-        public OggSound(SoundManager owner,string filename,bool stream) : base(owner,filename,stream)
+        public OggSound(SoundManager owner, string filename, bool stream) : base(owner, filename, stream, true)
         {
             if (!ToolBox.IsProperFilenameCase(filename))
             {
@@ -94,18 +94,6 @@ namespace Barotrauma.Sounds
                     fval = avgvals[j]*1.7f;
                     buffer[i + j] = fval;
                 }
-            }
-        }
-
-        static void CastBuffer(float[] inBuffer, short[] outBuffer, int length)
-        {
-            for (int i = 0; i < length; i++)
-            {
-                float fval = Math.Max(Math.Min(inBuffer[i], 1.0f), -1.0f);
-                int temp = (int)(32767f * fval);
-                if (temp > short.MaxValue) temp = short.MaxValue;
-                else if (temp < short.MinValue) temp = short.MinValue;
-                outBuffer[i] = (short)temp;
             }
         }
 

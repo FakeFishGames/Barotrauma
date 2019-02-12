@@ -1,7 +1,6 @@
 using Barotrauma.Extensions;
-﻿using Barotrauma.Items.Components;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -101,16 +100,15 @@ namespace Barotrauma
             get
             {
                 string disguiseName = "?";
-                if (Character == null || !Character.HideFace || (GameMain.Server != null && !GameMain.Server.AllowDisguises))
+                if (Character == null || !Character.HideFace)
                 {
                     return Name;
                 }
-#if CLIENT
-                if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
+                else if ((GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowDisguises))
                 {
                     return Name;
                 }
-#endif
+
                 if (Character.Inventory != null)
                 {
                     int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
@@ -250,7 +248,6 @@ namespace Barotrauma
         public ushort ID;
 
         public XElement InventoryData;
-               
 
         public List<string> SpriteTags
         {
@@ -694,7 +691,7 @@ namespace Barotrauma
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
-            if (Job == null || GameMain.Client != null) return;            
+            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)) return;            
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);
@@ -703,9 +700,9 @@ namespace Barotrauma
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
 
-            if (GameMain.Server != null && (int)newLevel != (int)prevLevel)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (int)newLevel != (int)prevLevel)
             {
-                GameMain.Server.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
+                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
             }
         }
 
@@ -777,7 +774,7 @@ namespace Barotrauma
                 int slotIndex = itemElement.GetAttributeInt("i", 0);
                 if (newItem == null) continue;
 
-                Entity.Spawner.CreateNetworkEvent(newItem, false);
+                SpawnInventoryItemProjSpecific(newItem);
 
                 inventory.TryPutItem(newItem, slotIndex, false, false, null);
 
@@ -792,96 +789,8 @@ namespace Barotrauma
                 }
             }
         }
-
-        public void ServerWrite(NetBuffer msg)
-        {
-            msg.Write(ID);
-            msg.Write(Name);
-            msg.Write(Gender == Gender.Female);
-            msg.Write((byte)Race);
-            msg.Write((byte)HeadSpriteId);
-            msg.Write((byte)Head.HairIndex);
-            msg.Write((byte)Head.BeardIndex);
-            msg.Write((byte)Head.MoustacheIndex);
-            msg.Write((byte)Head.FaceAttachmentIndex);
-            msg.Write(ragdollFileName);
-
-            if (Job != null)
-            {
-                msg.Write(Job.Prefab.Identifier);
-                msg.Write((byte)Job.Skills.Count);
-                foreach (Skill skill in Job.Skills)
-                {
-                    msg.Write(skill.Identifier);
-                    msg.Write(skill.Level);
-                }
-            }
-            else
-            {
-                msg.Write("");
-            }
-            // TODO: animations
-        }
-
-        public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
-        {
-            ushort infoID               = inc.ReadUInt16();
-            string newName              = inc.ReadString();
-            bool isFemale               = inc.ReadBoolean();
-            int race                    = inc.ReadByte();
-            int headSpriteID            = inc.ReadByte();
-            int hairIndex               = inc.ReadByte();
-            int beardIndex              = inc.ReadByte();
-            int moustacheIndex          = inc.ReadByte();
-            int faceAttachmentIndex     = inc.ReadByte();
-            string ragdollFile          = inc.ReadString();
-
-            string jobIdentifier        = inc.ReadString();
-            JobPrefab jobPrefab = null;
-            Dictionary<string, float> skillLevels = new Dictionary<string, float>();
-            if (!string.IsNullOrEmpty(jobIdentifier))
-            {
-                jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                int skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
-                {
-                    string skillIdentifier = inc.ReadString();
-                    float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
-                }
-            }
-
-            // TODO: animations
-
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, ragdollFile)
-            {
-                ID = infoID,
-            };
-            ch.Head.race = (Race)race;
-            ch.Head.HeadSpriteId = headSpriteID;
-            ch.HairIndex = hairIndex;
-            ch.BeardIndex = beardIndex;
-            ch.MoustacheIndex = moustacheIndex;
-            ch.FaceAttachmentIndex = faceAttachmentIndex;
-            ch.CalculateHeadSpriteRange();
-            ch.ReloadHeadAttachments();
-
-            System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
-            if (ch.Job != null)
-            {
-                foreach (KeyValuePair<string, float> skill in skillLevels)
-                {
-                    Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
-                    if (matchingSkill == null)
-                    {
-                        DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
-                        continue;
-                    }
-                    matchingSkill.Level = skill.Value;
-                }
-            }
-            return ch;
-        }
+        
+        partial void SpawnInventoryItemProjSpecific(Item item);
 
         public void ReloadHeadAttachments()
         {
