@@ -14,6 +14,9 @@ namespace Barotrauma
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
 
+        public float StrengthDiminishMultiplier = 1.0f;
+        public Affliction MultiplierSource;
+
         /// <summary>
         /// Which character gave this affliction
         /// </summary>
@@ -115,70 +118,19 @@ namespace Barotrauma
             }
         }
 
-        public float GetPsychosisResistance()
+        public float GetResistance(string afflictionId)
         {
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxPsychosisResistance - currentEffect.MinPsychosisResistance <= 0.0f) return 0.0f;
+            if (currentEffect.MaxResistance - currentEffect.MinResistance <= 0.0f) return 0.0f;
+            if (afflictionId != currentEffect.ResistanceFor) return 0.0f;
 
             return MathHelper.Lerp(
-                currentEffect.MinPsychosisResistance,
-                currentEffect.MaxPsychosisResistance,
+                currentEffect.MinResistance,
+                currentEffect.MaxResistance,
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-        }
-
-        public float GetHuskInfectionResistance()
-        {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxHuskInfectionResistance - currentEffect.MinHuskInfectionResistance <= 0.0f) return 0.0f;
-
-            return MathHelper.Lerp(
-                currentEffect.MinHuskInfectionResistance,
-                currentEffect.MaxHuskInfectionResistance,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-        }
-
-        public float GetPressureResistance()
-        {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxPressureResistance - currentEffect.MinPressureResistance <= 0.0f) return 0.0f;
-
-            return MathHelper.Lerp(
-                currentEffect.MinPressureResistance,
-                currentEffect.MaxPressureResistance,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-        }
-
-        public float GetPoisonResistance()
-        {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxDamageResistance - currentEffect.MinDamageResistance <= 0.0f) return 0.0f;
-
-            return MathHelper.Lerp(
-                currentEffect.MinDamageResistance,
-                currentEffect.MaxDamageResistance,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-        }
-
-        public float GetDamageResistance()
-        {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxDamageResistance - currentEffect.MinDamageResistance <= 0.0f) return 0.0f;
-
-            return MathHelper.Lerp(
-                currentEffect.MinDamageResistance,
-                currentEffect.MaxDamageResistance,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-        }
+        }    
 
         public float GetSpeedMultiplier()
         {
@@ -198,7 +150,15 @@ namespace Barotrauma
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return;
 
-            Strength += currentEffect.StrengthChange * deltaTime;
+            if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
+            {
+                Strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier;
+            }
+            else
+            {
+                Strength += currentEffect.StrengthChange * deltaTime;
+            }
+
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
