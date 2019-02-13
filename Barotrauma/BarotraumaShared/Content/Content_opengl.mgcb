@@ -13,23 +13,6 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin utg_4.mp4
-/importer:H264Importer
-/processor:VideoProcessor
-/build:utg_4.mp4
-
-#begin Effects/postprocess_opengl.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/postprocess_opengl.fx
-
-#begin Effects/deformshader_opengl.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/deformshader_opengl.fx
-
 #begin Effects/blurshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -42,21 +25,27 @@
 /processorParam:DebugMode=Auto
 /build:Effects/damageshader_opengl.fx
 
+#begin Effects/deformshader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/deformshader_opengl.fx
+
 #begin Effects/losshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/losshader_opengl.fx
 
-#begin Effects/watershader_opengl.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/watershader_opengl.fx
-
 #begin Effects/postprocess_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/postprocess_opengl.fx
+
+#begin Effects/watershader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/watershader_opengl.fx
 

@@ -1008,13 +1008,13 @@ namespace Barotrauma
                 {
                     if (PlayerInput.KeyHit(InputType.Chat) && !chatBox.InputBox.Selected)
                     {
-                        chatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
+                        chatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
                         chatBox.InputBox.Select();
                     }
 
                     if (PlayerInput.KeyHit(InputType.RadioChat) && !chatBox.InputBox.Selected)
                     {
-                        chatBox.GUIFrame.Flash(Color.Yellow, 0.5f);
+                        chatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
                         chatBox.InputBox.Select();
                         chatBox.InputBox.Text = "r; ";
                     }

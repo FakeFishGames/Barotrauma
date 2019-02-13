@@ -199,10 +199,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="MonoGame.Framework.WindowsDX">
-      <HintPath>..\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+      <HintPath>..\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\lib\net45\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
-      <HintPath>..\NuGet\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
+      <HintPath>..\NuGet\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('LINUX')) OR $(DefineConstants.Contains('OSX'))" Include="MonoGame.Framework.DesktopGL">
       <HintPath>..\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
@@ -210,7 +210,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
