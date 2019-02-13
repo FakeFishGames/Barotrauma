@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
         public UInt16 CharacterID;
+        public bool Muted;
     }
 
     partial class Client : IDisposable
@@ -19,7 +20,21 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        private bool mutedLocally;
+        public bool MutedLocally
+        {
+            get { return mutedLocally; }
+            set
+            {
+                if (mutedLocally == value) { return; }
+                mutedLocally = value;
+#if CLIENT
+                GameMain.NetLobbyScreen.SetPlayerVoiceIconState(this, muted, mutedLocally);
+#endif
+            }
+        }
+
         public void UpdateSoundPosition()
         {
             if (VoipSound != null)

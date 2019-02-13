@@ -1189,6 +1189,8 @@ namespace Barotrauma.Networking
                 outmsg.Write(client.ID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
+                outmsg.Write(client.Muted);
+                outmsg.WritePadBits();
             }
         }
 
@@ -1878,9 +1880,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void SendDirectChatMessage(string txt, Client recipient)
+        public void SendDirectChatMessage(string txt, Client recipient, ChatMessageType messageType = ChatMessageType.Server)
         {
-            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Server, null);
+            ChatMessage msg = ChatMessage.Create("", txt, messageType, null);
             SendDirectChatMessage(msg, recipient);
         }
 

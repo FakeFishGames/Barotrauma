@@ -79,7 +79,7 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.05f), settingsFrame.RectTransform, Anchor.TopCenter)
-            { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
+            { RelativeOffset = new Vector2(0.0f, 0.11f) }, isHorizontal: true);
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
             tabButtons = new GUIButton[tabs.Length];
@@ -89,7 +89,8 @@ namespace Barotrauma
                 {
                     UserData = tab
                 };
-                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("SettingsTab." + tab.ToString()))
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), 
+                    TextManager.Get("SettingsTab." + tab.ToString()), style: "GUITabButton")
                 {
                     UserData = tab,
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }

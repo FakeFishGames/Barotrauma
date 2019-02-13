@@ -32,7 +32,8 @@ namespace Barotrauma.Networking
 
         public void SendToClients(List<Client> clients)
         {
-            foreach (VoipQueue queue in queues) {
+            foreach (VoipQueue queue in queues)
+            {
                 if (queue.LastReadTime < DateTime.Now - VoipConfig.SEND_INTERVAL) { continue; }
 
                 if (lastSendTime.ContainsKey(queue))
