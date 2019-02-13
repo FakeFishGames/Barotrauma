@@ -41,7 +41,7 @@ namespace Barotrauma
 
         public readonly string TargetItemComponentName;
 
-        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk" };
+        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk", "huskinfection" };
 
         private readonly int cancelStatusEffect;
 
@@ -129,6 +129,10 @@ namespace Barotrauma
                 if (afflictionNames.Any(n => n == AttributeName))
                 {
                     Type = ConditionType.Affliction;
+                    if (AttributeName == "husk" || AttributeName == "huskaffliction")
+                    {
+                        AttributeName = "huskinfection";
+                    }
                 }
                 else
                 {
