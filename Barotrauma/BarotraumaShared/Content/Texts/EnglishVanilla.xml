@@ -789,6 +789,8 @@
   <ReloadLinkedSubError>Submarine file [file] not found!</ReloadLinkedSubError>
 
   <!-- Chat -->
+  <MutedByServer>You have been muted by the server. Other players will not hear what you say through the voice chat.</MutedByServer>
+  <UnmutedByServer>You have been unmuted by the server. You can now use the voice chat to talk to other players.</UnmutedByServer>
   <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
 
