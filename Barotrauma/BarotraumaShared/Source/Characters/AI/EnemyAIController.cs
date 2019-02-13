@@ -687,7 +687,7 @@ namespace Barotrauma
                     !l.IsStuck &&
                     l.attack.IsValidContext(currentContext) &&
                     l.attack.IsValidTarget(target) &&
-                    l.attack.Conditionals.All(c => (target is ISerializableEntity se && c.Matches(se)) || !(target is ISerializableEntity)))
+                    l.attack.Conditionals.All(c => (target is ISerializableEntity se && c.Matches(se)) || !(target is ISerializableEntity) || !(target is Character)))
                 .OrderByDescending(l => l.attack.Priority)
                 .ThenBy(l => ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)));
             // TODO: priority should probably not override the distance -> use values instead of booleans

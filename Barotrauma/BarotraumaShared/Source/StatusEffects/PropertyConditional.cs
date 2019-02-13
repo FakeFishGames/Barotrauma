@@ -209,7 +209,9 @@ namespace Barotrauma
                 case ConditionType.Affliction:
                     if (target is Character targetChar)
                     {
-                        var affliction = targetChar.CharacterHealth.GetAffliction(AttributeName);
+                        var health = targetChar.CharacterHealth;
+                        if (health == null) { return false; }
+                        var affliction = health.GetAffliction(AttributeName);
                         if (affliction == null) { return false; }
                         if (FloatValue.HasValue)
                         {
@@ -231,7 +233,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    return true;
+                    return false;
                 default:
                     return false;
             }
