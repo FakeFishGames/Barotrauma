@@ -180,6 +180,19 @@ namespace Barotrauma
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
+        public float GetSpeedMultiplier()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 1.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 1.0f;
+            if (currentEffect.MaxSpeedMultiplier - currentEffect.MinSpeedMultiplier <= 0.0f) return 1.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinSpeedMultiplier,
+                currentEffect.MaxSpeedMultiplier,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);

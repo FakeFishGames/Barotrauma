@@ -987,6 +987,11 @@ namespace Barotrauma
             //  b. it's a debuff that decreases movement speed
             if (run || SpeedMultiplier <= 0.0f) targetMovement *= SpeedMultiplier;
 
+            if (SpeedMultiplier > 1f)
+            {
+                DebugConsole.NewMessage("Character.SpeedMultiplier: " + SpeedMultiplier);
+            }
+
             SpeedMultiplier = 1; // Reset, items will set the value before the next update
 
             return targetMovement;

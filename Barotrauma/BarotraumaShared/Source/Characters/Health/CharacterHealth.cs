@@ -559,8 +559,6 @@ namespace Barotrauma
         {
             UpdateOxygen(deltaTime);
 
-            DebugConsole.NewMessage("Husk Infection Resistance: " + HuskInfectionResistance);
-
             for (int i = 0; i < limbHealths.Count; i++)
             {
                 for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)

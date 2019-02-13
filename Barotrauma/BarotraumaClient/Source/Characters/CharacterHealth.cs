@@ -485,6 +485,7 @@ namespace Barotrauma
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
                 radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
                 chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
+                Character.SpeedMultiplier = Math.Max(Character.SpeedMultiplier, affliction.GetSpeedMultiplier());
             }
             foreach (LimbHealth limbHealth in limbHealths)
             {
@@ -1261,8 +1262,8 @@ namespace Barotrauma
 
         private void DrawLimbAfflictionIcon(SpriteBatch spriteBatch, Affliction affliction, GUIComponentStyle slotStyle, float iconScale, ref Vector2 iconPos)
         {
-            Vector2 iconSize = (affliction.Prefab.Icon.size * iconScale);
             if (affliction.Strength < affliction.Prefab.ShowIconThreshold) return;
+            Vector2 iconSize = (affliction.Prefab.Icon.size * iconScale);
 
             //afflictions that have a strength of less than 10 are faded out slightly
             float alpha = MathHelper.Lerp(0.3f, 1.0f,
