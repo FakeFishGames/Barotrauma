@@ -16,7 +16,6 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\" />
@@ -93,7 +92,25 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Human.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Huskappendage.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskRun.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskSwimFast.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskSwimSlow.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskWalk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Humanhusk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Huskappendage.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Ragdolls\HuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">

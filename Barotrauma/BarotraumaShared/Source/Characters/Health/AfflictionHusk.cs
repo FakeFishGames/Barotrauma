@@ -108,8 +108,8 @@ namespace Barotrauma
 
         public static Limb AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
         {
-            var humanDoc = XMLExtensions.TryLoadXml(Character.HumanConfigFile);
-            string pathToAppendage = humanDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
+            var huskDoc = XMLExtensions.TryLoadXml(Character.GetConfigFile("humanhusk"));
+            string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
             if (doc == null || doc.Root == null) { return null; }
 
@@ -209,7 +209,7 @@ namespace Barotrauma
             
             //character.Info.Ragdoll = null;
             //character.Info.SourceElement = doc.Root;
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true, ragdoll: character.Info.Ragdoll);
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

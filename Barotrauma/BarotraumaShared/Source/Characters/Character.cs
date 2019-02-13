@@ -644,7 +644,7 @@ namespace Barotrauma
             Properties = SerializableProperty.GetProperties(this);
 
             Info = characterInfo;
-            if (file == HumanConfigFile || file == GetConfigFile("husk"))
+            if (file == HumanConfigFile || file == GetConfigFile("humanhusk"))
             {
                 if (characterInfo == null)
                 {
