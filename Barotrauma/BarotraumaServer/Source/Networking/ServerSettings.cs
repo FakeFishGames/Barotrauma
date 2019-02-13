@@ -130,17 +130,18 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.MissionTypeIndex = missionType;
                 
                 int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
-                if (traitorSetting < 0) traitorSetting = 0;
-                if (traitorSetting > (int)YesNoMaybe.Yes) traitorSetting = (int)YesNoMaybe.Yes;
+                if (traitorSetting < 0) traitorSetting = 2;
+                if (traitorSetting > 2) traitorSetting = 0;
                 TraitorsEnabled = (YesNoMaybe)traitorSetting;
 
                 int botCount = BotCount + incMsg.ReadByte() - 1;
-                if (botCount < 0) botCount = 0;
+                if (botCount < 0) botCount = MaxBotCount;
+                if (botCount > MaxBotCount) botCount = 0;
                 BotCount = botCount;
 
                 int botSpawnMode = (int)BotSpawnMode + incMsg.ReadByte() - 1;
-                if (botSpawnMode < 0) botSpawnMode = 0;
-                if (botSpawnMode > (int)BotSpawnMode.Fill) botSpawnMode = (int)BotSpawnMode.Fill;
+                if (botSpawnMode < 0) botSpawnMode = 1;
+                if (botSpawnMode > 1) botSpawnMode = 0;
                 BotSpawnMode = (BotSpawnMode)botSpawnMode;
 
                 float levelDifficulty = incMsg.ReadFloat();
