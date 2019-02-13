@@ -331,6 +331,18 @@ namespace Barotrauma
                 }
             }));
 
+
+            commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
+            {
+                CheatsEnabled = true;
+                SteamAchievementManager.CheatsEnabled = true;
+                NewMessage("Enabled cheat commands.", Color.Red);
+                if (GameMain.Config.UseSteam)
+                {
+                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+                }
+            }));
+
             commands.Add(new Command("mainmenuscreen|mainmenu|menu", "mainmenu/menu: Go to the main menu.", (string[] args) =>
             {
                 GameMain.GameSession = null;
