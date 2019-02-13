@@ -58,6 +58,7 @@ namespace Barotrauma
             public float MinPressureResistance, MaxPressureResistance;
             public float MinDamageResistance, MaxDamageResistance;
             public float MinPoisonResistance, MaxPoisonResistance;
+            public float MinSpeedMultiplier, MaxSpeedMultiplier;
 
             public string DialogFlag;
 
@@ -111,6 +112,10 @@ namespace Barotrauma
                 MaxPoisonResistance = element.GetAttributeFloat("maxpoisonresistance", 0.0f);
                 MaxPoisonResistance = Math.Max(MinPoisonResistance, MaxPoisonResistance);
 
+                MinSpeedMultiplier = element.GetAttributeFloat("minspeedmultiplier", 1.0f);
+                MaxSpeedMultiplier = element.GetAttributeFloat("maxspeedmultiplier", 1.0f);
+                MaxSpeedMultiplier = Math.Max(MinSpeedMultiplier, MaxSpeedMultiplier);
+
                 DialogFlag = element.GetAttributeString("dialogflag", "");
 
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
@@ -152,6 +157,7 @@ namespace Barotrauma
         public readonly string Identifier;
 
         public readonly string Name, Description;
+        public readonly bool IsBuff;
 
         public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
 
@@ -248,6 +254,7 @@ namespace Barotrauma
             AfflictionType = element.GetAttributeString("type", "");
             Name = TextManager.Get("AfflictionName." + Identifier, true) ?? element.GetAttributeString("name", "");
             Description = TextManager.Get("AfflictionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
+            IsBuff = element.GetAttributeBool("isbuff", false);
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
