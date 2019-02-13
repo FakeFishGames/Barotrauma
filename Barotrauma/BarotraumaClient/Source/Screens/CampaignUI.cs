@@ -180,9 +180,10 @@ namespace Barotrauma
                 };
                 itemCategoryButtons.Add(categoryButton);
 
-                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter),
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) },
                    TextManager.Get("MapEntityCategory." + category), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
                 {
+                    Padding = Vector4.Zero,
                     AutoScale = true,
                     Color = Color.Transparent,
                     HoverColor = Color.Transparent,
@@ -490,13 +491,14 @@ namespace Barotrauma
 
             ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Rect.Width - 50, 25), frame.RectTransform, Anchor.CenterLeft)
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Rect.Width - (pi.Quantity > 0 ? 160 : 120), 25), frame.RectTransform, Anchor.CenterLeft)
             {
-                AbsoluteOffset = new Point(40, 0)
+                AbsoluteOffset = new Point(40, 0),
             }, pi.ItemPrefab.Name, font: font)
-            {
+            {                
                 ToolTip = pi.ItemPrefab.Description
             };
+            textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
             Sprite itemIcon = pi.ItemPrefab.InventoryIcon ?? pi.ItemPrefab.sprite;
 
@@ -509,12 +511,12 @@ namespace Barotrauma
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
 
-            textBlock = new GUITextBlock(new RectTransform(new Point(120, 25), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(20, 0) }, 
-                priceInfo.BuyPrice.ToString(), font: font)
+            textBlock = new GUITextBlock(new RectTransform(new Point(60, 25), frame.RectTransform, Anchor.CenterRight)
+            { AbsoluteOffset = new Point(pi.Quantity > 0 ? 70 : 25, 0) }, 
+                priceInfo.BuyPrice.ToString(), font: font, textAlignment: Alignment.CenterRight)
             {
                 ToolTip = pi.ItemPrefab.Description
             };
-
 
             //If its the store menu, quantity will always be 0
             if (pi.Quantity > 0)
