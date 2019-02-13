@@ -93,7 +93,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Human.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Huskappendage.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Huskappendage.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">
@@ -226,9 +226,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdoll.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Ragdolls\HuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Animations\LegacyhuskRun.xml">
@@ -1913,13 +1910,13 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\guardian2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Husk1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Husk1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Husk2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Husk2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Husk3.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Husk3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\attack1.ogg">

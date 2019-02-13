@@ -1105,7 +1105,7 @@ namespace Barotrauma
             }
             else
             {
-                character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), new CharacterInfo(configFile), hasAi: false, ragdoll: ragdoll);
+                character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
                 selectedJob = null;
             }
             character.dontFollowCursor = dontFollowCursor;

@@ -340,6 +340,13 @@ namespace Barotrauma
                     limb.WearingItems.AddRange(itemList);
                 }
             }
+            if (character.SpeciesName.ToLowerInvariant() == "husk")
+            {
+                if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
+                {
+                    AfflictionHusk.AttachHuskAppendage(character, this);
+                }
+            }
         }
 
         public Ragdoll(Character character, string seed, RagdollParams ragdollParams = null)

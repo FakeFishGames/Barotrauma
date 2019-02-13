@@ -590,7 +590,7 @@ namespace Barotrauma
             }
 #endif
             Character newCharacter = null;
-            if (file.ToLower() != HumanConfigFile?.ToLower())
+            if (file != HumanConfigFile)
             {
                 var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, file, seed);
@@ -622,12 +622,6 @@ namespace Barotrauma
                 Spawner.CreateNetworkEvent(newCharacter, false);
             }
 #endif
-
-            if (characterInfo != null)
-            {
-               newCharacter.LoadHeadAttachments();
-            }
-
             return newCharacter;
         }
 
@@ -650,9 +644,12 @@ namespace Barotrauma
             Properties = SerializableProperty.GetProperties(this);
 
             Info = characterInfo;
-            if (file == humanConfigFile && characterInfo == null)
+            if (file == HumanConfigFile || file == GetConfigFile("husk"))
             {
-                Info = new CharacterInfo(file);
+                if (characterInfo == null)
+                {
+                    Info = new CharacterInfo(HumanConfigFile);
+                }
             }
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
@@ -740,6 +737,11 @@ namespace Barotrauma
             //  - server receives an input message from the client controlling the character
             //  - if an AICharacter, the server enables it when close enough to any of the players
             Enabled = GameMain.NetworkMember == null;
+
+            if (Info != null)
+            {
+                LoadHeadAttachments();
+            }
         }
         partial void InitProjSpecific(XDocument doc);
 
