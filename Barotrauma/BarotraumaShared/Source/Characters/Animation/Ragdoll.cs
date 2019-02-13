@@ -340,7 +340,7 @@ namespace Barotrauma
                     limb.WearingItems.AddRange(itemList);
                 }
             }
-            if (character.SpeciesName.ToLowerInvariant() == "husk")
+            if (character.SpeciesName.ToLowerInvariant() == "humanhusk")
             {
                 if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
                 {
