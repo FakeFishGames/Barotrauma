@@ -805,7 +805,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10.0">
         <ReduceAffliction identifier="internaldamage" amount="0.5" />
-        <Affliction identifier="durationincrease"/>
+        <Affliction identifier="durationincrease" amount="100"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -823,13 +823,12 @@
     <Body width="60" height="110" density="15" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <!--<StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.2" setvalue="true" preservebiggervalue="true" duration="60.0" />-->
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <ReduceAffliction identifier="internaldamage" amount="0.1" />
         <ReduceAffliction identifier="oxygenlow" amount="0.1" />
         <ReduceAffliction identifier="stun" amount="10" />
         <Affliction identifier="psychosis" amount="0.2" />
-        <Affliction identifier="haste" amount ="10"/>
+        <Affliction identifier="haste" amount ="50"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -846,7 +845,6 @@
     <Body width="60" height="110" density="15" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <!--<StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.3" setvalue="true" preservebiggervalue="true" duration="60.0" />-->
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <Affliction identifier="internaldamage" amount="0.1" />
         <ReduceAffliction identifier="oxygenlow" amount="0.2" />
@@ -867,13 +865,12 @@
     <Body width="60" height="110" density="15" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <!--<StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.4" setvalue="true" preservebiggervalue="true" duration="60.0"/>-->
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <ReduceAffliction identifier="internaldamage" amount="0.1" />
         <ReduceAffliction identifier="oxygenlow" amount="0.1" />
         <ReduceAffliction identifier="stun" amount="10" />
         <Affliction identifier="psychosis" amount="0.1" />
-        <Affliction identifier="haste" amount ="0.8"/>
+        <Affliction identifier="haste" amount ="100"/>
         <Affliction identifier="strengthen" amount ="0.3"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->

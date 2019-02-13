@@ -74,7 +74,7 @@ namespace Barotrauma
             {
                 return Afflictions.FindAll(a => a.Prefab.AfflictionType == afflictionType);
             }
-        }
+        }       
 
         const float InsufficientOxygenThreshold = 30.0f;
         const float LowOxygenThreshold = 50.0f;
@@ -154,31 +154,6 @@ namespace Barotrauma
         {
             get { return stunAffliction.Strength; }
             set { stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); }
-        }
-
-        public float HuskInfectionResistance
-        {
-            get { return afflictions.Max(a => a.GetHuskInfectionResistance()); }
-        }
-
-        public float PsychosisResistance
-        {
-            get { return afflictions.Max(a => a.GetPsychosisResistance()); }
-        }
-
-        public float PressureResistance
-        {
-            get { return afflictions.Max(a => a.GetPressureResistance()); }
-        }
-
-        public float DamageResistance
-        {
-            get { return afflictions.Max(a => a.GetDamageResistance()); }
-        }
-
-        public float PoisonResistance
-        {
-            get { return afflictions.Max(a => a.GetPoisonResistance()); }
         }
 
         public Affliction PressureAffliction
@@ -347,7 +322,7 @@ namespace Barotrauma
         {
             if (Unkillable) { return; }
 
-            affliction.Strength *= 1f - GetResistance(affliction);
+            affliction.Strength *= 1f - GetResistance(affliction.Prefab.Identifier);
 
             if (affliction.Prefab.LimbSpecific)
             {
@@ -370,21 +345,17 @@ namespace Barotrauma
             }
         }
 
-        private float GetResistance(Affliction affliction)
+        private float GetResistance(string resistanceId)
         {
-            switch (affliction.Prefab.AfflictionType)
+            float resistance = 0.0f;
+            for (int i = 0; i < afflictions.Count; i++)
             {
-                case "pressure":
-                    return PressureResistance;
-                case "huskinfection":
-                    return HuskInfectionResistance;
-                case "psychosis":
-                    return PsychosisResistance;
-                case "poison":
-                    return PoisonResistance;
-                default:
-                    return 0.0f;
+                if (!afflictions[i].Prefab.IsBuff) continue;
+                float temp = afflictions[i].GetResistance(resistanceId);
+                if (temp > resistance) resistance = temp;
             }
+
+            return resistance;
         }
 
         public void ReduceAffliction(Limb targetLimb, string affliction, float amount)
@@ -656,7 +627,7 @@ namespace Barotrauma
                     {
                         vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
                     }
-                    vitalityDecrease *= 1f - DamageResistance;
+                    vitalityDecrease *= 1f - GetResistance("damage");
                     Vitality -= vitalityDecrease;
                     affliction.CalculateDamagePerSecond(vitalityDecrease);
                 }
@@ -665,7 +636,7 @@ namespace Barotrauma
             foreach (Affliction affliction in afflictions)
             {
                 float vitalityDecrease = affliction.GetVitalityDecrease(this);
-                vitalityDecrease *= 1f - DamageResistance;
+                vitalityDecrease *= 1f - GetResistance("damage");
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
             }

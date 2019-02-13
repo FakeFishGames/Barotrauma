@@ -472,7 +472,10 @@
     isbuff="true"
     limbspecific="false"
     maxstrength="100">
-    <Effect minstrength="0" maxstrength="100"/>
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      minbuffmultiplier="1"
+      maxbuffmultiplier="0.75"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </BuffDurationIncrease>
 
@@ -485,15 +488,16 @@
     limbspecific="false"
     maxstrength="100">
     <Effect minstrength="0" maxstrength="100"
-        strengthchange="-1"
-        minspeedmultiplier="1.0"
-        maxspeedmultiplier="1.499"/>
+      strengthchange="-1"
+      minspeedmultiplier="1.0"
+      maxspeedmultiplier="1.48"/> <!-- Greater than 1.48 and the ragdolls start snapping when turning and characters take damage from colliding with doors & walls -->
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
     name="Husk Infection Resistance"
     identifier="huskinfectionresistance"
+    resistancefor="huskinfection"
     description="Husk be gone."
     type="resistance"
     isbuff="true"
@@ -509,6 +513,7 @@
   <Affliction
     name="Psychosis Resistance"
     identifier="psychosisresistance"
+    resistancefor="psychosis"
     description="Psychosis be gone."
     type="resistance"
     isbuff="true"
@@ -516,14 +521,15 @@
     maxstrength="100">
     <Effect minstrength="0" maxstrength="100"
       strengthchange="-1"
-      minpsychosisresistance="0"
-      maxpsychosisresistance="1"/>
+      minresistance="0"
+      maxresistance="1"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
     name="Pressure Resistance"
     identifier="pressureresistance"
+    resistancefor="pressure"
     description="Pressure be gone."
     type="resistance"
     isbuff="true"
@@ -531,14 +537,15 @@
     maxstrength="100">
     <Effect minstrength="0" maxstrength="100"
       strengthchange="-1"
-      minpressureresistance="0"
-      maxpressureresistance="1"/>
+      minresistance="0"
+      maxresistance="1"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
     name="Strengthen"
     identifier="strengthen"
+    resistancefor="damage"
     description="Damage be gone."
     type="resistance"
     isbuff="true"
@@ -546,8 +553,8 @@
     maxstrength="100">
     <Effect minstrength="0" maxstrength="100"
       strengthchange="-1"
-      mindamageresistance="0"
-      maxdamageresistance="1"/>
+      minresistance="0"
+      maxresistance="1"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 </Afflictions>
