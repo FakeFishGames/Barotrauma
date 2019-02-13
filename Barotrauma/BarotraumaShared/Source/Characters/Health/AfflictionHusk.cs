@@ -192,7 +192,7 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            var configFile = Character.GetConfigFile("husk");
+            var configFile = Character.GetConfigFile("humanhusk");
 
             if (string.IsNullOrEmpty(configFile))
             {
