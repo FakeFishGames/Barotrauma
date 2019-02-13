@@ -197,18 +197,9 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
-
-            if (Config.WindowMode == WindowMode.Windowed)
-            {
-                //for whatever reason, window isn't centered automatically
-                //since MonoGame 3.6 (nuget package might be broken), so
-                //let's do it manually
-                Window.Position = new Point((GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - GraphicsWidth) / 2,
-                                            (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
-            }
-
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
+            GraphicsDeviceManager.ApplyChanges();
 
             SetWindowMode(Config.WindowMode);
 
