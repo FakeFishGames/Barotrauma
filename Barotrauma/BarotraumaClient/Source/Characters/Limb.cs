@@ -110,11 +110,28 @@ namespace Barotrauma
 
         public Sprite Sprite { get; protected set; }
         public DeformableSprite DeformSprite { get; protected set; }
-        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
-
+        public Sprite ActiveSprite
+        {
+            get
+            {
+                // TODO: should we optimize this? No need to check all the conditionals each time the property is accessed.
+                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.IsActive);
+                if (conditionalSprite != null)
+                {
+                    return conditionalSprite;
+                }
+                else
+                {
+                    return DeformSprite != null ? DeformSprite.Sprite : Sprite;
+                }
+            }
+        }
+        
         public float TextureScale => limbParams.Ragdoll.TextureScale;
 
-        public Sprite DamagedSprite { get; set; }
+        public Sprite DamagedSprite { get; private set; }
+
+        public List<ConditionalSprite> ConditionalSprites { get; private set; } = new List<ConditionalSprite>();
 
         public Color InitialLightSourceColor
         {
@@ -155,6 +172,9 @@ namespace Barotrauma
                         break;
                     case "damagedsprite":
                         DamagedSprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        break;
+                    case "conditionalsprite":
+                        ConditionalSprites.Add(new ConditionalSprite(subElement, character, file: GetSpritePath(subElement)));
                         break;
                     case "deformablesprite":
                         DeformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement));
@@ -358,7 +378,8 @@ namespace Barotrauma
 
             if (!hideLimb)
             {
-                if (DeformSprite != null)
+                var activeSprite = ActiveSprite;
+                if (DeformSprite != null && activeSprite == DeformSprite.Sprite)
                 {
                     if (Deformations != null && Deformations.Any())
                     {
@@ -373,7 +394,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    body.Draw(spriteBatch, Sprite, color, null, Scale * TextureScale);
+                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale);
                 }
             }
 
@@ -537,6 +558,9 @@ namespace Barotrauma
 
             DeformSprite?.Sprite?.Remove();
             DeformSprite = null;
+
+            ConditionalSprites.ForEach(s => s.Remove());
+            ConditionalSprites.Clear();
 
             LightSource?.Remove();
             LightSource = null;
