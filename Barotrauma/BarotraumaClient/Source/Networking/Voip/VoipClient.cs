@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
             if (queue.Read(msg))
             {
                 Client client = gameClient.ConnectedClients.Find(c => c.VoipQueue == queue);
-                if (client.Muted) { return; }
+                if (client.Muted || client.MutedLocally) { return; }
 
                 if (client.VoipSound == null)
                 {
@@ -98,6 +98,7 @@ namespace Barotrauma.Networking
                     var messageType = ChatMessage.CanUseRadio(client.Character) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
                 }
+                GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
             }
         }
 

@@ -599,7 +599,7 @@ namespace Barotrauma
                     return;
                 }
                 client.Muted = true;
-                GameMain.Server.SendChatMessage(TextManager.Get("MutedByServer"), ChatMessageType.MessageBox);
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("MutedByServer"), client, ChatMessageType.MessageBox);
             },
             () =>
             {
@@ -619,7 +619,7 @@ namespace Barotrauma
                     return;
                 }
                 client.Muted = false;
-                GameMain.Server.SendChatMessage(TextManager.Get("UnmutedByServer"), ChatMessageType.MessageBox);
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("UnmutedByServer"), client, ChatMessageType.MessageBox);
             },
             () =>
             {

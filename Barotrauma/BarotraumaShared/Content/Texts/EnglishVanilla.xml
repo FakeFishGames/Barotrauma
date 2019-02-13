@@ -590,6 +590,8 @@
   <BanRange>Ban range</BanRange>
   <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
   <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
+  <MutedLocally>You have muted this player, and will not hear what they say in the voice chat.</MutedLocally>
+  <MutedGlobally>This player has been muted by the server.</MutedGlobally>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
   <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
   <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>

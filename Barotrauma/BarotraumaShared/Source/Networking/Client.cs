@@ -34,7 +34,23 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool Muted;
+        private bool muted;
+        public bool Muted
+        {
+            get { return muted; }
+            set
+            {
+                if (muted == value) { return; }
+                muted = value;
+#if CLIENT
+                GameMain.NetLobbyScreen.SetPlayerVoiceIconState(this, muted, mutedLocally);
+#endif
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.LastClientListUpdateID++;
+                }
+            }
+        }
 
         public VoipQueue VoipQueue
         {
