@@ -8,6 +8,7 @@
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
+  <huskappendage path="Content/Characters/Husk/Huskappendage.xml"/>
 
   <bloodemitter particle="blood" particleamount="10"/>
   <bloodemitter particle="waterblood" particleamount="1"/>

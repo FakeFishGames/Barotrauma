@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <huskappendage>
   <!-- spike/tentacle thingy -->
-  <limb id="13" width="10" height="30" mass="6" attackpriority="2" flip="True" pullpos="0,25" name="Limb 13" type="None" healthindex="0" steerforce="0" stepoffset="0,0" radius="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="86,35,25,93" depth="0.5" origin="0.64,0.5913978" />
+  <limb name="Huskappendage" id="13" width="10" height="30" mass="6" attackpriority="2" flip="True" pullpos="0,25" type="None" healthindex="0" steerforce="0" stepoffset="0,0" radius="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Legacyhusk/DivingSuit.png" sourcerect="86,35,25,93" depth="0.5" origin="0.64,0.5913978" />
     <attack range="70" damagerange="35" duration="0.2" targetforce="10" structuresoundtype="StructureBlunt" force="5" applyforceonlimbs="1" torque="-10" context="NotDefined" targettype="Any" hitdetectiontype="Distance" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" afterattack="FallBack" cooldown="5" secondarycooldown="0">
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <ReduceAffliction identifier="internaldamage" strength="5" />

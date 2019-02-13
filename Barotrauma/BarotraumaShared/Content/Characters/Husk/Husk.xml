@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Husk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false">
+<Character name="Husk" humanoid="true" needsair="false" genders="true" canspeak="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
+  <huskappendage path="Content/Characters/Husk/Huskappendage.xml"/>
 
   <bloodemitter particle="blackblood" particleamount="5"/>
   <bloodemitter particle="blackwaterblood" particleamount="1"/>
