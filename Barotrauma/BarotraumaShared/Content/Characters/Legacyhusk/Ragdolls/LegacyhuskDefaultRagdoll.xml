@@ -1,0 +1,82 @@
+﻿<Ragdoll type="Legacyhusk" draggable="True" spritesheetorientation="0" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="True">
+  <collider height="80" radius="15" name="Main Collider" width="0" />
+  <collider height="40" radius="15" name="Secondary Collider" width="0" />
+  <!-- head -->
+  <limb id="0" radius="13" mass="6" type="Head" attackpriority="2" name="Limb 0" flip="True" healthindex="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="95,0,33,25" depth="0.051" origin="0.5,0.5" />
+  </limb>
+  <!-- spike/tentacle thingy -->
+  <limb id="13" width="10" height="30" mass="6" attackpriority="2" flip="True" pullpos="0,25" name="Limb 13" type="None" healthindex="0" steerforce="0" stepoffset="0,0" radius="0" density="5" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.052" origin="0.5,0.5" />
+    <attack cooldown="1" range="70" damagerange="35" duration="0.2" targetforce="10" structuresoundtype="StructureBlunt" force="5" applyforceonlimbs="1" torque="-10" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="FallBack" secondarycooldown="0" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <ReduceAffliction identifier="internaldamage" strength="5" />
+      </StatusEffect>
+      <Affliction identifier="bleeding" strength="10" />
+      <Affliction identifier="huskinfection" strength="5" />
+      <Affliction identifier="stun" strength="0.5" />
+    </attack>
+  </limb>
+  <!-- body -->
+  <limb id="1" radius="14" height="21" mass="20" type="Torso" attackpriority="3" name="Limb 1" flip="True" healthindex="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="Torso" sourcerect="41,1,42,96" depth="0.05" origin="0.5,0.55" />
+  </limb>
+  <limb id="12" radius="13" mass="20" type="Waist" name="Limb 12" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="0,0,1,1" depth="0.045" origin="0.5,0.5" />
+  </limb>
+  <!-- left arm -->
+  <limb id="2" radius="8" height="20" mass="3" type="LeftArm" name="Limb 2" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" depth="0.15" origin="0.5,0.4" />
+  </limb>
+  <limb id="3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0,-18" name="Limb 3" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" depth="0.16" origin="0.45,0.4" />
+  </limb>
+  <!-- right arm -->
+  <limb id="4" radius="8" height="20" mass="3" type="RightArm" name="Limb 4" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" depth="0.01" origin="0.5,0.4" />
+  </limb>
+  <limb id="5" radius="6" height="26" mass="3" type="RightHand" pullpos="0,-18" name="Limb 5" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0" />
+  </limb>
+  <!-- left leg -->
+  <limb id="6" radius="10" height="30" mass="8" type="LeftThigh" name="Limb 6" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" depth="0.15" origin="0.5,0.5" />
+  </limb>
+  <limb id="7" radius="6" height="39" mass="5" type="LeftLeg" name="Limb 7" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" depth="0.16" origin="0.5,0.55" />
+  </limb>
+  <limb id="8" radius="5" height="13" mass="2" type="LeftFoot" flip="True" pullpos="-5,0" name="Limb 8" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/legs.png" sourcerect="35,53,16,25" depth="0.14" origin="0.5,0.5" />
+    <sound tag="footstep_armor" />
+  </limb>
+  <!-- right leg -->
+  <limb id="9" radius="10" height="30" mass="8" type="RightThigh" name="Limb 9" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" depth="0.011" origin="0.5,0.5" />
+  </limb>
+  <limb id="10" radius="6" height="39" mass="5" type="RightLeg" name="Limb 10" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" depth="0.12" origin="0.5,0.55" />
+  </limb>
+  <limb id="11" radius="5" height="13" mass="2" type="RightFoot" flip="True" pullpos="-5,0" name="Limb 11" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Husk/legs.png" sourcerect="35,53,16,25" origin="0.5,0.5" depth="0" />
+    <sound tag="footstep_armor" />
+  </limb>
+  <!-- head to body -->
+  <joint limb1="0" limb1anchor="-10,-10" limb2="1" limb2anchor="-3,28" lowerlimit="0" upperlimit="10" canbesevered="True" name="Joint 0 - 1" limitenabled="True" stiffness="0.25" />
+  <!-- spike to head -->
+  <joint limb1="0" limb1anchor="12.85159,-24.11687" limb2="13" limb2anchor="22.04834,-1.04847" lowerlimit="-56.33264" upperlimit="-22.43474" canbesevered="False" name="Joint 0 - 13" limitenabled="True" stiffness="0.25" />
+  <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,15" lowerlimit="30" upperlimit="60" canbesevered="False" name="Joint 1 - 12" limitenabled="True" stiffness="0.25" />
+  <!-- body to left arm -->
+  <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="2" limb1anchor="0,-16" limb2="3" limb2anchor="-2,19" lowerlimit="0" upperlimit="170" canbesevered="True" name="Joint 2 - 3" limitenabled="True" stiffness="0.25" />
+  <!-- body to right arm -->
+  <joint limb1="1" limb1anchor="-3,14" limb2="4" limb2anchor="0,12" name="Joint 1 - 4" canbesevered="True" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
+  <joint limb1="4" limb1anchor="0,-16" limb2="5" limb2anchor="-2,19" lowerlimit="0" upperlimit="170" canbesevered="True" name="Joint 4 - 5" limitenabled="True" stiffness="0.25" />
+  <!-- body to left leg -->
+  <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 6" limitenabled="True" stiffness="0.25" />
+  <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10" canbesevered="True" name="Joint 6 - 7" limitenabled="True" stiffness="0.25" />
+  <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 7 - 8" limitenabled="True" stiffness="0.25" />
+  <!-- body to right leg -->
+  <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="120" canbesevered="True" name="Joint 12 - 9" limitenabled="True" stiffness="0.25" />
+  <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10" canbesevered="True" name="Joint 9 - 10" limitenabled="True" stiffness="0.25" />
+  <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90" canbesevered="True" name="Joint 10 - 11" limitenabled="True" stiffness="0.25" />
+</Ragdoll>

@@ -1,7 +1,7 @@
-﻿<HumanWalk
+﻿<LegacyhuskWalk
   getupforce="0.35"
-  cyclespeed="3.748913"
-  footmovestrength="12"
+  cyclespeed="4.091221"
+  footmovestrength="20"
   footrotatestrength="20"
   stepsize="0.3289057,0.06857298"
   legcorrectiontorque="13.74999"
@@ -11,9 +11,9 @@
   handmovestrength="0.7"
   handclampy="-1"
   headposition="1.480801"
-  torsoposition="1.067493"
+  torsoposition="1.076026"
   headleanamount="0.2155389"
-  torsoleanamount="0.3389727"
+  torsoleanamount="0.3359231"
   footmoveoffset="0,0"
   movementspeed="1.509427"
   headangle="-75.65061"

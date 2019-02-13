@@ -114,14 +114,14 @@ namespace Barotrauma
             var limbElement = doc.Root.Element("limb");
             if (limbElement == null)
             {
-                DebugConsole.ThrowError("Error in huskappendage.xml - limb element not found");
+                DebugConsole.ThrowError("Error in Huskappendage.xml - limb element not found");
                 return;
             }
 
             var jointElement = doc.Root.Element("joint");
             if (jointElement == null)
             {
-                DebugConsole.ThrowError("Error in huskappendage.xml - joint element not found");
+                DebugConsole.ThrowError("Error in Huskappendage.xml - joint element not found");
                 return;
             }
 
