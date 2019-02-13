@@ -646,8 +646,10 @@ namespace Barotrauma.Networking
                         byte id = inc.ReadByte();
                         if (connectedClient.ID != id)
                         {
+#if DEBUG
                             DebugConsole.ThrowError(
                                 "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
+#endif
                             return;
                         }
                         connectedClient.VoipQueue.Read(inc);
