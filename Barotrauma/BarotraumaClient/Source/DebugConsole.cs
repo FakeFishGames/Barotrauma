@@ -385,6 +385,7 @@ namespace Barotrauma
             AssignRelayToServer("dumpids", false);
             AssignRelayToServer("findentityids", false);
             AssignRelayToServer("campaigninfo", false);
+            AssignRelayToServer("help", false);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -659,7 +660,28 @@ namespace Barotrauma
             
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
-            
+
+            commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking to anyone through the voice chat. Using this command requires a permission from the server host.",
+            null,
+            () =>
+            {
+                if (GameMain.Client == null) return null;
+                return new string[][]
+                {
+                    GameMain.Client.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+            commands.Add(new Command("unmute", "unmute [name]: Allow the client to speak to anyone through the voice chat. Using this command requires a permission from the server host.",
+            null,
+            () =>
+            {
+                if (GameMain.Client == null) return null;
+                return new string[][]
+                {
+                    GameMain.Client.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+
             commands.Add(new Command("checkcrafting", "checkcrafting: Checks item deconstruction & crafting recipes for inconsistencies.", (string[] args) =>
             {
                 List<FabricableItem> fabricableItems = new List<FabricableItem>();
