@@ -321,9 +321,6 @@ namespace Barotrauma
         public void ApplyAffliction(Limb targetLimb, Affliction affliction)
         {
             if (Unkillable) { return; }
-
-            affliction.Strength *= 1f - GetResistance(affliction.Prefab.Identifier);
-
             if (affliction.Prefab.LimbSpecific)
             {
                 if (targetLimb == null)
@@ -475,7 +472,7 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + (newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier))));
                     affliction.Source = newAffliction.Source;
                     CalculateVitality();
                     if (Vitality <= MinVitality) Kill();
@@ -487,7 +484,7 @@ namespace Barotrauma
             //or modify the affliction instance of an Attack or a StatusEffect
 
             var copyAffliction = newAffliction.Prefab.Instantiate(
-                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
+                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab.Identifier))),
                 newAffliction.Source);
             limbHealth.Afflictions.Add(copyAffliction);
 
@@ -506,7 +503,7 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    float newStrength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    float newStrength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + (newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier))));
                     if (affliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                     affliction.Strength = newStrength;
                     affliction.Source = newAffliction.Source;
@@ -519,7 +516,7 @@ namespace Barotrauma
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
             afflictions.Add(newAffliction.Prefab.Instantiate(
-                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
+                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab.Identifier))),
                 source: newAffliction.Source));
 
             CalculateVitality();

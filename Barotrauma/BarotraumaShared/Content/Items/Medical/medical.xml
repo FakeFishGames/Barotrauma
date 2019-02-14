@@ -161,7 +161,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
         <Affliction identifier="drunk" amount="0.5" />
-        <Affliction identifier="psychosisresistance" amount="0.5" />
+        <Affliction identifier="psychosisresistance" amount="10" />
       </StatusEffect>
       
       <!-- Remove the item when fully used -->

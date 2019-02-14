@@ -90,10 +90,12 @@ namespace Barotrauma
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
 
-                ResistanceFor = element.GetAttributeString("resistancefor", "none");
+                ResistanceFor = element.GetAttributeString("resistancefor", "");
                 MinResistance = element.GetAttributeFloat("minresistance", 0.0f);
                 MaxResistance = element.GetAttributeFloat("maxresistance", 0.0f);
                 MaxResistance = Math.Max(MinResistance, MaxResistance);
+
+                DebugConsole.NewMessage("ResistanceFor: " + ResistanceFor);
 
                 MinSpeedMultiplier = element.GetAttributeFloat("minspeedmultiplier", 1.0f);
                 MaxSpeedMultiplier = element.GetAttributeFloat("maxspeedmultiplier", 1.0f);
