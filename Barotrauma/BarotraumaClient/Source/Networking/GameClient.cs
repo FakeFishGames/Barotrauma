@@ -1121,15 +1121,18 @@ namespace Barotrauma.Networking
             int clientCount = inc.ReadByte();
             for (int i = 0; i < clientCount; i++)
             {
-                byte id = inc.ReadByte();
-                string name = inc.ReadString();
-                UInt16 characterID = inc.ReadUInt16();
-                
+                byte id             = inc.ReadByte();
+                string name         = inc.ReadString();
+                UInt16 characterID  = inc.ReadUInt16();
+                bool muted          = inc.ReadBoolean();
+                inc.ReadPadBits();
+
                 tempClients.Add(new TempClient
                 {
                     ID = id,
                     Name = name,
-                    CharacterID = characterID
+                    CharacterID = characterID,
+                    Muted = muted
                 });
             }
 
@@ -1143,11 +1146,15 @@ namespace Barotrauma.Networking
                     var existingClient = ConnectedClients.Find(c => c.ID == tc.ID && c.Name == tc.Name);
                     if (existingClient == null) //if not, create it
                     {
-                        existingClient = new Client(tc.Name, tc.ID);
+                        existingClient = new Client(tc.Name, tc.ID)
+                        {
+                            Muted = tc.Muted
+                        };
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
                     existingClient.Character = null;
+                    existingClient.Muted = tc.Muted;
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;

@@ -159,6 +159,7 @@ namespace Barotrauma
                                     input += key.KeyChar;
                                     memoryIndex = -1;
                                 }
+                                DebugConsole.ResetAutoComplete();
                                 break;
                         }
                         
@@ -588,6 +589,47 @@ namespace Barotrauma
                     });
                 });
             });
+
+            commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking through the voice chat.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (client == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                client.Muted = true;
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("MutedByServer"), client, ChatMessageType.MessageBox);
+            },
+            () =>
+            {
+                if (GameMain.Server == null) return null;
+                return new string[][]
+                {
+                    GameMain.Server.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+            commands.Add(new Command("unmute", "unmute [name]: Allow the client to speak through the voice chat.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (client == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                client.Muted = false;
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("UnmutedByServer"), client, ChatMessageType.MessageBox);
+            },
+            () =>
+            {
+                if (GameMain.Server == null) return null;
+                return new string[][]
+                {
+                    GameMain.Server.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
 
             AssignOnExecute("netstats", (string[] args) =>
             {

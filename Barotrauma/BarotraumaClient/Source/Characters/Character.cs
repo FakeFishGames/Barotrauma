@@ -106,14 +106,7 @@ namespace Barotrauma
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
-
-            keys = new Key[Enum.GetNames(typeof(InputType)).Length];
-
-            for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
-            {
-                keys[i] = new Key((InputType)i);
-            }
-
+            
             BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
             sounds = new List<CharacterSound>();

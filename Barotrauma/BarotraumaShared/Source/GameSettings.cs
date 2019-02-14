@@ -339,16 +339,12 @@ namespace Barotrauma
 #endif
 
             var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
-            WindowMode wm = 0;
-            if (!Enum.TryParse(windowModeStr, out wm))
+            if (!Enum.TryParse(windowModeStr, out WindowMode wm))
             {
                 wm = WindowMode.Fullscreen;
             }
             WindowMode = wm;
-
-            SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
-            MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
-
+            
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", true);
@@ -544,14 +540,13 @@ namespace Barotrauma
             {
                 doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
-
+            
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)
             {
                 gMode = new XElement("graphicsmode");
                 doc.Root.Add(gMode);
             }
-
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
             {
                 gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
@@ -691,14 +686,26 @@ namespace Barotrauma
 #endif
 
             var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
-            if (!Enum.TryParse<WindowMode>(windowModeStr, out windowMode))
+            if (!Enum.TryParse(windowModeStr, out windowMode))
             {
                 windowMode = WindowMode.Fullscreen;
             }
 
-            SoundVolume = doc.Root.GetAttributeFloat("soundvolume", SoundVolume);
-            MusicVolume = doc.Root.GetAttributeFloat("musicvolume", MusicVolume);
-
+            XElement audioSettings = doc.Root.Element("audio");
+            if (audioSettings != null)
+            {
+                SoundVolume = audioSettings.GetAttributeFloat("soundvolume", SoundVolume);
+                MusicVolume = audioSettings.GetAttributeFloat("musicvolume", MusicVolume);
+                string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "Disabled");
+                VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", "");
+                NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", -45);
+                var voiceSetting = VoiceMode.Disabled;
+                if (Enum.TryParse(voiceSettingStr, out voiceSetting))
+                {
+                    VoiceSetting = voiceSetting;
+                }
+            }
+            
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
 
@@ -908,6 +915,19 @@ namespace Barotrauma
                     new XAttribute("vsync", VSyncEnabled),
                     new XAttribute("displaymode", windowMode));
             }
+            
+            XElement audio = doc.Root.Element("audio");
+            if (audio == null)
+            {
+                audio = new XElement("audio");
+                doc.Root.Add(audio);
+            }
+            audio.ReplaceAttributes(
+                new XAttribute("musicvolume", musicVolume),
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicesetting", VoiceSetting),
+                new XAttribute("voicecapturedevice", VoiceCaptureDevice ?? ""),
+                new XAttribute("noisegatethreshold", NoiseGateThreshold));
 
             XElement gSettings = doc.Root.Element("graphicssettings");
             if (gSettings == null)

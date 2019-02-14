@@ -79,7 +79,7 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.05f), settingsFrame.RectTransform, Anchor.TopCenter)
-            { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true);
+            { RelativeOffset = new Vector2(0.0f, 0.11f) }, isHorizontal: true);
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
             tabButtons = new GUIButton[tabs.Length];
@@ -89,7 +89,8 @@ namespace Barotrauma
                 {
                     UserData = tab
                 };
-                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("SettingsTab." + tab.ToString()))
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), 
+                    TextManager.Get("SettingsTab." + tab.ToString()), style: "GUITabButton")
                 {
                     UserData = tab,
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
@@ -438,17 +439,19 @@ namespace Barotrauma
 
             var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), voiceSettings.RectTransform));
 
-            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"));
-            noiseGateText.TextGetter = () =>
+            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
             {
-                return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
+                TextGetter = () =>
+                {
+                    return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
+                }
             };
             var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
                 if (VoipCapture.Instance == null) return 0.0f;
                 dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
-                return ((float)VoipCapture.Instance.LastdB+100.0f)/100.0f;
+                return ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
             };
             var noiseGateSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 1.0f), dbMeter.RectTransform, Anchor.Center), color: Color.White, barSize: 0.03f);
             noiseGateSlider.Frame.Visible = false;
@@ -458,6 +461,7 @@ namespace Barotrauma
             noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 NoiseGateThreshold = scrollBar.BarScrollValue;
+                UnsavedSettings = true;
                 return true;
             };
 
@@ -485,6 +489,7 @@ namespace Barotrauma
                 }
 
                 voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
+                UnsavedSettings = true;
             };
             voiceMode.Selected = VoiceSetting;
 

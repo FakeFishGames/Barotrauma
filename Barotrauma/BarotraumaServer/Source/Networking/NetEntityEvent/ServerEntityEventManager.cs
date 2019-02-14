@@ -197,6 +197,15 @@ namespace Barotrauma.Networking
             if (inGameClients.Count > 0)
             {
                 lastSentToAll = inGameClients[0].LastRecvEntityEventID;
+                if (server.OwnerConnection != null)
+                {
+                    var owner = clients.Find(c => c.Connection == server.OwnerConnection);
+                    if (owner != null)
+                    {
+                        lastSentToAll = owner.LastRecvEntityEventID;
+                    }
+                }
+
                 inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) lastSentToAll = c.LastRecvEntityEventID; });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
