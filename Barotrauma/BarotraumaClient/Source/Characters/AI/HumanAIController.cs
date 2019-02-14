@@ -23,21 +23,19 @@ namespace Barotrauma
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
+            Vector2 pos = Character.WorldPosition;
+            pos.Y = -pos.Y;
+
             if (SelectedAiTarget?.Entity != null)
             {
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                    new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
+                GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
+                GUI.Font.DrawString(spriteBatch, $"{SelectedAiTarget.Entity.ToString()}", pos - Vector2.UnitY * 20.0f, Color.Red);
             }
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
 
-            GUI.DrawLine(spriteBatch,
-                new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
-                Color.LightGreen * 0.5f, 0, 3);
-
+            GUI.DrawLine(spriteBatch, pos, new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y), Color.LightGreen * 0.5f, 0, 3);
 
             for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
             {
