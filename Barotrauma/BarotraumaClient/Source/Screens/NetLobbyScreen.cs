@@ -1532,6 +1532,14 @@ namespace Barotrauma
                 if (!CampaignSetupUI.Visible) CampaignSetupUI = null;                
             }
 
+            if (GameMain.Client != null && VoipCapture.Instance != null)
+            {
+                if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0,0,0,0,milliseconds: 100))
+                {
+                    SetPlayerSpeaking(GameMain.Client.ConnectedClients.Find(c => c.ID == GameMain.Client.ID));
+                }
+            }
+
             foreach (GUIComponent child in playerList.Content.Children)
             {
                 var soundIcon = child.FindChild("soundicon");
