@@ -881,7 +881,7 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Kick:
                     string kickedName = inc.ReadString().ToLowerInvariant();
                     string kickReason = inc.ReadString();
-                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == kickedName);
+                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == kickedName && cl.Connection != OwnerConnection);
                     if (kickedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
@@ -894,7 +894,7 @@ namespace Barotrauma.Networking
                     bool range = inc.ReadBoolean();
                     double durationSeconds = inc.ReadDouble();
 
-                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName);
+                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName && cl.Connection != OwnerConnection);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
@@ -1769,11 +1769,17 @@ namespace Barotrauma.Networking
 
         public void KickClient(Client client, string reason)
         {
-            if (client == null) return;
+            if (client == null || client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Kicked.ToString();
             if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
-            DisconnectClient(client, client.Name + " has been kicked from the server.", msg);
+
+            string logMsg = client.Name + " has been kicked from the server.";
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                logMsg += " Reason: " + reason;
+            }
+            DisconnectClient(client, logMsg, msg);
         }
 
         public override void BanPlayer(string playerName, string reason, bool range = false, TimeSpan? duration = null)
@@ -2165,7 +2171,9 @@ namespace Barotrauma.Networking
 
             Client.UpdateKickVotes(connectedClients);
 
-            var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
+            var clientsToKick = connectedClients.FindAll(c => 
+                c.Connection != OwnerConnection &&
+                c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
                 SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);
