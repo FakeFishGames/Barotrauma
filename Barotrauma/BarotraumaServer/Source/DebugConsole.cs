@@ -159,6 +159,7 @@ namespace Barotrauma
                                     input += key.KeyChar;
                                     memoryIndex = -1;
                                 }
+                                DebugConsole.ResetAutoComplete();
                                 break;
                         }
                         
