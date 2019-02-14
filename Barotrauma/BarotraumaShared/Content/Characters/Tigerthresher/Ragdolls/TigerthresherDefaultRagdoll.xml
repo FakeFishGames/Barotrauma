@@ -23,7 +23,7 @@
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>-->
     <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
-    <attack range="300" damagerange="150" duration="0.5" structuredamage="35" structuresoundtype="StructureSlash"
+    <attack range="300" damagerange="150" duration="0.5" structuredamage="20" structuresoundtype="StructureSlash"
             force="80" torque="80" targetforce="-50" severlimbsprobability="0.8">
       <Affliction identifier="internaldamage" strength="15"/>
       <Affliction identifier="bleeding" strength="50"/>

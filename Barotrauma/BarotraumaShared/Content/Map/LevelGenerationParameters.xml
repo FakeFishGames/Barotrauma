@@ -48,7 +48,7 @@
     levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
-    ItemCount="100"
+    ItemCount="400"
     SeaFloorDepth="-300000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">
@@ -75,7 +75,7 @@
     RuinCount="3"
     BottomHoleProbability="0.5"
     levelobjectamount="1000"
-    ItemCount="100"
+    ItemCount="400"
     MountainCountMin="2"
     MountainCountMax="3"
     SeaFloorDepth="-300000"
@@ -106,7 +106,7 @@
     FloatingIceChunkCount="3"
     BottomHoleProbability="0.6"
     levelobjectamount="1500"
-    ItemCount="100"
+    ItemCount="400"
     MountainCountMin="1"
     MountainCountMax="1"
     SeaFloorDepth="-100000"
@@ -134,7 +134,7 @@
     RuinCount="1"
     BottomHoleProbability="0.9"
     levelobjectamount="1000"
-    ItemCount="100"
+    ItemCount="400"
     SeaFloorDepth="0"
     SeaFloorVariance="500"
     MountainCountMin="1"
@@ -165,7 +165,7 @@
     FloatingIceChunkCount="20"
     BottomHoleProbability="1"
     levelobjectamount="800">
-    ItemCount="100"
+    ItemCount="400"
     <Background texture="Content/Map/iceBackgroundFade.png"/>
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
@@ -189,7 +189,7 @@
     RuinCount="1"
     BottomHoleProbability="0.8"
     levelobjectamount="1000"
-    ItemCount="100"
+    ItemCount="400"
     MountainCountMin="2"
     MountainCountMax="3"
     SeaFloorDepth="-50000"

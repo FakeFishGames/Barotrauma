@@ -655,6 +655,12 @@ namespace Barotrauma
                 Info = new CharacterInfo(file);
             }
 
+            keys = new Key[Enum.GetNames(typeof(InputType)).Length];
+            for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
+            {
+                keys[i] = new Key((InputType)i);
+            }
+
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 

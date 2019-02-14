@@ -105,7 +105,7 @@ namespace Barotrauma.Networking
 
         public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
         {
-            if (listener.WorldPosition == sender.WorldPosition) { return 1.0f; }
+            if (listener.WorldPosition == sender.WorldPosition) { return 0.0f; }
 
             float dist = Vector2.Distance(listener.WorldPosition, sender.WorldPosition);
             if (dist > range) { return 0.0f; }
@@ -204,11 +204,11 @@ namespace Barotrauma.Networking
         public static bool CanUseRadio(Character sender, out WifiComponent radio)
         {
             radio = null;
-
-            if (sender == null) return false;
+            if (sender == null) { return false; }
             var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            
-            return senderItem != null && sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit();
+            if (senderItem == null) { return false; }
+            radio = senderItem.GetComponent<WifiComponent>();
+            return sender.HasEquippedItem(senderItem) && radio.CanTransmit();
         }
     }
 }

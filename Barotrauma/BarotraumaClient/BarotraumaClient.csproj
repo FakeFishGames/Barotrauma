@@ -244,6 +244,7 @@
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\ServerSettings.cs" />

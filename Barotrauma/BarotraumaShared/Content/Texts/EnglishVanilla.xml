@@ -590,6 +590,8 @@
   <BanRange>Ban range</BanRange>
   <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
   <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
+  <MutedLocally>You have muted this player, and will not hear what they say in the voice chat.</MutedLocally>
+  <MutedGlobally>This player has been muted by the server.</MutedGlobally>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
   <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
   <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
@@ -789,6 +791,8 @@
   <ReloadLinkedSubError>Submarine file [file] not found!</ReloadLinkedSubError>
 
   <!-- Chat -->
+  <MutedByServer>You have been muted by the server. Other players will not hear what you say through the voice chat.</MutedByServer>
+  <UnmutedByServer>You have been unmuted by the server. You can now use the voice chat to talk to other players.</UnmutedByServer>
   <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
 

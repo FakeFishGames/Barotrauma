@@ -32,7 +32,8 @@ namespace Barotrauma.Networking
 
         public void SendToClients(List<Client> clients)
         {
-            foreach (VoipQueue queue in queues) {
+            foreach (VoipQueue queue in queues)
+            {
                 if (queue.LastReadTime < DateTime.Now - VoipConfig.SEND_INTERVAL) { continue; }
 
                 if (lastSendTime.ContainsKey(queue))
@@ -84,7 +85,7 @@ namespace Barotrauma.Networking
             if (recipientSpectating && senderSpectating) { return true; }
 
             //sender can't speak
-            if (sender.Character.SpeechImpediment >= 100.0f) { return false; }
+            if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }
 
             //check if the message can be sent via radio
             if (ChatMessage.CanUseRadio(sender.Character, out WifiComponent senderRadio) && 

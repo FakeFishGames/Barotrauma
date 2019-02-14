@@ -481,6 +481,20 @@
     selectedcolor="255,255,255,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect ="999, 950, 24, 23"/>
   </GUIStarIconBright>
+
+  <GUISoundIcon
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="973,1,50,46"/>
+  </GUISoundIcon>
+  
+  <GUISoundIconDisabled
+    color="150,150,150,255"
+    hovercolor="150,150,150,255"
+    selectedcolor="150,150,150,255">
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="918,1,53,46"/>
+  </GUISoundIconDisabled>
   
   <GUIMessageBox    
     color="0,0,0,204"

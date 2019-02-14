@@ -34,7 +34,7 @@
       <Button text="Signal out #1" connection="signal_out1" />
       <Button text="Signal out #2" connection="signal_out2" />
       <Button text="Signal out #3" connection="signal_out3" />
-      <TickBox text="Signal out #4" connection="signal_out4" />
+      <Button text="Signal out #4" connection="signal_out4" />
     </CustomInterface>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
