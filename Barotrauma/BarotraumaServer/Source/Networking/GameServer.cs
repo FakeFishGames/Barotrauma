@@ -452,7 +452,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            IEnumerable<Client> kickAFK = connectedClients.FindAll(c => c.KickAFKTimer >= serverSettings.KickAFKTime);
+            IEnumerable<Client> kickAFK = connectedClients.FindAll(c => 
+                c.KickAFKTimer >= serverSettings.KickAFKTime &&
+                (OwnerConnection == null || c.Connection != OwnerConnection));
             foreach (Client c in kickAFK)
             {
                 KickClient(c, TextManager.Get("DisconnectMessage.AFK"));
