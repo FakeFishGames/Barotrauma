@@ -115,7 +115,9 @@ namespace Barotrauma
             private set;
         }
 
+#if WINDOWS
         private static bool FullscreenOnTabIn;
+#endif
 
         public static WindowMode WindowMode
         {
@@ -199,7 +201,6 @@ namespace Barotrauma
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-            GraphicsDeviceManager.ApplyChanges();
 
             SetWindowMode(Config.WindowMode);
 
