@@ -273,6 +273,11 @@ namespace Barotrauma
             }
 
             LoadPlayerConfig();
+
+#if DEBUG
+            ShowUserStatisticsPrompt = false;
+            SendUserStatistics = false;
+#endif
         }
 
         #region Load DefaultConfig
