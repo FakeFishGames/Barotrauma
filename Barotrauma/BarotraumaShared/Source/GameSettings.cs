@@ -914,8 +914,7 @@ namespace Barotrauma
                     new XAttribute("vsync", VSyncEnabled),
                     new XAttribute("displaymode", windowMode));
             }
-
-
+            
             XElement audio = doc.Root.Element("audio");
             if (audio == null)
             {
@@ -926,7 +925,7 @@ namespace Barotrauma
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("voicesetting", VoiceSetting),
-                new XAttribute("voicecapturedevice", VoiceCaptureDevice),
+                new XAttribute("voicecapturedevice", VoiceCaptureDevice ?? ""),
                 new XAttribute("noisegatethreshold", NoiseGateThreshold));
 
             XElement gSettings = doc.Root.Element("graphicssettings");
