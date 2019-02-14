@@ -345,7 +345,7 @@ namespace Barotrauma
             }
         }
 
-        private float GetResistance(string resistanceId)
+        public float GetResistance(string resistanceId)
         {
             float resistance = 0.0f;
             for (int i = 0; i < afflictions.Count; i++)

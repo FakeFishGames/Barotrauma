@@ -154,9 +154,9 @@ namespace Barotrauma
             {
                 Strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier;
             }
-            else
+            else // Reduce strengthening of afflictions if resistant
             {
-                Strength += currentEffect.StrengthChange * deltaTime;
+                Strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
             }
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
