@@ -905,7 +905,8 @@ namespace Barotrauma
 
         public void SetInput(InputType inputType, bool hit, bool held)
         {
-            keys[(int)inputType].SetState(hit, held);
+            keys[(int)inputType].Hit = hit;
+            keys[(int)inputType].Held = held;
         }
 
         public void ClearInput(InputType inputType)
