@@ -369,6 +369,11 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
 
+#if DEBUG
+            GameSettings.ShowUserStatisticsPrompt = false;
+            GameSettings.SendUserStatistics = false;
+#endif
+
             InitUserStats();
 
         yield return CoroutineStatus.Running;
