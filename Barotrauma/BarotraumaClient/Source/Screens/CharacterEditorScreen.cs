@@ -2286,30 +2286,42 @@ namespace Barotrauma
             }
             else
             {
-                if (selectedJoints.Any())
+                //if (selectedJoints.Any())
+                //{
+                //    foreach (var jointParams in RagdollParams.Joints)
+                //    {
+                //        if (selectedJoints.Any(j => j.jointParams == jointParams))
+                //        {
+                //            jointParams?.AddToEditor(ParamsEditor.Instance);
+                //        }
+                //    }
+                //}
+                //if (selectedLimbs.Any())
+                //{
+                //    foreach (var limbParams in RagdollParams.Limbs)
+                //    {
+                //        if (limbParams == null) { continue; }
+                //        var selectedLimb = selectedLimbs.Find(l => l.limbParams == limbParams);
+                //        if (selectedLimb != null)
+                //        {
+                //            limbParams.AddToEditor(ParamsEditor.Instance);
+                //            if (selectedLimb.attack != null)
+                //            {
+                //                var attackEditor = new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, selectedLimb.attack, false, true);
+                //            }
+                //        }
+                //    }
+                //}
+                foreach (var joint in selectedJoints)
                 {
-                    foreach (var jointParams in RagdollParams.Joints)
-                    {
-                        if (selectedJoints.Any(j => j.jointParams == jointParams))
-                        {
-                            jointParams?.AddToEditor(ParamsEditor.Instance);
-                        }
-                    }
+                    joint.jointParams.AddToEditor(ParamsEditor.Instance);
                 }
-                if (selectedLimbs.Any())
+                foreach (var limb in selectedLimbs)
                 {
-                    foreach (var limbParams in RagdollParams.Limbs)
+                    limb.limbParams.AddToEditor(ParamsEditor.Instance);
+                    if (limb.attack != null)
                     {
-                        if (limbParams == null) { continue; }
-                        var selectedLimb = selectedLimbs.Find(l => l.limbParams == limbParams);
-                        if (selectedLimb != null)
-                        {
-                            limbParams.AddToEditor(ParamsEditor.Instance);
-                            if (selectedLimb.attack != null)
-                            {
-                                var attackEditor = new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, selectedLimb.attack, false, true);
-                            }
-                        }
+                        new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
                     }
                 }
                 if (selectedJoints.None() && selectedLimbs.None())
