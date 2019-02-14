@@ -614,6 +614,8 @@ namespace Barotrauma
             Vitality = MaxVitality;
             if (Unkillable) { return; }
 
+            float damageResistanceMultiplier = 1f - GetResistance("damage");
+
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
@@ -627,7 +629,7 @@ namespace Barotrauma
                     {
                         vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
                     }
-                    vitalityDecrease *= 1f - GetResistance("damage");
+                    vitalityDecrease *= damageResistanceMultiplier;
                     Vitality -= vitalityDecrease;
                     affliction.CalculateDamagePerSecond(vitalityDecrease);
                 }
@@ -636,7 +638,7 @@ namespace Barotrauma
             foreach (Affliction affliction in afflictions)
             {
                 float vitalityDecrease = affliction.GetVitalityDecrease(this);
-                vitalityDecrease *= 1f - GetResistance("damage");
+                vitalityDecrease *= damageResistanceMultiplier;
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
             }
