@@ -16,7 +16,7 @@ namespace Barotrauma
 
         private InfectionState state;
 
-        private Limb huskAppendage;
+        private List<Limb> huskAppendage;
         
         public InfectionState State
         {
@@ -106,46 +106,37 @@ namespace Barotrauma
             }
         }
 
-        public static Limb AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
+        public static List<Limb> AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
         {
             var huskDoc = XMLExtensions.TryLoadXml(Character.GetConfigFile("humanhusk"));
             string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
             if (doc == null || doc.Root == null) { return null; }
-
-            var limbElement = doc.Root.Element("limb");
-            if (limbElement == null)
-            {
-                DebugConsole.ThrowError("Error in Huskappendage.xml - limb element not found");
-                return null;
-            }
-
-            var jointElement = doc.Root.Element("joint");
-            if (jointElement == null)
-            {
-                DebugConsole.ThrowError("Error in Huskappendage.xml - joint element not found");
-                return null;
-            }
-
             if (ragdoll == null)
             {
                 ragdoll = character.AnimController;
             }
-
             if (ragdoll.Dir < 1.0f)
             {
                 ragdoll.Flip();
             }
-
-            var torso = ragdoll.GetLimb(LimbType.Torso);
-            
-            var huskAppendage = new Limb(ragdoll, character, new LimbParams(limbElement, ragdoll.RagdollParams));
-            huskAppendage.body.Submarine = character.Submarine;
-            huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
-
-            ragdoll.AddLimb(huskAppendage);
-            ragdoll.AddJoint(jointElement);
-            return huskAppendage;
+            var huskAppendages = new List<Limb>();
+            var limbElements = doc.Root.Elements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
+            foreach (var jointElement in doc.Root.Elements("joint"))
+            {
+                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
+                {
+                    JointParams jointParams = new JointParams(jointElement, ragdoll.RagdollParams);
+                    Limb attachLimb = ragdoll.Limbs[jointParams.Limb1];
+                    Limb huskAppendage = new Limb(ragdoll, character, new LimbParams(limbElement, ragdoll.RagdollParams));
+                    huskAppendage.body.Submarine = character.Submarine;
+                    huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
+                    ragdoll.AddLimb(huskAppendage);
+                    ragdoll.AddJoint(jointParams);
+                    huskAppendages.Add(huskAppendage);
+                }
+            }
+            return huskAppendages;
         }
 
         private void DeactivateHusk(Character character)
@@ -157,8 +148,7 @@ namespace Barotrauma
         private void RemoveHuskAppendage(Character character)
         {
             if (huskAppendage == null) return;
-
-            character.AnimController.RemoveLimb(huskAppendage);
+            huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
             huskAppendage = null;
         }
 
