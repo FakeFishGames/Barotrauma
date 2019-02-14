@@ -205,7 +205,7 @@
       <HintPath>..\NuGet\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('LINUX')) OR $(DefineConstants.Contains('OSX'))" Include="MonoGame.Framework.DesktopGL">
-      <HintPath>..\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+      <HintPath>..\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\lib\net45\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup />

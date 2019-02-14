@@ -316,13 +316,15 @@
     <Reference Include="nVLC, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\nVLC.3.0.0\lib\net40\nVLC.dll</HintPath>
     </Reference>
-    <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="PresentationCore" />
-    <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="NVorbis">
-      <HintPath>..\..\Libraries\NuGet\NVorbis.0.8.5.0\lib\NVorbis.dll</HintPath>
+    <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="NVorbis, Version=0.8.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\NVorbis.0.8.6\lib\net35\NVorbis.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
+    <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="PresentationCore" />
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
@@ -367,10 +369,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Condition="$(DefineConstants.Contains('LINUX')) OR $(DefineConstants.Contains('OSX'))" Include="MonoGame.Framework.DesktopGL">
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
-    </Reference>
-    <Reference Include="RestSharp">
-      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\lib\net45\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
