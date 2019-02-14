@@ -217,11 +217,12 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public bool StreamsReliably
+        public bool FilledByNetwork
         {
             get;
             private set;
         }
+        
         private int decayTimer;
         
         private bool muffled;
@@ -338,14 +339,11 @@ namespace Barotrauma.Sounds
             Sound = sound;
 
             IsStream = sound.Stream;
-            StreamsReliably = sound.StreamsReliably;
+            FilledByNetwork = sound is VoipSound;
             decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
             startedPlaying = true;
-
-            streamBuffers = new uint[4];
-            emptyBuffers = new List<uint>();
-
+            
             mutex = new object();
 
             lock (mutex)
@@ -566,22 +564,7 @@ namespace Barotrauma.Sounds
                     {
                         short[] buffer = streamShortBuffer;
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
-                        if (StreamsReliably)
-                        {
-                            streamSeekPos += readSamples;
-                            if (readSamples < STREAM_BUFFER_SIZE)
-                            {
-                                if (looping)
-                                {
-                                    streamSeekPos = 0;
-                                }
-                                else
-                                {
-                                    reachedEndSample = true;
-                                }
-                            }
-                        }
-                        else
+                        if (FilledByNetwork)
                         {
                             if (readSamples <= 0)
                             {
@@ -594,6 +577,21 @@ namespace Barotrauma.Sounds
                             else
                             {
                                 decayTimer = 0;
+                            }
+                        }
+                        else if (Sound.StreamsReliably)
+                        {
+                            streamSeekPos += readSamples;
+                            if (readSamples < STREAM_BUFFER_SIZE)
+                            {
+                                if (looping)
+                                {
+                                    streamSeekPos = 0;
+                                }
+                                else
+                                {
+                                    reachedEndSample = true;
+                                }
                             }
                         }
                         
