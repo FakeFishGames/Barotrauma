@@ -576,6 +576,22 @@ namespace Barotrauma.Networking
             {
                 c.UpdateSoundPosition();
             }
+            
+            if (VoipCapture.Instance != null)
+            {
+                if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
+                {
+                    var myClient = ConnectedClients.Find(c => c.ID == ID);
+                    if (Screen.Selected == GameMain.NetLobbyScreen)
+                    {
+                        GameMain.NetLobbyScreen.SetPlayerSpeaking(myClient);
+                    }
+                    else
+                    {
+                        GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(myClient);
+                    }
+                }
+            }
 
             if (gameStarted) SetRadioButtonColor();
 
