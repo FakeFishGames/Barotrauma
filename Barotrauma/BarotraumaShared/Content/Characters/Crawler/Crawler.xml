@@ -10,7 +10,7 @@
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
   <health
-    vitality="70"
+    vitality="50"
     doesbleed="true"/>
 
   <!-- TODO: sounds -->

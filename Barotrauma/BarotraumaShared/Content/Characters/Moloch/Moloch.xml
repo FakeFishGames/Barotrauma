@@ -8,7 +8,7 @@
   <gibemitter particle="blackwaterblood" particleamount="40" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
 
   <health
-    vitality="1000"
+    vitality="850"
     doesbleed="true"/>
 
   <!-- TODO: new sounds -->

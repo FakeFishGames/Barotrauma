@@ -9,7 +9,7 @@
   <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
 
   <health
-    vitality="375"
+    vitality="200"
     doesbleed="true"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">

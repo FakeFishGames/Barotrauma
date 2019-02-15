@@ -4,7 +4,7 @@
   <animations />
   
   <health
-    vitality="200"
+    vitality="120"
     doesbleed="true"/>
 
   <bloodemitter particle="blood" particleamount="1"/>
