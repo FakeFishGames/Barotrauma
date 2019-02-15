@@ -289,7 +289,9 @@ namespace Barotrauma.Items.Components
 
                 standPos = leak.WorldPosition + standPos * Range;
 
-                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);
+                Vector2 velocity = (standPos - character.WorldPosition) / 1000.0f;
+                velocity *= character.AnimController.GetCurrentSpeed(false);
+                character.AIController.SteeringManager.SteeringManual(deltaTime, velocity);
             }
             else
             {

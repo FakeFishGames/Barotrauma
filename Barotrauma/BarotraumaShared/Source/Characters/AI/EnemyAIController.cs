@@ -837,7 +837,7 @@ namespace Barotrauma
             {
                 Vector2 attackDir = Vector2.Normalize(Character.SimPosition - attackPosition);
                 if (!MathUtils.IsValid(attackDir)) attackDir = Vector2.UnitY;
-                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
+                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f) * Character.AnimController.GetCurrentSpeed(false)));
             }
 
             steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, Character.AnimController.GetCurrentSpeed(false));
