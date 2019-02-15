@@ -28,6 +28,8 @@
     <targetpriority tag="stronger" state="Escape" priority="30"/>
     <targetpriority tag="sonar" state="Attack" priority="25"/>
     <targetpriority tag="room" state="Attack" priority="5"/>
+    <!--Ignore-->
+    <targetpriority tag="humanhusk" state="Attack" priority="0"/>
   </ai>
 
   <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any" accessiblewhenalive="false">
