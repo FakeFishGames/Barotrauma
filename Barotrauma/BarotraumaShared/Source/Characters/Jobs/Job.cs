@@ -96,6 +96,12 @@ namespace Barotrauma
             {
                 skill.Level += increase;
             }
+            else
+            {
+                skills.Add(
+                    skillIdentifier,
+                    new Skill(skillIdentifier, increase));
+            }
         }
 
         public void GiveJobItems(Character character, WayPoint spawnPoint = null)
