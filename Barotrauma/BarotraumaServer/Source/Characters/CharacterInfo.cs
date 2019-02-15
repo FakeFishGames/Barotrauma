@@ -25,10 +25,8 @@ namespace Barotrauma
             if (Job != null)
             {
                 msg.Write(Job.Prefab.Identifier);
-                msg.Write((byte)Job.Skills.Count);
                 foreach (Skill skill in Job.Skills)
                 {
-                    msg.Write(skill.Identifier);
                     msg.Write(skill.Level);
                 }
             }

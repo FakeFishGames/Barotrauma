@@ -241,12 +241,10 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(jobIdentifier))
             {
                 jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                int skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
+                for (int i = 0; i < jobPrefab.Skills.Count; i++)
                 {
-                    string skillIdentifier = inc.ReadString();
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
+                    skillLevels.Add(jobPrefab.Skills[i].Identifier, skillLevel);
                 }
             }
 
