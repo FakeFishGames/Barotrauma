@@ -123,9 +123,10 @@ namespace Barotrauma
                 //  a. it's boosting the movement speed and the character is trying to move fast (= running)
                 //  b. it's a debuff that decreases movement speed
 
-                if (run || Character.SpeedMultiplier <= 0.0f) targetMovement *= Character.SpeedMultiplier;               
+                float speedMultiplier = Character.SpeedMultiplier;
+                if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;               
 
-                Character.SpeedMultiplier = 1.0f;   // Reset, items will set the value before the next update
+                Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
 
                 Character.AnimController.TargetMovement = targetMovement;
             }

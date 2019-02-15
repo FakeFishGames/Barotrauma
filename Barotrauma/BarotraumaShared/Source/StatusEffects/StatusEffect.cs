@@ -110,7 +110,6 @@ namespace Barotrauma
         private List<PropertyConditional> propertyConditionals;
 
         private bool setValue;
-        private bool preserveGreaterValue;
         
         private bool disableDeltaTime;
         
@@ -229,9 +228,6 @@ namespace Barotrauma
                         break;
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
-                        break;
-                    case "preservebiggervalue":
-                        preserveGreaterValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
                         DebugConsole.ThrowError("Error in StatusEffect config (" + parentDebugName + ") - use identifiers or tags to define the targets instead of names.");
@@ -775,23 +771,13 @@ namespace Barotrauma
             {
                 float floatValue = Convert.ToSingle(value) * deltaTime;
 
-                if (!setValue)
-                {
-                    floatValue += (float)property.GetValue();
-                }
-                else if (preserveGreaterValue && (float)property.GetValue() > floatValue) return;
-
+                if (!setValue) floatValue += (float)property.GetValue();
                 property.TrySetValue(floatValue);
             }
             else if (type == typeof(int) && value is int)
             {
                 int intValue = (int)((int)value * deltaTime);
-                if (!setValue)
-                {
-                    intValue += (int)property.GetValue();
-                }
-                else if (preserveGreaterValue && (int)property.GetValue() > intValue) return;
-
+                if (!setValue) intValue += (int)property.GetValue();
                 property.TrySetValue(intValue);
             }
             else if (type == typeof(bool) && value is bool)
