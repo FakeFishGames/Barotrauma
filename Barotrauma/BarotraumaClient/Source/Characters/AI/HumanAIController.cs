@@ -25,12 +25,12 @@ namespace Barotrauma
         {
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
-            Vector2 textOffset = new Vector2(-40, -100);
+            Vector2 textOffset = new Vector2(-40, -120);
 
             if (SelectedAiTarget?.Entity != null)
             {
                 GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
-                GUI.DrawString(spriteBatch, pos + textOffset, $"AI TARGET: {SelectedAiTarget.Entity.ToString()}", Color.White, Color.Black);
+                //GUI.DrawString(spriteBatch, pos + textOffset, $"AI TARGET: {SelectedAiTarget.Entity.ToString()}", Color.White, Color.Black);
             }
 
             if (ObjectiveManager != null)
@@ -40,13 +40,10 @@ namespace Barotrauma
                 {
                     GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
                 }
-                else
+                var currentObjective = ObjectiveManager.CurrentObjective;
+                if (currentObjective != null)
                 {
-                    var currentObjective = ObjectiveManager.CurrentObjective;
-                    if (currentObjective != null)
-                    {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
-                    }
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
                 }
             }
 
