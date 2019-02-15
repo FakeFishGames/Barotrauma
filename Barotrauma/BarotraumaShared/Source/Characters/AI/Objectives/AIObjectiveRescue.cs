@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     class AIObjectiveRescue : AIObjective
     {
+        public override string DebugTag => "rescue";
+
         const float TreatmentDelay = 0.5f;
 
         private readonly Character targetCharacter;

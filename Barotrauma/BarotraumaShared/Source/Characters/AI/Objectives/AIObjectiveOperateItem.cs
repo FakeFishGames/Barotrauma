@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
+        public override string DebugTag => "operate item";
+
         private ItemComponent component, controller;
 
         private Entity operateTarget;

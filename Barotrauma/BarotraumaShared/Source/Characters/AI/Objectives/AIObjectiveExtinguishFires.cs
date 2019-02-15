@@ -4,6 +4,8 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFires : AIObjective
     {
+        public override string DebugTag => "extinguish fires";
+
         public AIObjectiveExtinguishFires(Character character) : 
             base(character, "")
         {

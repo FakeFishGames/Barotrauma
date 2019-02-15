@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItem : AIObjective
     {
+        public override string DebugTag => "repair item";
+
         private Item item;
         
         public AIObjectiveRepairItem(Character character, Item item)

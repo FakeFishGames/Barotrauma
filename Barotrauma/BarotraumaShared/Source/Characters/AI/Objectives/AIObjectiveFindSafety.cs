@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveFindSafety : AIObjective
     {
+        public override string DebugTag => "find safety";
+
         const float SearchHullInterval = 3.0f;
         const float MinSafety = 50.0f;
 

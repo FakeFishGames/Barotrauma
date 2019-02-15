@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectivePumpWater : AIObjective
     {
+        public override string DebugTag => "pump water";
+
         private const float FindPumpsInterval = 5.0f;
 
         private string orderOption;

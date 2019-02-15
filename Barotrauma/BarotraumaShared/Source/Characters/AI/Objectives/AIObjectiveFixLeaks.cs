@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeaks : AIObjective
     {
+        public override string DebugTag => "fix leaks";
+
         const float UpdateGapListInterval = 5.0f;
 
         private double lastGapUpdate;

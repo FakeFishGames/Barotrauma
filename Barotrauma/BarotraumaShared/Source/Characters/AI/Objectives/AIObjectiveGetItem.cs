@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectiveGetItem : AIObjective
     {
+        public override string DebugTag => "get item";
+
         public Func<Item, float> GetItemPriority;
 
         //can be either tags or identifiers

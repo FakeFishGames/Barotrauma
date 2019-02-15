@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItems : AIObjective
     {
+        public override string DebugTag => "repair items";
+
         /// <summary>
         /// Should the character only attempt to fix items they have the skills to fix, or any damaged item
         /// </summary>
