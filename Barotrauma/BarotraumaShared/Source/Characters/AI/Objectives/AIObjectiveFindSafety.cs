@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -38,14 +39,16 @@ namespace Barotrauma
         {
             var currentHull = character.AnimController.CurrentHull;
 
-            currenthullSafety = OverrideCurrentHullSafety == null ?
-                GetHullSafety(currentHull, character) : (float)OverrideCurrentHullSafety;
+            currenthullSafety = OverrideCurrentHullSafety == null ? GetHullSafety(currentHull, character) : (float)OverrideCurrentHullSafety;
             
             if (NeedsDivingGear())
             {
-                if (!FindDivingGear(deltaTime)) return;
-            }
-            
+                // Stop seeking diving gear if the task is impossible.
+                if (divingGearObjective == null || divingGearObjective.CanBeCompleted)
+                {
+                    if (!FindDivingGear(deltaTime)) return;
+                }   
+            }          
 
             if (searchHullTimer > 0.0f)
             {
@@ -81,13 +84,13 @@ namespace Barotrauma
             // -> attempt to manually steer away from hazards
             else if (currentHull != null)
             {
+                bool ignoreY = character.SelectedConstruction?.GetComponent<Ladder>() == null;
                 Vector2 escapeVel = Vector2.Zero;
                 foreach (FireSource fireSource in currentHull.FireSources)
                 {
-                    int dir = Math.Sign(character.Position.X - fireSource.Position.X);
-                    
+                    Vector2 dir = character.Position - fireSource.Position;
                     float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
-                    escapeVel += new Vector2(dir * distMultiplier, 0.0f);                                      
+                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, ignoreY ? 0 : Math.Sign(dir.Y) * distMultiplier);                                      
                 }
 
                foreach (Character enemy in Character.CharacterList)
@@ -95,13 +98,15 @@ namespace Barotrauma
                     if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious && 
                         (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
                     {
+                        Vector2 dir = character.Position - enemy.Position;
                         float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
-                        escapeVel += new Vector2(Math.Sign(character.Position.X - enemy.Position.X) * distMultiplier, 0.0f);
+                        escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, ignoreY ? 0 : Math.Sign(dir.Y) * distMultiplier);
                     }
                 }
 
                 if (escapeVel != Vector2.Zero)
                 {
+                    escapeVel *= character.AnimController.GetCurrentSpeed(true);
                     //only move if we haven't reached the edge of the room
                     if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
                         (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))
