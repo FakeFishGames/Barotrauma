@@ -485,7 +485,6 @@ namespace Barotrauma
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
                 radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
                 chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
-                Character.SpeedMultiplier = Math.Max(Character.SpeedMultiplier, affliction.GetSpeedMultiplier());
             }
             foreach (LimbHealth limbHealth in limbHealths)
             {

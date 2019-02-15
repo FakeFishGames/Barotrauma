@@ -546,22 +546,26 @@ namespace Barotrauma
                     {
                         UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
                     }
+                    Character.SpeedMultiplier = affliction.GetSpeedMultiplier();
                 }
             }
             
             for (int i = afflictions.Count - 1; i >= 0; i--)
             {
-                if (irremovableAfflictions.Contains(afflictions[i])) continue;
-                if (afflictions[i].Strength <= 0.0f)
+                var affliction = afflictions[i];
+                if (irremovableAfflictions.Contains(affliction)) continue;
+                if (affliction.Strength <= 0.0f)
                 {
-                    SteamAchievementManager.OnAfflictionRemoved(afflictions[i], Character);
+                    SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
                     afflictions.RemoveAt(i);
                 }
             }
             for (int i = 0; i < afflictions.Count; i++)
             {
-                afflictions[i].Update(this, null, deltaTime);
-                afflictions[i].DamagePerSecondTimer += deltaTime;
+                var affliction = afflictions[i];
+                affliction.Update(this, null, deltaTime);
+                affliction.DamagePerSecondTimer += deltaTime;
+                Character.SpeedMultiplier = affliction.GetSpeedMultiplier();
             }
 
 #if CLIENT

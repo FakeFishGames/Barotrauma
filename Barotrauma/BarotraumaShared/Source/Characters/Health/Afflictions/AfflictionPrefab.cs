@@ -95,8 +95,6 @@ namespace Barotrauma
                 MaxResistance = element.GetAttributeFloat("maxresistance", 0.0f);
                 MaxResistance = Math.Max(MinResistance, MaxResistance);
 
-                DebugConsole.NewMessage("ResistanceFor: " + ResistanceFor);
-
                 MinSpeedMultiplier = element.GetAttributeFloat("minspeedmultiplier", 1.0f);
                 MaxSpeedMultiplier = element.GetAttributeFloat("maxspeedmultiplier", 1.0f);
                 MaxSpeedMultiplier = Math.Max(MinSpeedMultiplier, MaxSpeedMultiplier);
