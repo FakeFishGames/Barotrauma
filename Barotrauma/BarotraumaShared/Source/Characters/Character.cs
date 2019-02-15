@@ -831,7 +831,7 @@ namespace Barotrauma
         public bool IsKeyHit(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 switch (inputType)
                 {
@@ -869,7 +869,7 @@ namespace Barotrauma
         public bool IsKeyDown(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 switch (inputType)
                 {
@@ -907,6 +907,7 @@ namespace Barotrauma
         {
             keys[(int)inputType].Hit = hit;
             keys[(int)inputType].Held = held;
+            keys[(int)inputType].SetState(hit, held);
         }
 
         public void ClearInput(InputType inputType)
