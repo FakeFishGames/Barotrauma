@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Audio.OpenAL;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Concentus.Structs;
-using Concentus.Enums;
-using Barotrauma.Networking;
+using OpenTK.Audio.OpenAL;
+using System;
 
 namespace Barotrauma.Sounds
 {
@@ -81,14 +73,12 @@ namespace Barotrauma.Sounds
 
         public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
-            byte[] compressedBuffer;
-            int compressedSize;
-            queue.RetrieveBuffer(bufferID, out compressedSize, out compressedBuffer);
-            if (compressedSize>0)
+            queue.RetrieveBuffer(bufferID, out int compressedSize, out byte[] compressedBuffer);
+            if (compressedSize > 0)
             {
                 VoipConfig.Decoder.Decode(compressedBuffer, 0, compressedSize, buffer, 0, VoipConfig.BUFFER_SIZE);
                 bufferID++;
-                return VoipConfig.BUFFER_SIZE*2;
+                return VoipConfig.BUFFER_SIZE * 2;
             }
             if (bufferID < queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1)) bufferID = queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1);
 

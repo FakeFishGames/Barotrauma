@@ -9,7 +9,6 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XDocument doc)
         {
-            keys = null;
         }
 
         partial void AdjustKarma(Character attacker, AttackResult attackResult)
