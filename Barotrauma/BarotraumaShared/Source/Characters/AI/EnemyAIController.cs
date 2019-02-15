@@ -570,8 +570,13 @@ namespace Barotrauma
                                 if (SelectedAiTarget != _previousAiTarget)
                                 {
                                     canAttack = false;
+                                    if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
+                                    {
+                                        // Fall back if cannot attack.
+                                        UpdateFallBack(attackSimPosition, deltaTime);
+                                        return;
+                                    }
                                     attackingLimb = null;
-                                    return;
                                 }
                                 else
                                 {
