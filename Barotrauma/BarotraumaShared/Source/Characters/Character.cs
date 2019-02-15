@@ -652,6 +652,12 @@ namespace Barotrauma
                 }
             }
 
+            keys = new Key[Enum.GetNames(typeof(InputType)).Length];
+            for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
+            {
+                keys[i] = new Key((InputType)i);
+            }
+
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
@@ -827,7 +833,7 @@ namespace Barotrauma
         public bool IsKeyHit(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 switch (inputType)
                 {
@@ -865,7 +871,7 @@ namespace Barotrauma
         public bool IsKeyDown(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 switch (inputType)
                 {
@@ -903,6 +909,7 @@ namespace Barotrauma
         {
             keys[(int)inputType].Hit = hit;
             keys[(int)inputType].Held = held;
+            keys[(int)inputType].SetState(hit, held);
         }
 
         public void ClearInput(InputType inputType)

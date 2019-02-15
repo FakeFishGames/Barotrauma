@@ -59,14 +59,6 @@ namespace Barotrauma.Networking
         partial void UpdateWaiting(float deltaTime)
         {
             var server = networkMember as GameServer;
-            if (server == null)
-            {
-                if (CountdownStarted)
-                {
-                    respawnTimer = Math.Max(0.0f, respawnTimer - deltaTime);
-                }
-                return;
-            }
 
             int characterToRespawnCount = GetClientsToRespawn().Count;
             int totalCharacterCount = server.ConnectedClients.Count;

@@ -79,7 +79,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (similarity + c.ChatSpamSpeed > 5.0f)
+            bool isOwner = GameMain.Server.OwnerConnection != null && c.Connection == GameMain.Server.OwnerConnection;
+
+            if (similarity + c.ChatSpamSpeed > 5.0f && !isOwner)
             {
                 c.ChatSpamCount++;
 
@@ -99,7 +101,7 @@ namespace Barotrauma.Networking
 
             c.ChatSpamSpeed += similarity + 0.5f;
 
-            if (c.ChatSpamTimer > 0.0f)
+            if (c.ChatSpamTimer > 0.0f && !isOwner)
             {
                 ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
                 c.ChatSpamTimer = 10.0f;
@@ -109,7 +111,7 @@ namespace Barotrauma.Networking
 
             if (type == ChatMessageType.Order)
             {
-                if (c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) return;
+                if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) return;
 
                 ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
                 if (orderMsg.Order.TargetAllCharacters)

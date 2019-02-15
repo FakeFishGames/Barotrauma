@@ -452,7 +452,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            IEnumerable<Client> kickAFK = connectedClients.FindAll(c => c.KickAFKTimer >= serverSettings.KickAFKTime);
+            IEnumerable<Client> kickAFK = connectedClients.FindAll(c => 
+                c.KickAFKTimer >= serverSettings.KickAFKTime &&
+                (OwnerConnection == null || c.Connection != OwnerConnection));
             foreach (Client c in kickAFK)
             {
                 KickClient(c, TextManager.Get("DisconnectMessage.AFK"));
@@ -646,8 +648,10 @@ namespace Barotrauma.Networking
                         byte id = inc.ReadByte();
                         if (connectedClient.ID != id)
                         {
+#if DEBUG
                             DebugConsole.ThrowError(
                                 "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
+#endif
                             return;
                         }
                         connectedClient.VoipQueue.Read(inc);
@@ -877,7 +881,7 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Kick:
                     string kickedName = inc.ReadString().ToLowerInvariant();
                     string kickReason = inc.ReadString();
-                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == kickedName);
+                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == kickedName && cl.Connection != OwnerConnection);
                     if (kickedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
@@ -890,7 +894,7 @@ namespace Barotrauma.Networking
                     bool range = inc.ReadBoolean();
                     double durationSeconds = inc.ReadDouble();
 
-                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName);
+                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName && cl.Connection != OwnerConnection);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
@@ -1187,6 +1191,8 @@ namespace Barotrauma.Networking
                 outmsg.Write(client.ID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
+                outmsg.Write(client.Muted);
+                outmsg.WritePadBits();
             }
         }
 
@@ -1763,11 +1769,17 @@ namespace Barotrauma.Networking
 
         public void KickClient(Client client, string reason)
         {
-            if (client == null) return;
+            if (client == null || client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Kicked.ToString();
             if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
-            DisconnectClient(client, client.Name + " has been kicked from the server.", msg);
+
+            string logMsg = client.Name + " has been kicked from the server.";
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                logMsg += " Reason: " + reason;
+            }
+            DisconnectClient(client, logMsg, msg);
         }
 
         public override void BanPlayer(string playerName, string reason, bool range = false, TimeSpan? duration = null)
@@ -1876,9 +1888,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void SendDirectChatMessage(string txt, Client recipient)
+        public void SendDirectChatMessage(string txt, Client recipient, ChatMessageType messageType = ChatMessageType.Server)
         {
-            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Server, null);
+            ChatMessage msg = ChatMessage.Create("", txt, messageType, null);
             SendDirectChatMessage(msg, recipient);
         }
 
@@ -2159,7 +2171,9 @@ namespace Barotrauma.Networking
 
             Client.UpdateKickVotes(connectedClients);
 
-            var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
+            var clientsToKick = connectedClients.FindAll(c => 
+                c.Connection != OwnerConnection &&
+                c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
                 SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);

@@ -1193,12 +1193,51 @@ namespace Barotrauma
             {
                 UserData = client
             };
+            var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
+                "GUISoundIcon")
+            {
+                UserData = "soundicon",
+                CanBeFocused = false,
+                Visible = true
+            };
+            soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
+                "GUISoundIconDisabled")
+            {
+                UserData = "soundicondisabled",
+                CanBeFocused = true,
+                Visible = false
+            };
+        }
+
+        public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
+        {
+            var playerFrame = PlayerList.Content.FindChild(client);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
+
+            if (!soundIcon.Visible)
+            {
+                soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            }
+            soundIcon.Visible = !muted && !mutedLocally;
+            soundIconDisabled.Visible = muted || mutedLocally;
+            soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
+        }
+
+        public void SetPlayerSpeaking(Client client)
+        {
+            var playerFrame = PlayerList.Content.FindChild(client);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            soundIcon.Color = new Color(soundIcon.Color, 1.0f);
         }
 
         public void RemovePlayer(Client client)
         {
             GUIComponent child = playerList.Content.GetChildByUserData(client);
-            if (child != null) playerList.RemoveChild(child);
+            if (child != null) { playerList.RemoveChild(child); }
         }
 
         private bool SelectPlayer(GUIComponent component, object obj)
@@ -1233,7 +1272,7 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), 
-                text: obj.ToString(), font: GUI.LargeFont);
+                text: selectedClient.Name, font: GUI.LargeFont);
 
             //TODO: UI for client permission management
             if (GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
@@ -1412,10 +1451,12 @@ namespace Barotrauma
                 kickButton.OnClicked += ClosePlayerFrame;
             }
 
-            var muteTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
+            var muteTickBox = new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
                 TextManager.Get("Mute"))
             {
-                OnSelected = (tickBox) => { selectedClient.Muted = tickBox.Selected; return true; }
+                IgnoreLayoutGroups = true,
+                Selected = selectedClient.MutedLocally,
+                OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
             };
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
@@ -1489,6 +1530,20 @@ namespace Barotrauma
             if (CampaignSetupUI != null)
             {
                 if (!CampaignSetupUI.Visible) CampaignSetupUI = null;                
+            }
+
+            if (GameMain.Client != null && VoipCapture.Instance != null)
+            {
+                if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0,0,0,0,milliseconds: 100))
+                {
+                    SetPlayerSpeaking(GameMain.Client.ConnectedClients.Find(c => c.ID == GameMain.Client.ID));
+                }
+            }
+
+            foreach (GUIComponent child in playerList.Content.Children)
+            {
+                var soundIcon = child.FindChild("soundicon");
+                soundIcon.Color = new Color(soundIcon.Color, (soundIcon.Color.A / 255.0f) - (float)deltaTime);
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)

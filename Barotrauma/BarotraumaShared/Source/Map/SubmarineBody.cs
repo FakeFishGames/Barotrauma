@@ -539,10 +539,10 @@ namespace Barotrauma
 
                 float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
 
-                ApplyImpact(impact, -normal, contact);
+                ApplyImpact(impact, -normal, contact, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
+                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact, applyDamage: false);
                 }
             }
 
@@ -583,7 +583,7 @@ namespace Barotrauma
                 avgContactNormal += contactNormal;
 
                 //apply impacts at the positions where this sub is touching the limb
-                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact);
+                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact, applyDamage: false);
             }
             avgContactNormal /= levelContacts.Count;
             
@@ -738,7 +738,7 @@ namespace Barotrauma
             }            
         }
 
-        private void ApplyImpact(float impact, Vector2 direction, Contact contact)
+        private void ApplyImpact(float impact, Vector2 direction, Contact contact, bool applyDamage = true)
         {
             if (impact < 3.0f) return;
 
@@ -779,6 +779,10 @@ namespace Barotrauma
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
             }
 
+            if (!applyDamage)
+            {
+                impact = 0;
+            }
             var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
 
 #if CLIENT
