@@ -787,9 +787,11 @@ namespace Barotrauma.Networking
                             if (lastRecvEntityEventID >= c.UnreceivedEntityEventCount - 1 ||
                                 c.UnreceivedEntityEventCount == 0)
                             {
+                                ushort prevID = lastRecvEntityEventID;
                                 c.NeedsMidRoundSync = false;
                                 lastRecvEntityEventID = (UInt16)(c.FirstNewEventID - 1);
                                 c.LastRecvEntityEventID = lastRecvEntityEventID;
+                                DebugConsole.Log("Finished midround syncing " + c.Name + " - switching from ID " + prevID + " to " + c.LastRecvEntityEventID);
                             }
                             else
                             {
@@ -812,6 +814,15 @@ namespace Barotrauma.Networking
                         if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.LastRecvEntityEventID) &&
                             !NetIdUtils.IdMoreRecent(lastRecvEntityEventID, lastEntityEventID))
                         {
+                            if (c.NeedsMidRoundSync)
+                            {
+                                //give midround-joining clients a bit more time to get in sync if they keep receiving messages
+                                int receivedEventCount = lastRecvEntityEventID - c.LastRecvEntityEventID;
+                                if (receivedEventCount < 0) receivedEventCount += ushort.MaxValue;
+                                c.MidRoundSyncTimeOut += receivedEventCount * 0.01f;
+                                DebugConsole.Log("Midround sync timeout " + c.MidRoundSyncTimeOut.ToString("0.##") + "/" + Timing.TotalTime.ToString("0.##"));
+                            }
+
                             c.LastRecvEntityEventID = lastRecvEntityEventID;
                         }
                         else if (lastRecvEntityEventID != c.LastRecvEntityEventID && GameSettings.VerboseLogging)
@@ -1139,13 +1150,20 @@ namespace Barotrauma.Networking
             outmsg.Write(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             outmsg.Write(c.LastSentEntityEventID);
 
+            int clientListBytes = outmsg.LengthBytes;
             WriteClientList(c, outmsg);
+            clientListBytes = outmsg.LengthBytes - clientListBytes;
 
-            entityEventManager.Write(c, outmsg);
+            int eventManagerBytes = outmsg.LengthBytes;
+            entityEventManager.Write(c, outmsg, out List<NetEntityEvent> sentEvents);
+            eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
 
+            int chatMessageBytes = outmsg.LengthBytes;
             WriteChatMessages(outmsg, c);
-            
+            chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
+
             //write as many position updates as the message can fit (only after midround syncing is done)
+            int positionUpdateBytes = outmsg.LengthBytes;
             while (!c.NeedsMidRoundSync &&
                 outmsg.LengthBytes < NetPeerConfiguration.MaximumTransmissionUnit - 20 &&
                 c.PendingPositionUpdates.Count > 0)
@@ -1164,12 +1182,30 @@ namespace Barotrauma.Networking
                 }
                 outmsg.WritePadBits();
             }
+            positionUpdateBytes = outmsg.LengthBytes - positionUpdateBytes;
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
             if (outmsg.LengthBytes > NetPeerConfiguration.MaximumTransmissionUnit)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + NetPeerConfiguration.MaximumTransmissionUnit + ")");
+                string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + NetPeerConfiguration.MaximumTransmissionUnit + ")\n";
+                errorMsg +=
+                    "  Client list size: " + clientListBytes + " bytes\n" +
+                    "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                    "  Event size: " + eventManagerBytes + " bytes\n" +
+                    "  Position update size: " + positionUpdateBytes + " bytes\n\n";
+
+                if (sentEvents != null && sentEvents.Count > 0)
+                {
+                    errorMsg += "Sent events: \n";
+                    foreach (var entityEvent in sentEvents)
+                    {
+                        errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
+                    }
+                }
+
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
 
             CompressOutgoingMessage(outmsg);
