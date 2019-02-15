@@ -1587,6 +1587,7 @@ namespace Barotrauma.Networking
             
             gameStarted = true;
             initiatedStartGame = false;
+            GameMain.ResetFrameTime();
 
             LastClientListUpdateID++;
 

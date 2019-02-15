@@ -46,6 +46,8 @@ namespace Barotrauma
         
         public static bool ShouldRun = true;
 
+        private static Stopwatch stopwatch;
+
         public static HashSet<ContentPackage> SelectedPackages
         {
             get { return Config.SelectedContentPackages; }
@@ -243,7 +245,7 @@ namespace Barotrauma
             Init();
             StartServer();
 
-            Timing.Accumulator = 0.0;
+            ResetFrameTime();
 
             double frequency = (double)Stopwatch.Frequency;
             if (frequency <= 1500)
@@ -251,15 +253,21 @@ namespace Barotrauma
                 DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
             }
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            stopwatch = Stopwatch.StartNew();
             long prevTicks = stopwatch.ElapsedTicks;
             while (ShouldRun)
             {
                 long currTicks = stopwatch.ElapsedTicks;
                 double elapsedTime = (currTicks - prevTicks) / frequency;
                 Timing.Accumulator += elapsedTime;
+                if (Timing.Accumulator > 1.0)
+                {
+                    //prevent spiral of death
+                    Timing.Accumulator = Timing.Step;
+                }
                 Timing.TotalTime += elapsedTime;
                 prevTicks = currTicks;
+                
                 while (Timing.Accumulator >= Timing.Step)
                 {
                     DebugConsole.Update();
@@ -279,6 +287,12 @@ namespace Barotrauma
 
             SteamManager.ShutDown();
             if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+        }
+
+        public static void ResetFrameTime()
+        {
+            Timing.Accumulator = 0.0f;
+            stopwatch?.Reset();
         }
         
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)

@@ -293,8 +293,8 @@ namespace Barotrauma
             GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
             GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
                     GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
-            
-            
+
+
 #if CLIENT
             if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);            
             roundSummary = new RoundSummary(this);
@@ -311,6 +311,7 @@ namespace Barotrauma
 #endif
 
             RoundStartTime = Timing.TotalTime;
+            GameMain.ResetFrameTime();
         }
 
         public void Update(float deltaTime)

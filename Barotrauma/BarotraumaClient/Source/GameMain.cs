@@ -179,7 +179,7 @@ namespace Barotrauma
 
             IsFixedTimeStep = false;
 
-            Timing.Accumulator = 0.0f;
+            GameMain.ResetFrameTime();
             fixedTime = new GameTime();
 
             World = new World(new Vector2(0, -9.82f));
@@ -593,7 +593,7 @@ namespace Barotrauma
                     //reset accumulator if loading
                     // -> less choppy loading screens because the screen is rendered after each update
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
-                    Timing.Accumulator = 0.0f;
+                    GameMain.ResetFrameTime();
 
                     if (TitleScreen.LoadState >= 100.0f && 
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
@@ -665,6 +665,10 @@ namespace Barotrauma
             if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
+        public static void ResetFrameTime()
+        {
+            Timing.Accumulator = 0.0f;
+        }
 
         /// <summary>
         /// This is called when the game should draw itself.
