@@ -25,11 +25,29 @@ namespace Barotrauma
         {
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
+            Vector2 textOffset = new Vector2(-40, -100);
 
             if (SelectedAiTarget?.Entity != null)
             {
                 GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
-                GUI.Font.DrawString(spriteBatch, $"{SelectedAiTarget.Entity.ToString()}", pos - Vector2.UnitY * 20.0f, Color.Red);
+                GUI.DrawString(spriteBatch, pos + textOffset, $"AI TARGET: {SelectedAiTarget.Entity.ToString()}", Color.White, Color.Black);
+            }
+
+            if (ObjectiveManager != null)
+            {
+                var currentOrder = ObjectiveManager.CurrentOrder;
+                if (currentOrder != null)
+                {
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
+                }
+                else
+                {
+                    var currentObjective = ObjectiveManager.CurrentObjective;
+                    if (currentObjective != null)
+                    {
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
+                    }
+                }
             }
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
