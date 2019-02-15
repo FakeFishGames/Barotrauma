@@ -49,7 +49,7 @@ namespace Barotrauma
                 if (repeat || waitUntilPathUnreachable > 0.0f) { return true; }
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
-                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
+                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: adda timer?
                 if (pathSteering?.CurrentPath == null) { return true; }
 
                 if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { return false; }

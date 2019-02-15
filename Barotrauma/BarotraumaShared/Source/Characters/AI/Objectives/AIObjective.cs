@@ -8,15 +8,13 @@ namespace Barotrauma
     {
         public abstract string DebugTag { get; }
 
-        protected readonly List<AIObjective> subObjectives;
+        // TODO: not used at all in practice
+        protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         protected float priority;
         protected readonly Character character;
         protected string option;
 
-        public virtual bool CanBeCompleted
-        {
-            get { return true; }
-        }
+        public virtual bool CanBeCompleted => subObjectives.All(so => so.CanBeCompleted);
 
         public string Option
         {
@@ -25,7 +23,6 @@ namespace Barotrauma
 
         public AIObjective(Character character, string option)
         {
-            subObjectives = new List<AIObjective>();
             this.character = character;
             this.option = option;
 

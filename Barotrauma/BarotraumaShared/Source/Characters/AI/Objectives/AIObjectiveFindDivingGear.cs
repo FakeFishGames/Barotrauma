@@ -29,6 +29,8 @@ namespace Barotrauma
             return false;
         }
 
+        public override bool CanBeCompleted => subObjective == null || subObjective.CanBeCompleted;
+
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit)
             : base(character, "")
         {
