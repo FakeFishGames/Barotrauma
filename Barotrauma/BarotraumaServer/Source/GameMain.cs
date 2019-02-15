@@ -279,6 +279,7 @@ namespace Barotrauma
                     Timing.Accumulator -= Timing.Step;
                 }
                 int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency) * 1000.0);
+                frameTime = Math.Max(0, frameTime);
                 Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime) / 2, 0));
             }
             stopwatch.Stop();
@@ -293,6 +294,7 @@ namespace Barotrauma
         {
             Timing.Accumulator = 0.0f;
             stopwatch?.Reset();
+            stopwatch?.Start();
         }
         
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
