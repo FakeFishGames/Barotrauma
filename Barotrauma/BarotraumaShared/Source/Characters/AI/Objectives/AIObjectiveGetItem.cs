@@ -47,7 +47,6 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false)
             : base(character, "")
         {
-            canBeCompleted = true;
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
@@ -61,7 +60,6 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false)
             : base(character, "")
         {
-            canBeCompleted = true;
             currSearchIndex = -1;
             this.equip = equip;
             this.itemIdentifiers = itemIdentifiers;
@@ -114,6 +112,7 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
+                // TODO: cannot be completed?
                 character?.AIController?.SteeringManager?.Reset();
                 return;
             }
