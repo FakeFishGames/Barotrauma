@@ -9,7 +9,7 @@
     <deformablesprite texture="Content/Characters/Hammerhead/Hammerhead.png" sourcerect="264,0,329,191" origin="0.5,0.5" subdivisions="10,5" depth="0">
       <spritedeformation type="bendjoint" resolution="10,5" multiplier="1.0" />
     </deformablesprite>
-    <attack targettype="Any" priority="1" range="280" damagerange="250" cooldown="10" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="25" force="30" targetimpulse="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.5">
+    <attack targettype="Any" priority="1" range="280" damagerange="250" cooldown="10" secondarycooldown="1" afterattack="PursueIfCanAttack" structuredamage="20" force="30" targetimpulse="50" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 1" context="NotDefined" hitdetectiontype="Distance" itemdamage="0" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.5">
       <Affliction identifier="internaldamage" strength="20" />
       <Affliction identifier="stun" strength="5" />
       <Conditional stun="lte 0"></Conditional>
