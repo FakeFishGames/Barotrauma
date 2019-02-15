@@ -5,6 +5,8 @@ namespace Barotrauma
 {
     class AIObjectiveFindDivingGear : AIObjective
     {
+        public override string DebugTag => "find diving gear";
+
         private AIObjective subObjective;
 
         private string gearTag;

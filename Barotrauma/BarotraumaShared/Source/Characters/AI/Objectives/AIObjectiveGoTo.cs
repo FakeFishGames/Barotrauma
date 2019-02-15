@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
+        public override string DebugTag => "go to";
+
         private Vector2 targetPos;
 
         private bool repeat;

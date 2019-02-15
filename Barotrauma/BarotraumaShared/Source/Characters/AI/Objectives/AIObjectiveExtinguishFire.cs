@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
+        public override string DebugTag => "extinguish fire";
+
         private Hull targetHull;
 
         private AIObjectiveGetItem getExtinguisherObjective;

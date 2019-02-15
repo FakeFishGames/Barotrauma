@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveDecontainItem : AIObjective
     {
+        public override string DebugTag => "decontain item";
+
         //can either be a tag or an identifier
         private string[] itemIdentifiers;
 

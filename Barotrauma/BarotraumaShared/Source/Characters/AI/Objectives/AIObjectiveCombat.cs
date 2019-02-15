@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectiveCombat : AIObjective
     {
+        public override string DebugTag => "combat";
+
         const float CoolDown = 10.0f;
 
         //the largest amount of damage the enemy has inflicted on this character

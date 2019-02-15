@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     abstract class AIObjective
     {
+        public abstract string DebugTag { get; }
+
         protected readonly List<AIObjective> subObjectives;
         protected float priority;
         protected readonly Character character;

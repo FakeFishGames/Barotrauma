@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     class AIObjectiveIdle : AIObjective
     {
+        public override string DebugTag => "idle";
+
         const float WallAvoidDistance = 150.0f;
 
         private AITarget currentTarget;

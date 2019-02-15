@@ -5,6 +5,8 @@ namespace Barotrauma
 {
     class AIObjectiveChargeBatteries : AIObjective
     {
+        public override string DebugTag => "charge batteries";
+
         private List<PowerContainer> availableBatteries;
 
         private string orderOption;
