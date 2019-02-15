@@ -462,8 +462,160 @@
     </Effect>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
+
+  <Affliction
+    name="Cyanide poisoning"
+    identifier="cyanidepoisoning"
+    description="The patient is confused and has trouble breathing. Their skin is reddish and they have occasional muscle spasms."
+    type="poison"
+    causeofdeathdescription="Died of cyanide poisoning."
+    selfcauseofdeathdescription="You have died of cyanide poisoning."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="5"
+    maxstrength="100">
+    <!-- Decrease vitality, periodically cause stun -->
+    <!-- Becomes lethal in ~100 seconds -->
+    <Effect minstrength="0" maxstrength="19"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="19"
+      strengthchange="1"
+      minscreendistort="0.0"
+      maxscreendistort="0.19"
+      minscreenblur="0.0"
+      maxscreenblur="0.19"
+      minchromaticaberration="0.0"
+      maxchromaticaberration="0.95">
+    </Effect>
+
+    <Effect minstrength="20" maxstrength="21"
+      minvitalitydecrease="20"
+      maxvitalitydecrease="21"
+      strengthchange="1"
+      minscreendistort="0.20"
+      maxscreendistort="0.21"
+      minscreenblur="0.20"
+      maxscreenblur="0.21"
+      minchromaticaberration="1.0"
+      maxchromaticaberration="1.05">
+      <StatusEffect target="Character" duration="1.0">
+        <Affliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="22" maxstrength="39"
+      minvitalitydecrease="22"
+      maxvitalitydecrease="39"
+      strengthchange="1"
+      minscreendistort="0.22"
+      maxscreendistort="0.39"
+      minscreenblur="0.22"
+      maxscreenblur="0.39"
+      minchromaticaberration="1.1"
+      maxchromaticaberration="1.95">
+      <StatusEffect target="Character" setvalue="true" duration="1.0">
+        <ReduceAffliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+
+    <!--If strength >40, slow player down-->
+    <Effect minstrength="40" maxstrength="41"
+      minvitalitydecrease="40"
+      maxvitalitydecrease="41"
+      strengthchange="1"
+      minscreendistort="0.4"
+      maxscreendistort="0.41"
+      minscreenblur="0.4"
+      maxscreenblur="0.41"
+      minchromaticaberration="2.0"
+      maxchromaticaberration="2.05">
+      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.8">
+        <Affliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="42" maxstrength="59"
+      minvitalitydecrease="42"
+      maxvitalitydecrease="59"
+      strengthchange="1"
+      minscreendistort="0.42"
+      maxscreendistort="0.59"
+      minscreenblur="0.42"
+      maxscreenblur="0.59"
+      minchromaticaberration="2.1"
+      maxchromaticaberration="2.95">
+      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.8">
+        <ReduceAffliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+    
+    <Effect minstrength="60" maxstrength="61"
+      minvitalitydecrease="60"
+      maxvitalitydecrease="61"
+      strengthchange="1"
+      minscreendistort="0.6"
+      maxscreendistort="0.61"
+      minscreenblur="0.6"
+      maxscreenblur="0.61"
+      minchromaticaberration="3.0"
+      maxchromaticaberration="3.05">
+      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.6">
+        <Affliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+    
+    <Effect minstrength="62" maxstrength="79"
+      minvitalitydecrease="62"
+      maxvitalitydecrease="79"
+      strengthchange="1"
+      minscreendistort="0.62"
+      maxscreendistort="0.79"
+      minscreenblur="0.62"
+      maxscreenblur="0.79"
+      minchromaticaberration="3.1"
+      maxchromaticaberration="3.95">
+      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.6">
+        <ReduceAffliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   
+  <Effect minstrength="80" maxstrength="81"
+    minvitalitydecrease="80"
+    maxvitalitydecrease="81"
+    strengthchange="1"
+    minscreendistort="0.8"
+    maxscreendistort="0.81"
+    minscreenblur="0.8"
+    maxscreenblur="0.81"
+    minchromaticaberration="4.0"
+    maxchromaticaberration="4.05">
+    <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.4">
+      <Affliction identifier="stun" amount="1" />
+    </StatusEffect>
+  </Effect>
+
+  <Effect minstrength="82" maxstrength="100"
+    minvitalitydecrease="82"
+    maxvitalitydecrease="100"
+    strengthchange="1"
+    minscreendistort="0.82"
+    maxscreendistort="1.0"
+    minscreenblur="0.82"
+    maxscreenblur="1.0"
+    minchromaticaberration="4.1"
+    maxchromaticaberration="5.0">
+    <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.4">
+      <ReduceAffliction identifier="stun" amount="1" />
+    </StatusEffect>
+  </Effect>
+
+
+  </Affliction>
+
   <!-- Basic buffs. -->
+
+  <!--Better name?-->
   <BuffDurationIncrease
     name="Duration Increase"
     identifier="durationincrease"
@@ -480,7 +632,7 @@
   </BuffDurationIncrease>
 
   <Affliction
-    name="Haste"
+    name="Hyperactivity" 
     identifier="haste"
     description="Gotta go fast."
     type="haste"
@@ -542,6 +694,7 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
 
+  <!--Better name?-->
   <Affliction
     name="Strengthen"
     identifier="strengthen"
@@ -557,4 +710,6 @@
       maxresistance="0.75"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
+  
+
 </Afflictions>

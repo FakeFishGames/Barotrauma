@@ -828,7 +828,9 @@
         <ReduceAffliction identifier="oxygenlow" amount="0.1" />
         <ReduceAffliction identifier="stun" amount="10" />
         <Affliction identifier="psychosis" amount="0.2" />
-        <Affliction identifier="haste" amount ="50"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnUse" target="Character" >
+        <Affliction identifier="haste" amount ="80"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -920,7 +922,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </ChloralHydrate>
-  <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
+  <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A famous neurotoxin. Causes muscle spasms and eventual death." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="450" />
     <Price locationtype="Military" buyprice="1000" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,640,64,64" />
