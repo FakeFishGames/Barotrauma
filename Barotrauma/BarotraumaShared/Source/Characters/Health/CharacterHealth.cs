@@ -486,6 +486,8 @@ namespace Barotrauma
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
+            // Currently only human can get the husk infection.
+            if (newAffliction.Prefab == AfflictionPrefab.Husk && Character.SpeciesName.ToLowerInvariant() != "human") { return; }
             foreach (Affliction affliction in afflictions)
             {
                 if (newAffliction.Prefab == affliction.Prefab)
