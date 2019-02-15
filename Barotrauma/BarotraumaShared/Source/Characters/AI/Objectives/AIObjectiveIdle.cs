@@ -115,7 +115,7 @@ namespace Barotrauma
                     {
                         if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
                         {
-                            pathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
+                            pathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist) * character.AnimController.GetCurrentSpeed(false));
                         }
                         else
                         {
@@ -125,13 +125,13 @@ namespace Barotrauma
                     }
                     else if (leftDist < WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist)/WallAvoidDistance);
+                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
                         pathSteering.WanderAngle = 0.0f;
                         return;
                     }
                     else if (rightDist < WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist)/WallAvoidDistance);
+                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
                         pathSteering.WanderAngle = MathHelper.Pi;
                         return;
                     }
