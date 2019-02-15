@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -215,11 +216,14 @@ namespace Barotrauma.Networking
                     //kick everyone that hasn't received it yet, this is way too old
                     List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID));
                     toKick.ForEach(c =>
-                    {
-                        DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + c.LastRecvEntityEventID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
-                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " + c.LastRecvEntityEventID.ToString() + ").", ServerLog.MessageType.ServerMessage);
-                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
-                    }
+                        {
+                            DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
+                            GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " 
+                                + (c.LastRecvEntityEventID + 1).ToString() +
+                                " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago)" +
+                                " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.ServerMessage);
+                            server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                        }
                     );
                 }
 
@@ -230,8 +234,8 @@ namespace Barotrauma.Networking
                     List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.LastRecvEntityEventID + 1)));
                     toKick.ForEach(c =>
                     {
-                        DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected " + c.LastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
-                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected " + c.LastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
+                        DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
+                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
                         server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
                     });
                 }
@@ -262,10 +266,19 @@ namespace Barotrauma.Networking
             bufferedEvents.Add(bufferedEvent);
         }
 
+
         /// <summary>
         /// Writes all the events that the client hasn't received yet into the outgoing message
         /// </summary>
         public void Write(Client client, NetOutgoingMessage msg)
+        {
+            Write(client, msg, out _);
+        }
+
+        /// <summary>
+        /// Writes all the events that the client hasn't received yet into the outgoing message
+        /// </summary>
+        public void Write(Client client, NetOutgoingMessage msg, out List<NetEntityEvent> sentEvents)
         {
             List<NetEntityEvent> eventsToSync = null;
             if (client.NeedsMidRoundSync)
@@ -277,14 +290,25 @@ namespace Barotrauma.Networking
                 eventsToSync = GetEventsToSync(client, events);
             }
 
-            if (eventsToSync.Count == 0) return;
+            if (eventsToSync.Count == 0)
+            {
+                sentEvents = eventsToSync;
+                return;
+            }
 
             //too many events for one packet
             if (eventsToSync.Count > MaxEventsPerWrite)
             {
+                if (eventsToSync.Count > MaxEventsPerWrite * 3 && !client.NeedsMidRoundSync)
+                {
+                    Color color = eventsToSync.Count > MaxEventsPerWrite * 20 ? Color.Red : Color.Orange;
+                    if (eventsToSync.Count < MaxEventsPerWrite * 5) { color = Color.Yellow; }
+                    DebugConsole.NewMessage("WARNING: event count very high: " + eventsToSync.Count + "/" + MaxEventsPerWrite, color);
+                }
+
                 eventsToSync.RemoveRange(MaxEventsPerWrite, eventsToSync.Count - MaxEventsPerWrite);
             }
-            
+
             foreach (NetEntityEvent entityEvent in eventsToSync)
             {
                 (entityEvent as ServerEntityEvent).Sent = true;
@@ -302,9 +326,9 @@ namespace Barotrauma.Networking
                 //to the one before this, and the eventmanagers will start to function "normally")
                 client.FirstNewEventID = events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID;
 
-                msg.Write(client.UnreceivedEntityEventCount);                
+                msg.Write(client.UnreceivedEntityEventCount);
                 msg.Write(client.FirstNewEventID);
-                //DebugConsole.NewMessage(eventsToSync[0].ID.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+
                 Write(msg, eventsToSync, client);
             }
             else
@@ -312,6 +336,7 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT);
                 Write(msg, eventsToSync, client);
             }
+            sentEvents = eventsToSync;
         }
 
         /// <summary>
@@ -336,8 +361,7 @@ namespace Barotrauma.Networking
             for (int i = startIndex; i < eventList.Count; i++)
             {
                 //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
-                float lastSent = 0;
-                client.EntityEventLastSent.TryGetValue(eventList[i].ID, out lastSent);
+                client.EntityEventLastSent.TryGetValue(eventList[i].ID, out float lastSent);
 
                 if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
                 {
@@ -364,7 +388,7 @@ namespace Barotrauma.Networking
             else
             {
                 double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
-                midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 2.0f);
+                midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 10.0f);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.FirstNewEventID = 0;
@@ -414,7 +438,7 @@ namespace Barotrauma.Networking
                     if (GameSettings.VerboseLogging)
                     {
                         DebugConsole.NewMessage(
-                            "received msg " + thisEventID + ", entity " + entityID + " not found",
+                            "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             Microsoft.Xna.Framework.Color.Orange);
                     }
                     sender.LastSentEntityEventID++;
@@ -424,7 +448,7 @@ namespace Barotrauma.Networking
                 {
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
+                        DebugConsole.NewMessage("Received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
                     }
 
                     UInt16 characterStateID = msg.ReadUInt16();
