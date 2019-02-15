@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using OpenTK.Audio.OpenAL;
-using Microsoft.Xna.Framework;
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -31,6 +26,8 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        public DateTime LastEnqueueAudio; 
+
         public override byte QueueID
         {
             get
@@ -50,11 +47,13 @@ namespace Barotrauma.Networking
                 throw new Exception("Tried to instance more than one VoipCapture object");
             }
 
-            Instance = new VoipCapture(deviceName);
-            Instance.LatestBufferID = storedBufferID??BUFFER_COUNT-1;
+            Instance = new VoipCapture(deviceName)
+            {
+                LatestBufferID = storedBufferID ?? BUFFER_COUNT - 1
+            };
         }
 
-        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0,true,false)
+        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0, true, false)
         {
             VoipConfig.SetupEncoding();
 
@@ -71,7 +70,7 @@ namespace Barotrauma.Networking
             {
                 throw new Exception("Failed to open capture device: " + alError.ToString() + " (AL)");
             }
-
+            
             Alc.CaptureStart(captureDevice);
             alcError = Alc.GetError(captureDevice);
             if (alcError != AlcError.NoError)
@@ -80,8 +79,11 @@ namespace Barotrauma.Networking
             }
 
             capturing = true;
-            captureThread = new Thread(UpdateCapture);
-            captureThread.IsBackground = true;
+            captureThread = new Thread(UpdateCapture)
+            {
+                IsBackground = true,
+                Name = "VoipCapture"
+            };
             captureThread.Start();
         }
 
@@ -89,11 +91,11 @@ namespace Barotrauma.Networking
         {
             GameMain.Config.VoiceCaptureDevice = deviceName;
 
-            if (VoipCapture.Instance != null)
+            if (Instance != null)
             {
-                UInt16 storedBufferID = VoipCapture.Instance.LatestBufferID;
-                VoipCapture.Instance.Dispose();
-                VoipCapture.Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
+                UInt16 storedBufferID = Instance.LatestBufferID;
+                Instance.Dispose();
+                Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
             }
         }
 
@@ -102,9 +104,9 @@ namespace Barotrauma.Networking
             short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
             while (capturing)
             {
-                int sampleCount = 0;
                 AlcError alcError;
-                Alc.GetInteger(captureDevice, AlcGetInteger.CaptureSamples, 1, out sampleCount);
+                Alc.GetInteger(captureDevice, AlcGetInteger.CaptureSamples, 1, out int sampleCount);
+
                 alcError = Alc.GetError(captureDevice);
                 if (alcError != AlcError.NoError)
                 {
@@ -136,12 +138,12 @@ namespace Barotrauma.Networking
                 }
 
                 double maxAmplitude = 0.0f;
-                for (int i=0;i<VoipConfig.BUFFER_SIZE;i++)
+                for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
                 {
                     double sampleVal = (double)uncompressedBuffer[i] / (double)short.MaxValue;
                     maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
                 }
-                double dB = Math.Min(20*Math.Log10(maxAmplitude),0.0);
+                double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
 
                 LastdB = dB;
 
@@ -166,6 +168,7 @@ namespace Barotrauma.Networking
 
                 if (allowEnqueue)
                 {
+                    LastEnqueueAudio = DateTime.Now;
                     //encode audio and enqueue it
                     lock (buffers)
                     {

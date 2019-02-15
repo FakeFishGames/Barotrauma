@@ -80,6 +80,7 @@ namespace Barotrauma.Sounds
             get { return listenerGain; }
             set
             {
+                if (Math.Abs(ListenerGain - value) < 0.001f) { return; }
                 listenerGain = value;
                 AL.Listener(ALListenerf.Gain, listenerGain);
                 ALError alError = AL.GetError();
@@ -327,13 +328,16 @@ namespace Barotrauma.Sounds
             {
                 categoryModifiers[category].First = gain;
             }
-            for (int i = 0; i < playingChannels.Length; i++)
+            lock (playingChannels)
             {
-                for (int j = 0; j < playingChannels[i].Length; j++)
+                for (int i = 0; i < playingChannels.Length; i++)
                 {
-                    if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                    for (int j = 0; j < playingChannels[i].Length; j++)
                     {
-                        playingChannels[i][j].Gain = playingChannels[i][j].Gain; //force all channels to recalculate their gain
+                        if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
+                        {
+                            playingChannels[i][j].Gain = playingChannels[i][j].Gain; //force all channels to recalculate their gain
+                        }
                     }
                 }
             }

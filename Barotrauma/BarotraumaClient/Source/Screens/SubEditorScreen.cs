@@ -1434,8 +1434,8 @@ namespace Barotrauma
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
                 var itemPrefab = ep as ItemPrefab;
-                if (itemPrefab == null || itemPrefab.Name == null) continue;
-                if (!itemPrefab.Name.Contains("Wire") && (itemPrefab.Aliases == null || !itemPrefab.Aliases.Any(a => a.Contains("Wire")))) continue;
+                if (itemPrefab == null || itemPrefab.Name == null) { continue; }
+                if (!itemPrefab.Tags.Contains("wire")) { continue; }
 
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width - 20, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
