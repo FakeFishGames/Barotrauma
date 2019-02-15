@@ -99,6 +99,7 @@ namespace Barotrauma.Networking
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
                 }
                 GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
+                GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(client);
             }
         }
 
