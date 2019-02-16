@@ -258,7 +258,7 @@ namespace Barotrauma
             while (ShouldRun)
             {
                 long currTicks = stopwatch.ElapsedTicks;
-                double elapsedTime = (currTicks - prevTicks) / frequency;
+                double elapsedTime = Math.Max(currTicks - prevTicks, 0) / frequency;
                 Timing.Accumulator += elapsedTime;
                 if (Timing.Accumulator > 1.0)
                 {
@@ -267,7 +267,6 @@ namespace Barotrauma
                 }
                 Timing.TotalTime += elapsedTime;
                 prevTicks = currTicks;
-                
                 while (Timing.Accumulator >= Timing.Step)
                 {
                     DebugConsole.Update();
