@@ -250,13 +250,15 @@ namespace Barotrauma
 
             // TODO: animations
 
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, ragdollFile)
+            Gender gender = isFemale ? Gender.Female : Gender.Male;
+            CharacterInfo ch = new CharacterInfo(configPath, newName, gender, jobPrefab, ragdollFile)
             {
                 ID = infoID,
             };
             ch.head = new HeadInfo(headSpriteID)
             {
                 race = (Race)race,
+                gender = gender,
                 HairIndex = hairIndex,
                 BeardIndex = beardIndex,
                 MoustacheIndex = moustacheIndex,
