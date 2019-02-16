@@ -65,7 +65,7 @@ namespace Barotrauma
             }
         }
 
-        private HeadInfo head = new HeadInfo();
+        private HeadInfo head;
         public HeadInfo Head
         {
             get { return head; }
@@ -350,6 +350,7 @@ namespace Barotrauma
             SpriteTags = new List<string>();
             XDocument doc = GetConfig(file);
             SourceElement = doc.Root;
+            head = new HeadInfo();
             if (doc.Root.GetAttributeBool("genders", false))
             {
                 Head.gender = gender == Gender.None ? GetRandomGender() : gender;
@@ -406,16 +407,19 @@ namespace Barotrauma
             idCounter++;
             Name = element.GetAttributeString("name", "unnamed");
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
-            Head.gender = (genderStr == "male") ? Gender.Male : Gender.Female;
-            Enum.TryParse(element.GetAttributeString("race", "white"), true, out Head.race);
             File = element.GetAttributeString("file", "");
             SourceElement = GetConfig(File).Root;
             Salary = element.GetAttributeInt("salary", 1000);
-            Head.HeadSpriteId = element.GetAttributeInt("headspriteid", 1);
-            Head.HairIndex = element.GetAttributeInt("hairindex", -1);
-            Head.BeardIndex = element.GetAttributeInt("beardindex", -1);
-            Head.MoustacheIndex = element.GetAttributeInt("moustacheindex", -1);
-            Head.FaceAttachmentIndex = element.GetAttributeInt("faceattachmentindex", -1);
+            Enum.TryParse(element.GetAttributeString("race", "white"), true, out Race race);
+            head = new HeadInfo(element.GetAttributeInt("headspriteid", 1))
+            {
+                race = race,
+                gender = (genderStr == "male") ? Gender.Male : Gender.Female,
+                HairIndex = element.GetAttributeInt("hairindex", -1),
+                BeardIndex = element.GetAttributeInt("beardindex", -1),
+                MoustacheIndex = element.GetAttributeInt("moustacheindex", -1),
+                FaceAttachmentIndex = element.GetAttributeInt("faceattachmentindex", -1)
+            };
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             string personalityName = element.GetAttributeString("personality", "");
             ragdollFileName = element.GetAttributeString("ragdoll", string.Empty);
