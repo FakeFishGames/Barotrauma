@@ -197,11 +197,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override bool Read(NetBuffer msg)
-        {
-            throw new Exception("Called Read on a VoipCapture object");
-        }
-
         public override void Dispose()
         {
             Instance = null;

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using OpenTK.Audio.OpenAL;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
@@ -28,6 +29,18 @@ namespace Barotrauma.Sounds
         
         private SoundChannel soundChannel;
 
+        public bool UseRadioFilter;
+        public bool UseMuffleFilter;
+
+        private static BiQuad[] muffleFilters = new BiQuad[]
+        {
+            new LowpassFilter(VoipConfig.FREQUENCY, 400)
+        };
+        private static BiQuad[] radioFilters = new BiQuad[]
+        {
+            new BandpassFilter(VoipConfig.FREQUENCY, 2000)
+        };
+
         public VoipSound(SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
         {
             VoipConfig.SetupEncoding();
@@ -46,9 +59,39 @@ namespace Barotrauma.Sounds
 
         public void SetPosition(Vector3? pos)
         {
-            soundChannel.Near = 300.0f;
-            soundChannel.Far = 750.0f;
             soundChannel.Position = pos;
+        }
+
+        public void SetRange(float near, float far)
+        {
+            soundChannel.Near = near;
+            soundChannel.Far = far;
+        }
+
+        public void ApplyFilters(short[] buffer, int readSamples)
+        {
+            if (UseMuffleFilter)
+            {
+                ApplyFilters(radioFilters, buffer, readSamples);
+            }
+
+            if (UseRadioFilter)
+            {
+                ApplyFilters(radioFilters, buffer, readSamples);
+            }
+        }
+
+        private void ApplyFilters(IEnumerable<BiQuad> filters, short[] buffer, int readSamples)
+        {
+            for (int i = 0; i < readSamples; i++)
+            {
+                float fVal = ShortToFloat(buffer[i]);
+                foreach (var filter in filters)
+                {
+                    fVal = filter.Process(fVal);
+                }
+                buffer[i] = FloatToShort(fVal);
+            }
         }
 
         public override SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)

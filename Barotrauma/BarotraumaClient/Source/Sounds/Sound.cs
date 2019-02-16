@@ -155,12 +155,21 @@ namespace Barotrauma.Sounds
         {
             for (int i = 0; i < length; i++)
             {
-                float fval = Math.Max(Math.Min(inBuffer[i], 1.0f), -1.0f);
-                int temp = (int)(32767f * fval);
-                if (temp > short.MaxValue) temp = short.MaxValue;
-                else if (temp < short.MinValue) temp = short.MinValue;
-                outBuffer[i] = (short)temp;
+                outBuffer[i] = FloatToShort(inBuffer[i]);
             }
+        }
+
+        static protected short FloatToShort(float fVal)
+        {
+            fVal = Math.Max(Math.Min(fVal, 1.0f), -1.0f);
+            int temp = (int)(32767f * fVal);
+            if (temp > short.MaxValue) temp = short.MaxValue;
+            else if (temp < short.MinValue) temp = short.MinValue;
+            return (short)temp;
+        }
+        static protected float ShortToFloat(short shortVal)
+        {
+            return Math.Max(Math.Min(shortVal / 32767f, 1.0f), -1.0f);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

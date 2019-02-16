@@ -566,6 +566,11 @@ namespace Barotrauma.Sounds
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         if (FilledByNetwork)
                         {
+                            if (Sound is VoipSound voipSound)
+                            {
+                                voipSound.ApplyFilters(buffer, readSamples);
+                            }
+
                             if (readSamples <= 0)
                             {
                                 decayTimer++;
