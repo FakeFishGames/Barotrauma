@@ -254,13 +254,14 @@ namespace Barotrauma
             {
                 ID = infoID,
             };
-            ch.Head.race = (Race)race;
-            ch.Head.HeadSpriteId = headSpriteID;
-            ch.HairIndex = hairIndex;
-            ch.BeardIndex = beardIndex;
-            ch.MoustacheIndex = moustacheIndex;
-            ch.FaceAttachmentIndex = faceAttachmentIndex;
-            ch.CalculateHeadSpriteRange();
+            ch.head = new HeadInfo(headSpriteID)
+            {
+                race = (Race)race,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
+            };
             ch.ReloadHeadAttachments();
 
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
