@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
@@ -93,10 +94,25 @@ namespace Barotrauma.Networking
                     DebugConsole.Log("Recreating voipsound " + queueId);
                     client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
                 }
+                client.VoipSound.UseRadioFilter = true;
                 if (client.Character != null && !client.Character.IsDead && !client.Character.IsDead && client.Character.SpeechImpediment <= 100.0f)
                 {
-                    var messageType = ChatMessage.CanUseRadio(client.Character) ? ChatMessageType.Radio : ChatMessageType.Default;
+                    var messageType = ChatMessage.CanUseRadio(client.Character, out WifiComponent radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
+
+                    client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio;
+                    if (client.VoipSound.UseRadioFilter)
+                    {
+                        client.VoipSound.SetRange(radio.Range * 0.8f, radio.Range);
+                    }
+                    else
+                    {
+                        client.VoipSound.SetRange(ChatMessage.SpeakRange * 0.4f, ChatMessage.SpeakRange);
+                    }
+                    if (!client.VoipSound.UseRadioFilter && Character.Controlled != null)
+                    {
+                        client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
+                    }
                 }
                 GameMain.NetLobbyScreen.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(client);
