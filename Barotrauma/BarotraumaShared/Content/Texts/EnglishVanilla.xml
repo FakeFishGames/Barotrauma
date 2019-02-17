@@ -178,6 +178,7 @@
   <!-- Settings menu -->
   <Settings>Settings</Settings>
   <ApplySettingsButton>Apply</ApplySettingsButton>
+  <ApplySettingsButtonUnsavedChanges>Apply*</ApplySettingsButtonUnsavedChanges>
   <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
   <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
   <ApplySettingsYes>Apply</ApplySettingsYes>
@@ -239,6 +240,7 @@
   <SettingsTab.Audio>Audio</SettingsTab.Audio>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
+  <VoiceChatVolume>Voice chat volume</VoiceChatVolume>
   <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
   <MuteOnFocusLostToolTip>Mutes the game when its window is not in focus.</MuteOnFocusLostToolTip>
   <VoiceChat>Voice chat</VoiceChat>

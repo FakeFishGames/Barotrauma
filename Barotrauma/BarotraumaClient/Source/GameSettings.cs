@@ -345,6 +345,22 @@ namespace Barotrauma
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
+            GUITextBlock voiceChatVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.18f), audioSliders.RectTransform), TextManager.Get("VoiceChatVolume"));
+            GUIScrollBar voiceChatScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.18f), audioSliders.RectTransform),
+                barSize: 0.1f)
+            {
+                UserData = voiceChatVolumeText,
+                BarScroll = VoiceChatVolume,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    VoiceChatVolume = scroll;
+                    return true;
+                },
+                Step = 0.05f
+            };
+            voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
+
             GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.15f), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
