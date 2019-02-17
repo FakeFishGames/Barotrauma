@@ -135,7 +135,7 @@
     <Pickable slots="Any,RightHand,LeftHand" />
   </Item>
   
-  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
+  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium.">
     <Deconstruct time="10">
       <Item identifier="zinc" mincondition="0.5"/>
       <Item identifier="fulgurium" mincondition="0.5"/>
