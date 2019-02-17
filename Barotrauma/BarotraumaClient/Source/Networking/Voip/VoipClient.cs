@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
                     DebugConsole.Log("Recreating voipsound " + queueId);
                     client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
                 }
-                client.VoipSound.UseRadioFilter = true;
+
                 if (client.Character != null && !client.Character.IsDead && !client.Character.IsDead && client.Character.SpeechImpediment <= 100.0f)
                 {
                     var messageType = ChatMessage.CanUseRadio(client.Character, out WifiComponent radio) ? ChatMessageType.Radio : ChatMessageType.Default;
