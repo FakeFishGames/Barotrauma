@@ -1130,7 +1130,7 @@ namespace Barotrauma.Networking
                 {
                     //if docked to a sub with a smaller ID, don't send an update
                     //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
-                    if (sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
+                    if (sub.IsOutpost || sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
                     if (!c.PendingPositionUpdates.Contains(sub)) c.PendingPositionUpdates.Enqueue(sub);
                 }
 
@@ -1164,23 +1164,36 @@ namespace Barotrauma.Networking
 
             //write as many position updates as the message can fit (only after midround syncing is done)
             int positionUpdateBytes = outmsg.LengthBytes;
-            while (!c.NeedsMidRoundSync &&
-                outmsg.LengthBytes < NetPeerConfiguration.MaximumTransmissionUnit - 20 &&
-                c.PendingPositionUpdates.Count > 0)
+            while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
             {
-                var entity = c.PendingPositionUpdates.Dequeue();
-                if (entity == null || entity.Removed) continue;
+                var entity = c.PendingPositionUpdates.Peek();
+                if (entity == null || entity.Removed)
+                {
+                    c.PendingPositionUpdates.Dequeue();
+                    continue;
+                }
 
-                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                NetBuffer tempBuffer = new NetBuffer();
+                tempBuffer.Write((byte)ServerNetObject.ENTITY_POSITION);
                 if (entity is Item)
                 {
-                    ((Item)entity).ServerWritePosition(outmsg, c);
+                    ((Item)entity).ServerWritePosition(tempBuffer, c);
                 }
                 else
                 {
-                    ((IServerSerializable)entity).ServerWrite(outmsg, c);
+                    ((IServerSerializable)entity).ServerWrite(tempBuffer, c);
                 }
+
+                //no more room in this packet
+                if (outmsg.LengthBytes + tempBuffer.LengthBytes > NetPeerConfiguration.MaximumTransmissionUnit - 20)
+                {
+                    break;
+                }
+
+                outmsg.Write(tempBuffer);
                 outmsg.WritePadBits();
+
+                c.PendingPositionUpdates.Dequeue();
             }
             positionUpdateBytes = outmsg.LengthBytes - positionUpdateBytes;
 
