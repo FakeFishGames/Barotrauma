@@ -368,7 +368,7 @@ namespace Barotrauma
 #endif
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
-            
+
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
@@ -376,8 +376,9 @@ namespace Barotrauma
             keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
 
-            keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.Tab);
-            keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.OemPipe);
+            keyMapping[(int)InputType.InfoTab] = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.T);
+            keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.Y);
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
             keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
@@ -819,7 +820,7 @@ namespace Barotrauma
 
         public void ReloadContentPackages()
         {
-            LoadContentPackages(selectedContentPackagePaths);            
+            LoadContentPackages(selectedContentPackagePaths);
         }
 
         private void LoadContentPackages(IEnumerable<string> contentPackagePaths)
@@ -830,7 +831,7 @@ namespace Barotrauma
             foreach (string path in contentPackagePaths)
             {
                 var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
-                        
+
                 if (matchingContentPackage == null)
                 {
                     missingPackagePaths.Add(path);
@@ -1059,6 +1060,6 @@ namespace Barotrauma
         public KeyOrMouse KeyBind(InputType inputType)
         {
             return keyMapping[(int)inputType];
-        }        
+        }
     }
 }

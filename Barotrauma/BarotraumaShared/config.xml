@@ -9,7 +9,7 @@
   savedebugconsolelogs="false"
   enablesplashscreen="true"
   usesteammatchmaking="true"
-  quickstartsub = "Humpback" 
+  quickstartsub = "Humpback"
   requiresteamauthentication="true">
   <graphicsmode displaymode="BorderlessWindowed" vsync="true" />
   <graphicssettings
@@ -33,14 +33,15 @@
     Attack="R"
     Run="LeftShift"
     Crouch="LeftControl"
-    Chat="Tab"
-    RadioChat="T"
+    InfoTab="Tab"
+    Chat="T"
+    RadioChat="Y"
     CrewOrders="C"
     Ragdoll="Space"
     Health="H"
     Grab="G"
     SelectPreviousCharacter="Z"
-    SelectNextCharacter="X" />  
+    SelectNextCharacter="X" />
   <gameplay>
     <jobpreferences>
       <job identifier="captain" />
@@ -51,5 +52,5 @@
       <job identifier="assistant" />
     </jobpreferences>
   </gameplay>
-  
+
 </config>
