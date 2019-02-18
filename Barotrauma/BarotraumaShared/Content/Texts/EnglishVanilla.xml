@@ -1233,23 +1233,23 @@
   <AfflictionCauseOfDeathSelf.CyanidePoisoning>You have died of cyanide poisoning.</AfflictionCauseOfDeathSelf.CyanidePoisoning>
   
   <!-- Buffs -->
-  <AfflictionName.DurationIncrease>Duration increase</AfflictionName.DurationIncrease>
-  <AfflictionDescription.DurationIncrease>Increases the duration of all buffs.</AfflictionDescription.DurationIncrease>
+  <AfflictionName.DurationIncrease>Slow metabolism</AfflictionName.DurationIncrease>
+  <AfflictionDescription.DurationIncrease>Causes chemicals to last longer.</AfflictionDescription.DurationIncrease>
 
   <AfflictionName.Haste>Hyperactivity</AfflictionName.Haste>
-  <AfflictionDescription.Haste>Gotta go fast.</AfflictionDescription.Haste>
+  <AfflictionDescription.Haste>Movement speed and reflexes are heightened.</AfflictionDescription.Haste>
 
   <AfflictionName.HuskInfectionResistance>Husk infection resistance</AfflictionName.HuskInfectionResistance>
-  <AfflictionDescription.HuskInfectionResistance>Husk be gone.</AfflictionDescription.HuskInfectionResistance>
+  <AfflictionDescription.HuskInfectionResistance>Patient's immune system is more attuned to alien parasites.</AfflictionDescription.HuskInfectionResistance>
 
   <AfflictionName.PsychosisResistance>Psychosis resistance</AfflictionName.PsychosisResistance>
-  <AfflictionDescription.PsychosisResistance>Psychosis be gone.</AfflictionDescription.PsychosisResistance>
+  <AfflictionDescription.PsychosisResistance>Patient exhibits high mental fortitude.</AfflictionDescription.PsychosisResistance>
 
   <AfflictionName.PressureResistance>Pressure resistance</AfflictionName.PressureResistance>
-  <AfflictionDescription.PressureResistance>Pressure be gone.</AfflictionDescription.PressureResistance>
+  <AfflictionDescription.PressureResistance>Internal organs are more accustomed to high pressures.</AfflictionDescription.PressureResistance>
 
-  <AfflictionName.Strengthen>Strengthen</AfflictionName.Strengthen>
-  <AfflictionDescription.Strengthen>Damage be gone.</AfflictionDescription.Strengthen>
+  <AfflictionName.Strengthen>Vigor</AfflictionName.Strengthen>
+  <AfflictionDescription.Strengthen>Patient's pain receptors are numbed.</AfflictionDescription.Strengthen>
 
 
 

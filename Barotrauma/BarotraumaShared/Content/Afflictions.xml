@@ -408,6 +408,45 @@
   </AfflictionBleeding>
 
   <Affliction
+  name="Radiation sickness"
+  identifier="radiationsickness"
+  description="Burns and sores can be seen on patient's skin. They seem to be spreading."
+  type="poison"
+  causeofdeathdescription="Died of radiation sickness."
+  selfcauseofdeathdescription="You have died of radiation sickness."
+  limbspecific="false"
+  indicatorlimb="Torso"
+  showiconthreshold="10"
+  maxstrength="100">
+    <!-- Cause burns depending on strength -->
+    <Effect minstrength="0" maxstrength="25">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.025" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="25" maxstrength="50">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.05" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="50" maxstrength="75">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.075" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="75" maxstrength="100">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.1" />
+      </StatusEffect>
+    </Effect>
+
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,768,128,128" color="209,121,84,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
     name="Morbusine poisoning"
     identifier="morbusinepoisoning"
     description="The patient can't breathe at all, and their heartrate is slowing rapidly."
@@ -462,11 +501,32 @@
     </Effect>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
+  
+  <Affliction
+    name="Deliriumine Poisoning"
+    identifier="deliriuminepoisoning"
+    description="Patient is hallucinating and exhibits paranoia."
+    type="poison"
+    causeofdeathdescription="Died of sufforin poisoning."
+    selfcauseofdeathdescription="You have succumbed to hallucinations."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="5"
+    maxstrength="100">
+    <!-- Slowly cause psychosis -->
+    <!-- Non-lethal -->
+    <Effect minstrength="0" maxstrength="100" strengthchange="1">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="psychosis" amount="1" />
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+  </Affliction>
 
   <Affliction
     name="Cyanide poisoning"
     identifier="cyanidepoisoning"
-    description="The patient is confused and has trouble breathing. Their skin is reddish and they have occasional muscle spasms."
+    description="The patient is confused and has trouble breathing. Their skin is red and they have occasional muscle spasms."
     type="poison"
     causeofdeathdescription="Died of cyanide poisoning."
     selfcauseofdeathdescription="You have died of cyanide poisoning."
@@ -696,7 +756,7 @@
 
   <!--Better name?-->
   <Affliction
-    name="Strengthen"
+    name="Vigor"
     identifier="strengthen"
     description="Damage be gone."
     type="resistance"
