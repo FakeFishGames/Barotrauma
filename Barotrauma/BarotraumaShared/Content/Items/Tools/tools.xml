@@ -254,8 +254,9 @@
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
+    <AiTarget/>
   </Item>
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -277,8 +278,9 @@
       <StatusEffect type="OnBroken" target="This" IsOn="false" />
       <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
+    <AiTarget/>
   </Item>
-  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light">
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
@@ -296,5 +298,6 @@
       <StatusEffect type="OnBroken" target="This" IsOn="false" />
       <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
+    <AiTarget/>
   </Item>
 </Items>
