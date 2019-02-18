@@ -8,7 +8,6 @@ namespace Barotrauma
     {
         public abstract string DebugTag { get; }
 
-        // TODO: not used at all in practice
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         protected float priority;
         protected readonly Character character;
