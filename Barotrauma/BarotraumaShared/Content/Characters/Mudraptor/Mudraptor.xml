@@ -28,8 +28,9 @@
       attachtowalls="true"/>
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
+    <targetpriority tag="provocative" state="Attack" priority="300"/>
+    <targetpriority tag="light" state="Attack" priority="110"/>
     <targetpriority tag="stronger" state="Escape" priority="100"/>
-    <targetpriority tag="provocative" state="Attack" priority="100"/>
     <targetpriority tag="dead" state="Eat" priority="90"/> 
     <targetpriority tag="human" state="Attack" priority="80"/>
     <targetpriority tag="door" state="Attack" priority="65"/>
