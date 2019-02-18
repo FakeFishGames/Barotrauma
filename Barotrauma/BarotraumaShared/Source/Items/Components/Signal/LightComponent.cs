@@ -154,12 +154,20 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
+            item.AddTag("light");
         }
         
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
-            if (AITarget != null) AITarget.Enabled = voltage > minVoltage || powerConsumption <= 0.0f;
+            if (AITarget != null)
+            {
+                UpdateAITarget(AITarget);
+            }
+            if (item.AiTarget != null)
+            {
+                UpdateAITarget(item.AiTarget);
+            }
 
 #if CLIENT
             light.ParentSub = item.Submarine;
@@ -280,6 +288,17 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(IsOn);
+        }
+
+        private void UpdateAITarget(AITarget target)
+        {
+            //voltage > minVoltage || powerConsumption <= 0.0f; <- ?
+            target.Enabled = IsActive;
+            if (target.MaxSightRange <= 0)
+            {
+                target.MaxSightRange = Range;
+            }
+            target.SightRange = IsActive ? target.MaxSightRange : 0;
         }
     }
 }
