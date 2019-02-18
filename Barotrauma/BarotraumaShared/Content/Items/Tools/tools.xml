@@ -244,8 +244,8 @@
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-26,0" handle2="-26,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
       <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
-      <LightComponent LightColor="0.5,0.5,0.5,1.0" Flicker="0.02" range="800" powerconsumption="10" IsOn="true">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0" />
+      <LightComponent LightColor="0.5,0.5,0.5,1.0" Flicker="0.02" range="1000" powerconsumption="10" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0" />
       </LightComponent>
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
