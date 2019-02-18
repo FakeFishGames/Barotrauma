@@ -200,7 +200,6 @@ namespace Barotrauma
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
@@ -214,6 +213,9 @@ namespace Barotrauma
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             Window.IsBorderless = !GraphicsDeviceManager.HardwareModeSwitch;
+
+            GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
+            GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
             GraphicsDeviceManager.ApplyChanges();
         }
