@@ -827,16 +827,15 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
-                {
-                    Race = GameMain.Config.CharacterRace,
-                    HairIndex = GameMain.Config.CharacterHairIndex,
-                    BeardIndex = GameMain.Config.CharacterBeardIndex,
-                    MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
-                    FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
-                };
-                characterInfo.Head.HeadSpriteId = GameMain.Config.CharacterHeadIndex;
-                characterInfo.LoadHeadAttachments();
+                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, null);
+                characterInfo.RecreateHead(
+                    GameMain.Config.CharacterHeadIndex,
+                    GameMain.Config.CharacterRace,
+                    GameMain.Config.CharacterGender,
+                    GameMain.Config.CharacterHairIndex,
+                    GameMain.Config.CharacterBeardIndex,
+                    GameMain.Config.CharacterMoustacheIndex,
+                    GameMain.Config.CharacterFaceAttachmentIndex);
                 GameMain.Client.CharacterInfo = characterInfo;
             }
 
@@ -1531,15 +1530,7 @@ namespace Barotrauma
             {
                 if (!CampaignSetupUI.Visible) CampaignSetupUI = null;                
             }
-
-            if (GameMain.Client != null && VoipCapture.Instance != null)
-            {
-                if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0,0,0,0,milliseconds: 100))
-                {
-                    SetPlayerSpeaking(GameMain.Client.ConnectedClients.Find(c => c.ID == GameMain.Client.ID));
-                }
-            }
-
+            
             foreach (GUIComponent child in playerList.Content.Children)
             {
                 var soundIcon = child.FindChild("soundicon");

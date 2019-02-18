@@ -111,15 +111,26 @@ namespace Barotrauma
             var supportedDisplayModes = new List<DisplayMode>();
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
-                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) continue;
+                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
+#if OSX
+                // Monogame currently doesn't support retina displays
+                // so we need to disable resolutions above the viewport size.
+
+                // In a bundled .app you just disable HiDPI in the info.plist
+                // but that's probably not gonna happen.
+                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
+#endif
                 supportedDisplayModes.Add(mode);
             }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
-                OnSelected = SelectResolution
-            };
+                OnSelected = SelectResolution,
+#if OSX
+                ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
+#endif
+        };
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
@@ -138,10 +149,10 @@ namespace Barotrauma
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
 #if (!OSX)
-            // Fullscreen option just sets itself to borderless on macOS.
             displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
 #else
+            // Fullscreen option will just set itself to borderless on macOS.
             if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
             {
                 displayModeDD.SelectItem(WindowMode.Fullscreen);
@@ -155,6 +166,9 @@ namespace Barotrauma
             {
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+#if OSX
+                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
+#endif
                 return true;
             };
 
@@ -306,7 +320,7 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
-            
+
             /// Audio tab ----------------------------------------------------------------
 
             var audioSliders = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.4f), tabs[(int)Tab.Audio].RectTransform, Anchor.TopCenter)
@@ -344,6 +358,22 @@ namespace Barotrauma
                 Step = 0.05f
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
+
+            GUITextBlock voiceChatVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.18f), audioSliders.RectTransform), TextManager.Get("VoiceChatVolume"));
+            GUIScrollBar voiceChatScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.18f), audioSliders.RectTransform),
+                barSize: 0.1f)
+            {
+                UserData = voiceChatVolumeText,
+                BarScroll = VoiceChatVolume,
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    VoiceChatVolume = scroll;
+                    return true;
+                },
+                Step = 0.05f
+            };
+            voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
 
             GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.15f), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
@@ -722,7 +752,8 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
             while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0 &&
-                !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked() && !PlayerInput.MidButtonClicked())
+                !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked() && !PlayerInput.MidButtonClicked() &&
+                !PlayerInput.Mouse4ButtonClicked() && !PlayerInput.Mouse5ButtonClicked() && !PlayerInput.MouseWheelUpClicked() && !PlayerInput.MouseWheelDownClicked())
             {
                 if (Screen.Selected != GameMain.MainMenuScreen && !GUI.SettingsMenuOpen) yield return CoroutineStatus.Success;
 
@@ -748,6 +779,26 @@ namespace Barotrauma
                 keyMapping[keyIndex] = new KeyOrMouse(2);
                 keyBox.Text = "Mouse3";
             }
+            else if (PlayerInput.Mouse4ButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(3);
+                keyBox.Text = "Mouse4";
+            }
+            else if (PlayerInput.Mouse5ButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(4);
+                keyBox.Text = "Mouse5";
+            }
+            else if (PlayerInput.MouseWheelUpClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(5);
+                keyBox.Text = "MouseWheelUp";
+            }
+            else if (PlayerInput.MouseWheelDownClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(6);
+                keyBox.Text = "MouseWheelDown";
+            }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
                 Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
@@ -772,12 +823,19 @@ namespace Barotrauma
 
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
-                GameMain.Instance.SetWindowMode(GameMain.Config.WindowMode);
+                GameMain.Instance.ApplyGraphicsSettings();
             }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredResolution"));
+#if OSX
+                if (GameMain.Config.WindowMode != WindowMode.BorderlessWindowed)
+                {
+#endif
+                    new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredResolution"));
+#if OSX
+                }
+#endif
             }
 
             if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;

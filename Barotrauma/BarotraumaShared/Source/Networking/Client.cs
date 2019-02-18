@@ -30,7 +30,13 @@ namespace Barotrauma.Networking
                     }
                 }
                 character = value;
-                if (character != null) HasSpawned = true;
+                if (character != null)
+                {
+                    HasSpawned = true;
+#if CLIENT
+                    GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
+#endif
+                }
             }
         }
 
@@ -44,6 +50,7 @@ namespace Barotrauma.Networking
                 muted = value;
 #if CLIENT
                 GameMain.NetLobbyScreen.SetPlayerVoiceIconState(this, muted, mutedLocally);
+                GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 #endif
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
