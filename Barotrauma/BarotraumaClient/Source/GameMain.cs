@@ -114,11 +114,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-#if WINDOWS
-        private static bool FullscreenOnTabIn;
-#endif
-
+        
         public static WindowMode WindowMode
         {
             get;
@@ -272,39 +268,8 @@ namespace Barotrauma
 #endif
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", canLoadInSeparateThread);
-
-#if WINDOWS
-            var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
-            myForm.Deactivate += new EventHandler(HandleDefocus);
-            myForm.Activated += new EventHandler(HandleFocus);
-#endif
         }
-
-#if WINDOWS
-        private void HandleDefocus(object sender, EventArgs e)
-        {
-            if (GraphicsDeviceManager.IsFullScreen && GraphicsDeviceManager.HardwareModeSwitch)
-            {
-                GraphicsDeviceManager.IsFullScreen = false;
-                GraphicsDeviceManager.ApplyChanges();
-                FullscreenOnTabIn = true;
-                Thread.Sleep(500);
-            }
-        }
-
-        private void HandleFocus(object sender, EventArgs e)
-        {
-            if (FullscreenOnTabIn)
-            {
-                GraphicsDeviceManager.HardwareModeSwitch = true;
-                GraphicsDeviceManager.IsFullScreen = true;
-                GraphicsDeviceManager.ApplyChanges();
-                FullscreenOnTabIn = false;
-                Thread.Sleep(500);
-            }
-        }
-#endif
-
+        
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
