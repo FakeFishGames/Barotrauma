@@ -174,7 +174,7 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, null)
             {
                 Job = null
             };
@@ -575,6 +575,22 @@ namespace Barotrauma.Networking
             foreach (Client c in ConnectedClients)
             {
                 c.UpdateSoundPosition();
+            }
+            
+            if (VoipCapture.Instance != null)
+            {
+                if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
+                {
+                    var myClient = ConnectedClients.Find(c => c.ID == ID);
+                    if (Screen.Selected == GameMain.NetLobbyScreen)
+                    {
+                        GameMain.NetLobbyScreen.SetPlayerSpeaking(myClient);
+                    }
+                    else
+                    {
+                        GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(myClient);
+                    }
+                }
             }
 
             if (gameStarted) SetRadioButtonColor();
@@ -1674,7 +1690,7 @@ namespace Barotrauma.Networking
             msg.Write(characterInfo == null);
             if (characterInfo == null) return;
 
-            msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write((byte)characterInfo.Gender);
             msg.Write((byte)characterInfo.Race);
             msg.Write((byte)characterInfo.HeadSpriteId);
             msg.Write((byte)characterInfo.HairIndex);

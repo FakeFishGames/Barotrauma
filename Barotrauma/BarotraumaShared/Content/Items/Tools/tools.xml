@@ -244,8 +244,8 @@
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-26,0" handle2="-26,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
       <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
-      <LightComponent LightColor="0.5,0.5,0.5,1.0" Flicker="0.02" range="800" powerconsumption="10" IsOn="true">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0" />
+      <LightComponent LightColor="0.5,0.5,0.5,1.0" Flicker="0.02" range="1000" powerconsumption="10" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0" />
       </LightComponent>
     </Holdable>
     <ItemContainer capacity="1" hideitems="true">
@@ -254,8 +254,9 @@
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true" />
       </Containable>
     </ItemContainer>
+    <AiTarget/>
   </Item>
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -270,15 +271,16 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
     <LightComponent LightColor="255,0.0,0.0,255" Flicker="0.5" range="600" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true" />
-      <StatusEffect type="OnActive" target="This" Condition="-1.0">
+      <StatusEffect type="OnActive" target="This" Condition="-0.25">
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This" IsOn="false" />
       <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
+    <AiTarget/>
   </Item>
-  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem">
+  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light">
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
@@ -289,12 +291,13 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
     <LightComponent LightColor="0,162,232,255" Flicker="0.5" range="1000" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true" />
-      <StatusEffect type="OnActive" target="This" Condition="-0.2">
+      <StatusEffect type="OnActive" target="This" Condition="-0.125">
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This" IsOn="false" />
       <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true" />
     </LightComponent>
+    <AiTarget/>
   </Item>
 </Items>

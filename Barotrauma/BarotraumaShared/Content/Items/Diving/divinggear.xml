@@ -163,8 +163,8 @@
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />
       <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true" />
-      <LightComponent LightColor="1.0,1.0,1.0,0.8" range="200">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0" />
+      <LightComponent LightColor="1.0,1.0,1.0,0.8" range="1000">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="1.0,1.0" />
       </LightComponent>
     </Propulsion>
     <ItemContainer capacity="1" hideitems="true">

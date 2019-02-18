@@ -40,6 +40,7 @@
       <Skill identifier="mechanical" level="25,35"/>
       <Skill identifier="weapons" level="10,30"/>
       <Skill identifier="medical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -70,6 +71,7 @@
       <Skill identifier="electrical" level="25,35"/>
       <Skill identifier="weapons" level="10,30"/>
       <Skill identifier="medical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -100,6 +102,7 @@
       <Skill identifier="medical" level="30,40"/>
       <Skill identifier="mechanical" level="10,20"/>
       <Skill identifier="electrical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
     </Skills>
     <Items>
       <Item identifier="securityuniform" equip="true"/>
@@ -129,6 +132,7 @@
       <Skill identifier="weapons" level="10,20"/>
       <Skill identifier="mechanical" level="10,20"/>
       <Skill identifier="electrical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -152,6 +156,7 @@
       <Skill identifier="mechanical" level="20,32"/>
       <Skill identifier="electrical" level="20,32"/>
       <Skill identifier="medical" level="10,22"/>
+      <Skill identifier="helm" level="10,20"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>

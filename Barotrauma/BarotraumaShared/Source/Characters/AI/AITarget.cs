@@ -27,7 +27,7 @@ namespace Barotrauma
         public float SightRange
         {
             get { return sightRange; }
-            set { sightRange = MathHelper.Clamp(value, MinSightRange, MaxSoundRange); }
+            set { sightRange = MathHelper.Clamp(value, MinSightRange, MaxSightRange); }
         }
 
         private float sectorRad = MathHelper.TwoPi;
@@ -58,8 +58,8 @@ namespace Barotrauma
 
         public bool Enabled = true;
 
-        public readonly float MinSoundRange, MinSightRange;
-        public readonly float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
+        public float MinSoundRange, MinSightRange;
+        public float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
 
         public Vector2 WorldPosition
         {
@@ -101,19 +101,12 @@ namespace Barotrauma
 
         public AITarget(Entity e, XElement element) : this(e)
         {
-            SightRange = MinSightRange = element.GetAttributeFloat("sightrange", 0.0f);
-            SoundRange = MinSoundRange = element.GetAttributeFloat("soundrange", 0.0f);
-            // Use the min and max definitions if found.
-            if (element.Attribute("minsightrange") != null)
-            {
-                MinSightRange = element.GetAttributeFloat("minsightrange", MinSightRange);
-            }
-            if (element.Attribute("minsoundrange") != null)
-            {
-                MinSoundRange = element.GetAttributeFloat("minsoundrange", MinSoundRange);
-            }
-            MaxSightRange = element.GetAttributeFloat("maxsightrange", MaxSightRange);
-            MaxSoundRange = element.GetAttributeFloat("maxsoundrange", MaxSoundRange);
+            SightRange = element.GetAttributeFloat("sightrange", 0.0f);
+            SoundRange = element.GetAttributeFloat("soundrange", 0.0f);
+            MinSightRange = element.GetAttributeFloat("minsightrange", SightRange);
+            MinSoundRange = element.GetAttributeFloat("minsoundrange", SoundRange);
+            MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
+            MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
         }
 

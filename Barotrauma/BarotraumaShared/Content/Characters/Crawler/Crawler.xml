@@ -10,7 +10,7 @@
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
   <health
-    vitality="70"
+    vitality="50"
     doesbleed="true"/>
 
   <!-- TODO: sounds -->
@@ -43,7 +43,9 @@
       attachlimbrotation="100"/>
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="provocative" state="Attack" priority="300"/>
+    <targetpriority tag="light" state="Escape" priority="250"/>
+    <targetpriority tag="human" state="Attack" priority="200"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>
     <targetpriority tag="stronger" state="Escape" priority="60"/>
     <targetpriority tag="dead" state="Eat" priority="55"/>

@@ -398,6 +398,7 @@ namespace Barotrauma
             AssignRelayToServer("findentityids", false);
             AssignRelayToServer("campaigninfo", false);
             AssignRelayToServer("help", false);
+            AssignRelayToServer("verboselogging", false);
 
             AssignOnExecute("control", (string[] args) =>
             {
