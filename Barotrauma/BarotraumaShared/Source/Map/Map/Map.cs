@@ -65,7 +65,7 @@ namespace Barotrauma
             Vector2 center = new Vector2(size, size) / 2;
             foreach (Location location in Locations)
             {
-                if (location.Type.Name != "City") continue;
+                if (location.Type.Identifier != "City") continue;
                 float dist = Vector2.DistanceSquared(center, location.MapPosition);
                 if (dist > largestDist)
                 {
@@ -483,7 +483,7 @@ namespace Barotrauma
                     bool disallowedFound = false;
                     foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
                     {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Name.ToLowerInvariant() == disallowedLocationName.ToLowerInvariant()))
+                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.ToLowerInvariant() == disallowedLocationName.ToLowerInvariant()))
                         {
                             disallowedFound = true;
                             break;
@@ -495,7 +495,7 @@ namespace Barotrauma
                     bool requiredFound = false;
                     foreach (string requiredLocationName in typeChange.RequiredAdjacentLocations)
                     {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Name.ToLowerInvariant() == requiredLocationName.ToLowerInvariant()))
+                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.ToLowerInvariant() == requiredLocationName.ToLowerInvariant()))
                         {
                             requiredFound = true;
                             break;
@@ -519,7 +519,7 @@ namespace Barotrauma
                     if (selectedTypeChange != null)
                     {
                         string prevName = location.Name;
-                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == selectedTypeChange.ChangeTo.ToLowerInvariant()));
+                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.ToLowerInvariant() == selectedTypeChange.ChangeToType.ToLowerInvariant()));
                         ChangeLocationType(location, prevName, selectedTypeChange);
                         location.TypeChangeTimer = -1;
                         break;
@@ -573,7 +573,7 @@ namespace Barotrauma
                         string prevLocationName = location.Name;
                         LocationType prevLocationType = location.Type;
                         location.Discovered = true;
-                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
+                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.ToLowerInvariant() == locationType.ToLowerInvariant()));
                         location.TypeChangeTimer = typeChangeTimer;
                         location.MissionsCompleted = missionsCompleted;
                         if (showNotifications && prevLocationType != location.Type)
@@ -581,7 +581,7 @@ namespace Barotrauma
                             ChangeLocationType(
                                 location,
                                 prevLocationName,
-                                prevLocationType.CanChangeTo.Find(c => c.ChangeTo.ToLowerInvariant() == location.Type.Name.ToLowerInvariant()));
+                                prevLocationType.CanChangeTo.Find(c => c.ChangeToType.ToLowerInvariant() == location.Type.Identifier.ToLowerInvariant()));
                         }
                         break;
                     case "connection":
@@ -606,7 +606,7 @@ namespace Barotrauma
                 if (!location.Discovered) continue;
 
                 var locationElement = new XElement("location", new XAttribute("i", i));
-                locationElement.Add(new XAttribute("type", location.Type.Name));
+                locationElement.Add(new XAttribute("type", location.Type.Identifier));
                 if (location.TypeChangeTimer > 0)
                 {
                     locationElement.Add(new XAttribute("changetimer", location.TypeChangeTimer));

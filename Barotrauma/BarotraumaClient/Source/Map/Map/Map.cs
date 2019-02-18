@@ -258,7 +258,7 @@ namespace Barotrauma
             if (change.Messages.Count > 0)
             {
                 mapAnim.EndMessage = change.Messages[Rand.Range(0,change.Messages.Count)]
-                    .Replace("[prevname]", prevName)
+                    .Replace("[previousname]", prevName)
                     .Replace("[name]", location.Name);
             }
             mapAnimQueue.Enqueue(mapAnim);
@@ -634,7 +634,7 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, pos, 
                     location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
                 GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, 
-                    location.Type.DisplayName, Color.White * hudOpenState * 1.5f);
+                    location.Type.Name, Color.White * hudOpenState * 1.5f);
             }
                         
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
