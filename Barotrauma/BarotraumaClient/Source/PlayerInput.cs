@@ -19,7 +19,7 @@ namespace Barotrauma
 
         static bool allowInput;
         static bool wasWindowActive;
-        
+
         public static Vector2 MousePosition
         {
             get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
@@ -124,6 +124,40 @@ namespace Barotrauma
             return AllowInput && mouseState.MiddleButton == ButtonState.Pressed;
         }
 
+        public static bool Mouse4ButtonClicked()
+        {
+            return (AllowInput &&
+                oldMouseState.XButton1 == ButtonState.Pressed
+                && mouseState.XButton1 == ButtonState.Released);
+        }
+
+        public static bool Mouse4ButtonHeld()
+        {
+            return AllowInput && mouseState.XButton1 == ButtonState.Pressed;
+        }
+
+        public static bool Mouse5ButtonClicked()
+        {
+            return (AllowInput &&
+                oldMouseState.XButton2 == ButtonState.Pressed
+                && mouseState.XButton2 == ButtonState.Released);
+        }
+
+        public static bool Mouse5ButtonHeld()
+        {
+            return AllowInput && mouseState.XButton2 == ButtonState.Pressed;
+        }
+
+        public static bool MouseWheelUpClicked()
+        {
+            return (AllowInput && ScrollWheelSpeed > 0);
+        }
+
+        public static bool MouseWheelDownClicked()
+        {
+            return (AllowInput && ScrollWheelSpeed < 0);
+        }
+
         public static bool DoubleClicked()
         {
             return AllowInput && doubleClicked;
@@ -199,7 +233,7 @@ namespace Barotrauma
                 }
                 lastClickPosition = mouseState.Position;
                 timeSinceClick = 0.0;
-            }            
+            }
         }
 
         public static void UpdateVariable()

@@ -6,8 +6,11 @@ namespace Barotrauma
     partial class GameSession
     {
         private InfoFrameTab selectedTab;
-        private GUIButton infoButton;
         private GUIButton infoFrame;
+        /// <summary>
+        /// Determines whether the hotkey for the info button was held down in the previous frame.
+        /// </summary>
+        private bool prevInfoKey;
 
         private GUIFrame infoFrameContent;
 
@@ -17,7 +20,12 @@ namespace Barotrauma
             get { return roundSummary; }
         }
 
-        private bool ToggleInfoFrame(GUIButton button, object obj)
+        partial void InitProjSpecific()
+        {
+            prevInfoKey = false;
+        }
+
+        private bool ToggleInfoFrame()
         {
             if (infoFrame == null)
             {
@@ -36,10 +44,7 @@ namespace Barotrauma
         {
             int width = 600, height = 400;
 
-            infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
-            {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleInfoFrame(btn, userdata); return true; }
-            };
+            infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
@@ -72,11 +77,6 @@ namespace Barotrauma
                     OnClicked = SelectInfoFrameTab
                 };
             }*/
-
-            var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.08f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
-            {
-                OnClicked = ToggleInfoFrame
-            };
 
         }
 
@@ -127,7 +127,6 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             if (GUI.DisableHUD) return;
-            infoButton.AddToGUIUpdateList();
             GameMode?.AddToGUIUpdateList();
             infoFrame?.AddToGUIUpdateList();
         }
@@ -135,16 +134,19 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime)
         {
             if (GUI.DisableHUD) return;
-            
-            infoButton?.UpdateManually(deltaTime);
+
+            if (prevInfoKey != PlayerInput.KeyDown(InputType.InfoTab))
+            {
+                ToggleInfoFrame();
+                prevInfoKey = PlayerInput.KeyDown(InputType.InfoTab);
+            }
+
             infoFrame?.UpdateManually(deltaTime);
         }
-        
+
         public void Draw(SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD) return;
-
-            infoButton.DrawManually(spriteBatch);
 
             GameMode?.Draw(spriteBatch);
             infoFrame?.DrawManually(spriteBatch);

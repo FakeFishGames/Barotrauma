@@ -89,6 +89,8 @@ namespace Barotrauma
                     uint r = (data[x + (y * texture.Width)] & 0x00ff0000) >> 16;
                     uint g = (data[x + (y * texture.Width)] & 0x0000ff00) >> 8;
                     uint b = (data[x + (y * texture.Width)] & 0x000000ff);
+                    // Monogame 3.7 needs the line below.
+                    a *= a; a /= 255;
                     b *= a; b /= 255;
                     g *= a; g /= 255;
                     r *= a; r /= 255;

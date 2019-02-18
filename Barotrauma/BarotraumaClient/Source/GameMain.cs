@@ -29,7 +29,7 @@ namespace Barotrauma
         public static PerformanceCounter PerformanceCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        
+
         public static GameScreen GameScreen;
         public static MainMenuScreen MainMenuScreen;
         public static LobbyScreen LobbyScreen;
@@ -115,7 +115,9 @@ namespace Barotrauma
             private set;
         }
 
+#if WINDOWS
         private static bool FullscreenOnTabIn;
+#endif
 
         public static WindowMode WindowMode
         {
@@ -168,8 +170,6 @@ namespace Barotrauma
             Instance = this;
 
             Config = new GameSettings();
-            
-            ApplyGraphicsSettings();
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -193,20 +193,17 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
+#if OSX
+            if (Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                GraphicsWidth = GraphicsDevice.DisplayMode.Width;
+                GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+            }
+#endif
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
-
-            if (Config.WindowMode == WindowMode.Windowed)
-            {
-                //for whatever reason, window isn't centered automatically
-                //since MonoGame 3.6 (nuget package might be broken), so
-                //let's do it manually
-                Window.Position = new Point((GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - GraphicsWidth) / 2,
-                                            (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
-            }
-
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
@@ -241,6 +238,8 @@ namespace Barotrauma
         protected override void Initialize()
         {
             base.Initialize();
+
+            ApplyGraphicsSettings();
 
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
@@ -345,7 +344,7 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
-            
+
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
@@ -377,6 +376,11 @@ namespace Barotrauma
             {
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
+
+#if DEBUG
+            GameSettings.ShowUserStatisticsPrompt = false;
+            GameSettings.SendUserStatistics = false;
+#endif
 
             InitUserStats();
 
@@ -443,17 +447,17 @@ namespace Barotrauma
 
             TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
-            
+
             GameModePreset.Init();
 
             Submarine.RefreshSavedSubs();
 
             TitleScreen.LoadState = 80.0f;
-            
+
         yield return CoroutineStatus.Running;
-            
+
             GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
-            
+
             TitleScreen.LoadState = 90.0f;
 
         yield return CoroutineStatus.Running;
@@ -466,13 +470,13 @@ namespace Barotrauma
             {
                 SteamWorkshopScreen     = new SteamWorkshopScreen();
             }
-            
+
             SubEditorScreen         = new SubEditorScreen();
             ParticleEditorScreen    = new ParticleEditorScreen();
             LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
             CharacterEditorScreen   = new CharacterEditorScreen();
-            
+
         yield return CoroutineStatus.Running;
 
             TitleScreen.LoadState = 95.0f;
@@ -541,7 +545,7 @@ namespace Barotrauma
         {
             return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
-        
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -562,7 +566,7 @@ namespace Barotrauma
             PlayerInput.UpdateVariable();
 
             bool paused = true;
-            
+
             if (SoundManager != null)
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
@@ -574,7 +578,7 @@ namespace Barotrauma
                     SoundManager.ListenerGain = 0.0f;
                 }
             }
-            
+
             while (Timing.Accumulator >= Timing.Step)
             {
                 Stopwatch sw = new Stopwatch();
@@ -585,9 +589,9 @@ namespace Barotrauma
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
-                
+
                 PlayerInput.Update(Timing.Step);
-                
+
                 if (loadingScreenOpen)
                 {
                     //reset accumulator if loading
@@ -595,7 +599,7 @@ namespace Barotrauma
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
                     GameMain.ResetFrameTime();
 
-                    if (TitleScreen.LoadState >= 100.0f && 
+                    if (TitleScreen.LoadState >= 100.0f &&
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
                     {
                         loadingScreenOpen = false;
@@ -615,7 +619,18 @@ namespace Barotrauma
                 {
                     SoundPlayer.Update((float)Timing.Step);
 
-                    if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
+                    if (PlayerInput.KeyHit(Keys.Escape))
+                    {
+                        // Check if a text input is selected.
+                        if (GUI.KeyboardDispatcher.Subscriber != null)
+                        {
+                            GUI.KeyboardDispatcher.Subscriber = null;
+                        }
+                        else // Otherwise toggle pausing.
+                        {
+                            GUI.TogglePauseMenu();
+                        }
+                    }
 
                     GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || ContextualTutorial.ContentRunning) &&
@@ -632,7 +647,7 @@ namespace Barotrauma
 
                     DebugConsole.Update(this, (float)Timing.Step);
                     paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
-                    
+
                     if (!paused)
                     {
                         Screen.Selected.Update(Timing.Step);
