@@ -174,7 +174,7 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, null)
             {
                 Job = null
             };

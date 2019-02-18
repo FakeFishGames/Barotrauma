@@ -827,16 +827,15 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null)
-                {
-                    Race = GameMain.Config.CharacterRace,
-                    HairIndex = GameMain.Config.CharacterHairIndex,
-                    BeardIndex = GameMain.Config.CharacterBeardIndex,
-                    MoustacheIndex = GameMain.Config.CharacterMoustacheIndex,
-                    FaceAttachmentIndex = GameMain.Config.CharacterFaceAttachmentIndex,
-                };
-                characterInfo.Head.HeadSpriteId = GameMain.Config.CharacterHeadIndex;
-                characterInfo.LoadHeadAttachments();
+                characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, null);
+                characterInfo.RecreateHead(
+                    GameMain.Config.CharacterHeadIndex,
+                    GameMain.Config.CharacterRace,
+                    GameMain.Config.CharacterGender,
+                    GameMain.Config.CharacterHairIndex,
+                    GameMain.Config.CharacterBeardIndex,
+                    GameMain.Config.CharacterMoustacheIndex,
+                    GameMain.Config.CharacterFaceAttachmentIndex);
                 GameMain.Client.CharacterInfo = characterInfo;
             }
 
