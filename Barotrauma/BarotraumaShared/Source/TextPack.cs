@@ -44,5 +44,15 @@ namespace Barotrauma
             string text = textList[Rand.Int(textList.Count)].Replace(@"\n", "\n");
             return text;
         }
+
+        public List<string> GetAll(string textTag)
+        {
+            if (!texts.TryGetValue(textTag.ToLowerInvariant(), out List<string> textList) || !textList.Any())
+            {
+                return null;
+            }
+
+            return textList;
+        }
     }
 }

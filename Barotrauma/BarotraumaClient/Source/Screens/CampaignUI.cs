@@ -375,13 +375,13 @@ namespace Barotrauma
             {
                 AutoScale = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.DisplayName);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.Name);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             new GUIImage(new RectTransform(new Vector2(1.0f, 0.6f),
                 container.RectTransform), portrait, scaleToFit: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), "Select a mission", font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), TextManager.Get("SelectMission"), font: GUI.LargeFont)
             {
                 AutoScale = true
             };

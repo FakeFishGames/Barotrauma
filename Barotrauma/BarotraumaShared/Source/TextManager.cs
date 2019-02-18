@@ -116,7 +116,27 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag, bool returnNull = false, params object[] args)
+        public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
+        {
+            string text = Get(textTag, returnNull);
+
+            if (text == null || text.Length == 0)
+            {
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
+                    return textTag;
+                }
+            }
+
+            return string.Format(text, args);     
+        }
+
+        public static List<string> GetAll(string textTag)
         {
             if (!textPacks.ContainsKey(Language))
             {
@@ -128,38 +148,26 @@ namespace Barotrauma
                 }
             }
 
+            List<string> allText;
+
             foreach (TextPack textPack in textPacks[Language])
             {
-                string text = textPack.Get(textTag);
-                if (text != null)
-                {
-                    text = string.Format(text, args);
-                    return text;
-                }
+                allText = textPack.GetAll(textTag);
+                if (allText != null) return allText;
             }
 
+            //if text was not found and we're using a language other than English, see if we can find an English version
+            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
             if (Language != "English" && textPacks.ContainsKey("English"))
             {
-                foreach (TextPack textPack in textPacks[Language])
+                foreach (TextPack textPack in textPacks["English"])
                 {
-                    string text = textPack.Get(textTag);
-                    if (text != null)
-                    {
-                        text = string.Format(text, args);
-                        return text;
-                    }
+                    allText = textPack.GetAll(textTag);
+                    if (allText != null) return allText;
                 }
             }
 
-            if (returnNull)
-            {
-                return null;
-            }
-            else
-            {
-                DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
-                return textTag;
-            }
+            return null;
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)

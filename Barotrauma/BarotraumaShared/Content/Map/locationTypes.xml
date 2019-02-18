@@ -1,37 +1,28 @@
 <locationtypes>
   <None
-    name="Natural Formation"
+    identifier="NaturalFormation"
     namefile="Content/Map/locationNames.txt"    
     commonnessperzone="1: 5.0, 2: 5.0, 3: 5.0, 4: 5.0, 5: 5.0, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
-    
-    <nameformats f0="[name]"/>
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="514,806,253,196" color="236,200,159,255"/>
     <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.jpg"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
-
     <ChangeTo type="Outpost" probability="0.5" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair">
-      <Message text="A new outpost has been established at [prevname]."/>
-    </ChangeTo>
+              disallowedadjacentlocations="Lair"/>
 
     <ChangeTo type="Military" probability="0.25" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair">
-      <Message text="A new military outpost has been established at [prevname]."/>
-    </ChangeTo>
+              disallowedadjacentlocations="Lair"/>
 
     <ChangeTo type="Research" probability="0.25" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair">
-      <Message text="A new research outpost has been established at [prevname]."/>
-    </ChangeTo>
+              disallowedadjacentlocations="Lair"/>
   </None>
 
   <City
-    name="Colony"
+    identifier="Colony"
     namefile="Content/Map/cityNames.txt"
     commonnessperzone="1: 5.0"
     halo="0,1,0,0.3">
@@ -45,16 +36,10 @@
     <Hireable identifier="medicaldoctor" commonness="1"/>
     <Hireable identifier="securityofficer" commonness="1"/>
     <Hireable identifier="captain" commonness="1"/>
-
-    <nameformats
-      f0="[name]"
-      f1="The City of [name]"
-      f2="[name] City"
-      f3="[name] Station"/>
   </City>
 
   <Outpost
-    name="Habitation Outpost"
+    identifier="HabitationOutpost"
     namefile="Content/Map/cityNames.txt"
     commonnessperzone="2: 5.0, 3: 2.5"
     halo="0,1,0,0.2">
@@ -70,18 +55,11 @@
     <Hireable identifier="captain" commonness="1"/>
 
     <!-- can become a city if there are no adjacent lairs -->
-    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair">
-      <Message text="[prevname] has become [name]."/>
-      <Message text="[prevname] has become a city!"/>
-    </ChangeTo>
-
-    <nameformats
-      f0="[name] Habitation Outpost"
-      f1="[name] Outpost"/>
+    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair"/>
   </Outpost>
   
   <Military
-    name="Military Outpost"
+    identifier="MilitaryOutpost"
     namefile="Content/Map/locationNames.txt"
     commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
     halo="0,1,0,0.4">
@@ -95,16 +73,10 @@
     <Hireable identifier="engineer" commonness="2"/>
     <Hireable identifier="mechanic" commonness="2"/>
     <Hireable identifier="medicaldoctor" commonness="2"/>
-
-    <nameformats
-      f0="[name] Outpost"
-      f1="[name] Facility"
-      f2="[name] Station"
-      f3="[name] Fortification"/>
   </Military>
 
   <Research
-    name="Research Outpost"
+    identifier="ResearchOutpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
     commonnessperzone="2: 1.25, 3: 2.5"
@@ -119,16 +91,10 @@
     <Hireable identifier="assistant" commonness="3"/>
     <Hireable identifier="securityofficer" commonness="1"/>
     <Hireable identifier="captain" commonness="1"/>
-
-    <nameformats
-      f0="[name] Research Facility"
-      f1="[name] Research Center"
-      f2="[name] Institute of Astrobiology"
-      f3="[name] Biomedical Research Center"/>
   </Research>
   
   <Mine
-    name="Mining Outpost"
+    identifier="MiningOutpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
     commonnessperzone="2: 1.25, 3: 2.5"
@@ -141,53 +107,32 @@
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
     <Hireable identifier="assistant" commonness="3"/>
-
-    <nameformats
-      f0="[name] Mining Facility"
-      f1="[name] Mining Claim"
-      f2="[name] Prospecting Outpost"
-      f3="[name] Mine"/>
   </Mine>
 
   <Lair
-    name="Breeding Grounds"
+    identifier="BreedingGrounds"
     namefile="Content/Map/alienNames.txt"
     commonnessperzone="1: 0.5, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.4">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
     <Portrait texture="Content/Map/LocationPortraits/EmptyLocation.jpg"/>
-
-    <nameformats
-      f0="[name] Breeding Grounds"
-      f1="The Hives of [name]"/>
-
+    
     <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
-    <ChangeTo type="None" probability="1.0">
-      <Message text="[prevname] have been depopulated."/>
-    </ChangeTo>
+    <ChangeTo type="None" probability="1.0"/>
   </Lair>
 
   <Ruins
-    name="Alien Ruins"
+    identifier="AlienRuins"
     namefile="Content/Map/alienNames.txt"
     commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.2">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="784,847,233,158" color="216,91,80,255"/>
     <Portrait texture="Content/Map/LocationPortraits/AlienRuins2.jpg"/>
-    
-    <nameformats
-      f0="[name] Ruins"/>
 
-    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair">
-      <Message text="A research outpost has been established at [prevname]."/>
-    </ChangeTo>
-    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair">
-      <Message text="An outpost has been established at [prevname]."/>
-    </ChangeTo>
-    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair">
-      <Message text="A military outpost has been established at [prevname]."/>
-    </ChangeTo>
+    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair"/>
   </Ruins>
 </locationtypes>

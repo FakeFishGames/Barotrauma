@@ -101,12 +101,8 @@ namespace Barotrauma
         public JobPrefab(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
-
-            string translatedName = TextManager.Get("JobName." + Identifier, true);
-            if (!string.IsNullOrEmpty(translatedName)) Name = translatedName;
-
-            string translatedDescription = TextManager.Get("JobDescription." + Identifier, true);
-            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
+            Name = TextManager.Get("JobName." + Identifier);
+            Description = TextManager.Get("JobDescription." + Identifier);
 
             ItemNames = new List<string>();
 
