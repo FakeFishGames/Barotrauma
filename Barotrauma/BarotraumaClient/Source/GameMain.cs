@@ -171,8 +171,6 @@ namespace Barotrauma
 
             Config = new GameSettings();
 
-            ApplyGraphicsSettings();
-
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
             Content.RootDirectory = "Content";
@@ -195,6 +193,13 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
+#if OSX
+            if (Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                GraphicsWidth = GraphicsDevice.DisplayMode.Width;
+                GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+            }
+#endif
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
@@ -233,6 +238,8 @@ namespace Barotrauma
         protected override void Initialize()
         {
             base.Initialize();
+
+            ApplyGraphicsSettings();
 
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
