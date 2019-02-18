@@ -2416,7 +2416,7 @@ namespace Barotrauma.Networking
             int headSpriteId = 0;
             try
             {
-                gender = message.ReadBoolean() ? Gender.Male : Gender.Female;
+                gender = (Gender)message.ReadByte();
                 race = (Race)message.ReadByte();
                 headSpriteId = message.ReadByte();
             }
@@ -2442,17 +2442,8 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
-            {
-                Race = race,
-                HeadSpriteId = headSpriteId,
-                HairIndex = hairIndex,
-                BeardIndex = beardIndex,
-                MoustacheIndex = moustacheIndex,
-                FaceAttachmentIndex = faceAttachmentIndex
-            };
-            // Need to reload the attachments because the indices may have changed
-            sender.CharacterInfo.LoadHeadAttachments();
+            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name);
+            sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
             Debug.Assert(sender.JobPreferences.Count > 0);

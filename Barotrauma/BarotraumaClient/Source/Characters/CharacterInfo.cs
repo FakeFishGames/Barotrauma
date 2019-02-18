@@ -226,7 +226,7 @@ namespace Barotrauma
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
-            bool isFemale = inc.ReadBoolean();
+            int gender = inc.ReadByte();
             int race = inc.ReadByte();
             int headSpriteID = inc.ReadByte();
             int hairIndex = inc.ReadByte();
@@ -249,23 +249,11 @@ namespace Barotrauma
             }
 
             // TODO: animations
-
-            Gender gender = isFemale ? Gender.Female : Gender.Male;
-            CharacterInfo ch = new CharacterInfo(configPath, newName, gender, jobPrefab, ragdollFile)
+            CharacterInfo ch = new CharacterInfo(configPath, newName, jobPrefab, ragdollFile)
             {
                 ID = infoID,
             };
-            ch.head = new HeadInfo(headSpriteID)
-            {
-                race = (Race)race,
-                gender = gender,
-                HairIndex = hairIndex,
-                BeardIndex = beardIndex,
-                MoustacheIndex = moustacheIndex,
-                FaceAttachmentIndex = faceAttachmentIndex
-            };
-            ch.ReloadHeadAttachments();
-
+            ch.RecreateHead(headSpriteID,(Race)race, (Gender)gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
             if (ch.Job != null)
             {

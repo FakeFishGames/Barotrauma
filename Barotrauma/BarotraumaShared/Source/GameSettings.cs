@@ -425,8 +425,10 @@ namespace Barotrauma
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
                         CharacterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
-                        CharacterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
-                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
+                        {
+                            CharacterGender = g;
+                        }
                         if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
                         {
                             CharacterRace = r;
@@ -656,6 +658,7 @@ namespace Barotrauma
         #endregion
 
         #region Load PlayerConfig
+        // TODO: DRY
         public void LoadPlayerConfig()
         {
             XDocument doc = XMLExtensions.LoadXml(playerSavePath);
@@ -761,11 +764,17 @@ namespace Barotrauma
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
                         CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                        CharacterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
-                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
+                        {
+                            CharacterGender = g;
+                        }
                         if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
                         {
                             CharacterRace = r;
+                        }
+                        else
+                        {
+                            CharacterRace = Race.White;
                         }
                         CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
                         CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);

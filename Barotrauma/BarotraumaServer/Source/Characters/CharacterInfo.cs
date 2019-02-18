@@ -13,7 +13,7 @@ namespace Barotrauma
         {
             msg.Write(ID);
             msg.Write(Name);
-            msg.Write(Gender == Gender.Female);
+            msg.Write((byte)Gender);
             msg.Write((byte)Race);
             msg.Write((byte)HeadSpriteId);
             msg.Write((byte)Head.HairIndex);
