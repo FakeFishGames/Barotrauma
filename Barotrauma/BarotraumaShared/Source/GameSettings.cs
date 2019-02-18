@@ -162,13 +162,13 @@ namespace Barotrauma
                 {
                     //applyButton.Selected = unsavedSettings;
                     applyButton.Enabled = unsavedSettings;
-                    applyButton.Text = unsavedSettings ? "Apply*" : "Apply";
+                    applyButton.Text = TextManager.Get(unsavedSettings ? "ApplySettingsButtonUnsavedChanges" : "ApplySettingsButton");
                 }
 #endif
             }
         }
 
-        private float soundVolume, musicVolume;
+        private float soundVolume = 0.5f, musicVolume = 0.3f, voiceChatVolume = 0.5f;
 
         public float SoundVolume
         {
@@ -195,6 +195,18 @@ namespace Barotrauma
                 musicVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
                 GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume);
+#endif
+            }
+        }
+
+        public float VoiceChatVolume
+        {
+            get { return voiceChatVolume; }
+            set
+            {
+                voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
+#if CLIENT
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume);
 #endif
             }
         }
@@ -356,7 +368,7 @@ namespace Barotrauma
 #endif
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
-            
+
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
@@ -364,8 +376,9 @@ namespace Barotrauma
             keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
 
-            keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.Tab);
-            keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.OemPipe);
+            keyMapping[(int)InputType.InfoTab] = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.T);
+            keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.Y);
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
             keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
@@ -413,8 +426,10 @@ namespace Barotrauma
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
                         CharacterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
-                        CharacterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
-                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
+                        {
+                            CharacterGender = g;
+                        }
                         if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
                         {
                             CharacterRace = r;
@@ -522,6 +537,7 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
@@ -643,6 +659,7 @@ namespace Barotrauma
         #endregion
 
         #region Load PlayerConfig
+        // TODO: DRY
         public void LoadPlayerConfig()
         {
             XDocument doc = XMLExtensions.LoadXml(playerSavePath);
@@ -695,6 +712,7 @@ namespace Barotrauma
             {
                 SoundVolume = audioSettings.GetAttributeFloat("soundvolume", SoundVolume);
                 MusicVolume = audioSettings.GetAttributeFloat("musicvolume", MusicVolume);
+                VoiceChatVolume = audioSettings.GetAttributeFloat("voicechatvolume", VoiceChatVolume);
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "Disabled");
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", "");
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", -45);
@@ -747,11 +765,17 @@ namespace Barotrauma
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
                         CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                        CharacterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
-                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
+                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
+                        {
+                            CharacterGender = g;
+                        }
                         if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
                         {
                             CharacterRace = r;
+                        }
+                        else
+                        {
+                            CharacterRace = Race.White;
                         }
                         CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
                         CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);
@@ -796,7 +820,7 @@ namespace Barotrauma
 
         public void ReloadContentPackages()
         {
-            LoadContentPackages(selectedContentPackagePaths);            
+            LoadContentPackages(selectedContentPackagePaths);
         }
 
         private void LoadContentPackages(IEnumerable<string> contentPackagePaths)
@@ -807,7 +831,7 @@ namespace Barotrauma
             foreach (string path in contentPackagePaths)
             {
                 var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
-                        
+
                 if (matchingContentPackage == null)
                 {
                     missingPackagePaths.Add(path);
@@ -1036,6 +1060,6 @@ namespace Barotrauma
         public KeyOrMouse KeyBind(InputType inputType)
         {
             return keyMapping[(int)inputType];
-        }        
+        }
     }
 }

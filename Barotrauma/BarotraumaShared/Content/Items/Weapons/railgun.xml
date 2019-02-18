@@ -89,7 +89,7 @@
     <Body width="215" height="30" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
-      <Attack structuredamage="200" severlimbsprobability="1.0">
+      <Attack structuredamage="75" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="100" />
         <Affliction identifier="bleeding" strength="10" />
 		<Affliction identifier="stun" strength="10" />
@@ -117,7 +117,7 @@
     <Body width="215" height="30" density="35" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
-      <Attack structuredamage="200" severlimbsprobability="1.0">
+      <Attack structuredamage="75" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="100" />
         <Affliction identifier="bleeding" strength="10" />
       </Attack>

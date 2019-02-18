@@ -165,7 +165,7 @@ namespace Barotrauma
                     Vector2 dropShadowOffset = Vector2.Zero;
                     if (drawDropShadow)
                     {
-                        dropShadowOffset = Submarine.WorldPosition - WorldPosition;
+                        dropShadowOffset = Submarine.HiddenSubPosition - Position;
                         if (dropShadowOffset != Vector2.Zero)
                         {
                             if (IsHorizontal)

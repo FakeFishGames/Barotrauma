@@ -389,10 +389,12 @@ namespace Barotrauma
         public void WriteSpawnData(NetBuffer msg)
         {
             if (GameMain.Server == null) return;
+            
+            int msgLength = msg.LengthBytes;
 
             msg.Write(Info == null);
             msg.Write(ID);
-            msg.Write(ConfigPath);
+            msg.Write(SpeciesName);
             msg.Write(seed);
 
             if (Removed)
@@ -430,6 +432,8 @@ namespace Barotrauma
             msg.Write(TeamID);
             msg.Write(this is AICharacter);
             info.ServerWrite(msg);
+
+            DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - msgLength));
         }
     }
 }

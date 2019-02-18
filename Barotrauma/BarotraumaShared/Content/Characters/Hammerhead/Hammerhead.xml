@@ -9,7 +9,7 @@
   <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
 
   <health
-    vitality="375"
+    vitality="200"
     doesbleed="true"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
@@ -22,7 +22,8 @@
     sight="1.0"
     hearing="0.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="provocative" state="Attack" priority="100"/>
+    <targetpriority tag="provocative" state="Attack" priority="300"/>
+    <targetpriority tag="light" state="Attack" priority="200"/>
     <targetpriority tag="human" state="Attack" priority="90"/>
     <targetpriority tag="stronger" state="Escape" priority="70"/>
     <targetpriority tag="room" state="Attack" priority="60"/>

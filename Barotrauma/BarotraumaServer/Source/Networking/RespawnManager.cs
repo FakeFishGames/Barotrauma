@@ -1,7 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using FarseerPhysics;
-using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,17 +66,10 @@ namespace Barotrauma.Networking
             }*/
             bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * server.ServerSettings.MinRespawnRatio, 1.0f);
 
-            if (startCountdown)
+            if (startCountdown != CountdownStarted)
             {
-                if (!CountdownStarted)
-                {
-                    CountdownStarted = true;
-                    server.CreateEntityEvent(this);
-                }
-            }
-            else
-            {
-                CountdownStarted = false;
+                CountdownStarted = startCountdown;
+                server.CreateEntityEvent(this);                
             }
 
             if (!CountdownStarted) return;

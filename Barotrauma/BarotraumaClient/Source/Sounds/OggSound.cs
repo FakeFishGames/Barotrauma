@@ -40,7 +40,7 @@ namespace Barotrauma.Sounds
                     throw new Exception("Failed to set buffer data for non-streamed audio! "+AL.GetErrorString(alError));
                 }
 
-                MuffleBuffer(floatBuffer, reader.Channels);
+                MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
@@ -74,27 +74,10 @@ namespace Barotrauma.Sounds
             return readSamples*2;
         }
 
-        static void MuffleBuffer(float[] buffer,int channelCount)
+        static void MuffleBuffer(float[] buffer, int sampleRate, int channelCount)
         {
-            //this function will probably have to replace EFX on OSX
-            float[] avgvals = new float[channelCount];
-            for (int j = 0; j < channelCount; j++)
-            {
-                avgvals[j] = buffer[j];
-            }
-            for (int i = 0; i < buffer.Length; i+=channelCount)
-            {
-                for (int j = 0; j < channelCount; j++)
-                {
-                    float fval = buffer[i + j];
-                    float weight = 0.7f;
-                    weight = 1.0f - weight;
-                    weight *= weight * weight;
-                    avgvals[j] = (avgvals[j] * (1.0f - weight) + fval * weight);
-                    fval = avgvals[j]*1.7f;
-                    buffer[i + j] = fval;
-                }
-            }
+            var lpf = new LowpassFilter(sampleRate, 400);
+            lpf.Process(buffer);
         }
 
         public override void Dispose()

@@ -11,21 +11,21 @@
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="50" stun="0.2" targetforce="20">
+      <Attack structuredamage="10" stun="0.2" targetforce="20">
         <Affliction identifier="bleeding" strength="30" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
     </Projectile>
   </Item>
   <Item name="Alien Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
-    <Deconstruct time="5">
+    <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
     <Sprite texture="weapons_new.png" sourcerect="4,173,241,16" depth="0.55" />
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="50" stun="0.2" targetforce="20">
+      <Attack structuredamage="5" stun="0.2" targetforce="20">
         <Affliction identifier="bleeding" strength="30" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
@@ -42,13 +42,13 @@
     <Body width="241" height="16" density="20" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
-      <Attack structuredamage="50" stun="0.2">
+      <Attack structuredamage="10" stun="0.2">
         <Affliction identifier="bleeding" strength="30" />
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="200.0" structuredamage="50" stun="2" force="15.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="200.0" structuredamage="25" stun="2" force="15.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="internaldamage" strength="40" />
         </Explosion>
@@ -114,7 +114,7 @@
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="100" stun="0.5" targetforce="10">
+      <Attack structuredamage="5" stun="0.5" targetforce="10">
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
@@ -217,7 +217,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
-        <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="800.0" structuredamage="35" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="100" />
           <Affliction identifier="internaldamage" strength="100" />
         </Explosion>
@@ -227,7 +227,7 @@
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
-        <Explosion range="800.0" structuredamage="150" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="800.0" structuredamage="35" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="internaldamage" strength="20" />
         </Explosion>

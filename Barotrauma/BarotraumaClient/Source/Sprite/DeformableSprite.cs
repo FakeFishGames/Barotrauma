@@ -247,7 +247,7 @@ namespace Barotrauma
                 SetupVertexBuffers();
             }
 
-#if LINUX
+#if (LINUX || OSX)
             effect.Parameters["TextureSampler+xTexture"].SetValue(sprite.Texture);
 #else
             effect.Parameters["xTexture"].SetValue(sprite.Texture);
