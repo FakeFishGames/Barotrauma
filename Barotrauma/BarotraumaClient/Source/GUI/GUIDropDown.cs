@@ -36,6 +36,12 @@ namespace Barotrauma
             set { listBox.Enabled = value; }
         }
 
+        public bool ButtonEnabled
+        {
+            get { return  button.Enabled; }
+            set { button.Enabled = value; }
+        }
+
         public GUIComponent Selected
         {
             get { return listBox.SelectedComponent; }
