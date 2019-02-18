@@ -160,14 +160,6 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
-            if (AITarget != null)
-            {
-                UpdateAITarget(AITarget);
-            }
-            if (item.AiTarget != null)
-            {
-                UpdateAITarget(item.AiTarget);
-            }
 
 #if CLIENT
             light.ParentSub = item.Submarine;
@@ -244,9 +236,16 @@ namespace Barotrauma.Items.Components
                 light.Color = lightColor * lightBrightness * (1.0f - Rand.Range(0.0f, Flicker));
                 light.Range = range;
 #endif
-                item.SightRange = Math.Max(range * (float)Math.Sqrt(lightBrightness), item.SightRange);
             }
-            
+            if (AITarget != null)
+            {
+                UpdateAITarget(AITarget);
+            }
+            if (item.AiTarget != null)
+            {
+                UpdateAITarget(item.AiTarget);
+            }
+
             voltage = 0.0f;
         }
                 
@@ -296,9 +295,9 @@ namespace Barotrauma.Items.Components
             target.Enabled = IsActive;
             if (target.MaxSightRange <= 0)
             {
-                target.MaxSightRange = Range;
+                target.MaxSightRange = Range * 5;
             }
-            target.SightRange = IsActive ? target.MaxSightRange : 0;
+            target.SightRange = IsActive ? target.MaxSightRange * lightBrightness : 0;
         }
     }
 }
