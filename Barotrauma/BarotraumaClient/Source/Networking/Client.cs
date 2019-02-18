@@ -31,6 +31,7 @@ namespace Barotrauma.Networking
                 mutedLocally = value;
 #if CLIENT
                 GameMain.NetLobbyScreen.SetPlayerVoiceIconState(this, muted, mutedLocally);
+                GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 #endif
             }
         }

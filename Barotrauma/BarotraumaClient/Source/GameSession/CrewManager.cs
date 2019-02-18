@@ -338,7 +338,7 @@ namespace Barotrauma
 
             int spacing = (int)(10 * GUI.Scale);
             int height = (int)(45 * GUI.Scale);
-            characterInfoWidth = (int)(170 * GUI.Scale);
+            characterInfoWidth = (int)(200 * GUI.Scale);
 
             float charactersPerView = characterListBox.Rect.Height / (float)(height + characterListBox.Spacing);
 
@@ -360,7 +360,7 @@ namespace Barotrauma
             frame.Color = character.Info.Job.Prefab.UIColor;
             frame.SelectedColor = Color.Lerp(frame.Color, Color.White, 0.5f);
             frame.HoverColor = Color.Lerp(frame.Color, Color.White, 0.9f);
-
+            
             new GUIFrame(new RectTransform(new Point(characterInfoWidth, (int)(frame.Rect.Height * 1.3f)), frame.RectTransform, Anchor.CenterLeft), style: "OuterGlow")
             {
                 UserData = "highlight",
@@ -385,6 +385,23 @@ namespace Barotrauma
                 HoverColor = frame.HoverColor,
                 ToolTip = characterToolTip
             };
+            
+            var soundIcon = new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+                "GUISoundIcon")
+            {
+                UserData = "soundicon",
+                CanBeFocused = false,
+                Visible = true
+            };
+            soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+                "GUISoundIconDisabled")
+            {
+                UserData = "soundicondisabled",
+                CanBeFocused = true,
+                Visible = false
+            };
+
             if (isSinglePlayer)
             {
                 characterArea.OnClicked = CharacterClicked;
@@ -395,7 +412,7 @@ namespace Barotrauma
                 characterArea.CanBeSelected = false;
             }
 
-            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
+            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
                 onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
                 CanBeFocused = false,
@@ -404,7 +421,8 @@ namespace Barotrauma
                 ToolTip = characterToolTip
             };
 
-            var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterRight),
+            var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width - soundIcon.Rect.Width - 10, characterArea.Rect.Height),
+                characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(soundIcon.Rect.Width + 10, 0) },
                 character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
             {
                 Color = frame.Color,
@@ -649,6 +667,38 @@ namespace Barotrauma
             pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
         }
 
+        #endregion
+
+
+        #region Voice chat
+        
+        public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
+        {
+            if (client?.Character == null) { return; }
+
+            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
+
+            if (!soundIcon.Visible)
+            {
+                soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            }
+            soundIcon.Visible = !muted && !mutedLocally;
+            soundIconDisabled.Visible = muted || mutedLocally;
+            soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
+        }
+
+        public void SetPlayerSpeaking(Client client)
+        {
+            if (client?.Character == null) { return; }
+
+            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            soundIcon.Color = new Color(soundIcon.Color, 1.0f);
+        }
         #endregion
 
         /// <summary>
@@ -1037,6 +1087,13 @@ namespace Barotrauma
                 if (child.Visible)
                 {
                     child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
+                    
+                    var soundIcon = child.FindChild(character)?.FindChild("soundicon");
+                    if (soundIcon != null)
+                    {
+                        soundIcon.Color = new Color(soundIcon.Color, (soundIcon.Color.A / 255.0f) - deltaTime);
+                    }
+
 
                     GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
                     if (wrongOrderList != null)

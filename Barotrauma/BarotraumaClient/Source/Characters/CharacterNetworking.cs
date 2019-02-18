@@ -309,21 +309,27 @@ namespace Barotrauma
 
             bool noInfo = inc.ReadBoolean();
             ushort id = inc.ReadUInt16();
-            string configPath = inc.ReadString();
+            string speciesName = inc.ReadString();
             string seed = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
             bool enabled = inc.ReadBoolean();
 
-            DebugConsole.Log("Received spawn data for " + configPath);
+            DebugConsole.Log("Received spawn data for " + speciesName);
+
+            string configPath = GetConfigFile(speciesName);
+            if (string.IsNullOrEmpty(configPath))
+            {
+                throw new Exception("Error in character spawn data - could not find a config file for the character \"" + configPath + "\"!");
+            }
 
             Character character = null;
             if (noInfo)
             {
                 if (!spawn) return null;
 
-                character = Character.Create(configPath, position, seed, null, true);
+                character = Create(configPath, position, seed, null, true);
                 character.ID = id;
             }
             else

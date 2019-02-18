@@ -114,11 +114,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-#if WINDOWS
-        private static bool FullscreenOnTabIn;
-#endif
-
+        
         public static WindowMode WindowMode
         {
             get;
@@ -179,7 +175,7 @@ namespace Barotrauma
 
             IsFixedTimeStep = false;
 
-            Timing.Accumulator = 0.0f;
+            GameMain.ResetFrameTime();
             fixedTime = new GameTime();
 
             World = new World(new Vector2(0, -9.82f));
@@ -193,20 +189,17 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
-#if OSX
             if (Config.WindowMode == WindowMode.BorderlessWindowed)
             {
                 GraphicsWidth = GraphicsDevice.DisplayMode.Width;
                 GraphicsHeight = GraphicsDevice.DisplayMode.Height;
             }
-#endif
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
@@ -220,6 +213,9 @@ namespace Barotrauma
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             Window.IsBorderless = !GraphicsDeviceManager.HardwareModeSwitch;
+
+            GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
+            GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
             GraphicsDeviceManager.ApplyChanges();
         }
@@ -272,39 +268,8 @@ namespace Barotrauma
 #endif
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", canLoadInSeparateThread);
-
-#if WINDOWS
-            var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
-            myForm.Deactivate += new EventHandler(HandleDefocus);
-            myForm.Activated += new EventHandler(HandleFocus);
-#endif
         }
-
-#if WINDOWS
-        private void HandleDefocus(object sender, EventArgs e)
-        {
-            if (GraphicsDeviceManager.IsFullScreen && GraphicsDeviceManager.HardwareModeSwitch)
-            {
-                GraphicsDeviceManager.IsFullScreen = false;
-                GraphicsDeviceManager.ApplyChanges();
-                FullscreenOnTabIn = true;
-                Thread.Sleep(500);
-            }
-        }
-
-        private void HandleFocus(object sender, EventArgs e)
-        {
-            if (FullscreenOnTabIn)
-            {
-                GraphicsDeviceManager.HardwareModeSwitch = true;
-                GraphicsDeviceManager.IsFullScreen = true;
-                GraphicsDeviceManager.ApplyChanges();
-                FullscreenOnTabIn = false;
-                Thread.Sleep(500);
-            }
-        }
-#endif
-
+        
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
@@ -597,7 +562,7 @@ namespace Barotrauma
                     //reset accumulator if loading
                     // -> less choppy loading screens because the screen is rendered after each update
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
-                    Timing.Accumulator = 0.0f;
+                    GameMain.ResetFrameTime();
 
                     if (TitleScreen.LoadState >= 100.0f &&
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
@@ -680,6 +645,10 @@ namespace Barotrauma
             if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
+        public static void ResetFrameTime()
+        {
+            Timing.Accumulator = 0.0f;
+        }
 
         /// <summary>
         /// This is called when the game should draw itself.

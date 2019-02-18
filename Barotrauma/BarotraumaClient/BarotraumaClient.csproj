@@ -284,6 +284,7 @@
     <Compile Include="Source\Sounds\OggSound.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
     <Compile Include="Source\Sounds\SoundChannel.cs" />
+    <Compile Include="Source\Sounds\SoundFilters.cs" />
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
     <Compile Include="Source\Sounds\VoipSound.cs" />

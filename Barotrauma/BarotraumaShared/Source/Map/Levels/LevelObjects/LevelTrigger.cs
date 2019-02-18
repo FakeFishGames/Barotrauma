@@ -279,6 +279,9 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            forceFluctuationTimer = Rand.Range(0.0f, ForceFluctuationInterval);
+            randomTriggerTimer = Rand.Range(0.0f, randomTriggerInterval);
         }
 
         private void UpdateCollisionCategories()

@@ -306,6 +306,7 @@ namespace Barotrauma
 #endif
 
             RoundStartTime = Timing.TotalTime;
+            GameMain.ResetFrameTime();
         }
 
         public void Update(float deltaTime)

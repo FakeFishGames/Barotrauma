@@ -65,7 +65,7 @@ namespace Barotrauma
             }
         }
 
-        private HeadInfo head = new HeadInfo();
+        private HeadInfo head;
         public HeadInfo Head
         {
             get { return head; }
@@ -77,10 +77,6 @@ namespace Barotrauma
                     if (head.race == Race.None)
                     {
                         head.race = GetRandomRace();
-                    }
-                    if (head.gender == Gender.None)
-                    {
-                        head.gender = GetRandomGender();
                     }
                     CalculateHeadSpriteRange();
                     Head.HeadSpriteId = value.HeadSpriteId;
@@ -342,7 +338,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, string ragdollFileName = null)
+        public CharacterInfo(string file, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null)
         {
             ID = idCounter;
             idCounter++;
@@ -350,18 +346,12 @@ namespace Barotrauma
             SpriteTags = new List<string>();
             XDocument doc = GetConfig(file);
             SourceElement = doc.Root;
+            head = new HeadInfo();
             if (doc.Root.GetAttributeBool("genders", false))
             {
-                Head.gender = gender == Gender.None ? GetRandomGender() : gender;
+                Head.gender = GetRandomGender();
             }
-            if (!Enum.TryParse(doc.Root.GetAttributeString("race", "None"), true, out Head.race))
-            {
-                Head.race = GetRandomRace();
-            }
-            if (Head.race == Race.None)
-            {
-                Head.race = GetRandomRace();
-            }
+            Head.race = GetRandomRace();
             CalculateHeadSpriteRange();
             Head.HeadSpriteId = GetRandomHeadID();
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
@@ -406,16 +396,19 @@ namespace Barotrauma
             idCounter++;
             Name = element.GetAttributeString("name", "unnamed");
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
-            Head.gender = (genderStr == "male") ? Gender.Male : Gender.Female;
-            Enum.TryParse(element.GetAttributeString("race", "white"), true, out Head.race);
             File = element.GetAttributeString("file", "");
             SourceElement = GetConfig(File).Root;
             Salary = element.GetAttributeInt("salary", 1000);
-            Head.HeadSpriteId = element.GetAttributeInt("headspriteid", 1);
-            Head.HairIndex = element.GetAttributeInt("hairindex", -1);
-            Head.BeardIndex = element.GetAttributeInt("beardindex", -1);
-            Head.MoustacheIndex = element.GetAttributeInt("moustacheindex", -1);
-            Head.FaceAttachmentIndex = element.GetAttributeInt("faceattachmentindex", -1);
+            Enum.TryParse(element.GetAttributeString("race", "White"), true, out Race race);
+            Enum.TryParse(element.GetAttributeString("gender", "None"), true, out Gender gender);
+            RecreateHead(
+                element.GetAttributeInt("headspriteid", 1),
+                race,
+                gender,
+                element.GetAttributeInt("hairindex", -1),
+                element.GetAttributeInt("beardindex", -1),
+                element.GetAttributeInt("moustacheindex", -1),
+                element.GetAttributeInt("faceattachmentindex", -1));
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             string personalityName = element.GetAttributeString("personality", "");
             ragdollFileName = element.GetAttributeString("ragdoll", string.Empty);
@@ -432,50 +425,6 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
-        public void LoadHeadSprite()
-        {
-            foreach (XElement limbElement in Ragdoll.MainElement.Elements())
-            {
-                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
-
-                XElement spriteElement = limbElement.Element("sprite");
-
-                string spritePath = spriteElement.Attribute("texture").Value;
-
-                spritePath = spritePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                spritePath = spritePath.Replace("[RACE]", Head.race.ToString().ToLowerInvariant());
-                spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
-                
-                string fileName = Path.GetFileNameWithoutExtension(spritePath);
-
-                //go through the files in the directory to find a matching sprite
-                foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
-                {
-                    if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-                    string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
-                    fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-                    if (fileWithoutTags != fileName) continue;
-
-                    HeadSprite = new Sprite(spriteElement, "", file);
-                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
-
-                    //extract the tags out of the filename
-                    SpriteTags = file.Split('[', ']').Skip(1).ToList();
-                    if (SpriteTags.Any())
-                    {
-                        SpriteTags.RemoveAt(SpriteTags.Count-1);
-                    }
-
-                    break;                    
-                }
-
-                break;
-            }
-        }
-
         private XDocument GetConfig(string file)
         {
             if (!cachedConfigs.TryGetValue(file, out XDocument doc))
@@ -487,8 +436,6 @@ namespace Barotrauma
             return doc;
         }
 
-        public Gender SetRandomGender() => Gender = GetRandomGender();
-        public Race SetRandomRace() => Race = GetRandomRace();
         public int SetRandomHead() => HeadSpriteId = GetRandomHeadID();
 
         public Gender GetRandomGender() => (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
@@ -521,7 +468,7 @@ namespace Barotrauma
         {
             if (elements == null) { return elements; }
             return elements.Where(w =>
-                Enum.TryParse(w.GetAttributeString("gender", "male"), true, out Gender g) && g == Head.gender &&
+                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == Head.gender &&
                 Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == Head.race);
         }
 
@@ -533,7 +480,7 @@ namespace Barotrauma
             {
                 // If range is defined, we use it as it is
                 // Else we calculate the range from the wearables.
-                var wearables = FilterElementsByGenderAndRace(Wearables);
+                var wearables = FilterElementsByGenderAndRace(Wearables).ToList();
                 if (wearables == null)
                 {
                     Head.headSpriteRange = Vector2.Zero;
@@ -556,6 +503,65 @@ namespace Barotrauma
                     ids = ids.OrderBy(id => id);
                     Head.headSpriteRange = new Vector2(ids.First(), ids.Last());
                 }
+            }
+        }
+
+        public void RecreateHead(int headID, Race race, Gender gender, int hairIndex, int beardIndex, int moustacheIndex, int faceAttachmentIndex)
+        {
+            head = new HeadInfo(headID)
+            {
+                race = race,
+                gender = gender,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
+            };
+            CalculateHeadSpriteRange();
+            ReloadHeadAttachments();
+        }
+
+        public void LoadHeadSprite()
+        {
+            foreach (XElement limbElement in Ragdoll.MainElement.Elements())
+            {
+                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
+
+                XElement spriteElement = limbElement.Element("sprite");
+
+                string spritePath = spriteElement.Attribute("texture").Value;
+
+                spritePath = spritePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
+                spritePath = spritePath.Replace("[RACE]", Head.race.ToString().ToLowerInvariant());
+                spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
+
+                string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                //go through the files in the directory to find a matching sprite
+                foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
+                {
+                    if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                    string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                    fileWithoutTags = fileWithoutTags.Split('[', ']').First();
+                    if (fileWithoutTags != fileName) continue;
+
+                    HeadSprite = new Sprite(spriteElement, "", file);
+                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+
+                    //extract the tags out of the filename
+                    SpriteTags = file.Split('[', ']').Skip(1).ToList();
+                    if (SpriteTags.Any())
+                    {
+                        SpriteTags.RemoveAt(SpriteTags.Count - 1);
+                    }
+
+                    break;
+                }
+
+                break;
             }
         }
 

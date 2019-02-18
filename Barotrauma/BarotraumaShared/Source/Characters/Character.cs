@@ -756,13 +756,7 @@ namespace Barotrauma
             if (head == null) { return; }
             if (headId.HasValue)
             {
-                Info.Head.HeadSpriteId = headId.Value;
-                Info.LoadHeadSprite();
-                Info.HairIndex = hairIndex ?? -1;
-                Info.BeardIndex = beardIndex ?? -1;
-                Info.MoustacheIndex = moustacheIndex ?? -1;
-                Info.FaceAttachmentIndex = faceAttachmentIndex ?? -1;
-                Info.LoadHeadAttachments();
+                Info.RecreateHead(headId.Value, Info.Race, Info.Gender, hairIndex ?? -1, beardIndex ?? -1, moustacheIndex ?? -1, faceAttachmentIndex ?? -1);
             }
 #if CLIENT
             head.RecreateSprite();
@@ -831,7 +825,7 @@ namespace Barotrauma
         public bool IsKeyHit(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 switch (inputType)
                 {
@@ -869,7 +863,7 @@ namespace Barotrauma
         public bool IsKeyDown(InputType inputType)
         {
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 switch (inputType)
                 {
@@ -907,6 +901,7 @@ namespace Barotrauma
         {
             keys[(int)inputType].Hit = hit;
             keys[(int)inputType].Held = held;
+            keys[(int)inputType].SetState(hit, held);
         }
 
         public void ClearInput(InputType inputType)
