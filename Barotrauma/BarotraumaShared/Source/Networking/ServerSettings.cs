@@ -292,6 +292,14 @@ namespace Barotrauma.Networking
 
         public WhiteList Whitelist { get; private set; }
 
+
+        [Serialize(20.0f, true)]
+        public float TickRate
+        {
+            get;
+            private set;
+        }
+
         [Serialize(true, true)]
         public bool RandomizeSeed
         {
