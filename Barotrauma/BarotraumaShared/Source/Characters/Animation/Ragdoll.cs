@@ -988,6 +988,12 @@ namespace Barotrauma
 
             SetPosition(Collider.SimPosition + moveAmount);
             character.CursorPosition += moveAmount;
+
+            Collider?.UpdateDrawPosition();
+            foreach (Limb limb in Limbs)
+            {
+                limb.body.UpdateDrawPosition();
+            }
         }
 
         private void UpdateCollisionCategories()

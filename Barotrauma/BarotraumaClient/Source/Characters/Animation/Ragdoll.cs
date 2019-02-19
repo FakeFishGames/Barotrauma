@@ -82,7 +82,7 @@ namespace Barotrauma
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
                     if (distSqrd > 10.0f || !character.AllowInput)
                     {
-                        SetPosition(newPosition, lerp: true);
+                        SetPosition(newPosition, lerp: distSqrd < 1.0f);
                     }
                     else if (distSqrd > 0.01f)
                     {

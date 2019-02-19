@@ -670,6 +670,10 @@ namespace Barotrauma
                     drawOffset = -((Vector2)targetPosition - (body.Position + drawOffset));
                     prevPosition = (Vector2)targetPosition;
                 }
+                else
+                {
+                    drawOffset = Vector2.Zero;
+                }
                 if (targetRotation.HasValue)
                 {
                     rotationOffset = -MathUtils.GetShortestAngle(body.Rotation + rotationOffset, targetRotation.Value);
