@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
 
             if (updateTimer > 0.0f) return;
 
-            for (int i = 0; i<3; i++)
+            for (int i = 0; i < 3; i++)
             {
 
                 graphs[i].Update(totalValue[i] / UpdateInterval);
@@ -59,9 +59,9 @@ namespace Barotrauma.Networking
             updateTimer = UpdateInterval;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect)//, GameServer server
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect)
         {
-            GUI.DrawRectangle(spriteBatch, rect, Color.Black*0.4f, true);
+            GUI.DrawRectangle(spriteBatch, rect, Color.Black * 0.4f, true);
 
             graphs[(int)NetStatType.ReceivedBytes].Draw(spriteBatch, rect, null, 0.0f, Color.Cyan);
 
