@@ -50,14 +50,14 @@ namespace Barotrauma
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
 
-            GUI.DrawLine(spriteBatch, pos, new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y), Color.LightGreen * 0.5f, 0, 3);
+            GUI.DrawLine(spriteBatch, pos, new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y), Color.BlueViolet, 0, 3);
 
             for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
                     new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
-                    Color.LightGreen * 0.5f, 0, 3);
+                    Color.Blue * 0.5f, 0, 3);
 
                 GUI.SmallFont.DrawString(spriteBatch,
                     pathSteering.CurrentPath.Nodes[i].ID.ToString(),
