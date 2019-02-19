@@ -72,15 +72,15 @@ namespace Barotrauma.Networking
             GUI.SmallFont.DrawString(spriteBatch,
                 "Peak received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].LargestValue()) + "/s      " +
                 "Avg received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].Average()) + "/s",
-                new Vector2(rect.X + 10, rect.Y + 10), Color.Cyan);
+                new Vector2(rect.Right + 10, rect.Y + 10), Color.Cyan);
 
 
             GUI.SmallFont.DrawString(spriteBatch, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
                 "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + "/s",
-                new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
+                new Vector2(rect.Right + 10, rect.Y + 30), Color.Orange);
 
             GUI.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
-                new Vector2(rect.X + 10, rect.Y + 50), Color.Red);
+                new Vector2(rect.Right + 10, rect.Y + 50), Color.Red);
 #if DEBUG
             /*int y = 10;
 
