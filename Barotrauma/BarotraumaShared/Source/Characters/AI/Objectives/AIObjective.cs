@@ -36,7 +36,28 @@ namespace Barotrauma
         /// </summary>
         public void TryComplete(float deltaTime)
         {
-            subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted || ShouldInterruptSubObjective(s));
+            //subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted || ShouldInterruptSubObjective(s));
+
+            // For debugging
+            for (int i = 0; i < subObjectives.Count; i++)
+            {
+                var subObjective = subObjectives[i];
+                if (subObjective.IsCompleted())
+                {
+                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.");
+                    subObjectives.Remove(subObjective);
+                }
+                else if (!subObjective.CanBeCompleted)
+                {
+                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.");
+                    subObjectives.Remove(subObjective);
+                }
+                else if (subObjective.ShouldInterruptSubObjective(subObjective))
+                {
+                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is interrupted.");
+                    subObjectives.Remove(subObjective);
+                }
+            }
 
             foreach (AIObjective objective in subObjectives)
             {
