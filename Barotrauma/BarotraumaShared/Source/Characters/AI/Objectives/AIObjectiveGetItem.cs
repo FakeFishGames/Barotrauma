@@ -19,8 +19,6 @@ namespace Barotrauma
 
         private int currSearchIndex;
 
-        private bool canBeCompleted;
-
         public bool IgnoreContainedItems;
 
         private AIObjectiveGoTo goToObjective;
@@ -29,10 +27,8 @@ namespace Barotrauma
 
         private bool equip;
 
-        public override bool CanBeCompleted
-        {
-            get { return canBeCompleted; }
-        }
+        private bool canBeCompleted = true;
+        public override bool CanBeCompleted => canBeCompleted;
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
@@ -185,11 +181,12 @@ namespace Barotrauma
         {
             if (itemIdentifiers == null)
             {
-                if (targetItem == null) canBeCompleted = false;
+                if (targetItem == null)
+                {
+                    canBeCompleted = false;
+                }
                 return;
             }
-
-            float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
 
             for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 1; i++)
             {
@@ -235,7 +232,10 @@ namespace Barotrauma
             }
 
             //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null) canBeCompleted = false;
+            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
+            {
+                canBeCompleted = false;
+            }
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
