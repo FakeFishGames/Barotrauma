@@ -502,7 +502,6 @@ namespace Barotrauma
 
             aiming = false;
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) return;
-            if (character.IsRemotePlayer) Collider.LinearVelocity = Vector2.Zero;
         }
 
         void UpdateStanding()
