@@ -48,7 +48,7 @@ namespace Barotrauma
             public XElement BeardElement { get; set; }
             public XElement MoustacheElement { get; set; }
             public XElement FaceAttachment { get; set; }
-
+            
             public HeadInfo() { }
 
             public HeadInfo(int headId)
@@ -271,6 +271,8 @@ namespace Barotrauma
             }
         }
 
+        public readonly bool HasGenders;
+
         public Gender Gender
         {
             get { return Head.gender; }
@@ -347,7 +349,8 @@ namespace Barotrauma
             XDocument doc = GetConfig(file);
             SourceElement = doc.Root;
             head = new HeadInfo();
-            if (doc.Root.GetAttributeBool("genders", false))
+            HasGenders = doc.Root.GetAttributeBool("genders", false);
+            if (HasGenders)
             {
                 Head.gender = GetRandomGender();
             }
@@ -398,9 +401,18 @@ namespace Barotrauma
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
             File = element.GetAttributeString("file", "");
             SourceElement = GetConfig(File).Root;
+            HasGenders = SourceElement.GetAttributeBool("genders", false);
             Salary = element.GetAttributeInt("salary", 1000);
             Enum.TryParse(element.GetAttributeString("race", "White"), true, out Race race);
             Enum.TryParse(element.GetAttributeString("gender", "None"), true, out Gender gender);
+            if (HasGenders && gender == Gender.None)
+            {
+                gender = GetRandomGender();
+            }
+            else if (!HasGenders)
+            {
+                gender = Gender.None;
+            }
             RecreateHead(
                 element.GetAttributeInt("headspriteid", 1),
                 race,
@@ -508,6 +520,15 @@ namespace Barotrauma
 
         public void RecreateHead(int headID, Race race, Gender gender, int hairIndex, int beardIndex, int moustacheIndex, int faceAttachmentIndex)
         {
+            if (HasGenders && gender == Gender.None)
+            {
+                gender = GetRandomGender();
+            }
+            else if (!HasGenders)
+            {
+                gender = Gender.None;
+            }
+
             head = new HeadInfo(headID)
             {
                 race = race,

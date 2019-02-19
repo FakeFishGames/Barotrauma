@@ -275,9 +275,7 @@ namespace Barotrauma.Networking
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
-
-        public bool ShowNetStats;
-
+        
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
         private string password;

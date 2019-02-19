@@ -27,6 +27,8 @@ namespace Barotrauma.Networking
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
 
+        private NetStats netStats;
+
         protected GUITickBox cameraFollowsSub;
 
         private ClientPermissions permissions = ClientPermissions.None;
@@ -94,6 +96,8 @@ namespace Barotrauma.Networking
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
+
+            netStats = new NetStats();
 
             inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
             {
@@ -594,6 +598,14 @@ namespace Barotrauma.Networking
             }
 
             if (gameStarted) SetRadioButtonColor();
+
+            if (ShowNetStats)
+            {
+                netStats.AddValue(NetStats.NetStatType.ReceivedBytes, client.ServerConnection.Statistics.ReceivedBytes);
+                netStats.AddValue(NetStats.NetStatType.SentBytes, client.ServerConnection.Statistics.SentBytes);
+                netStats.AddValue(NetStats.NetStatType.ResentMessages, client.ServerConnection.Statistics.ResentMessages);
+                netStats.Update(deltaTime);
+            }
 
             UpdateHUD(deltaTime);
 
@@ -2177,7 +2189,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (!GameMain.DebugDraw) return;
+            if (!ShowNetStats) return;
+
+            netStats.Draw(spriteBatch, new Rectangle(300, 10, 300, 150));
 
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
