@@ -240,11 +240,26 @@ namespace Barotrauma
             float totalDamage = attackResult.Damage;
             if (totalDamage <= 0.0f || attacker == null) return;
 
-            if (attacker.AnimController.Anim == AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
+            if (attacker.SpeciesName == Character.SpeciesName)
             {
-                // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
-                // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
-                return;
+                if (!attacker.IsRemotePlayer && Character.Controlled != attacker && attacker.AIController != null && attacker.AIController.Enabled)
+                {
+                    // Don't react to damage done by friendly ai, because we know that it's accidental
+                    return;
+                }
+                float maxVitality = Character.CharacterHealth.MaxVitality;
+                float dmgPercentage = totalDamage / maxVitality * 100;
+                if (dmgPercentage < maxVitality / 10)
+                {
+                    // Don't react to a minor amount of (accidental) dmg done by friendly characters
+                    return;
+                }
+                if (attacker.AnimController.Anim == AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
+                {
+                    // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
+                    // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
+                    return;
+                }
             }
 
             objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1, Rand.RandSync.Unsynced), () =>
