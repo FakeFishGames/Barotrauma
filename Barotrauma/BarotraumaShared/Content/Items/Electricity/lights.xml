@@ -17,8 +17,6 @@
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37" alpha="1.0"/>
     </LightComponent>
 
-    <AITarget/>
-
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
@@ -40,8 +38,6 @@
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="0,48,48,16" alpha="1.0"/>
     </LightComponent>
-
-    <AITarget/>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
