@@ -1368,7 +1368,15 @@ namespace Barotrauma
 
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 
-            Collider.SetTransform(simPosition, Collider.Rotation);
+            if (lerp)
+            {
+                Collider.TargetPosition = simPosition;
+                Collider.MoveToTargetPosition(true);
+            }
+            else
+            {
+                Collider.SetTransform(simPosition, Collider.Rotation);
+            }
 
             foreach (Limb limb in Limbs)
             {

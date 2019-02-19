@@ -1041,7 +1041,8 @@ namespace Barotrauma
             if (AnimController.onGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
-                AnimController.Anim != AnimController.Animation.CPR)
+                AnimController.Anim != AnimController.Animation.CPR &&
+                (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient || Controlled == this))
             {
                 //Limb head = AnimController.GetLimb(LimbType.Head);
                 // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
