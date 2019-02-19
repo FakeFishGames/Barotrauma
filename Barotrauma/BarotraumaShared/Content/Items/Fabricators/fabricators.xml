@@ -571,6 +571,12 @@
         <RequiredItem identifier="stabilozine" mincondition="0.25"/>
       </FabricableItem>
       
+      <FabricableItem identifier="radiotoxin" requiredtime="30">
+        <RequiredSkill identifier="medical" level="80"/>
+        <RequiredItem identifier="thorium"/>
+        <RequiredItem identifier="uranium"/>
+      </FabricableItem>
+
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">

@@ -408,6 +408,45 @@
   </AfflictionBleeding>
 
   <Affliction
+  name="Radiation sickness"
+  identifier="radiationsickness"
+  description="Burns and sores can be seen on patient's skin. They seem to be spreading."
+  type="poison"
+  causeofdeathdescription="Died of radiation sickness."
+  selfcauseofdeathdescription="You have died of radiation sickness."
+  limbspecific="false"
+  indicatorlimb="Torso"
+  showiconthreshold="10"
+  maxstrength="100">
+    <!-- Cause burns depending on strength -->
+    <Effect minstrength="0" maxstrength="25">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.025" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="25" maxstrength="50">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.05" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="50" maxstrength="75">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.075" />
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="75" maxstrength="100">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="burn" amount="0.1" />
+      </StatusEffect>
+    </Effect>
+
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="896,768,128,128" color="195,136,60,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
     name="Morbusine poisoning"
     identifier="morbusinepoisoning"
     description="The patient can't breathe at all, and their heartrate is slowing rapidly."
@@ -463,4 +502,183 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
   </Affliction>
   
+  <Affliction
+    name="Deliriumine Poisoning"
+    identifier="deliriuminepoisoning"
+    description="Patient is hallucinating and exhibits paranoia."
+    type="poison"
+    causeofdeathdescription="Died of sufforin poisoning."
+    selfcauseofdeathdescription="You have succumbed to hallucinations."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="5"
+    maxstrength="100">
+    <!-- Slowly cause psychosis -->
+    <!-- Non-lethal -->
+    <Effect minstrength="0" maxstrength="100" strengthchange="1">
+      <StatusEffect target="Character" setvalue="true">
+        <Affliction identifier="psychosis" amount="1" />
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Cyanide poisoning"
+    identifier="cyanidepoisoning"
+    description="The patient is confused and has trouble breathing. Their skin is red and they have occasional muscle spasms."
+    type="poison"
+    causeofdeathdescription="Died of cyanide poisoning."
+    selfcauseofdeathdescription="You have died of cyanide poisoning."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="5"
+    maxstrength="100">
+    <!-- Decrease vitality, slow player down -->
+    <!-- Becomes lethal in ~100 seconds -->
+    <Effect minstrength="0" maxstrength="20"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="20"
+      strengthchange="1"
+      minscreendistort="0.0"
+      maxscreendistort="0.20"
+      minscreenblur="0.0"
+      maxscreenblur="0.20">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.8"/>
+    </Effect>
+
+    <Effect minstrength="20" maxstrength="40"
+      minvitalitydecrease="20"
+      maxvitalitydecrease="40"
+      strengthchange="1"
+      minscreendistort="0.2"
+      maxscreendistort="0.4"
+      minscreenblur="0.2"
+      maxscreenblur="0.4">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.6"/>
+    </Effect>
+
+    <Effect minstrength="40" maxstrength="70"
+      minvitalitydecrease="40"
+      maxvitalitydecrease="70"
+      strengthchange="1"
+      minscreendistort="0.4"
+      maxscreendistort="0.6"
+      minscreenblur="0.4"
+      maxscreenblur="0.6">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.3"/>
+    </Effect>
+
+    <Effect minstrength="70" maxstrength="100"
+      minvitalitydecrease="70"
+      maxvitalitydecrease="100"
+      strengthchange="1"
+      minscreendistort="0.8"
+      maxscreendistort="1.0"
+      minscreenblur="0.8"
+      maxscreenblur="1.0">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.1">
+        <Affliction identifier="stun" amount="1" />
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+  </Affliction>
+
+  <!-- Basic buffs. -->
+
+  <BuffDurationIncrease
+    name="Slow metabolism"
+    identifier="durationincrease"
+    description="Increases the duration of all buffs."
+    type="durationincrease"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      minbuffmultiplier="1"
+      maxbuffmultiplier="1.5"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </BuffDurationIncrease>
+
+  <Affliction
+    name="Hyperactivity" 
+    identifier="haste"
+    description="Gotta go fast."
+    type="haste"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      minspeedmultiplier="1.0"
+      maxspeedmultiplier="1.48"/> <!-- Greater than 1.48 and the ragdolls start snapping when turning and characters take damage from colliding with doors & walls -->
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="128,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Husk Infection Resistance"
+    identifier="huskinfectionresistance"
+    description="Husk be gone."
+    type="resistance"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      resistancefor="huskinfection"
+      minhuskinfectionresistance="0"
+      maxhuskinfectionresistance="0.75"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="384,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Psychosis Resistance"
+    identifier="psychosisresistance"
+    description="Psychosis be gone."
+    type="resistance"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      resistancefor="psychosis"
+      minresistance="0"
+      maxresistance="0.75"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Pressure Resistance"
+    identifier="pressureresistance"
+    description="Pressure be gone."
+    type="resistance"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      resistancefor="pressure"
+      minresistance="0"
+      maxresistance="0.75"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Vigor"
+    identifier="strengthen"
+    description="Damage be gone."
+    type="resistance"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      resistancefor="damage"
+      minresistance="0"
+      maxresistance="0.75"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,896,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+
 </Afflictions>

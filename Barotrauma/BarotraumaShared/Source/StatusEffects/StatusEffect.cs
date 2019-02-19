@@ -775,7 +775,7 @@ namespace Barotrauma
                 (type == typeof(int) && property.GetValue() is float))
             {
                 float floatValue = Convert.ToSingle(value) * deltaTime;
-                
+
                 if (!setValue) floatValue += (float)property.GetValue();
                 property.TrySetValue(floatValue);
             }

@@ -109,7 +109,8 @@ namespace Barotrauma
         private string currentOrderOption;
 
         private List<StatusEffect> statusEffects = new List<StatusEffect>();
-        
+        private List<float> speedMultipliers = new List<float>();
+
         public Entity ViewTarget
         {
             get;
@@ -429,16 +430,7 @@ namespace Barotrauma
         {
             get;
             set;
-        }
-
-        /// <summary>
-        /// Can be used to modify the character's speed via StatusEffects
-        /// </summary>
-        public float SpeedMultiplier
-        {
-            get;
-            set;
-        }
+        }       
 
         public Item[] SelectedItems
         {
@@ -986,11 +978,57 @@ namespace Barotrauma
             //apply speed multiplier if 
             //  a. it's boosting the movement speed and the character is trying to move fast (= running)
             //  b. it's a debuff that decreases movement speed
-            if (run || SpeedMultiplier <= 0.0f) targetMovement *= SpeedMultiplier;
+            float speedMultiplier = SpeedMultiplier;
+            if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
 
-            SpeedMultiplier = 1; // Reset, items will set the value before the next update
+            ResetSpeedMultiplier(); // Reset, items will set the value before the next update
 
             return targetMovement;
+        }
+
+        /// <summary>
+        /// Can be used to modify the character's speed via StatusEffects
+        /// </summary>
+        public float SpeedMultiplier
+        {
+            get
+            {
+                if (speedMultipliers.Count == 0) return 1f;
+
+                float greatestPositive = 1f;
+                float greatestNegative = 1f;
+
+                for (int i = 0; i < speedMultipliers.Count; i++)
+                {
+                    float val = speedMultipliers[i];
+                    if (val < 1f)
+                    {
+                        if (val < greatestNegative)
+                        {
+                            greatestNegative = val;
+                        }
+                    }
+                    else
+                    {
+                        if (val > greatestPositive)
+                        {
+                            greatestPositive = val;
+                        }
+                    }
+                }
+
+                return greatestPositive - (1f - greatestNegative);
+            }
+            set
+            {
+                if (value == 1f) return;
+                speedMultipliers.Add(value);
+            }
+        }
+
+        public void ResetSpeedMultiplier()
+        {
+            speedMultipliers.Clear();
         }
 
         /// <summary>

@@ -53,7 +53,11 @@ namespace Barotrauma
             public float MinScreenDistortStrength, MaxScreenDistortStrength;
             public float MinRadialDistortStrength, MaxRadialDistortStrength;
             public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
+            public float MinSpeedMultiplier, MaxSpeedMultiplier;
+            public float MinBuffMultiplier, MaxBuffMultiplier;
 
+            public float MinResistance, MaxResistance;
+            public string ResistanceFor;
             public string DialogFlag;
 
             //statuseffects applied on the character when the affliction is active
@@ -85,6 +89,19 @@ namespace Barotrauma
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
+
+                ResistanceFor = element.GetAttributeString("resistancefor", "");
+                MinResistance = element.GetAttributeFloat("minresistance", 0.0f);
+                MaxResistance = element.GetAttributeFloat("maxresistance", 0.0f);
+                MaxResistance = Math.Max(MinResistance, MaxResistance);
+
+                MinSpeedMultiplier = element.GetAttributeFloat("minspeedmultiplier", 1.0f);
+                MaxSpeedMultiplier = element.GetAttributeFloat("maxspeedmultiplier", 1.0f);
+                MaxSpeedMultiplier = Math.Max(MinSpeedMultiplier, MaxSpeedMultiplier);
+
+                MinBuffMultiplier = element.GetAttributeFloat("minmultiplier", 1.0f);
+                MaxBuffMultiplier = element.GetAttributeFloat("maxmultiplier", 1.0f);
+                MaxBuffMultiplier = Math.Max(MinBuffMultiplier, MaxBuffMultiplier);
 
                 DialogFlag = element.GetAttributeString("dialogflag", "");
 
@@ -127,6 +144,7 @@ namespace Barotrauma
         public readonly string Identifier;
 
         public readonly string Name, Description;
+        public readonly bool IsBuff;
 
         public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
 
@@ -223,6 +241,7 @@ namespace Barotrauma
             AfflictionType = element.GetAttributeString("type", "");
             Name = TextManager.Get("AfflictionName." + Identifier, true) ?? element.GetAttributeString("name", "");
             Description = TextManager.Get("AfflictionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
+            IsBuff = element.GetAttributeBool("isbuff", false);
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
