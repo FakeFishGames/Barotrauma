@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -7,6 +8,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "extinguish fires";
         private List<Hull> hullList = new List<Hull>();
+        private Dictionary<Hull, AIObjectiveExtinguishFire> extinguishObjectives = new Dictionary<Hull, AIObjectiveExtinguishFire>();
 
         public AIObjectiveExtinguishFires(Character character) : 
             base(character, "")
@@ -16,7 +18,7 @@ namespace Barotrauma
                 var connectedSubs = character.Submarine.GetConnectedSubs();
                 hullList = Hull.hullList.Where(h => h.Submarine == character.Submarine || connectedSubs.Any(s => s == h.Submarine)).ToList();
             }
-            if (!hullList.Any(h => h.FireSources.Count > 0))
+            if (IsCompleted())
             {
                 character?.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
             }
@@ -34,7 +36,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return !hullList.Any(h => h.FireSources.Count > 0);
+            return hullList.None(h => h.FireSources.Count > 0);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
@@ -46,9 +48,20 @@ namespace Barotrauma
         {
             foreach (Hull hull in hullList)
             {
-                if (hull.FireSources.Count > 0)
+                if (extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
                 {
-                    AddSubObjective(new AIObjectiveExtinguishFire(character, hull));
+                    // Remove the objective, if not found in the subobjectives (completed or removed for some reason)
+                    if (!subObjectives.Contains(objective))
+                    {
+                        extinguishObjectives.Remove(hull);
+                    }
+                }
+                else if (hull.FireSources.Count > 0)
+                {
+                    // Add the objective, if not found
+                    objective = new AIObjectiveExtinguishFire(character, hull);
+                    extinguishObjectives.Add(hull, objective);
+                    AddSubObjective(objective);
                 }
             }
         }
