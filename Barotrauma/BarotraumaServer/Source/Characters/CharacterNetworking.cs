@@ -343,7 +343,12 @@ namespace Barotrauma
                 tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
                 tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
 
-                WriteStatus(tempBuffer);
+                bool writeStatus = healthUpdateTimer <= 0.0f;
+                tempBuffer.Write(writeStatus);
+                if (writeStatus)
+                {
+                    WriteStatus(tempBuffer);
+                }
 
                 tempBuffer.WritePadBits();
 

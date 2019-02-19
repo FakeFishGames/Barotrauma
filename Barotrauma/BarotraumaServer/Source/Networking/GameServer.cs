@@ -539,7 +539,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            // if 30ms has passed
+            // if update interval has passed
             if (updateTimer < DateTime.Now)
             {
                 if (server.ConnectionsCount > 0)
@@ -562,6 +562,18 @@ namespace Barotrauma.Networking
                     foreach (Item item in Item.ItemList)
                     {
                         item.NeedsPositionUpdate = false;
+                    }
+                    foreach (Character character in Character.CharacterList)
+                    {
+                        if (character.healthUpdateTimer <= 0.0f)
+                        {
+                            character.healthUpdateTimer = character.HealthUpdateInterval;
+                        }
+                        else
+                        {
+                            character.healthUpdateTimer -= (float)UpdateInterval.TotalSeconds;
+                        }
+                        character.HealthUpdateInterval += (float)UpdateInterval.TotalSeconds;
                     }
                 }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 
@@ -78,7 +79,20 @@ namespace Barotrauma
 
         private List<CharacterStateInfo> memState        = new List<CharacterStateInfo>();
         private List<CharacterStateInfo> memLocalState   = new List<CharacterStateInfo>();
-        
+
+        public float healthUpdateTimer;
+
+        private float healthUpdateInterval;
+        public float HealthUpdateInterval
+        {
+            get { return healthUpdateInterval; }
+            set
+            {
+                healthUpdateInterval = MathHelper.Clamp(value, 0.0f, IsDead ? NetConfig.MaxHealthUpdateIntervalDead : NetConfig.MaxHealthUpdateInterval);
+                healthUpdateTimer = Math.Min(healthUpdateTimer, healthUpdateInterval);
+            }
+        }
+
         private bool networkUpdateSent;
 
         public bool isSynced = false;

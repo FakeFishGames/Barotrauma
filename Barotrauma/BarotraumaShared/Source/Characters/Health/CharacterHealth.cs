@@ -469,11 +469,12 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-
             var copyAffliction = newAffliction.Prefab.Instantiate(
                 Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
                 newAffliction.Source);
             limbHealth.Afflictions.Add(copyAffliction);
+            
+            Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -505,6 +506,8 @@ namespace Barotrauma
             afflictions.Add(newAffliction.Prefab.Instantiate(
                 Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
                 source: newAffliction.Source));
+
+            Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -615,6 +618,7 @@ namespace Barotrauma
         private void Kill()
         {
             if (Unkillable) { return; }
+            
             var causeOfDeath = GetCauseOfDeath();
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
         }
