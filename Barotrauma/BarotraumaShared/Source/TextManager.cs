@@ -78,6 +78,7 @@ namespace Barotrauma
 
         public static string Get(string textTag, bool returnNull = false)
         {
+            return "";
             if (!textPacks.ContainsKey(Language))
             {
                 DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
@@ -118,6 +119,7 @@ namespace Barotrauma
 
         public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
         {
+            return "";
             string text = Get(textTag, returnNull);
 
             if (text == null || text.Length == 0)

@@ -532,7 +532,7 @@ namespace Barotrauma
             }
             else
             {
-                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
+                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, TextManager.Get("UnspecifiedSubFileName") + ".sub"), "", false);
                 cam.Position = Submarine.MainSub.Position;
             }
 
@@ -846,11 +846,7 @@ namespace Barotrauma
             
             foreach (SubmarineTag tag in Enum.GetValues(typeof(SubmarineTag)))
             {
-                FieldInfo fi = typeof(SubmarineTag).GetField(tag.ToString());
-                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-                string tagStr = attributes.Length > 0 ? attributes[0].Description : "";
-
+                string tagStr = TextManager.Get(tag.ToString());
                 var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Content.RectTransform),
                     tagStr, font: GUI.SmallFont)
                 {
