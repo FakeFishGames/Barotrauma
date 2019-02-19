@@ -138,6 +138,7 @@
     <Compile Include="Source\Items\Item.cs" />
     <Compile Include="Source\Map\Hull.cs" />
     <Compile Include="Source\Map\Structure.cs" />
+    <Compile Include="Source\Map\Submarine.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
@@ -154,6 +155,7 @@
     <Compile Include="Source\Networking\Voip\VoipServer.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
+    <Compile Include="Source\Physics\PhysicsBody.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />

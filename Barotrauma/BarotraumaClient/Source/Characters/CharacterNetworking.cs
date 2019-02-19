@@ -215,8 +215,14 @@ namespace Barotrauma
                     Vector2 pos = new Vector2(
                         msg.ReadFloat(),
                         msg.ReadFloat());
-
                     float rotation = msg.ReadFloat();
+
+                    float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
+                    float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
+                    Vector2 linearVelocity = new Vector2(
+                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
+                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+                    float angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
 
                     ReadStatus(msg);
 
@@ -226,17 +232,17 @@ namespace Barotrauma
                     if (GameMain.Client.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
-
                         memState.Insert(index, posInfo);
                     }
                     else
                     {
-                        var posInfo = new CharacterStateInfo(pos, rotation, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(pos, rotation, linearVelocity, angularVelocity, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
-
                         memState.Insert(index, posInfo);
                     }
 

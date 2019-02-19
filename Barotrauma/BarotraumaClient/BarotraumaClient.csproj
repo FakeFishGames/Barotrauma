@@ -232,6 +232,7 @@
     <Compile Include="Source\Map\Structure.cs" />
     <Compile Include="Source\Map\StructurePrefab.cs" />
     <Compile Include="Source\Map\Submarine.cs" />
+    <Compile Include="Source\Map\SubmarineBody.cs" />
     <Compile Include="Source\Map\WayPoint.cs" />
     <Compile Include="Source\Media\Video.cs" />
     <Compile Include="Source\Networking\BanList.cs" />

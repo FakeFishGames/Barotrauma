@@ -337,6 +337,12 @@ namespace Barotrauma
                 tempBuffer.Write(SimPosition.Y);
                 tempBuffer.Write(AnimController.Collider.Rotation);
 
+                float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
+                float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
+                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
+                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
+                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
+
                 WriteStatus(tempBuffer);
 
                 tempBuffer.WritePadBits();

@@ -1,4 +1,6 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,7 +10,7 @@ namespace Barotrauma
     partial class PhysicsBody
     {
         private float bodyShapeTextureScale;
-
+        
         private Texture2D bodyShapeTexture;
         public Texture2D BodyShapeTexture
         {
@@ -61,7 +63,7 @@ namespace Barotrauma
                     Vector2.One * 10.0f, Color.Red, false, 0, 3);
             }
 
-            if (offsetFromTargetPos != Vector2.Zero)
+            if (drawOffset != Vector2.Zero)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
                 if (Submarine != null) pos += Submarine.DrawPosition;
@@ -140,6 +142,61 @@ namespace Barotrauma
                 rot,
                 new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
                 1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
+        }
+
+        public PosInfo ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime, string parentDebugName)
+        {
+            float MaxVel            = NetConfig.MaxPhysicsBodyVelocity;
+            float MaxAngularVel     = NetConfig.MaxPhysicsBodyAngularVelocity;
+
+            Vector2 newPosition         = SimPosition;
+            float newRotation           = Rotation;
+            bool awake                  = body.Awake;
+            Vector2 newVelocity         = LinearVelocity;
+            float newAngularVelocity    = AngularVelocity;
+
+            newPosition = new Vector2(
+                msg.ReadFloat(), 
+                msg.ReadFloat());
+            
+            awake = msg.ReadBoolean();
+            bool fixedRotation = msg.ReadBoolean();
+
+            if (!fixedRotation)
+            {
+                newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 8);
+            }
+            if (awake)
+            {
+                newVelocity = new Vector2(
+                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
+                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+                if (!fixedRotation)
+                {
+                    newAngularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
+                }
+            }
+            msg.ReadPadBits();
+
+            if (!MathUtils.IsValid(newPosition) || 
+                !MathUtils.IsValid(newRotation) ||
+                !MathUtils.IsValid(newVelocity) ||
+                !MathUtils.IsValid(newAngularVelocity))
+            {
+                string errorMsg = "Received invalid position data for \"" + parentDebugName
+                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ", angular velocity: " + newAngularVelocity + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("PhysicsBody.ClientRead:InvalidData" + parentDebugName,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return null;
+            }
+
+            return lastProcessedNetworkState > sendingTime ? 
+                null : 
+                new PosInfo(newPosition, newRotation, newVelocity, newAngularVelocity, sendingTime);            
         }
 
         partial void DisposeProjSpecific()
