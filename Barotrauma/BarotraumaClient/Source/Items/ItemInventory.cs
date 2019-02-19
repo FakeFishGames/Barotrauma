@@ -85,7 +85,7 @@ namespace Barotrauma
                 if (container.InventoryTopSprite == null)
                 {
                     Item item = Owner as Item;
-                    string label = container.UILabel ?? item?.Name;
+                    string label = TextManager.Get("UILabel." + container.UILabel) ?? item?.Name;
                     if (!string.IsNullOrEmpty(label) && !subInventory)
                     {
                         GUI.DrawString(spriteBatch,

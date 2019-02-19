@@ -180,9 +180,15 @@ namespace Barotrauma
             return files;
         }
         
-        public static string CreateSavePath(SaveType saveType, string fileName = "Save")
+        public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
+
+            if (fileName == "Save_Default")
+            {
+                fileName = TextManager.Get("SaveFile.DefaultName", true);
+                if (fileName.Length == 0) fileName = "Save";
+            }
 
             if (!Directory.Exists(folder))
             {
