@@ -28,6 +28,7 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)changelog.txt">
@@ -2760,11 +2761,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CauseOfDeath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Affliction.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionBleeding.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPsychosis.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionHusk.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\AfflictionPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\Affliction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionBleeding.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionPsychosis.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionHusk.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Buffs\BuffDurationIncrease.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />

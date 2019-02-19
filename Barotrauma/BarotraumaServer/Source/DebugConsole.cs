@@ -635,7 +635,7 @@ namespace Barotrauma
             {
                 //TODO: reimplement
                 if (GameMain.Server == null) return;
-                GameMain.Server.ServerSettings.ShowNetStats = !GameMain.Server.ServerSettings.ShowNetStats;
+                GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
             });
 
             AssignOnExecute("setclientcharacter", (string[] args) =>
