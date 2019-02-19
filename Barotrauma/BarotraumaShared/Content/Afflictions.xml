@@ -443,7 +443,7 @@
       </StatusEffect>
     </Effect>
 
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,768,128,128" color="209,121,84,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="896,768,128,128" color="195,136,60,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -534,150 +534,60 @@
     indicatorlimb="Torso"
     showiconthreshold="5"
     maxstrength="100">
-    <!-- Decrease vitality, periodically cause stun -->
+    <!-- Decrease vitality, slow player down -->
     <!-- Becomes lethal in ~100 seconds -->
-    <Effect minstrength="0" maxstrength="19"
+    <Effect minstrength="0" maxstrength="20"
       minvitalitydecrease="0"
-      maxvitalitydecrease="19"
+      maxvitalitydecrease="20"
       strengthchange="1"
       minscreendistort="0.0"
-      maxscreendistort="0.19"
+      maxscreendistort="0.20"
       minscreenblur="0.0"
-      maxscreenblur="0.19"
-      minchromaticaberration="0.0"
-      maxchromaticaberration="0.95">
+      maxscreenblur="0.20">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.8"/>
     </Effect>
 
-    <Effect minstrength="20" maxstrength="21"
+    <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="20"
-      maxvitalitydecrease="21"
+      maxvitalitydecrease="40"
       strengthchange="1"
-      minscreendistort="0.20"
-      maxscreendistort="0.21"
-      minscreenblur="0.20"
-      maxscreenblur="0.21"
-      minchromaticaberration="1.0"
-      maxchromaticaberration="1.05">
-      <StatusEffect target="Character" duration="1.0">
-        <Affliction identifier="stun" amount="1" />
-      </StatusEffect>
+      minscreendistort="0.2"
+      maxscreendistort="0.4"
+      minscreenblur="0.2"
+      maxscreenblur="0.4">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.6"/>
     </Effect>
 
-    <Effect minstrength="22" maxstrength="39"
-      minvitalitydecrease="22"
-      maxvitalitydecrease="39"
-      strengthchange="1"
-      minscreendistort="0.22"
-      maxscreendistort="0.39"
-      minscreenblur="0.22"
-      maxscreenblur="0.39"
-      minchromaticaberration="1.1"
-      maxchromaticaberration="1.95">
-      <StatusEffect target="Character" setvalue="true" duration="1.0">
-        <ReduceAffliction identifier="stun" amount="1" />
-      </StatusEffect>
-    </Effect>
-
-    <!--If strength >40, slow player down-->
-    <Effect minstrength="40" maxstrength="41"
+    <Effect minstrength="40" maxstrength="70"
       minvitalitydecrease="40"
-      maxvitalitydecrease="41"
+      maxvitalitydecrease="70"
       strengthchange="1"
       minscreendistort="0.4"
-      maxscreendistort="0.41"
+      maxscreendistort="0.6"
       minscreenblur="0.4"
-      maxscreenblur="0.41"
-      minchromaticaberration="2.0"
-      maxchromaticaberration="2.05">
-      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.8">
-        <Affliction identifier="stun" amount="1" />
-      </StatusEffect>
+      maxscreenblur="0.6">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.3"/>
     </Effect>
 
-    <Effect minstrength="42" maxstrength="59"
-      minvitalitydecrease="42"
-      maxvitalitydecrease="59"
+    <Effect minstrength="70" maxstrength="100"
+      minvitalitydecrease="70"
+      maxvitalitydecrease="100"
       strengthchange="1"
-      minscreendistort="0.42"
-      maxscreendistort="0.59"
-      minscreenblur="0.42"
-      maxscreenblur="0.59"
-      minchromaticaberration="2.1"
-      maxchromaticaberration="2.95">
-      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.8">
-        <ReduceAffliction identifier="stun" amount="1" />
-      </StatusEffect>
-    </Effect>
-    
-    <Effect minstrength="60" maxstrength="61"
-      minvitalitydecrease="60"
-      maxvitalitydecrease="61"
-      strengthchange="1"
-      minscreendistort="0.6"
-      maxscreendistort="0.61"
-      minscreenblur="0.6"
-      maxscreenblur="0.61"
-      minchromaticaberration="3.0"
-      maxchromaticaberration="3.05">
-      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.6">
+      minscreendistort="0.8"
+      maxscreendistort="1.0"
+      minscreenblur="0.8"
+      maxscreenblur="1.0">
+      <StatusEffect target="Character" setvalue="true" SpeedMultiplier="0.1">
         <Affliction identifier="stun" amount="1" />
-      </StatusEffect>
-    </Effect>
-    
-    <Effect minstrength="62" maxstrength="79"
-      minvitalitydecrease="62"
-      maxvitalitydecrease="79"
-      strengthchange="1"
-      minscreendistort="0.62"
-      maxscreendistort="0.79"
-      minscreenblur="0.62"
-      maxscreenblur="0.79"
-      minchromaticaberration="3.1"
-      maxchromaticaberration="3.95">
-      <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.6">
-        <ReduceAffliction identifier="stun" amount="1" />
       </StatusEffect>
     </Effect>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
-  
-  <Effect minstrength="80" maxstrength="81"
-    minvitalitydecrease="80"
-    maxvitalitydecrease="81"
-    strengthchange="1"
-    minscreendistort="0.8"
-    maxscreendistort="0.81"
-    minscreenblur="0.8"
-    maxscreenblur="0.81"
-    minchromaticaberration="4.0"
-    maxchromaticaberration="4.05">
-    <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.4">
-      <Affliction identifier="stun" amount="1" />
-    </StatusEffect>
-  </Effect>
-
-  <Effect minstrength="82" maxstrength="100"
-    minvitalitydecrease="82"
-    maxvitalitydecrease="100"
-    strengthchange="1"
-    minscreendistort="0.82"
-    maxscreendistort="1.0"
-    minscreenblur="0.82"
-    maxscreenblur="1.0"
-    minchromaticaberration="4.1"
-    maxchromaticaberration="5.0">
-    <StatusEffect target="Character" setvalue="true" duration="1.0" SpeedMultiplier="0.4">
-      <ReduceAffliction identifier="stun" amount="1" />
-    </StatusEffect>
-  </Effect>
-
-
   </Affliction>
 
   <!-- Basic buffs. -->
 
-  <!--Better name?-->
   <BuffDurationIncrease
-    name="Duration Increase"
+    name="Slow metabolism"
     identifier="durationincrease"
     description="Increases the duration of all buffs."
     type="durationincrease"
@@ -687,8 +597,8 @@
     <Effect minstrength="0" maxstrength="100"
       strengthchange="-1"
       minbuffmultiplier="1"
-      maxbuffmultiplier="0.75"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+      maxbuffmultiplier="1.5"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,896,128,128" color="10,193,114,255" origin="0,0"/>
   </BuffDurationIncrease>
 
   <Affliction
@@ -703,7 +613,7 @@
       strengthchange="-1"
       minspeedmultiplier="1.0"
       maxspeedmultiplier="1.48"/> <!-- Greater than 1.48 and the ragdolls start snapping when turning and characters take damage from colliding with doors & walls -->
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="128,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -719,7 +629,7 @@
       resistancefor="huskinfection"
       minhuskinfectionresistance="0"
       maxhuskinfectionresistance="0.75"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="384,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -735,7 +645,7 @@
       resistancefor="psychosis"
       minresistance="0"
       maxresistance="0.75"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
 
   <Affliction
@@ -751,10 +661,9 @@
       resistancefor="pressure"
       minresistance="0"
       maxresistance="0.75"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="512,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
 
-  <!--Better name?-->
   <Affliction
     name="Vigor"
     identifier="strengthen"
@@ -768,7 +677,7 @@
       resistancefor="damage"
       minresistance="0"
       maxresistance="0.75"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
   
 

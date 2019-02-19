@@ -1228,7 +1228,7 @@
   <AfflictionCauseOfDeathSelf.SufforinPoisoning>You have died of sufforin poisoning.</AfflictionCauseOfDeathSelf.SufforinPoisoning>
 
   <AfflictionName.CyanidePoisoning>Cyanide poisoning</AfflictionName.CyanidePoisoning>
-  <AfflictionDescription.CyanidePoisoning>The patient is confused and has trouble breathing. Their skin is reddish and they have occasional muscle spasms.</AfflictionDescription.CyanidePoisoning>
+  <AfflictionDescription.CyanidePoisoning>The patient is confused and has trouble breathing. Their skin is red and they have occasional muscle spasms.</AfflictionDescription.CyanidePoisoning>
   <AfflictionCauseOfDeath.CyanidePoisoning>Died of cyanide poisoning.</AfflictionCauseOfDeath.CyanidePoisoning>
   <AfflictionCauseOfDeathSelf.CyanidePoisoning>You have died of cyanide poisoning.</AfflictionCauseOfDeathSelf.CyanidePoisoning>
   

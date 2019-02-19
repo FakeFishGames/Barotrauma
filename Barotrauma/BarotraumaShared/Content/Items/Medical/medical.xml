@@ -752,6 +752,130 @@
     </MeleeWeapon>
   </MorbusineAntidote>
   
+  <CyanideAntidote name="Cyanide Antidote" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute cyanide poisoning." useinhealthinterface="true" scale="0.3">
+
+    <Price locationtype="Research" buyprice="120" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="150" />
+
+    <SuitableTreatment identifier="cyanidepoisoning" suitability="100" />
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,704,64,64" />
+    <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
+    <Body width="60" height="110" density="20" />
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
+        <ReduceAffliction identifier="cyanidepoisoning" amount="100.0" />
+      </StatusEffect>
+
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+
+    </MeleeWeapon>
+  </CyanideAntidote>
+
+  <SufforinAntidote name="Sufforin Antidote" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute sufforin poisoning." useinhealthinterface="true" scale="0.3">
+
+    <Price locationtype="Research" buyprice="120" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="150" />
+
+    <SuitableTreatment identifier="sufforinpoisoning" suitability="100" />
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,704,64,64" />
+    <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
+    <Body width="60" height="110" density="20" />
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
+        <ReduceAffliction identifier="sufforinpoisoning" amount="100.0" />
+      </StatusEffect>
+
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+
+    </MeleeWeapon>
+  </SufforinAntidote>
+
+  <DeliriumineAntidote name="Deliriumine Antidote" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute deliriumine poisoning." useinhealthinterface="true" scale="0.3">
+
+    <Price locationtype="Research" buyprice="120" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="150" />
+
+    <SuitableTreatment identifier="deliriuminepoisoning" suitability="100" />
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,703,64,64" />
+    <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
+    <Body width="60" height="110" density="20" />
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+
+      <!--Heal deliriumine poisoning instantly, slowly lower psychosis-->
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
+        <ReduceAffliction identifier="deliriuminepoisoning" amount="100.0" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="20.0">
+        <ReduceAffliction identifier="psychosis" amount="5.0" />
+      </StatusEffect>
+
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+
+    </MeleeWeapon>
+  </DeliriumineAntidote>
+
+  <AntiRad name="AntiRad" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Slows down cellular degradation caused by radiation." useinhealthinterface="true" scale="0.3">
+
+    <Price locationtype="Research" buyprice="120" />
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="150" />
+
+    <SuitableTreatment identifier="radiationsickness" suitability="100" />
+
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,704,64,64" />
+    <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
+    <Body width="60" height="110" density="20" />
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+
+      <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
+        <ReduceAffliction identifier="radiationsickness" amount="100.0" />
+      </StatusEffect>
+
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+
+    </MeleeWeapon>
+  </AntiRad>
+
   <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3">
     
     <SuitableTreatment identifier="internaldamage" suitability="-15" />
@@ -848,10 +972,9 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
-        <Affliction identifier="internaldamage" amount="0.1" />
         <ReduceAffliction identifier="oxygenlow" amount="0.2" />
         <Affliction identifier="psychosis" amount="0.2" />
-        <Affliction identifier="strengthen" amount="0.6" />
+        <Affliction identifier="strengthen" amount="1.6" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
