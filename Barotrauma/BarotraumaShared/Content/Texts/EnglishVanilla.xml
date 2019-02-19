@@ -115,6 +115,8 @@
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
   
   <!-- Steam Workshop menu -->
+  <BrowseTab>Browse</BrowseTab>
+  <PublishTab>Publish</PublishTab>
   <DownloadButton>Download</DownloadButton>
   <SubscribedMods>Mods</SubscribedMods>
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
@@ -173,6 +175,12 @@
   <WorkshopErrorEnableFailed>Enabling the workshop item "[itemname]" failed.</WorkshopErrorEnableFailed>
   <WorkshopItemIncompatible>Incompatible</WorkshopItemIncompatible>
   <WorkshopItemIncompatibleTooltip>This Workshop item is not compatible with your version of Barotrauma.</WorkshopItemIncompatibleTooltip>
+  <Workshop.ContentTag.Submarine>Submarine</Workshop.ContentTag.Submarine>
+  <Workshop.ContentTag.Item>Item</Workshop.ContentTag.Item>
+  <Workshop.ContentTag.Art>Art</Workshop.ContentTag.Art>
+  <Workshop.ContentTag.Environment>Environment</Workshop.ContentTag.Environment>
+  <Workshop.ContentTag.Monster>Monster</Workshop.ContentTag.Monster>
+  <Workshop.ContentTag.Mission>Mission</Workshop.ContentTag.Mission>
   
   <!-- Settings menu -->
   <Settings>Settings</Settings>
@@ -199,7 +207,8 @@
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
   <AimAssist>Aim assist</AimAssist>
-  <Language>Language</Language>  
+  <Language>Language</Language>
+  <Language.English>English</Language.English>
   <ContentPackage>Content package</ContentPackage>
   <ContentPackages>Content packages</ContentPackages>
   <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
@@ -281,7 +290,6 @@
   <BanDuration>Duration</BanDuration>
   <BanPermanent>Permanent</BanPermanent>
   <BanReason>Reason: </BanReason>
-
 
   <!-- Round summary -->
   <RoundSummaryProgress>[sub] has made its way to [location].</RoundSummaryProgress>
@@ -393,7 +401,10 @@
   <SubNotSelected>Submarine not selected!</SubNotSelected>
   <SelectSubRequest>Please select a submarine.</SelectSubRequest>
   <SelectedSub>Selected submarine</SelectedSub>
+  <SaveNameInUseHeader>Save name already in use</SaveNameInUseHeader>
+  <SaveNameInUseText>Please choose another name for the save file</SaveNameInUseText>
   <SaveName>Save name</SaveName>
+  <SaveFile.DefaultName>Save</SaveFile.DefaultName>
   <LastSaved>Last saved</LastSaved>
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
@@ -724,6 +735,25 @@
   <CrewExperienceLow>Beginner</CrewExperienceLow>
   <CrewExperienceMid>Intermediate</CrewExperienceMid>
   <CrewExperienceHigh>Experienced</CrewExperienceHigh>
+  
+  <!-- Vanilla sub names & descriptions -->
+  <Submarine.Name.Humpback>Humpback</Submarine.Name.Humpback>
+  <Submarine.Description.Humpback>A former military vessel, WH4-L3 "Humpback" has been outfitted to withstand most of the dangers in deep Europa. Her relatively high velocity is offset by low maneuverability. Still boasting an older model reactor, power needs to be supplemented by a backup battery array or the crew will find themselves unable to run all of the new equipment.</Submarine.Description.Humpback>
+
+  <Submarine.Name.Bunyip>Bunyip</Submarine.Name.Bunyip>
+  <Submarine.Description.Bunyip>Latest in the line of personnel transports, Bunyip is capable of ferrying crew between submarines and installations. Its operating radius is considerably lower than its more advanced cousins and no weapons on board make it vulnerable to attacks.</Submarine.Description.Bunyip>
+
+  <Submarine.Name.Muikku>Muikku</Submarine.Name.Muikku>
+  <Submarine.Description.Muikku>The workhorse of the colonies, these little shuttles have good speed and dive/ascent characteristics, but they are fragile and their low capacity batteries limit their range somewhat.</Submarine.Description.Muikku>
+
+  <Submarine.Name.Orca>Orca</Submarine.Name.Orca>
+  <Submarine.Description.Orca>With a relatively high top speed and fantastic ascent and descent characteristics due to her 3 large ballast tanks, Orca class subs are agile vessels, let down only by their small compliment of weapons, unreliable engine and reactors with a greater than average hunger for fuel.</Submarine.Description.Orca>
+
+  <Submarine.Name.Remora>Remora</Submarine.Name.Remora>
+  <Submarine.Description.Remora>NYI</Submarine.Description.Remora>
+
+  <Submarine.Name.Typhon>Typhon</Submarine.Name.Typhon>
+  <Submarine.Description.Typhon>Typhon class subs are known for their brutish appearance, reasonable array of light and heavy firepower, and their general dependability. Any captain should be aware of their poor rate of descent and unimpressive top speed.</Submarine.Description.Typhon>
 
   <!-- Waypoints -->
   <Waypoint>Waypoint</Waypoint>
@@ -797,6 +827,7 @@
   <ReactorTipLoad>How much power is currently being consumed by the devices connected to the reactor.</ReactorTipLoad>
   <ReactorTipPower>How much power is currently being generated by the reactor.</ReactorTipPower>
   <ReactorTipAutoTemp>When automatic control is on, the reactor will automatically adjust itself according to the power consumption. However, the system is not fast enough to react to large fluctuations in power consumption, so manual adjustments may still be needed.</ReactorTipAutoTemp>
+  <UILabel.FuelRods>Fuel Rods</UILabel.FuelRods>
 
   <SteeringManual>Manual steering</SteeringManual>
   <SteeringAutoPilot>Autopilot</SteeringAutoPilot>
@@ -820,6 +851,7 @@
   
   <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
   <PowerContainerRechargeRate>Recharge rate [rate] %</PowerContainerRechargeRate>
+  <UILabel.ChargingDock>Charging Dock</UILabel.ChargingDock>
   
   <PowerTransferPowered>Powered</PowerTransferPowered>
   <PowerTransferHighVoltage>Overvoltage</PowerTransferHighVoltage>

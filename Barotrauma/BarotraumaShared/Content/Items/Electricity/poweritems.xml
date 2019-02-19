@@ -53,7 +53,7 @@
       <input name="power_out" />
       <input name="power_in" />
     </ConnectionPanel>
-    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="Charging Dock">
+    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
       <Containable identifiers="loadable" />
     </ItemContainer>
@@ -86,7 +86,7 @@
       <input name="power_out" />
       <input name="power_in" />
     </ConnectionPanel>
-    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="Charging Dock" >
+    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock" >
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI"/>
       <Containable identifiers="loadable" />
     </ItemContainer>
@@ -165,7 +165,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power_in" />
     </ConnectionPanel>
-    <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="Charging Dock" containedspritedepth="0.81">
+    <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="ChargingDock" containedspritedepth="0.81">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" style="ItemUI" />
       <Containable identifiers="loadable" />
     </ItemContainer>
