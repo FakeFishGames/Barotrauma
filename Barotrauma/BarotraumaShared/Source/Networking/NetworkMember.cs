@@ -151,6 +151,8 @@ namespace Barotrauma.Networking
 
         protected RespawnManager respawnManager;
 
+        public bool ShowNetStats;
+
         public int Port
         {
             get;

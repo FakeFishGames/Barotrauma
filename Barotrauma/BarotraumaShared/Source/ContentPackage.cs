@@ -34,6 +34,7 @@ namespace Barotrauma
         Decals,
         NPCConversations,
         Afflictions,
+        Buffs,
         Tutorials,
         UIStyle
     }
