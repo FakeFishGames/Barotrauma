@@ -12,6 +12,9 @@ namespace Barotrauma.Items.Components
         private ConvexHull convexHull;
         private ConvexHull convexHull2;
 
+        //openState when the vertices of the convex hull were last calculated
+        private float lastConvexHullState;
+
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
             Vector2[] corners = new Vector2[4];
