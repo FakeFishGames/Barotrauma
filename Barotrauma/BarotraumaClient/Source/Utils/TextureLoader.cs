@@ -97,12 +97,6 @@ namespace Barotrauma
                     data[x + (y * texture.Width)] = (a<<24) | (r<<16) | (g<<8) | b;
                 }
             }
-
-            //not sure why this is needed, but it seems to cut the memory usage of the game almost in half
-            //GetData/SetData might be leaking memory?
-            texture.Dispose();
-            texture = new Texture2D(_graphicsDevice, texture.Width, texture.Height);
-            
             texture.SetData(data);
         }
        
