@@ -224,7 +224,11 @@ namespace Barotrauma
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
                     float angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
 
-                    ReadStatus(msg);
+                    bool readStatus = msg.ReadBoolean();
+                    if (readStatus)
+                    {
+                        ReadStatus(msg);
+                    }
 
                     msg.ReadPadBits();
 

@@ -21,6 +21,9 @@
         public const float MaxPhysicsBodyVelocity = 64.0f;
         public const float MaxPhysicsBodyAngularVelocity = 16.0f;
 
+        public const float MaxHealthUpdateInterval = 1.0f;
+        public const float MaxHealthUpdateIntervalDead = 5.0f;
+
         //how much the physics body of an item has to move until the server 
         //send a position update to clients (in sim units)
         public const float ItemPosUpdateDistance = 2.0f;

@@ -2359,6 +2359,8 @@ namespace Barotrauma
         public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (IsDead || CharacterHealth.Unkillable) { return; }
+
+            HealthUpdateInterval = 0.0f;
             
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
