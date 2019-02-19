@@ -180,7 +180,7 @@ namespace Barotrauma.Networking
                 CoroutineManager.StartCoroutine(RegisterToMasterServer());
             }
 
-            updateInterval = new TimeSpan(0, 0, 0, 0, 150);
+            updateInterval = new TimeSpan(0, 0, 0, 0, MathHelper.Clamp((int)(1000 / ServerSettings.TickRate), 1, 500));
 
             Log("Server started", ServerLog.MessageType.ServerMessage);
 
