@@ -247,17 +247,17 @@ namespace Barotrauma
                     // Don't react to damage done by friendly ai, because we know that it's accidental
                     return;
                 }
+                if (attacker.AnimController.Anim == AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
+                {
+                    // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
+                    // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
+                    return;
+                }
                 float currentVitality = Character.CharacterHealth.Vitality;
                 float dmgPercentage = totalDamage / currentVitality * 100;
                 if (dmgPercentage < currentVitality / 10)
                 {
                     // Don't react to a minor amount of (accidental) dmg done by friendly characters
-                    return;
-                }
-                if (attacker.AnimController.Anim == AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
-                {
-                    // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
-                    // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
                     return;
                 }
             }
