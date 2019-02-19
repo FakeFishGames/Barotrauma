@@ -364,12 +364,16 @@
   <Done>Done</Done>
   <Delete>Delete</Delete>
   <Load>Load</Load>
+  <Save>Save</Save>
   <Back>Back</Back>
   <Days>Days</Days>
   <Hours>Hours</Hours>
   <Retry>Retry</Retry>
   <ManagePlayers>Manage players</ManagePlayers>
   <Destination>Destination</Destination>
+  <Previous>Previous</Previous>
+  <Next>Next</Next>
+  <Name>Name</Name>
 
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
@@ -710,6 +714,122 @@
   <LevelEditorLevelObjNameTaken>The selected name is already in use.</LevelEditorLevelObjNameTaken>
   <LevelEditorLevelObjTextureNotFound>Could not find the selected texture file.</LevelEditorLevelObjTextureNotFound>
   
+  <!-- Character Editor -->
+  <CharacterEditor.CreatingNewJoint>Creating a new joint</CharacterEditor.CreatingNewJoint>
+  <CharacterEditor.Frozen>Frozen</CharacterEditor.Frozen>
+  <CharacterEditor.AnimationTestPoseEnabled>Animation Test Pose Enabled</CharacterEditor.AnimationTestPoseEnabled>
+  <CharacterEditor.SpriteSheetOrientation>Spritesheet Orientation</CharacterEditor.SpriteSheetOrientation>
+  <CharacterEditor.CantAddJointsNoLimbElements>Cannot add joints, because no limb elements were found!</CharacterEditor.CantAddJointsNoLimbElements>
+  <CharacterEditor.HumanoidLimbDeletionDisabled>Deleting limbs from a humanoid is currently disabled due to crashing</CharacterEditor.HumanoidLimbDeletionDisabled>
+  <CharacterEditor.TryingToSpawnCharacter>Trying to spawn [config]</CharacterEditor.TryingToSpawnCharacter>
+  <CharacterEditor.NoContentPackageSelected>No content package selected!</CharacterEditor.NoContentPackageSelected>
+  <CharacterEditor.ContentPackageSaved>Content package saved at: [path]</CharacterEditor.ContentPackageSaved>
+  <CharacterEditor.BackgroundColor>Background \nColor</CharacterEditor.BackgroundColor>
+  <CharacterEditor.SpriteSheetZoom>Spritesheet Zoom</CharacterEditor.SpriteSheetZoom>
+  <CharacterEditor.Reset>Reset</CharacterEditor.Reset>
+  <CharacterEditor.HideBodySprites>Hide Body Sprites</CharacterEditor.HideBodySprites>
+  <CharacterEditor.ShowWearables>Show Wearables</CharacterEditor.ShowWearables>
+  <CharacterEditor.LockSpriteOrigin>Lock Sprite Origin</CharacterEditor.LockSpriteOrigin>
+  <CharacterEditor.LockSpritePosition>Lock Sprite Position</CharacterEditor.LockSpritePosition>
+  <CharacterEditor.LockSpriteSize>Lock Sprite Size</CharacterEditor.LockSpriteSize>
+  <CharacterEditor.AdjustCollider>Adjust Collider</CharacterEditor.AdjustCollider>
+  <CharacterEditor.UniformScale>Uniform Scale</CharacterEditor.UniformScale>
+  <CharacterEditor.CopyJointSettings>Copy Joint Settings</CharacterEditor.CopyJointSettings>
+  <CharacterEditor.CopyJointSettingsTooltip>Copies the currently tweaked settings to all selected joints.</CharacterEditor.CopyJointSettingsTooltip>
+  <CharacterEditor.JointScale>Joint Scale</CharacterEditor.JointScale>
+  <CharacterEditor.LimbScale>Limb Scale</CharacterEditor.LimbScale>
+  <CharacterEditor.SelectedAnimation>Selected Animation</CharacterEditor.SelectedAnimation>
+  <CharacterEditor.PreviousCharacter>Previous \nCharacter</CharacterEditor.PreviousCharacter>
+  <CharacterEditor.NextCharacter>Next \nCharacter</CharacterEditor.NextCharacter>
+  <CharacterEditor.ShowParameters>Show Parameters</CharacterEditor.ShowParameters>
+  <CharacterEditor.ShowSpriteSheet>Show Spritesheet</CharacterEditor.ShowSpriteSheet>
+  <CharacterEditor.ShowRagdoll>Show Ragdoll</CharacterEditor.ShowRagdoll>
+  <CharacterEditor.EditAnimations>Edit Animations</CharacterEditor.EditAnimations>
+  <CharacterEditor.EditLimbs>Edit Limbs</CharacterEditor.EditLimbs>
+  <CharacterEditor.EditJoints>Edit Joints</CharacterEditor.EditJoints>
+  <CharacterEditor.EditIKTargets>Edit IK Targets</CharacterEditor.EditIKTargets>
+  <CharacterEditor.Freeze>Freeze</CharacterEditor.Freeze>
+  <CharacterEditor.AutoFreeze>Auto Freeze</CharacterEditor.AutoFreeze>
+  <CharacterEditor.LimbPairEditing>Limb Pair Editing</CharacterEditor.LimbPairEditing>
+  <CharacterEditor.AnimationTestPose>Animation Test Pose</CharacterEditor.AnimationTestPose>
+  <CharacterEditor.AutoMove>Auto Move</CharacterEditor.AutoMove>
+  <CharacterEditor.FollowCursor>Follow Cursor</CharacterEditor.FollowCursor>
+  <CharacterEditor.DisplayColliders>Display Colliders</CharacterEditor.DisplayColliders>
+  <CharacterEditor.EditBackgroundColor>Edit Background Color</CharacterEditor.EditBackgroundColor>
+  <CharacterEditor.QuickSaveAnimations>Quick Save Animations</CharacterEditor.QuickSaveAnimations>
+  <CharacterEditor.CantEditVanillaContent>Can't edit Vanilla content!</CharacterEditor.CantEditVanillaContent>
+  <CharacterEditor.AllAnimationsSaved>All animations saved</CharacterEditor.AllAnimationsSaved>
+  <CharacterEditor.QuickSaveRagdoll>Quick Save Ragdoll</CharacterEditor.QuickSaveRagdoll>
+  <CharacterEditor.RagdollSavedTo>Ragdoll saved to [path]</CharacterEditor.RagdollSavedTo>
+  <CharacterEditor.ResetAnimations>Reset Animations</CharacterEditor.ResetAnimations>
+  <CharacterEditor.AllAnimationsReset>All animations reset</CharacterEditor.AllAnimationsReset>
+  <CharacterEditor.ResetRagdoll>Reset Ragdoll</CharacterEditor.ResetRagdoll>
+  <CharacterEditor.RagdollReset>Ragdoll reset</CharacterEditor.RagdollReset>
+  <CharacterEditor.SaveRagdoll>Save Ragdoll</CharacterEditor.SaveRagdoll>
+  <CharacterEditor.ProvideFileName>Please provide a name for the file</CharacterEditor.ProvideFileName>
+  <CharacterEditor.LoadRagdoll>Load Ragdoll</CharacterEditor.LoadRagdoll>
+  <CharacterEditor.CouldntOpenDirectory>Couldn't open directory \"[folder]\"!</CharacterEditor.CouldntOpenDirectory>
+  <CharacterEditor.RagdollDeletedFrom>Ragdoll deleted from [file]</CharacterEditor.RagdollDeletedFrom>
+  <CharacterEditor.RagdollLoadedFrom>Ragdoll loaded from [file]</CharacterEditor.RagdollLoadedFrom>
+  <CharacterEditor.SaveAnimation>Save Animation</CharacterEditor.SaveAnimation>
+  <CharacterEditor.SelectAnimationType>Select Animation Type</CharacterEditor.SelectAnimationType>
+  <CharacterEditor.AnimationOfTypeSavedTo>Animation of type [type] saved to [path]</CharacterEditor.AnimationOfTypeSavedTo>
+  <CharacterEditor.LoadAnimation>Load Animation</CharacterEditor.LoadAnimation>
+  <CharacterEditor.AnimationOfTypeDeleted>Animation of type [type] at [file] deleted</CharacterEditor.AnimationOfTypeDeleted>
+  <CharacterEditor.AnimationTypeNotImplemented>Animation type [type] not implemented!</CharacterEditor.AnimationTypeNotImplemented>
+  <CharacterEditor.AnimationOfTypeLoaded>Animation of type [type] loaded from [file]</CharacterEditor.AnimationOfTypeLoaded>
+  <CharacterEditor.ReloadTextures>Reload Textures</CharacterEditor.ReloadTextures>
+  <CharacterEditor.RecreateRagdoll>Recreate Ragdoll</CharacterEditor.RecreateRagdoll>
+  <CharacterEditor.RecreateRagdollTooltip>Many of the parameters requires recreation of the ragdoll. If adjusting the parameter doesn't seem to have effect, click this button.</CharacterEditor.RecreateRagdollTooltip>
+  <CharacterEditor.CreateNewCharacter>Create New Character</CharacterEditor.CreateNewCharacter>
+  <CharacterEditor.NoFieldForParameterFound>No field for [parameter] found!</CharacterEditor.NoFieldForParameterFound>
+  <CharacterEditor.SelectTargetLimbForJointEnd>Left click to select the target limb for the other end of the joint.</CharacterEditor.SelectTargetLimbForJointEnd>
+  <CharacterEditor.HoldLeftAltToAdjustCycleSpeed>Hold \"Left Alt\" to adjust cycle speed</CharacterEditor.HoldLeftAltToAdjustCycleSpeed>
+  <CharacterEditor.CycleSpeed>Cycle Speed</CharacterEditor.CycleSpeed>
+  <CharacterEditor.MovementSpeed>Movement Speed</CharacterEditor.MovementSpeed>
+  <CharacterEditor.HeadAngle>Head Angle</CharacterEditor.HeadAngle>
+  <CharacterEditor.Head>Head</CharacterEditor.Head>
+  <CharacterEditor.HeadPosition>Head Position</CharacterEditor.HeadPosition>
+  <CharacterEditor.TorsoAngle>Torso Angle</CharacterEditor.TorsoAngle>
+  <CharacterEditor.Torso>Torso</CharacterEditor.Torso>
+  <CharacterEditor.TorsoPosition>Torso Position</CharacterEditor.TorsoPosition>
+  <CharacterEditor.TailAngle>Tail Angle</CharacterEditor.TailAngle>
+  <CharacterEditor.FootAngle>Foot Angle</CharacterEditor.FootAngle>
+  <CharacterEditor.StepSize>Step Size</CharacterEditor.StepSize>
+  <CharacterEditor.HandMoveAmount>Hand Move Amount</CharacterEditor.HandMoveAmount>
+  <CharacterEditor.TailMovementSpeed>Tail Movement Speed</CharacterEditor.TailMovementSpeed>
+  <CharacterEditor.TailMovementAmount>Tail Movement Amount</CharacterEditor.TailMovementAmount>
+  <CharacterEditor.LegMovementSpeed>Leg Movement Speed</CharacterEditor.LegMovementSpeed>
+  <CharacterEditor.LegMovementAmount>Leg Movement Amount</CharacterEditor.LegMovementAmount>
+  <CharacterEditor.HandMovementAmount>Hand Movement Amount</CharacterEditor.HandMovementAmount>
+  <CharacterEditor.HoldLeftAltToManipulateJoint>Hold \"Left Alt\" to manipulate the other end of the joint</CharacterEditor.HoldLeftAltToManipulateJoint>
+  <CharacterEditor.Origin>Origin</CharacterEditor.Origin>
+  <CharacterEditor.Position>Position: [coordinates]</CharacterEditor.Position>
+  <CharacterEditor.Size>Size</CharacterEditor.Size>
+  <CharacterEditor.UpperLimit>Upper Limit</CharacterEditor.UpperLimit>
+  <CharacterEditor.LowerLimit>Lower Limit</CharacterEditor.LowerLimit>
+  <CharacterEditor.DefaultName>Character X</CharacterEditor.DefaultName>
+  <CharacterEditor.IsHumanoid>Is a Humanoid?</CharacterEditor.IsHumanoid>
+  <CharacterEditor.CanEnterSubmarines>Can Enter Submarines?</CharacterEditor.CanEnterSubmarines>
+  <CharacterEditor.ConfigFileOutput>Config File Output</CharacterEditor.ConfigFileOutput>
+  <CharacterEditor.TexturePath>Texture Path</CharacterEditor.TexturePath>
+  <CharacterEditor.TextureDoesNotExist>The texture file does not exist!</CharacterEditor.TextureDoesNotExist>
+  <CharacterEditor.DefineRagdoll>Define Ragdoll</CharacterEditor.DefineRagdoll>
+  <CharacterEditor.LoadFromHTML>Load From HTML</CharacterEditor.LoadFromHTML>
+  <CharacterEditor.Limbs>Limbs</CharacterEditor.Limbs>
+  <CharacterEditor.Joints>Joints</CharacterEditor.Joints>
+  <CharacterEditor.LoadHTML>Load HTML</CharacterEditor.LoadHTML>
+  <CharacterEditor.HTMLPath>HTML Path</CharacterEditor.HTMLPath>
+  <CharacterEditor.MultipleTorsosDefined>You need to define one and only one limb as \"Torso\"!</CharacterEditor.MultipleTorsosDefined>
+  <CharacterEditor.CharacterCreated>Character [name] Created</CharacterEditor.CharacterCreated>
+  <CharacterEditor.LimbType>Limb Type</CharacterEditor.LimbType>
+  <CharacterEditor.SourceRectangle>Source Rectangle</CharacterEditor.SourceRectangle>
+  <CharacterEditor.ID>Identifier</CharacterEditor.ID>
+  <CharacterEditor.LimbWithIndex>Limb [index]</CharacterEditor.LimbWithIndex>
+  <CharacterEditor.LimbWithIndexAnchor>Limb [index] Anchor</CharacterEditor.LimbWithIndexAnchor>
+  <CharacterEditor.FailedToReadHTML>Character Editor Screen: Failed to read HTML at [path]</CharacterEditor.FailedToReadHTML>
+  <CharacterEditor.MultipleItemsWithSameHierarchy>Multiple items with the same hierarchy \"[hierarchy]\" found ([name]). Cannot continue.</CharacterEditor.MultipleItemsWithSameHierarchy>
+
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
   <EngineRoom>Engine room</EngineRoom>
