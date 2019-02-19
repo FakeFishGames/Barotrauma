@@ -42,8 +42,9 @@ namespace Barotrauma.Items.Components
 
         private bool isBroken;
 
-        private float ignoreSignalTimer;
-        
+        //openState when the vertices of the convex hull were last calculated
+        private float lastConvexHullState;
+
         public bool IsBroken
         {
             get { return isBroken; }
@@ -263,7 +264,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            ignoreSignalTimer -= deltaTime;
             if (isBroken)
             {
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
@@ -313,7 +313,6 @@ namespace Barotrauma.Items.Components
         
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
-            ignoreSignalTimer -= deltaTime;
             IsBroken = true;
         }
 
@@ -485,9 +484,10 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (isStuck || ignoreSignalTimer > 0.0f) return;
-            
+            if (isStuck) return;
+
             bool wasOpen = predictedState == null ? isOpen : predictedState.Value;
+
             if (connection.Name == "toggle")
             {
                 SetState(!wasOpen, false, true);
@@ -496,8 +496,6 @@ namespace Barotrauma.Items.Components
             {
                 SetState(signal != "0", false, true);
             }
-
-            ignoreSignalTimer = 0.5f;
 
 #if SERVER
             bool newState = predictedState == null ? isOpen : predictedState.Value;
