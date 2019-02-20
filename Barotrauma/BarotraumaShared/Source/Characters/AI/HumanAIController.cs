@@ -129,9 +129,12 @@ namespace Barotrauma
                 Character.AnimController.TargetMovement = targetMovement;
             }
 
-            if (Character.AnimController.Anim == AnimController.Animation.Climbing &&
+            bool isClimbing =
+                Character.AnimController.Anim == AnimController.Animation.Climbing &&
                 Character.SelectedConstruction != null &&
-                Character.SelectedConstruction.GetComponent<Items.Components.Ladder>() != null)
+                Character.SelectedConstruction.GetComponent<Items.Components.Ladder>() != null;
+
+            if (isClimbing)
             {
                 if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
                 {
@@ -139,17 +142,20 @@ namespace Barotrauma
                 }
             }
 
-            //suit can be taken off if there character is inside a hull and there's air in the room
+            //suit can be taken off if the character is inside a hull and there's air in the room
             bool canTakeOffSuit = Character.AnimController.CurrentHull != null &&
                 Character.AnimController.CurrentHull.OxygenPercentage > 30.0f &&
-                Character.AnimController.CurrentHull.WaterVolume < Character.AnimController.CurrentHull.Volume * 0.3f;
+                Character.AnimController.CurrentHull.WaterPercentage < 30;
 
-            //the suit can be taken off and the character is running out of oxygen (couldn't find a tank for the suit?) or idling
-            //-> take the suit off
-            if (canTakeOffSuit && (Character.Oxygen < 50.0f || objectiveManager.CurrentObjective is AIObjectiveIdle))
+            bool shouldTakeSuitOff = Character.Oxygen < 50.0f || (objectiveManager.CurrentObjective is AIObjectiveIdle && Character.AnimController.CurrentHull.WaterPercentage < 1 && !isClimbing);
+            if (canTakeOffSuit && shouldTakeSuitOff)
             {
                 var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
-                if (divingSuit != null) divingSuit.Drop(Character);
+                if (divingSuit != null)
+                {
+                    // TODO: take the item where it was taken?
+                    divingSuit.Drop(Character);
+                }
             }
 
             if (Character.IsKeyDown(InputType.Aim))
