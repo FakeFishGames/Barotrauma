@@ -39,7 +39,7 @@ namespace Barotrauma
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
         {
             preMultipliedAlpha = preMultiplyAlpha;
-            texture = LoadTexture(this.file, preMultiplyAlpha);
+            texture = LoadTexture(this.FilePath, preMultiplyAlpha);
 
             if (texture == null)
             {
@@ -57,7 +57,7 @@ namespace Barotrauma
             texture.Dispose();
             texture = null;
 
-            texture = TextureLoader.FromFile(file, preMultipliedAlpha);
+            texture = TextureLoader.FromFile(FilePath, preMultipliedAlpha);
             foreach (Sprite sprite in sprites)
             {
                 sprite.texture = texture;
@@ -76,8 +76,7 @@ namespace Barotrauma
             file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (string.IsNullOrEmpty(s.FilePath)) continue;
-                if (Path.GetFullPath(s.file) == file) return s.texture;
+                if (s.FullPath == file) return s.texture;
             }
 
             if (File.Exists(file))
@@ -278,13 +277,11 @@ namespace Barotrauma
         partial void DisposeTexture()
         {
             //check if another sprite is using the same texture
-            if (!string.IsNullOrEmpty(file)) //file can be empty if the sprite is created directly from a Texture2D instance
+            if (!string.IsNullOrEmpty(FilePath)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
-                string normalizedFilePath = Path.GetFullPath(file);
                 foreach (Sprite s in list)
                 {
-                    if (string.IsNullOrEmpty(s.file)) continue;
-                    if (Path.GetFullPath(s.file) == normalizedFilePath) return;
+                    if (s.FullPath == FullPath) return;
                 }
             }
             
