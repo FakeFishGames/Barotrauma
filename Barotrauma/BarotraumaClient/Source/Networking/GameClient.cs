@@ -643,12 +643,12 @@ namespace Barotrauma.Networking
                     respawnManager.Update(deltaTime);
                 }
 
-                if (updateTimer > DateTime.Now) return;
+                if (updateTimer > DateTime.Now) { return; }
                 SendIngameUpdate();
             }
             else
             {
-                if (updateTimer > DateTime.Now) return;
+                if (updateTimer > DateTime.Now) { return; }
                 SendLobbyUpdate();
             }
 
