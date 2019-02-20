@@ -13,12 +13,18 @@
     vitality="50"
     doesbleed="true"/>
 
-  <!-- TODO: sounds -->
-  <sound file="Content/Characters/Legacycrawler/attack1.ogg" state="Attack" range="500"/>
-  <sound file="Content/Characters/Legacycrawler/attack2.ogg" state="Attack" range="500"/>
-
-  <sound file="Content/Characters/Legacycrawler/idle1.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Legacycrawler/idle2.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack1.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack2.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack3.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack4.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_death1.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_death2.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_damage1.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_damage2.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_damage3.ogg" state="Damage" range="1000"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
     <Item identifier="alienblood"/>
