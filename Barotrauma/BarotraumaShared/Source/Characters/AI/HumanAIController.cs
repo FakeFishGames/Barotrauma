@@ -129,11 +129,7 @@ namespace Barotrauma
                 Character.AnimController.TargetMovement = targetMovement;
             }
 
-            bool isClimbing =
-                Character.AnimController.Anim == AnimController.Animation.Climbing &&
-                Character.SelectedConstruction != null &&
-                Character.SelectedConstruction.GetComponent<Items.Components.Ladder>() != null;
-
+            bool isClimbing = Character.IsClimbing;
             if (isClimbing)
             {
                 if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
