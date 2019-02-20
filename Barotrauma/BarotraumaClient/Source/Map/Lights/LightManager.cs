@@ -491,7 +491,7 @@ namespace Barotrauma.Lights
 
             if (LosEnabled && LosMode != LosMode.None && ViewTarget != null)
             {
-                Vector2 pos = ViewTarget.WorldPosition;
+                Vector2 pos = ViewTarget.DrawPosition;
 
                 Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 

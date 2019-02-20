@@ -1244,17 +1244,7 @@ namespace Barotrauma
             var selectedClient = component.UserData as Client;
             if (selectedClient == null) return false;
 
-            /*if (GameMain.Client != null)
-            {
-                if (selectedClient.ID == GameMain.Client.ID) return false;
-
-                if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
-                    !GameMain.Client.HasPermission(ClientPermissions.Kick) &&
-                    !GameMain.Client.ServerSettings.Voting.AllowVoteKick)
-                {
-                    return false;
-                }
-            }*/
+            bool myClient = selectedClient.ID == GameMain.Client.ID;
 
             playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
@@ -1285,7 +1275,8 @@ namespace Barotrauma
                 var rankDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("Rank"))
                 {
-                    UserData = selectedClient
+                    UserData = selectedClient,
+                    Enabled = !myClient
                 };
                 foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                 {
@@ -1334,14 +1325,14 @@ namespace Barotrauma
 
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
-                    if (permission == ClientPermissions.None) continue;
+                    if (permission == ClientPermissions.None || permission == ClientPermissions.All) continue;
 
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
                         TextManager.Get("ClientPermission." + permission), font: GUI.SmallFont)
                     {
                         UserData = permission,
                         Selected = selectedClient.HasPermission(permission),
-
+                        Enabled = !myClient,
                         OnSelected = (tickBox) =>
                         {
                             //reset rank to custom
@@ -1378,6 +1369,7 @@ namespace Barotrauma
                         command.names[0], font: GUI.SmallFont)
                     {
                         Selected = selectedClient.PermittedConsoleCommands.Contains(command),
+                        Enabled = !myClient,
                         ToolTip = command.help,
                         UserData = command
                     };
@@ -1408,55 +1400,58 @@ namespace Barotrauma
             var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             
-            if (GameMain.Client.HasPermission(ClientPermissions.Ban))
+            if (!myClient)
             {
-                var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
-                    TextManager.Get("Ban"))
+                if (GameMain.Client.HasPermission(ClientPermissions.Ban))
                 {
-                    UserData = obj
-                };
-                banButton.OnClicked += BanPlayer;
-                banButton.OnClicked += ClosePlayerFrame;
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                        TextManager.Get("Ban"))
+                    {
+                        UserData = obj
+                    };
+                    banButton.OnClicked += BanPlayer;
+                    banButton.OnClicked += ClosePlayerFrame;
 
-                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
-                    TextManager.Get("BanRange"))
+                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                        TextManager.Get("BanRange"))
+                    {
+                        UserData = obj
+                    };
+                    rangebanButton.OnClicked += BanPlayerRange;
+                    rangebanButton.OnClicked += ClosePlayerFrame;
+                }
+
+
+                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
                 {
-                    UserData = obj
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                        TextManager.Get("VoteToKick"))
+                    {
+                        Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                        OnClicked = GameMain.Client.VoteForKick,
+                        UserData = selectedClient
+                    };
+                }
+
+                if (GameMain.Client.HasPermission(ClientPermissions.Kick))
+                {
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                        TextManager.Get("Kick"))
+                    {
+                        UserData = obj
+                    };
+                    kickButton.OnClicked = KickPlayer;
+                    kickButton.OnClicked += ClosePlayerFrame;
+                }
+
+                new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
+                    TextManager.Get("Mute"))
+                {
+                    IgnoreLayoutGroups = true,
+                    Selected = selectedClient.MutedLocally,
+                    OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
                 };
-                rangebanButton.OnClicked += BanPlayerRange;
-                rangebanButton.OnClicked += ClosePlayerFrame;
             }
-
-
-            if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
-            {
-                var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
-                    TextManager.Get("VoteToKick"))
-                {
-                    Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
-                    OnClicked = GameMain.Client.VoteForKick,
-                    UserData = selectedClient
-                };
-            }
-
-            if (GameMain.Client.HasPermission(ClientPermissions.Kick))
-            {
-                var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
-                    TextManager.Get("Kick"))
-                {
-                    UserData = obj
-                };
-                kickButton.OnClicked = KickPlayer;
-                kickButton.OnClicked += ClosePlayerFrame;
-            }
-
-            var muteTickBox = new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
-                TextManager.Get("Mute"))
-            {
-                IgnoreLayoutGroups = true,
-                Selected = selectedClient.MutedLocally,
-                OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
-            };
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))

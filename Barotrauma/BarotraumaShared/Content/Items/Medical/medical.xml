@@ -1050,8 +1050,8 @@
     </MeleeWeapon>
   </ChloralHydrate>
   <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A famous neurotoxin. Causes muscle spasms and eventual death." useinhealthinterface="true" scale="0.3">
-    <Price locationtype="Research" buyprice="450" />
-    <Price locationtype="Military" buyprice="1000" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="Military" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,640,64,64" />
     <Sprite texture="Medicines.png" sourcerect="63,117,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -1068,8 +1068,8 @@
   </Cyanide>
   
   <Radiotoxin name="Radiotoxin" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly radioactive solution." useinhealthinterface="true" scale="0.3">
-    <Price locationtype="Research" buyprice="450" />
-    <Price locationtype="Military" buyprice="1000" />
+    <Price locationtype="Research" buyprice="200" />
+    <Price locationtype="Military" buyprice="500" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" />
     <Sprite texture="Medicines.png" sourcerect="0,115,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -1086,8 +1086,8 @@
   </Radiotoxin>
   
   <Sufforin name="Sufforin" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
-    <Price locationtype="Research" buyprice="450" />
-    <Price locationtype="Military" buyprice="1000" />
+    <Price locationtype="Research" buyprice="200" />
+    <Price locationtype="Military" buyprice="500" />
     
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,640,64,64" />
     <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1109,8 +1109,8 @@
   </Sufforin>
   
   <Deliriumine name="Deliriumine" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A psychosis-inducing toxin." useinhealthinterface="true" scale="0.3">
-    <Price locationtype="Research" buyprice="450" />
-    <Price locationtype="Military" buyprice="1000" />
+    <Price locationtype="Research" buyprice="250" />
+    <Price locationtype="Military" buyprice="600" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="378,239,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -68,9 +69,23 @@ namespace Barotrauma.Networking
             VoipSound = null;
         }
 
+        public void SetPermissions(ClientPermissions permissions, List<string> permittedConsoleCommands)
+        {
+            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+            foreach (string commandName in permittedConsoleCommands)
+            {
+                var consoleCommand = DebugConsole.Commands.Find(c => c.names.Contains(commandName));
+                if (consoleCommand != null)
+                {
+                    permittedCommands.Add(consoleCommand);
+                }
+            }
+            SetPermissions(permissions, permittedCommands);
+        }
+
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
         {
-            if (GameMain.Client == null || !GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
+            if (GameMain.Client == null)
             {
                 return;
             }
@@ -98,10 +113,11 @@ namespace Barotrauma.Networking
 
         public bool HasPermission(ClientPermissions permission)
         {
-            if (GameMain.Client == null || !GameMain.Client.HasPermission(ClientPermissions.ManagePermissions))
+            if (GameMain.Client == null)
             {
                 return false;
             }
+
             return Permissions.HasFlag(permission);
         }
 

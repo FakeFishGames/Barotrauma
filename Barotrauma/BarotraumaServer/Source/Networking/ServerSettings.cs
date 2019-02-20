@@ -13,14 +13,11 @@ namespace Barotrauma.Networking
     partial class ServerSettings
     {
         public const string SettingsFile = "serversettings.xml";
-        public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
 
         partial void InitProjSpecific()
         {
             LoadSettings();
-
-            PermissionPreset.LoadAll(PermissionPresetFile);
             LoadClientPermissions();
         }
 
@@ -51,6 +48,7 @@ namespace Barotrauma.Networking
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
+            outMsg.WriteRangedInteger(1, 60, TickRate);
 
             WriteExtraCargo(outMsg);
 
