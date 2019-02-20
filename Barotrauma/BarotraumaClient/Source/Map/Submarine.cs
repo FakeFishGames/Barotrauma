@@ -128,14 +128,14 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
-                    if (sub.subBody.MemPos.Count < 2) continue;
+                    if (sub.subBody.PositionBuffer.Count < 2) continue;
 
-                    Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[0].Position);
+                    Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[0].Position);
                     prevPos.Y = -prevPos.Y;
 
-                    for (int i = 1; i < sub.subBody.MemPos.Count; i++)
+                    for (int i = 1; i < sub.subBody.PositionBuffer.Count; i++)
                     {
-                        Vector2 currPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[i].Position);
+                        Vector2 currPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[i].Position);
                         currPos.Y = -currPos.Y;
 
                         GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 10, (int)currPos.Y - 10, 20, 20), Color.Blue * 0.6f, true, 0.01f);
@@ -372,30 +372,19 @@ namespace Barotrauma
         
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            var newTargetPosition = new Vector2(
-                msg.ReadFloat(),
-                msg.ReadFloat());
-            
-            //already interpolating with more up-to-date data -> ignore
-            if (subBody.MemPos.Count > 1 && subBody.MemPos[0].Timestamp > sendingTime)
-            {
-                return;
-            }
+            var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Name);
+            msg.ReadPadBits();
 
-            int index = 0;
-            while (index < subBody.MemPos.Count && sendingTime > subBody.MemPos[index].Timestamp)
+            if (posInfo != null)
             {
-                index++;
-            }
+                int index = 0;
+                while (index < subBody.PositionBuffer.Count && sendingTime > subBody.PositionBuffer[index].Timestamp)
+                {
+                    index++;
+                }
 
-            //position with the same timestamp already in the buffer (duplicate packet?)
-            //  -> no need to add again
-            if (index < subBody.MemPos.Count && sendingTime == subBody.MemPos[index].Timestamp)
-            {
-                return;
+                subBody.PositionBuffer.Insert(index, posInfo);
             }
-            
-            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, 0.0f, sendingTime));
         }
     }
 }

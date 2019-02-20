@@ -341,10 +341,13 @@ namespace Barotrauma
             if (!character.AllowInput)
             {
                 levitatingCollider = false;
-                Collider.Enabled = false;
-                Collider.LinearVelocity = MainLimb.LinearVelocity;
                 Collider.FarseerBody.FixedRotation = false;
-                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    Collider.Enabled = false;
+                    Collider.LinearVelocity = MainLimb.LinearVelocity;
+                    Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                }
                 return;
             }
 
@@ -499,7 +502,6 @@ namespace Barotrauma
 
             aiming = false;
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) return;
-            if (character.IsRemotePlayer) Collider.LinearVelocity = Vector2.Zero;
         }
 
         void UpdateStanding()
