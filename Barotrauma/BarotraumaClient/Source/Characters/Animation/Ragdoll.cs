@@ -80,14 +80,18 @@ namespace Barotrauma
                     Collider.LinearVelocity = newVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    if (distSqrd > 10.0f || !character.AllowInput)
+                    float errorTolerance = character.AllowInput ? 0.01f : 0.1f;
+                    if (distSqrd > errorTolerance)
                     {
-                        SetPosition(newPosition, lerp: distSqrd < 1.0f);
-                    }
-                    else if (distSqrd > 0.01f)
-                    {
-                        Collider.TargetPosition = newPosition;
-                        Collider.MoveToTargetPosition(true);
+                        if (distSqrd > 10.0f || !character.AllowInput)
+                        {
+                            SetPosition(newPosition, lerp: distSqrd < 1.0f);
+                        }
+                        else
+                        {
+                            Collider.TargetPosition = newPosition;
+                            Collider.MoveToTargetPosition(true);
+                        }
                     }
                     
                     //unconscious/dead characters can't correct their position using AnimController movement
