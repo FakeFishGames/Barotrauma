@@ -452,9 +452,12 @@ namespace Barotrauma
 
             // Alternative implementation
             float offset = GetArmorSectorRotationOffset(armorSector, body.Rotation);
+            // TODO: test this
+            //float angle = body.Dir == 1.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
+            //Vector2 forward = VectorExtensions.Forward(angle);
             Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
             float hitAngle = VectorExtensions.Angle(forward, simPosition - SimPosition);
-            float sectorSize = MathHelper.ToDegrees(GetArmorSectorSize(armorSector));
+            float sectorSize = GetArmorSectorSize(armorSector);
             return hitAngle < sectorSize / 2;
         }
 
