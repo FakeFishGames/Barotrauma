@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     partial class ItemInventory : Inventory
     {
+        private string uiLabel;
+
         protected override void ControlInput(Camera cam)
         {
             if (draggingItem == null && HUD.CloseHUD(BackgroundFrame))
@@ -84,13 +86,24 @@ namespace Barotrauma
 
                 if (container.InventoryTopSprite == null)
                 {
-                    Item item = Owner as Item;
-                    string label = TextManager.Get("UILabel." + container.UILabel) ?? item?.Name;
-                    if (!string.IsNullOrEmpty(label) && !subInventory)
+                    if (uiLabel == null || uiLabel == string.Empty)
+                    {
+                        if (container.UILabel != null && container.UILabel.Length > 0)
+                        {
+                            uiLabel = TextManager.Get("UILabel." + container.UILabel);
+                        }
+                        else
+                        {
+                            Item item = Owner as Item;
+                            uiLabel = item?.Name;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(uiLabel) && !subInventory)
                     {
                         GUI.DrawString(spriteBatch,
-                            new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(label).X / 2), (int)BackgroundFrame.Y + 5),
-                            label, Color.White * 0.9f);
+                            new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(uiLabel).X / 2), (int)BackgroundFrame.Y + 5),
+                            uiLabel, Color.White * 0.9f);
                     }
                 }
                 else if (!subInventory)

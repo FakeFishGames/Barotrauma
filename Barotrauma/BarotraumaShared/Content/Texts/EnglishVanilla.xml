@@ -677,6 +677,276 @@
   <Shuttle>Shuttle</Shuttle>
   <HideInMenus>Hide in menus</HideInMenus>
   <UnspecifiedSubFileName>Unnamed</UnspecifiedSubFileName>
+  
+  <!-- Sub Editor entities -->
+  <EntityName.hull>Hull</EntityName.hull>
+  <EntityDescription.hull>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</EntityDescription.hull>
+  <EntityName.gap>Gap</EntityName.gap>
+  <EntityDescription.gap>Gaps allow water and air to flow between two hulls.</EntityDescription.gap>
+  <EntityName.waypoint>Waypoint</EntityName.waypoint>
+  <EntityDescription.waypoint>Used by AI characters to navigate inside the submarine.</EntityDescription.waypoint>
+  <EntityName.spawnpoint>Spawnpoint</EntityName.spawnpoint>
+  <EntityDescription.spawnpoint>Determines which rooms the crew spawns inside.</EntityDescription.spawnpoint>
+  <EntityName.ff_x_wall>InWall L 0</EntityName.ff_x_wall>
+  <EntityDescription.ff_x_wall>A large horizontal wall with collision detection</EntityDescription.ff_x_wall>
+  <EntityName.ff_x_wall_cables>InWall L 0 Cables</EntityName.ff_x_wall_cables>
+  <EntityDescription.ff_x_wall_cables>A large vertical wall with collision detection</EntityDescription.ff_x_wall_cables>
+  <EntityName.ff_y_wall>InWall L 90</EntityName.ff_y_wall>
+  <EntityDescription.ff_y_wall>A large vertical wall with collision detection</EntityDescription.ff_y_wall>
+  <EntityName.inwalll90cables>InWall L 90 cables</EntityName.inwalll90cables>
+  <EntityDescription.inwalll90cables>A large vertical wall with collision detection</EntityDescription.inwalll90cables>
+  <EntityName.inwalllcaph1>InWall L Cap H1</EntityName.inwalllcaph1>
+  <EntityDescription.inwalllcaph1>A large wall cap</EntityDescription.inwalllcaph1>
+  <EntityName.inwalllcaph2>InWall L Cap H2</EntityName.inwalllcaph2>
+  <EntityDescription.inwalllcaph2>A large wall cap</EntityDescription.inwalllcaph2>
+  <EntityName.inwalllcaph3>InWall L Cap H3</EntityName.inwalllcaph3>
+  <EntityDescription.inwalllcaph3>A large wall cap</EntityDescription.inwalllcaph3>
+  <EntityName.inwalllcapy1>InWall L Cap V1</EntityName.inwalllcapy1>
+  <EntityDescription.inwalllcapy1>A large wall cap</EntityDescription.inwalllcapy1>
+  <EntityName.inwalllcapy2>InWall L Cap V2</EntityName.inwalllcapy2>
+  <EntityDescription.inwalllcapy2>A large wall cap</EntityDescription.inwalllcapy2>
+  <EntityName.inwalllcapy4>InWall L Cap V4</EntityName.inwalllcapy4>
+  <EntityDescription.inwalllcapy4>A large wall cap</EntityDescription.inwalllcapy4>
+  <EntityName.inwallltieh1>InWall L tie H1</EntityName.inwallltieh1>
+  <EntityDescription.inwallltieh1>A large wall cap</EntityDescription.inwallltieh1>
+  <EntityName.inwallltieh2>InWall L tie H2</EntityName.inwallltieh2>
+  <EntityDescription.inwallltieh2>A large wall cap</EntityDescription.inwallltieh2>
+  <EntityName.inwallltieh3>InWall L tie H3</EntityName.inwallltieh3>
+  <EntityDescription.inwallltieh3>A large wall cap</EntityDescription.inwallltieh3>
+  <EntityName.inwallltiev1>InWall L tie V1</EntityName.inwallltiev1>
+  <EntityDescription.inwallltiev1>A large wall cap</EntityDescription.inwallltiev1>
+  <EntityName.inwallltiev2>InWall L tie V2</EntityName.inwallltiev2>
+  <EntityDescription.inwallltiev2>A large wall cap</EntityDescription.inwallltiev2>
+  <EntityName.inwallltiev3>InWall L tie V3</EntityName.inwallltiev3>
+  <EntityDescription.inwallltiev3>A large wall cap</EntityDescription.inwallltiev3>
+  <EntityName.FF_Wall_B>BackWall Ballast A1</EntityName.FF_Wall_B>
+  <EntityDescription.FF_Wall_B>Ballast back wall</EntityDescription.FF_Wall_B>
+  <EntityName.FF_Wall_BP>BackWall Ballast A2</EntityName.FF_Wall_BP>
+  <EntityDescription.FF_Wall_BP>Ballast back wall with pipe</EntityDescription.FF_Wall_BP>
+  <EntityName.bwbc>BackWall Ballast C</EntityName.bwbc>
+  <EntityDescription.bwbc>Ballast back wall with pipe</EntityDescription.bwbc>
+  <EntityName.FF_Wall_C1>BackWall C1</EntityName.FF_Wall_C1>
+  <EntityDescription.FF_Wall_C1>Mushy grey wall</EntityDescription.FF_Wall_C1>
+  <EntityName.FF_Wall_C2>BackWall C2</EntityName.FF_Wall_C2>
+  <EntityDescription.FF_Wall_C2>Mushy grey wall</EntityDescription.FF_Wall_C2>
+  <EntityName.FF_Wall_C3>BackWall C3</EntityName.FF_Wall_C3>
+  <EntityDescription.FF_Wall_C3>Mushy grey Greeble wall</EntityDescription.FF_Wall_C3>
+  <EntityName.FF_Wall_D1>BackWall D1</EntityName.FF_Wall_D1>
+  <EntityDescription.FF_Wall_D1>Metal wall 1</EntityDescription.FF_Wall_D1>
+  <EntityName.FF_Wall_D2>BackWall D2</EntityName.FF_Wall_D2>
+  <EntityDescription.FF_Wall_D2>Metal wall 2</EntityDescription.FF_Wall_D2>
+  <EntityName.FF_Wall_D3>BackWall D3</EntityName.FF_Wall_D3>
+  <EntityDescription.FF_Wall_D3>Metal wall 3</EntityDescription.FF_Wall_D3>
+  <EntityName.FF_Wall_E>BackWall E</EntityName.FF_Wall_E>
+  <EntityDescription.FF_Wall_E>Block wall lit</EntityDescription.FF_Wall_E>
+  <EntityName.FF_Wall_G1>BackWall G1</EntityName.FF_Wall_G1>
+  <EntityDescription.FF_Wall_G1>General grey back wall 1</EntityDescription.FF_Wall_G1>
+  <EntityName.FF_Wall_G2>BackWall G2</EntityName.FF_Wall_G2>
+  <EntityDescription.FF_Wall_G2>General grey back wall 2</EntityDescription.FF_Wall_G2>
+  <EntityName.FF_Wall_G3>BackWall G3</EntityName.FF_Wall_G3>
+  <EntityDescription.FF_Wall_G3>General grey back wall 3</EntityDescription.FF_Wall_G3>
+  <EntityName.FF_Wall_H1>BackWall H1</EntityName.FF_Wall_H1>
+  <EntityDescription.FF_Wall_H1>Airlock Background</EntityDescription.FF_Wall_H1>
+  <EntityName.extA_Tail>Tail Fin Old A</EntityName.extA_Tail>
+  <EntityDescription.extA_Tail>Submarine tail temp</EntityDescription.extA_Tail>
+  <EntityName.tailfina>Tail Fin A</EntityName.tailfina>
+  <EntityDescription.tailfina>Submarine tail temp</EntityDescription.tailfina>
+  <EntityName.tailfinb>Tail Fin B</EntityName.tailfinb>
+  <EntityDescription.tailfinb>Submarine tail temp</EntityDescription.tailfinb>
+  <EntityName.tailfinc>Tail Fin C</EntityName.tailfinc>
+  <EntityDescription.tailfinc>Submarine tail temp</EntityDescription.tailfinc>
+  <EntityName.tailfind>Tail Fin D</EntityName.tailfind>
+  <EntityDescription.tailfind>Submarine tail temp</EntityDescription.tailfind>
+  <EntityName.extA_Front>Front</EntityName.extA_Front>
+  <EntityDescription.extA_Front>Submarine front A temp</EntityDescription.extA_Front>
+  <EntityName.subfrontb>Front</EntityName.subfrontb>
+  <EntityDescription.subfrontb>Submarine front B temp</EntityDescription.subfrontb>
+  <EntityName.shella90deg>Shell A 90 deg</EntityName.shella90deg>
+  <EntityDescription.shella90deg>Submarine wall</EntityDescription.shella90deg>
+  <EntityName.shella16deg>Shell A 16 deg</EntityName.shella16deg>
+  <EntityDescription.shella16deg>Submarine wall</EntityDescription.shella16deg>
+  <EntityName.shella34deg>Shell A 34 deg</EntityName.shella34deg>
+  <EntityDescription.shella34deg>Submarine wall</EntityDescription.shella34deg>
+  <EntityName.shella0deg>Shell A 0 deg</EntityName.shella0deg>
+  <EntityDescription.shella0deg>Submarine wall</EntityDescription.shella0deg>
+  <EntityName.shella04deg>Shell A 04 deg</EntityName.shella04deg>
+  <EntityDescription.shella04deg>Submarine wall</EntityDescription.shella04deg>
+  <EntityName.shella14adeg>Shell A 14 deg</EntityName.shella14adeg>
+  <EntityDescription.shella14adeg>Submarine wall</EntityDescription.shella14adeg>
+  <EntityName.shella52deg>Shell A 52 deg</EntityName.shella52deg>
+  <EntityDescription.shella52deg>Submarine wall</EntityDescription.shella52deg>
+  <EntityName.shella16degb>Shell A 16 deg B</EntityName.shella16degb>
+  <EntityDescription.shella16degb>Submarine wall</EntityDescription.shella16degb>
+  <EntityName.shella25deg>Shell A 25 deg</EntityName.shella25deg>
+  <EntityDescription.shella25deg>Submarine wall</EntityDescription.shella25deg>
+  <EntityName.shella45deg>Shell A 45 deg</EntityName.shella45deg>
+  <EntityDescription.shella45deg>Submarine wall</EntityDescription.shella45deg>
+  <EntityName.shella32deg>Shell A 32 deg</EntityName.shella32deg>
+  <EntityDescription.shella32deg>Submarine wall</EntityDescription.shella32deg>
+  <EntityName.shella14degb>Shell A 14 deg B</EntityName.shella14degb>
+  <EntityDescription.shella14degb>Submarine wall</EntityDescription.shella14degb>
+  <EntityName.shella43deg>Shell A 43 deg</EntityName.shella43deg>
+  <EntityDescription.shella43deg>Submarine wall</EntityDescription.shella43deg>
+  <EntityName.Shella51deg>Shell A 51 deg</EntityName.Shella51deg>
+  <EntityDescription.Shella51deg>Submarine wall</EntityDescription.Shella51deg>
+  <EntityName.Shella47deg>Shell A 47 deg</EntityName.Shella47deg>
+  <EntityDescription.Shella47deg>Submarine wall</EntityDescription.Shella47deg>
+  <EntityName.Shella60deg>Shell A 60 deg</EntityName.Shella60deg>
+  <EntityDescription.Shella60deg>Submarine wall</EntityDescription.Shella60deg>
+  <EntityName.Shella18deg>Shell A 18 deg</EntityName.Shella18deg>
+  <EntityDescription.Shella18deg>Submarine wall</EntityDescription.Shella18deg>
+  <EntityName.Shella70deg>Shell A 70 deg</EntityName.Shella70deg>
+  <EntityDescription.Shella70deg>Submarine wall</EntityDescription.Shella70deg>
+  <EntityName.shella90degcurve>Shell A 90 deg Curve</EntityName.shella90degcurve>
+  <EntityDescription.shella90degcurve>Submarine wall</EntityDescription.shella90degcurve>
+  <EntityName.shella45degb>Shell A 45 deg B</EntityName.shella45degb>
+  <EntityDescription.shella45degb>Submarine wall</EntityDescription.shella45degb>
+  <EntityName.shella57deg>Shell A 57 deg</EntityName.shella57deg>
+  <EntityDescription.shella57deg>Submarine wall</EntityDescription.shella57deg>
+  <EntityName.shella40deg>Shell A 40 deg</EntityName.shella40deg>
+  <EntityDescription.shella40deg>Submarine wall</EntityDescription.shella40deg>
+  <EntityName.shella61deg>Shell A 61 deg</EntityName.shella61deg>
+  <EntityDescription.shella61deg>Submarine wall</EntityDescription.shella61deg>
+  <EntityName.shella17deg>Shell A 17 deg</EntityName.shella17deg>
+  <EntityDescription.shella17deg>Submarine wall</EntityDescription.shella17deg>
+  <EntityName.shella34degb>Shell A 34 deg B</EntityName.shella34degb>
+  <EntityDescription.shella34degb>Submarine wall</EntityDescription.shella34degb>
+  <EntityName.shella26deg>Shell A 26 deg</EntityName.shella26deg>
+  <EntityDescription.shella26deg>Submarine wall</EntityDescription.shella26deg>
+  <EntityName.shella54deg>Shell A 54 deg</EntityName.shella54deg>
+  <EntityDescription.shella54deg>Submarine wall</EntityDescription.shella54deg>
+  <EntityName.shella38deg>Shell A 38 deg</EntityName.shella38deg>
+  <EntityDescription.shella38deg>Submarine wall</EntityDescription.shella38deg>
+  <EntityName.shellacombo11>Shell A combo 1 1</EntityName.shellacombo11>
+  <EntityDescription.shellacombo11>Submarine wall</EntityDescription.shellacombo11>
+  <EntityName.shellacombo12>Shell A combo 1 2</EntityName.shellacombo12>
+  <EntityDescription.shellacombo12>Submarine wall</EntityDescription.shellacombo12>
+  <EntityName.sshella01>Shuttle Shell A01</EntityName.sshella01>
+  <EntityDescription.sshella01>Shuttle wall</EntityDescription.sshella01>
+  <EntityName.sshella02>Shuttle Shell A02</EntityName.sshella02>
+  <EntityDescription.sshella02>Shuttle wall</EntityDescription.sshella02>
+  <EntityName.sshella04>Shuttle Shell A04</EntityName.sshella04>
+  <EntityDescription.sshella04>Shuttle wall</EntityDescription.sshella04>
+  <EntityName.sshella05>Shuttle Shell A05</EntityName.sshella05>
+  <EntityDescription.sshella05>Shuttle wall</EntityDescription.sshella05>
+  <EntityName.sshellaA06>Shuttle Shell A06</EntityName.sshellaA06>
+  <EntityDescription.sshellaA06>Shuttle wall</EntityDescription.sshellaA06>
+  <EntityName.sshella07>Shuttle Shell A07</EntityName.sshella07>
+  <EntityDescription.sshella07>Shuttle wall</EntityDescription.sshella07>
+  <EntityName.sshella08>Shuttle Shell A08</EntityName.sshella08>
+  <EntityDescription.sshella08>Shuttle wall</EntityDescription.sshella08>
+  <EntityName.sshella09>Shuttle Shell A09</EntityName.sshella09>
+  <EntityDescription.sshella09>Shuttle wall</EntityDescription.sshella09>
+  <EntityName.sshella10>Shuttle Shell A10</EntityName.sshella10>
+  <EntityDescription.sshella10>Shuttle wall</EntityDescription.sshella10>
+  <EntityName.sshella11>Shuttle Shell A11</EntityName.sshella11>
+  <EntityDescription.sshella11>Shuttle wall</EntityDescription.sshella11>
+  <EntityName.sshella14>Shuttle Shell A14</EntityName.sshella14>
+  <EntityDescription.sshella14>Shuttle wall</EntityDescription.sshella14>
+  <EntityName.sshella15a>Shuttle Shell A15a</EntityName.sshella15a>
+  <EntityDescription.sshella15a>Shuttle Fin</EntityDescription.sshella15a>
+  <EntityName.sshella15b>Shuttle Shell A15b</EntityName.sshella15b>
+  <EntityDescription.sshella15b>Shuttle Fin</EntityDescription.sshella15b>
+  <EntityName.sshella15c>Shuttle Shell A15c</EntityName.sshella15c>
+  <EntityDescription.sshella15c>Shuttle Fin</EntityDescription.sshella15c>
+  <EntityName.sshella17a>Shuttle Shell A17a</EntityName.sshella17a>
+  <EntityDescription.sshella17a>Shuttle wall</EntityDescription.sshella17a>
+  <EntityName.sshella17b>Shuttle Shell A17b</EntityName.sshella17b>
+  <EntityDescription.sshella17b>Shuttle wall</EntityDescription.sshella17b>
+  <EntityName.sshella17c>Shuttle Shell A17c</EntityName.sshella17c>
+  <EntityDescription.sshella17c>Shuttle wall</EntityDescription.sshella17c>
+  <EntityName.sshella18>Shuttle Shell A18</EntityName.sshella18>
+  <EntityDescription.sshella18>Shuttle wall</EntityDescription.sshella18>
+  <EntityName.sshella19>Shuttle Shell A19</EntityName.sshella19>
+  <EntityDescription.sshella19>Shuttle wall</EntityDescription.sshella19>
+  <EntityName.sshella20>Shuttle Shell A20</EntityName.sshella20>
+  <EntityDescription.sshella20>Shuttle wall</EntityDescription.sshella20>
+  <EntityName.sshella21>Shuttle Shell A21</EntityName.sshella21>
+  <EntityDescription.sshella21>Shuttle wall</EntityDescription.sshella21>
+  <EntityName.sshella22>Shuttle Shell A22</EntityName.sshella22>
+  <EntityDescription.sshella22>Shuttle wall</EntityDescription.sshella22>
+  <EntityName.sshella23>Shuttle Shell A23</EntityName.sshella23>
+  <EntityDescription.sshella23>Shuttle wall</EntityDescription.sshella23>
+  <EntityName.sshella24>Shuttle Shell A24</EntityName.sshella24>
+  <EntityDescription.sshella24>Shuttle wall</EntityDescription.sshella24>
+  <EntityName.sshella25>Shuttle Shell A25</EntityName.sshella25>
+  <EntityDescription.sshella25>Shuttle wall</EntityDescription.sshella25>
+  <EntityName.sshella26>Shuttle Shell A26</EntityName.sshella26>
+  <EntityDescription.sshella26>Shuttle wall</EntityDescription.sshella26>
+  <EntityName.sshella27>Shuttle Shell A27</EntityName.sshella27>
+  <EntityDescription.sshella27>Shuttle wall</EntityDescription.sshella27>
+  <EntityName.sshella28>Shuttle Shell A28</EntityName.sshella28>
+  <EntityDescription.sshella28>Shuttle wall</EntityDescription.sshella28>
+  <EntityName.sshella30>Shuttle Shell A30</EntityName.sshella30>
+  <EntityDescription.sshella30>Shuttle wall</EntityDescription.sshella30>
+  <EntityName.sshella32b>Shuttle Shell A32b</EntityName.sshella32b>
+  <EntityDescription.sshella32b>Shuttle wall</EntityDescription.sshella32b>
+  <EntityName.sshella32c>Shuttle Shell A32c</EntityName.sshella32c>
+  <EntityDescription.sshella32c>Shuttle wall</EntityDescription.sshella32c>
+  <EntityName.sshella32d>Shuttle Shell A32d</EntityName.sshella32d>
+  <EntityDescription.sshella32d>Shuttle wall</EntityDescription.sshella32d>
+  <EntityName.sshella36>Shuttle Shell A36</EntityName.sshella36>
+  <EntityDescription.sshella36>Shuttle wall</EntityDescription.sshella36>
+  <EntityName.sshella37>Shuttle Shell A37</EntityName.sshella37>
+  <EntityDescription.sshella37>Shuttle wall</EntityDescription.sshella37>
+  <EntityName.sshella38>Shuttle Shell A38</EntityName.sshella38>
+  <EntityDescription.sshella38>Shuttle wall</EntityDescription.sshella38>
+  <EntityName.sshella39>Shuttle Shell A39</EntityName.sshella39>
+  <EntityDescription.sshella39>Shuttle wall</EntityDescription.sshella39>
+  <EntityName.sshella40>Shuttle Shell A40</EntityName.sshella40>
+  <EntityDescription.sshella40>Shuttle wall</EntityDescription.sshella40>
+  <EntityName.sshella41>Shuttle Shell A41</EntityName.sshella41>
+  <EntityDescription.sshella41>Shuttle wall</EntityDescription.sshella41>
+  <EntityName.sshellalightsa>Shuttle Lights A</EntityName.sshellalightsa>
+  <EntityDescription.sshellalightsa>Shuttle wall</EntityDescription.sshellalightsa>
+  <EntityName.sshellaplatea>Shuttle Plate A</EntityName.sshellaplatea>
+  <EntityDescription.sshellaplatea>Shuttle wall</EntityDescription.sshellaplatea>
+  <EntityName.sshellaplateb>Shuttle Plate B</EntityName.sshellaplateb>
+  <EntityDescription.sshellaplateb>Shuttle wall</EntityDescription.sshellaplateb>
+  <EntityName.sshellabumpera>Shuttle Bumper A</EntityName.sshellabumpera>
+  <EntityDescription.sshellabumpera>Shuttle wall</EntityDescription.sshellabumpera>
+  <EntityName.sshellabumperb>Shuttle Bumper B</EntityName.sshellabumperb>
+  <EntityDescription.sshellabumperb>Shuttle wall</EntityDescription.sshellabumperb>
+  <EntityName.sshellaglassa>Shuttle Shell A Glass A</EntityName.sshellaglassa>
+  <EntityDescription.sshellaglassa>Shuttle wall</EntityDescription.sshellaglassa>
+  <EntityName.sshellaglassb>Shuttle Shell A Glass B</EntityName.sshellaglassb>
+  <EntityDescription.sshellaglassb>Shuttle wall</EntityDescription.sshellaglassb>
+  <EntityName.sshellaglassc>Shuttle Shell A Glass C</EntityName.sshellaglassc>
+  <EntityDescription.sshellaglassc>Shuttle wall</EntityDescription.sshellaglassc>
+  <EntityName.sshellaglassd>Shuttle Shell A Glass D</EntityName.sshellaglassd>
+  <EntityDescription.sshellaglassd>Shuttle wall</EntityDescription.sshellaglassd>
+  <EntityName.sshellaglasse>Shuttle Shell A Glass E</EntityName.sshellaglasse>
+  <EntityDescription.sshellaglasse>Shuttle wall</EntityDescription.sshellaglasse>
+  <EntityName.sshellaglassf>Shuttle Shell A Glass F</EntityName.sshellaglassf>
+  <EntityDescription.sshellaglassf>Shuttle wall</EntityDescription.sshellaglassf>
+  <EntityName.sshellafina>Shuttle Fin A</EntityName.sshellafina>
+  <EntityDescription.sshellafina>Shuttle wall</EntityDescription.sshellafina>
+  <EntityName.sshellafinb>Shuttle Fin B</EntityName.sshellafinb>
+  <EntityDescription.sshellafinb>Shuttle wall</EntityDescription.sshellafinb>
+  <EntityName.sshellafinc>Shuttle Fin C</EntityName.sshellafinc>
+  <EntityDescription.sshellafinc>Shuttle wall</EntityDescription.sshellafinc>
+  <EntityName.sshellafind>Shuttle Fin D</EntityName.sshellafind>
+  <EntityDescription.sshellafind>Shuttle wall</EntityDescription.sshellafind>
+  <EntityName.sshellagromita>Shuttle Gromit A</EntityName.sshellagromita>
+  <EntityDescription.sshellagromita>Shuttle wall</EntityDescription.sshellagromita>
+  <EntityName.sshellagromitb>Shuttle Gromit B</EntityName.sshellagromitb>
+  <EntityDescription.sshellagromitb>Shuttle gromit</EntityDescription.sshellagromitb>
+  <EntityName.sshellagromitc>Shuttle Gromit C</EntityName.sshellagromitc>
+  <EntityDescription.sshellagromitc>Shuttle gromit</EntityDescription.sshellagromitc>
+  <EntityName.sshellagromitd>Shuttle Gromit D</EntityName.sshellagromitd>
+  <EntityDescription.sshellagromitd>Shuttle gromit</EntityDescription.sshellagromitd>
+  <EntityName.largehorizontalback>largehorizontalback</EntityName.largehorizontalback>
+  <EntityDescription.largehorizontalback>A decorative structure with no collision detection</EntityDescription.largehorizontalback>
+  <EntityName.smallhorizontalback>smallhorizontalback</EntityName.smallhorizontalback>
+  <EntityDescription.smallhorizontalback>A decorative structure with no collision detection</EntityDescription.smallhorizontalback>
+  <EntityName.largeverticalback>largeverticalback</EntityName.largeverticalback>
+  <EntityDescription.largeverticalback>A decorative structure with no collision detection</EntityDescription.largeverticalback>
+  <EntityName.largeverticalback2>largeverticalback2</EntityName.largeverticalback2>
+  <EntityDescription.largeverticalback2>A decorative structure with no collision detection</EntityDescription.largeverticalback2>
+  <EntityName.smallverticalback>smallverticalback</EntityName.smallverticalback>
+  <EntityDescription.smallverticalback>A decorative structure with no collision detection</EntityDescription.smallverticalback>
+  <EntityName.smallverticalback2>smallverticalback2</EntityName.smallverticalback2>
+  <EntityDescription.smallverticalback2>A decorative structure with no collision detection</EntityDescription.smallverticalback2>
 
   <!-- Entity categories -->
   <MapEntityCategory.Structure>Structure</MapEntityCategory.Structure>
@@ -768,7 +1038,7 @@
   <CharacterEditor.SaveRagdoll>Save Ragdoll</CharacterEditor.SaveRagdoll>
   <CharacterEditor.ProvideFileName>Please provide a name for the file</CharacterEditor.ProvideFileName>
   <CharacterEditor.LoadRagdoll>Load Ragdoll</CharacterEditor.LoadRagdoll>
-  <CharacterEditor.CouldntOpenDirectory>Couldn't open directory \"[folder]\"!</CharacterEditor.CouldntOpenDirectory>
+  <CharacterEditor.CouldntOpenDirectory>Couldn't open directory [folder]!</CharacterEditor.CouldntOpenDirectory>
   <CharacterEditor.RagdollDeletedFrom>Ragdoll deleted from [file]</CharacterEditor.RagdollDeletedFrom>
   <CharacterEditor.RagdollLoadedFrom>Ragdoll loaded from [file]</CharacterEditor.RagdollLoadedFrom>
   <CharacterEditor.SaveAnimation>Save Animation</CharacterEditor.SaveAnimation>
@@ -784,7 +1054,7 @@
   <CharacterEditor.CreateNewCharacter>Create New Character</CharacterEditor.CreateNewCharacter>
   <CharacterEditor.NoFieldForParameterFound>No field for [parameter] found!</CharacterEditor.NoFieldForParameterFound>
   <CharacterEditor.SelectTargetLimbForJointEnd>Left click to select the target limb for the other end of the joint.</CharacterEditor.SelectTargetLimbForJointEnd>
-  <CharacterEditor.HoldLeftAltToAdjustCycleSpeed>Hold \"Left Alt\" to adjust cycle speed</CharacterEditor.HoldLeftAltToAdjustCycleSpeed>
+  <CharacterEditor.HoldLeftAltToAdjustCycleSpeed>Hold Left Alt to adjust cycle speed</CharacterEditor.HoldLeftAltToAdjustCycleSpeed>
   <CharacterEditor.CycleSpeed>Cycle Speed</CharacterEditor.CycleSpeed>
   <CharacterEditor.MovementSpeed>Movement Speed</CharacterEditor.MovementSpeed>
   <CharacterEditor.HeadAngle>Head Angle</CharacterEditor.HeadAngle>
@@ -802,7 +1072,7 @@
   <CharacterEditor.LegMovementSpeed>Leg Movement Speed</CharacterEditor.LegMovementSpeed>
   <CharacterEditor.LegMovementAmount>Leg Movement Amount</CharacterEditor.LegMovementAmount>
   <CharacterEditor.HandMovementAmount>Hand Movement Amount</CharacterEditor.HandMovementAmount>
-  <CharacterEditor.HoldLeftAltToManipulateJoint>Hold \"Left Alt\" to manipulate the other end of the joint</CharacterEditor.HoldLeftAltToManipulateJoint>
+  <CharacterEditor.HoldLeftAltToManipulateJoint>Hold Left Alt to manipulate the other end of the joint</CharacterEditor.HoldLeftAltToManipulateJoint>
   <CharacterEditor.Origin>Origin</CharacterEditor.Origin>
   <CharacterEditor.Position>Position: [coordinates]</CharacterEditor.Position>
   <CharacterEditor.Size>Size</CharacterEditor.Size>
@@ -820,7 +1090,7 @@
   <CharacterEditor.Joints>Joints</CharacterEditor.Joints>
   <CharacterEditor.LoadHTML>Load HTML</CharacterEditor.LoadHTML>
   <CharacterEditor.HTMLPath>HTML Path</CharacterEditor.HTMLPath>
-  <CharacterEditor.MultipleTorsosDefined>You need to define one and only one limb as \"Torso\"!</CharacterEditor.MultipleTorsosDefined>
+  <CharacterEditor.MultipleTorsosDefined>You need to define one and only one limb as Torso!</CharacterEditor.MultipleTorsosDefined>
   <CharacterEditor.CharacterCreated>Character [name] Created</CharacterEditor.CharacterCreated>
   <CharacterEditor.LimbType>Limb Type</CharacterEditor.LimbType>
   <CharacterEditor.SourceRectangle>Source Rectangle</CharacterEditor.SourceRectangle>
@@ -828,7 +1098,7 @@
   <CharacterEditor.LimbWithIndex>Limb [index]</CharacterEditor.LimbWithIndex>
   <CharacterEditor.LimbWithIndexAnchor>Limb [index] Anchor</CharacterEditor.LimbWithIndexAnchor>
   <CharacterEditor.FailedToReadHTML>Character Editor Screen: Failed to read HTML at [path]</CharacterEditor.FailedToReadHTML>
-  <CharacterEditor.MultipleItemsWithSameHierarchy>Multiple items with the same hierarchy \"[hierarchy]\" found ([name]). Cannot continue.</CharacterEditor.MultipleItemsWithSameHierarchy>
+  <CharacterEditor.MultipleItemsWithSameHierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</CharacterEditor.MultipleItemsWithSameHierarchy>
 
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
@@ -913,6 +1183,8 @@
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
   <FabricatorCancel>Cancel</FabricatorCancel>
+  <UILabel.Input>Input</UILabel.Input>
+  <UILabel.Output>Output</UILabel.Output>
   <DeconstructorNoPower>Insufficient power</DeconstructorNoPower>
   <DeconstructorDeconstruct>Deconstruct</DeconstructorDeconstruct>
   <DeconstructorCancel>Cancel</DeconstructorCancel>
@@ -1408,6 +1680,286 @@
   <AfflictionDescription.Strengthen>Patient's pain receptors are numbed.</AfflictionDescription.Strengthen>
   
   <!-- Items -->
+  <EntityName.captainscap>Captain's Cap</EntityName.captainscap>
+  <EntityDescription.captainscap>A token of the Captain's unquestionable authority.</EntityDescription.captainscap>
+  <EntityName.healthscanner>Health Scanner HUD</EntityName.healthscanner>
+  <EntityDescription.healthscanner>A heads-up display that displays information of the vital signs and status of nearby humans.</EntityDescription.healthscanner>
+  <EntityName.orangejumpsuit>Orange Jumpsuit</EntityName.orangejumpsuit>
+  <EntityDescription.orangejumpsuit>The fire-resistant fabric offers some protection against fires.</EntityDescription.orangejumpsuit>
+  <EntityName.bluejumpsuit>Blue Jumpsuit</EntityName.bluejumpsuit>
+  <EntityDescription.bluejumpsuit>The fire-resistant fabric offers some protection against fires.</EntityDescription.bluejumpsuit>
+  <EntityName.headset>Headset</EntityName.headset>
+  <EntityDescription.headset>Allows remote communication between the crew.</EntityDescription.headset>
+  <EntityName.clownmask>Clown Mask</EntityName.clownmask>
+  <EntityDescription.clownmask>Praise the honkmother.</EntityDescription.clownmask>
+  <EntityName.clowncostume>Clown Costume</EntityName.clowncostume>
+  <EntityDescription.clowncostume>Praise the honkmother.</EntityDescription.clowncostume>
+  <EntityName.assistantclothes>Assistant Clothes</EntityName.assistantclothes>
+  <EntityDescription.assistantclothes>Even the assistant needs clothing.</EntityDescription.assistantclothes>
+  <EntityName.securityuniform>Security Officer's Uniform</EntityName.securityuniform>
+  <EntityDescription.securityuniform>Obey my authority!</EntityDescription.securityuniform>
+  <EntityName.bodyarmor>Body Armor</EntityName.bodyarmor>
+  <EntityDescription.bodyarmor>While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</EntityDescription.bodyarmor>
+  <EntityName.ballistichelmet>Ballistic Helmet</EntityName.ballistichelmet>
+  <EntityDescription.ballistichelmet>While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</EntityDescription.ballistichelmet>
+  <EntityName.alienblood>Alien Blood</EntityName.alienblood>
+  <EntityDescription.alienblood>Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss.</EntityDescription.alienblood>
+  <EntityName.huskeggs>Velonaceps Calyx Eggs</EntityName.huskeggs>
+  <EntityDescription.huskeggs>Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'.</EntityDescription.huskeggs>
+  <EntityName.swimbladder>Swim Bladder</EntityName.swimbladder>
+  <EntityDescription.swimbladder>Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline.</EntityDescription.swimbladder>
+  <EntityName.adrenalinegland>Adrenaline Gland</EntityName.adrenalinegland>
+  <EntityDescription.adrenalinegland>Contains large amounts of adrenaline, which can be extracted using a deconstructor.</EntityDescription.adrenalinegland>
+  <EntityName.oxygenitetank>Oxygenite Tank</EntityName.oxygenitetank>
+  <EntityDescription.oxygenitetank>A Tank containing liquid Oxygenite.</EntityDescription.oxygenitetank>
+  <EntityName.divingmask>Diving Mask</EntityName.divingmask>
+  <EntityDescription.divingmask>Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.</EntityDescription.divingmask>
+  <EntityName.divingsuit>Diving Suit</EntityName.divingsuit>
+  <EntityDescription.divingsuit>An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.</EntityDescription.divingsuit>
+  <EntityName.underwaterscooter>Underwater Scooter</EntityName.underwaterscooter>
+  <EntityDescription.underwaterscooter>A battery-powered underwater propulsion device.</EntityDescription.underwaterscooter>
+  <EntityName.door>Door</EntityName.door>
+  <EntityDescription.door>A pre-wired door with two buttons.</EntityDescription.door>
+  <EntityName.junctionbox>Junction Box</EntityName.junctionbox>
+  <EntityDescription.junctionbox>Serves as a hub for power distribution and relaying signals between devices.</EntityDescription.junctionbox>
+  <EntityName.battery>Battery</EntityName.battery>
+  <EntityDescription.battery>Generally used for storing backup power in case of a reactor failure.</EntityDescription.battery>
+  <EntityName.shuttlebattery>ShuttleBattery</EntityName.shuttlebattery>
+  <EntityDescription.shuttlebattery>Generally used for storing backup power in case of a reactor failure.</EntityDescription.shuttlebattery>
+  <EntityName.supercapacitor>Supercapacitor</EntityName.supercapacitor>
+  <EntityDescription.supercapacitor>Can deliver charge much faster than batteries.</EntityDescription.supercapacitor>
+  <EntityName.batterycell>Battery Cell</EntityName.batterycell>
+  <EntityDescription.batterycell>Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.</EntityDescription.batterycell>
+  <EntityName.fulguriumbatterycell>Fulgurium Battery Cell</EntityName.fulguriumbatterycell>
+  <EntityDescription.fulguriumbatterycell>A battery cell constructed of the rare and poorly understood compound Fulgurium.</EntityDescription.fulguriumbatterycell>
+  <EntityName.chargingdock>Charging Dock</EntityName.chargingdock>
+  <EntityDescription.chargingdock>A wall-mounted battery cell charging dock.</EntityDescription.chargingdock>
+  <EntityName.fpgacircuit>FPGA Circuit</EntityName.fpgacircuit>
+  <EntityDescription.fpgacircuit>Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.</EntityDescription.fpgacircuit>
+  <EntityName.andcomponent>And Component</EntityName.andcomponent>
+  <EntityDescription.andcomponent>Sends a signal when both inputs receive a signal within a set period of each other.</EntityDescription.andcomponent>
+  <EntityName.addercomponent>Adder Component</EntityName.addercomponent>
+  <EntityDescription.addercomponent>Outputs the sum of the received signals.</EntityDescription.addercomponent>
+  <EntityName.orcomponent>Or Component</EntityName.orcomponent>
+  <EntityDescription.orcomponent>Sends a signal if either of the inputs receive a signal.</EntityDescription.orcomponent>
+  <EntityName.notcomponent>Not Component</EntityName.notcomponent>
+  <EntityDescription.notcomponent>Sends a signal when the input is NOT receiving a signal.</EntityDescription.notcomponent>
+  <EntityName.relaycomponent>Relay Component</EntityName.relaycomponent>
+  <EntityDescription.relaycomponent>When switched on, forwards all received signals from the input connections to the outputs.</EntityDescription.relaycomponent>
+  <EntityName.delaycomponent>Delay Component</EntityName.delaycomponent>
+  <EntityDescription.delaycomponent>Delays all received signals for a specific amount of time.</EntityDescription.delaycomponent>
+  <EntityName.oxygendetector>Oxygen Detector</EntityName.oxygendetector>
+  <EntityDescription.oxygendetector>Sends out a value between 0-100 depending on the quality of the surrounding air.</EntityDescription.oxygendetector>
+  <EntityName.waterdetector>Water Detector</EntityName.waterdetector>
+  <EntityDescription.waterdetector>Sends out a signal when the detector is submerged.</EntityDescription.waterdetector>
+  <EntityName.smokedetector>Smoke Detector</EntityName.smokedetector>
+  <EntityDescription.smokedetector>Sends out a signal when it senses smoke.</EntityDescription.smokedetector>
+  <EntityName.motiondetector>Motion Detector</EntityName.motiondetector>
+  <EntityDescription.motiondetector>Sends out a signal when it detects movement.</EntityDescription.motiondetector>
+  <EntityName.signalcheckcomponent>Signal Check Component</EntityName.signalcheckcomponent>
+  <EntityDescription.signalcheckcomponent>Sends a signal when a signal matching a specific value is received.</EntityDescription.signalcheckcomponent>
+  <EntityName.regexcomponent>RegEx Find Component</EntityName.regexcomponent>
+  <EntityDescription.regexcomponent>Sends a signal if the received signal matches a specific regular expression pattern.</EntityDescription.regexcomponent>
+  <EntityName.oscillator>Oscillator</EntityName.oscillator>
+  <EntityDescription.oscillator>Sends out a periodic, oscillating signal.</EntityDescription.oscillator>
+  <EntityName.wificomponent>Wifi Component</EntityName.wificomponent>
+  <EntityDescription.wificomponent>Allows remote communication between other Wifi Components that are using the same channel.</EntityDescription.wificomponent>
+  <EntityName.camera>Camera</EntityName.camera>
+  <EntityDescription.camera>Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.</EntityDescription.camera>
+  <EntityName.fabricator>Fabricator</EntityName.fabricator>
+  <EntityDescription.fabricator>A machine capable of manufacturing a wide range of items out of basic raw materials.</EntityDescription.fabricator>
+  <EntityName.medicalfabricator>Medical Fabricator</EntityName.medicalfabricator>
+  <EntityDescription.medicalfabricator>A machine that can be used to manufacture various medicines.</EntityDescription.medicalfabricator>
+  <EntityName.deconstructor>Deconstructor</EntityName.deconstructor>
+  <EntityDescription.deconstructor>Disassembles and breaks down items to reusable components and material bars.</EntityDescription.deconstructor>
+  <EntityName.carbon>Carbon</EntityName.carbon>
+  <EntityDescription.carbon>Most commonly used in the manufacture of steel and plastic.</EntityDescription.carbon>
+  <EntityName.iron>Iron</EntityName.iron>
+  <EntityDescription.iron>Can be used in the manufacture of simple tools, or refined into steel by mixing it with carbon.</EntityDescription.iron>
+  <EntityName.tin>Tin</EntityName.tin>
+  <EntityDescription.tin>Most commonly used in the manufacture of various electrical components.</EntityDescription.tin>
+  <EntityName.lead>Lead</EntityName.lead>
+  <EntityDescription.lead>Most commonly used in the manufacture of various types of ammunition.</EntityDescription.lead>
+  <EntityName.phosphorus>Phosphorus</EntityName.phosphorus>
+  <EntityDescription.phosphorus>Used in the manufacture of lamps, explosives and some medical compounds.</EntityDescription.phosphorus>
+  <EntityName.copper>Copper</EntityName.copper>
+  <EntityDescription.copper>Most commonly used in the manufacture of electrical wiring.</EntityDescription.copper>
+  <EntityName.zinc>Zinc</EntityName.zinc>
+  <EntityDescription.zinc>Most commonly used in the manufacture of batteries and tonic liquid.</EntityDescription.zinc>
+  <EntityName.sodium>Sodium</EntityName.sodium>
+  <EntityDescription.sodium>Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine.</EntityDescription.sodium>
+  <EntityName.silicon>Silicon</EntityName.silicon>
+  <EntityDescription.silicon>Used as an ingredient in aluminium alloys, plastic and various electrical components.</EntityDescription.silicon>
+  <EntityName.uranium>Uranium</EntityName.uranium>
+  <EntityDescription.uranium>Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons.</EntityDescription.uranium>
+  <EntityName.potassium>Potassium</EntityName.potassium>
+  <EntityDescription.potassium>Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water.</EntityDescription.potassium>
+  <EntityName.magnesium>Magnesium</EntityName.magnesium>
+  <EntityDescription.magnesium>Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water.</EntityDescription.magnesium>
+  <EntityName.lithium>Lithium</EntityName.lithium>
+  <EntityDescription.lithium>Most commonly used in the manufacture of batteries and antipsychotic drugs.</EntityDescription.lithium>
+  <EntityName.chlorine>Chlorine</EntityName.chlorine>
+  <EntityDescription.chlorine>Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative.</EntityDescription.chlorine>
+  <EntityName.slimebacteria>Slime Bacteria</EntityName.slimebacteria>
+  <EntityDescription.slimebacteria>A colony of myxobacteria. Can be processed into antibiotics.</EntityDescription.slimebacteria>
+  <EntityName.titanite>Titanite</EntityName.titanite>
+  <EntityDescription.titanite>A mineral containing titanium and iron.</EntityDescription.titanite>
+  <EntityName.brockite>Brockite</EntityName.brockite>
+  <EntityDescription.brockite>A mineral containing titanium and phosphorus.</EntityDescription.brockite>
+  <EntityName.thorianite>Thorianite</EntityName.thorianite>
+  <EntityDescription.thorianite>A rare mineral containing thorium.</EntityDescription.thorianite>
+  <EntityName.amblygonite>Amblygonite</EntityName.amblygonite>
+  <EntityDescription.amblygonite>A mineral composed of lithium, aluminium and sodium.</EntityDescription.amblygonite>
+  <EntityName.sphalerite>Sphalerite</EntityName.sphalerite>
+  <EntityDescription.sphalerite>A mineral consisting largely of zinc in crystalline form.</EntityDescription.sphalerite>
+  <EntityName.pyromorphite>Pyromorphite</EntityName.pyromorphite>
+  <EntityDescription.pyromorphite>A mineral composed of chlorine.</EntityDescription.pyromorphite>
+  <EntityName.quartz>Quartz</EntityName.quartz>
+  <EntityDescription.quartz>A crystalline mineral composed of silicon.</EntityDescription.quartz>
+  <EntityName.diamond>Diamond</EntityName.diamond>
+  <EntityDescription.diamond>A crystal composed of solid carbon.</EntityDescription.diamond>
+  <EntityName.hydroxyapatite>Hydroxyapatite</EntityName.hydroxyapatite>
+  <EntityDescription.hydroxyapatite>A mineral composed of calcium and phosphorus.</EntityDescription.hydroxyapatite>
+  <EntityName.uraniumore>Uranium Ore</EntityName.uraniumore>
+  <EntityDescription.uraniumore>A mineral containing large concentrations of uranium.</EntityDescription.uraniumore>
+  <EntityName.ilmenite>Ilmenite</EntityName.ilmenite>
+  <EntityDescription.ilmenite>A mineral containing titanium.</EntityDescription.ilmenite>
+  <EntityName.stannite>Stannite</EntityName.stannite>
+  <EntityDescription.stannite>A mineral composed of copper, iron and tin.</EntityDescription.stannite>
+  <EntityName.chalcopyrite>Chalcopyrite</EntityName.chalcopyrite>
+  <EntityDescription.chalcopyrite>A mineral containing copper.</EntityDescription.chalcopyrite>
+  <EntityName.esperite>Esperite</EntityName.esperite>
+  <EntityDescription.esperite>A mineral composed of zinc and lead.</EntityDescription.esperite>
+  <EntityName.galena>Galena</EntityName.galena>
+  <EntityDescription.galena>A mineral mostly consisting of lead.</EntityDescription.galena>
+  <EntityName.triphylite>Triphylite</EntityName.triphylite>
+  <EntityDescription.triphylite>A mineral containing lithium.</EntityDescription.triphylite>
+  <EntityName.langbeinite>Langbeinite</EntityName.langbeinite>
+  <EntityDescription.langbeinite>A mineral consisting of potassium and magnesium.</EntityDescription.langbeinite>
+  <EntityName.chamosite>Chamosite</EntityName.chamosite>
+  <EntityDescription.chamosite>A mineral consisting of iron and aluminium.</EntityDescription.chamosite>
+  <EntityName.ironore>Iron Ore</EntityName.ironore>
+  <EntityDescription.ironore>A mineral containing large amounts of iron.</EntityDescription.ironore>
+  <EntityName.polyhalite>Polyhalite</EntityName.polyhalite>
+  <EntityDescription.polyhalite>A mineral consisting of potassium and calcium.</EntityDescription.polyhalite>
+  <EntityName.graphite>Graphite</EntityName.graphite>
+  <EntityDescription.graphite>Carbon in crystalline form.</EntityDescription.graphite>
+  <EntityName.sylvite>Sylvite</EntityName.sylvite>
+  <EntityDescription.sylvite>A mineral containing potassium and sodium.</EntityDescription.sylvite>
+  <EntityName.lazulite>Lazulite</EntityName.lazulite>
+  <EntityDescription.lazulite>A mineral containing phosphorus and iron.</EntityDescription.lazulite>
+  <EntityName.bornite>Bornite</EntityName.bornite>
+  <EntityDescription.bornite>A mineral containing copper.</EntityDescription.bornite>
+  <EntityName.cassiterite>Cassiterite</EntityName.cassiterite>
+  <EntityDescription.cassiterite>A mineral consisting of tin.</EntityDescription.cassiterite>
+  <EntityName.cryolite>Cryolite</EntityName.cryolite>
+  <EntityDescription.cryolite>A mineral containing sodium.</EntityDescription.cryolite>
+  <EntityName.aragonite>Aragonite</EntityName.aragonite>
+  <EntityDescription.aragonite>A mineral containing calcium.</EntityDescription.aragonite>
+  <EntityName.chrysoprase>Chrysoprase</EntityName.chrysoprase>
+  <EntityDescription.chrysoprase>A mineral containing silicon.</EntityDescription.chrysoprase>
+  <EntityName.opium>Opium</EntityName.opium>
+  <EntityDescription.opium>A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl.</EntityDescription.opium>
+  <EntityName.antibiotics>Broad-spectrum Antibiotics</EntityName.antibiotics>
+  <EntityDescription.antibiotics>A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds.</EntityDescription.antibiotics>
+  <EntityName.stabilozine>Stabilozine</EntityName.stabilozine>
+  <EntityDescription.stabilozine>Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage and burns, and slightly more effectively for oxygen deprivation.</EntityDescription.stabilozine>
+  <EntityName.ethanol>Ethanol</EntityName.ethanol>
+  <EntityDescription.ethanol>Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not advised.</EntityDescription.ethanol>
+  <EntityName.sulphuricacid>Sulphuric Acid</EntityName.sulphuricacid>
+  <EntityDescription.sulphuricacid>A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons.</EntityDescription.sulphuricacid>
+  <EntityName.antibleeding1>Bandage</EntityName.antibleeding1>
+  <EntityDescription.antibleeding1>Basic bandages, useful in the treatment of bleeding wounds and burns.</EntityDescription.antibleeding1>
+  <EntityName.antibleeding2>Plastiseal</EntityName.antibleeding2>
+  <EntityDescription.antibleeding2>A synthetic skin with hemostatic properties, able to quickly seal most wounds.</EntityDescription.antibleeding2>
+  <EntityName.antibleeding3>Antibiotic Glue</EntityName.antibleeding3>
+  <EntityDescription.antibleeding3>An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream.</EntityDescription.antibleeding3>
+  <EntityName.antidama1>Morphine</EntityName.antidama1>
+  <EntityDescription.antidama1>A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse.</EntityDescription.antidama1>
+  <EntityName.antidama2>Fentanyl</EntityName.antidama2>
+  <EntityDescription.antidama2>A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse.</EntityDescription.antidama2>
+  <EntityName.antibloodloss1>Saline</EntityName.antibloodloss1>
+  <EntityDescription.antibloodloss1>A sodium chloride infusion mildly useful in the treatment of blood loss.</EntityDescription.antibloodloss1>
+  <EntityName.antibloodloss2>Blood Pack</EntityName.antibloodloss2>
+  <EntityDescription.antibloodloss2>A pack of blood substitute for the treatment of blood loss.</EntityDescription.antibloodloss2>
+  <EntityName.deusizine>Deusizine</EntityName.deusizine>
+  <EntityDescription.deusizine>A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect.</EntityDescription.deusizine>
+  <EntityName.calyxanide>Calyxanide</EntityName.calyxanide>
+  <EntityDescription.calyxanide>An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages.</EntityDescription.calyxanide>
+  <EntityName.antipsychosis>Haloperidol</EntityName.antipsychosis>
+  <EntityDescription.antipsychosis>A strong antipsychotic drug.</EntityDescription.antipsychosis>
+  <EntityName.antinarc>Naloxone</EntityName.antinarc>
+  <EntityDescription.antinarc>An opioid antagonist for the treatment of opiate based withdrawal and overdose.</EntityDescription.antinarc>
+  <EntityName.morbusineantidote>Morbusine Antidote</EntityName.morbusineantidote>
+  <EntityDescription.morbusineantidote>An antidote for acute morbusine poisoning.</EntityDescription.morbusineantidote>
+  <EntityName.liquidoxygenite>Liquid Oxygenite</EntityName.liquidoxygenite>
+  <EntityDescription.liquidoxygenite>A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping.</EntityDescription.liquidoxygenite>
+  <EntityName.tonicliquid>Tonic Liquid</EntityName.tonicliquid>
+  <EntityDescription.tonicliquid>A medical solution that's mildy effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds.</EntityDescription.tonicliquid>
+  <EntityName.meth>Methamphetamine</EntityName.meth>
+  <EntityDescription.meth>A potent nervous system stimulant.</EntityDescription.meth>
+  <EntityName.steroids>Anabolic Steroids</EntityName.steroids>
+  <EntityDescription.steroids>Temporarily increases muscular strength and physical performance.</EntityDescription.steroids>
+  <EntityName.hyperzine>Hyperzine</EntityName.hyperzine>
+  <EntityDescription.hyperzine>An extremely potent muscle stimulant for those moments when you gotta go fast.</EntityDescription.hyperzine>
+  <EntityName.morbusine>Morbusine</EntityName.morbusine>
+  <EntityDescription.morbusine>A highly potent neurotoxin.</EntityDescription.morbusine>
+  <EntityName.chloralhydrate>Chloral Hydrate</EntityName.chloralhydrate>
+  <EntityDescription.chloralhydrate>A sedative that can be used to knock someone out for a short period of time.</EntityDescription.chloralhydrate>
+  <EntityName.cyanide>Cyanide</EntityName.cyanide>
+  <EntityDescription.cyanide>A highly potent neurotoxin.</EntityDescription.cyanide>
+  <EntityName.radiotoxin>Radiotoxin</EntityName.radiotoxin>
+  <EntityDescription.radiotoxin>A highly potent neurotoxin.</EntityDescription.radiotoxin>
+  <EntityName.sufforin>Sufforin</EntityName.sufforin>
+  <EntityDescription.sufforin>A highly potent neurotoxin.</EntityDescription.sufforin>
+  <EntityName.deliriumine>Deliriumine</EntityName.deliriumine>
+  <EntityDescription.deliriumine>A psychosis-inducing toxin.</EntityDescription.deliriumine>
+  <EntityName.guitar>Guitar</EntityName.guitar>
+  <EntityDescription.guitar>An old acoustic guitar.</EntityDescription.guitar>
+  <EntityName.harmonica>Harmonica</EntityName.harmonica>
+  <EntityDescription.harmonica>An old hand-made harmonica.</EntityDescription.harmonica>
+  <EntityName.weldingtool>Welding Tool</EntityName.weldingtool>
+  <EntityDescription.weldingtool>One of the most crucial tools on board the submarine. Also works underwater.</EntityDescription.weldingtool>
+  <EntityName.plasmacutter>Plasma Cutter</EntityName.plasmacutter>
+  <EntityDescription.plasmacutter>Cuts through various materials using a jet of ionized oxygen.</EntityDescription.plasmacutter>
+  <EntityName.extinguisher>Fire Extinguisher</EntityName.extinguisher>
+  <EntityDescription.extinguisher>A handheld carbon dioxide extinguisher.</EntityDescription.extinguisher>
+  <EntityName.coilgun>Coilgun</EntityName.coilgun>
+  <EntityDescription.coilgun>A rapid-firing turret that propels metal bolts using electromagnets. Generally not very effective against large or heavily armored targets, but ideal for taking down smaller enemies.</EntityDescription.coilgun>
+  <EntityName.uex>UEX</EntityName.uex>
+  <EntityDescription.uex>A simple explosive compound made of sodium and phosphorus.</EntityDescription.uex>
+  <EntityName.ic4block>IC-4 Block</EntityName.ic4block>
+  <EntityDescription.ic4block>A compound made of C-4 and incendium.</EntityDescription.ic4block>
+  <EntityName.detonator>Detonator</EntityName.detonator>
+  <EntityDescription.detonator>A device that detonates any contained explosive when receiving a signal.</EntityDescription.detonator>
+  <EntityName.nitroglycerin>Nitroglycerin</EntityName.nitroglycerin>
+  <EntityDescription.nitroglycerin>A highly unstable liquid that may explode when subjected to heat or physical shock.</EntityDescription.nitroglycerin>
+  <EntityName.railgun>Railgun</EntityName.railgun>
+  <EntityDescription.railgun>A heavy turret that uses electromagnetic force to launch shells at very high velocities. Requires very large surges of power (usually supplied by supercapacitors) and has a low rate of fire, and as such it's most often used against large and heavily armored targets.</EntityDescription.railgun>
+  <EntityName.periscope>Periscope</EntityName.periscope>
+  <EntityDescription.periscope>A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun.</EntityDescription.periscope>
+  <EntityName.stunbaton>Stun Baton</EntityName.stunbaton>
+  <EntityDescription.stunbaton>If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.</EntityDescription.stunbaton>
+  <EntityName.bikehorn>Bike Horn</EntityName.bikehorn>
+  <EntityDescription.bikehorn>HONK</EntityDescription.bikehorn>
+  <EntityName.automateddockinghatch>Automated Docking Hatch</EntityName.automateddockinghatch>
+  <EntityDescription.automateddockinghatch>A docking hatch with a circuit that automatically opens the hatch when docked, and closes the hatch when undocking (with a delay that prevents deattaching while the hatch is still closing)</EntityDescription.automateddockinghatch>
+  <EntityName.automaticdoor>Automatic Door</EntityName.automaticdoor>
+  <EntityDescription.automaticdoor>A door that closes automatically after 5 seconds if there's no-one in the doorway.</EntityDescription.automaticdoor>
+  <EntityName.automatichatch>Automatic Hatch</EntityName.automatichatch>
+  <EntityDescription.automatichatch>A hatch that closes automatically in 5 seconds if there's no-one in the way.</EntityDescription.automatichatch>
+  <EntityName.automaticwindoweddoor>Automatic Windowed Door</EntityName.automaticwindoweddoor>
+  <EntityDescription.automaticwindoweddoor>A door that closes automatically after 5 seconds if there's no-one in the doorway.</EntityDescription.automaticwindoweddoor>
+  <EntityName.divingsuitlocker>Diving Suit Locker</EntityName.divingsuitlocker>
+  <EntityDescription.divingsuitlocker>A diving suit locker with one dive-ready suit.</EntityDescription.divingsuitlocker>
+  <EntityName.door>Door</EntityName.door>
+  <EntityDescription.door>A pre-wired door with two buttons.</EntityDescription.door>
+  <EntityName.largedivinggearcabinet>Large Diving Gear Cabinet</EntityName.largedivinggearcabinet>
+  <EntityDescription.largedivinggearcabinet>A cabinet loaded with diving masks, oxygen tanks, underwater scooters, handheld sonars and flares.</EntityDescription.largedivinggearcabinet>
+  <EntityName.largedivingsuitcabinet>Large Diving Suit Cabinet</EntityName.largedivingsuitcabinet>
+  <EntityDescription.largedivingsuitcabinet>A cabinet with 5 dive-ready diving suits and 10 oxygen tanks.</EntityDescription.largedivingsuitcabinet>
+  <EntityName.smalldivinggearcabinet>Small Diving Gear Cabinet</EntityName.smalldivinggearcabinet>
+  <EntityDescription.smalldivinggearcabinet>A cabinet with diving masks, underwater scooters and handheld sonars</EntityDescription.smalldivinggearcabinet>
   
   <!-- Jobs -->
   <JobName.captain>Captain</JobName.captain>
@@ -1478,4 +2030,6 @@
   <LocationChange.Ruins.ChangeTo.Outpost>An outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Outpost>
   <LocationChange.Ruins.ChangeTo.Military>A military outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Military>
   <LocationChange.Ruins.ChangeTo.Research>A research outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Research>
+
+
 </infotexts>
