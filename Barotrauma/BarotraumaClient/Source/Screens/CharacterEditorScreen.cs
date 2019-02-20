@@ -2496,7 +2496,7 @@ namespace Barotrauma
             {
                 var sourceRect = targetLimb.ActiveSprite.SourceRect;
                 Vector2 size = sourceRect.Size.ToVector2() * Cam.Zoom * targetLimb.Scale * targetLimb.TextureScale;
-                Vector2 up = VectorExtensions.Backward(targetLimb.Rotation);
+                Vector2 up = VectorExtensions.BackwardFlipped(targetLimb.Rotation);
                 Vector2 left = up.Right();
                 Vector2 limbScreenPos = SimToScreen(targetLimb.SimPosition);
                 var offset = targetLimb.ActiveSprite.RelativeOrigin.X * left + targetLimb.ActiveSprite.RelativeOrigin.Y * up;
@@ -2601,12 +2601,12 @@ namespace Barotrauma
             //Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
             Vector2 simSpaceForward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
             //Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-            Vector2 screenSpaceForward = VectorExtensions.Backward(collider.Rotation, 1);
+            Vector2 screenSpaceForward = VectorExtensions.BackwardFlipped(collider.Rotation, 1);
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
             Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * character.AnimController.Dir;
-            Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.Backward(collider.Rotation, 1) : Vector2.UnitX * character.AnimController.Dir;
+            Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.BackwardFlipped(collider.Rotation, 1) : Vector2.UnitX * character.AnimController.Dir;
             bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
 
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
@@ -3141,7 +3141,7 @@ namespace Barotrauma
         private Vector2[] GetLimbPhysicRect(Limb limb)
         {
             Vector2 size = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) * Cam.Zoom;
-            Vector2 up = VectorExtensions.Backward(limb.Rotation);
+            Vector2 up = VectorExtensions.BackwardFlipped(limb.Rotation);
             Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
             corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size);
             return corners;
@@ -3288,7 +3288,7 @@ namespace Barotrauma
                                 DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation);
                             }
                             // Is the direction inversed incorrectly?
-                            Vector2 to = tformedJointPos + VectorExtensions.Forward(joint.LimbB.Rotation + MathHelper.ToRadians(-RagdollParams.SpritesheetOrientation), 20);
+                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-RagdollParams.SpritesheetOrientation), 20);
                             GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                             var dotSize = new Vector2(5, 5);
                             var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
@@ -3306,7 +3306,7 @@ namespace Barotrauma
                                 }
                                 Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
-                                input = input.TransformVector(VectorExtensions.Forward(limb.Rotation));
+                                input = input.TransformVector(VectorExtensions.ForwardFlipped(limb.Rotation));
                                 if (joint.BodyA == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorA += input;
@@ -3973,7 +3973,7 @@ namespace Barotrauma
                 angle = 0;
             }
             float drawAngle = clockWise ? -angle : angle;
-            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(drawAngle) + rotationOffset, circleRadius);
+            var widgetDrawPos = drawPos + VectorExtensions.ForwardFlipped(MathHelper.ToRadians(drawAngle) + rotationOffset, circleRadius);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetSize, color, toolTip, () =>
             {
@@ -3989,7 +3989,7 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
                 }
                 onClick(angle);
-                var zeroPos = drawPos + VectorExtensions.Forward(rotationOffset, circleRadius);
+                var zeroPos = drawPos + VectorExtensions.ForwardFlipped(rotationOffset, circleRadius);
                 GUI.DrawLine(spriteBatch, drawPos, zeroPos, Color.Red, width: 3);
             }, autoFreeze, onHovered: () =>
             {

@@ -6,13 +6,13 @@ namespace Barotrauma.Extensions
     public static class VectorExtensions
     {
         /// <summary>
-        /// Unity's Angle implementation.
-        /// Returns the angle in degrees.
-        /// 0 - 180.
+        /// Unity's Angle implementation without the conversion to degrees.
+        /// Returns the angle in radians between two vectors.
+        /// 0 - Pi.
         /// </summary>
         public static float Angle(this Vector2 from, Vector2 to)
         {
-            return (float)Math.Acos(MathHelper.Clamp(Vector2.Dot(Vector2.Normalize(from), Vector2.Normalize(to)), -1f, 1f)) * 57.29578f;
+            return (float)Math.Acos(MathHelper.Clamp(Vector2.Dot(Vector2.Normalize(from), Vector2.Normalize(to)), -1f, 1f));
         }
 
         /// <summary>
@@ -20,7 +20,7 @@ namespace Barotrauma.Extensions
         /// </summary>
         public static Vector2 Forward(float radians, float length = 1)
         {
-            return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * length;
+            return new Vector2((float)Math.Cos(radians), (float)Math.Sin(radians)) * length;
         }
 
         /// <summary>
@@ -29,6 +29,22 @@ namespace Barotrauma.Extensions
         public static Vector2 Backward(float radians, float length = 1)
         {
             return -Forward(radians, length);
+        }
+
+        /// <summary>
+        /// Creates a forward pointing vector based on the rotation (in radians). TODO: remove when the implications have been neutralized
+        /// </summary>
+        public static Vector2 ForwardFlipped(float radians, float length = 1)
+        {
+            return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * length;
+        }
+
+        /// <summary>
+        /// Creates a backward pointing vector based on the rotation (in radians). TODO: remove when the implications have been neutralized
+        /// </summary>
+        public static Vector2 BackwardFlipped(float radians, float length = 1)
+        {
+            return -ForwardFlipped(radians, length);
         }
 
         /// <summary>
