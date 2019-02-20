@@ -161,7 +161,7 @@ namespace Barotrauma.Sounds
 
         static protected short FloatToShort(float fVal)
         {
-            int temp = 32767 * (int)fVal;
+            int temp = (int)(32767 * fVal);
             if (temp > short.MaxValue) temp = short.MaxValue;
             else if (temp < short.MinValue) temp = short.MinValue;
             return (short)temp;
