@@ -235,7 +235,7 @@ namespace Barotrauma
             }
 
 #if LINUX
-            //arrow keys cannot be received using window.TextInput on Linux (see https://github.com/MonoGame/MonoGame/issues/5806)
+            //arrow keys cannot be received using window.TextInput on Linux (see https://github.com/MonoGame/MonoGame/issues/5808)
             //so lets do it manually here and pass to the KeyboardDispatcher:
             foreach (Keys key in manuallyHandledTextInputKeys)
             {
