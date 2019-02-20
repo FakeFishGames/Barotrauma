@@ -100,9 +100,7 @@ namespace Barotrauma
 
             var collider = character.AnimController.Collider;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
-            if (!character.AnimController.InWater && 
-                character.AnimController.Anim != AnimController.Animation.Climbing &&
-                diff.Y < collider.height / 2 + collider.radius)
+            if (!character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
             {
                 diff.Y = 0.0f;
             }
@@ -163,7 +161,7 @@ namespace Barotrauma
             
             var collider = character.AnimController.Collider;
 
-            if (character.AnimController.Anim == AnimController.Animation.Climbing)
+            if (character.IsClimbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
 

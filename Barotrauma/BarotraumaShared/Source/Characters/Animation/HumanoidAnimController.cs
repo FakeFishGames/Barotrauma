@@ -1621,7 +1621,7 @@ namespace Barotrauma
 
             Holdable holdable = item.GetComponent<Holdable>();
 
-            if (Anim != Animation.Climbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (!character.IsClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
@@ -1651,7 +1651,7 @@ namespace Barotrauma
             }
 
             Vector2 transformedHoldPos = shoulder.WorldAnchorA;
-            if (itemPos == Vector2.Zero || Anim == Animation.Climbing || usingController)
+            if (itemPos == Vector2.Zero || character.IsClimbing || usingController)
             {
                 if (character.SelectedItems[0] == item)
                 {
@@ -1740,7 +1740,7 @@ namespace Barotrauma
 
             item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir);
 
-            if (Anim == Animation.Climbing) return;
+            if (character.IsClimbing) return;
 
             for (int i = 0; i < 2; i++)
             {

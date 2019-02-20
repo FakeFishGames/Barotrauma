@@ -1145,9 +1145,7 @@ namespace Barotrauma
                 characters.Contains(Character.Controlled))
             {
                 //deselect construction unless it's the ladders the character is climbing
-                if (Character.Controlled != null &&
-                    Character.Controlled.SelectedConstruction != null &&
-                    Character.Controlled.SelectedConstruction.GetComponent<Items.Components.Ladder>() == null)
+                if (Character.Controlled != null && !Character.Controlled.IsClimbing)
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }

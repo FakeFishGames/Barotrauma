@@ -99,7 +99,7 @@ namespace Barotrauma
             
             waitUntilPathUnreachable -= deltaTime;
 
-            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
+            if (!character.IsClimbing)
             {
                 character.SelectedConstruction = null;
             }

@@ -47,7 +47,7 @@ namespace Barotrauma
             {
                 character.DeselectCharacter();
             }
-            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
+            if (!character.IsClimbing)
             {
                 character.SelectedConstruction = null;
             }
@@ -105,9 +105,9 @@ namespace Barotrauma
                     standStillTimer = Rand.Range(1.0f, 10.0f);
                 }
 
-                var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
+                bool isClimbing = character.IsClimbing;
                 //steer away from edges of the hull
-                if (character.AnimController.CurrentHull != null && ladder == null)
+                if (character.AnimController.CurrentHull != null && !isClimbing)
                 {
                     float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
                     float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
@@ -139,7 +139,7 @@ namespace Barotrauma
                 }
                 
                 character.AIController.SteeringManager.SteeringWander(character.AnimController.GetCurrentSpeed(false));
-                if (ladder == null)
+                if (!isClimbing)
                 {
                     //reset vertical steering to prevent dropping down from platforms etc
                     character.AIController.SteeringManager.ResetY();
