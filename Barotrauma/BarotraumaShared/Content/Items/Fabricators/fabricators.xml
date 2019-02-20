@@ -236,7 +236,7 @@
         <RequiredItem identifier="lithium"/>
       </FabricableItem>
       
-      <FabricableItem identifier="fulguriumbatterycell" requiredtime="10">
+      <FabricableItem identifier="fulguriumbatterycell" requiredtime="15">
         <RequiredItem identifier="fulgurium"/>
         <RequiredItem identifier="zinc"/>
       </FabricableItem>
@@ -256,6 +256,11 @@
       <FabricableItem identifier="weldingfueltank" displayname="WeldingFuelTankEmpty" outcondition="0.0">
         <RequiredItem identifier="aluminium"/>
       </FabricableItem>
+      <FabricableItem identifier="incendiumfueltank" >
+        <RequiredItem identifier="aluminium"/>
+        <RequiredItem identifier="incendium"/>
+      </FabricableItem>
+
 
       <FabricableItem identifier="extinguisher" requiredtime="10">
         <RequiredItem identifier="aluminium"/>
@@ -309,7 +314,11 @@
         <RequiredItem identifier="spear"/>
         <RequiredItem identifier="c4block"/>
       </FabricableItem>
-      
+      <FabricableItem identifier="alienspear" requiredtime="20">
+        <RequiredItem identifier="physicorium"/>
+      </FabricableItem>
+
+
       <FabricableItem identifier="stungrenade" requiredtime="20">
         <RequiredSkill identifier="weapons" level="30"/>
         <RequiredItem identifier="iron"/>
@@ -571,6 +580,30 @@
         <RequiredItem identifier="stabilozine" mincondition="0.25"/>
       </FabricableItem>
       
+      <FabricableItem identifier="radiotoxin" requiredtime="30">
+        <RequiredSkill identifier="medical" level="80"/>
+        <RequiredItem identifier="thorium"/>
+        <RequiredItem identifier="uranium"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="sufforin" requiredtime="30">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="sulphuricacid"/>
+        <RequiredItem identifier="flashpowder"/>
+      </FabricableItem>
+      
+      <FabricableItem identifier="deliriumine" requiredtime="30">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="dementonite"/>
+      </FabricableItem>
+
+      <FabricableItem identifier="cyanide" requiredtime="30">
+        <RequiredSkill identifier="medical" level="60"/>
+        <RequiredItem identifier="chloralhydrate"/>
+        <RequiredItem identifier="sodium"/>
+      </FabricableItem>
+
+
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">

@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
 
             if (updateTimer > 0.0f) return;
 
-            for (int i = 0; i<3; i++)
+            for (int i = 0; i < 3; i++)
             {
 
                 graphs[i].Update(totalValue[i] / UpdateInterval);
@@ -59,9 +59,9 @@ namespace Barotrauma.Networking
             updateTimer = UpdateInterval;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect)//, GameServer server
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect)
         {
-            GUI.DrawRectangle(spriteBatch, rect, Color.Black*0.4f, true);
+            GUI.DrawRectangle(spriteBatch, rect, Color.Black * 0.4f, true);
 
             graphs[(int)NetStatType.ReceivedBytes].Draw(spriteBatch, rect, null, 0.0f, Color.Cyan);
 
@@ -72,15 +72,15 @@ namespace Barotrauma.Networking
             GUI.SmallFont.DrawString(spriteBatch,
                 "Peak received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].LargestValue()) + "/s      " +
                 "Avg received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].Average()) + "/s",
-                new Vector2(rect.X + 10, rect.Y + 10), Color.Cyan);
+                new Vector2(rect.Right + 10, rect.Y + 10), Color.Cyan);
 
 
             GUI.SmallFont.DrawString(spriteBatch, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
                 "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + "/s",
-                new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
+                new Vector2(rect.Right + 10, rect.Y + 30), Color.Orange);
 
             GUI.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
-                new Vector2(rect.X + 10, rect.Y + 50), Color.Red);
+                new Vector2(rect.Right + 10, rect.Y + 50), Color.Red);
 #if DEBUG
             /*int y = 10;
 

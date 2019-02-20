@@ -1203,20 +1203,102 @@
   <Approach2>Approach II</Approach2>
   <Approach2Text>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2Text>
 
+  <!-- Afflictions -->
+  <AfflictionName.InternalDamage>Internal Damage</AfflictionName.InternalDamage>
+  <AfflictionDescription.InternalDamage>The area is an ugly shade of purple, and apparently very painful to touch. You suspect a bone might be broken.</AfflictionDescription.InternalDamage>
+  <AfflictionCauseOfDeath.InternalDamage>Died of internal injuries.</AfflictionCauseOfDeath.InternalDamage>
+  <AfflictionCauseOfDeathSelf.InternalDamage>You have succumbed to your internal injuries.</AfflictionCauseOfDeathSelf.InternalDamage>
 
+  <AfflictionName.Bleeding>Bleeding</AfflictionName.Bleeding>
+  <AfflictionDescription.Bleeding>Blood pours freely from this ragged and particularly nasty open wound.</AfflictionDescription.Bleeding>
+  <AfflictionCauseOfDeath.Bleeding>Bled to death.</AfflictionCauseOfDeath.Bleeding>
+  <AfflictionCauseOfDeathSelf.Bleeding>You have bled to death.</AfflictionCauseOfDeathSelf.Bleeding>
 
+  <AfflictionName.Burn>Burn</AfflictionName.Burn>
+  <AfflictionDescription.Burn>The area is blistered and red, and skin is already beginning to peel away in sheets. The patient is in a great deal of pain.</AfflictionDescription.Burn>
+  <AfflictionCauseOfDeath.Burn>Burned to death.</AfflictionCauseOfDeath.Burn>
+  <AfflictionCauseOfDeathSelf.Burn>You have burned to death.</AfflictionCauseOfDeathSelf.Burn>
 
+  <AfflictionName.OxygenLow>Oxygen low</AfflictionName.OxygenLow>
+  <AfflictionDescription.OxygenLow>The skin is pale and clammy, and the lips turning blue.</AfflictionDescription.OxygenLow>
+  <AfflictionCauseOfDeath.OxygenLow>Suffocated.</AfflictionCauseOfDeath.OxygenLow>
+  <AfflictionCauseOfDeathSelf.OxygenLow>You have suffocated.</AfflictionCauseOfDeathSelf.OxygenLow>
 
+  <AfflictionName.Bloodloss>Bloodloss</AfflictionName.Bloodloss>
+  <AfflictionDescription.Bloodloss>The patient is pale and cold. Their heart beats in an alarmingly rapid fashion.</AfflictionDescription.Bloodloss>
+  <AfflictionCauseOfDeath.Bloodloss>Bled to death.</AfflictionCauseOfDeath.Bloodloss>
+  <AfflictionCauseOfDeathSelf.Bloodloss>You have bled to death.</AfflictionCauseOfDeathSelf.Bloodloss>
 
+  <AfflictionName.Stun>Stun</AfflictionName.Stun>
+  <AfflictionDescription.Stun>The patient is dazed and unresponsive.</AfflictionDescription.Stun>
 
+  <AfflictionName.Pressure>Barotrauma</AfflictionName.Pressure>
+  <AfflictionDescription.Pressure>There is obvious massive organ damage and the blood vessels of the eye have burst, creating an unnerving red gaze.</AfflictionDescription.Pressure>
+  <AfflictionCauseOfDeath.Pressure>Crushed by water pressure.</AfflictionCauseOfDeath.Pressure>
+  <AfflictionCauseOfDeathSelf.Pressure>You have been crushed by water pressure.</AfflictionCauseOfDeathSelf.Pressure>
 
+  <AfflictionName.HuskInfection>Husk infection</AfflictionName.HuskInfection>
+  <AfflictionDescription.HuskInfection>Something dark and unpleasant moves in the mouth. They are rendered completely mute, save for occasional clicking sounds apparently emanating from deep within the throat.</AfflictionDescription.HuskInfection>
+  <AfflictionCauseOfDeath.HuskInfection>Taken over by a husk parasite.</AfflictionCauseOfDeath.HuskInfection>
+  <AfflictionCauseOfDeathSelf.HuskInfection>You have been taken over by the husk parasite.</AfflictionCauseOfDeathSelf.HuskInfection>
 
+  <AfflictionName.Psychosis>Psychosis</AfflictionName.Psychosis>
+  <AfflictionDescription.Psychosis>The patient rants and mutters in an agitated fashion, a steady commentary of unseen events.</AfflictionDescription.Psychosis>
 
+  <AfflictionName.Drunk>Drunk</AfflictionName.Drunk>
+  <AfflictionDescription.Drunk>The smell of alcohol rises from them like a vapor, their speech slurs a little, and their eyes fail to focus.</AfflictionDescription.Drunk>
+  <AfflictionCauseOfDeath.Drunk>Died of alcohol poisoning.</AfflictionCauseOfDeath.Drunk>
+  <AfflictionCauseOfDeathSelf.Drunk>You have died of alcohol poisoning.</AfflictionCauseOfDeathSelf.Drunk>
 
+  <AfflictionName.OpiateWithdrawal>Opiate withdrawal</AfflictionName.OpiateWithdrawal>
+  <AfflictionDescription.OpiateWithdrawal>Agitation and a tremor are obvious, as are the signs of nausea.</AfflictionDescription.OpiateWithdrawal>
+  <AfflictionCauseOfDeath.OpiateWithdrawal>Died of opiate withdrawal.</AfflictionCauseOfDeath.OpiateWithdrawal>
+  <AfflictionCauseOfDeathSelf.OpiateWithdrawal>You have died of opiate withdrawal.</AfflictionCauseOfDeathSelf.OpiateWithdrawal>
 
+  <AfflictionName.OpiateOverdose>Opiate overdose</AfflictionName.OpiateOverdose>
+  <AfflictionDescription.OpiateOverdose>The patient has pinpoint pupils and icy cold skin. They struggle to breathe and swallow.</AfflictionDescription.OpiateOverdose>
+  <AfflictionCauseOfDeath.OpiateOverdose>Died of opiate overdose.</AfflictionCauseOfDeath.OpiateOverdose>
+  <AfflictionCauseOfDeathSelf.OpiateOverdose>You have died of opiate overdose.</AfflictionCauseOfDeathSelf.OpiateOverdose>
 
+  <AfflictionName.OpiateAddiction>Opiate addiction</AfflictionName.OpiateAddiction>
+  <AfflictionDescription.OpiateAddiction>The patient is happy enough... so long as they get what they need.</AfflictionDescription.OpiateAddiction>
 
+  <AfflictionName.GunshotWound>Gunshot wound</AfflictionName.GunshotWound>
+  <AfflictionDescription.GunshotWound>The entry site is a small, dark, bruised hole oozing a little blood. The exit wound however is a large ragged mess of exposed tissue and pouring blood.</AfflictionDescription.GunshotWound>
+  <AfflictionCauseOfDeath.GunshotWound>Shot to death.</AfflictionCauseOfDeath.GunshotWound>
+  <AfflictionCauseOfDeathSelf.GunshotWound>You have died of gunshot wounds.</AfflictionCauseOfDeathSelf.GunshotWound>
 
+  <AfflictionName.MorbusinePoisoning>Morbusine poisoning</AfflictionName.MorbusinePoisoning>
+  <AfflictionDescription.MorbusinePoisoning>The patient can't breathe at all, and their heartrate is slowing rapidly.</AfflictionDescription.MorbusinePoisoning>
+  <AfflictionCauseOfDeath.MorbusinePoisoning>Died of morbusine poisoning.</AfflictionCauseOfDeath.MorbusinePoisoning>
+  <AfflictionCauseOfDeathSelf.MorbusinePoisoning>You have died of morbusine poisoning.</AfflictionCauseOfDeathSelf.MorbusinePoisoning>
 
+  <AfflictionName.SufforinPoisoning>Sufforin poisoning</AfflictionName.SufforinPoisoning>
+  <AfflictionDescription.SufforinPoisoning>Without prompt treatment, sufforine poisoning leads to delusions and rapid death.</AfflictionDescription.SufforinPoisoning>
+  <AfflictionCauseOfDeath.SufforinPoisoning>Died of sufforin poisoning.</AfflictionCauseOfDeath.SufforinPoisoning>
+  <AfflictionCauseOfDeathSelf.SufforinPoisoning>You have died of sufforin poisoning.</AfflictionCauseOfDeathSelf.SufforinPoisoning>
 
+  <AfflictionName.CyanidePoisoning>Cyanide poisoning</AfflictionName.CyanidePoisoning>
+  <AfflictionDescription.CyanidePoisoning>The patient is confused and has trouble breathing. Their skin is red and they have occasional muscle spasms.</AfflictionDescription.CyanidePoisoning>
+  <AfflictionCauseOfDeath.CyanidePoisoning>Died of cyanide poisoning.</AfflictionCauseOfDeath.CyanidePoisoning>
+  <AfflictionCauseOfDeathSelf.CyanidePoisoning>You have died of cyanide poisoning.</AfflictionCauseOfDeathSelf.CyanidePoisoning>
+  
+  <!-- Buffs -->
+  <AfflictionName.DurationIncrease>Slow metabolism</AfflictionName.DurationIncrease>
+  <AfflictionDescription.DurationIncrease>Causes chemicals to last longer.</AfflictionDescription.DurationIncrease>
+
+  <AfflictionName.Haste>Hyperactivity</AfflictionName.Haste>
+  <AfflictionDescription.Haste>Movement speed and reflexes are heightened.</AfflictionDescription.Haste>
+
+  <AfflictionName.HuskInfectionResistance>Husk infection resistance</AfflictionName.HuskInfectionResistance>
+  <AfflictionDescription.HuskInfectionResistance>Patient's immune system is more attuned to alien parasites.</AfflictionDescription.HuskInfectionResistance>
+
+  <AfflictionName.PsychosisResistance>Psychosis resistance</AfflictionName.PsychosisResistance>
+  <AfflictionDescription.PsychosisResistance>Patient exhibits high mental fortitude.</AfflictionDescription.PsychosisResistance>
+
+  <AfflictionName.PressureResistance>Pressure resistance</AfflictionName.PressureResistance>
+  <AfflictionDescription.PressureResistance>Internal organs are more accustomed to high pressures.</AfflictionDescription.PressureResistance>
+
+  <AfflictionName.Strengthen>Vigor</AfflictionName.Strengthen>
+  <AfflictionDescription.Strengthen>Patient's pain receptors are numbed.</AfflictionDescription.Strengthen>
 </infotexts>
