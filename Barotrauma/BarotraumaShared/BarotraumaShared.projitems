@@ -2962,6 +2962,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voip\VoipQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\HireManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
   </ItemGroup>
 </Project>
