@@ -420,7 +420,7 @@ namespace Barotrauma
             float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
             float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
             
-            if (hudInfoVisible && info != null &&
+            if (!GUI.DisableCharacterNames && hudInfoVisible && info != null &&
                 (controlled == null || this != controlled.focusedCharacter))
             {
                 string name = Info.DisplayName;

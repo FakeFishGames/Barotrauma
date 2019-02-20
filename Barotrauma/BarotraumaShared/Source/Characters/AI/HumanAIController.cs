@@ -123,9 +123,11 @@ namespace Barotrauma
                 //apply speed multiplier if 
                 //  a. it's boosting the movement speed and the character is trying to move fast (= running)
                 //  b. it's a debuff that decreases movement speed
-                if (run || Character.SpeedMultiplier <= 0.0f) targetMovement *= Character.SpeedMultiplier;
-                
-                Character.SpeedMultiplier = 1.0f;   // Reset, items will set the value before the next update
+
+                float speedMultiplier = Character.SpeedMultiplier;
+                if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;               
+
+                Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
 
                 Character.AnimController.TargetMovement = targetMovement;
             }

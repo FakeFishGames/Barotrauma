@@ -27,6 +27,8 @@ namespace Barotrauma.Networking
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
 
+        private NetStats netStats;
+
         protected GUITickBox cameraFollowsSub;
 
         private ClientPermissions permissions = ClientPermissions.None;
@@ -94,6 +96,8 @@ namespace Barotrauma.Networking
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
+
+            netStats = new NetStats();
 
             inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
             {
@@ -594,6 +598,14 @@ namespace Barotrauma.Networking
             }
 
             if (gameStarted) SetRadioButtonColor();
+
+            if (ShowNetStats)
+            {
+                netStats.AddValue(NetStats.NetStatType.ReceivedBytes, client.ServerConnection.Statistics.ReceivedBytes);
+                netStats.AddValue(NetStats.NetStatType.SentBytes, client.ServerConnection.Statistics.SentBytes);
+                netStats.AddValue(NetStats.NetStatType.ResentMessages, client.ServerConnection.Statistics.ResentMessages);
+                netStats.Update(deltaTime);
+            }
 
             UpdateHUD(deltaTime);
 
@@ -2036,7 +2048,7 @@ namespace Barotrauma.Networking
 
         public virtual void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             if (gameStarted &&
                 Screen.Selected == GameMain.GameScreen)
@@ -2055,7 +2067,7 @@ namespace Barotrauma.Networking
             GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                if (!GUI.DisableHUD)
+                if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
@@ -2107,7 +2119,7 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             inGameHUD.DrawManually(spriteBatch);
 
@@ -2177,7 +2189,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (!GameMain.DebugDraw) return;
+            if (!ShowNetStats) return;
+
+            netStats.Draw(spriteBatch, new Rectangle(300, 10, 300, 150));
 
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
