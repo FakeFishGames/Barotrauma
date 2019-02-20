@@ -784,8 +784,6 @@ namespace Barotrauma
                 }
             }, null, true));
 
-            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", null));
-
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
             () =>
             {
