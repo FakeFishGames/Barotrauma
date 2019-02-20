@@ -641,11 +641,11 @@ namespace Barotrauma
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
 
-            AssignOnClientExecute("netstats", (string[] args) =>
+            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", (string[] args) =>
             {
                 if (GameMain.Client == null) return;
                 GameMain.Client.ShowNetStats = !GameMain.Client.ShowNetStats;
-            });
+            }));
 
             commands.Add(new Command("hudlayoutdebugdraw|debugdrawhudlayout", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {
