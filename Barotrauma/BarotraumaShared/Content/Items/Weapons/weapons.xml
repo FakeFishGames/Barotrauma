@@ -17,9 +17,9 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Alien Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
+  <Item name="Physicorium Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
     <Deconstruct time="10">
-      <Item identifier="steel" />
+      <Item identifier="physicorium" />
     </Deconstruct>
     <Sprite texture="weapons_new.png" sourcerect="4,173,241,16" depth="0.55" />
     <Body width="241" height="16" density="20" />
@@ -27,7 +27,7 @@
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="5" stun="0.2" targetforce="20">
         <Affliction identifier="bleeding" strength="30" />
-        <Affliction identifier="internaldamage" strength="30" />
+        <Affliction identifier="internaldamage" strength="50" />
       </Attack>
     </Projectile>
   </Item>
