@@ -23,7 +23,7 @@
   <Preset 
     name="Admin" 
     description="Allowed to ban and kick players, manage round settings, access server logs and use nearly all console commands." 
-    permissions="ManageRound,Kick,Ban,Unban,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog,ManagePermissions">
+    permissions="All">
     <Command name="clientlist"/>
     <Command name="autorestart"/>
     <Command name="autorestartinterval"/>

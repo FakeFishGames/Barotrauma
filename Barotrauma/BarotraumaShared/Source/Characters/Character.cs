@@ -1068,7 +1068,7 @@ namespace Barotrauma
                 Vector2 targetMovement = GetTargetMovement();
 
                 AnimController.TargetMovement = targetMovement;
-                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < 0.0f;
+                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
             }
 
             if (AnimController is HumanoidAnimController)
@@ -1079,7 +1079,8 @@ namespace Barotrauma
             if (AnimController.onGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
-                AnimController.Anim != AnimController.Animation.CPR)
+                AnimController.Anim != AnimController.Animation.CPR &&
+                (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient || Controlled == this))
             {
                 //Limb head = AnimController.GetLimb(LimbType.Head);
                 // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
@@ -2396,6 +2397,8 @@ namespace Barotrauma
         public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (IsDead || CharacterHealth.Unkillable) { return; }
+
+            HealthUpdateInterval = 0.0f;
             
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
