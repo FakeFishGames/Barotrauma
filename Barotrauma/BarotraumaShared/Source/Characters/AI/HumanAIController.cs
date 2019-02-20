@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -138,19 +139,28 @@ namespace Barotrauma
                 }
             }
 
-            //suit can be taken off if the character is inside a hull and there's air in the room
-            bool canTakeOffSuit = Character.AnimController.CurrentHull != null &&
-                Character.AnimController.CurrentHull.OxygenPercentage > 30.0f &&
-                Character.AnimController.CurrentHull.WaterPercentage < 30;
-
-            bool shouldTakeSuitOff = Character.Oxygen < 50.0f || (objectiveManager.CurrentObjective is AIObjectiveIdle && Character.AnimController.CurrentHull.WaterPercentage < 1 && !isClimbing);
-            if (canTakeOffSuit && shouldTakeSuitOff)
+            Hull currentHull = Character.AnimController.CurrentHull;
+            bool needDivingGear = currentHull.OxygenPercentage < 30 || currentHull.WaterPercentage > 30;
+            if (!needDivingGear)
             {
-                var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
-                if (divingSuit != null)
+                bool shouldRemoveDivingGear = Character.Oxygen < 50.0f || (objectiveManager.CurrentObjective is AIObjectiveIdle && Character.AnimController.CurrentHull.WaterPercentage < 1 && !isClimbing);
+                if (shouldRemoveDivingGear)
                 {
-                    // TODO: take the item where it was taken?
-                    divingSuit.Drop(Character);
+                    var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
+                    if (divingSuit != null && Character.AnimController.CurrentHull != null)
+                    {
+                        // TODO: take the item where it was taken from?
+                        divingSuit.Drop(Character);
+                    }
+                    var mask = Character.Inventory.FindItemByIdentifier("divingmask");
+                    if (mask != null)
+                    {
+                        // Try to put the mask in an Any slot, and drop it if that fails
+                        if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
+                        {
+                            mask.Drop();
+                        }
+                    }
                 }
             }
 
