@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
             LevelSeed = 0x10
         }
 
+        public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
+
         public string Name
         {
             get { return "ServerSettings"; }
@@ -226,6 +228,7 @@ namespace Barotrauma.Networking
 
             ExtraCargo = new Dictionary<ItemPrefab, int>();
 
+            PermissionPreset.LoadAll(PermissionPresetFile);
             InitProjSpecific();
 
             ServerName = serverName;

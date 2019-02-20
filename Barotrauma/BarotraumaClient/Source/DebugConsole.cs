@@ -400,6 +400,10 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
 
+            commands.Add(new Command("clientlist", "", (string[] args) => { }));
+            AssignRelayToServer("clientlist", true);
+
+
             AssignOnExecute("control", (string[] args) =>
             {
                 if (args.Length < 1) return;

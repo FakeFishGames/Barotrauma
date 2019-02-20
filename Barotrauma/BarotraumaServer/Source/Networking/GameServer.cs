@@ -1084,8 +1084,8 @@ namespace Barotrauma.Networking
 
             outmsg.Write(GameStarted);
             outmsg.Write(serverSettings.AllowSpectating);
-
-            WritePermissions(outmsg, c);
+            
+            c.WritePermissions(outmsg);
         }
 
         private const int COMPRESSION_THRESHOLD = 500;
@@ -2297,8 +2297,7 @@ namespace Barotrauma.Networking
 
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
-            WritePermissions(msg, client);
-
+            client.WritePermissions(msg);
             CompressOutgoingMessage(msg);
 
             //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
@@ -2317,23 +2316,7 @@ namespace Barotrauma.Networking
 
             serverSettings.SaveClientPermissions();
         }
-
-        private void WritePermissions(NetBuffer msg, Client client)
-        {
-            msg.WriteVariableUInt32((UInt32)client.Permissions);
-            if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
-            {
-                msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));
-                foreach (DebugConsole.Command command in client.PermittedConsoleCommands)
-                {
-                    foreach (string commandName in command.names)
-                    {
-                        msg.Write(commandName);
-                    }
-                }
-            }
-        }
-
+        
         public void GiveAchievement(Character character, string achievementIdentifier)
         {
             achievementIdentifier = achievementIdentifier.ToLowerInvariant();
