@@ -1030,7 +1030,7 @@ namespace Barotrauma
                 Vector2 targetMovement = GetTargetMovement();
 
                 AnimController.TargetMovement = targetMovement;
-                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < 0.0f;
+                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
             }
 
             if (AnimController is HumanoidAnimController)
