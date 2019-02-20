@@ -283,17 +283,15 @@ namespace Barotrauma
 
                     if (IsRemotePlayer)
                     {
-                        aiming = dequeuedInput.HasFlag(InputNetFlags.Aim);
-                        use = dequeuedInput.HasFlag(InputNetFlags.Use);
-
-                        attack = dequeuedInput.HasFlag(InputNetFlags.Attack);
+                        aiming  = dequeuedInput.HasFlag(InputNetFlags.Aim);
+                        use     = dequeuedInput.HasFlag(InputNetFlags.Use);
+                        attack  = dequeuedInput.HasFlag(InputNetFlags.Attack);
                     }
                     else if (keys != null)
                     {
-                        aiming = keys[(int)InputType.Aim].GetHeldQueue;
-                        use = keys[(int)InputType.Use].GetHeldQueue;
-
-                        attack = keys[(int)InputType.Attack].GetHeldQueue;
+                        aiming  = keys[(int)InputType.Aim].GetHeldQueue;
+                        use     = keys[(int)InputType.Use].GetHeldQueue;
+                        attack  = keys[(int)InputType.Attack].GetHeldQueue;
 
                         networkUpdateSent = true;
                     }
@@ -304,10 +302,7 @@ namespace Barotrauma
                     {
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
                     }
-
-                    bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
-                    tempBuffer.Write(hasAttackLimb);
-                    if (hasAttackLimb) tempBuffer.Write(attack);
+                    tempBuffer.Write(attack);
 
                     if (aiming)
                     {
@@ -335,13 +330,18 @@ namespace Barotrauma
 
                 tempBuffer.Write(SimPosition.X);
                 tempBuffer.Write(SimPosition.Y);
-                tempBuffer.Write(AnimController.Collider.Rotation);
-
                 float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
-                float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
                 tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
                 tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
-                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
+
+                bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation;
+                tempBuffer.Write(fixedRotation);
+                if (!fixedRotation)
+                {
+                    tempBuffer.Write(AnimController.Collider.Rotation);
+                    float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
+                    tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
+                }
 
                 bool writeStatus = healthUpdateTimer <= 0.0f;
                 tempBuffer.Write(writeStatus);
@@ -393,7 +393,6 @@ namespace Barotrauma
             else
             {
                 CharacterHealth.ServerWrite(msg);
-                msg.Write(IsRagdolled);
             }
         }
 
