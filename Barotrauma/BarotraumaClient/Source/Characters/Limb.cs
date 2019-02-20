@@ -454,6 +454,9 @@ namespace Barotrauma
                     //float offset = -body.Rotation - (midAngle + spritesheetOrientation) * Dir;
                     float offset = GetArmorSectorRotationOffset(modifier.ArmorSector, -body.Rotation);
                     Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
+                    // TODO: test this
+                    //float angle = body.Dir == 1.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
+                    //Vector2 forward = VectorExtensions.Forward(angle);
                     float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
                     color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
                     GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
