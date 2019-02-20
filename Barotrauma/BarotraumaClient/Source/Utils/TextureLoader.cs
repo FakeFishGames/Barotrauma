@@ -49,7 +49,7 @@ namespace Barotrauma
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
                     if (preMultiplyAlpha)
                     {
-                        PreMultiplyAlpha(texture);
+                        PreMultiplyAlpha(ref texture);
                     }
                     return texture;
                 }
@@ -67,7 +67,7 @@ namespace Barotrauma
             try
             {
                 var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                PreMultiplyAlpha(texture);
+                PreMultiplyAlpha(ref texture);
                 return texture;
             }
             catch (Exception e)
@@ -77,7 +77,7 @@ namespace Barotrauma
             }
         }
 
-        private static void PreMultiplyAlpha(Texture2D texture)
+        private static void PreMultiplyAlpha(ref Texture2D texture)
         {
             UInt32[] data = new UInt32[texture.Width * texture.Height];
             texture.GetData(data);
@@ -100,9 +100,9 @@ namespace Barotrauma
 
             //not sure why this is needed, but it seems to cut the memory usage of the game almost in half
             //GetData/SetData might be leaking memory?
+            int width = texture.Width; int height = texture.Height;
             texture.Dispose();
-            texture = new Texture2D(_graphicsDevice, texture.Width, texture.Height);
-            
+            texture = new Texture2D(_graphicsDevice, width, height);
             texture.SetData(data);
         }
        

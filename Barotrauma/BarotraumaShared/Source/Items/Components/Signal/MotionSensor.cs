@@ -79,6 +79,13 @@ namespace Barotrauma.Items.Components
             set { falseOutput = value; }
         }
 
+        [Editable(ToolTip = "How fast the objects within the detector's range have to be moving (in m/s).", DecimalCount = 3), Serialize(0.01f, true)]
+        public float MinimumVelocity
+        {
+            get;
+            set;
+        }
+
 
         public MotionSensor(Item item, XElement element)
             : base (item, element)
@@ -106,7 +113,7 @@ namespace Barotrauma.Items.Components
 
             if (item.body != null && item.body.Enabled)
             {
-                if (Math.Abs(item.body.LinearVelocity.X) > 0.01f || Math.Abs(item.body.LinearVelocity.Y) > 0.1f)
+                if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {
                     motionDetected = true;
                 }
@@ -130,7 +137,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (limb.LinearVelocity.LengthSquared() <= 0.001f) continue;
+                    if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) continue;
                     if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                     {
                         motionDetected = true;
