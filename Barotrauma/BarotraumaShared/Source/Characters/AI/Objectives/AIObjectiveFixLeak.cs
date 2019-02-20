@@ -29,6 +29,8 @@ namespace Barotrauma
             return leak.Open <= 0.0f || leak.Removed || pathUnreachable;
         }
 
+        public override bool CanBeCompleted => !pathUnreachable && base.CanBeCompleted;
+
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (leak.Open == 0.0f) { return 0.0f; }

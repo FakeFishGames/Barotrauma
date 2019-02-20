@@ -24,8 +24,6 @@ namespace Barotrauma
         {
         }
 
-        // TODO: define canbecompleted condition
-
         public override bool IsCompleted()
         {
             if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
