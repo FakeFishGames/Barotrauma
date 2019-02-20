@@ -11,6 +11,9 @@ namespace Barotrauma
 
         private readonly Gap leak;
 
+        private AIObjectiveGoTo gotoObjective;
+        private AIObjectiveOperateItem operateObjective;
+
         private bool pathUnreachable;
         
         public Gap Leak
@@ -75,31 +78,52 @@ namespace Barotrauma
             var repairTool = weldingTool.GetComponent<RepairTool>();
             if (repairTool == null) { return; }
 
-            Vector2 standPosition = GetStandPosition();
-
             Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
 
-            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController && 
-                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            // TODO: use the collider size/reach?
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController humanoidController && 
+                Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
             {
                 ((HumanoidAnimController)character.AnimController).Crouching = true;
             }
 
-            if (Math.Abs(gapDiff.X) > 100.0f || Math.Abs(gapDiff.Y) > 150.0f)
+            if (gotoObjective != null)
             {
-                var gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(standPosition), character);
-                if (!gotoObjective.IsCompleted())
+                // Check if the objective is already removed -> completed/impossible
+                if (!subObjectives.Contains(gotoObjective))
                 {
-                    pathUnreachable = !gotoObjective.CanBeCompleted;
-                    if (!pathUnreachable)
-                    {
-                        AddSubObjective(gotoObjective);
-                    }
-                    return;
+                    gotoObjective = null;
                 }
             }
-
-            AddSubObjective(new AIObjectiveOperateItem(repairTool, character, "", true, leak));                       
+            else
+            {
+                var objective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character);
+                if (!objective.IsCompleted())
+                {
+                    pathUnreachable = !objective.CanBeCompleted;
+                    if (!pathUnreachable)
+                    {
+                        AddSubObjective(objective);
+                        gotoObjective = objective;
+                    }
+                }
+                else
+                {
+                    gotoObjective = null;
+                }
+            }
+            if (gotoObjective == null)
+            {
+                if (operateObjective == null)
+                {
+                    operateObjective = new AIObjectiveOperateItem(repairTool, character, "", true, leak);
+                    AddSubObjective(operateObjective);
+                }
+                else if (!subObjectives.Contains(operateObjective))
+                {
+                    operateObjective = null;
+                }
+            }   
         }
 
         private Vector2 GetStandPosition()
