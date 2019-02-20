@@ -71,13 +71,16 @@ namespace Barotrauma
 
                     Vector2 newVelocity = Collider.LinearVelocity;
                     Vector2 newPosition = Collider.SimPosition;
-                    Collider.CorrectPosition(character.MemState, out newPosition, out newVelocity, out _, out _);
+                    float newRotation = Collider.Rotation;
+                    float newAngularVelocity = Collider.AngularVelocity;
+                    Collider.CorrectPosition(character.MemState, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
 
                     newVelocity = newVelocity.ClampLength(100.0f);
                     if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
                     overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
 
                     Collider.LinearVelocity = newVelocity;
+                    Collider.AngularVelocity = newAngularVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
                     float errorTolerance = character.AllowInput ? 0.01f : 0.1f;
@@ -85,10 +88,12 @@ namespace Barotrauma
                     {
                         if (distSqrd > 10.0f || !character.AllowInput)
                         {
+                            Collider.TargetRotation = newRotation;
                             SetPosition(newPosition, lerp: distSqrd < 1.0f);
                         }
                         else
                         {
+                            Collider.TargetRotation = newRotation;
                             Collider.TargetPosition = newPosition;
                             Collider.MoveToTargetPosition(true);
                         }
@@ -98,7 +103,6 @@ namespace Barotrauma
                     // -> we need to correct it manually
                     if (!character.AllowInput)
                     {
-                        //Collider.LinearVelocity = overrideTargetMovement;
                         MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
                         MainLimb.PullJointEnabled = true;
                     }

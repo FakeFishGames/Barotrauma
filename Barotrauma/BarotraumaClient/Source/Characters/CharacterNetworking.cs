@@ -173,13 +173,9 @@ namespace Barotrauma
                             keys[(int)InputType.Crouch].SetState(false, crouching);
                         }
 
-                        bool hasAttackLimb = msg.ReadBoolean();
-                        if (hasAttackLimb)
-                        {
-                            bool attackInput = msg.ReadBoolean();
-                            keys[(int)InputType.Attack].Held = attackInput;
-                            keys[(int)InputType.Attack].SetState(false, attackInput);
-                        }
+                        bool attackInput = msg.ReadBoolean();
+                        keys[(int)InputType.Attack].Held = attackInput;
+                        keys[(int)InputType.Attack].SetState(false, attackInput);
 
                         if (aimInput)
                         {
@@ -215,14 +211,20 @@ namespace Barotrauma
                     Vector2 pos = new Vector2(
                         msg.ReadFloat(),
                         msg.ReadFloat());
-                    float rotation = msg.ReadFloat();
-
                     float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
-                    float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
                     Vector2 linearVelocity = new Vector2(
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
-                    float angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
+
+                    bool fixedRotation = msg.ReadBoolean();
+                    float rotation = AnimController.Collider.Rotation;
+                    float angularVelocity = AnimController.Collider.AngularVelocity;
+                    if (!fixedRotation)
+                    {
+                        rotation = msg.ReadFloat();
+                        float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
+                        angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
+                    }
 
                     bool readStatus = msg.ReadBoolean();
                     if (readStatus)
@@ -420,9 +422,6 @@ namespace Barotrauma
                 if (IsDead) Revive();
                 
                 CharacterHealth.ClientRead(msg);
-                
-                bool ragdolled = msg.ReadBoolean();
-                IsRagdolled = ragdolled;
             }
         }
     }

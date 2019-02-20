@@ -176,7 +176,14 @@ namespace Barotrauma
                 }
                 NewMessage("***************", Color.Cyan);
             }));
-            
+
+
+            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null) return;
+                GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
+            }));
+
             commands.Add(new Command("createfilelist", "", (string[] args) =>
             {
                 UpdaterUtil.SaveFileList("filelist.xml");
