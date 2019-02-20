@@ -1481,16 +1481,6 @@ namespace Barotrauma
             PreviewImage = null;
 #endif
         }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(ID);
-            //length in bytes
-            msg.Write((byte)(4 + 4));
-
-            msg.Write(PhysicsBody.SimPosition.X);
-            msg.Write(PhysicsBody.SimPosition.Y);
-        }
     }
 
 }

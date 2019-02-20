@@ -1,9 +1,7 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -15,18 +13,18 @@ namespace Barotrauma
 
         public readonly AnimController.Animation Animation;
 
-        public CharacterStateInfo(Vector2 pos, float rotation, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, rotation, 0, time, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float rotation, Vector2 velocity, float angularVelocity, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, velocity, angularVelocity, 0, time, dir, interact, animation)
         {
         }
 
         public CharacterStateInfo(Vector2 pos, float rotation, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, rotation, ID, 0.0f, dir, interact, animation)
+            : this(pos, rotation, Vector2.Zero, 0.0f, ID, 0.0f, dir, interact, animation)
         {
         }
 
-        protected CharacterStateInfo(Vector2 pos, float rotation, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : base(pos, rotation, ID, time)
+        protected CharacterStateInfo(Vector2 pos, float rotation, Vector2 velocity, float angularVelocity, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : base(pos, rotation, velocity, angularVelocity, ID, time)
         {
             Direction = dir;
             Interact = interact;
@@ -81,7 +79,20 @@ namespace Barotrauma
 
         private List<CharacterStateInfo> memState        = new List<CharacterStateInfo>();
         private List<CharacterStateInfo> memLocalState   = new List<CharacterStateInfo>();
-        
+
+        public float healthUpdateTimer;
+
+        private float healthUpdateInterval;
+        public float HealthUpdateInterval
+        {
+            get { return healthUpdateInterval; }
+            set
+            {
+                healthUpdateInterval = MathHelper.Clamp(value, 0.0f, IsDead ? NetConfig.MaxHealthUpdateIntervalDead : NetConfig.MaxHealthUpdateInterval);
+                healthUpdateTimer = Math.Min(healthUpdateTimer, healthUpdateInterval);
+            }
+        }
+
         private bool networkUpdateSent;
 
         public bool isSynced = false;

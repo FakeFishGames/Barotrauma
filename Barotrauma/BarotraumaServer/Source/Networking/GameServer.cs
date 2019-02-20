@@ -180,7 +180,7 @@ namespace Barotrauma.Networking
                 CoroutineManager.StartCoroutine(RegisterToMasterServer());
             }
 
-            updateInterval = new TimeSpan(0, 0, 0, 0, 150);
+            TickRate = serverSettings.TickRate;
 
             Log("Server started", ServerLog.MessageType.ServerMessage);
 
@@ -539,7 +539,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            // if 30ms has passed
+            // if update interval has passed
             if (updateTimer < DateTime.Now)
             {
                 if (server.ConnectionsCount > 0)
@@ -562,6 +562,18 @@ namespace Barotrauma.Networking
                     foreach (Item item in Item.ItemList)
                     {
                         item.NeedsPositionUpdate = false;
+                    }
+                    foreach (Character character in Character.CharacterList)
+                    {
+                        if (character.healthUpdateTimer <= 0.0f)
+                        {
+                            character.healthUpdateTimer = character.HealthUpdateInterval;
+                        }
+                        else
+                        {
+                            character.healthUpdateTimer -= (float)UpdateInterval.TotalSeconds;
+                        }
+                        character.HealthUpdateInterval += (float)UpdateInterval.TotalSeconds;
                     }
                 }
 
@@ -1072,8 +1084,8 @@ namespace Barotrauma.Networking
 
             outmsg.Write(GameStarted);
             outmsg.Write(serverSettings.AllowSpectating);
-
-            WritePermissions(outmsg, c);
+            
+            c.WritePermissions(outmsg);
         }
 
         private const int COMPRESSION_THRESHOLD = 500;
@@ -1123,6 +1135,11 @@ namespace Barotrauma.Networking
                     {
                         continue;
                     }
+
+                    float updateInterval = character.GetPositionUpdateInterval(c);
+                    c.PositionUpdateLastSent.TryGetValue(character.ID, out float lastSent);
+                    if (lastSent > NetTime.Now - updateInterval) { continue; }
+
                     if (!c.PendingPositionUpdates.Contains(character)) c.PendingPositionUpdates.Enqueue(character);
                 }
 
@@ -1193,6 +1210,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(tempBuffer);
                 outmsg.WritePadBits();
 
+                c.PositionUpdateLastSent[entity.ID] = (float)NetTime.Now;
                 c.PendingPositionUpdates.Dequeue();
             }
             positionUpdateBytes = outmsg.LengthBytes - positionUpdateBytes;
@@ -1737,6 +1755,7 @@ namespace Barotrauma.Networking
             {
                 c.EntityEventLastSent.Clear();
                 c.PendingPositionUpdates.Clear();
+                c.PositionUpdateLastSent.Clear();
             }
 
 #if DEBUG
@@ -2285,8 +2304,7 @@ namespace Barotrauma.Networking
 
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
-            WritePermissions(msg, client);
-
+            client.WritePermissions(msg);
             CompressOutgoingMessage(msg);
 
             //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
@@ -2305,23 +2323,7 @@ namespace Barotrauma.Networking
 
             serverSettings.SaveClientPermissions();
         }
-
-        private void WritePermissions(NetBuffer msg, Client client)
-        {
-            msg.WriteVariableUInt32((UInt32)client.Permissions);
-            if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
-            {
-                msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));
-                foreach (DebugConsole.Command command in client.PermittedConsoleCommands)
-                {
-                    foreach (string commandName in command.names)
-                    {
-                        msg.Write(commandName);
-                    }
-                }
-            }
-        }
-
+        
         public void GiveAchievement(Character character, string achievementIdentifier)
         {
             achievementIdentifier = achievementIdentifier.ToLowerInvariant();
