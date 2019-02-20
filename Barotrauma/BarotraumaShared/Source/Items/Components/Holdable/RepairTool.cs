@@ -299,17 +299,14 @@ namespace Barotrauma.Items.Components
             }
 
             character.CursorPosition = leak.Position;
+            character.SetInput(InputType.Aim, false, true);
 
             float rotation = item.body.Dir < 0 ? item.body.Rotation - MathHelper.Pi : item.body.Rotation;
-            var a = VectorExtensions.Angle(VectorExtensions.Forward(rotation), fromItemToLeak);
-            if (a > MathHelper.PiOver4)
+            if (VectorExtensions.Angle(VectorExtensions.Forward(rotation), fromItemToLeak) < MathHelper.PiOver4)
             {
-                // Don't press the trigger yet, because the tool is not facing the target
-                return false;
+                // Press the trigger only when the tool is approximately facing the target.
+                Use(deltaTime, character);
             }
-
-            character.SetInput(InputType.Aim, false, true);
-            Use(deltaTime, character);
 
             // TODO: fix until the wall is fixed?
             bool leakFixed = leak.Open <= 0.0f || leak.Removed;
