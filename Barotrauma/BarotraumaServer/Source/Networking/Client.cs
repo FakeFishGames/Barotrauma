@@ -41,12 +41,14 @@ namespace Barotrauma.Networking
         //how many unique events the client missed before joining the server
         public UInt16 UnreceivedEntityEventCount;
         public UInt16 FirstNewEventID;
-
-
+        
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
         public readonly Dictionary<UInt16, float> EntityEventLastSent = new Dictionary<UInt16, float>();
-
+        
+        //when was a position update for a given entity last sent to the client
+        //  key = entity id, value = NetTime.Now when sending
+        public readonly Dictionary<UInt16, float> PositionUpdateLastSent = new Dictionary<UInt16, float>();
         public readonly Queue<Entity> PendingPositionUpdates = new Queue<Entity>();
 
         public bool ReadyToStart;

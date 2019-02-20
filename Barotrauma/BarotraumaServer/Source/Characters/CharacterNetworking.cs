@@ -3,12 +3,40 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     partial class Character
     {
+        public float GetPositionUpdateInterval(Client recipient)
+        {
+            if (!Enabled) { return 1000.0f; }
+
+            if (recipient.Character == null)
+            {
+                return 0.1f;
+            }
+            else
+            {
+                float distance = Vector2.Distance(recipient.Character.WorldPosition, WorldPosition);
+                float priority = 1.0f - MathUtils.InverseLerp(
+                    NetConfig.HighPrioCharacterPositionUpdateDistance, 
+                    NetConfig.LowPrioCharacterPositionUpdateDistance,
+                    distance);
+
+                float interval = MathHelper.Lerp(
+                    NetConfig.LowPrioCharacterPositionUpdateInterval, 
+                    NetConfig.HighPrioCharacterPositionUpdateInterval,
+                    priority);
+
+                if (IsDead)
+                {
+                    interval = Math.Max(interval * 2, 0.1f);
+                }
+                return interval;
+            }
+        }
+
         partial void UpdateNetInput()
         {
             if (!(this is AICharacter) || IsRemotePlayer)
@@ -143,21 +171,19 @@ namespace Barotrauma
                         {
                             newInteract = msg.ReadUInt16();
                         }
-
-                        //if (AllowInput)
-                        //{
+                        
                         if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
                         {
-                            NetInputMem newMem = new NetInputMem();
-                            newMem.states = newInput;
-                            newMem.intAim = newAim;
-                            newMem.interact = newInteract;
+                            NetInputMem newMem = new NetInputMem
+                            {
+                                states = newInput,
+                                intAim = newAim,
+                                interact = newInteract,
 
-                            newMem.networkUpdateID = (ushort)(networkUpdateID - i);
-
+                                networkUpdateID = (ushort)(networkUpdateID - i)
+                            };
                             memInput.Insert(i, newMem);
                         }
-                        //}
                     }
 
                     if (NetIdUtils.IdMoreRecent(networkUpdateID, LastNetworkUpdateID))

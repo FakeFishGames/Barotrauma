@@ -1135,6 +1135,11 @@ namespace Barotrauma.Networking
                     {
                         continue;
                     }
+
+                    float updateInterval = character.GetPositionUpdateInterval(c);
+                    c.PositionUpdateLastSent.TryGetValue(character.ID, out float lastSent);
+                    if (lastSent > NetTime.Now - updateInterval) { continue; }
+
                     if (!c.PendingPositionUpdates.Contains(character)) c.PendingPositionUpdates.Enqueue(character);
                 }
 
@@ -1205,6 +1210,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(tempBuffer);
                 outmsg.WritePadBits();
 
+                c.PositionUpdateLastSent[entity.ID] = (float)NetTime.Now;
                 c.PendingPositionUpdates.Dequeue();
             }
             positionUpdateBytes = outmsg.LengthBytes - positionUpdateBytes;
@@ -1749,6 +1755,7 @@ namespace Barotrauma.Networking
             {
                 c.EntityEventLastSent.Clear();
                 c.PendingPositionUpdates.Clear();
+                c.PositionUpdateLastSent.Clear();
             }
 
 #if DEBUG
