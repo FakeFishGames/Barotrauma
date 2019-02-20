@@ -73,6 +73,7 @@
   <Submarine file="Submarines/Bunyip.sub" />
   <Submarine file="Submarines/Humpback.sub" />
   <Submarine file="Submarines/Remora.sub" />
+  <Submarine file="Submarines/RemoraDrone.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
   <Text file="Content/Texts/EnglishVanillaLoadingTips.xml" />
   <UIStyle file="Content/UI/style.xml"/>  

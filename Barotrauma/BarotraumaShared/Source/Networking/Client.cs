@@ -155,8 +155,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void WritePermissions(NetOutgoingMessage msg)
+        public void WritePermissions(NetBuffer msg)
         {
+            msg.Write(ID);
             msg.Write((UInt16)Permissions);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
@@ -167,7 +168,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        public static void ReadPermissions(NetIncomingMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
+        public static void ReadPermissions(NetBuffer inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
             UInt16 permissionsInt = inc.ReadUInt16();
 

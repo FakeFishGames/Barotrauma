@@ -1,6 +1,8 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -22,25 +24,39 @@ namespace Barotrauma
             private set;
         }
 
+        public Vector2 LinearVelocity
+        {
+            get;
+            private set;
+        }
+
+        public float AngularVelocity
+        {
+            get;
+            private set;
+        }
+
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
-        public PosInfo(Vector2 pos, float rotation, float time)
-            : this(pos, rotation, 0, time)
+        public PosInfo(Vector2 pos, float rotation, Vector2 linearVelocity, float angularVelocity, float time)
+            : this(pos, rotation, linearVelocity, angularVelocity, 0, time)
         {
         }
 
-        public PosInfo(Vector2 pos, float rotation, UInt16 ID)
-            : this(pos, rotation, ID, 0.0f)
+        public PosInfo(Vector2 pos, float rotation, Vector2 linearVelocity, float angularVelocity, UInt16 ID)
+            : this(pos, rotation, linearVelocity, angularVelocity, ID, 0.0f)
         {
         }
-        
-        protected PosInfo(Vector2 pos, float rotation, UInt16 ID, float time)
+
+        protected PosInfo(Vector2 pos, float rotation, Vector2 linearVelocity, float angularVelocity, UInt16 ID, float time)
         {
             Position = pos;
             Rotation = rotation;
-            this.ID = ID;
-            
+            LinearVelocity = linearVelocity;
+            AngularVelocity = angularVelocity;
+
+            this.ID = ID;            
             Timestamp = time;
         }
 
@@ -104,10 +120,10 @@ namespace Barotrauma
         //flipped horizontally if the Character holding it turns around)
         float dir = 1.0f;
 
-        Vector2 offsetFromTargetPos;
-        float offsetLerp;
+        private Vector2 drawOffset;
+        private float rotationOffset;
 
-        private float netInterpolationState;
+        private float lastProcessedNetworkState;
 
         public Shape BodyShape
         {
@@ -645,17 +661,28 @@ namespace Barotrauma
 
         public void MoveToTargetPosition(bool lerp = true)
         {
-            if (targetPosition == null) return;
+            if (targetPosition == null) { return; }
 
-            if (lerp && Vector2.Distance((Vector2)targetPosition, body.Position) < 10.0f)
+            if (lerp)
             {
-                offsetFromTargetPos = (Vector2)targetPosition - (body.Position - Vector2.Lerp(offsetFromTargetPos, Vector2.Zero, offsetLerp));
-                offsetLerp = 1.0f;
-                prevPosition = (Vector2)targetPosition;
+                if (Vector2.DistanceSquared((Vector2)targetPosition, body.Position) < 10.0f * 10.0f)
+                {
+                    drawOffset = -((Vector2)targetPosition - (body.Position + drawOffset));
+                    prevPosition = (Vector2)targetPosition;
+                }
+                else
+                {
+                    drawOffset = Vector2.Zero;
+                }
+                if (targetRotation.HasValue)
+                {
+                    rotationOffset = -MathUtils.GetShortestAngle(body.Rotation + rotationOffset, targetRotation.Value);
+                }
             }
 
             SetTransform((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
             targetPosition = null;
+            targetRotation = null;
         }
 
         public void MoveToPos(Vector2 simPosition, float force, Vector2? pullPos = null)
@@ -695,79 +722,46 @@ namespace Barotrauma
             ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
         }
 
+        public void Update(float deltaTime)
+        {
+            //use faster smoothing if the drawOffset is large
+            float positionSmoothingFactor = MathHelper.Lerp(0.95f, 0.8f, MathHelper.Clamp(drawOffset.LengthSquared(), 0.0f, 1.0f));
+            float rotationSmoothingFactor = MathHelper.Lerp(0.95f, 0.8f, Math.Min(Math.Abs(rotationOffset), 1.0f));
+
+            drawOffset *= positionSmoothingFactor;
+            rotationOffset *= rotationSmoothingFactor;
+        }
 
         public void UpdateDrawPosition()
         {
             drawPosition = Timing.Interpolate(prevPosition, body.Position);
-            drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
-
-            drawRotation = Timing.InterpolateRotation(prevRotation, body.Rotation);
-
-            if (offsetFromTargetPos == Vector2.Zero)
-            {
-                return;
-            }
-
-            drawPosition -= ConvertUnits.ToDisplayUnits(Vector2.Lerp(Vector2.Zero, offsetFromTargetPos, offsetLerp));
-
-            offsetLerp -= 0.1f;
-            if (offsetLerp < 0.0f)
-            {
-                offsetFromTargetPos = Vector2.Zero;
-            }
+            drawPosition = ConvertUnits.ToDisplayUnits(drawPosition + drawOffset);
+            drawRotation = Timing.InterpolateRotation(prevRotation, body.Rotation) + rotationOffset;
         }
-
-        public void CorrectPosition<T>(List<T> positionBuffer, float deltaTime, out Vector2 newVelocity) where T : PosInfo
+        
+        public void CorrectPosition<T>(List<T> positionBuffer,
+            out Vector2 newPosition, out Vector2 newVelocity, out float newRotation, out float newAngularVelocity) where T : PosInfo
         {
-            Vector2 newPosition = SimPosition;
-            CorrectPosition(positionBuffer, deltaTime, out newVelocity, out newPosition);
-            
-            SetTransform(newPosition, Rotation);
-        }
-
-
-        public void CorrectPosition<T>(List<T> positionBuffer, float deltaTime, out Vector2 newVelocity, out Vector2 newPosition) where T : PosInfo
-        {
-            newVelocity = Vector2.Zero;
+            newVelocity = LinearVelocity;
             newPosition = SimPosition;
+            newRotation = Rotation;
+            newAngularVelocity = AngularVelocity;
 
-            if (positionBuffer.Count < 2) return;
-            
-            PosInfo prev = positionBuffer[0];
-            PosInfo next = positionBuffer[1];
-            
-            //interpolate the position of the collider from the first position in the buffer towards the second
-            if (prev.Timestamp < next.Timestamp)
+            while (positionBuffer.Count > 0 && positionBuffer[0].Timestamp < lastProcessedNetworkState)
             {
-                //if there are more than 2 positions in the buffer, 
-                //increase the interpolation speed to catch up with the server
-                float speedMultiplier = (float)Math.Pow(1.0f + (positionBuffer.Count - 2) / 10.0f, 2.0f);
-
-                netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
-
-                newPosition = Vector2.Lerp(prev.Position, next.Position, Math.Min(netInterpolationState, 1.0f));
-
-                if (next.Timestamp == prev.Timestamp)
-                {
-                    newVelocity = Vector2.Zero;
-                }
-                else
-                {
-                    //override the targetMovement to make the character play the walking/running animation
-                    newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
-                }
-            }
-            else
-            {
-                newPosition = next.Position;
-                netInterpolationState = 1.0f;
-            }
-
-            if (netInterpolationState >= 1.0f)
-            {
-                netInterpolationState = 0.0f;
                 positionBuffer.RemoveAt(0);
             }
+
+            if (positionBuffer.Count == 0) { return; }
+
+            lastProcessedNetworkState = positionBuffer[0].Timestamp;
+
+            newVelocity = positionBuffer[0].LinearVelocity;
+            newPosition = positionBuffer[0].Position;
+            newRotation = positionBuffer[0].Rotation;
+            newAngularVelocity = positionBuffer[0].AngularVelocity;
+            
+            positionBuffer.RemoveAt(0);            
         }
 
         /// <summary>
@@ -840,5 +834,6 @@ namespace Barotrauma
         }
 
         partial void DisposeProjSpecific();
+
     }
 }
