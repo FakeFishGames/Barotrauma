@@ -15,6 +15,8 @@ namespace Barotrauma
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
         public static bool ShowItems = true;
+        
+        private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
@@ -816,41 +818,47 @@ namespace Barotrauma
             }
             msg.WritePadBits();
         }
-        
+
+        partial void UpdateNetPosition()
+        {
+            Vector2 newVelocity = body.LinearVelocity;
+            Vector2 newPosition = body.SimPosition;
+            float newAngularVelocity = body.AngularVelocity;
+            float newRotation = body.Rotation;
+            body.CorrectPosition(positionBuffer, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
+
+            body.TargetPosition = newPosition;
+            body.LinearVelocity = newVelocity;
+            body.TargetRotation = newRotation;
+            body.AngularVelocity = newAngularVelocity;
+            body.MoveToTargetPosition(lerp: true);
+            
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+        }
+
         public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            Vector2 newPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-            float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
-            bool awake = msg.ReadBoolean();
-            Vector2 newVelocity = Vector2.Zero;
-            
-            if (awake)
-            {
-                newVelocity = new Vector2(
-                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
-                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
-            }
-
-            if (!MathUtils.IsValid(newPosition) || !MathUtils.IsValid(newRotation) || !MathUtils.IsValid(newVelocity))
-            {
-                string errorMsg = "Received invalid position data for the item \"" + Name
-                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ")";
-#if DEBUG
-                DebugConsole.ThrowError(errorMsg);
-#endif
-                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:InvalidData" + ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    errorMsg);
-                return;
-            }
-
             if (body == null)
             {
                 DebugConsole.ThrowError("Received a position update for an item with no physics body (" + Name + ")");
                 return;
             }
 
-            body.FarseerBody.Awake = awake;
+            var posInfo = body.ClientRead(type, msg, sendingTime, parentDebugName: Name);
+            msg.ReadPadBits();
+            if (posInfo != null)
+            {
+                int index = 0;
+                while (index < positionBuffer.Count && sendingTime > positionBuffer[index].Timestamp)
+                {
+                    index++;
+                }
+
+                positionBuffer.Insert(index, posInfo);
+            }
+            /*body.FarseerBody.Awake = awake;
             if (body.FarseerBody.Awake)
             {
                 if ((newVelocity - body.LinearVelocity).LengthSquared() > 8.0f * 8.0f) body.LinearVelocity = newVelocity;
@@ -879,7 +887,7 @@ namespace Barotrauma
                     rect.X = (int)(displayPos.X - rect.Width / 2.0f);
                     rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
                 }
-            }
+            }*/
         }
 
         public void CreateClientEvent<T>(T ic) where T : ItemComponent, IClientSerializable

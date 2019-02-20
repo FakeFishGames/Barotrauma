@@ -400,6 +400,10 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
 
+            commands.Add(new Command("clientlist", "", (string[] args) => { }));
+            AssignRelayToServer("clientlist", true);
+
+
             AssignOnExecute("control", (string[] args) =>
             {
                 if (args.Length < 1) return;
@@ -649,7 +653,7 @@ namespace Barotrauma
                 GameMain.ShowPerf = !GameMain.ShowPerf;
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
-
+            
             AssignOnClientExecute("netstats", (string[] args) =>
             {
                 if (GameMain.Client == null) return;

@@ -176,7 +176,14 @@ namespace Barotrauma
                 }
                 NewMessage("***************", Color.Cyan);
             }));
-            
+
+
+            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null) return;
+                GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
+            }));
+
             commands.Add(new Command("createfilelist", "", (string[] args) =>
             {
                 UpdaterUtil.SaveFileList("filelist.xml");
@@ -783,8 +790,6 @@ namespace Barotrauma
                     c.SetAllDamage(200.0f, 0.0f, 0.0f);
                 }
             }, null, true));
-
-            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", null));
 
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
             () =>

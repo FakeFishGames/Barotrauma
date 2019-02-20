@@ -482,11 +482,12 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-
             var copyAffliction = newAffliction.Prefab.Instantiate(
                 Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab.Identifier))),
                 newAffliction.Source);
             limbHealth.Afflictions.Add(copyAffliction);
+            
+            Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -518,6 +519,8 @@ namespace Barotrauma
             afflictions.Add(newAffliction.Prefab.Instantiate(
                 Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab.Identifier))),
                 source: newAffliction.Source));
+
+            Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -636,6 +639,7 @@ namespace Barotrauma
         private void Kill()
         {
             if (Unkillable) { return; }
+            
             var causeOfDeath = GetCauseOfDeath();
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
         }
@@ -706,7 +710,9 @@ namespace Barotrauma
             foreach (Affliction affliction in activeAfflictions)
             {
                 msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(affliction.Prefab));
-                msg.Write(affliction.Strength);
+                msg.WriteRangedSingle(
+                    MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
+                    0.0f, affliction.Prefab.MaxStrength, 8);
             }
 
             List<Pair<LimbHealth, Affliction>> limbAfflictions = new List<Pair<LimbHealth, Affliction>>();
@@ -724,7 +730,9 @@ namespace Barotrauma
             {
                 msg.WriteRangedInteger(0, limbHealths.Count - 1, limbHealths.IndexOf(limbAffliction.First));
                 msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab));
-                msg.Write(limbAffliction.Second.Strength);
+                msg.WriteRangedSingle(
+                    MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
+                    0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);
             }
         }
 

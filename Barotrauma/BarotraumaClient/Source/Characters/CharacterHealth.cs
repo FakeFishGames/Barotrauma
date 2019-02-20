@@ -1293,10 +1293,10 @@ namespace Barotrauma
             byte afflictionCount = inc.ReadByte();
             for (int i = 0; i < afflictionCount; i++)
             {
-                int afflictionPrefabIndex = inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
-                float afflictionStrength = inc.ReadSingle();
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List[inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1)];
+                float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
 
-                newAfflictions.Add(new Pair<AfflictionPrefab, float>(AfflictionPrefab.List[afflictionPrefabIndex], afflictionStrength));
+                newAfflictions.Add(new Pair<AfflictionPrefab, float>(afflictionPrefab, afflictionStrength));
             }
 
             foreach (Affliction affliction in afflictions)
@@ -1327,10 +1327,10 @@ namespace Barotrauma
             for (int i = 0; i < limbAfflictionCount; i++)
             {
                 int limbIndex = inc.ReadRangedInteger(0, limbHealths.Count - 1);
-                int afflictionPrefabIndex = inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
-                float afflictionStrength = inc.ReadSingle();
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List[inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1)];
+                float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
 
-                newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], AfflictionPrefab.List[afflictionPrefabIndex], afflictionStrength));
+                newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], afflictionPrefab, afflictionStrength));
             }
 
             foreach (LimbHealth limbHealth in limbHealths)
