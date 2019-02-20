@@ -2048,7 +2048,7 @@ namespace Barotrauma.Networking
 
         public virtual void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             if (gameStarted &&
                 Screen.Selected == GameMain.GameScreen)
@@ -2067,7 +2067,7 @@ namespace Barotrauma.Networking
             GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                if (!GUI.DisableHUD)
+                if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
@@ -2119,7 +2119,7 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             inGameHUD.DrawManually(spriteBatch);
 

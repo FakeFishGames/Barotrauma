@@ -969,7 +969,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y ||
                 prevUIScale != GUI.Scale)
             {
@@ -1048,7 +1048,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
             if (chatBox != null)
             {
                 chatBox.Update(deltaTime);
