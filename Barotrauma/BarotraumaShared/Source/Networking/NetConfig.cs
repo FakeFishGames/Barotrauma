@@ -18,6 +18,17 @@
         public const float EnableCharacterDist = 20000.0f;
         public const float EnableCharacterDistSqr = EnableCharacterDist * EnableCharacterDist;
 
+        public const float MaxPhysicsBodyVelocity = 64.0f;
+        public const float MaxPhysicsBodyAngularVelocity = 16.0f;
+
+        public const float MaxHealthUpdateInterval = 2.0f;
+        public const float MaxHealthUpdateIntervalDead = 10.0f;
+
+        public const float HighPrioCharacterPositionUpdateDistance = 1000.0f;
+        public const float LowPrioCharacterPositionUpdateDistance = 10000.0f;
+        public const float HighPrioCharacterPositionUpdateInterval = 0.0f;
+        public const float LowPrioCharacterPositionUpdateInterval = 1.0f;
+
         //how much the physics body of an item has to move until the server 
         //send a position update to clients (in sim units)
         public const float ItemPosUpdateDistance = 2.0f;

@@ -29,8 +29,6 @@ namespace Barotrauma
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        const float MaxVel = 64.0f;
-
         public static List<Item> ItemList = new List<Item>();
         public ItemPrefab Prefab => prefab as ItemPrefab;
 
@@ -1039,11 +1037,12 @@ namespace Barotrauma
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
-            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            if (Math.Abs(body.LinearVelocity.X) > NetConfig.MaxPhysicsBodyVelocity || 
+                Math.Abs(body.LinearVelocity.Y) > NetConfig.MaxPhysicsBodyVelocity)
             {
                 body.LinearVelocity = new Vector2(
-                    MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                    MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
             }
         }
 
@@ -1760,47 +1759,7 @@ namespace Barotrauma
         }
 
         partial void UpdateNetPosition();
-
-        public void ServerWritePosition(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(ID);
-            //length in bytes
-            if (body.FarseerBody.Awake)
-            {
-                msg.Write((byte)(4 + 4 + 1 + 3));
-            }
-            else
-            {
-                msg.Write((byte)(4 + 4 + 1));
-            }
-
-            msg.Write(SimPosition.X);
-            msg.Write(SimPosition.Y);
-
-            msg.WriteRangedSingle(MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 7);
-
-#if DEBUG
-            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-            {
-
-                DebugConsole.ThrowError("Item velocity out of range (" + body.LinearVelocity + ")");
-
-            }
-#endif
-
-            msg.Write(body.FarseerBody.Awake);
-            if (body.FarseerBody.Awake)
-            {
-                body.Enabled = true;
-                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
-                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
-            }
-
-            msg.WritePadBits();
-
-            lastSentPos = SimPosition;
-        }
-
+        
         public static Item Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;            

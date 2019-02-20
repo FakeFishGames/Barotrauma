@@ -145,7 +145,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
             }
 
-            if (!string.IsNullOrWhiteSpace("msg")) element.Add(new XAttribute("msg", Msg));
+            if (!string.IsNullOrWhiteSpace(Msg)) element.Add(new XAttribute("msg", Msg));
         }
 
         public static RelatedItem Load(XElement element, string parentDebugName)

@@ -128,6 +128,8 @@ namespace Barotrauma.Networking
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
+            TickRate = incMsg.ReadRangedInteger(1, 60);
+            GameMain.NetworkMember.TickRate = TickRate;
 
             ReadExtraCargo(incMsg);
 
@@ -141,7 +143,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend,int missionType=0,float? levelDifficulty=null,bool? autoRestart=null,int traitorSetting=0,int botCount=0,int botSpawnMode=0)
+        public void ClientAdminWrite(NetFlags dataToSend, int missionType = 0, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 

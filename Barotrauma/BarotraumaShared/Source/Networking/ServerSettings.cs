@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
             LevelSeed = 0x10
         }
 
+        public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
+
         public string Name
         {
             get { return "ServerSettings"; }
@@ -226,6 +228,7 @@ namespace Barotrauma.Networking
 
             ExtraCargo = new Dictionary<ItemPrefab, int>();
 
+            PermissionPreset.LoadAll(PermissionPresetFile);
             InitProjSpecific();
 
             ServerName = serverName;
@@ -291,6 +294,13 @@ namespace Barotrauma.Networking
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
         public WhiteList Whitelist { get; private set; }
+        
+        [Serialize(20, true)]
+        public int TickRate
+        {
+            get;
+            set;
+        }
 
         [Serialize(true, true)]
         public bool RandomizeSeed
@@ -649,11 +659,11 @@ namespace Barotrauma.Networking
             UInt32 count = msg.ReadUInt32();
             if (ExtraCargo == null || count != ExtraCargo.Count) changed = true;
             Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
-            for (int i=0;i<count;i++)
+            for (int i = 0; i < count; i++)
             {
                 string prefabName = msg.ReadString();
                 byte amount = msg.ReadByte();
-                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName,StringComparison.InvariantCulture)) as ItemPrefab;
+                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName, StringComparison.InvariantCulture)) as ItemPrefab;
                 if (ip != null && amount > 0)
                 {
                     if (changed || !ExtraCargo.ContainsKey(ip) || ExtraCargo[ip] != amount) changed = true;

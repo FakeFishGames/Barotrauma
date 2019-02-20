@@ -643,12 +643,12 @@ namespace Barotrauma.Networking
                     respawnManager.Update(deltaTime);
                 }
 
-                if (updateTimer > DateTime.Now) return;
+                if (updateTimer > DateTime.Now) { return; }
                 SendIngameUpdate();
             }
             else
             {
-                if (updateTimer > DateTime.Now) return;
+                if (updateTimer > DateTime.Now) { return; }
                 SendLobbyUpdate();
             }
 
@@ -909,66 +909,74 @@ namespace Barotrauma.Networking
         private void ReadPermissions(NetIncomingMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
-            ClientPermissions newPermissions = (ClientPermissions)inc.ReadVariableUInt32();
-            if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
-            {
-                UInt16 consoleCommandCount = inc.ReadUInt16();
-                for (int i = 0; i < consoleCommandCount; i++)
-                {
-                    permittedConsoleCommands.Add(inc.ReadString());
-                }
-            }
+            byte clientID = inc.ReadByte();
 
-            SetPermissions(newPermissions, permittedConsoleCommands);
+            ClientPermissions permissions = ClientPermissions.None;
+            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+            Client.ReadPermissions(inc, out permissions, out permittedCommands);
+
+            Client targetClient = ConnectedClients.Find(c => c.ID == clientID);
+            if (targetClient != null)
+            {
+                targetClient.SetPermissions(permissions, permittedCommands);
+            }
+            if (clientID == myID)
+            {
+                SetMyPermissions(permissions, permittedCommands.Select(command => command.names[0]));
+            }
         }
 
-        private void SetPermissions(ClientPermissions newPermissions, List<string> permittedConsoleCommands)
+        private void SetMyPermissions(ClientPermissions newPermissions, IEnumerable<string> permittedConsoleCommands)
         {
             if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
                 permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
             {
                 if (newPermissions == permissions) return;
             }
-
-            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
-
-            string msg = "";
-            if (newPermissions == ClientPermissions.None)
-            {
-                msg = TextManager.Get("PermissionsRemoved");
-            }
-            else
-            {
-                msg = TextManager.Get("CurrentPermissions") + '\n';
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
-                {
-                    if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
-                    msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
-                }
-            }
-
+            
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
-            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
+            //don't show the "permissions changed" popup if the client owns the server
+            if (ownerKey == 0)
             {
-                UserData = "permissions"
-            };
+                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
 
-            if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
-            {
-                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
-                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.15f) },
-                     TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
-                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.55f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.25f) });
-                foreach (string permittedCommand in permittedConsoleCommands)
+                string msg = "";
+                if (newPermissions == ClientPermissions.None)
                 {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
-                        permittedCommand, font: GUI.SmallFont)
-                    {
-                        CanBeFocused = false
-                    };
+                    msg = TextManager.Get("PermissionsRemoved");
                 }
-            }
+                else
+                {
+                    msg = TextManager.Get("CurrentPermissions") + '\n';
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
+                        msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
+                    }
+                }
+
+                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
+                {
+                    UserData = "permissions"
+                };
+
+                if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
+                {
+                    int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
+                    new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.15f) },
+                         TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
+                    var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.55f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.25f) });
+                    foreach (string permittedCommand in permittedConsoleCommands)
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
+                            permittedCommand, font: GUI.SmallFont)
+                        {
+                            CanBeFocused = false
+                        };
+                    }
+                }
+            }            
 
             GameMain.NetLobbyScreen.UpdatePermissions();
         }
@@ -1132,7 +1140,7 @@ namespace Barotrauma.Networking
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
-
+            
             ReadPermissions(inc);
 
             if (gameStarted)
@@ -1190,6 +1198,10 @@ namespace Barotrauma.Networking
                         {
                             updateClientListId = false;
                         }
+                    }
+                    if (existingClient.ID == myID)
+                    {
+                        existingClient.SetPermissions(permissions, permittedConsoleCommands);
                     }
                     currentClients.Add(existingClient);
                 }
@@ -1792,7 +1804,6 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((UInt16)ClientPermissions.ManagePermissions);
-            msg.Write(targetClient.ID);
             targetClient.WritePermissions(msg);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -2048,7 +2059,7 @@ namespace Barotrauma.Networking
 
         public virtual void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             if (gameStarted &&
                 Screen.Selected == GameMain.GameScreen)
@@ -2067,7 +2078,7 @@ namespace Barotrauma.Networking
             GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                if (!GUI.DisableHUD)
+                if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
@@ -2119,7 +2130,7 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             inGameHUD.DrawManually(spriteBatch);
 

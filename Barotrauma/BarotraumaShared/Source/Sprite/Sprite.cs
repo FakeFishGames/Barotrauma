@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -15,10 +16,6 @@ namespace Barotrauma
         }
 
         private static HashSet<Sprite> list = new HashSet<Sprite>();
-
-        //the file from which the texture is loaded
-        //if two sprites use the same file, they share the same texture
-        private string file;
 
         /// <summary>
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
@@ -81,11 +78,11 @@ namespace Barotrauma
                 origin = new Vector2(_relativeOrigin.X * sourceRect.Width, _relativeOrigin.Y * sourceRect.Height);
             }
         }
-        
-        public string FilePath
-        {
-            get { return file; }
-        }
+
+        public string FilePath { get; private set; }
+
+        public string FullPath { get; private set; }
+
 
         public override string ToString()
         {
@@ -118,7 +115,12 @@ namespace Barotrauma
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-            this.file = path + file;
+            FilePath = path + file;
+            if (!string.IsNullOrEmpty(FilePath))
+            {
+                FullPath = Path.GetFullPath(FilePath);
+            }
+
             Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             bool shouldReturn = false;
@@ -162,7 +164,11 @@ namespace Barotrauma
         private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0, 
             bool preMultiplyAlpha = true)
         {
-            file = newFile;
+            FilePath = newFile;
+            if (!string.IsNullOrEmpty(FilePath))
+            {
+                FullPath = Path.GetFullPath(FilePath);
+            }
             Vector4 sourceVector = Vector4.Zero;
             bool shouldReturn = false;
             LoadTexture(ref sourceVector, ref shouldReturn, preMultiplyAlpha);

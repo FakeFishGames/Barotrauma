@@ -400,6 +400,10 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
 
+            commands.Add(new Command("clientlist", "", (string[] args) => { }));
+            AssignRelayToServer("clientlist", true);
+
+
             AssignOnExecute("control", (string[] args) =>
             {
                 if (args.Length < 1) return;
@@ -429,6 +433,19 @@ namespace Barotrauma
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("lighting|lights", false);
+
+            AssignOnExecute("ambientlight", (string[] args) =>
+            {
+                if (Level.Loaded == null)
+                {
+                    ThrowError("Could not set ambient light color (no level loaded).");
+                    return;
+                }
+                Color color = XMLExtensions.ParseColor(string.Join("", args));
+                Level.Loaded.GenerationParams.AmbientLightColor = color;
+                NewMessage("Set ambient light color to " + color + ".", Color.White);
+            });
+            AssignRelayToServer("ambientlight", false);
 
             commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given Vector4 value (for example, 1,1,1,0.5).", (string[] args) =>
             {
@@ -636,7 +653,7 @@ namespace Barotrauma
                 GameMain.ShowPerf = !GameMain.ShowPerf;
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
-
+            
             AssignOnClientExecute("netstats", (string[] args) =>
             {
                 if (GameMain.Client == null) return;
@@ -662,6 +679,20 @@ namespace Barotrauma
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             });
             AssignRelayToServer("togglehud|hud", false);
+            
+            AssignOnExecute("toggleupperhud", (string[] args) =>
+            {
+                GUI.DisableUpperHUD = !GUI.DisableUpperHUD;
+                NewMessage(GUI.DisableUpperHUD ? "Disabled upper HUD" : "Enabled upper HUD", Color.White);
+            });
+            AssignRelayToServer("toggleupperhud", false);
+
+            AssignOnExecute("togglecharacternames", (string[] args) =>
+            {
+                GUI.DisableCharacterNames = !GUI.DisableCharacterNames;
+                NewMessage(GUI.DisableCharacterNames ? "Disabled character names" : "Enabled character names", Color.White);
+            });
+            AssignRelayToServer("togglecharacternames", false);
 
             AssignOnExecute("followsub", (string[] args) =>
             {

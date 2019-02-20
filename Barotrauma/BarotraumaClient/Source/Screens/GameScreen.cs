@@ -356,9 +356,13 @@ namespace Barotrauma
                 postProcessTechnique += "Distort";
                 postProcessEffect.Parameters["distortScale"].SetValue(Vector2.One * DistortStrength);
                 postProcessEffect.Parameters["distortUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
+#if LINUX
+                postProcessEffect.Parameters["xTexture"].SetValue(distortTexture);
+#else
                 postProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+#endif
             }
-            
+
             if (string.IsNullOrEmpty(postProcessTechnique))
             {
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None);
@@ -369,7 +373,11 @@ namespace Barotrauma
                 postProcessEffect.CurrentTechnique.Passes[0].Apply();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, effect: postProcessEffect);
             }
+#if LINUX
+            spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#else
             spriteBatch.Draw(DistortStrength > 0.0f ? distortTexture : renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#endif
             spriteBatch.End();            
         }
     }

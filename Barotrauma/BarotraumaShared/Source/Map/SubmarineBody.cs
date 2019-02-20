@@ -14,7 +14,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class SubmarineBody
+    partial class SubmarineBody
     {
         public const float NeutralBallastPercentage = 0.07f;
 
@@ -39,7 +39,7 @@ namespace Barotrauma
 
         public readonly PhysicsBody Body;
 
-        private List<PosInfo> memPos = new List<PosInfo>();
+        private List<PosInfo> positionBuffer = new List<PosInfo>();
 
         public Rectangle Borders
         {
@@ -62,9 +62,9 @@ namespace Barotrauma
             get { return ConvertUnits.ToDisplayUnits(Body.SimPosition); }
         }
 
-        public List<PosInfo> MemPos
+        public List<PosInfo> PositionBuffer
         {
-            get { return memPos; }
+            get { return positionBuffer; }
         }
         
         public bool AtDamageDepth
@@ -246,60 +246,8 @@ namespace Barotrauma
         {
             if (Body.FarseerBody.IsStatic) { return; }
 
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                if (memPos.Count == 0) return;
-                
-                Vector2 newVelocity = Body.LinearVelocity;
-                Vector2 newPosition = Body.SimPosition;
-
-                Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
-                Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
-                newVelocity = newVelocity.ClampLength(100.0f);
-                if (!MathUtils.IsValid(newVelocity))
-                {
-                    return;
-                }
-
-                List<Submarine> subsToMove = submarine.GetConnectedSubs();
-                foreach (Submarine dockedSub in subsToMove)
-                {
-                    if (dockedSub == submarine) continue;
-                    //clear the position buffer of the docked subs to prevent unnecessary position corrections
-                    dockedSub.SubBody.memPos.Clear();
-                }
-
-                Submarine closestSub = null;
-                if (Character.Controlled == null)
-                {
-                    closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.Position);
-                }
-                else
-                {
-                    closestSub = Character.Controlled.Submarine;
-                }
-
-                bool displace = moveAmount.LengthSquared() > 100.0f * 100.0f;
-                foreach (Submarine sub in subsToMove)
-                {
-                    sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
-                    sub.PhysicsBody.LinearVelocity = newVelocity;
-
-                    if (displace) sub.SubBody.DisplaceCharacters(moveAmount);
-                }
-
-                if (closestSub != null && subsToMove.Contains(closestSub))
-                {
-                    GameMain.GameScreen.Cam.Position += moveAmount;
-                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;
-
-                    if (Character.Controlled != null) Character.Controlled.CursorPosition += moveAmount;
-                }
-
-                return;
-            }
-#endif
+            ClientUpdatePosition(deltaTime);
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             
             //if outside left or right edge of the level
             if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
@@ -350,7 +298,9 @@ namespace Barotrauma
 
             UpdateDepthDamage(deltaTime);
         }
-        
+
+        partial void ClientUpdatePosition(float deltaTime);
+
         /// <summary>
         /// Moves away any character that is inside the bounding box of the sub (but not inside the sub)
         /// </summary>

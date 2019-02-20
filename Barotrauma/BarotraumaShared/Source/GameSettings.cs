@@ -131,7 +131,7 @@ namespace Barotrauma
             set { jobPreferences = value; }
         }
 
-        public int CharacterHeadIndex { get; set; }
+        public int CharacterHeadIndex { get; set; } = 1;
         public int CharacterHairIndex { get; set; }
         public int CharacterBeardIndex { get; set; }
         public int CharacterMoustacheIndex { get; set; }
@@ -425,7 +425,7 @@ namespace Barotrauma
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
-                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
+                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
                         if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
                         {
                             CharacterGender = g;
