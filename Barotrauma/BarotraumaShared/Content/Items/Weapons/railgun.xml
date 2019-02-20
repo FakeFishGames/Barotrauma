@@ -141,12 +141,10 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Alien Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+  <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
     <Price locationtype="Military" buyprice="400" />
-    <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="uranium" />
-      <Item identifier="uex" />
+    <Deconstruct time="20">
+      <Item identifier="physicorium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,170,216,34" depth="0.55" origin="0.5,0.5" />
@@ -154,8 +152,8 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
-        <Affliction identifier="internaldamage" strength="100" />
-        <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="internaldamage" strength="150" />
+        <Affliction identifier="bleeding" strength="20" />
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000" />

@@ -45,10 +45,10 @@
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true">
-      <Containable identifiers="coilgunammobox" />
+      <Containable identifiers="coilgunammobox,physicoriumammobox" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem identifiers="coilgunammobox" type="Contained" />
+        <RequiredItem identifiers="coilgunammobox,physicoriumammobox" type="Contained" />
         <Use />
       </StatusEffect>
     </ItemContainer>
@@ -95,4 +95,44 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true">
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <Body width="115" height="88" density="50" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" />
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <!-- we cheat a bit with ammunition boxes - they don't actually contain hundreds of rounds, 
+      but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
+      of the item, and when the condition is 0, the box is considered empty. -->
+      <!--  -0.5 per usage = 200 shots per box -->
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <SpawnItem identifiers="physicoriumbolt" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <Containable identifiers="physicoriumbolt" />
+    </ItemContainer>
+  </Item>
+  <Item name="Physicorium Bolt" identifier="physicoriumbolt" category="Misc" sonarsize="2">
+    <Sprite texture="weapons.png" sourcerect="0,48,65,9" depth="0.55" />
+    <Body width="64" height="5" density="20" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="10" severlimbsprobability="0.5">
+        <Affliction identifier="internaldamage" strength="15" />
+        <Affliction identifier="bleeding" strength="0.5" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <!-- reduce condition to give the bolt a 5 second lifetime -->
+      <StatusEffect type="OnNotContained" target="This" condition="-20" />
+      <StatusEffect type="OnImpact" target="This">
+        <!--<Remove />-->
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
 </Items>

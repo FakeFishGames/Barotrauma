@@ -176,7 +176,14 @@ namespace Barotrauma
                 }
                 NewMessage("***************", Color.Cyan);
             }));
-            
+
+
+            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", (string[] args) =>
+            {
+                if (GameMain.NetworkMember == null) return;
+                GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
+            }));
+
             commands.Add(new Command("createfilelist", "", (string[] args) =>
             {
                 UpdaterUtil.SaveFileList("filelist.xml");
@@ -784,8 +791,6 @@ namespace Barotrauma
                 }
             }, null, true));
 
-            commands.Add(new Command("netstats", "netstats: Toggles the visibility of the network statistics UI.", null));
-
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
             () =>
             {
@@ -1031,8 +1036,11 @@ namespace Barotrauma
             }));
             commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
+            commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
+            commands.Add(new Command("togglecharacternames", "Toggle the names hovering above characters on/off (client-only).", null));
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             
