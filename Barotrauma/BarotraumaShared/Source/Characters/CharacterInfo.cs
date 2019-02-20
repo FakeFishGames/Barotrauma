@@ -488,11 +488,13 @@ namespace Barotrauma
         {
             if (SourceElement == null) { return; }
             Head.headSpriteRange = SourceElement.GetAttributeVector2("headidrange", Vector2.Zero);
+            // If range is defined, we use it as it is
+            // Else we calculate the range from the wearables.
             if (Head.headSpriteRange == Vector2.Zero)
             {
-                // If range is defined, we use it as it is
-                // Else we calculate the range from the wearables.
-                var wearables = FilterElementsByGenderAndRace(Wearables).ToList();
+                var wearableElements = Wearables;
+                if (wearableElements == null) { return; }
+                var wearables = FilterElementsByGenderAndRace(wearableElements).ToList();
                 if (wearables == null)
                 {
                     Head.headSpriteRange = Vector2.Zero;
