@@ -53,7 +53,7 @@ namespace Barotrauma
 
             public HeadInfo(int headId)
             {
-                _headSpriteId = headId;
+                _headSpriteId = Math.Max(headId, 1);
             }
 
             public void ResetAttachmentIndices()
