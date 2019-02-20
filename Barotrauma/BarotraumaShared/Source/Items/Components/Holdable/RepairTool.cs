@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 #if CLIENT
 using Barotrauma.Particles;
 #endif
@@ -267,15 +268,16 @@ namespace Barotrauma.Items.Components
         {
             Gap leak = objective.OperateTarget as Gap;
             if (leak == null) return true;
-            
-            float dist = Vector2.Distance(leak.WorldPosition, item.WorldPosition);
+
+            Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
+            float dist = fromItemToLeak.Length();
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
             if (dist > Range * 5.0f) return true;
 
-            Vector2 gapDiff = leak.WorldPosition - item.WorldPosition;
+            // TODO: use the collider size?
             if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
-                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+                Math.Abs(fromItemToLeak.X) < 100.0f && fromItemToLeak.Y < 0.0f && fromItemToLeak.Y > -150.0f)
             {
                 ((HumanoidAnimController)character.AnimController).Crouching = true;
             }
@@ -283,27 +285,33 @@ namespace Barotrauma.Items.Components
             //steer closer if almost in range
             if (dist > Range)
             {
-                Vector2 standPos = leak.IsHorizontal ?
-                    new Vector2(Math.Sign(-gapDiff.X), 0.0f)
-                    : new Vector2(0.0f, Math.Sign(-gapDiff.Y) * 0.5f);
-
+                Vector2 standPos = leak.IsHorizontal ? new Vector2(Math.Sign(-fromItemToLeak.X), 0.0f) : new Vector2(0.0f, Math.Sign(-fromItemToLeak.Y) * 0.5f);
                 standPos = leak.WorldPosition + standPos * Range;
-
+                // TODO: check if too close to the stand pos -> move away so that the tool can hit the target and not through it?
                 Vector2 velocity = (standPos - character.WorldPosition) / 1000.0f;
-                velocity *= character.AnimController.GetCurrentSpeed(false);
-                character.AIController.SteeringManager.SteeringManual(deltaTime, velocity);
+                character.AIController.SteeringManager.SteeringManual(deltaTime, velocity.ClampLength(character.AnimController.GetCurrentSpeed(false)));
             }
             else
             {
+                // TODO: sometimes stuck here, if too close to the target
                 //close enough -> stop moving
                 character.AIController.SteeringManager.Reset();
             }
 
             character.CursorPosition = leak.Position;
-            character.SetInput(InputType.Aim, false, true);
 
+            float rotation = item.body.Dir < 0 ? item.body.Rotation - MathHelper.Pi : item.body.Rotation;
+            var a = VectorExtensions.Angle(VectorExtensions.Forward(rotation), fromItemToLeak);
+            if (a > MathHelper.PiOver4)
+            {
+                // Don't press the trigger yet, because the tool is not facing the target
+                return false;
+            }
+
+            character.SetInput(InputType.Aim, false, true);
             Use(deltaTime, character);
 
+            // TODO: fix until the wall is fixed?
             bool leakFixed = leak.Open <= 0.0f || leak.Removed;
 
             if (leakFixed && leak.FlowTargetHull != null)
