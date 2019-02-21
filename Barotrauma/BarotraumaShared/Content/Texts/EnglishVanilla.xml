@@ -442,6 +442,8 @@
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
   <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
+  <CampaignStartingPleaseWait>Please wait</CampaignStartingPleaseWait>
+  <CampaignStarting>Waiting for the campaign to start.</CampaignStarting>
 
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
@@ -574,6 +576,8 @@
   <PlayYourself>Play yourself</PlayYourself>
   <StartGameButton>Start</StartGameButton>
   <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
+  <RoundStartingPleaseWait>Please wait</RoundStartingPleaseWait>
+  <RoundStarting>Waiting for the round to start.</RoundStarting>
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>

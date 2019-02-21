@@ -670,7 +670,7 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPacketHeader.SERVER_SETTINGS:
-                    serverSettings.ServerRead(inc, ConnectedClients.First(c=>c.Connection == inc.SenderConnection));
+                    serverSettings.ServerRead(inc, connectedClient);
                     break;
                 case ClientPacketHeader.SERVER_COMMAND:
                     ClientReadServerCommand(inc);
@@ -678,7 +678,7 @@ namespace Barotrauma.Networking
                 case ClientPacketHeader.FILE_REQUEST:
                     if (serverSettings.AllowFileTransfers)
                     {
-                        fileSender.ReadFileRequest(inc);
+                        fileSender.ReadFileRequest(inc, connectedClient);
                     }
                     break;
             }
@@ -943,7 +943,7 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" ended the round.", ServerLog.MessageType.ServerMessage);
                         EndGame();
                     }
-                    else if (!gameStarted && !end)
+                    else if (!gameStarted && !end && !initiatedStartGame)
                     {
                         Log("Client \"" + sender.Name + "\" started the round.", ServerLog.MessageType.ServerMessage);
                         StartGame();
@@ -1050,13 +1050,25 @@ namespace Barotrauma.Networking
                 }
 
                 ClientWriteLobby(c);
-                
-                MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-                if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
+
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
+                    NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
+                    //already sent an up-to-date campaign save
+                    if (c.LastCampaignSaveSendTime != null && campaign.LastSaveID == c.LastCampaignSaveSendTime.First)
+                    {
+                        //the save was sent less than 5 second ago, don't attempt to resend yet
+                        //(the client may have received it but hasn't acked us yet)
+                        if (c.LastCampaignSaveSendTime.Second > NetTime.Now - 5.0f)
+                        {
+                            return;
+                        }                        
+                    }
+
                     if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
                     {
                         fileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
+                        c.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)NetTime.Now);
                     }
                 }
             }
@@ -2222,6 +2234,12 @@ namespace Barotrauma.Networking
         private void FileTransferChanged(FileSender.FileTransferOut transfer)
         {
             Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
+            if (transfer.FileType == FileTransferType.CampaignSave &&
+                (transfer.Status == FileTransferStatus.Sending || transfer.Status == FileTransferStatus.Finished) &&
+                recipient.LastCampaignSaveSendTime != null)
+            {
+                recipient.LastCampaignSaveSendTime.Second = (float)NetTime.Now;
+            }
         }
 
         public void SendCancelTransferMsg(FileSender.FileTransferOut transfer)
