@@ -574,6 +574,8 @@
   <PlayYourself>Play yourself</PlayYourself>
   <StartGameButton>Start</StartGameButton>
   <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
+  <RoundStartingPleaseWait>Please wait</RoundStartingPleaseWait>
+  <RoundStarting>Waiting for the round to start.</RoundStarting>
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>

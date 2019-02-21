@@ -943,7 +943,7 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" ended the round.", ServerLog.MessageType.ServerMessage);
                         EndGame();
                     }
-                    else if (!gameStarted && !end)
+                    else if (!gameStarted && !end && !initiatedStartGame)
                     {
                         Log("Client \"" + sender.Name + "\" started the round.", ServerLog.MessageType.ServerMessage);
                         StartGame();
