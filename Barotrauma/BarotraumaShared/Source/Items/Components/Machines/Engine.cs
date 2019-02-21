@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
             //pumps consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 currForce = new Vector2((force / 100.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
                 //less effective when in a bad condition
-                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / 100.0f);
+                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
 
                 item.Submarine.ApplyForce(currForce);
 

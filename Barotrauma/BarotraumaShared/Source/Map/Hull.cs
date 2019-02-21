@@ -163,7 +163,7 @@ namespace Barotrauma
             }
         }
 
-        public float WaterPercentage => WaterVolume / Volume * 100;
+        public float WaterPercentage => MathUtils.Percentage(WaterVolume, Volume);
 
         public float OxygenPercentage
         {

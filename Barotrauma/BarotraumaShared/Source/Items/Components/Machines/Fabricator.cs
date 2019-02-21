@@ -237,7 +237,7 @@ namespace Barotrauma.Items.Components
             outputContainer.Inventory.Locked = true;
 
             currPowerConsumption = powerConsumption;
-            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
         }
 
         private void CancelFabricating(Character user = null)

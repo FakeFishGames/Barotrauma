@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                 var progressBar = user.UpdateHUDProgressBar(
                     targetItem,
                     progressBarPos,
-                    targetItem.Condition / 100.0f,
+                    targetItem.Condition / item.MaxCondition,
                     Color.Red, Color.Green);
                 if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
             }

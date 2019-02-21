@@ -239,6 +239,10 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
+        public bool IsFullCondition => Condition >= MaxCondition;
+        public float MaxCondition => Prefab.Health;
+        public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
+
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
         //we'll just use NaN (which does nothing) and set the default value in the constructor/load
         [Serialize(float.NaN, false), Editable]

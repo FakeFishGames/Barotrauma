@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return (item.Condition < ShowRepairUIThreshold || (currentFixer == character && item.Condition < item.Prefab.Health));
+            return (item.Condition < ShowRepairUIThreshold || (currentFixer == character && !item.IsFullCondition));
         }
 
         partial void InitProjSpecific(XElement element)
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < particleEmitters.Count; i++)
             {
-                if (item.Condition >= particleEmitterConditionRanges[i].X && item.Condition <= particleEmitterConditionRanges[i].Y)
+                if (item.ConditionPercentage >= particleEmitterConditionRanges[i].X && item.ConditionPercentage <= particleEmitterConditionRanges[i].Y)
                 {
                     particleEmitters[i].Emit(deltaTime, item.WorldPosition, item.CurrentHull);
                 }
@@ -101,8 +101,8 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            progressBar.BarSize = item.Condition / item.Prefab.Health;
-            progressBar.Color = ToolBox.GradientLerp(item.Condition / item.Prefab.Health, Color.Red, Color.Orange, Color.Green);
+            progressBar.BarSize = item.Condition / item.MaxCondition;
+            progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
             repairButton.Enabled = currentFixer == null;
             repairButton.Text = currentFixer == null ? 
