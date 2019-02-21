@@ -675,15 +675,8 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
 
             InitProjSpecific(doc);
-
             SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
-            string displayNameId = doc.Root.GetAttributeString("displaynameid", string.Empty);
-
-            if (displayNameId.Length > 0)
-            {
-                displayName = TextManager.Get($"Character.{displayNameId}", true);
-                DebugConsole.NewMessage(displayNameId);
-            }
+            displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
