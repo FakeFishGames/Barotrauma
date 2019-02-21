@@ -7,13 +7,13 @@
 		linkable="true"
     allowedlinks="deconstructor,cabinet"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials."
-    scale="0.4">
+    scale="0.5">
 
-    <Sprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="0,0,351,488" depth="0.8"/>
-    <BrokenSprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="351,0,351,488" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="Content/Items/Fabricators/Fabricator.png" sourcerect="702,0,351,488" depth="0.8" maxcondition="0" />
+    <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="0,513,285,391" depth="0.8"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="286,513,285,391" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="572,513,285,391" depth="0.8" maxcondition="0" />
 
-    <Fabricator canbeselected = "true" powerconsumption="500.0">
+    <Fabricator canbeselected="true" powerconsumption="500.0">
       <GuiFrame relativesize="0.25,0.5" maxsize="460,800" style="ItemUI" anchor="Center" absoluteoffset="10,0"/>
 
       <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
@@ -437,9 +437,9 @@
     allowedlinks="deconstructor"
     description="A machine that can be used to manufacture various medicines.">
 
-    <Sprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" depth="0.8" sourcerect="0,0,139,199"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" sourcerect="139,0,139,199" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="Content/Items/Fabricators/FF_medicalFabricator.png" sourcerect="278,0,139,199" depth="0.8" maxcondition="0" />
+    <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,0,140,168"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="280,0,140,168" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="100.0">
       <GuiFrame relativesize="0.35,0.5" minsize="400,400" maxsize="800,800" anchor="Center" style="ItemUI" absoluteoffset="10,0"/>
@@ -632,11 +632,11 @@
 		linkable="true"
     allowedlinks="fabricator,medicalfabricator,cabinet"
     description="Disassembles and breaks down items to reusable components and material bars."
-    scale="0.4">
+    scale="0.5">
 
-    <Sprite texture="Content/Items/Fabricators/Deconstructor.png" depth="0.8" sourcerect="0,0,302,426"/>
-    <BrokenSprite texture="Content/Items/Fabricators/Deconstructor.png" sourcerect="302,0,302,426" depth="0.8" maxcondition="50" fadein="true" />
-    <BrokenSprite texture="Content/Items/Fabricators/Deconstructor.png" sourcerect="605,0,302,426" depth="0.8" maxcondition="0" />
+    <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,171,243,335"/>
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="243,171,243,335" depth="0.8" maxcondition="50" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="486,171,243,335" depth="0.8" maxcondition="0" />
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.25,0.45" maxsize="460,600" style="ItemUI" anchor="Center" absoluteoffset="-10,0"/>
