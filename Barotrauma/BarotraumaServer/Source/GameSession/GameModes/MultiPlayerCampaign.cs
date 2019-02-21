@@ -141,6 +141,9 @@ namespace Barotrauma
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
             msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
+            msg.Write(isRunning && startWatchman != null ? startWatchman.ID : (UInt16)0);
+            msg.Write(isRunning && endWatchman != null ? endWatchman.ID : (UInt16)0);
+
             msg.Write(Money);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
