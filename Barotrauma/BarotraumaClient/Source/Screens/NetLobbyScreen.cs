@@ -964,7 +964,7 @@ namespace Barotrauma
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), style: null);
 
-                new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), infoContainer.RectTransform, Anchor.BottomCenter), "Create new")
+                new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), infoContainer.RectTransform, Anchor.BottomCenter), TextManager.Get("CreateNew"))
                 {
                     IgnoreLayoutGroups = true,
                     OnClicked = (btn, userdata) =>
@@ -1084,7 +1084,7 @@ namespace Barotrauma
 
             int buttonSize = (int)(frame.Rect.Height * 0.8f);
             var subTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1.0f), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(buttonSize + 5, 0) },
-                ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), textAlignment: Alignment.CenterLeft)
+                ToolBox.LimitString(sub.DisplayName, GUI.Font, subList.Rect.Width - 65), textAlignment: Alignment.CenterLeft)
             {
                 CanBeFocused = false
             };

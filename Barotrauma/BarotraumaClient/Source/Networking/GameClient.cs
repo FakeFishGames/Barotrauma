@@ -266,7 +266,7 @@ namespace Barotrauma.Networking
 
         private bool RetryConnection(GUIButton button, object obj)
         {
-            if (client != null) client.Shutdown("Disconnecting");
+            if (client != null) client.Shutdown(TextManager.Get("Disconnecting"));
             ConnectToServer(serverIP);
             return true;
         }
@@ -362,7 +362,7 @@ namespace Barotrauma.Networking
                 // If new messages arrived
                 if ((inc = client.ReadMessage()) == null) continue;
 
-                string pwMsg = "Password required";
+                string pwMsg = TextManager.Get("PasswordRequired");
 
                 try
                 {
@@ -628,7 +628,7 @@ namespace Barotrauma.Networking
                 string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
-                new GUIMessageBox(TextManager.Get("Error"), "Error while reading a message from the server. (" + e.Message + " Target site: " + e.TargetSite + ")");
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("MessageReadError").Replace("[message]", e.Message).Replace("[targetsite]", e.TargetSite.ToString()));
                 Disconnect();
                 GameMain.MainMenuScreen.Select();
                 return;
@@ -780,7 +780,7 @@ namespace Barotrauma.Networking
                                     SteamAchievementManager.CheatsEnabled = cheatsEnabled;
                                     if (cheatsEnabled)
                                     {
-                                        new GUIMessageBox("Cheats enabled.", "Cheat commands have been enabled on this server. You cannot get Steam achievements during this play session.");
+                                        new GUIMessageBox(TextManager.Get("CheatsEnabledTitle"), TextManager.Get("CheatsEnabledDescription"));
                                     }
                                 }
                                 break;
@@ -1137,7 +1137,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                new GUIMessageBox("Please wait", TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
+                new GUIMessageBox(TextManager.Get("PleaseWait"), TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
                 GameMain.NetLobbyScreen.Select();
             }
         }
