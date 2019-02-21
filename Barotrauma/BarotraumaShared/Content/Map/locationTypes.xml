@@ -175,6 +175,7 @@
     halo="1,0,0,0.2">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="784,847,233,158" color="216,91,80,255"/>
+    <Portrait texture="Content/Map/LocationPortraits/AlienRuins.jpg"/>
     <Portrait texture="Content/Map/LocationPortraits/AlienRuins2.jpg"/>
     
     <nameformats
