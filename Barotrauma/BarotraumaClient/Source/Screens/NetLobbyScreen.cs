@@ -259,6 +259,11 @@ namespace Barotrauma
             return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
         }
 
+        public CampaignUI CampaignUI
+        {
+            get { return campaignUI; }
+        }
+
         public NetLobbyScreen()
         {
             defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center), style: null);
@@ -1701,7 +1706,7 @@ namespace Barotrauma
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
             
-            if (SelectedMode?.Identifier == "multiplayercampaign" &&
+            if (campaignUI != null &&
                 ((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Identifier != "multiplayercampaign")
             {
                 ToggleCampaignMode(false);
