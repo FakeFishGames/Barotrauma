@@ -735,9 +735,8 @@ namespace Barotrauma.Networking
                                     GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
 
                                 WriteCharacterInfo(readyToStartMsg);
-
-                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
                                 
+                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);                                
                                 break;
                             case ServerPacketHeader.STARTGAME:
                                 startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
