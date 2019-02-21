@@ -225,9 +225,12 @@ namespace Barotrauma.Items.Components
                 }
 
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
-                if (equipLimb == null) continue;
+                if (equipLimb == null) { continue; }
                 
-                item.body.Enabled = false;
+                if (item.body != null)
+                {
+                    item.body.Enabled = false;
+                }
                 IsActive = true;
                 if (wearableSprite.LightComponent != null)
                 {
