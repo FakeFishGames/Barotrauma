@@ -156,6 +156,16 @@ namespace Barotrauma
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : SpeciesName;
             }
         }
+
+        private string displayName;
+        public string DisplayName
+        {
+            get
+            {
+                return displayName != null && displayName.Length > 0 ? displayName : Name;
+            }
+        }
+
         //Only used by server logs to determine "true identity" of the player for cases when they're disguised
         public string LogName
         {
@@ -666,7 +676,15 @@ namespace Barotrauma
 
             InitProjSpecific(doc);
 
-            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");            
+            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
+            string displayNameId = doc.Root.GetAttributeString("displaynameid", string.Empty);
+
+            if (displayNameId.Length > 0)
+            {
+                displayName = TextManager.Get($"Character.{displayNameId}", true);
+                DebugConsole.NewMessage(displayNameId);
+            }
+
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
