@@ -15,7 +15,7 @@ namespace Barotrauma
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;
-
+        
         bool caretVisible;
         float caretTimer;
 

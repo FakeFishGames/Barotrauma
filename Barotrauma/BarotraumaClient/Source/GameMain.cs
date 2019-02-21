@@ -473,7 +473,7 @@ namespace Barotrauma
             foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
             {
                 var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
-                if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
+                if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
                     var msgBox = new GUIMessageBox(TextManager.Get("Error"),
                         TextManager.Get("IncorrectExe")
