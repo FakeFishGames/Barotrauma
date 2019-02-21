@@ -279,6 +279,7 @@
   <ServerSettingsTraitorRatio>Traitor ratio: </ServerSettingsTraitorRatio>
   <ServerSettingsTraitorCount>Traitor count: </ServerSettingsTraitorCount>
   <ServerSettingsUseKarma>Use Karma</ServerSettingsUseKarma>
+  <ServerSettingsVoiceChatEnabled>Voice chat enabled</ServerSettingsVoiceChatEnabled>
   <WhiteListEnabled>Enabled</WhiteListEnabled>
   <WhiteListName>Name</WhiteListName>
   <WhiteListIP>IP Address</WhiteListIP>
@@ -375,6 +376,7 @@
   <Previous>Previous</Previous>
   <Next>Next</Next>
   <Name>Name</Name>
+  <Unlimited>Unlimited</Unlimited>
 
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
@@ -383,8 +385,26 @@
   <SteamDllNotFound>Initializing Steam client failed (steam_api64.dll not found). All Steam features have been disabled - you will not be able to use the Steam Workshop or join servers that use Steam.</SteamDllNotFound>
   <SteamClientInitFailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account. All Steam features have been disabled - you will not be able to use the Steam Workshop or join servers that use Steam.</SteamClientInitFailed>
 
-  <!-- Monsters NYI -->
-  <Character.Charybdis>CHAR</Character.Charybdis>
+  <!-- Characters -->
+  <Character.Carrier>Carrier</Character.Carrier>
+  <Character.Charybdis>Charybdis</Character.Charybdis>
+  <Character.Coelanth>Coelanth</Character.Coelanth>
+  <Character.Crawler>Crawler</Character.Crawler>
+  <Character.Endworm>End Worm</Character.Endworm>
+  <Character.Fractalguardian>Fractal Guardian</Character.Fractalguardian>
+  <Character.Fractalguardian2>Fractal Guardian 2</Character.Fractalguardian2>
+  <Character.Human>Human</Character.Human>
+  <Character.Humanhusk>Human Husk</Character.Humanhusk>
+  <Character.Husk>Husk</Character.Husk>
+  <Character.Mudraptor>Mudraptor</Character.Mudraptor>
+  <Character.Mantis>Mantis</Character.Mantis>
+  <Character.Moloch>Moloch</Character.Moloch>
+  <Character.MolochBaby>Moloch Baby</Character.MolochBaby>
+  <Character.MolochBoss>Moloch Boss</Character.MolochBoss>
+  <Character.TigerThresher>Tiger Thresher</Character.TigerThresher>
+  <Character.TigerThresherBoss>Tiger Thresher Boss</Character.TigerThresherBoss>
+  <Character.Watcher>Watcher</Character.Watcher>
+  <Character.Hammerhead>Hammerhead</Character.Hammerhead>
   
   <!-- Pronouns -->
   <PronounMale>He</PronounMale>
@@ -542,6 +562,9 @@
   <!-- Server lobby -->
   <RestartingIn>Restarting in</RestartingIn>
   <Votes>Votes</Votes>
+  <Manual>Manual</Manual>
+  <Vote>Vote</Vote>
+  <Random>Random</Random>
   <GameMode>Game mode</GameMode>
   <MissionType>Mission type</MissionType>
   <Random>Random</Random>
@@ -1010,27 +1033,27 @@
   <EntityName.platform>Platform Basic</EntityName.platform>
   <EntityDescription.platform>Walkable platform which a character may optionally drop down from or climb on</EntityDescription.platform>
   <EntityName.roughbgwall>BackWall Rough</EntityName.roughbgwall>
-  <EntityDescription.roughbgwall></EntityDescription.roughbgwall>
+  <EntityDescription.roughbgwall><!-- No description --></EntityDescription.roughbgwall>
   <EntityName.cleanbgwall>BackWall Clean</EntityName.cleanbgwall>
-  <EntityDescription.cleanbgwall></EntityDescription.cleanbgwall>
+  <EntityDescription.cleanbgwall><!-- No description --></EntityDescription.cleanbgwall>
   <EntityName.bgpanels>BackWall Panels</EntityName.bgpanels>
-  <EntityDescription.bgpanels></EntityDescription.bgpanels>
+  <EntityDescription.bgpanels><!-- No description --></EntityDescription.bgpanels>
   <EntityName.bgpanelswindow>BackWall Window</EntityName.bgpanelswindow>
-  <EntityDescription.bgpanelswindow></EntityDescription.bgpanelswindow>
+  <EntityDescription.bgpanelswindow><!-- No description --></EntityDescription.bgpanelswindow>
   <EntityName.bgorangepanels>BackWall Orange Panels</EntityName.bgorangepanels>
-  <EntityDescription.bgorangepanels></EntityDescription.bgorangepanels>
+  <EntityDescription.bgorangepanels><!-- No description --></EntityDescription.bgorangepanels>
   <EntityName.bgorangepanelwindow>BackWall Orange Panels Window</EntityName.bgorangepanelwindow>
-  <EntityDescription.bgorangepanelwindow></EntityDescription.bgorangepanelwindow>
+  <EntityDescription.bgorangepanelwindow><!-- No description --></EntityDescription.bgorangepanelwindow>
   <EntityName.PipesBackground>BackWall Pipes</EntityName.PipesBackground>
-  <EntityDescription.PipesBackground></EntityDescription.PipesBackground>
+  <EntityDescription.PipesBackground><!-- No description --></EntityDescription.PipesBackground>
   <EntityName.SlopeForward>Slope Forwards</EntityName.SlopeForward>
-  <EntityDescription.SlopeForward></EntityDescription.SlopeForward>
+  <EntityDescription.SlopeForward><!-- No description --></EntityDescription.SlopeForward>
   <EntityName.SlopeBack>Slope Backwards</EntityName.SlopeBack>
-  <EntityDescription.SlopeBack></EntityDescription.SlopeBack>
+  <EntityDescription.SlopeBack><!-- No description --></EntityDescription.SlopeBack>
   <EntityName.stairsright>Stairs Right</EntityName.stairsright>
-  <EntityDescription.stairsright></EntityDescription.stairsright>
+  <EntityDescription.stairsright><!-- No description --></EntityDescription.stairsright>
   <EntityName.stairsleft>Stairs Left</EntityName.stairsleft>
-  <EntityDescription.stairsleft></EntityDescription.stairsleft>
+  <EntityDescription.stairsleft><!-- No description --></EntityDescription.stairsleft>
   <EntityName.bunk>Bunk</EntityName.bunk>
   <EntityDescription.bunk>Crew can sleep here</EntityDescription.bunk>
 
@@ -1110,7 +1133,7 @@
   <EntityName.bluejumpsuit>Blue Jumpsuit</EntityName.bluejumpsuit>
   <EntityDescription.bluejumpsuit>The fire-resistant fabric offers some protection against fires.</EntityDescription.bluejumpsuit>
   <EntityName.toolbox>Toolbox</EntityName.toolbox>
-  <EntityDescription.toolbox></EntityDescription.toolbox>
+  <EntityDescription.toolbox><!-- No description --></EntityDescription.toolbox>
   <EntityName.headset>Headset</EntityName.headset>
   <EntityDescription.headset>Allows remote communication between the crew.</EntityDescription.headset>
   <EntityName.clownmask>Clown Mask</EntityName.clownmask>
@@ -1488,13 +1511,13 @@
   <EntityName.harmonica>Harmonica</EntityName.harmonica>
   <EntityDescription.harmonica>An old hand-made harmonica.</EntityDescription.harmonica>
   <EntityName.BGRock1>Background Rock 1</EntityName.BGRock1>
-  <EntityDescription.BGRock1></EntityDescription.BGRock1>
+  <EntityDescription.BGRock1><!-- No description --></EntityDescription.BGRock1>
   <EntityName.BGRock2>Background Rock 2</EntityName.BGRock2>
-  <EntityDescription.BGRock2></EntityDescription.BGRock2>
+  <EntityDescription.BGRock2><!-- No description --></EntityDescription.BGRock2>
   <EntityName.BGRock3>Background Rock 3</EntityName.BGRock3>
-  <EntityDescription.BGRock3></EntityDescription.BGRock3>
+  <EntityDescription.BGRock3><!-- No description --></EntityDescription.BGRock3>
   <EntityName.BGRock4>Background Rock 4</EntityName.BGRock4>
-  <EntityDescription.BGRock4></EntityDescription.BGRock4>
+  <EntityDescription.BGRock4><!-- No description --></EntityDescription.BGRock4>
   <EntityName.suppliescabinet>Supplies Cabinet</EntityName.suppliescabinet>
   <EntityDescription.suppliescabinet>Storage for small and medium sized items</EntityDescription.suppliescabinet>
   <EntityName.mediumsteelcabinet>Medium Steel Cabinet</EntityName.mediumsteelcabinet>
@@ -1666,63 +1689,63 @@
   <EntityName.smalldivinggearcabinet>Small Diving Gear Cabinet</EntityName.smalldivinggearcabinet>
   <EntityDescription.largedivinggearcabinet>A cabinet with diving masks, underwater scooters and handheld sonars.</EntityDescription.largedivinggearcabinet>
   <EntityName.alienturretassembly>Alien Turret Assembly</EntityName.alienturretassembly>
-  <EntityDescription.alienturretassembly></EntityDescription.alienturretassembly>
+  <EntityDescription.alienturretassembly><!-- No description --></EntityDescription.alienturretassembly>
   <EntityName.alienarmoryassembly1>AlienArmoryAssembly1</EntityName.alienarmoryassembly1>
-  <EntityDescription.alienarmoryassembly1></EntityDescription.alienarmoryassembly1>
+  <EntityDescription.alienarmoryassembly1><!-- No description --></EntityDescription.alienarmoryassembly1>
   <EntityName.aliencellbottom>AlienCellBottom</EntityName.aliencellbottom>
-  <EntityDescription.aliencellbottom></EntityDescription.aliencellbottom>
+  <EntityDescription.aliencellbottom><!-- No description --></EntityDescription.aliencellbottom>
   <EntityName.aliencelltop>AlienCellTop</EntityName.aliencelltop>
-  <EntityDescription.aliencelltop></EntityDescription.aliencelltop>
+  <EntityDescription.aliencelltop><!-- No description --></EntityDescription.aliencelltop>
   <EntityName.alienchestlarge>AlienChestLarge</EntityName.alienchestlarge>
-  <EntityDescription.alienchestlarge></EntityDescription.alienchestlarge>
+  <EntityDescription.alienchestlarge><!-- No description --></EntityDescription.alienchestlarge>
   <EntityName.alienchestsmall>AlienChestSmall</EntityName.alienchestsmall>
-  <EntityDescription.alienchestsmall></EntityDescription.alienchestsmall>
+  <EntityDescription.alienchestsmall><!-- No description --></EntityDescription.alienchestsmall>
   <EntityName.aliendoorassembly1>AlienDoorAssembly1</EntityName.aliendoorassembly1>
-  <EntityDescription.aliendoorassembly1></EntityDescription.aliendoorassembly1>
+  <EntityDescription.aliendoorassembly1><!-- No description --></EntityDescription.aliendoorassembly1>
   <EntityName.aliendoorassembly2>AlienDoorAssembly2</EntityName.aliendoorassembly2>
-  <EntityDescription.aliendoorassembly2></EntityDescription.aliendoorassembly2>
+  <EntityDescription.aliendoorassembly2><!-- No description --></EntityDescription.aliendoorassembly2>
   <EntityName.aliendoorassembly5>AlienDoorAssembly5</EntityName.aliendoorassembly5>
-  <EntityDescription.aliendoorassembly5></EntityDescription.aliendoorassembly5>
+  <EntityDescription.aliendoorassembly5><!-- No description --></EntityDescription.aliendoorassembly5>
   <EntityName.alienfractalspawnpoint>AlienFractalSpawnpoint</EntityName.alienfractalspawnpoint>
-  <EntityDescription.alienfractalspawnpoint></EntityDescription.alienfractalspawnpoint>
+  <EntityDescription.alienfractalspawnpoint><!-- No description --></EntityDescription.alienfractalspawnpoint>
   <EntityName.aliengenericroomassembly1>AlienGenericRoomAssembly1</EntityName.aliengenericroomassembly1>
-  <EntityDescription.aliengenericroomassembly1></EntityDescription.aliengenericroomassembly1>
+  <EntityDescription.aliengenericroomassembly1><!-- No description --></EntityDescription.aliengenericroomassembly1>
   <EntityName.aliengenericroomassembly2>AlienGenericRoomAssembly2</EntityName.aliengenericroomassembly2>
-  <EntityDescription.aliengenericroomassembly2></EntityDescription.aliengenericroomassembly2>
+  <EntityDescription.aliengenericroomassembly2><!-- No description --></EntityDescription.aliengenericroomassembly2>
   <EntityName.aliengenericroomassembly3>AlienGenericRoomAssembly3</EntityName.aliengenericroomassembly3>
-  <EntityDescription.aliengenericroomassembly3></EntityDescription.aliengenericroomassembly3>
+  <EntityDescription.aliengenericroomassembly3><!-- No description --></EntityDescription.aliengenericroomassembly3>
   <EntityName.aliengenericroomassembly4>AlienGenericRoomAssembly4</EntityName.aliengenericroomassembly4>
-  <EntityDescription.aliengenericroomassembly4></EntityDescription.aliengenericroomassembly4>
+  <EntityDescription.aliengenericroomassembly4><!-- No description --></EntityDescription.aliengenericroomassembly4>
   <EntityName.aliengenericroomassembly5>AlienGenericRoomAssembly5</EntityName.aliengenericroomassembly5>
-  <EntityDescription.aliengenericroomassembly5></EntityDescription.aliengenericroomassembly5>
+  <EntityDescription.aliengenericroomassembly5><!-- No description --></EntityDescription.aliengenericroomassembly5>
   <EntityName.aliengenericroomassembly6>AlienGenericRoomAssembly6</EntityName.aliengenericroomassembly6>
-  <EntityDescription.aliengenericroomassembly6></EntityDescription.aliengenericroomassembly6>
+  <EntityDescription.aliengenericroomassembly6><!-- No description --></EntityDescription.aliengenericroomassembly6>
   <EntityName.aliengenericroomassembly7>AlienGenericRoomAssembly7</EntityName.aliengenericroomassembly7>
-  <EntityDescription.aliengenericroomassembly7></EntityDescription.aliengenericroomassembly7>
+  <EntityDescription.aliengenericroomassembly7><!-- No description --></EntityDescription.aliengenericroomassembly7>
   <EntityName.aliengenericroomassembly8>AlienGenericRoomAssembly8</EntityName.aliengenericroomassembly8>
-  <EntityDescription.aliengenericroomassembly8></EntityDescription.aliengenericroomassembly8>
+  <EntityDescription.aliengenericroomassembly8><!-- No description --></EntityDescription.aliengenericroomassembly8>
   <EntityName.aliengenericroomassembly9>AlienGenericRoomAssembly9</EntityName.aliengenericroomassembly9>
-  <EntityDescription.aliengenericroomassembly9></EntityDescription.aliengenericroomassembly9>
+  <EntityDescription.aliengenericroomassembly9><!-- No description --></EntityDescription.aliengenericroomassembly9>
   <EntityName.alienhatchassembly>AlienHatchAssembly</EntityName.alienhatchassembly>
-  <EntityDescription.alienhatchassembly></EntityDescription.alienhatchassembly>
+  <EntityDescription.alienhatchassembly><!-- No description --></EntityDescription.alienhatchassembly>
   <EntityName.alienhatchassembly2>AlienHatchAssembly2</EntityName.alienhatchassembly2>
-  <EntityDescription.alienhatchassembly2></EntityDescription.alienhatchassembly2>
+  <EntityDescription.alienhatchassembly2><!-- No description --></EntityDescription.alienhatchassembly2>
   <EntityName.alienpumpassembly>AlienPumpAssembly</EntityName.alienpumpassembly>
-  <EntityDescription.alienpumpassembly></EntityDescription.alienpumpassembly>
+  <EntityDescription.alienpumpassembly><!-- No description --></EntityDescription.alienpumpassembly>
   <EntityName.alienpumpassembly1>AlienPumpAssembly1</EntityName.alienpumpassembly1>
-  <EntityDescription.alienpumpassembly1></EntityDescription.alienpumpassembly1>
+  <EntityDescription.alienpumpassembly1><!-- No description --></EntityDescription.alienpumpassembly1>
   <EntityName.alienpumpassembly2>AlienPumpAssembly2</EntityName.alienpumpassembly2>
-  <EntityDescription.alienpumpassembly2></EntityDescription.alienpumpassembly2>
+  <EntityDescription.alienpumpassembly2><!-- No description --></EntityDescription.alienpumpassembly2>
   <EntityName.alienvaultassembly1>AlienVaultAssembly1</EntityName.alienvaultassembly1>
-  <EntityDescription.alienvaultassembly1></EntityDescription.alienvaultassembly1>
+  <EntityDescription.alienvaultassembly1><!-- No description --></EntityDescription.alienvaultassembly1>
   <EntityName.alienverticalassembly1>AlienVerticalAssembly1</EntityName.alienverticalassembly1>
-  <EntityDescription.alienverticalassembly1></EntityDescription.alienverticalassembly1>
+  <EntityDescription.alienverticalassembly1><!-- No description --></EntityDescription.alienverticalassembly1>
   <EntityName.alienverticalassembly2>AlienVerticalAssembly2</EntityName.alienverticalassembly2>
-  <EntityDescription.alienverticalassembly2></EntityDescription.alienverticalassembly2>
+  <EntityDescription.alienverticalassembly2><!-- No description --></EntityDescription.alienverticalassembly2>
   <EntityName.alienverticalassembly3>AlienVerticalAssembly3</EntityName.alienverticalassembly3>
-  <EntityDescription.alienverticalassembly3></EntityDescription.alienverticalassembly3>
+  <EntityDescription.alienverticalassembly3><!-- No description --></EntityDescription.alienverticalassembly3>
   <EntityName.chargedaliengenerator>ChargedAlienGenerator</EntityName.chargedaliengenerator>
-  <EntityDescription.chargedaliengenerator></EntityDescription.chargedaliengenerator>
+  <EntityDescription.chargedaliengenerator><!-- No description --></EntityDescription.chargedaliengenerator>
 
   <!-- Particle editor -->
   <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
@@ -2498,4 +2521,8 @@
   <LocationChange.Ruins.ChangeTo.Outpost>An outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Outpost>
   <LocationChange.Ruins.ChangeTo.Military>A military outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Military>
   <LocationChange.Ruins.ChangeTo.Research>A research outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Research>
+
+
+
+
 </infotexts>

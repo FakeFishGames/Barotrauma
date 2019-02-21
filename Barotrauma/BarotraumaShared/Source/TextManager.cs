@@ -91,7 +91,7 @@ namespace Barotrauma
             foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
-                if (text != null) return text + "_Translated";
+                if (text != null) return text;
             }
 
             //if text was not found and we're using a language other than English, see if we can find an English version
@@ -101,7 +101,7 @@ namespace Barotrauma
                 foreach (TextPack textPack in textPacks["English"])
                 {
                     string text = textPack.Get(textTag);
-                    if (text != null) return text + "_Translated";
+                    if (text != null) return text;
                 }
             }
 
