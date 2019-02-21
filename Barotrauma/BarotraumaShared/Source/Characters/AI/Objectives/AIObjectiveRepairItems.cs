@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Items.Components;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -49,18 +47,21 @@ namespace Barotrauma
         {
             foreach (Item item in Item.ItemList)
             {
-                //ignore items that are in full condition
-                if (item.IsFullCondition) continue;
+                // Ignore items that are in full condition
+                if (item.IsFullCondition) { continue; }
                 foreach (Repairable repairable in item.Repairables)
                 {
-                    //ignore ones that are already fixed
-                    if (item.Condition > repairable.ShowRepairUIThreshold) continue;
+                    // Ignore ones that are already fixed
+                    if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
+                    // Ignore items that are already being repaired by someone else
+                    if (item.Repairables.Any(r => r.CurrentFixer != null)) { continue; }
 
                     if (RequireAdequateSkills)
                     {
                         if (!repairable.HasRequiredSkills(character)) { continue; }
                     }
 
+                    // TODO: don't create duplicates, because this is called so frequently
                     AddSubObjective(new AIObjectiveRepairItem(character, item));
                     break;
                 }
