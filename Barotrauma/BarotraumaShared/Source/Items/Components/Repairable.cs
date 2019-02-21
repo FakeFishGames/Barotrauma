@@ -140,7 +140,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
+            if (Item.IsFullCondition || CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
             {
                 currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = null;
