@@ -12,9 +12,19 @@
     vitality="100"
     doesbleed="false"/>
 
-  <sound file="Content/Characters/Husk/Husk1.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Husk/Husk2.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Husk/Husk3.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_attack1.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_attack2.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_attack3.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_attack4.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_idle1.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_idle2.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_idle3.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_idle4.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_damage1.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_damage2.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_damage3.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_death1.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/Husk/HUSK_death2.ogg" state="Die" range="1000"/>
 
   <ai
     combatstrength="100"
