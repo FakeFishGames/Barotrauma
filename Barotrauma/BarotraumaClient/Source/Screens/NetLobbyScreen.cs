@@ -209,6 +209,13 @@ namespace Barotrauma
         {
             get
             {
+                //joblist if the server has already assigned the player a job 
+                //(e.g. the player has a pre-existing campaign character)
+                if (jobList?.Content == null)
+                {
+                    return new List<JobPrefab>();
+                }
+
                 List<JobPrefab> jobPreferences = new List<JobPrefab>();
                 foreach (GUIComponent child in jobList.Content.Children)
                 {
