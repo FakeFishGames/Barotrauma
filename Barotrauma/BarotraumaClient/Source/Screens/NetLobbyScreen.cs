@@ -209,6 +209,13 @@ namespace Barotrauma
         {
             get
             {
+                //joblist if the server has already assigned the player a job 
+                //(e.g. the player has a pre-existing campaign character)
+                if (jobList?.Content == null)
+                {
+                    return new List<JobPrefab>();
+                }
+
                 List<JobPrefab> jobPreferences = new List<JobPrefab>();
                 foreach (GUIComponent child in jobList.Content.Children)
                 {
@@ -615,7 +622,12 @@ namespace Barotrauma
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
-                OnClicked = (btn, obj) => { GameMain.Client.RequestStartRound(); return true; }
+                OnClicked = (btn, obj) => 
+                {
+                    GameMain.Client.RequestStartRound();
+                    CoroutineManager.StartCoroutine(WaitForStartRound(), "WaitForStartRound");
+                    return true;
+                }
             };
             clientHiddenElements.Add(StartButton);
 
@@ -634,6 +646,35 @@ namespace Barotrauma
 
             spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
+        }
+        
+        private IEnumerable<object> WaitForStartRound()
+        {
+            string headerText = TextManager.Get("RoundStartingPleaseWait");
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("RoundStarting"), new string[] { TextManager.Get("Cancel") });
+
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                StartButton.Enabled = true;
+                GameMain.Client.RequestRoundEnd();
+                CoroutineManager.StopCoroutines("WaitForStartRound");
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+            StartButton.Enabled = false;
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (Selected != GameMain.GameScreen && DateTime.Now < timeOut)
+            {
+                msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                yield return CoroutineStatus.Running;
+            }
+
+            msgBox.Close();
+            StartButton.Enabled = true;
+
+            yield return CoroutineStatus.Success;
         }
 
         public override void Deselect()
