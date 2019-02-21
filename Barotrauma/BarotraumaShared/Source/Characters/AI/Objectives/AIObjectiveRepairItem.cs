@@ -23,7 +23,7 @@ namespace Barotrauma
             bool repairablesFound = false;
             foreach (Repairable repairable in item.Repairables)
             {
-                if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
+                //if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
                 if (repairable.DegreeOfSuccess(character) >= 0.5f) { insufficientSkills = false; }
                 repairablesFound = true;
             }
@@ -54,10 +54,11 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            foreach (Repairable repairable in item.Repairables)
-            {
-                if (item.Condition < Math.Max(repairable.ShowRepairUIThreshold, item.Prefab.Health * 0.98f)) return false;
-            }
+            if (!item.IsFullCondition) { return false; }
+            //foreach (Repairable repairable in item.Repairables)
+            //{
+            //    if (item.Condition < Math.Max(repairable.ShowRepairUIThreshold, item.Prefab.Health * 0.98f)) return false;
+            //}
             
             character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
             return true;
