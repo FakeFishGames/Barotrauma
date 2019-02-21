@@ -68,6 +68,11 @@ namespace Barotrauma.Sounds
             get;
             protected set;
         }
+
+        /// <summary>
+        /// How many instances of the same sound clip can be playing at the same time
+        /// </summary>
+        public int MaxSimultaneousInstances = 5;
         
         public float BaseGain;
         public float BaseNear;
@@ -148,6 +153,7 @@ namespace Barotrauma.Sounds
 
         public virtual SoundChannel Play(float? gain, string category)
         {
+            if (Owner.CountPlayingInstances(this) >= MaxSimultaneousInstances) { return null; }
             return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
         }
 
