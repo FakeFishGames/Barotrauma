@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
             CurrFlow = 0.0f;
             currPowerConsumption = powerConsumption;
             //consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
             if (powerConsumption <= 0.0f)
             {
@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
             
             CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 100.0f;
             //less effective when in bad condition
-            CurrFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / 100.0f);
+            CurrFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
             UpdateVents(CurrFlow);
             

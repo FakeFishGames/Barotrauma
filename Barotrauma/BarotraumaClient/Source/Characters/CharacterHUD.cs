@@ -171,7 +171,7 @@ namespace Barotrauma
                 float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
                 if (alpha <= 0.0f) continue;
                 GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.BrokenIcon, 
-                    Color.Lerp(Color.DarkRed, Color.Orange * 0.5f, brokenItem.Condition / 100.0f) * alpha);                
+                    Color.Lerp(Color.DarkRed, Color.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
             }
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)

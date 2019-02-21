@@ -30,7 +30,7 @@ namespace Barotrauma
 
             if (!repairablesFound) { return 0.0f; }
 
-            float priority = 100.0f - item.Condition;
+            float priority = item.MaxCondition - item.Condition;
             //vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = 
                 Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + 

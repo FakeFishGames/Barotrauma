@@ -395,9 +395,9 @@ namespace Barotrauma.Items.Components
             {
                 float transferAmount = 0.0f;
                 if (this.Item.Condition <= item.Condition)
-                    transferAmount = Math.Min(item.Condition, this.item.Prefab.Health - this.item.Condition);
+                    transferAmount = Math.Min(item.Condition, this.item.MaxCondition - this.item.Condition);
                 else
-                    transferAmount = -Math.Min(this.item.Condition, item.Prefab.Health - item.Condition);
+                    transferAmount = -Math.Min(this.item.Condition, item.MaxCondition - item.Condition);
 
                 if (transferAmount == 0.0f)
                     return false;

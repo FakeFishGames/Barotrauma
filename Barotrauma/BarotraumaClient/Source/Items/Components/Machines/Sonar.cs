@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float distort = 1.0f - item.Condition / 100.0f;
+            float distort = 1.0f - item.Condition / item.MaxCondition;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
                 sonarBlips[i].FadeTimer -= deltaTime * MathHelper.Lerp(0.5f, 2.0f, distort);
@@ -887,7 +887,7 @@ namespace Barotrauma.Items.Components
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
 
-            float distort = 1.0f - item.Condition / 100.0f;
+            float distort = 1.0f - item.Condition / item.MaxCondition;
             
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;

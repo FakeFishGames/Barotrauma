@@ -584,7 +584,7 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
-                if (brokenBox != null && brokenBox.Condition > 50.0f && pump.Voltage < pump.MinVoltage)
+                if (brokenBox != null && brokenBox.ConditionPercentage > 50.0f && pump.Voltage < pump.MinVoltage)
                 {
                     yield return new WaitForSeconds(1.0f);
 
