@@ -567,7 +567,7 @@ namespace Barotrauma
                             if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
                             {
                                 // Don't allow attacking when the attack target has changed.
-                                if (SelectedAiTarget != _previousAiTarget)
+                                if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
                                 {
                                     canAttack = false;
                                     if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
@@ -890,8 +890,6 @@ namespace Barotrauma
         //sight/hearing range
         public void UpdateTargets(Character character, out TargetingPriority targetingPriority)
         {
-            var prevAiTarget = SelectedAiTarget;
-
             targetingPriority = null;
             SelectedAiTarget = null;
             selectedTargetMemory = null;
@@ -1029,10 +1027,11 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedAiTarget != prevAiTarget)
+            if (SelectedAiTarget != _previousAiTarget)
             {
                 wallTarget = null;
-            }           
+            }
+            _previousAiTarget = SelectedAiTarget;
         }
 
         //find the targetMemory that corresponds to some AItarget or create if there isn't one yet
