@@ -49,7 +49,7 @@ namespace Barotrauma
                 if (repeat || waitUntilPathUnreachable > 0.0f) { return true; }
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
-                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: adda timer?
+                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: add a timer?
                 if (pathSteering?.CurrentPath == null) { return true; }
 
                 if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { return false; }
@@ -146,20 +146,13 @@ namespace Barotrauma
 
                 float normalSpeed = character.AnimController.GetCurrentSpeed(false);
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
-                if (getDivingGearIfNeeded && Target?.Submarine == null && AllowGoingOutside)
+
+                if (getDivingGearIfNeeded && NeedsDivingGear())
                 {
-                    AddSubObjective(new AIObjectiveFindDivingGear(character, true));
-                }
-                else if (character.AIController.SteeringManager is IndoorsSteeringManager indoorsSteering)
-                {
-                    if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
-                    {
-                        indoorsSteering.SteeringWander(normalSpeed);
-                    }
-                    else if (AllowGoingOutside && 
-                        getDivingGearIfNeeded && 
-                        indoorsSteering.CurrentPath != null && 
-                        indoorsSteering.CurrentPath.HasOutdoorsNodes)
+                    bool targetIsOutside = Target?.Submarine == null || 
+                        character.AIController.SteeringManager is IndoorsSteeringManager iSteer && iSteer.CurrentPath != null && iSteer.CurrentPath.HasOutdoorsNodes;
+                    bool getDivingGear = !targetIsOutside || AllowGoingOutside;
+                    if (getDivingGear)
                     {
                         AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                     }
@@ -200,6 +193,19 @@ namespace Barotrauma
             if (objective.Target == Target) return true;
 
             return (objective.targetPos == targetPos);
+        }
+
+        private bool NeedsDivingGear()
+        {
+            var currentHull = character.AnimController.CurrentHull;
+            if (currentHull == null) return true;
+
+            //there's lots of water in the room -> get a suit
+            if (currentHull.WaterVolume / currentHull.Volume > 0.5f) return true;
+
+            if (currentHull.OxygenPercentage < 30.0f) return true;
+
+            return false;
         }
     }
 }
