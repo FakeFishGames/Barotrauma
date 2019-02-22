@@ -165,6 +165,15 @@ namespace Barotrauma
                     }
                 }
             }
+            if (!(ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires) && !(ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire))
+            {
+                var extinguisherItem = Character.Inventory.FindItemByIdentifier("extinguisher") ?? Character.Inventory.FindItemByTag("extinguisher");
+                if (extinguisherItem != null && Character.HasEquippedItem(extinguisherItem))
+                {
+                    // TODO: take the item where it was taken from?
+                    extinguisherItem.Drop();
+                }
+            }
 
             if (Character.IsKeyDown(InputType.Aim))
             {
