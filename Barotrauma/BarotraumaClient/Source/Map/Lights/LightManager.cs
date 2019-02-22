@@ -284,11 +284,14 @@ namespace Barotrauma.Lights
                     Character.Controlled.FocusedCharacter.Draw(spriteBatch, cam);
                 }
 
-                foreach (Item item in Item.ItemList)
+                if (!GUI.DisableItemHighlights)
                 {
-                    if (item.IsHighlighted)
+                    foreach (Item item in Item.ItemList)
                     {
-                        item.Draw(spriteBatch, false, true);
+                        if (item.IsHighlighted)
+                        {
+                            item.Draw(spriteBatch, false, true);
+                        }
                     }
                 }
             }
