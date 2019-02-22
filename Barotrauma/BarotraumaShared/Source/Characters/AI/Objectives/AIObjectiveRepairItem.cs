@@ -10,24 +10,25 @@ namespace Barotrauma
     {
         public override string DebugTag => "repair item";
 
-        private Item item;
+        public Item Item { get; private set; }
 
-        public AIObjectiveRepairItem(Character character, Item item)
-            : base(character, "")
+        public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
         {
-            this.item = item;
+            Item = item;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (item.Repairables.None()) { return 0; }
+            if (Item.Repairables.None()) { return 0; }
+            // Ignore items that are being repaired by someone else.
+            if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
             base.GetPriority(objectiveManager);
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y) * 2.0f;
+            float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
-            float damagePriority = MathHelper.Lerp(1, 0, item.Condition / item.MaxCondition);
-            float successFactor = MathHelper.Lerp(0, 1, item.Repairables.Average(r => r.DegreeOfSuccess(character)));
-            float isSelected = character.SelectedConstruction == item ? 50 : 1;
+            float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
+            float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+            float isSelected = character.SelectedConstruction == Item ? 50 : 1;
             return MathHelper.Clamp((priority + isSelected) * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 
@@ -36,10 +37,10 @@ namespace Barotrauma
             get
             {
                 // If the current condition is not more than the previous condition, we can't repair the target. It probably is deteriorating at a greater speed than we can repair it.
-                bool canRepair = base.CanBeCompleted && item.Condition > previousCondition;
+                bool canRepair = base.CanBeCompleted && Item.Condition > previousCondition;
                 if (!canRepair)
                 {
-                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", item.Name), null, 0.0f, "cannotrepair", 10.0f);
+                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
                 }
                 return canRepair;
             }
@@ -47,23 +48,23 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            bool isCompleted = item.IsFullCondition;
+            bool isCompleted = Item.IsFullCondition;
             if (isCompleted)
             {
-                character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
+                character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", Item.Name), null, 0.0f, "itemrepaired", 10.0f);
             }
             return isCompleted;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.item == item;
+            return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.Item == Item;
         }
 
         private float previousCondition = -1;
         protected override void Act(float deltaTime)
         {
-            foreach (Repairable repairable in item.Repairables)
+            foreach (Repairable repairable in Item.Repairables)
             {
                 //make sure we have all the items required to fix the target item
                 foreach (var kvp in repairable.requiredItems)
@@ -79,14 +80,14 @@ namespace Barotrauma
                 }
             }
 
-            if (character.CanInteractWith(item))
+            if (character.CanInteractWith(Item))
             {
-                foreach (Repairable repairable in item.Repairables)
+                foreach (Repairable repairable in Item.Repairables)
                 {
-                    if (character.SelectedConstruction != item)
+                    if (character.SelectedConstruction != Item)
                     {
-                        previousCondition = item.Condition;
-                        item.TryInteract(character, true, true);
+                        previousCondition = Item.Condition;
+                        Item.TryInteract(character, true, true);
                     }
                     repairable.CurrentFixer = character;
                     break;
@@ -94,7 +95,7 @@ namespace Barotrauma
             }
             else
             {
-                AddSubObjective(new AIObjectiveGoTo(item, character));
+                AddSubObjective(new AIObjectiveGoTo(Item, character));
             }
         }
     }
