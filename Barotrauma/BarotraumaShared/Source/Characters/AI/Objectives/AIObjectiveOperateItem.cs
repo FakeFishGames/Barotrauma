@@ -42,6 +42,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;

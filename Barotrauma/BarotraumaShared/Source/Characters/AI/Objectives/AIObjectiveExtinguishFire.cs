@@ -25,6 +25,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
             base.GetPriority(objectiveManager);
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
@@ -74,9 +75,9 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (FireSource fs in targetHull.FireSources.ToList())
+            foreach (FireSource fs in targetHull.FireSources)
             {
-                if (fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range)) || useExtinquisherTimer > 0.0f)
+                if (!character.IsClimbing && fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range)) || useExtinquisherTimer > 0.0f)
                 {
                     useExtinquisherTimer += deltaTime;
                     if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
@@ -92,20 +93,19 @@ namespace Barotrauma
                     }
                     return;
                 }
-            }
-
-            foreach (FireSource fs in targetHull.FireSources)
-            {
-                //go to the first firesource
-                if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
-                {
-                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character);
-                }
                 else
                 {
-                    gotoObjective.TryComplete(deltaTime);
+                    //go to the first firesource
+                    if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
+                    {
+                        gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character);
+                    }
+                    else
+                    {
+                        gotoObjective.TryComplete(deltaTime);
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
