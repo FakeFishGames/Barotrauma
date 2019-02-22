@@ -130,13 +130,13 @@ namespace Barotrauma
             }
             else
             {
-                if (!AllowGoingOutside)
+                var indoorSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                bool targetIsOutside = Target?.Submarine == null || indoorSteering != null && indoorSteering.CurrentPath != null && indoorSteering.CurrentPath.HasOutdoorsNodes;
+
+                if (!AllowGoingOutside && targetIsOutside)
                 {
                     //if path is up-to-date and contains outdoors nodes, this path is unreachable
-                    var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                    if (pathSteering?.CurrentPath != null && 
-                        Vector2.Distance(pathSteering.CurrentTarget, currTargetPos) < 1.0f && 
-                        pathSteering.CurrentPath.HasOutdoorsNodes)
+                    if (Vector2.DistanceSquared(indoorSteering.CurrentTarget, currTargetPos) < 1.0f)
                     {
                         waitUntilPathUnreachable = 0.0f;
                         character.AIController.SteeringManager.Reset();
@@ -147,12 +147,9 @@ namespace Barotrauma
                 float normalSpeed = character.AnimController.GetCurrentSpeed(false);
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
 
-                if (getDivingGearIfNeeded && NeedsDivingGear())
+                if (getDivingGearIfNeeded)
                 {
-                    bool targetIsOutside = Target?.Submarine == null || 
-                        character.AIController.SteeringManager is IndoorsSteeringManager iSteer && iSteer.CurrentPath != null && iSteer.CurrentPath.HasOutdoorsNodes;
-                    bool getDivingGear = !targetIsOutside || AllowGoingOutside;
-                    if (getDivingGear)
+                    if ((targetIsOutside && AllowGoingOutside) || NeedsDivingGear())
                     {
                         AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                     }
