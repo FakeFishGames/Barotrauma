@@ -14,6 +14,7 @@ namespace Barotrauma
         protected string option;
 
         public virtual bool CanBeCompleted => subObjectives.All(so => so.CanBeCompleted);
+        public IEnumerable<AIObjective> SubObjectives => subObjectives;
 
         public string Option
         {
@@ -73,16 +74,6 @@ namespace Barotrauma
             if (subObjectives.Any(o => o.IsDuplicate(objective))) return;
 
             subObjectives.Add(objective);
-        }
-
-        public AIObjective GetCurrentSubObjective()
-        {
-            AIObjective currentSubObjective = this;
-            while (currentSubObjective.subObjectives.Count > 0)
-            {
-                currentSubObjective = subObjectives[0];
-            }
-            return currentSubObjective;
         }
 
         public void SortSubObjectives(AIObjectiveManager objectiveManager)
