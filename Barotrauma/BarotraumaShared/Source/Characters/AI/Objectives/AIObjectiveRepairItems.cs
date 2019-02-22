@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -7,15 +8,14 @@ namespace Barotrauma
     {
         public override string DebugTag => "repair items";
 
+        private Dictionary<Item, AIObjectiveRepairItem> repairObjectives = new Dictionary<Item, AIObjectiveRepairItem>();
+
         /// <summary>
         /// Should the character only attempt to fix items they have the skills to fix, or any damaged item
         /// </summary>
         public bool RequireAdequateSkills;
 
-        public AIObjectiveRepairItems(Character character)
-            : base(character, "")
-        {
-        }
+        public AIObjectiveRepairItems(Character character) : base(character, "") { }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
@@ -24,46 +24,41 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
             return 1.0f;
         }
-                
-        public override bool IsCompleted()
-        {
-            return false;
-        }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
-        }
+        public override bool IsCompleted() => false;
 
-        protected override void Act(float deltaTime)
-        {
-            GetBrokenItems();
-        }
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
+
+        protected override void Act(float deltaTime) => GetBrokenItems();
 
         private void GetBrokenItems()
         {
             foreach (Item item in Item.ItemList)
             {
-                // Ignore items that are in full condition
-                if (item.IsFullCondition) { continue; }
-                foreach (Repairable repairable in item.Repairables)
+                // Clear completed/impossible objectives.
+                if (repairObjectives.TryGetValue(item, out AIObjectiveRepairItem objective))
                 {
-                    // Ignore ones that are already fixed
-                    if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
-                    // Ignore items that are already being repaired by someone else
-                    if (item.Repairables.Any(r => r.CurrentFixer != null)) { continue; }
-
-                    if (RequireAdequateSkills)
+                    if (!subObjectives.Contains(objective))
                     {
-                        if (!repairable.HasRequiredSkills(character)) { continue; }
+                        repairObjectives.Remove(objective.Item);
                     }
-
-                    // TODO: don't create duplicates, because this is called so frequently
-                    AddSubObjective(new AIObjectiveRepairItem(character, item));
-                    break;
+                }
+                if (!item.IsFullCondition)
+                {
+                    foreach (Repairable repairable in item.Repairables)
+                    {
+                        if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
+                        if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { continue; }
+                        if (objective == null)
+                        {
+                            objective = new AIObjectiveRepairItem(character, item);
+                            repairObjectives.Add(item, objective);
+                            AddSubObjective(objective);
+                        }
+                        break;
+                    }
                 }
             }
         }
