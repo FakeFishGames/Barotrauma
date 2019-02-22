@@ -46,8 +46,7 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
-            return 1.0f;
+            return base.GetPriority(objectiveManager);
         }
 
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false)

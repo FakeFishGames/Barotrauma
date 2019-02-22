@@ -46,19 +46,11 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            SyncRemovedObjectives(extinguishObjectives, hullList);
             foreach (Hull hull in hullList)
             {
-                if (extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
+                if (hull.FireSources.Count > 0 && !extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
                 {
-                    // Remove the objective, if not found in the subobjectives (completed or removed for some reason)
-                    if (!subObjectives.Contains(objective))
-                    {
-                        extinguishObjectives.Remove(hull);
-                    }
-                }
-                else if (hull.FireSources.Count > 0)
-                {
-                    // Add the objective, if not found
                     objective = new AIObjectiveExtinguishFire(character, hull);
                     extinguishObjectives.Add(hull, objective);
                     AddSubObjective(objective);
