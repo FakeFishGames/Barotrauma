@@ -10,7 +10,7 @@ namespace Barotrauma
         public override string DebugTag => "repair item";
 
         private Item item;
-        
+
         public AIObjectiveRepairItem(Character character, Item item)
             : base(character, "")
         {
@@ -23,7 +23,7 @@ namespace Barotrauma
             bool repairablesFound = false;
             foreach (Repairable repairable in item.Repairables)
             {
-                //if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
+                if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
                 if (repairable.DegreeOfSuccess(character) >= 0.5f) { insufficientSkills = false; }
                 repairablesFound = true;
             }
@@ -32,8 +32,8 @@ namespace Barotrauma
 
             float priority = item.MaxCondition - item.Condition;
             //vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = 
-                Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + 
+            float dist =
+                Math.Abs(character.WorldPosition.X - item.WorldPosition.X) +
                 Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y) * 2.0f;
 
             //heavily increase the priority if the item is already selected 
@@ -52,16 +52,28 @@ namespace Barotrauma
             }
         }
 
+        public override bool CanBeCompleted
+        {
+            get
+            {
+                // If the current condition is not more than the previous condition, we can't repair the target. It probably is deteriorating at a greater speed than we can repair it.
+                bool canRepair = base.CanBeCompleted && item.Condition > previousCondition;
+                if (!canRepair)
+                {
+                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", item.Name), null, 0.0f, "cannotrepair", 10.0f);
+                }
+                return canRepair;
+            }
+        }
+
         public override bool IsCompleted()
         {
-            if (!item.IsFullCondition) { return false; }
-            //foreach (Repairable repairable in item.Repairables)
-            //{
-            //    if (item.Condition < Math.Max(repairable.ShowRepairUIThreshold, item.Prefab.Health * 0.98f)) return false;
-            //}
-            
-            character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
-            return true;
+            bool isCompleted = item.IsFullCondition;
+            if (isCompleted)
+            {
+                character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
+            }
+            return isCompleted;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
@@ -69,6 +81,7 @@ namespace Barotrauma
             return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.item == item;
         }
 
+        private float previousCondition = -1;
         protected override void Act(float deltaTime)
         {
             foreach (Repairable repairable in item.Repairables)
@@ -91,7 +104,11 @@ namespace Barotrauma
             {
                 foreach (Repairable repairable in item.Repairables)
                 {
-                    if (character.SelectedConstruction != item) { item.TryInteract(character, true, true); }
+                    if (character.SelectedConstruction != item)
+                    {
+                        previousCondition = item.Condition;
+                        item.TryInteract(character, true, true);
+                    }
                     repairable.CurrentFixer = character;
                     break;
                 }
