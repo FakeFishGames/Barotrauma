@@ -132,7 +132,7 @@ namespace Barotrauma
             set;
         }
 
-        public static bool DisableHUD, DisableUpperHUD, DisableCharacterNames;
+        public static bool DisableHUD, DisableUpperHUD, DisableItemHighlights, DisableCharacterNames;
 
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {

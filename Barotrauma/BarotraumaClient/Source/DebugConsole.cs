@@ -687,6 +687,13 @@ namespace Barotrauma
             });
             AssignRelayToServer("toggleupperhud", false);
 
+            AssignOnExecute("toggleitemhighlights", (string[] args) =>
+            {
+                GUI.DisableItemHighlights = !GUI.DisableItemHighlights;
+                NewMessage(GUI.DisableItemHighlights ? "Disabled item highlights" : "Enabled item highlights", Color.White);
+            });
+            AssignRelayToServer("toggleitemhighlights", false);
+
             AssignOnExecute("togglecharacternames", (string[] args) =>
             {
                 GUI.DisableCharacterNames = !GUI.DisableCharacterNames;
