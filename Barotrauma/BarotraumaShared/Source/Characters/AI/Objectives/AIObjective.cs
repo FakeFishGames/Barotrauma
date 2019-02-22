@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     abstract class AIObjective
     {
+        public virtual float Devotion => AIObjectiveManager.baseDevotion;
+
         public abstract string DebugTag { get; }
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
@@ -15,6 +17,7 @@ namespace Barotrauma
 
         public virtual bool CanBeCompleted => subObjectives.All(so => so.CanBeCompleted);
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
+        public AIObjective CurrentSubObjective { get; private set; }
 
         public string Option
         {
@@ -80,18 +83,33 @@ namespace Barotrauma
         {
             if (!subObjectives.Any()) return;
             subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
-            subObjectives[0].SortSubObjectives(objectiveManager);
+            CurrentSubObjective = SubObjectives.First();
+            CurrentSubObjective.SortSubObjectives(objectiveManager);
         }
 
-        protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective)
+        public virtual float GetPriority(AIObjectiveManager objectiveManager)
         {
-            return false;
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+            else if (objectiveManager.CurrentObjective == this)
+            {
+                priority += Devotion;
+            }
+            var subObjective = objectiveManager.CurrentObjective.CurrentSubObjective;
+            if (subObjective != null && subObjective == this)
+            {
+                priority += Devotion;
+            }
+            return priority;
         }
+
+        protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
 
         protected abstract void Act(float deltaTime);
         
         public abstract bool IsCompleted();
-        public abstract float GetPriority(AIObjectiveManager objectiveManager);
         public abstract bool IsDuplicate(AIObjective otherObjective);
     }
 }
