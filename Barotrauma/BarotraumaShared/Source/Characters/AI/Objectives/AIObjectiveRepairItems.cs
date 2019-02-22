@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -20,11 +21,13 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             GetBrokenItems();
-            if (subObjectives.Count > 0 && objectiveManager.CurrentOrder == this)
+            if (subObjectives.Any() && objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-            return 1.0f;
+            // Don't use the itemlist, because it can be huge.
+            float avg = repairObjectives.Average(ro => 100 - ro.Key.ConditionPercentage);
+            return MathHelper.Lerp(0, 50, avg / 100);
         }
 
         public override bool IsCompleted() => false;
