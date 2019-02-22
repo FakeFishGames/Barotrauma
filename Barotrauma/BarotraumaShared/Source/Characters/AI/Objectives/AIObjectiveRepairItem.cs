@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -19,37 +20,15 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            bool insufficientSkills = true;
-            bool repairablesFound = false;
-            foreach (Repairable repairable in item.Repairables)
-            {
-                if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
-                if (repairable.DegreeOfSuccess(character) >= 0.5f) { insufficientSkills = false; }
-                repairablesFound = true;
-            }
-
-            if (!repairablesFound) { return 0.0f; }
-
-            float priority = item.MaxCondition - item.Condition;
-            //vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist =
-                Math.Abs(character.WorldPosition.X - item.WorldPosition.X) +
-                Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y) * 2.0f;
-
-            //heavily increase the priority if the item is already selected 
-            //so characters don't keep switching between nearby damaged items
-            if (character.SelectedConstruction == item)
-            {
-                priority += 50.0f;
-            }
-            if (insufficientSkills)
-            {
-                return MathHelper.Lerp(0.0f, 50.0f, priority / 100.0f / Math.Max(dist / 100.0f, 1.0f));
-            }
-            else
-            {
-                return MathHelper.Lerp(50.0f, 100.0f, priority / 100.0f / Math.Max(dist / 100.0f, 1.0f));
-            }
+            if (item.Repairables.None()) { return 0; }
+            base.GetPriority(objectiveManager);
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y) * 2.0f;
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            float damagePriority = MathHelper.Lerp(1, 0, item.Condition / item.MaxCondition);
+            float successFactor = MathHelper.Lerp(0, 1, item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+            float isSelected = character.SelectedConstruction == item ? 50 : 1;
+            return MathHelper.Clamp((priority + isSelected) * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 
         public override bool CanBeCompleted

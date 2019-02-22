@@ -38,16 +38,16 @@ namespace Barotrauma
                 var currentOrder = ObjectiveManager.CurrentOrder;
                 if (currentOrder != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset, $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + textOffset, $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority(ObjectiveManager).FormatZeroDecimal()})", Color.White, Color.Black);
                 }
                 var currentObjective = ObjectiveManager.CurrentObjective;
                 if (currentObjective != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
-                    var subObjective = currentObjective.SubObjectives.FirstOrDefault();
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority(ObjectiveManager).FormatZeroDecimal()})", Color.White, Color.Black);
+                    var subObjective = currentObjective.CurrentSubObjective;
                     if (subObjective != null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority(ObjectiveManager)})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority(ObjectiveManager).FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                 }
             }
