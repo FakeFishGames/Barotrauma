@@ -323,7 +323,7 @@ namespace Barotrauma
 
             playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
             {
-                OnSelected = SelectPlayer
+                OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
 
             //--------------------------------------------------------------------------------------------------------------------------------
@@ -1255,6 +1255,13 @@ namespace Barotrauma
                 CanBeFocused = true,
                 Visible = false
             };
+            new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, "")
+            {
+                Selected = true,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReadyToStartTickBox"),
+                UserData = "clientready"
+            };
         }
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
@@ -1287,11 +1294,8 @@ namespace Barotrauma
             if (child != null) { playerList.RemoveChild(child); }
         }
 
-        private bool SelectPlayer(GUIComponent component, object obj)
+        private bool SelectPlayer(Client selectedClient)
         {
-            var selectedClient = component.UserData as Client;
-            if (selectedClient == null) return false;
-
             bool myClient = selectedClient.ID == GameMain.Client.ID;
 
             playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
@@ -1347,7 +1351,7 @@ namespace Barotrauma
                         GameMain.Client.UpdateClientPermissions(client);
 
                         playerFrame = null;
-                        SelectPlayer(null, client);
+                        SelectPlayer(client);
                     }
                     return true;
                 };
@@ -1455,7 +1459,7 @@ namespace Barotrauma
                     var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
                         TextManager.Get("Ban"))
                     {
-                        UserData = obj
+                        UserData = selectedClient
                     };
                     banButton.OnClicked += BanPlayer;
                     banButton.OnClicked += ClosePlayerFrame;
@@ -1463,7 +1467,7 @@ namespace Barotrauma
                     var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
                         TextManager.Get("BanRange"))
                     {
-                        UserData = obj
+                        UserData = selectedClient
                     };
                     rangebanButton.OnClicked += BanPlayerRange;
                     rangebanButton.OnClicked += ClosePlayerFrame;
@@ -1486,7 +1490,7 @@ namespace Barotrauma
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
                     {
-                        UserData = obj
+                        UserData = selectedClient
                     };
                     kickButton.OnClicked = KickPlayer;
                     kickButton.OnClicked += ClosePlayerFrame;
