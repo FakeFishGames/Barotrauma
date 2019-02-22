@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -10,8 +11,7 @@ namespace Barotrauma
         private List<Hull> hullList = new List<Hull>();
         private Dictionary<Hull, AIObjectiveExtinguishFire> extinguishObjectives = new Dictionary<Hull, AIObjectiveExtinguishFire>();
 
-        public AIObjectiveExtinguishFires(Character character) : 
-            base(character, "")
+        public AIObjectiveExtinguishFires(Character character) : base(character, "")
         {
             if (character.Submarine != null)
             {
@@ -26,12 +26,13 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (objectiveManager.CurrentObjective == this)
+            int fireCount = hullList.Sum(h => h.FireSources.Count);
+            if (objectiveManager.CurrentObjective == this && fireCount > 0)
             {
                 return AIObjectiveManager.OrderPriority;
             }
 
-            return hullList.Count(h => h.FireSources.Count > 0) * 10;
+            return MathHelper.Clamp(fireCount * 10, 0, 100);
         }
 
         public override bool IsCompleted()
