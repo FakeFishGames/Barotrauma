@@ -93,6 +93,8 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public float ChargePercentage => MathUtils.Percentage(Charge, Capacity);
         
         [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
             "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]

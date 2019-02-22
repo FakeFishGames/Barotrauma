@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -33,17 +34,15 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (objectiveManager.CurrentOrder == this)
+            float avgNeedOfCharge = availableBatteries.Average(b => 100 - b.ChargePercentage);
+            if (objectiveManager.CurrentOrder == this && avgNeedOfCharge > 10)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-            return 1.0f;
+            return MathHelper.Lerp(0, 50, avgNeedOfCharge / 100);
         }
 
-        public override bool IsCompleted()
-        {
-            return false;
-        }
+        public override bool IsCompleted() => false;
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
@@ -53,8 +52,11 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             SyncRemovedObjectives(chargeObjectives, availableBatteries);
+            availableBatteries.Sort((x, y) => x.ChargePercentage.CompareTo(y.ChargePercentage));
             foreach (PowerContainer battery in availableBatteries)
             {
+                // Ignore batteries that are almost full
+                if (battery.ChargePercentage > 90) { continue; }
                 if (!chargeObjectives.TryGetValue(battery, out AIObjectiveOperateItem objective))
                 {
                     objective = new AIObjectiveOperateItem(battery, character, orderOption, false);
