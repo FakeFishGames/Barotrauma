@@ -63,6 +63,11 @@ namespace Barotrauma
                 }
             }
 
+            if (!subObjectives.Contains(CurrentSubObjective))
+            {
+                CurrentSubObjective = null;
+            }
+
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
