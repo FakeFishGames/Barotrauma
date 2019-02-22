@@ -123,10 +123,10 @@ namespace Barotrauma
                                 memoryIndex = -1;
                                 break;
                             case ConsoleKey.LeftArrow:
-                                AutoComplete(input, -1);
+                                input = AutoComplete(input, -1);
                                 break;
                             case ConsoleKey.RightArrow:
-                                AutoComplete(input, 1);
+                                input = AutoComplete(input, 1);
                                 break;
                             case ConsoleKey.UpArrow:
                                 memoryIndex--;
@@ -183,7 +183,7 @@ namespace Barotrauma
             int consoleHeight = Console.WindowHeight;
             if (consoleHeight < 5) consoleHeight = 5;
 
-            string ln = input.Length>0 ? AutoComplete(input,0) : "";
+            string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
             ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.CursorLeft = 0;

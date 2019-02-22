@@ -147,7 +147,7 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
-                     textBox.Text = AutoComplete(textBox.Text);
+                     textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
                 if (PlayerInput.KeyHit(Keys.Enter))

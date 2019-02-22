@@ -1148,8 +1148,8 @@ namespace Barotrauma
                 }
 
                 if (matchingCommands.Count == 0) return command;
-
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % matchingCommands.Count;
+                
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, matchingCommands.Count);
                 return matchingCommands[currentAutoCompletedIndex];
             }
         }
