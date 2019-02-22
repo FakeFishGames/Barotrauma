@@ -38,6 +38,7 @@
     aggressiveboarding="true">
 
     <latchonto
+      commonness="2.0"
       attachtowalls="true"
       attachtosub="true"
       mindeattachspeed="3.0"
