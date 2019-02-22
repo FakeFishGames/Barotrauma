@@ -12,6 +12,7 @@ namespace Barotrauma
         private Vector2 targetPos;
 
         private bool repeat;
+        private bool cannotReach;
 
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
@@ -131,27 +132,23 @@ namespace Barotrauma
             else
             {
                 var indoorSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                bool targetIsOutside = Target?.Submarine == null || indoorSteering != null && indoorSteering.CurrentPath != null && indoorSteering.CurrentPath.HasOutdoorsNodes;
-
-                if (!AllowGoingOutside && targetIsOutside)
+                bool targetIsOutside = (Target != null && Target.Submarine == null) || (indoorSteering != null && indoorSteering.CurrentPath != null && indoorSteering.CurrentPath.HasOutdoorsNodes);
+                if (targetIsOutside && !AllowGoingOutside)
                 {
-                    //if path is up-to-date and contains outdoors nodes, this path is unreachable
-                    if (Vector2.DistanceSquared(indoorSteering.CurrentTarget, currTargetPos) < 1.0f)
-                    {
-                        waitUntilPathUnreachable = 0.0f;
-                        character.AIController.SteeringManager.Reset();
-                        return;
-                    }
+                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotrepair", minDurationBetweenSimilar: 10.0f);
+                    cannotReach = true;
+                    character.AIController.SteeringManager.Reset();
                 }
-
-                float normalSpeed = character.AnimController.GetCurrentSpeed(false);
-                character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
-
-                if (getDivingGearIfNeeded)
+                else
                 {
-                    if ((targetIsOutside && AllowGoingOutside) || NeedsDivingGear())
+                    float normalSpeed = character.AnimController.GetCurrentSpeed(false);
+                    character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
+                    if (getDivingGearIfNeeded)
                     {
-                        AddSubObjective(new AIObjectiveFindDivingGear(character, true));
+                        if (targetIsOutside || NeedsDivingGear())
+                        {
+                            AddSubObjective(new AIObjectiveFindDivingGear(character, true));
+                        }
                     }
                 }
             }
