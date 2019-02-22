@@ -964,6 +964,9 @@
   <DialogAffirmative>Got it!</DialogAffirmative>
   <DialogAffirmative>Sure thing!</DialogAffirmative>
   <DialogAffirmative>Copy that.</DialogAffirmative>
+  <DialogNegative>Negative.</DialogNegative>
+  <DialogNegative>No way!</DialogNegative>
+  <DialogCannotReach>Can't reach the target.</DialogCannotReach>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
