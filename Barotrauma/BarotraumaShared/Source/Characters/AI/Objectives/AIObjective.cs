@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -107,7 +108,7 @@ namespace Barotrauma
             {
                 priority += Devotion;
             }
-            return priority;
+            return MathHelper.Clamp(priority, 0, 100);
         }
 
         /// <summary>
