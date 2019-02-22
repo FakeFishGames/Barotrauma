@@ -35,23 +35,16 @@ namespace Barotrauma
 
         private void GetBrokenItems()
         {
+            SyncRemovedObjectives(repairObjectives, Item.ItemList);
             foreach (Item item in Item.ItemList)
             {
-                // Clear completed/impossible objectives.
-                if (repairObjectives.TryGetValue(item, out AIObjectiveRepairItem objective))
-                {
-                    if (!subObjectives.Contains(objective))
-                    {
-                        repairObjectives.Remove(objective.Item);
-                    }
-                }
                 if (!item.IsFullCondition)
                 {
                     foreach (Repairable repairable in item.Repairables)
                     {
                         if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
                         if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { continue; }
-                        if (objective == null)
+                        if (!repairObjectives.TryGetValue(item, out AIObjectiveRepairItem objective))
                         {
                             objective = new AIObjectiveRepairItem(character, item);
                             repairObjectives.Add(item, objective);

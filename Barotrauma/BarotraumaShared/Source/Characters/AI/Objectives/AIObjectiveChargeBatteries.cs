@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -7,16 +8,14 @@ namespace Barotrauma
     {
         public override string DebugTag => "charge batteries";
 
-        private List<PowerContainer> availableBatteries;
-
+        private List<PowerContainer> availableBatteries = new List<PowerContainer>();
+        private Dictionary<PowerContainer, AIObjectiveOperateItem> chargeObjectives = new Dictionary<PowerContainer, AIObjectiveOperateItem>();
         private string orderOption;
         
-        public AIObjectiveChargeBatteries(Character character, string option)
-            : base(character, option)
+        public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
         {
             orderOption = option;
             
-            availableBatteries = new List<PowerContainer>();
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine == null) continue;
@@ -38,7 +37,6 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
             return 1.0f;
         }
 
@@ -54,14 +52,15 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (availableBatteries.Count == 0)
-            {
-                AddSubObjective(new AIObjectiveIdle(character));
-                return;
-            }
+            SyncRemovedObjectives(chargeObjectives, availableBatteries);
             foreach (PowerContainer battery in availableBatteries)
             {
-                AddSubObjective(new AIObjectiveOperateItem(battery, character, orderOption, false));
+                if (!chargeObjectives.TryGetValue(battery, out AIObjectiveOperateItem objective))
+                {
+                    objective = new AIObjectiveOperateItem(battery, character, orderOption, false);
+                    chargeObjectives.Add(battery, objective);
+                    AddSubObjective(objective);
+                }
             }
         }
     }

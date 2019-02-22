@@ -105,6 +105,23 @@ namespace Barotrauma
             return priority;
         }
 
+        /// <summary>
+        /// Checks if the subobjectives in the given collection are removed from the subobjectives. And if so, removes it also from the dictionary.
+        /// </summary>
+        protected void SyncRemovedObjectives<T1, T2>(Dictionary<T1, T2> dictionary, IEnumerable<T1> collection) where T2 : AIObjective
+        {
+            foreach (T1 key in collection)
+            {
+                if (dictionary.TryGetValue(key, out T2 objective))
+                {
+                    if (!subObjectives.Contains(objective))
+                    {
+                        dictionary.Remove(key);
+                    }
+                }
+            }
+        }
+
         protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
 
         protected abstract void Act(float deltaTime);
