@@ -2116,7 +2116,7 @@ namespace Barotrauma
             prevAiChatMessages.Add(dummyMsg);
         }
 
-        public void Speak(string message, ChatMessageType? messageType, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
+        public void Speak(string message, ChatMessageType? messageType = null, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
