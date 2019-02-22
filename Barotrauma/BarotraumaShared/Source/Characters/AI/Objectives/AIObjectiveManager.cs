@@ -8,6 +8,7 @@ namespace Barotrauma
     class AIObjectiveManager
     {
         public const float OrderPriority = 50.0f;
+        public const float determinationMultiplier = 1.1f;
 
         private List<AIObjective> objectives;
 
@@ -86,7 +87,16 @@ namespace Barotrauma
             objectives = objectives.FindAll(o => !o.IsCompleted() && o.CanBeCompleted);
 
             //sort objectives according to priority
-            objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
+            objectives.Sort((x, y) =>
+            {
+                float yPrio = y.GetPriority(this);
+                float xPrio = x.GetPriority(this);
+                // Increase the priority of the current objective so that we don't switch objecives so easily.
+                if (y == CurrentObjective) { yPrio *= determinationMultiplier; }
+                if (x == CurrentObjective) { xPrio *= determinationMultiplier; }
+                return yPrio.CompareTo(xPrio);
+                //return y.GetPriority(this).CompareTo(x.GetPriority(this)
+            });
             GetCurrentObjective()?.SortSubObjectives(this);
         }
 
@@ -101,7 +111,6 @@ namespace Barotrauma
                 character.AIController.SteeringManager.Reset();
                 return;
             }
-
             CurrentObjective?.TryComplete(deltaTime);
         }
         
