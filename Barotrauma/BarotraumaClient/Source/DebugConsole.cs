@@ -147,7 +147,7 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
-                     textBox.Text = AutoComplete(textBox.Text);
+                     textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
                 if (PlayerInput.KeyHit(Keys.Enter))
@@ -686,6 +686,13 @@ namespace Barotrauma
                 NewMessage(GUI.DisableUpperHUD ? "Disabled upper HUD" : "Enabled upper HUD", Color.White);
             });
             AssignRelayToServer("toggleupperhud", false);
+
+            AssignOnExecute("toggleitemhighlights", (string[] args) =>
+            {
+                GUI.DisableItemHighlights = !GUI.DisableItemHighlights;
+                NewMessage(GUI.DisableItemHighlights ? "Disabled item highlights" : "Enabled item highlights", Color.White);
+            });
+            AssignRelayToServer("toggleitemhighlights", false);
 
             AssignOnExecute("togglecharacternames", (string[] args) =>
             {
