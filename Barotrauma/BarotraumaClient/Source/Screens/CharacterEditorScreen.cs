@@ -2377,20 +2377,40 @@ namespace Barotrauma
 
         private Limb GetClosestLimbOnRagdoll(Vector2 targetPos, Func<Limb, bool> filter = null)
         {
-            // TODO: optimize?
-            return character.AnimController.Limbs
-                .Where(l => filter == null ? true : filter(l))
-                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), targetPos))
-                .FirstOrDefault();
+            Limb closestLimb = null;
+            float closestDistance = float.MaxValue;
+            foreach (Limb l in character.AnimController.Limbs) 
+            {
+                if (filter == null ? true : filter(l)) 
+                {
+                    float distance = Vector2.Distance(SimToScreen(l.SimPosition), targetPos);
+                    if (distance < closestDistance) 
+                    {
+                        closestLimb = l;
+                        closestDistance = distance;
+                    }
+                }
+            }
+            return closestLimb;
         }
 
         private Limb GetClosestLimbOnSpritesheet(Vector2 targetPos, Func<Limb, bool> filter = null)
         {
-            // TODO: optimize?
-            return character.AnimController.Limbs
-                .Where(l => filter == null ? true : filter(l))
-                .OrderBy(l => Vector2.Distance(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos))
-                .FirstOrDefault();
+            Limb closestLimb = null;
+            float closestDistance = float.MaxValue;
+            foreach (Limb l in character.AnimController.Limbs) 
+            {
+                if (filter == null ? true : filter(l)) 
+                {
+                    float distance = Vector2.Distance(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos);
+                    if (distance < closestDistance) 
+                    {
+                        closestLimb = l;
+                        closestDistance = distance;
+                    }
+                }
+            }
+            return closestLimb;
         }
 
         private Rectangle GetLimbSpritesheetRect(Limb limb)
