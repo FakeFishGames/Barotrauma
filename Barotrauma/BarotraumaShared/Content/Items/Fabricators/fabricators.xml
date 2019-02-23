@@ -169,6 +169,11 @@
         <RequiredItem identifier="aluminium"/>
       </FabricableItem>
 
+      <FabricableItem identifier="headset" requiredtime="10">
+        <RequiredItem identifier="plastic"/>
+        <RequiredItem identifier="fpgacircuit"/>
+      </FabricableItem>
+      
       <FabricableItem identifier="divingmask" requiredtime="20">
         <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="plastic"/>

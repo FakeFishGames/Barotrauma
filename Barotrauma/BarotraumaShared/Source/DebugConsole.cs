@@ -1040,6 +1040,7 @@ namespace Barotrauma
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
+            commands.Add(new Command("toggleitemhighlights", "Toggle the item highlight effect on/off (client-only).", null));
             commands.Add(new Command("togglecharacternames", "Toggle the names hovering above characters on/off (client-only).", null));
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
@@ -1147,8 +1148,8 @@ namespace Barotrauma
                 }
 
                 if (matchingCommands.Count == 0) return command;
-
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % matchingCommands.Count;
+                
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, matchingCommands.Count);
                 return matchingCommands[currentAutoCompletedIndex];
             }
         }

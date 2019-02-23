@@ -134,7 +134,7 @@ namespace Barotrauma
             if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
             if (editing && !ShowItems) return;
             
-            Color color = isHighlighted ? Color.Orange : GetSpriteColor();
+            Color color = isHighlighted && !GUI.DisableItemHighlights ? Color.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
             Sprite activeSprite = prefab.sprite;

@@ -75,28 +75,11 @@ namespace Barotrauma
                     if (clients == null) return;
                     foreach (Client client in clients)
                     {
-                        var clientNameBox = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client.Name);
-                        if (clientNameBox == null) continue;
-
-                        var clientReady = clientNameBox.FindChild("clientready");
-                        if (!client.GetVote<bool>(VoteType.StartRound))
+                        var clientReady = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client)?.FindChild("clientready");
+                        if (clientReady != null)
                         {
-                            if (clientReady != null) clientReady.Parent.RemoveChild(clientReady);
+                            clientReady.Visible = client.GetVote<bool>(VoteType.StartRound);
                         }
-                        else
-                        {
-                            if (clientReady == null)
-                            {
-                                new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), clientNameBox.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, "")
-                                {
-                                    Selected = true,
-                                    Enabled = false,
-                                    ToolTip = "Ready to start",
-                                    UserData = "clientready"
-                                };
-                            }
-                        }
-
                     }
                     break;
             }

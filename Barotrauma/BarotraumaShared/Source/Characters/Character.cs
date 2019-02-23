@@ -505,7 +505,31 @@ namespace Barotrauma
 
         public override Vector2 SimPosition
         {
-            get { return AnimController.Collider.SimPosition; }
+            get
+            {
+                if (AnimController?.Collider == null)
+                {
+                    string errorMsg = "Attempted to access a potentially removed character. Character: " + Name + ", id: " + ID + ", removed: " + Removed+".";
+                    if (AnimController == null)
+                    {
+                        errorMsg += " AnimController == null";
+                    }
+                    else if (AnimController.Collider == null)
+                    {
+                        errorMsg += " AnimController.Collider == null";
+                    }
+
+                    DebugConsole.NewMessage(errorMsg, Color.Red);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Character.SimPosition:AccessRemoved",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        errorMsg + "\n" + Environment.StackTrace);
+
+                    return Vector2.Zero;
+                }
+
+                return AnimController.Collider.SimPosition;
+            }
         }
 
         public override Vector2 Position
