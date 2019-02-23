@@ -2383,7 +2383,7 @@ namespace Barotrauma
             {
                 if (filter == null ? true : filter(l)) 
                 {
-                    float distance = Vector2.Distance(SimToScreen(l.SimPosition), targetPos);
+                    float distance = Vector2.DistanceSquared(SimToScreen(l.SimPosition), targetPos);
                     if (distance < closestDistance) 
                     {
                         closestLimb = l;
@@ -2402,7 +2402,7 @@ namespace Barotrauma
             {
                 if (filter == null ? true : filter(l)) 
                 {
-                    float distance = Vector2.Distance(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos);
+                    float distance = Vector2.DistanceSquared(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos);
                     if (distance < closestDistance) 
                     {
                         closestLimb = l;
