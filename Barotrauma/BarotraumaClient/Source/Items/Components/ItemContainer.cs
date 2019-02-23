@@ -72,7 +72,13 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())

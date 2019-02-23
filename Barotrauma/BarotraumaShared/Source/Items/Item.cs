@@ -1136,18 +1136,13 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsVisible(Rectangle worldView)
-        {
-            return drawableComponents.Count > 0 || body == null || body.Enabled;
-        }
-
         public List<T> GetConnectedComponents<T>(bool recursive = false)
         {
             List<T> connectedComponents = new List<T>();
 
             if (recursive)
             {
-                List<Item> alreadySearched = new List<Item>() {this};
+                List<Item> alreadySearched = new List<Item>() { this };
                 GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
 
                 return connectedComponents;
@@ -1155,7 +1150,6 @@ namespace Barotrauma
 
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) return connectedComponents;
-
 
             foreach (Connection c in connectionPanel.Connections)
             {
