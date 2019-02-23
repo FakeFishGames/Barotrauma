@@ -582,6 +582,7 @@
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
   <JobPreferences>Job preferences</JobPreferences>
+  <RandomPreferences>Random Preferences</RandomPreferences>
   <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
   <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
   <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
