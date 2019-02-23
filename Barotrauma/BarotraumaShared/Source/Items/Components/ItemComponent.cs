@@ -14,6 +14,11 @@ namespace Barotrauma.Items.Components
     interface IDrawableComponent
     {
 #if CLIENT
+        /// <summary>
+        /// The extents of the sprites or other graphics this component needs to draw. Used to determine which items are visible on the screen.
+        /// </summary>
+        Vector2 DrawSize { get; }
+
         void Draw(SpriteBatch spriteBatch, bool editing);
 #endif
     }
