@@ -361,10 +361,19 @@ namespace Barotrauma
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
             };
             clientDisabledElements.Add(ServerName);
-            
-            ServerMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+
+            var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) });
+            ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform))
             {
                 Wrap = true
+            };
+            ServerMessage.OnTextChanged += (textBox, text) =>
+            {
+                Vector2 textSize = textBox.Font.MeasureString(textBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Rect.Height, (int)textSize.Y + 10));
+                serverMessageContainer.UpdateScrollBarSize();
+                serverMessageContainer.BarScroll = 1.0f;
+                return true;
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
