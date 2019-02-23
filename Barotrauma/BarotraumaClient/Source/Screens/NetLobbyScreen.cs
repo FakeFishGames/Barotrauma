@@ -1650,6 +1650,14 @@ namespace Barotrauma
             if (GameMain.Client.CharacterInfo == null) return true;
             int dir = (int)userData;
             var info = GameMain.Client.CharacterInfo;
+            if (!info.HasGenders)
+            {
+                GameMain.Config.CharacterGender = Gender.None;
+            }
+            else if (GameMain.Config.CharacterGender == Gender.None)
+            {
+                GameMain.Config.CharacterGender = info.Gender;
+            }
             if (generatedHeads.Current == null)
             {
                 // Add the current head in the memory
