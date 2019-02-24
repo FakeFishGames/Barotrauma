@@ -1227,7 +1227,6 @@ namespace Barotrauma
                 "revokecommandperm",
                 (string[] args) =>
                 {
-                    //TODO: revoke lol
                     if (args.Length < 1) return;
 
                     if (!int.TryParse(args[0], out int id))
@@ -1236,9 +1235,9 @@ namespace Barotrauma
                         return;
                     }
 
-                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    ShowQuestionPrompt("Console command permissions to revoke from client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                        GameMain.Client.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
                     });
                 }
             );
