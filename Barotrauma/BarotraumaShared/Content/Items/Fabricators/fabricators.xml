@@ -16,7 +16,7 @@
     <Fabricator canbeselected="true" powerconsumption="500.0">
       <GuiFrame relativesize="0.25,0.5" maxsize="460,800" style="ItemUI" anchor="Center" absoluteoffset="10,0"/>
 
-      <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/Fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
       <!-- materials ************************************************************************************* -->
@@ -449,7 +449,7 @@
     <Fabricator canbeselected = "true" powerconsumption="100.0">
       <GuiFrame relativesize="0.35,0.5" minsize="400,400" maxsize="800,800" anchor="Center" style="ItemUI" absoluteoffset="10,0"/>
 
-      <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/Fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
       <FabricableItem identifier="chloralhydrate" requiredtime="20">
@@ -645,7 +645,7 @@
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
       <GuiFrame relativesize="0.25,0.45" maxsize="460,600" style="ItemUI" anchor="Center" absoluteoffset="-10,0"/>
-      <sound file="Content/Items/Fabricators/deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/Deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
     </Deconstructor>
 

@@ -42,11 +42,11 @@
   
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <sound file="Content/Items/OxygenGenerator/oxygengenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>    
+      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/Zap5.ogg" range="500" loop="false"/>
+      <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>    
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
       <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
@@ -90,11 +90,11 @@
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
-      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <sound file="Content/Items/OxygenGenerator/oxygengenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>
+      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false"/>
+      <sound file="Content/Items/OxygenGenerator/OxygenGenerator.ogg" type="OnActive" range="1000.0" volumeproperty="CurrFlow" volume="0.001f" loop="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetidentifiers="oxygentank" Condition="2.0"/>
       <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
@@ -141,7 +141,7 @@
     </DecorativeSprite>
 
     <Vent>
-      <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>
+      <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" volumeproperty="OxygenFlow" volume="0.0005f" loop="true"/>
     </Vent>
 
   </Item>

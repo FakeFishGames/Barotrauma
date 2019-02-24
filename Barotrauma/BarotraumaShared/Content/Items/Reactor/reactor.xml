@@ -9,7 +9,7 @@
     
     <trigger/>
 
-    <Sprite texture = "reactor.png" sourcerect="0,0,321,191" depth="0.8"/>
+    <Sprite texture="reactor.png" sourcerect="0,0,321,191" depth="0.8"/>
     <BrokenSprite texture="reactor.png" sourcerect="0,192,321,193" depth="0.8" maxcondition="50" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
 
@@ -26,7 +26,7 @@
       
       <RequiredSkill identifier="mechanical" level="30"/>
 
-      <sound file="Content/Items/Reactor/reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
+      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
