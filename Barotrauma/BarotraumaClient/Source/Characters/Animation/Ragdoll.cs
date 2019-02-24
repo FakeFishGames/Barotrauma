@@ -17,6 +17,11 @@ namespace Barotrauma
     {
         public HashSet<SpriteDeformation> SpriteDeformations { get; protected set; } = new HashSet<SpriteDeformation>();
 
+        /// <summary>
+        /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
+        /// </summary>
+        protected Limb[] inversedLimbDrawOrder;
+
         partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
         {
             if (character != GameMain.Client.Character || !character.AllowInput)

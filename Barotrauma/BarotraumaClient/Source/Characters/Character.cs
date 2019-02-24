@@ -22,6 +22,8 @@ namespace Barotrauma
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
 
+        private float findFocusedTimer;
+
         protected float lastRecvPositionUpdateTime;
 
         private float hudInfoHeight;

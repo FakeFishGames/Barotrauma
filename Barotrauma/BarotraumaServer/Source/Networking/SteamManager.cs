@@ -62,7 +62,6 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
             Instance.server.SetKey("gamemode", server.ServerSettings.GameModeIdentifier);
             
-            //TODO: remove if hosting through client?
             instance.server.DedicatedServer = true;
 
             return true;

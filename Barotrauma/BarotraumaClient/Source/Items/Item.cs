@@ -155,7 +155,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
+            if (!Visible || (!editing && hiddenInGame)) return;
             if (editing && !ShowItems) return;
             
             Color color = isHighlighted && !GUI.DisableItemHighlights ? Color.Orange : GetSpriteColor();
