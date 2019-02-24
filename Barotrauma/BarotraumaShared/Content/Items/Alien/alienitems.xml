@@ -446,7 +446,7 @@
   <Item name="Alien Pump" identifier="alienpump" category="Alien" tags="alien">
     <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,0,256,256" />
     <Pump canbeselected="false" maxflow="6000" PowerConsumption="300.0" MinVoltage="0.3">
-      <sound file="Content/Items/Alien/alienPump.ogg" type="OnUse" range="1500.0" volumeproperty="CurrFlow" volume="0.01" loop="true" />
+      <sound file="Content/Items/Alien/alienpump.ogg" type="OnUse" range="1500.0" volumeproperty="CurrFlow" volume="0.01" loop="true" />
       <PumpInEmitter particle="watersplash" particlespersecond="80" position="128,-107" anglemin="90" anglemax="90" velocitymin="400" velocitymax="500" />
       <PumpInEmitter particle="bubbles" particlespersecond="10" position="128,-107" anglemin="90" anglemax="90" velocitymin="100" velocitymax="200" />
       <PumpOutEmitter particle="bubbles" particlespersecond="5" position="128,-107" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" />
