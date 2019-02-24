@@ -20,18 +20,9 @@ namespace Barotrauma.Lights
         /// the time being because it makes the lighting behave unpredictably and may cause rooms to appear
         /// excessively bright if different lighting conditions aren't tested and accounted for.
         /// </summary>
-        private static bool UseHullSpecificAmbientLight = false;
+        private static readonly bool UseHullSpecificAmbientLight = false;
 
-        private static Entity viewTarget;
-
-        public static Entity ViewTarget
-        {
-            get { return viewTarget; }
-            set {
-                if (viewTarget == value) return;
-                viewTarget = value; 
-            }
-        }
+        public static Entity ViewTarget { get; set; }
 
         private float currLightMapScale;
 
@@ -55,10 +46,7 @@ namespace Barotrauma.Lights
 
         private BasicEffect lightEffect;
 
-        public Effect LosEffect
-        {
-            get; private set;
-        }
+        public Effect LosEffect { get; private set; }
         
         private List<LightSource> lights;
 
@@ -70,7 +58,6 @@ namespace Barotrauma.Lights
         public bool ObstructVision;
 
         private Texture2D visionCircle;
-
         
         private Dictionary<Hull, Color> hullAmbientLights;
         private Dictionary<Hull, Color> smoothedHullAmbientLights;
@@ -99,11 +86,12 @@ namespace Barotrauma.Lights
 
             if (lightEffect == null)
             {
-                lightEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
-                lightEffect.VertexColorEnabled = true;
-
-                lightEffect.TextureEnabled = true;
-                lightEffect.Texture = LightSource.LightTexture;
+                lightEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                {
+                    VertexColorEnabled = true,
+                    TextureEnabled = true,
+                    Texture = LightSource.LightTexture
+                };
             }
 
             hullAmbientLights = new Dictionary<Hull, Color>();
@@ -394,7 +382,7 @@ namespace Barotrauma.Lights
             graphics.SetRenderTarget(SpecularMap);
             
             //clear the lightmap
-            graphics.Clear(Color.Gray);
+            graphics.Clear(Color.Black);
             graphics.BlendState = BlendState.AlphaBlend;
 
             spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
@@ -403,40 +391,21 @@ namespace Barotrauma.Lights
             {
                 Level.Loaded.LevelObjectManager.DrawObjects(spriteBatch, cam, drawFront: false, specular: true);
             }
-            
-            Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
-            foreach (Hull hull in Hull.hullList)
-            {
-                var drawRect =
-                    hull.Submarine == null ?
-                    hull.Rect :
-                    new Rectangle((int)(hull.Submarine.DrawPosition.X + hull.Rect.X), (int)(hull.Submarine.DrawPosition.Y + hull.Rect.Y), hull.Rect.Width, hull.Rect.Height);
-
-                if (drawRect.Right < cam.WorldView.X || drawRect.X > cam.WorldView.Right ||
-                    drawRect.Y - drawRect.Height > cam.WorldView.Y || drawRect.Y < cam.WorldView.Y - cam.WorldView.Height)
-                {
-                    continue;
-                }
-                visibleHulls.Add(hull, drawRect);
-            }
-            
-            foreach (Rectangle drawRect in visibleHulls.Values)
-            {
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(drawRect.X, -drawRect.Y),
-                    new Vector2(drawRect.Width, drawRect.Height),
-                    Color.Gray, true);
-            }
             spriteBatch.End();
-
-            //TODO: use renderTargetFront to obstruct the things behind the sub (has to be drawn with a solid gray color)
-            /*spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-            spriteBatch.Draw(renderTargetFront, new Rectangle(0, 0,
-                (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
-            spriteBatch.End();*/
 
             //TODO: specular maps for level walls
             Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            if (backgroundObstructor != null)
+            {
+                spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
+                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
+            }
+            GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0,
+                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)),
+                    Color.White * 0.4f, isFilled: true);
+            spriteBatch.End();
 
             graphics.SetRenderTarget(null);
             graphics.BlendState = BlendState.AlphaBlend;
@@ -501,7 +470,7 @@ namespace Barotrauma.Lights
                 Matrix shadowTransform = cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-                var convexHulls = ConvexHull.GetHullsInRange(viewTarget.Position, cam.WorldView.Width*0.75f, viewTarget.Submarine);
+                var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width*0.75f, ViewTarget.Submarine);
                 if (convexHulls != null)
                 {
                     List<VertexPositionColor> shadowVerts = new List<VertexPositionColor>();
