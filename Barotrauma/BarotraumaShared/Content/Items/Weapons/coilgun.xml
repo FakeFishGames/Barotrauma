@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
+  
   <Item name="Coilgun" 
         description="A rapid-firing turret that propels metal bolts using electromagnets. Generally not very effective against large or heavily armored targets, but ideal for taking down smaller enemies."
         identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coligunequipment">
@@ -34,9 +35,10 @@
       <input name="toggle_light" />
     </ConnectionPanel>
   </Item>
+  
   <Item name="Coilgun Loader" identifier="coilgunloader" tags="coilgunequipment" category="Machine" linkable="true" allowedlinks="coilgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="363,2,149,368" origin="0.5,0.5" />
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="840" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="840" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="Equipped" />
@@ -53,6 +55,7 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
+  
   <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true">
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Military" buyprice="150" />
@@ -73,6 +76,7 @@
       <Containable identifiers="coilgunbolt" />
     </ItemContainer>
   </Item>
+  
   <Item name="Coilgun Bolt" identifier="coilgunbolt" category="Misc" sonarsize="2">
     <Sprite texture="weapons.png" sourcerect="0,48,65,9" depth="0.55" />
     <Body width="64" height="5" density="20" />
@@ -95,6 +99,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  
   <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true">
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
@@ -112,6 +117,7 @@
       <Containable identifiers="physicoriumbolt" />
     </ItemContainer>
   </Item>
+  
   <Item name="Physicorium Bolt" identifier="physicoriumbolt" category="Misc" sonarsize="2">
     <Sprite texture="weapons.png" sourcerect="0,48,65,9" depth="0.55" />
     <Body width="64" height="5" density="20" />
