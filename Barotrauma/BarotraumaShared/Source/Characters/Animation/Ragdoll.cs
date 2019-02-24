@@ -431,12 +431,7 @@ namespace Barotrauma
         }
 
         partial void SetupDrawOrder();
-
-        /// <summary>
-        /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
-        /// </summary>
-        protected Limb[] inversedLimbDrawOrder;
-
+        
         /// <summary>
         /// Saves all serializable data in the currently selected ragdoll params. This method should properly handle character flipping.
         /// </summary>

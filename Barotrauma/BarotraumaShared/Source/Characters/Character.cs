@@ -952,9 +952,7 @@ namespace Barotrauma
         {
             return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillIdentifier);
         }
-
-        float findFocusedTimer;
-
+        
         // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
         public Vector2? OverrideMovement { get; set; }
         public bool ForceRun { get; set; }
@@ -1145,11 +1143,12 @@ namespace Barotrauma
                 }
             }
 
-            // TODO: remove, dev test only
+#if DEBUG
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.F))
             {
                 AnimController.ReleaseStuckLimbs();
             }
+#endif
 
             if (attackCoolDown > 0.0f)
             {
