@@ -28,7 +28,7 @@
       <input name="power_in" />
       <input name="set_force" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="60" maxdeteriorationdelay="480" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="60" maxdeteriorationdelay="480" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -63,7 +63,7 @@
       <input name="power_in" />
       <input name="set_force" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="60" maxdeteriorationdelay="120" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="60" maxdeteriorationdelay="120" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -84,7 +84,7 @@
       <input name="power_in" />
       <input name="set_force" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />
