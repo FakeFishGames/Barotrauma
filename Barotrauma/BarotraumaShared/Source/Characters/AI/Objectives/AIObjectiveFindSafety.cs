@@ -227,8 +227,9 @@ namespace Barotrauma
             if (hull.LethalPressure > 0 && character.PressureProtection <= 0) { return 0; }
             float oxygenFactor = MathHelper.Lerp(0, 1, hull.OxygenPercentage / 100);
             float waterFactor =  MathHelper.Lerp(1, 0, hull.WaterPercentage / 100);
-            if (!character.NeedsAir || character.OxygenAvailable > 100)
+            if (!character.NeedsAir)
             {
+                // TODO: use reduced factors if wearing diving gear?
                 oxygenFactor = 1;
                 waterFactor = 1;
             }
