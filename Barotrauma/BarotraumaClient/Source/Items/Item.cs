@@ -843,7 +843,7 @@ namespace Barotrauma
             msg.WritePadBits();
         }
 
-        partial void ClientUpdatePosition()
+        partial void UpdateNetPosition()
         {
             if (GameMain.Client == null) { return; }
 
