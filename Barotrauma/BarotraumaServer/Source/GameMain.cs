@@ -140,27 +140,33 @@ namespace Barotrauma
 
         public void StartServer()
         {
+            string name = "Server";
+            int port = NetConfig.DefaultPort;
+            int queryPort = NetConfig.DefaultQueryPort;
+            bool publiclyVisible = false;
+            string password = "";
+            bool enableUpnp = false;
+            int maxPlayers = 10;
+            int ownerKey = 0;
+
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
-            if (doc == null)
+            if (doc?.Root == null)
             {
                 DebugConsole.ThrowError("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
-                Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
-                return;
             }
-
-            string name = doc.Root.GetAttributeString("name", "Server");
-            int port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
-            int queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
-            bool publiclyVisible = doc.Root.GetAttributeBool("public", false);
-            string password = doc.Root.GetAttributeString("password", "");
-            bool enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
-            int maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
-            int ownerKey = 0;
+            else
+            {
+                name = doc.Root.GetAttributeString("name", "Server");
+                port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
+                queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
+                publiclyVisible = doc.Root.GetAttributeBool("public", false);
+                password = doc.Root.GetAttributeString("password", "");
+                enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
+                maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
+                ownerKey = 0;
+            }
             
-            int tempInt;
-            bool tempBool;
-
-            for (int i=0;i<CommandLineArgs.Length;i++)
+            for (int i = 0; i < CommandLineArgs.Length; i++)
             {
                 switch (CommandLineArgs[i].Trim())
                 {
@@ -169,24 +175,15 @@ namespace Barotrauma
                         i++;
                         break;
                     case "-port":
-                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
-                        {
-                            port = tempInt;
-                        }
+                        int.TryParse(CommandLineArgs[i + 1], out port);
                         i++;
                         break;
                     case "-queryport":
-                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
-                        {
-                            queryPort = tempInt;
-                        }
+                        int.TryParse(CommandLineArgs[i + 1], out queryPort);
                         i++;
                         break;
                     case "-public":
-                        if (bool.TryParse(CommandLineArgs[i + 1], out tempBool))
-                        {
-                            publiclyVisible = tempBool;
-                        }
+                        bool.TryParse(CommandLineArgs[i + 1], out publiclyVisible);
                         i++;
                         break;
                     case "-password":
@@ -195,24 +192,15 @@ namespace Barotrauma
                         break;
                     case "-upnp":
                     case "-enableupnp":
-                        if (bool.TryParse(CommandLineArgs[i + 1], out tempBool))
-                        {
-                            enableUpnp = tempBool;
-                        }
+                        bool.TryParse(CommandLineArgs[i + 1], out enableUpnp);
                         i++;
                         break;
                     case "-maxplayers":
-                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
-                        {
-                            maxPlayers = tempInt;
-                        }
+                        int.TryParse(CommandLineArgs[i + 1], out maxPlayers);
                         i++;
                         break;
                     case "-ownerkey":
-                        if (int.TryParse(CommandLineArgs[i + 1], out tempInt))
-                        {
-                            ownerKey = tempInt;
-                        }
+                        int.TryParse(CommandLineArgs[i + 1], out ownerKey);
                         i++;
                         break;
                 }
