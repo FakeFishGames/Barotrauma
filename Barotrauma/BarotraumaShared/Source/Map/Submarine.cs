@@ -397,7 +397,7 @@ namespace Barotrauma
                 if (me is Item item)
                 {
                     item.Indestructible = true;
-                    foreach (ItemComponent ic in item.components)
+                    foreach (ItemComponent ic in item.Components)
                     {
                         if (ic is ConnectionPanel connectionPanel)
                         {

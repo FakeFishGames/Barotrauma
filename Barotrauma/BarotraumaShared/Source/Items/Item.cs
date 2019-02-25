@@ -50,10 +50,11 @@ namespace Barotrauma
         public bool Visible = true;
 
         public SpriteEffects SpriteEffects = SpriteEffects.None;
-        
+
         //components that determine the functionality of the item
-        public List<ItemComponent> components;
-        public List<IDrawableComponent> drawableComponents;
+        private Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
+        private List<ItemComponent> components;
+        private List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
 
@@ -400,6 +401,11 @@ namespace Barotrauma
             get { return repairables; }
         }
 
+        public IEnumerable<ItemComponent> Components
+        {
+            get { return components; }
+        }
+
         public override bool Linkable
         {
             get { return Prefab.Linkable; }
@@ -498,7 +504,7 @@ namespace Barotrauma
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
                         if (ic == null) break;
 
-                        components.Add(ic);
+                        AddComponent(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
                         if (ic is Repairable) repairables.Add((Repairable)ic);
@@ -638,18 +644,57 @@ namespace Barotrauma
             return clone;
         }
 
-        public T GetComponent<T>()
+        public void AddComponent(ItemComponent component)
         {
-            foreach (ItemComponent ic in components)
+            components.Add(component);
+            Type type = component.GetType();
+            if (!componentsByType.ContainsKey(type))
             {
-                if (ic is T) return (T)(object)ic;
+                componentsByType.Add(type, component);
+                Type baseType = type.BaseType;
+                while (baseType != null && baseType != typeof(ItemComponent))
+                {
+                    if (!componentsByType.ContainsKey(baseType))
+                    {
+                        componentsByType.Add(baseType, component);
+                    }
+                    baseType = baseType.BaseType;
+                }
             }
+        }
 
+        public void EnableDrawableComponent(IDrawableComponent drawable)
+        {
+            if (!drawableComponents.Contains(drawable))
+            {
+                drawableComponents.Add(drawable);
+            }
+        }
+
+        public void DisableDrawableComponent(IDrawableComponent drawable)
+        {
+            drawableComponents.Remove(drawable);            
+        }
+
+        public int GetComponentIndex(ItemComponent component)
+        {
+            return components.IndexOf(component);
+        }
+
+        public T GetComponent<T>() where T : ItemComponent
+        {
+            if (componentsByType.TryGetValue(typeof(T), out ItemComponent component))
+            {
+                return (T)component;
+            }
+            
             return default(T);
         }
 
         public IEnumerable<T> GetComponents<T>()
         {
+            if (!componentsByType.ContainsKey(typeof(T))) { return Enumerable.Empty<T>(); }
+
             return components.Where(c => c is T).Cast<T>();
         }
         
@@ -1135,14 +1180,14 @@ namespace Barotrauma
             }
         }
 
-        public List<T> GetConnectedComponents<T>(bool recursive = false)
+        public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
             if (recursive)
             {
                 List<Item> alreadySearched = new List<Item>() { this };
-                GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
+                GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
 
                 return connectedComponents;
             }
@@ -1163,7 +1208,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents)
+        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             alreadySearched.Add(this);
 
@@ -1189,16 +1234,16 @@ namespace Barotrauma
             }
         }
 
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c)
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();            
             List<Item> alreadySearched = new List<Item>() { this };
-            GetConnectedComponentsRecursive<T>(c, alreadySearched, connectedComponents);
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents)
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             alreadySearched.Add(this);
                         
@@ -1213,7 +1258,7 @@ namespace Barotrauma
                     connectedComponents.Add(component);
                 }
 
-                recipient.Item.GetConnectedComponentsRecursive<T>(recipient, alreadySearched, connectedComponents);                   
+                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
             }            
         }
 

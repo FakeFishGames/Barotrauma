@@ -642,7 +642,7 @@ namespace Barotrauma.RuinGeneration
             {
                 if (ruinEntity.Entity is Item item)
                 {
-                    foreach (ItemComponent ic in item.components)
+                    foreach (ItemComponent ic in item.Components)
                     {
                         // Prevent wiring & interacting
                         if (ic is ConnectionPanel connectionPanel)

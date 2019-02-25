@@ -435,7 +435,7 @@ namespace Barotrauma
             if (SelectedAiTarget.Entity is Item item)
             {
                 // If the item is held by a character, attack the character instead.
-                var pickable = item.components.Select(c => c as Pickable).FirstOrDefault();
+                var pickable = item.GetComponent<Pickable>();
                 if (pickable != null)
                 {
                     var target = pickable.Picker?.AiTarget;

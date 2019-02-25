@@ -197,9 +197,11 @@ namespace Barotrauma.Items.Components
                         foreach (XElement lightElement in subElement.Elements())
                         {
                             if (lightElement.Name.ToString().ToLowerInvariant() != "lightcomponent") continue;
-                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement);
-                            wearableSprites[i].LightComponent.Parent = this;
-                            item.components.Add(wearableSprites[i].LightComponent);
+                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement)
+                            {
+                                Parent = this
+                            };
+                            item.AddComponent(wearableSprites[i].LightComponent);
                         }
 
                         i++;

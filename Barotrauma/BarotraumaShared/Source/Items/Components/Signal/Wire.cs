@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
 
             if (connections[0] != null && connections[1] != null)
             {
-                foreach (ItemComponent ic in item.components)
+                foreach (ItemComponent ic in item.Components)
                 {
                     if (ic == this) continue;
                     ic.Drop(null);

@@ -91,7 +91,7 @@ namespace Barotrauma
 
         protected override void CreateNetworkEvent()
         {
-            int componentIndex = container.Item.components.IndexOf(container);
+            int componentIndex = container.Item.GetComponentIndex(container);
             if (componentIndex == -1)
             {
                 DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");

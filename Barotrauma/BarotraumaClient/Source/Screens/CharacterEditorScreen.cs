@@ -2570,7 +2570,7 @@ namespace Barotrauma
         {
             foreach (var item in Item.ItemList)
             {
-                foreach (var component in item.components)
+                foreach (var component in item.Components)
                 {
                     if (component is Items.Components.Door door)
                     {

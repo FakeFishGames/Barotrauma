@@ -103,12 +103,11 @@ namespace Barotrauma.Items.Components
                 drawable = value;
                 if (drawable)
                 {
-                    if (!item.drawableComponents.Contains((IDrawableComponent)this))
-                        item.drawableComponents.Add((IDrawableComponent)this);
+                    item.EnableDrawableComponent((IDrawableComponent)this);
                 }
                 else
                 {
-                    item.drawableComponents.Remove((IDrawableComponent)this);
+                    item.DisableDrawableComponent((IDrawableComponent)this);
                 }                
             }
         }
@@ -316,7 +315,7 @@ namespace Barotrauma.Items.Components
                         if (ic == null) break;
 
                         ic.Parent = this;
-                        item.components.Add(ic);
+                        item.AddComponent(ic);
                         break;
                 }
                 
