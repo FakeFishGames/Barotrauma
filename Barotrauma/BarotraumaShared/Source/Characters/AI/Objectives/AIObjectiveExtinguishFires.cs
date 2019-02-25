@@ -26,12 +26,12 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             int fireCount = hullList.Sum(h => h.FireSources.Count);
-            if (objectiveManager.CurrentObjective == this && fireCount > 0)
+            if (objectiveManager.CurrentOrder == this && fireCount > 0)
             {
                 return AIObjectiveManager.OrderPriority;
             }
 
-            return MathHelper.Clamp(fireCount * 10, 0, 100);
+            return MathHelper.Clamp(fireCount * 20, 0, 100);
         }
 
         public override bool IsCompleted()
