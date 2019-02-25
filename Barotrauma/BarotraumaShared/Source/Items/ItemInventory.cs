@@ -100,7 +100,7 @@ namespace Barotrauma
             
             if (GameMain.NetworkMember != null)
             {
-                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
+                if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
                 GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }
         }    

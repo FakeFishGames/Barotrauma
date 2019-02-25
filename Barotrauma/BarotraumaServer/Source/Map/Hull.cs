@@ -9,6 +9,9 @@ namespace Barotrauma
 {
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private float lastSentVolume, lastSentOxygen;
+        private float sendUpdateTimer;
+
         public override bool IsMouseOn(Vector2 position)
         {
             return false;

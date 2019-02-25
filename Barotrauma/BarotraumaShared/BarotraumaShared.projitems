@@ -2816,8 +2816,6 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Typhon.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Moloch.png" />
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Moloch.xml" />
     <None Include="$(MSBuildThisFileDirectory)Content\Effects\postprocess_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2926,7 +2924,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AdderComponent.cs" />

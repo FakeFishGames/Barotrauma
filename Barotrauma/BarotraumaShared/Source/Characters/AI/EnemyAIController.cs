@@ -88,9 +88,7 @@ namespace Barotrauma
         
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
-
-        private float eatTimer;
-        
+                
         private Dictionary<AITarget, AITargetMemory> targetMemories;
 
         //the eyesight of the NPC (0.0 = blind, 1.0 = sees every target within sightRange)

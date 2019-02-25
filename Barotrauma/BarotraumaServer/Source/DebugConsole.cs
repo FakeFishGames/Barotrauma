@@ -159,7 +159,7 @@ namespace Barotrauma
                                     input += key.KeyChar;
                                     memoryIndex = -1;
                                 }
-                                DebugConsole.ResetAutoComplete();
+                                ResetAutoComplete();
                                 break;
                         }
                         
@@ -169,7 +169,7 @@ namespace Barotrauma
                     Thread.Yield();
                 }
             }
-            catch (ThreadAbortException e)
+            catch (ThreadAbortException)
             {
                 //don't have anything to do here yet
             }
@@ -548,12 +548,12 @@ namespace Barotrauma
                 }
             });
 
-            AssignOnExecute("togglekarma", (string[] args) =>
+            /*AssignOnExecute("togglekarma", (string[] args) =>
             {
-                throw new NotImplementedException();
+                return;
                 if (GameMain.Server == null) return;
                 GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
-            });
+            });*/
 
             AssignOnExecute("banip", (string[] args) =>
             {

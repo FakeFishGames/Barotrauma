@@ -126,7 +126,7 @@ namespace Barotrauma.Sounds
             return GetType().ToString() + " (" + Filename + ")";
         }
 
-        public bool IsPlaying()
+        public virtual bool IsPlaying()
         {
             return Owner.IsPlaying(this);
         }
@@ -199,6 +199,22 @@ namespace Barotrauma.Sounds
                     throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
             }
+            if (alMuffledBuffer != 0)
+            {
+                if (!AL.IsBuffer(alMuffledBuffer))
+                {
+                    throw new Exception("Buffer to delete is invalid!");
+                }
+
+                AL.DeleteBuffer(ref alMuffledBuffer); alMuffledBuffer = 0;
+
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                }
+            }
+
             Owner.RemoveSound(this);
             disposed = true;
         }
