@@ -133,13 +133,13 @@ namespace Barotrauma
             }
 
             bool isClimbing = Character.IsClimbing;
-            if (isClimbing)
-            {
-                if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
-                {
-                    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
-                }
-            }
+            //if (isClimbing)
+            //{
+            //    if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
+            //    {
+            //        Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+            //    }
+            //}
 
             if (!NeedsDivingGear(Character))
             {
