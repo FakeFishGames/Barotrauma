@@ -145,7 +145,7 @@ namespace Barotrauma
                     character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
                     if (getDivingGearIfNeeded)
                     {
-                        if (targetIsOutside || NeedsDivingGear())
+                        if (targetIsOutside || HumanAIController.NeedsDivingGear(character))
                         {
                             AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                         }
@@ -187,19 +187,6 @@ namespace Barotrauma
             if (objective.Target == Target) return true;
 
             return (objective.targetPos == targetPos);
-        }
-
-        private bool NeedsDivingGear()
-        {
-            var currentHull = character.AnimController.CurrentHull;
-            if (currentHull == null) return true;
-
-            //there's lots of water in the room -> get a suit
-            if (currentHull.WaterVolume / currentHull.Volume > 0.5f) return true;
-
-            if (currentHull.OxygenPercentage < 30.0f) return true;
-
-            return false;
         }
     }
 }

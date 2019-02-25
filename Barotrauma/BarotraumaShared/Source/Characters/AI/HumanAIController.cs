@@ -141,9 +141,7 @@ namespace Barotrauma
                 }
             }
 
-            Hull currentHull = Character.AnimController.CurrentHull;
-            bool needDivingGear = currentHull.OxygenPercentage < 30 || currentHull.WaterPercentage > 30;
-            if (!needDivingGear)
+            if (!NeedsDivingGear(Character))
             {
                 bool shouldRemoveDivingGear = Character.Oxygen < 50.0f || (objectiveManager.CurrentObjective is AIObjectiveIdle && Character.AnimController.CurrentHull.WaterPercentage < 1 && !isClimbing);
                 if (shouldRemoveDivingGear)
@@ -325,5 +323,10 @@ namespace Barotrauma
             float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
+
+        public static bool NeedsDivingGear(Character character) =>
+            character.AnimController.CurrentHull == null ||
+            character.AnimController.CurrentHull.OxygenPercentage < 30 ||
+            character.AnimController.CurrentHull.WaterPercentage > 50;
     }
 }

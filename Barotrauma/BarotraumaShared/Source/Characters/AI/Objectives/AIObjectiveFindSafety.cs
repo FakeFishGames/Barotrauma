@@ -41,7 +41,7 @@ namespace Barotrauma
 
             currenthullSafety = OverrideCurrentHullSafety == null ? GetHullSafety(currentHull, character) : (float)OverrideCurrentHullSafety;
             
-            if (NeedsDivingGear())
+            if (HumanAIController.NeedsDivingGear(character))
             {
                 // Stop seeking diving gear if the task is impossible.
                 if (divingGearObjective == null || divingGearObjective.CanBeCompleted)
@@ -168,21 +168,9 @@ namespace Barotrauma
             return (otherObjective is AIObjectiveFindSafety);
         }
 
-        private bool NeedsDivingGear()
-        {
-            var currentHull = character.AnimController.CurrentHull;
-            if (currentHull == null) return true;
-
-            //there's lots of water in the room -> get a suit
-            if (currentHull.WaterVolume / currentHull.Volume > 0.5f) return true;
-
-            if (currentHull.OxygenPercentage < 30.0f) return true;
-
-            return false;
-        }
-
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            // TODO: refactor and cleanup
             if (character.Oxygen < 80.0f)
             {
                 return 150.0f - character.Oxygen;
@@ -213,7 +201,7 @@ namespace Barotrauma
                 }
             }*/
             
-            if (NeedsDivingGear())
+            if (HumanAIController.NeedsDivingGear(character))
             {
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
             }
