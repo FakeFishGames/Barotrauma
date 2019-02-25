@@ -481,8 +481,15 @@ namespace Barotrauma.Networking
                                         disconnectedClients.Add(connectedClient);
                                     }
                                     */
-                                    DisconnectClient(inc.SenderConnection,
-                                        connectedClient != null ? connectedClient.Name + " has disconnected" : "");
+                                    if (connectedClient != null)
+                                    {
+                                        DisconnectClient(inc.SenderConnection, $"ServerMessage.HasDisconnected_[client]={connectedClient.Name}");
+                                    }
+                                    else
+                                    {
+                                        DisconnectClient(inc.SenderConnection, string.Empty);
+                                    }
+
                                     break;
                             }
                             break;
@@ -1632,7 +1639,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
 
-            AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
+            AddChatMessage("ServerMessage.HowToCommunicate", ChatMessageType.Server);
             
             gameStarted = true;
             initiatedStartGame = false;
@@ -1794,7 +1801,15 @@ namespace Barotrauma.Networking
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
-            Log(message.TextWithSender, ServerLog.MessageType.Chat);
+            if (message.Sender != null)
+            {
+                Log($"{message.Sender}: {message.Text}", ServerLog.MessageType.Chat);
+            }
+            else
+            {
+                Log($"{message.Text}", ServerLog.MessageType.Chat);
+            }
+
             base.AddChatMessage(message);
         }
 
@@ -1822,14 +1837,8 @@ namespace Barotrauma.Networking
             if (client == null || client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Kicked.ToString();
-            if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
-
-            string logMsg = client.Name + " has been kicked from the server.";
-            if (!string.IsNullOrWhiteSpace(reason))
-            {
-                logMsg += " Reason: " + reason;
-            }
-            DisconnectClient(client, logMsg, msg);
+            string logMsg = $"ServerMessage.KickedFromServer_[client]={client.Name}";
+            DisconnectClient(client, logMsg, msg, reason);
         }
 
         public override void BanPlayer(string playerName, string reason, bool range = false, TimeSpan? duration = null)
@@ -1855,8 +1864,7 @@ namespace Barotrauma.Networking
             if (client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Banned.ToString();
-            if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
-            DisconnectClient(client, client.Name + " has been banned from the server.", msg);
+            DisconnectClient(client, $"ServerMessage.BannedFromServer_[client]={client.Name}", msg, reason);
 
             if (client.SteamID == 0 || range)
             {
@@ -1893,10 +1901,10 @@ namespace Barotrauma.Networking
             Client client = connectedClients.Find(x => x.Connection == senderConnection);
             if (client == null) return;
 
-            DisconnectClient(client, msg, targetmsg);
+            DisconnectClient(client, msg, targetmsg, string.Empty);
         }
 
-        public void DisconnectClient(Client client, string msg = "", string targetmsg = "")
+        public void DisconnectClient(Client client, string msg = "", string targetmsg = "", string reason = "")
         {
             if (client == null) return;
 
@@ -1910,8 +1918,13 @@ namespace Barotrauma.Networking
             client.HasSpawned = false;
             client.InGame = false;
 
-            if (string.IsNullOrWhiteSpace(msg)) msg = client.Name + " has left the server";
-            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
+            if (string.IsNullOrWhiteSpace(msg))
+            {
+                msg = $"ServerMessage.ClientLeftServer_[client]={client.Name}";
+            }
+
+            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "ServerMessage.YouLeftServer";            
+            if (!string.IsNullOrWhiteSpace(reason)) msg += $";ServerMessage.Reason;{reason}";
 
             Log(msg, ServerLog.MessageType.ServerMessage);
 
@@ -2000,7 +2013,7 @@ namespace Barotrauma.Networking
                                     if (senderClient != null)
                                     {
                                         var chatMsg = ChatMessage.Create(
-                                            "", "Player \"" + command + "\" not found!",
+                                            "", $"ServerMessage.PlayerNotFound_[player]={command}",
                                             ChatMessageType.Error, null);
 
                                         chatMsg.NetStateID = senderClient.ChatMsgQueue.Count > 0 ?
@@ -2012,7 +2025,7 @@ namespace Barotrauma.Networking
                                     }
                                     else
                                     {
-                                        AddChatMessage("Player \"" + command + "\" not found!", ChatMessageType.Error);
+                                        AddChatMessage($"ServerMessage.PlayerNotFound_[player]={command}", ChatMessageType.Error);
                                     }
 
                                     return;
@@ -2226,9 +2239,9 @@ namespace Barotrauma.Networking
                 c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
-                SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);
-                KickClient(c, "Kicked by vote");
-                BanClient(c, "Kicked by vote (auto ban)", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
+                SendChatMessage($"ServerMessage.KickedFromServer_[client]={c.Name}", ChatMessageType.Server, null);
+                KickClient(c, "ServerMessage.KickedByVote");
+                BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
             }
 
             GameMain.NetLobbyScreen.LastUpdateID++;

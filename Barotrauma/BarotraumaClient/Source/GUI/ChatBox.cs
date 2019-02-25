@@ -172,7 +172,7 @@ namespace Barotrauma
             
             float prevSize = chatBox.BarSize;
 
-            string displayedText = message.Text;
+            string displayedText = message.TranslatedText;
             string senderName = "";
             if (!string.IsNullOrWhiteSpace(message.SenderName))
             {

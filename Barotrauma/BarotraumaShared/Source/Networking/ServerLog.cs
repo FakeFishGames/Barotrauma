@@ -10,12 +10,14 @@ namespace Barotrauma.Networking
     {
         private struct LogMessage
         {
+            public readonly string Time;
             public readonly string Text;
             public readonly MessageType Type;
 
             public LogMessage(string text, MessageType type)
             {
-                Text = "[" + DateTime.Now.ToString() + "] " + text;
+                Time = "[" + DateTime.Now.ToString() + "]";
+                Text = text;
                 Type = type;
             }
         }
@@ -46,13 +48,13 @@ namespace Barotrauma.Networking
 
         private readonly string[] messageTypeName =
         {
-            "Chat message",
-            "Item interaction",
-            "Inventory usage",
-            "Attack & death",
+            "ChatMessage",
+            "ItemInteraction",
+            "InventoryUsage",
+            "AttackDeath",
             "Spawning",
-            "Server message",
-            "Console usage",
+            "ServerMessage",
+            "ConsoleUsage",
             "Error"
         };
 

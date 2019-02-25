@@ -222,7 +222,7 @@ namespace Barotrauma.Networking
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago)" +
                                 " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.ServerMessage);
-                            server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                            server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesync");
                         }
                     );
                 }
@@ -236,7 +236,7 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
                         GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
-                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                        server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesync");
                     });
                 }
             }
@@ -245,7 +245,7 @@ namespace Barotrauma.Networking
             foreach (Client timedOutClient in timedOutClients)
             {
                 GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.ServerMessage);
-                GameMain.Server.DisconnectClient(timedOutClient, "", "You have been disconnected because syncing your client with the server took too long.");
+                GameMain.Server.DisconnectClient(timedOutClient, "", "ServerMessage.SyncTimeout");
             }
             
             bufferedEvents.RemoveAll(b => b.IsProcessed);           

@@ -91,7 +91,7 @@ namespace Barotrauma
             foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
-                if (text != null) return text;
+                if (text != null) return text + "_T_Eng";
             }
 
             //if text was not found and we're using a language other than English, see if we can find an English version
@@ -134,6 +134,49 @@ namespace Barotrauma
             }
 
             return string.Format(text, args);     
+        }
+
+        // Format: ServerMessage.Identifier1;ServerMessage.Indentifier2_[variable1]=value_[variable2]=value
+        public static string GetServerMessage(string serverMessage)
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            string[] messages = serverMessage.Split(';');
+
+            for (int i = 0; i < messages.Length; i++)
+            {
+                if (!messages[i].Contains("_")) // No variables, just translate
+                {
+                    messages[i] = Get(messages[i]);
+                    continue;
+                }
+
+                string[] messageWithVariables = messages[i].Split('_');
+                messages[i] = Get(messageWithVariables[0]);
+
+                // First index is always the message identifier -> start at 1
+                for (int j = 1; j < messageWithVariables.Length; j++)
+                {
+                    string[] variableAndValue = messageWithVariables[j].Split('=');
+                    messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
+                }
+            }
+
+            string translatedServerMessage = string.Empty;
+            for (int i = 0; i < messages.Length; i++)
+            {
+                translatedServerMessage += messages[i];
+            }
+
+            return translatedServerMessage;
         }
 
         public static List<string> GetAll(string textTag)
