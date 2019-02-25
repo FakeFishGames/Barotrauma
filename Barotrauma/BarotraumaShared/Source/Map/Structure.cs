@@ -312,7 +312,7 @@ namespace Barotrauma
             foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                clone.SerializableProperties[property.Key].TrySetValue(property.Value.GetValue());
+                clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
             if (FlippedX) clone.FlipX(false);
             if (FlippedY) clone.FlipY(false);

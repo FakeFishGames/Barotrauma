@@ -627,7 +627,7 @@ namespace Barotrauma.Items.Components
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
-                property.TrySetValue(attribute.Value);
+                property.TrySetValue(this, attribute.Value);
             }
 #if CLIENT 
             string msg = TextManager.Get(Msg, true);
