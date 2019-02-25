@@ -49,16 +49,13 @@ namespace Barotrauma
         private bool update;
 
         public bool Visible = true;
-        
-        float[] waveY; //displacement from the surface of the water
-        float[] waveVel; //velocity of the point
 
-        float[] leftDelta;
-        float[] rightDelta;
+        private float[] waveY; //displacement from the surface of the water
+        private float[] waveVel; //velocity of the point
 
-        private float lastSentVolume, lastSentOxygen;
-        private float sendUpdateTimer;
-        
+        private float[] leftDelta;
+        private float[] rightDelta;
+                
         public List<Gap> ConnectedGaps;
 
         public override string Name

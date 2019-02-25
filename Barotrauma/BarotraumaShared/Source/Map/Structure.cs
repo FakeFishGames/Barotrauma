@@ -47,7 +47,6 @@ namespace Barotrauma
 
         const float LeakThreshold = 0.1f;
 
-        private StructurePrefab prefab;
         private SpriteEffects SpriteEffects = SpriteEffects.None;
 
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
@@ -69,7 +68,7 @@ namespace Barotrauma
 
         public bool IsPlatform
         {
-            get { return prefab.Platform; }
+            get { return Prefab.Platform; }
         }
 
         public Direction StairDirection
@@ -85,14 +84,14 @@ namespace Barotrauma
 
         public bool HasBody
         {
-            get { return prefab.Body; }
+            get { return Prefab.Body; }
         }
         
         public List<Body> Bodies { get; private set; }
 
         public bool CastShadow
         {
-            get { return prefab.CastShadow; }
+            get { return Prefab.CastShadow; }
         }
 
         public bool IsHorizontal { get; private set; }
@@ -104,14 +103,14 @@ namespace Barotrauma
 
         public float Health
         {
-            get { return prefab.Health; }
+            get { return Prefab.Health; }
         }
 
         public override bool DrawBelowWater
         {
             get
             {
-                return base.DrawBelowWater || prefab.BackgroundSprite != null;
+                return base.DrawBelowWater || Prefab.BackgroundSprite != null;
             }
         }
 
@@ -127,14 +126,11 @@ namespace Barotrauma
         {
             get
             {
-                return prefab.Body;
+                return Prefab.Body;
             }
         }
 
-        public StructurePrefab Prefab
-        {
-            get { return prefab; }
-        }
+        public StructurePrefab Prefab => prefab as StructurePrefab;
 
         public HashSet<string> Tags
         {
@@ -159,7 +155,7 @@ namespace Barotrauma
             {
                 Rectangle oldRect = Rect;
                 base.Rect = value;
-                if (prefab.Body) CreateSections();
+                if (Prefab.Body) CreateSections();
                 else
                 {
                     foreach (WallSection sec in Sections)
@@ -179,11 +175,11 @@ namespace Barotrauma
 
         public float BodyWidth
         {
-            get { return prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width; }
+            get { return Prefab.BodyWidth > 0.0f ? Prefab.BodyWidth : rect.Width; }
         }
         public float BodyHeight
         {
-            get { return prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height; }
+            get { return Prefab.BodyHeight > 0.0f ? Prefab.BodyHeight : rect.Height; }
         }
 
         /// <summary>
@@ -193,7 +189,7 @@ namespace Barotrauma
         {
             get
             {
-                float rotation = MathHelper.ToRadians(prefab.BodyRotation);
+                float rotation = MathHelper.ToRadians(Prefab.BodyRotation);
                 if (FlippedX) rotation = -MathHelper.Pi - rotation;
                 if (FlippedY) rotation = -rotation;
                 return rotation;
@@ -206,7 +202,7 @@ namespace Barotrauma
         {
             get
             {
-                Vector2 bodyOffset = prefab.BodyOffset;
+                Vector2 bodyOffset = Prefab.BodyOffset;
                 if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
                 if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
                 return bodyOffset;
@@ -255,7 +251,6 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(rectangle.Width > 0 && rectangle.Height > 0);
 
             rect = rectangle;
-            prefab = sp;
 #if CLIENT
             TextureScale = sp.TextureScale;
 #endif
@@ -280,11 +275,11 @@ namespace Barotrauma
                 }
             }
 
-            StairDirection = prefab.StairDirection;
+            StairDirection = Prefab.StairDirection;
 
             SerializableProperties = SerializableProperty.GetProperties(this);
                       
-            if (prefab.Body)
+            if (Prefab.Body)
             {
                 Bodies = new List<Body>();
                 WallList.Add(this);
@@ -313,7 +308,7 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            var clone = new Structure(rect, prefab, Submarine);
+            var clone = new Structure(rect, Prefab, Submarine);
             foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
@@ -573,7 +568,7 @@ namespace Barotrauma
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            if (prefab.Platform)
+            if (Prefab.Platform)
             {
                 if (f2.Body.UserData is Limb limb)
                 {
@@ -587,7 +582,7 @@ namespace Barotrauma
                 if (character.DisableImpactDamageTimer > 0.0f || ((Limb)f2.Body.UserData).Mass < 100.0f) return true;
             }
             
-            if (!prefab.Platform && prefab.StairDirection == Direction.None)
+            if (!Prefab.Platform && Prefab.StairDirection == Direction.None)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
@@ -621,7 +616,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
 
-            return (Sections[sectionIndex].damage >= prefab.Health);
+            return (Sections[sectionIndex].damage >= Prefab.Health);
         }
 
         /// <summary>
@@ -631,7 +626,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
 
-            return (Sections[sectionIndex].damage >= prefab.Health * LeakThreshold);
+            return (Sections[sectionIndex].damage >= Prefab.Health * LeakThreshold);
         }
 
         public int SectionLength(int sectionIndex)
@@ -643,7 +638,7 @@ namespace Barotrauma
 
         public void AddDamage(int sectionIndex, float damage, Character attacker = null)
         {
-            if (!prefab.Body || prefab.Platform || Indestructible) return;
+            if (!Prefab.Body || Prefab.Platform || Indestructible) return;
 
             if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) return;
 
@@ -718,7 +713,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) return Vector2.Zero;
 
-            if (prefab.BodyRotation == 0.0f)
+            if (Prefab.BodyRotation == 0.0f)
             {
                 Vector2 sectionPos = new Vector2(
                     Sections[sectionIndex].rect.X + Sections[sectionIndex].rect.Width / 2.0f,
@@ -756,7 +751,7 @@ namespace Barotrauma
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, null);
-            if (!prefab.Body || prefab.Platform || Indestructible) return new AttackResult(0.0f, null);
+            if (!Prefab.Body || Prefab.Platform || Indestructible) return new AttackResult(0.0f, null);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -789,18 +784,16 @@ namespace Barotrauma
         private void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true)
         {
             if (Submarine != null && Submarine.GodMode || Indestructible) return;
-            if (!prefab.Body) return;
+            if (!Prefab.Body) return;
             if (!MathUtils.IsValid(damage)) return;
 
-            damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
+            damage = MathHelper.Clamp(damage, 0.0f, Prefab.Health);
             
 #if SERVER
             if (GameMain.Server != null && createNetworkEvent && damage != Sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
-#endif
-
             bool noGaps = true;
             for (int i = 0; i < Sections.Length; i++)
             {
@@ -810,8 +803,10 @@ namespace Barotrauma
                     break;
                 }
             }
+#endif
 
-            if (damage < prefab.Health * LeakThreshold)
+
+            if (damage < Prefab.Health * LeakThreshold)
             {
                 if (Sections[sectionIndex].gap != null)
                 {
@@ -822,7 +817,6 @@ namespace Barotrauma
                         GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 #endif
-
                     DebugConsole.Log("Removing gap (ID " + Sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
 
                     //remove existing gap if damage is below leak threshold
@@ -866,7 +860,7 @@ namespace Barotrauma
                     gapRect.Height += 20;
                     
                     bool horizontalGap = !IsHorizontal;
-                    if (prefab.BodyRotation != 0.0f)
+                    if (Prefab.BodyRotation != 0.0f)
                     {
                         //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
                         float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
@@ -899,13 +893,13 @@ namespace Barotrauma
 #endif
                 }
                 
-                float gapOpen = (damage / prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
+                float gapOpen = (damage / Prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
                 Sections[sectionIndex].gap.Open = gapOpen;
             }
 
             float damageDiff = damage - Sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
-            Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
+            Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, Prefab.Health);
             
             //otherwise it's possible to infinitely gain karma by welding fixed things
             if (attacker != null && damageDiff != 0.0f)
@@ -1009,7 +1003,7 @@ namespace Barotrauma
             }
             if (FlippedX) diffFromCenter = -diffFromCenter;
             
-            Vector2 bodyOffset = ConvertUnits.ToSimUnits(prefab.BodyOffset);
+            Vector2 bodyOffset = ConvertUnits.ToSimUnits(Prefab.BodyOffset);
             if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
             if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
 
@@ -1021,7 +1015,7 @@ namespace Barotrauma
             //newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
-            newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
+            newBody.CollisionCategories = (Prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
 
             Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
@@ -1050,27 +1044,11 @@ namespace Barotrauma
 
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation);
         
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
-        {
-            for (int i = 0; i < Sections.Length; i++)
-            {
-                msg.WriteRangedSingle(Sections[i].damage / Health, 0.0f, 1.0f, 8);
-            }
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime) 
-        {
-            for (int i = 0; i < Sections.Length; i++)
-            {
-                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;                
-                SetDamage(i, damage);                
-            }
-        }
         public override void FlipX(bool relativeToSub)
         {
             base.FlipX(relativeToSub);
             
-            if (prefab.CanSpriteFlipX)
+            if (Prefab.CanSpriteFlipX)
             {
                 SpriteEffects ^= SpriteEffects.FlipHorizontally;
             }
@@ -1096,7 +1074,7 @@ namespace Barotrauma
         {
             base.FlipY(relativeToSub);
 
-            if (prefab.CanSpriteFlipY)
+            if (Prefab.CanSpriteFlipY)
             {
                 SpriteEffects ^= SpriteEffects.FlipVertically;
             }

@@ -61,7 +61,6 @@ namespace Barotrauma
         public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
-        private bool prevBodyAwake;
 
         private bool needsPositionUpdate;
         private float lastSentCondition;
@@ -424,8 +423,7 @@ namespace Barotrauma
         {
             get
             {
-                List<ISerializableEntity> pobjects = new List<ISerializableEntity>();
-                pobjects.Add(this);
+                List<ISerializableEntity> pobjects = new List<ISerializableEntity>() { this };
                 foreach (ItemComponent ic in components)
                 {
                     pobjects.Add(ic);
@@ -1640,9 +1638,8 @@ namespace Barotrauma
                 {
                     msg.Write((bool)value);
                 }
-                else if (value is Color)
+                else if (value is Color color)
                 {
-                    Color color = (Color)value;
                     msg.Write(color.R);
                     msg.Write(color.G);
                     msg.Write(color.B);

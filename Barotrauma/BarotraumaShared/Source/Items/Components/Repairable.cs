@@ -12,9 +12,7 @@ namespace Barotrauma.Items.Components
         public static float SkillIncreaseMultiplier = 0.4f;
 
         private string header;
-        
-        private float lastSentProgress;
-        
+                
         private float fixDurationLowSkill, fixDurationHighSkill;
 
         private float deteriorationTimer;

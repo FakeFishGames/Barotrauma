@@ -7,7 +7,7 @@ namespace Barotrauma.SpriteDeformations
     {
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f,
             ToolTip = "The frequency of the noise.")]
-        public float Frequency { get; set; }
+        public override float Frequency { get; set; }
 
         [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
             ToolTip = "How much the noise distorts the sprite.")]
