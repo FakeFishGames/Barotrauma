@@ -65,9 +65,8 @@ namespace Barotrauma
             {
                 searchHullTimer -= deltaTime;
             }
-            else
+            else if (goToObjective == null || goToObjective.IsCompleted())
             {
-                // TODO: resolution -> don't keep changing the selection (evaluate only when the previous gotoobjective is completed/impossible?)
                 var bestHull = FindBestHull();
                 if (bestHull != null)
                 {
