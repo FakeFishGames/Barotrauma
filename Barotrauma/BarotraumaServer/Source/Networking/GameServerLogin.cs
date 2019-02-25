@@ -90,7 +90,8 @@ namespace Barotrauma.Networking
             }
 
             unauthenticatedClients.RemoveAll(uc => uc.Connection == senderConnection);
-            var unauthClient = new UnauthenticatedClient(senderConnection, 0, clientSteamID)
+            int nonce = CryptoRandom.Instance.Next();
+            var unauthClient = new UnauthenticatedClient(senderConnection, nonce, clientSteamID)
             {
                 AuthTimer = 20
             };
@@ -203,7 +204,7 @@ namespace Barotrauma.Networking
         {
             DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
 
-            if (GameMain.Config.RequireSteamAuthentication && connection!=OwnerConnection && steamID == 0)
+            if (GameMain.Config.RequireSteamAuthentication && connection != OwnerConnection && steamID == 0)
             {
                 DebugConsole.Log("Disconnecting " + connection.RemoteEndPoint + ", Steam authentication required.");
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
@@ -276,7 +277,7 @@ namespace Barotrauma.Networking
             {
                 //decrypt message and compare password
                 string clPw = inc.ReadString();
-                if (!serverSettings.IsPasswordCorrect(clPw,unauthClient.Nonce))
+                if (!serverSettings.IsPasswordCorrect(clPw, unauthClient.Nonce))
                 {
                     unauthClient.FailedAttempts++;
                     if (unauthClient.FailedAttempts > 3)

@@ -108,6 +108,10 @@ namespace Barotrauma.Networking
             }
 
             serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            if (!string.IsNullOrEmpty(password))
+            {
+                serverSettings.SetPassword(password);
+            }
 
             NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
