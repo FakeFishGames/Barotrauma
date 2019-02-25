@@ -1092,14 +1092,14 @@ namespace Barotrauma
             if (!AllowInput) return;
 
             Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-            if (Controlled == this || smoothedCursorDiff.LengthSquared() > 500.0f)
+            if (Controlled == this)
             {
                 SmoothedCursorPosition = cursorPosition;
             }
             else
             {
-                //TODO: tweak
-                SmoothedCursorPosition += smoothedCursorDiff * 0.7f;
+                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
+                SmoothedCursorPosition += smoothedCursorDiff;
             }
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
