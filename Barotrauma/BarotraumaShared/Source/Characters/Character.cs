@@ -235,6 +235,12 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 SmoothedCursorPosition
+        {
+            get;
+            private set;
+        }
+
         public Vector2 CursorWorldPosition
         {
             get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
@@ -1084,6 +1090,17 @@ namespace Barotrauma
         {
             ViewTarget = null;
             if (!AllowInput) return;
+
+            Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
+            if (Controlled == this || smoothedCursorDiff.LengthSquared() > 500.0f)
+            {
+                SmoothedCursorPosition = cursorPosition;
+            }
+            else
+            {
+                //TODO: tweak
+                SmoothedCursorPosition += smoothedCursorDiff * 0.7f;
+            }
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
