@@ -329,5 +329,17 @@ namespace Barotrauma
             character.AnimController.CurrentHull == null ||
             character.AnimController.CurrentHull.OxygenPercentage < 30 ||
             character.AnimController.CurrentHull.WaterPercentage > 50;
+
+
+        /// <summary>
+        /// Check whether the character has a diving suit in usable condition plus some oxygen.
+        /// </summary>
+        public static bool HasDivingSuit(Character character)
+        {
+            var divingSuit = character.Inventory.FindItemByTag("divingsuit");
+            return divingSuit != null && 
+                divingSuit.ConditionPercentage > 30 && 
+                divingSuit.ContainedItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage > 30);
+        }
     }
 }

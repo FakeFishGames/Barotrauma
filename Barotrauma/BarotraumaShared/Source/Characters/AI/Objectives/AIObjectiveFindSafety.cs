@@ -11,10 +11,10 @@ namespace Barotrauma
         public override string DebugTag => "find safety";
 
         // TODO: expose?
-        const float priorityIncrease = 20;
+        const float priorityIncrease = 25;
         const float priorityDecrease = 5;
         const float SearchHullInterval = 3.0f;
-        const float hullSafetyThreshold = 60;
+        const float hullSafetyThreshold = 50;
 
         private List<Hull> hullList;
         private List<Hull> unreachable = new List<Hull>();
@@ -48,10 +48,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            var currentHull = character.AnimController.CurrentHull;
-
-            currenthullSafety = OverrideCurrentHullSafety == null ? GetHullSafety(currentHull, character) : (float)OverrideCurrentHullSafety;
-            
+            var currentHull = character.AnimController.CurrentHull;            
             if (HumanAIController.NeedsDivingGear(character))
             {
                 // Stop seeking diving gear if the task is impossible.
@@ -65,7 +62,7 @@ namespace Barotrauma
             {
                 searchHullTimer -= deltaTime;
             }
-            else if (goToObjective == null || goToObjective.IsCompleted())
+            else if (currenthullSafety < hullSafetyThreshold)
             {
                 var bestHull = FindBestHull();
                 if (bestHull != null)
@@ -88,7 +85,6 @@ namespace Barotrauma
                         };
                     }
                 }
-
                 searchHullTimer = SearchHullInterval;
             }
 
@@ -194,8 +190,16 @@ namespace Barotrauma
 
         public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            if (character.CurrentHull == null) { return; }
-            currenthullSafety = GetHullSafety(character.CurrentHull, character);
+            if (character.CurrentHull == null)
+            {
+                currenthullSafety = 0;
+                return;
+            }
+            bool ignoreFire = 
+                character.AIController.ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || 
+                character.AIController.ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
+            bool ignoreWater = HumanAIController.HasDivingSuit(character);
+            currenthullSafety = OverrideCurrentHullSafety ?? GetHullSafety(character.CurrentHull, character, ignoreWater, ignoreWater, ignoreFire);
             if (currenthullSafety > hullSafetyThreshold)
             {
                 priority -= priorityDecrease * deltaTime;
@@ -221,29 +225,23 @@ namespace Barotrauma
             return priority;
         }
 
-        public static float GetHullSafety(Hull hull, Character character)
+        public static float GetHullSafety(Hull hull, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
         {
             if (hull == null) { return 0; }
             if (hull.LethalPressure > 0 && character.PressureProtection <= 0) { return 0; }
-            float oxygenFactor = MathHelper.Lerp(0, 1, hull.OxygenPercentage / 100);
-            float waterFactor =  MathHelper.Lerp(1, 0, hull.WaterPercentage / 100);
+            float oxygenFactor = ignoreOxygen ? 1 : MathHelper.Lerp(0, 1, hull.OxygenPercentage / 100);
+            float waterFactor =  ignoreWater ? 1 : MathHelper.Lerp(1, 0, hull.WaterPercentage / 100);
             if (!character.NeedsAir)
             {
-                // TODO: use reduced factors if wearing diving gear?
                 oxygenFactor = 1;
                 waterFactor = 1;
             }
-            // Even the smallest fire reduces the safety by 40%
-            float fire = hull.FireSources.Count * 0.4f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
-            float fireFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
-            if (character.AIController.ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire ||
-                character.AIController.ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires)
-            {
-                fireFactor = 1;
-            }
+            // Even the smallest fire reduces the safety by 50%
+            float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
+            float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
             int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
-            // The hull safety decreases 50% per enemy up to 100%
-            float enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp((float)enemyCount / 2, 0, 1));
+            // The hull safety decreases 90% per enemy up to 100%
+            float enemyFactor = ignoreEnemies ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
             return MathHelper.Clamp(safety * 100, 0, 100);
         }

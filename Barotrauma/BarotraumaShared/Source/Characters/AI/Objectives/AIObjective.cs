@@ -42,9 +42,6 @@ namespace Barotrauma
         /// </summary>
         public void TryComplete(float deltaTime)
         {
-            //subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted || ShouldInterruptSubObjective(s));
-
-            // For debugging
             for (int i = 0; i < subObjectives.Count; i++)
             {
                 var subObjective = subObjectives[i];
