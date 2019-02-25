@@ -369,7 +369,7 @@ namespace Barotrauma.Items.Components
             
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
+                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), projectile });
             }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, user: user);

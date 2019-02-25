@@ -60,7 +60,7 @@ namespace Barotrauma
                         var item = character.Inventory.Items[i];
                         if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
 
-                        foreach (ItemComponent ic in item.components)
+                        foreach (ItemComponent ic in item.Components)
                         {
                             if (ic.DrawHudWhenEquipped) ic.AddToGUIUpdateList();
                         }
@@ -94,7 +94,7 @@ namespace Barotrauma
                         var item = character.Inventory.Items[i];
                         if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
 
-                        foreach (ItemComponent ic in item.components)
+                        foreach (ItemComponent ic in item.Components)
                         {
                             if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character, deltaTime, cam);
                         }
@@ -287,7 +287,7 @@ namespace Barotrauma
                     var item = character.Inventory.Items[i];
                     if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
 
-                    foreach (ItemComponent ic in item.components)
+                    foreach (ItemComponent ic in item.Components)
                     {
                         if (ic.DrawHudWhenEquipped) ic.DrawHUD(spriteBatch, character);
                     }

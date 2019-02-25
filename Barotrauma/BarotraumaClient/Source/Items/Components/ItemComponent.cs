@@ -353,7 +353,7 @@ namespace Barotrauma.Items.Components
             {
                 return null;
             }
-            foreach (ItemComponent component in item.components)
+            foreach (ItemComponent component in item.Components)
             {
                 if (component.name.ToLower() == LinkUIToComponent.ToLower())
                 {

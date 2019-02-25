@@ -197,7 +197,7 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = 0.0f;
                 }
-                else if (SelectedConstruction != null && SelectedConstruction.components.Any(ic => (ic.GuiFrame != null && GUI.IsMouseOn(ic.GuiFrame))))
+                else if (SelectedConstruction != null && SelectedConstruction.Components.Any(ic => (ic.GuiFrame != null && GUI.IsMouseOn(ic.GuiFrame))))
                 {
                     cam.OffsetAmount = 0.0f;
                 }
@@ -301,6 +301,129 @@ namespace Barotrauma
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }
+
+
+        private List<Item> debugInteractablesInRange = new List<Item>();
+        private List<Item> debugInteractablesAtCursor = new List<Item>();
+        private List<Pair<Item, float>> debugInteractablesNearCursor = new List<Pair<Item, float>>();
+
+        /// <summary>
+        ///   Finds the front (lowest depth) interactable item at a position. "Interactable" in this case means that the character can "reach" the item.
+        /// </summary>
+        /// <param name="character">The Character who is looking for the interactable item, only items that are close enough to this character are returned</param>
+        /// <param name="simPosition">The item at the simPosition, with the lowest depth, is returned</param>
+        /// <param name="allowFindingNearestItem">If this is true and an item cannot be found at simPosition then a nearest item will be returned if possible</param>
+        /// <param name="hull">If a hull is specified, only items within that hull are returned</param>
+        public Item FindItemAtPosition(Vector2 simPosition, float aimAssistModifier = 0.0f, Item[] ignoredItems = null)
+        {
+            if (Submarine != null)
+            {
+                simPosition += Submarine.SimPosition;
+            }
+
+            debugInteractablesInRange.Clear();
+            debugInteractablesAtCursor.Clear();
+            debugInteractablesNearCursor.Clear();
+
+            //reduce the amount of aim assist if an item has been selected 
+            //= can't switch selection to another item without deselecting the current one first UNLESS the cursor is directly on the item
+            //otherwise it would be too easy to accidentally switch the selected item when rewiring items
+            float aimAssistAmount = SelectedConstruction == null ? 100.0f * aimAssistModifier : 1.0f;
+
+            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
+
+            Item closestItem = null;
+            float closestItemDistance = aimAssistAmount;
+            foreach (MapEntity entity in Submarine.VisibleEntities)
+            {
+                if (!(entity is Item item))
+                {
+                    continue;
+                }
+                if (item.body != null && !item.body.Enabled) continue;
+                if (item.ParentInventory != null) continue;
+                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                
+                float distanceToItem = float.PositiveInfinity;
+                if (item.IsInsideTrigger(displayPosition, out Rectangle transformedTrigger))
+                {
+                    debugInteractablesAtCursor.Add(item);
+                    //distance is between 0-1 when the cursor is directly on the item
+                    distanceToItem =
+                        Math.Abs(transformedTrigger.Center.X - displayPosition.X) / transformedTrigger.Width +
+                        Math.Abs((transformedTrigger.Y - transformedTrigger.Height / 2.0f) - displayPosition.Y) / transformedTrigger.Height;
+                    //modify the distance based on the size of the trigger (preferring smaller items)
+                    distanceToItem *= MathHelper.Lerp(0.05f, 2.0f, (transformedTrigger.Width + transformedTrigger.Height) / 250.0f);
+                }
+                else
+                {
+                    Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
+
+                    if (itemDisplayRect.Contains(displayPosition))
+                    {
+                        debugInteractablesAtCursor.Add(item);
+                        //distance is between 0-1 when the cursor is directly on the item
+                        distanceToItem =
+                            Math.Abs(itemDisplayRect.Center.X - displayPosition.X) / itemDisplayRect.Width +
+                            Math.Abs(itemDisplayRect.Center.Y - displayPosition.Y) / itemDisplayRect.Height;
+                        //modify the distance based on the size of the item (preferring smaller ones)
+                        distanceToItem *= MathHelper.Lerp(0.05f, 2.0f, (itemDisplayRect.Width + itemDisplayRect.Height) / 250.0f);
+                    }
+                    else
+                    {
+                        if (closestItemDistance < 2.0f) { continue; }
+                        //get the point on the itemDisplayRect which is closest to the cursor
+                        Vector2 rectIntersectionPoint = new Vector2(
+                            MathHelper.Clamp(displayPosition.X, itemDisplayRect.X, itemDisplayRect.Right),
+                            MathHelper.Clamp(displayPosition.Y, itemDisplayRect.Y, itemDisplayRect.Bottom));
+                        distanceToItem = 2.0f + Vector2.Distance(rectIntersectionPoint, displayPosition);
+                    }
+                }
+
+                if (distanceToItem > closestItemDistance) { continue; }
+                if (!CanInteractWith(item)) { continue; }
+                
+                debugInteractablesNearCursor.Add(new Pair<Item, float>(item, 1.0f - distanceToItem / (100.0f * aimAssistModifier)));
+                closestItem = item;
+                closestItemDistance = distanceToItem;
+            }
+            
+            return closestItem;
+        }
+
+        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
+        {
+            Character closestCharacter = null;
+            float closestDist = 0.0f;
+
+            maxDist = ConvertUnits.ToSimUnits(maxDist);
+
+            foreach (Character c in CharacterList)
+            {
+                if (!CanInteractWith(c)) continue;
+
+                float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
+                if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))
+                {
+                    closestCharacter = c;
+                    closestDist = dist;
+                }
+
+                /*FarseerPhysics.Common.Transform transform;
+                c.AnimController.Collider.FarseerBody.GetTransform(out transform);
+                for (int i = 0; i < c.AnimController.Collider.FarseerBody.FixtureList.Count; i++)
+                {
+                    if (c.AnimController.Collider.FarseerBody.FixtureList[i].Shape.TestPoint(ref transform, ref mouseSimPos))
+                    {
+                        Console.WriteLine("Hit: " + i);
+                        closestCharacter = c;
+                    }
+                }*/
+            }
+
+            return closestCharacter;
+        }
+
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {

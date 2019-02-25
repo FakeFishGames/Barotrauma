@@ -57,7 +57,7 @@ namespace Barotrauma
                     {
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
-                            foreach (var ic in newSelectedConstruction.components)
+                            foreach (var ic in newSelectedConstruction.Components)
                             {
                                 if (ic.CanBeSelected) ic.Select(character);
                             }
