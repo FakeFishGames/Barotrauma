@@ -952,9 +952,7 @@ namespace Barotrauma
         {
             return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillIdentifier);
         }
-
-        float findFocusedTimer;
-
+        
         // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
         public Vector2? OverrideMovement { get; set; }
         public bool ForceRun { get; set; }
@@ -1145,11 +1143,12 @@ namespace Barotrauma
                 }
             }
 
-            // TODO: remove, dev test only
+#if DEBUG
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.F))
             {
                 AnimController.ReleaseStuckLimbs();
             }
+#endif
 
             if (attackCoolDown > 0.0f)
             {
@@ -2337,7 +2336,10 @@ namespace Barotrauma
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
-            if (attacker != this) { OnAttacked?.Invoke(attacker, attackResult); };
+            if (attacker != this)
+            {
+                OnAttacked?.Invoke(attacker, attackResult);
+            };
             AdjustKarma(attacker, attackResult);
 
             if (attacker != null && attackResult.Damage > 0.0f)
@@ -2347,6 +2349,8 @@ namespace Barotrauma
 
             return attackResult;
         }
+
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult);
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {

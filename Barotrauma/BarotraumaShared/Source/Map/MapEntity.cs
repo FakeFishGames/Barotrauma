@@ -287,12 +287,7 @@ namespace Barotrauma
 
             mapEntityList.Insert(i, this);
         }
-
-        public virtual bool IsVisible(Rectangle worldView)
-        {
-            return true;
-        }
-        
+                
         /// <summary>
         /// Remove the entity from the entity list without removing links to other entities
         /// </summary>

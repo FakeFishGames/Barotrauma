@@ -5,6 +5,11 @@ namespace Barotrauma.Items.Components
 {
     partial class MotionSensor : IDrawableComponent
     {
+        public Vector2 DrawSize
+        {
+            get { return new Vector2(rangeX, rangeY) * 2.0f; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (!editing || !MapEntity.SelectedList.Contains(item)) return;

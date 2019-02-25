@@ -129,9 +129,33 @@ namespace Barotrauma
             }
         }
 
+        public override bool IsVisible(Rectangle worldView)
+        {
+            //no drawable components and the body has been disabled = nothing to draw
+            if (drawableComponents.Count == 0 && body != null && !body.Enabled)
+            {
+                return false;
+            }
+
+            float padding = 100.0f;
+            Vector2 size = new Vector2(rect.Width + padding, rect.Height + padding);
+            foreach (IDrawableComponent drawable in drawableComponents)
+            {
+                size.X = Math.Max(drawable.DrawSize.X, size.X);
+                size.Y = Math.Max(drawable.DrawSize.Y, size.Y);
+            }
+            size *= 0.5f;
+
+            Vector2 worldPosition = WorldPosition;
+            if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
+            if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;
+
+            return true;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
+            if (!Visible || (!editing && hiddenInGame)) return;
             if (editing && !ShowItems) return;
             
             Color color = isHighlighted && !GUI.DisableItemHighlights ? Color.Orange : GetSpriteColor();

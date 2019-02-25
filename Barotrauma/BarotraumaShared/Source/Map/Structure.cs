@@ -571,16 +571,6 @@ namespace Barotrauma
 #endif
         }
 
-        public override bool IsVisible(Rectangle worldView)
-        {
-            Rectangle worldRect = WorldRect;
-
-            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) return false;
-            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) return false;
-
-            return true;
-        }
-
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (prefab.Platform)

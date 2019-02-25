@@ -23,6 +23,7 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
             : base(file, position, seed, characterInfo, isNetworkPlayer, ragdoll)
         {
+            InitProjSpecific();
         }
 
         partial void InitProjSpecific();
