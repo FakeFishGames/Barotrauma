@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -9,7 +10,8 @@ namespace Barotrauma
     {
         // TODO: expose
         public const float OrderPriority = 50.0f;
-        public const float baseDevotion = 0.5f;
+        // Constantly increases the priority of the selected objective, unless overridden
+        public const float baseDevotion = 2;
 
         private List<AIObjective> objectives;
 
@@ -80,18 +82,34 @@ namespace Barotrauma
             return currentObjective == null ? 0.0f : currentObjective.GetPriority(this);
         }
 
-        public void UpdateObjectives()
+        public void UpdateObjectives(float deltaTime)
         {
-            if (!objectives.Any()) return;
+            for (int i = 0; i < objectives.Count; i++)
+            {
+                var objective = objectives[i];
+                if (objective.IsCompleted())
+                {
+                    DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it is completed.");
+                    objectives.Remove(objective);
+                }
+                else if (!objective.CanBeCompleted)
+                {
+                    DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it cannot be completed.");
+                    objectives.Remove(objective);
+                }
+                else
+                {
+                    objective.UpdatePriority(this, deltaTime);
+                }
+            }
+        }
 
-            //remove completed objectives and ones that can't be completed
-            objectives = objectives.FindAll(o => !o.IsCompleted() && o.CanBeCompleted);
-
-            //sort objectives according to priority
+        public void SortObjectives()
+        {
+            if (objectives.None()) { return; }
             objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
             GetCurrentObjective()?.SortSubObjectives(this);
         }
-
         
         public void DoCurrentObjective(float deltaTime)
         {

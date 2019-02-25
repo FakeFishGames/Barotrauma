@@ -72,14 +72,15 @@ namespace Barotrauma
             (Character.AnimController as HumanoidAnimController).Crouching = shouldCrouch;
             CheckCrouching(deltaTime);
             Character.ClearInputs();
-            
+
+            objectiveManager.UpdateObjectives(deltaTime);
             if (updateObjectiveTimer > 0.0f)
             {
                 updateObjectiveTimer -= deltaTime;
             }
             else
             {
-                objectiveManager.UpdateObjectives();
+                objectiveManager.SortObjectives();
                 updateObjectiveTimer = UpdateObjectiveInterval;
             }
 
