@@ -295,12 +295,16 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f || !t.Enabled) continue;
+                    if (t.SoundRange <= 0.0f || !t.Enabled) { continue; }
+                    
+                    float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
+                    if (distSqr > range * range) { continue; }
 
-                    if (Vector2.DistanceSquared(t.WorldPosition, transducerCenter) < t.SoundRange * t.SoundRange)
+                    float dist = (float)Math.Sqrt(distSqr);
+                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range)
                     {
-                        Ping(t.WorldPosition, transducerCenter, 
-                            t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 
+                        Ping(t.WorldPosition, transducerCenter,
+                            Math.Min(t.SoundRange, range * 0.5f), 0, displayScale, Math.Min(t.SoundRange, range * 0.5f), 
                             passive: true, pingStrength: 0.5f);
                         sonarBlips.Add(new SonarBlip(t.WorldPosition, 1.0f, 1.0f));
                     }
