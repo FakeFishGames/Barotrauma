@@ -596,13 +596,13 @@ namespace Barotrauma.Networking
             this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
         }
 
-        public bool IsPasswordCorrect(string input,int nonce)
+        public bool IsPasswordCorrect(string input, int nonce)
         {
             if (!HasPassword) return true;
             string saltedPw = password;
             saltedPw = saltedPw + Convert.ToString(nonce);
             saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            return input == password;
+            return input == saltedPw;
         }
 
         /// <summary>
