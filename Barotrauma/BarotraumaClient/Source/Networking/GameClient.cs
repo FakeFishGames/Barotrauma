@@ -1748,7 +1748,6 @@ namespace Barotrauma.Networking
             base.AddChatMessage(message);
 
             if (string.IsNullOrEmpty(message.Text)) { return; }
-
             GameMain.NetLobbyScreen.NewChatMessage(message);
             chatBox.AddMessage(message);
         }

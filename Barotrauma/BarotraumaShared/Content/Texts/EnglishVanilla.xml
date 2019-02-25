@@ -625,6 +625,34 @@
   <MutedLocally>Muted Locally</MutedLocally>
   <MutedGlobally>Muted Globally</MutedGlobally>
 
+  <!-- Server Log -->
+  <ServerLog.Filter>Filter</ServerLog.Filter>
+  <ServerLog.ChatMessage>Chat message</ServerLog.ChatMessage>
+  <ServerLog.ItemInteraction>Item interaction</ServerLog.ItemInteraction>
+  <ServerLog.InventoryUsage>Inventory usage</ServerLog.InventoryUsage>
+  <ServerLog.AttackDeath>Attack &amp; death</ServerLog.AttackDeath> <!-- &amp; = & -->
+  <ServerLog.Spawning>Spawning</ServerLog.Spawning>
+  <ServerLog.ServerMessage>Server message</ServerLog.ServerMessage>
+  <ServerLog.ConsoleUsage>Console usage</ServerLog.ConsoleUsage>
+  <ServerLog.Error>Error</ServerLog.Error>
+
+  <!-- Server Messages -->
+  <ServerMessage.Reason>Reason</ServerMessage.Reason>
+  <ServerMessage.JoinedServer>[client] has joined the server.</ServerMessage.JoinedServer>
+  <ServerMessage.KickedFromServer>[client] has been kicked from the server.</ServerMessage.KickedFromServer>
+  <ServerMessage.KickedByVote>Kicked by vote.</ServerMessage.KickedByVote>
+  <ServerMessage.KickedByVoteAutoBan>Kicked by vote (auto ban).</ServerMessage.KickedByVoteAutoBan>
+  <ServerMessage.YouLeftServer>You have left the server.</ServerMessage.YouLeftServer>
+  <ServerMessage.ClientLeftServer>[client] has left the server.</ServerMessage.ClientLeftServer>
+  <ServerMessage.HasVotedToKick>[initiator] has voted to kick [target].</ServerMessage.HasVotedToKick>
+  <ServerMessage.BannedFromServer>[client] has been banned from the server.</ServerMessage.BannedFromServer>
+  <ServerMessage.HasDisconnected>[client] has disconnected.</ServerMessage.HasDisconnected>
+  <ServerMessage.ExcessiveDesync>You have been disconnected because of excessive desync.</ServerMessage.ExcessiveDesync>
+  <ServerMessage.SyncTimeout>You have been disconnected because syncing your client with the server took too long.</ServerMessage.SyncTimeout>
+  <ServerMessage.ShuttleLeaving>The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.</ServerMessage.ShuttleLeaving>
+  <ServerMessage.HowToCommunicate>Press TAB to chat. Use \"r;\" to talk through the radio.</ServerMessage.HowToCommunicate>
+  <ServerMessage.PlayerNotFound>Player \""[player]"\" not found!</ServerMessage.PlayerNotFound>
+
   <!-- Client permissions -->
   <ClientPermission.None>None</ClientPermission.None>
   <ClientPermission.All>All</ClientPermission.All>
@@ -2521,6 +2549,7 @@
   <LocationChange.Ruins.ChangeTo.Outpost>An outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Outpost>
   <LocationChange.Ruins.ChangeTo.Military>A military outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Military>
   <LocationChange.Ruins.ChangeTo.Research>A research outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Research>
+
 
 
 

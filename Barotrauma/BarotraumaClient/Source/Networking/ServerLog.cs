@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.4f), LogFrame.RectTransform, Anchor.Center) { MinSize = new Point(600, 420) });
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.03f) }, style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), "Filter", font: GUI.SmallFont);            
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), TextManager.Get("ServerLog.Filter"), font: GUI.SmallFont);            
             GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), font: GUI.SmallFont);
             searchBox.OnTextChanged += (textBox, text) =>
             {
@@ -47,7 +47,7 @@ namespace Barotrauma.Networking
             int y = 30;
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform), messageTypeName[(int)msgType], font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[(int)msgType]
@@ -77,7 +77,7 @@ namespace Barotrauma.Networking
 
             if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) listBox.BarScroll = 1.0f;
 
-            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), innerFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.02f, 0.03f) }, "Close");
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), innerFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.02f, 0.03f) }, TextManager.Get("Close"));
             closeButton.OnClicked = (button, userData) =>
             {
                 LogFrame = null;
@@ -92,7 +92,7 @@ namespace Barotrauma.Networking
             float prevSize = listBox.BarSize;
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), 
-                line.Text, wrap: true, font: GUI.SmallFont);
+                $"{line.Time} {TextManager.GetServerMessage(line.Text)}", wrap: true, font: GUI.SmallFont);
             textBlock.TextColor = messageColor[(int)line.Type];
             textBlock.Visible = !msgTypeHidden[(int)line.Type];
             textBlock.CanBeFocused = false;
