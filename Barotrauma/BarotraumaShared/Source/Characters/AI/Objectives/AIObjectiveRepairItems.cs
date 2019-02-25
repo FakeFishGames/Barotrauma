@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -25,6 +26,7 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
+            if (repairObjectives.None()) { return 0; }
             // Don't use the itemlist, because it can be huge.
             float avg = repairObjectives.Average(ro => 100 - ro.Key.ConditionPercentage);
             return MathHelper.Lerp(0, 50, avg / 100);

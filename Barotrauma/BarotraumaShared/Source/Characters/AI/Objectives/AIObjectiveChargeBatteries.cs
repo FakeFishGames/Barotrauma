@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -34,6 +35,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (availableBatteries.None()) { return 0; }
             float avgNeedOfCharge = availableBatteries.Average(b => 100 - b.ChargePercentage);
             if (objectiveManager.CurrentOrder == this && avgNeedOfCharge > 10)
             {
