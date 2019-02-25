@@ -239,14 +239,14 @@ namespace Barotrauma.Networking
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
-            if (!serverSettings.HasPassword)
-            {
-                nonceMsg.Write(false); //false = no password
-            }
-            else
+            if (serverSettings.HasPassword && connection != OwnerConnection)
             {
                 nonceMsg.Write(true); //true = password
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
+            }
+            else
+            {
+                nonceMsg.Write(false); //false = no password
             }
             CompressOutgoingMessage(nonceMsg);
             DebugConsole.Log("Sending auth response...");
@@ -273,7 +273,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (serverSettings.HasPassword)
+            if (serverSettings.HasPassword && inc.SenderConnection != OwnerConnection)
             {
                 //decrypt message and compare password
                 string clPw = inc.ReadString();
