@@ -234,9 +234,13 @@ namespace Barotrauma
                 waterFactor = 1;
             }
             // Even the smallest fire reduces the safety by 40%
-            // TODO: reduce/ignore the fire factor if has the objective to extinguish fires
             float fire = hull.FireSources.Count * 0.4f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
             float fireFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
+            if (character.AIController.ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire ||
+                character.AIController.ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires)
+            {
+                fireFactor = 1;
+            }
             int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
             // The hull safety decreases 50% per enemy up to 100%
             float enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp((float)enemyCount / 2, 0, 1));
