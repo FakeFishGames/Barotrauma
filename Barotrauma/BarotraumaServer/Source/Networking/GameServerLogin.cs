@@ -246,6 +246,7 @@ namespace Barotrauma.Networking
             else
             {
                 nonceMsg.Write(true); //true = password
+                DebugConsole.Log("Client nonce: "+ unauthClient.Nonce);
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
             }
             CompressOutgoingMessage(nonceMsg);
