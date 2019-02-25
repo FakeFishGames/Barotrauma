@@ -589,6 +589,10 @@ namespace Barotrauma
                         // Check if a text input is selected.
                         if (GUI.KeyboardDispatcher.Subscriber != null)
                         {
+                            if (GUI.KeyboardDispatcher.Subscriber is GUITextBox textBox)
+                            {
+                                textBox.Deselect();
+                            }
                             GUI.KeyboardDispatcher.Subscriber = null;
                         }
                         else // Otherwise toggle pausing.
