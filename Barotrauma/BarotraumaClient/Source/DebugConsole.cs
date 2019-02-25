@@ -399,10 +399,10 @@ namespace Barotrauma
             AssignRelayToServer("campaigninfo", false);
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
+            AssignRelayToServer("freecam", false);
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
-
 
             AssignOnExecute("control", (string[] args) =>
             {
