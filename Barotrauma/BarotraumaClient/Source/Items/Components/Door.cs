@@ -12,6 +12,12 @@ namespace Barotrauma.Items.Components
         private ConvexHull convexHull;
         private ConvexHull convexHull2;
 
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
             Vector2[] corners = new Vector2[4];

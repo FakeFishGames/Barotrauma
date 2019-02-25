@@ -105,7 +105,17 @@ namespace Barotrauma
 
             return editingHUD;
         }
-        
+
+        public override bool IsVisible(Rectangle worldView)
+        {
+            Rectangle worldRect = WorldRect;
+
+            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) return false;
+            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) return false;
+
+            return true;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;

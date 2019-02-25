@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -9,6 +8,12 @@ namespace Barotrauma.Items.Components
 {
     partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
     {
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (dockingState == 0.0f) return;

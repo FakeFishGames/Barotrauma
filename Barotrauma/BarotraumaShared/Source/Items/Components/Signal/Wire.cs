@@ -14,13 +14,24 @@ namespace Barotrauma.Items.Components
         partial class WireSection
         {
             private Vector2 start;
+            private Vector2 end;
 
             private float angle;
             private float length;
 
+            public Vector2 Start
+            {
+                get { return start; }
+            }
+            public Vector2 End
+            {
+                get { return end; }
+            }
+
             public WireSection(Vector2 start, Vector2 end)
             {
                 this.start = start;
+                this.end = end;
 
                 angle = MathUtils.VectorToAngle(end - start);
                 length = Vector2.Distance(start, end);
@@ -40,6 +51,8 @@ namespace Barotrauma.Items.Components
 
         private bool canPlaceNode;
         private Vector2 newNodePos;
+
+        private Vector2 sectionExtents;
 
         public bool Hidden;
 
@@ -276,8 +289,7 @@ namespace Barotrauma.Items.Components
                 //prevent the wire from extending too far when rewiring
                 if (nodes.Count > 0)
                 {
-                    Character user = item.ParentInventory?.Owner as Character;
-                    if (user == null) return;
+                    if (!(item.ParentInventory?.Owner is Character user)) return;
 
                     Vector2 prevNodePos = nodes[nodes.Count - 1];
                     if (sub != null) { prevNodePos += sub.HiddenSubPosition; }
@@ -296,10 +308,9 @@ namespace Barotrauma.Items.Components
 
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
                         user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * 200.0f);
-#if CLIENT
-                        if (GameMain.Client == null)
+
+                        if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                         {
-#endif
                             if (currLength > MaxLength * 1.5f)
                             {
                                 ClearConnections();
@@ -308,9 +319,7 @@ namespace Barotrauma.Items.Components
 #endif
                                 return;
                             }
-#if CLIENT
                         }
-#endif
                     }
                 }
             }
@@ -319,6 +328,10 @@ namespace Barotrauma.Items.Components
                 newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
                 canPlaceNode = true;
             }
+
+            sectionExtents = new Vector2(
+                Math.Max(Math.Abs((newNodePos.X + sub.HiddenSubPosition.X) - item.Position.X), sectionExtents.X),
+                Math.Max(Math.Abs((newNodePos.Y + sub.HiddenSubPosition.Y) - item.Position.Y), sectionExtents.Y));
         }
         
         public override bool Use(float deltaTime, Character character = null)
@@ -408,11 +421,25 @@ namespace Barotrauma.Items.Components
         {
             sections.Clear();
 
-            for (int i = 0; i < nodes.Count-1; i++)
+            for (int i = 0; i < nodes.Count - 1; i++)
             {
                 sections.Add(new WireSection(nodes[i], nodes[i + 1]));
             }
             Drawable = IsActive || sections.Count > 0;
+            CalculateExtents();
+        }
+
+        private void CalculateExtents()
+        {
+            sectionExtents = Vector2.Zero;
+            if (sections.Count > 0)
+            {
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    sectionExtents.X = Math.Max(Math.Abs(nodes[i].X - item.Position.X), sectionExtents.X);
+                    sectionExtents.Y = Math.Max(Math.Abs(nodes[i].Y - item.Position.Y), sectionExtents.Y);
+                }
+            }
         }
 
         private void ClearConnections(Character user = null)

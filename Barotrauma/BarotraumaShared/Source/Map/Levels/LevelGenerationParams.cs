@@ -346,7 +346,9 @@ namespace Barotrauma
         public Sprite BackgroundSprite { get; private set; }
         public Sprite BackgroundTopSprite { get; private set; }
         public Sprite WallSprite { get; private set; }
+        public Sprite WallSpriteSpecular { get; private set; }
         public Sprite WallEdgeSprite { get; private set; }
+        public Sprite WallEdgeSpriteSpecular { get; private set; }
         public Sprite WaterParticles { get; private set; }
         
         public static List<Biome> GetBiomes()
@@ -419,8 +421,14 @@ namespace Barotrauma
                     case "wall":
                         WallSprite = new Sprite(subElement);
                         break;
+                    case "wallspecular":
+                        WallSpriteSpecular = new Sprite(subElement);
+                        break;
                     case "walledge":
                         WallEdgeSprite = new Sprite(subElement);
+                        break;
+                    case "walledgespecular":
+                        WallEdgeSpriteSpecular = new Sprite(subElement);
                         break;
                     case "waterparticles":
                         WaterParticles = new Sprite(subElement);

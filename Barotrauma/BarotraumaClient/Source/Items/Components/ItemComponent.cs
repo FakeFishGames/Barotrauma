@@ -309,8 +309,8 @@ namespace Barotrauma.Items.Components
 
         private float GetSoundVolume(ItemSound sound)
         {
-            if (sound == null) return 0.0f;
-            if (sound.VolumeProperty == "") return 1.0f;
+            if (sound == null) { return 0.0f; }
+            if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
 
             if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out SerializableProperty property))
             {

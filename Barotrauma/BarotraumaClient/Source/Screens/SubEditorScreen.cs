@@ -83,7 +83,7 @@ namespace Barotrauma
 
         private string GetStructureCount()
         {
-            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
+            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
         }
 
         private string GetTotalHullVolume()

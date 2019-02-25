@@ -6,6 +6,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Facepunch.Steamworks;
+using Client = Barotrauma.Networking.Client;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
@@ -358,10 +361,19 @@ namespace Barotrauma
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
             };
             clientDisabledElements.Add(ServerName);
-            
-            ServerMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+
+            var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) });
+            ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform))
             {
                 Wrap = true
+            };
+            ServerMessage.OnTextChanged += (textBox, text) =>
+            {
+                Vector2 textSize = textBox.Font.MeasureString(textBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Rect.Height, (int)textSize.Y + 10));
+                serverMessageContainer.UpdateScrollBarSize();
+                serverMessageContainer.BarScroll = 1.0f;
+                return true;
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
@@ -994,6 +1006,20 @@ namespace Barotrauma
                         Rotation = MathHelper.Pi
                     };
                 }
+                 GUITickBox randPrefTickBox = new GUITickBox(
+                        new RectTransform(new Vector2(0.05f, 0.05f), infoContainer.RectTransform)
+                            {RelativeOffset = new Vector2(-0.5f, 0.1f)},
+                        TextManager.Get("RandomPreferences"))
+                    {
+                        OnSelected = (tickBox) =>
+                        {
+                            if (tickBox.Selected)
+                            {
+                                GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
+                            }
+                            return true;
+                        }
+                    };
 
                 UpdateJobPreferences(jobList);
             }
@@ -1633,6 +1659,14 @@ namespace Barotrauma
             if (GameMain.Client.CharacterInfo == null) return true;
             int dir = (int)userData;
             var info = GameMain.Client.CharacterInfo;
+            if (!info.HasGenders)
+            {
+                GameMain.Config.CharacterGender = Gender.None;
+            }
+            else if (GameMain.Config.CharacterGender == Gender.None)
+            {
+                GameMain.Config.CharacterGender = info.Gender;
+            }
             if (generatedHeads.Current == null)
             {
                 // Add the current head in the memory

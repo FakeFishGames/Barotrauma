@@ -22,6 +22,8 @@ namespace Barotrauma
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
 
+        private float findFocusedTimer;
+
         protected float lastRecvPositionUpdateTime;
 
         private float hudInfoHeight;
@@ -105,8 +107,8 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XDocument doc)
         {
-            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
-            
+            soundInterval = Rand.Range(0.0f, doc.Root.GetAttributeFloat("soundinterval", 10.0f));
+
             BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
             sounds = new List<CharacterSound>();
@@ -256,6 +258,17 @@ namespace Barotrauma
             }
         }
         
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
+        {
+            if (attackResult.Damage <= 0) { return; }
+            soundTimer = Rand.Range(0.0f, soundInterval);
+            if (soundTimer < soundInterval * 0.5f)
+            {
+                PlaySound(CharacterSound.SoundType.Attack);
+                soundTimer = soundInterval;
+            }
+        }
+
         partial void KillProjSpecific()
         {
             if (GameMain.NetworkMember != null && controlled == this)
