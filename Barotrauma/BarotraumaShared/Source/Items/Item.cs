@@ -1040,7 +1040,7 @@ namespace Barotrauma
                     }
                 }
 
-                ClientUpdatePosition();
+                UpdateNetPosition();
             }
 
             inWater = IsInWater();
@@ -1796,7 +1796,7 @@ namespace Barotrauma
             }
         }
 
-        partial void ClientUpdatePosition();
+        partial void UpdateNetPosition();
         
         public static Item Load(XElement element, Submarine submarine)
         {
