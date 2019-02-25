@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 
 namespace Barotrauma.Networking
@@ -18,7 +17,7 @@ namespace Barotrauma.Networking
             public void AssignGUIComponent(GUIComponent component)
             {
                 GUIComponent = component;
-                GUIComponentValue = property.GetValue();
+                GUIComponentValue = property.GetValue(serverSettings);
                 TempValue = GUIComponentValue;
             }
 
