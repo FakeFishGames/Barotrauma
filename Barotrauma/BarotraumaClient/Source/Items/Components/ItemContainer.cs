@@ -175,9 +175,10 @@ namespace Barotrauma.Items.Components
                     item.IsHighlighted = false;
                 }
 
-                if (containedItem.body != null)
+                if (containedItem.body != null && 
+                    Math.Abs(containedItem.body.FarseerBody.Rotation - currentRotation) > 0.001f)
                 {
-                    containedItem.body.FarseerBody.Rotation = currentRotation;
+                    containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
                 }
 
                 containedItem.Sprite.Draw(

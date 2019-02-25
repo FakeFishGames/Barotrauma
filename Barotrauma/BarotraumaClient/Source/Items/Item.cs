@@ -843,20 +843,26 @@ namespace Barotrauma
             msg.WritePadBits();
         }
 
-        partial void UpdateNetPosition()
+        partial void ClientUpdatePosition()
         {
+            if (GameMain.Client == null) { return; }
+
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;
             float newAngularVelocity = body.AngularVelocity;
             float newRotation = body.Rotation;
             body.CorrectPosition(positionBuffer, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
 
-            body.TargetPosition = newPosition;
             body.LinearVelocity = newVelocity;
-            body.TargetRotation = newRotation;
             body.AngularVelocity = newAngularVelocity;
-            body.MoveToTargetPosition(lerp: true);
-            
+            if (Vector2.DistanceSquared(newPosition, body.SimPosition) > 0.0001f ||
+                Math.Abs(newRotation - body.Rotation) > 0.01f)
+            {
+                body.TargetPosition = newPosition;
+                body.TargetRotation = newRotation;
+                body.MoveToTargetPosition(lerp: true);
+            }
+
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
