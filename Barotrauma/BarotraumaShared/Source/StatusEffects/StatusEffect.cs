@@ -657,11 +657,11 @@ namespace Barotrauma
                     if (target is Character character)
                     {
                         character.LastDamageSource = entity;
-                        character.CharacterHealth.ApplyAffliction(null, multipliedAffliction);
+                        character.AddDamage(entity.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
+                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
                     }
                 }
 
@@ -832,13 +832,16 @@ namespace Barotrauma
 
                     foreach (Affliction affliction in element.Parent.Afflictions)
                     {
-                        if (target is Character)
+                        Affliction multipliedAffliction = affliction;
+                        if (!element.Parent.disableDeltaTime) { multipliedAffliction = affliction.CreateMultiplied(deltaTime); }
+
+                        if (target is Character character)
                         {
-                            ((Character)target).CharacterHealth.ApplyAffliction(null, affliction.CreateMultiplied(deltaTime));
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
                         }
                         else if (target is Limb limb)
                         {
-                            limb.character.CharacterHealth.ApplyAffliction(limb, affliction.CreateMultiplied(deltaTime));
+                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
                         }
                     }
 
