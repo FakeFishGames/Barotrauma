@@ -22,7 +22,6 @@ namespace Barotrauma
             if (Item.Repairables.None()) { return 0; }
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
-            base.GetPriority(objectiveManager);
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));

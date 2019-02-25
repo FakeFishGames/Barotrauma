@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -87,28 +88,27 @@ namespace Barotrauma
 
         public void SortSubObjectives(AIObjectiveManager objectiveManager)
         {
-            if (!subObjectives.Any()) return;
+            if (subObjectives.None()) { return; }
             subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
             CurrentSubObjective = SubObjectives.First();
             CurrentSubObjective.SortSubObjectives(objectiveManager);
         }
 
-        public virtual float GetPriority(AIObjectiveManager objectiveManager)
+        public virtual float GetPriority(AIObjectiveManager objectiveManager) => priority;
+
+        public virtual void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
+            var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
             if (objectiveManager.CurrentOrder == this)
             {
-                return AIObjectiveManager.OrderPriority;
+                priority = AIObjectiveManager.OrderPriority;
             }
-            else if (objectiveManager.CurrentObjective == this)
+            else if (objectiveManager.CurrentObjective == this || subObjective == this)
             {
-                priority += Devotion;
+                priority += Devotion * deltaTime;
             }
-            var subObjective = objectiveManager.CurrentObjective.CurrentSubObjective;
-            if (subObjective != null && subObjective == this)
-            {
-                priority += Devotion;
-            }
-            return MathHelper.Clamp(priority, 0, 100);
+            priority = MathHelper.Clamp(priority, 0, 100);
+            subObjectives.ForEach(so => so.UpdatePriority(objectiveManager, deltaTime));
         }
 
         /// <summary>

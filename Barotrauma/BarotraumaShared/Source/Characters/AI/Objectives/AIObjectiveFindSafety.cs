@@ -10,7 +10,11 @@ namespace Barotrauma
     {
         public override string DebugTag => "find safety";
 
+        // TODO: expose?
+        const float priorityIncrease = 20;
+        const float priorityDecrease = 5;
         const float SearchHullInterval = 3.0f;
+        const float hullSafetyThreshold = 60;
 
         private List<Hull> hullList;
         private List<Hull> unreachable = new List<Hull>();
@@ -189,17 +193,20 @@ namespace Barotrauma
             return (otherObjective is AIObjectiveFindSafety);
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            if (character.CurrentHull == null) { return 5; }
+            if (character.CurrentHull == null) { return; }
             currenthullSafety = GetHullSafety(character.CurrentHull, character);
-            // If the hull is relatively safe, just consider it safe.
-            if (currenthullSafety > 60)
+            if (currenthullSafety > hullSafetyThreshold)
             {
-                currenthullSafety = 100;
+                priority -= priorityDecrease * deltaTime;
             }
-            // TODO: constantly add priority when the objective is active and remove it when it's not -> resolve swapping between objectives
-            priority = 100 - currenthullSafety;
+            else
+            {
+                float dangerFactor = (100 - currenthullSafety) / 100;
+                priority += dangerFactor * priorityIncrease * deltaTime;
+            }
+            priority = MathHelper.Clamp(priority, 0, 100);
             if (HumanAIController.NeedsDivingGear(character))
             {
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
@@ -207,6 +214,11 @@ namespace Barotrauma
                     priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
                 }
             }
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (character.CurrentHull == null) { return 5; }
             return priority;
         }
 

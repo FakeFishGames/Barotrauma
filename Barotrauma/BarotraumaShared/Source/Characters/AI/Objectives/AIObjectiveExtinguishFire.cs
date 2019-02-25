@@ -26,7 +26,6 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
-            base.GetPriority(objectiveManager);
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
