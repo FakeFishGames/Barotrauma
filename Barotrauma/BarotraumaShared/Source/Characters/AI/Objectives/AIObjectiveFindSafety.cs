@@ -12,27 +12,34 @@ namespace Barotrauma
 
         const float SearchHullInterval = 3.0f;
 
-        private AIObjectiveGoTo goToObjective;
-
-        private List<Hull> unreachable;
+        private List<Hull> hullList;
+        private List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
 
         private float searchHullTimer;
 
+        private AIObjectiveGoTo goToObjective;
         private AIObjective divingGearObjective;
 
         public float? OverrideCurrentHullSafety;
 
-        public AIObjectiveFindSafety(Character character)
-            : base(character, "")
+        public AIObjectiveFindSafety(Character character) : base(character, "")
         {
-            unreachable = new List<Hull>();
+            if (character.Submarine != null)
+            {
+                hullList = character.Submarine.GetHulls(true);
+            }
         }
 
-        public override bool IsCompleted()
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted
         {
-            return false;
+            get
+            {
+                return (goToObjective == null || goToObjective.IsCompleted() || goToObjective.CanBeCompleted) &&
+                    (divingGearObjective == null || divingGearObjective.IsCompleted() || divingGearObjective.CanBeCompleted);
+            }
         }
 
         protected override void Act(float deltaTime)
@@ -56,13 +63,27 @@ namespace Barotrauma
             }
             else
             {
+                // TODO: resolution -> don't keep changing the selection (evaluate only when the previous gotoobjective is completed/impossible?)
                 var bestHull = FindBestHull();
                 if (bestHull != null)
                 {
-                    goToObjective = new AIObjectiveGoTo(bestHull, character)
+                    if (goToObjective != null)
                     {
-                        AllowGoingOutside = true
-                    };
+                        if (goToObjective.Target != bestHull)
+                        {
+                            goToObjective = new AIObjectiveGoTo(bestHull, character)
+                            {
+                                AllowGoingOutside = true
+                            };
+                        }
+                    }
+                    else
+                    {
+                        goToObjective = new AIObjectiveGoTo(bestHull, character)
+                        {
+                            AllowGoingOutside = true
+                        };
+                    }
                 }
 
                 searchHullTimer = SearchHullInterval;
@@ -71,12 +92,12 @@ namespace Barotrauma
             if (goToObjective != null)
             {
                 goToObjective.TryComplete(deltaTime);
-
-                if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering && 
-                    pathSteering.CurrentPath != null &&
-                    pathSteering.CurrentPath.Unreachable && !unreachable.Contains(goToObjective.Target))
+                if (!goToObjective.CanBeCompleted)
                 {
-                    unreachable.Add(goToObjective.Target as Hull);
+                    if (!unreachable.Contains(goToObjective.Target))
+                    {
+                        unreachable.Add(goToObjective.Target as Hull);
+                    }
                     goToObjective = null;
                 }
             }
@@ -144,7 +165,7 @@ namespace Barotrauma
             Hull bestHull = null;
             float bestValue = currenthullSafety;
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in hullList)
             {
                 if (hull == character.AnimController.CurrentHull || unreachable.Contains(hull)) continue;
 
@@ -170,99 +191,45 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            // TODO: refactor and cleanup
-            if (character.Oxygen < 80.0f)
-            {
-                return 150.0f - character.Oxygen;
-            }
-            
-            if (character.CurrentHull == null) return 5.0f;
+            if (character.CurrentHull == null) { return 5; }
             currenthullSafety = GetHullSafety(character.CurrentHull, character);
-            priority = 100.0f - currenthullSafety;
-
-            //var nearbyHulls = character.CurrentHull.GetConnectedHulls(3);
-
-            //increase priority slightly if there's a fire in the room
-            //(will increase more heavily if near the damage range of the fire)
-            if (character.CurrentHull.FireSources.Count > 0)
+            // If the hull is relatively safe, just consider it safe.
+            if (currenthullSafety > 60)
             {
-                priority += 5.0f;
+                currenthullSafety = 100;
             }
-
-            /*foreach (Hull hull in nearbyHulls)
-            {
-                foreach (FireSource fireSource in hull.FireSources)
-                {
-                    //heavily increase priority if almost within damage range of a fire
-                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * 1.25f))
-                    {
-                        priority += Math.Max(fireSource.Size.X, 50.0f);
-                    }
-                }
-            }*/
-            
+            // TODO: constantly add priority when the objective is active and remove it when it's not -> resolve swapping between objectives
+            priority = 100 - currenthullSafety;
             if (HumanAIController.NeedsDivingGear(character))
             {
-                if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
+                if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
+                {
+                    priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
+                }
             }
-
             return priority;
         }
 
         public static float GetHullSafety(Hull hull, Character character)
         {
-            if (hull == null) return 0.0f;
-
-            float safety = 100.0f;
-
-            float waterPercentage = (hull.WaterVolume / hull.Volume) * 100.0f;
-            if (hull.LethalPressure > 0.0f && character.PressureProtection <= 0.0f)
+            if (hull == null) { return 0; }
+            if (hull.LethalPressure > 0 && character.PressureProtection <= 0) { return 0; }
+            float oxygenFactor = MathHelper.Lerp(0, 1, hull.OxygenPercentage / 100);
+            float waterFactor =  MathHelper.Lerp(1, 0, hull.WaterPercentage / 100);
+            if (!character.NeedsAir || character.OxygenAvailable > 100)
             {
-                safety -= 100.0f;
+                oxygenFactor = 1;
+                waterFactor = 1;
             }
-            else if (character.OxygenAvailable <= 0.0f)
-            {
-                safety -= waterPercentage;
-            }
-            else
-            {
-                safety -= waterPercentage * 0.1f;
-            }
-
-            if (hull.OxygenPercentage < 30.0f) safety -= (30.0f - hull.OxygenPercentage) * 5.0f;
-
-            if (safety <= 0.0f) return 0.0f;
-
-            bool extinguishFires = 
-                character.AIController.ObjectiveManager?.CurrentOrder is AIObjectiveExtinguishFires ||
-                character.AIController.ObjectiveManager?.CurrentOrder is AIObjectiveExtinguishFire;
-
-            float fireAmount = 0.0f;
-            var nearbyHulls = hull.GetConnectedHulls(3);
-            foreach (Hull hull2 in nearbyHulls)
-            {
-                foreach (FireSource fireSource in hull2.FireSources)
-                {
-                    //increase priority if near the damage range of a fire
-                    //if extinguishing fires, the character can go closer the damage range
-                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * (extinguishFires ? 1.25f : 5.0f)))
-                    {
-                        fireAmount += Math.Max(fireSource.Size.X, AIObjectiveManager.OrderPriority + 1.0f);
-                    }
-                }
-            }
-            safety -= fireAmount;
-
-            foreach (Character enemy in Character.CharacterList)
-            {
-                if (enemy.CurrentHull == hull && !enemy.IsDead && !enemy.IsUnconscious &&
-                   (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
-                {
-                    safety -= 10.0f;
-                }
-            }
-            
-            return MathHelper.Clamp(safety, 0.0f, 100.0f);
+            // Even the smallest fire reduces the safety by 40%
+            // TODO: reduce/ignore the fire factor if has the objective to extinguish fires
+            float fire = hull.FireSources.Count * 0.4f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
+            float fireFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
+            int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
+            // The hull safety decreases 50% per enemy up to 100%
+            float enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp((float)enemyCount / 2, 0, 1));
+            float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
+            return MathHelper.Clamp(safety * 100, 0, 100);
         }
     }
 }
