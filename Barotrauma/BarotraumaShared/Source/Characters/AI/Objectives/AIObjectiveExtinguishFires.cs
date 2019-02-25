@@ -15,8 +15,7 @@ namespace Barotrauma
         {
             if (character.Submarine != null)
             {
-                var connectedSubs = character.Submarine.GetConnectedSubs();
-                hullList = Hull.hullList.Where(h => h.Submarine == character.Submarine || connectedSubs.Any(s => s == h.Submarine)).ToList();
+                hullList = character.Submarine.GetHulls(true);
             }
             if (IsCompleted())
             {

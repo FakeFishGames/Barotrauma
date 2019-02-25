@@ -1041,6 +1041,19 @@ namespace Barotrauma
             return closest;
         }
 
+        public List<Hull> GetHulls(bool alsoFromConnectedSubs)
+        {
+            if (!alsoFromConnectedSubs)
+            {
+                return Hull.hullList.FindAll(h => h.Submarine == this);
+            }
+            else
+            {
+                var connectedSubs = GetConnectedSubs();
+                return Hull.hullList.FindAll(h => h.Submarine == this || connectedSubs.Any(s => s == h.Submarine));
+            }
+        }
+
         /// <summary>
         /// Finds the sub whose borders contain the position
         /// </summary>
