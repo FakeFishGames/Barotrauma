@@ -191,14 +191,14 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
-
-            doc.Root.SetAttributeValue("password", password);
             
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
-        
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Indent = true;
-            settings.NewLineOnAttributes = true;
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                NewLineOnAttributes = true
+            };
 
             using (var writer = XmlWriter.Create(SettingsFile, settings))
             {
@@ -222,9 +222,8 @@ namespace Barotrauma.Networking
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
-            
-            Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;
-            
+                        
+            Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;            
             Voting.AllowModeVoting = ModeSelectionMode == SelectionMode.Vote;
 
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
