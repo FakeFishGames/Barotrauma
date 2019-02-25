@@ -1562,11 +1562,11 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    for (int i = 0; i < item.components.Count; i++)
+                    foreach (ItemComponent component in item.Components)
                     {
-                        if (item.components[i] is IServerSerializable)
+                        if (component is IServerSerializable)
                         {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(component) });
                         }
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null)
