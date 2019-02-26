@@ -1115,7 +1115,7 @@ namespace Barotrauma
 
                 if (validArgs.Length == 0) return command;
 
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % validArgs.Length;
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, validArgs.Length);
                 string autoCompletedArg = validArgs[currentAutoCompletedIndex];
 
                 //add quotation marks to args that contain spaces
