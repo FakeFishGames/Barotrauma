@@ -332,9 +332,12 @@ namespace Barotrauma
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
+            //use the list of visible entities if it exists
+            var entityList = Submarine.VisibleEntities ?? Item.ItemList;
+
             Item closestItem = null;
             float closestItemDistance = aimAssistAmount;
-            foreach (MapEntity entity in Submarine.VisibleEntities)
+            foreach (MapEntity entity in entityList)
             {
                 if (!(entity is Item item))
                 {
