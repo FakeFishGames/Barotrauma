@@ -1575,8 +1575,6 @@ namespace Barotrauma
                         }
 
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
-
-                        item.NeedsPositionUpdate = true;
                     }
                 }
 
