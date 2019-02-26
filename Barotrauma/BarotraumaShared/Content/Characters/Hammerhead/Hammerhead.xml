@@ -12,6 +12,17 @@
     vitality="200"
     doesbleed="true"/>
 
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle1.ogg" state="None" range="5000" />
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle2.ogg" state="None" range="4000" />
+
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_attack1.ogg" state="Attack" range="3000" />
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_attack2.ogg" state="Attack" range="3000" />
+  
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_damage1.ogg" state="Damage" range="3000" />
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_damage2.ogg" state="Damage" range="3000" />
+
+  <sound file="Content/Characters/Hammerhead/HAMMERHEAD_death1.ogg" state="Die" range="5000" />
+  
   <Inventory slots="Any, Any" accessiblewhenalive="false">
     <Item identifier="swimbladder"/>
     <Item identifier="alienblood"/>
