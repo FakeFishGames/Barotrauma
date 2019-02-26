@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "fix leaks";
 
-        const float updateGapListInterval = 5.0f;
+        const float updateGapListInterval = 3.0f;
         private float updateCounter;
 
         private AIObjectiveIdle idleObjective;
@@ -96,7 +96,7 @@ namespace Barotrauma
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
                 //not linked to a hull -> ignore
                 if (gap.linkedTo.All(l => l == null)) { continue; }
-                
+
                 if (character.TeamID == 0)
                 {
                     if (gap.Submarine == null) continue;
