@@ -235,6 +235,7 @@ namespace Barotrauma
             }
         }
 
+#if DEBUG
         public static void CheckForDuplicates(string lang)
         {
             if (!textPacks.ContainsKey(lang))
@@ -250,6 +251,7 @@ namespace Barotrauma
                 packIndex++;
             }
         }
+#endif
 
         private static string Capitalize(string str)
         {
