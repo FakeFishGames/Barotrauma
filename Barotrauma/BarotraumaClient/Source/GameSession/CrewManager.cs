@@ -801,7 +801,7 @@ namespace Barotrauma
             {
                 matchingItems = order.ItemIdentifiers.Length > 0 ?
                     Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
-                    Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == order.ItemComponentType));
 
                 matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
                 matchingItems.RemoveAll(it => it.Submarine != null && it.Submarine.IsOutpost);
@@ -878,7 +878,7 @@ namespace Barotrauma
                         var optionButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), optionContainer.RectTransform),
                             order.OptionNames[i], style: "GUITextBox")
                         {
-                            UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                            UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                             Font = GUI.SmallFont,
                             OnClicked = (btn, userData) =>
                             {
@@ -914,7 +914,7 @@ namespace Barotrauma
                     var optionButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), orderTargetFrame.RectTransform),
                         order.OptionNames[i], style: "GUITextBox")
                     {
-                        UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                        UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                         OnClicked = (btn, userData) =>
                         {
                             if (Character.Controlled == null) return false;
@@ -969,7 +969,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y ||
                 prevUIScale != GUI.Scale)
             {
@@ -1048,7 +1048,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
             if (chatBox != null)
             {
                 chatBox.Update(deltaTime);

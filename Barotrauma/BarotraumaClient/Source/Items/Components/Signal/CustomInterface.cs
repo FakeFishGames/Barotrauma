@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), userdata as CustomInterfaceElement });
+                            GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), userdata as CustomInterfaceElement });
                         }
                         return true;
                     };

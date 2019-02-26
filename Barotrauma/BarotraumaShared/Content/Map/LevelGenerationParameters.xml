@@ -56,7 +56,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </ColdCavernsBasic>
 
   <ColdCavernsMaze
@@ -86,7 +88,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </ColdCavernsMaze>
   
   <RidgeBasic
@@ -117,7 +121,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/BackgroundColorful.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </RidgeBasic>
 
   <PlateauBasic
@@ -145,7 +151,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </PlateauBasic>
 
   <VoidBasic
@@ -162,15 +170,17 @@
     SmallTunnelCount="3"
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
+    ItemCount="400"
     FloatingIceChunkCount="20"
     BottomHoleProbability="1"
     levelobjectamount="800">
-    ItemCount="400"
     <Background texture="Content/Map/iceBackgroundFade.png"/>
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </VoidBasic>
 
   <WastesBasic
@@ -201,7 +211,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/BackgroundSmoke.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </WastesBasic>
 
   <!--

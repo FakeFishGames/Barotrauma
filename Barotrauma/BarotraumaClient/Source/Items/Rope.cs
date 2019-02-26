@@ -7,6 +7,12 @@ namespace Barotrauma.Items.Components
 {
     partial class Rope : ItemComponent, IDrawableComponent
     {
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             if (!IsActive) return;

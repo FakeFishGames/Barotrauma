@@ -1,21 +1,16 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private bool prevBodyAwake;
+
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";
@@ -264,12 +259,26 @@ namespace Barotrauma
         {
             if (parentInventory != null) return;
 
-            if (prevBodyAwake != body.FarseerBody.Awake || Vector2.Distance(lastSentPos, SimPosition) > NetConfig.ItemPosUpdateDistance)
+            if (prevBodyAwake != body.FarseerBody.Awake || 
+                Vector2.DistanceSquared(lastSentPos, SimPosition) > NetConfig.ItemPosUpdateDistance * NetConfig.ItemPosUpdateDistance)
             {
                 needsPositionUpdate = true;
             }
 
             prevBodyAwake = body.FarseerBody.Awake;
+        }
+
+        public void ServerWritePosition(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(ID);
+
+            NetBuffer tempBuffer = new NetBuffer();
+            body.ServerWrite(tempBuffer, c, extraData);
+            msg.Write((byte)tempBuffer.LengthBytes);
+            msg.Write(tempBuffer);
+            msg.WritePadBits();
+
+            lastSentPos = SimPosition;
         }
 
         public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable

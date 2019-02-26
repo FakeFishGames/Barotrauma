@@ -68,6 +68,11 @@ namespace Barotrauma.Sounds
             get;
             protected set;
         }
+
+        /// <summary>
+        /// How many instances of the same sound clip can be playing at the same time
+        /// </summary>
+        public int MaxSimultaneousInstances = 5;
         
         public float BaseGain;
         public float BaseNear;
@@ -121,7 +126,7 @@ namespace Barotrauma.Sounds
             return GetType().ToString() + " (" + Filename + ")";
         }
 
-        public bool IsPlaying()
+        public virtual bool IsPlaying()
         {
             return Owner.IsPlaying(this);
         }
@@ -148,6 +153,7 @@ namespace Barotrauma.Sounds
 
         public virtual SoundChannel Play(float? gain, string category)
         {
+            if (Owner.CountPlayingInstances(this) >= MaxSimultaneousInstances) { return null; }
             return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
         }
 
@@ -161,15 +167,14 @@ namespace Barotrauma.Sounds
 
         static protected short FloatToShort(float fVal)
         {
-            fVal = Math.Max(Math.Min(fVal, 1.0f), -1.0f);
-            int temp = (int)(32767f * fVal);
+            int temp = (int)(32767 * fVal);
             if (temp > short.MaxValue) temp = short.MaxValue;
             else if (temp < short.MinValue) temp = short.MinValue;
             return (short)temp;
         }
         static protected float ShortToFloat(short shortVal)
         {
-            return Math.Max(Math.Min(shortVal / 32767f, 1.0f), -1.0f);
+            return shortVal / 32767f;
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);
@@ -194,6 +199,22 @@ namespace Barotrauma.Sounds
                     throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
             }
+            if (alMuffledBuffer != 0)
+            {
+                if (!AL.IsBuffer(alMuffledBuffer))
+                {
+                    throw new Exception("Buffer to delete is invalid!");
+                }
+
+                AL.DeleteBuffer(ref alMuffledBuffer); alMuffledBuffer = 0;
+
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                }
+            }
+
             Owner.RemoveSound(this);
             disposed = true;
         }

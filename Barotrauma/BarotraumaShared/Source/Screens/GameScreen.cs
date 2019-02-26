@@ -73,7 +73,10 @@ namespace Barotrauma
                     closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
             }
 #endif
-
+            foreach (PhysicsBody body in PhysicsBody.List)
+            {
+                body.Update((float)deltaTime);
+            }
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 e.IsHighlighted = false;
@@ -128,7 +131,7 @@ namespace Barotrauma
             if (Character.Controlled != null && 
                 Lights.LightManager.ViewTarget != null)
             {
-                Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
+                Vector2 targetPos = Lights.LightManager.ViewTarget.DrawPosition;
                 if (Lights.LightManager.ViewTarget == Character.Controlled && CharacterHealth.OpenHealthWindow != null)
                 {
                     Vector2 screenTargetPos = CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ?

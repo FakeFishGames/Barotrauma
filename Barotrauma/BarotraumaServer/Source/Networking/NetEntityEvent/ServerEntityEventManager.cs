@@ -363,7 +363,9 @@ namespace Barotrauma.Networking
                 //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
                 client.EntityEventLastSent.TryGetValue(eventList[i].ID, out float lastSent);
 
-                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
+                float minInterval = Math.Max(client.Connection.AverageRoundtripTime * 1.5f, (float)server.UpdateInterval.TotalSeconds * 2);
+
+                if (lastSent > NetTime.Now - Math.Min(minInterval, 0.5f))
                 {
                     continue;
                 }
@@ -492,6 +494,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in server.ConnectedClients)
             {
+                c.PositionUpdateLastSent.Clear();
                 c.EntityEventLastSent.Clear();
                 c.LastRecvEntityEventID = 0;
                 c.LastSentEntityEventID = 0;

@@ -19,9 +19,7 @@ namespace Barotrauma
         
         public bool Locked;
 
-        private ushort[] receivedItemIDs;
         protected float syncItemsDelay;
-        private CoroutineHandle syncItemsCoroutine;
 
         public int Capacity
         {
@@ -315,7 +313,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null)
             {
-                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
+                if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
                 GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState });
             }
         }
@@ -380,13 +378,6 @@ namespace Barotrauma
                 }
                 Items[i].Remove();
             }
-        }
-        
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
-        {
-            SharedWrite(msg, extraData);
-
-            syncItemsDelay = 1.0f;
-        }
+        }        
     }
 }

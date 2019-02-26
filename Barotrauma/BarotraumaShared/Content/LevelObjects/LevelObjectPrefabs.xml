@@ -643,7 +643,7 @@
     <overridecommonness commonness="10" leveltype="RidgeBasic" />
     <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
-    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/IceSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
   </icechunk1>
   <icechunk2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
     <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
@@ -651,7 +651,7 @@
     <overridecommonness commonness="10" leveltype="RidgeBasic" />
     <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
-    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/IceSpecular.png" sourcerect="669,0,355,513" origin="0.5,0.5" />
   </icechunk2>
   <icechunk3 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
     <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
@@ -659,7 +659,7 @@
     <overridecommonness commonness="10" leveltype="RidgeBasic" />
     <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
-    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/IceSpecular.png" sourcerect="0,523,331,501" origin="0.5,0.5" />
   </icechunk3>
   <icechunk4 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="5" maxsize="8" randomrotation="-180,180" commonness="0" depthrange="100,2000">
     <overridecommonness commonness="10" leveltype="ColdCavernsBasic" />
@@ -667,7 +667,7 @@
     <overridecommonness commonness="10" leveltype="RidgeBasic" />
     <overridecommonness commonness="10" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
-    <SpecularSprite texture="Content/LevelObjects/ice_specular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
+    <SpecularSprite texture="Content/LevelObjects/IceSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
   </icechunk4>
 
   <!-- rocks chunks-->

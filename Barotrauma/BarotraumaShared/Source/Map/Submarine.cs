@@ -408,7 +408,7 @@ namespace Barotrauma
                 if (me is Item item)
                 {
                     item.Indestructible = true;
-                    foreach (ItemComponent ic in item.components)
+                    foreach (ItemComponent ic in item.Components)
                     {
                         if (ic is ConnectionPanel connectionPanel)
                         {
@@ -542,71 +542,6 @@ namespace Barotrauma
             
             spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
             return spawnPos - diffFromDockedBorders;
-        }
-
-        //drawing ----------------------------------------------------
-
-        public static void CullEntities(Camera cam)
-        {
-            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
-            foreach (Submarine sub in Loaded)
-            {
-                if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
-
-                Rectangle worldBorders = new Rectangle(
-                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
-                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
-                    sub.Borders.Width + 1000,
-                    sub.Borders.Height + 1000);
-
-                if (RectsOverlap(worldBorders, cam.WorldView))
-                {
-                    visibleSubs.Add(sub);
-                }
-            }
-
-            HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
-            if (Level.Loaded != null)
-            {
-                foreach (Ruin ruin in Level.Loaded.Ruins)
-                {
-                    Rectangle worldBorders = new Rectangle(
-                        ruin.Area.X - 500,
-                        ruin.Area.Y + ruin.Area.Height + 500,
-                        ruin.Area.Width + 1000,
-                        ruin.Area.Height + 1000);
-
-                    if (RectsOverlap(worldBorders, cam.WorldView))
-                    {
-                        visibleRuins.Add(ruin);
-                    }
-                }
-            }
-            
-            if (visibleEntities == null)
-            {
-                visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count); 
-            }
-            else
-            {
-                visibleEntities.Clear();
-            }
-
-            Rectangle worldView = cam.WorldView;
-            foreach (MapEntity entity in MapEntity.mapEntityList)
-            {
-                if (entity.Submarine != null)
-                {
-                    if (!visibleSubs.Contains(entity.Submarine)) { continue; }
-
-                }
-                else if(entity.ParentRuin != null)
-                {
-                    if (!visibleRuins.Contains(entity.ParentRuin)) { continue; }
-                }
-
-                if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }             
-            }
         }
 
         public void UpdateTransform()
@@ -1491,16 +1426,6 @@ namespace Barotrauma
             PreviewImage?.Remove();
             PreviewImage = null;
 #endif
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(ID);
-            //length in bytes
-            msg.Write((byte)(4 + 4));
-
-            msg.Write(PhysicsBody.SimPosition.X);
-            msg.Write(PhysicsBody.SimPosition.Y);
         }
     }
 

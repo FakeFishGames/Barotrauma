@@ -13,26 +13,13 @@ namespace Barotrauma.Sounds
 {
     public class VideoSound : Sound
     {
-        public bool IsPlaying
-        {
-            get
-            {
-                bool retVal = false;
-                lock (mutex)
-                {
-                    retVal = soundChannel != null && soundChannel.IsPlaying;
-                }
-                return retVal;
-            }
-        }
-
-        private object mutex;
+        private readonly object mutex;
         private Queue<short[]> sampleQueue;
 
         private SoundChannel soundChannel;
         private Video video;
 
-        public VideoSound(SoundManager owner,string filename,int sampleRate,Video vid) : base(owner, filename, true, false)
+        public VideoSound(SoundManager owner, string filename, int sampleRate, Video vid) : base(owner, filename, true, false)
         {
             ALFormat = ALFormat.Stereo16;
             SampleRate = sampleRate;
@@ -43,6 +30,16 @@ namespace Barotrauma.Sounds
             soundChannel = null;
 
             video = vid;
+        }
+
+        public override bool IsPlaying()
+        {
+            bool retVal = false;
+            lock (mutex)
+            {
+                retVal = soundChannel != null && soundChannel.IsPlaying;
+            }
+            return retVal;
         }
 
         public void Enqueue(short[] buf)

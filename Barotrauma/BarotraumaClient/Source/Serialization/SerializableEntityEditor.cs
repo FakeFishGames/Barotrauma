@@ -285,7 +285,7 @@ namespace Barotrauma
 
         private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
         {
-            object value = property.GetValue();
+            object value = property.GetValue(entity);
             if (property.PropertyType == typeof(string) && value == null)
             {
                 value = "";
@@ -360,7 +360,7 @@ namespace Barotrauma
                 ToolTip = toolTip,
                 OnSelected = (tickBox) =>
                 {
-                    if (property.TrySetValue(tickBox.Selected))
+                    if (property.TrySetValue(entity, tickBox.Selected))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
@@ -390,7 +390,7 @@ namespace Barotrauma
             numberInput.IntValue = value;
             numberInput.OnValueChanged += (numInput) =>
             {
-                if (property.TrySetValue(numInput.IntValue))
+                if (property.TrySetValue(entity, numInput.IntValue))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
@@ -420,7 +420,7 @@ namespace Barotrauma
             numberInput.FloatValue = value;
             numberInput.OnValueChanged += (numInput) =>
             {
-                if (property.TrySetValue(numInput.FloatValue))
+                if (property.TrySetValue(entity, numInput.FloatValue))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
@@ -447,7 +447,7 @@ namespace Barotrauma
             }
             enumDropDown.OnSelected += (selected, val) =>
             {
-                if (property.TrySetValue(val))
+                if (property.TrySetValue(entity, val))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
@@ -480,7 +480,7 @@ namespace Barotrauma
             }
             enumDropDown.OnSelected += (selected, val) =>
             {
-                if (property.TrySetValue(string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
+                if (property.TrySetValue(entity, string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
@@ -505,10 +505,10 @@ namespace Barotrauma
                 Text = value,
                 OnEnterPressed = (textBox, text) =>
                 {
-                    if (property.TrySetValue(text))
+                    if (property.TrySetValue(entity, text))
                     {
                         TrySendNetworkUpdate(entity, property);
-                        textBox.Text = (string)property.GetValue();
+                        textBox.Text = (string)property.GetValue(entity);
                         textBox.Deselect();
                     }
                     return true;
@@ -553,13 +553,13 @@ namespace Barotrauma
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
-                    Point newVal = (Point)property.GetValue();
+                    Point newVal = (Point)property.GetValue(entity);
                     if (comp == 0)
                         newVal.X = numInput.IntValue;
                     else
                         newVal.Y = numInput.IntValue;
 
-                    if (property.TrySetValue(newVal))
+                    if (property.TrySetValue(entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
@@ -607,13 +607,13 @@ namespace Barotrauma
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
-                    Vector2 newVal = (Vector2)property.GetValue();
+                    Vector2 newVal = (Vector2)property.GetValue(entity);
                     if (comp == 0)
                         newVal.X = numInput.FloatValue;
                     else
                         newVal.Y = numInput.FloatValue;
 
-                    if (property.TrySetValue(newVal))
+                    if (property.TrySetValue(entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
@@ -663,7 +663,7 @@ namespace Barotrauma
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
-                    Vector3 newVal = (Vector3)property.GetValue();
+                    Vector3 newVal = (Vector3)property.GetValue(entity);
                     if (comp == 0)
                         newVal.X = numInput.FloatValue;
                     else if (comp == 1)
@@ -671,7 +671,7 @@ namespace Barotrauma
                     else
                         newVal.Z = numInput.FloatValue;
 
-                    if (property.TrySetValue(newVal))
+                    if (property.TrySetValue(entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
@@ -723,7 +723,7 @@ namespace Barotrauma
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
-                    Vector4 newVal = (Vector4)property.GetValue();
+                    Vector4 newVal = (Vector4)property.GetValue(entity);
                     if (comp == 0)
                         newVal.X = numInput.FloatValue;
                     else if (comp == 1)
@@ -733,7 +733,7 @@ namespace Barotrauma
                     else
                         newVal.W = numInput.FloatValue;
 
-                    if (property.TrySetValue(newVal))
+                    if (property.TrySetValue(entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
@@ -788,7 +788,7 @@ namespace Barotrauma
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
-                    Color newVal = (Color)property.GetValue();
+                    Color newVal = (Color)property.GetValue(entity);
                     if (comp == 0)
                         newVal.R = (byte)(numInput.IntValue);
                     else if (comp == 1)
@@ -798,13 +798,13 @@ namespace Barotrauma
                     else
                         newVal.A = (byte)(numInput.IntValue);
 
-                    if (property.TrySetValue(newVal))
+                    if (property.TrySetValue(entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                         colorBox.Color = newVal;
                     }
                 };
-                colorBox.Color = (Color)property.GetValue();
+                colorBox.Color = (Color)property.GetValue(entity);
                 fields[i] = numberInput;
             }
             Fields.Add(property.Name, fields);
@@ -850,7 +850,7 @@ namespace Barotrauma
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
-                    Rectangle newVal = (Rectangle)property.GetValue();
+                    Rectangle newVal = (Rectangle)property.GetValue(entity);
                     if (comp == 0)
                         newVal.X = numInput.IntValue;
                     else if (comp == 1)
@@ -860,7 +860,7 @@ namespace Barotrauma
                     else
                         newVal.Height = numInput.IntValue;
 
-                    if (property.TrySetValue(newVal))
+                    if (property.TrySetValue(entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }

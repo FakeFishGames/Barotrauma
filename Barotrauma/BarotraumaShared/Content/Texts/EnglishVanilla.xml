@@ -437,10 +437,10 @@
   <StartCampaignButton>Start</StartCampaignButton>
   <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
   <SelectMission>Select a mission</SelectMission>
-  
+  <CampaignStartingPleaseWait>Please wait</CampaignStartingPleaseWait>
+  <CampaignStarting>Waiting for the campaign to start.</CampaignStarting>
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
-
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
   <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content packages, because it requires the content packages [requiredcontentpackages]. Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
 
@@ -582,10 +582,13 @@
   <PlayYourself>Play yourself</PlayYourself>
   <StartGameButton>Start</StartGameButton>
   <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
+  <RoundStartingPleaseWait>Please wait</RoundStartingPleaseWait>
+  <RoundStarting>Waiting for the round to start.</RoundStarting>
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
   <JobPreferences>Job preferences</JobPreferences>
+  <RandomPreferences>Random Preferences</RandomPreferences>
   <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
   <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
   <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
@@ -2380,7 +2383,7 @@
   <Approach1>Approach I</Approach1>  
   <Approach2>Approach II</Approach2>
   <Approach2Text>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2Text>
-  
+
   <!-- Afflictions -->
   <AfflictionName.InternalDamage>Internal Damage</AfflictionName.InternalDamage>
   <AfflictionDescription.InternalDamage>The area is an ugly shade of purple, and apparently very painful to touch. You suspect a bone might be broken.</AfflictionDescription.InternalDamage>
@@ -2457,7 +2460,7 @@
   <AfflictionCauseOfDeathSelf.SufforinPoisoning>You have died of sufforin poisoning.</AfflictionCauseOfDeathSelf.SufforinPoisoning>
 
   <AfflictionName.CyanidePoisoning>Cyanide poisoning</AfflictionName.CyanidePoisoning>
-  <AfflictionDescription.CyanidePoisoning>The patient is confused and has trouble breathing. Their skin is reddish and they have occasional muscle spasms.</AfflictionDescription.CyanidePoisoning>
+  <AfflictionDescription.CyanidePoisoning>The patient is confused and has trouble breathing. Their skin is red and they have occasional muscle spasms.</AfflictionDescription.CyanidePoisoning>
   <AfflictionCauseOfDeath.CyanidePoisoning>Died of cyanide poisoning.</AfflictionCauseOfDeath.CyanidePoisoning>
   <AfflictionCauseOfDeathSelf.CyanidePoisoning>You have died of cyanide poisoning.</AfflictionCauseOfDeathSelf.CyanidePoisoning>
   
@@ -2549,9 +2552,4 @@
   <LocationChange.Ruins.ChangeTo.Outpost>An outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Outpost>
   <LocationChange.Ruins.ChangeTo.Military>A military outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Military>
   <LocationChange.Ruins.ChangeTo.Research>A research outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Research>
-
-
-
-
-
 </infotexts>

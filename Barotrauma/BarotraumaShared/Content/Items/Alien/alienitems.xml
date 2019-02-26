@@ -356,7 +356,7 @@
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,56,208,19" depth="0.6" origin="0.0,0.5" />
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="1000.0" />
-      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -371,7 +371,7 @@
       <RequiredItem identifier="crowbar" type="Equipped" />
       <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="56,0,19,208" depth="0.6" origin="0.5,0.0" />
       <sound file="Content/Items/Alien/aliendoor.ogg" type="OnUse" range="1000.0" />
-      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -552,7 +552,7 @@
   <Item name="Alien Vent" identifier="alienvent" category="Alien" interactdistance="0" linkable="true">
     <Sprite texture="Content/Items/OxygenGenerator/vent.png" depth="0.91" sourcerect="0,0,64,64" />
     <Vent>
-      <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="400.0" loop="true" />
+      <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" loop="true" />
       <StatusEffect type="NotInWater" target="NearbyCharacters" range="300">
         <Affliction identifier="psychosis" strength="2" />
         <ParticleEmitter particle="aliengas" anglemin="0" anglemax="360" particlespersecond="5" velocitymin="0" velocitymax="10" scalemin="1" scalemax="2" />

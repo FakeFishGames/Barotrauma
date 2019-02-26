@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
             LevelSeed = 0x10
         }
 
+        public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
+
         public string Name
         {
             get { return "ServerSettings"; }
@@ -74,8 +76,11 @@ namespace Barotrauma.Networking
 
         partial class NetPropertyData
         {
-            SerializableProperty property;
-            string typeString;
+            private SerializableProperty property;
+            private string typeString;
+
+            private ServerSettings serverSettings;
+
             public string Name
             {
                 get { return property.Name; }
@@ -83,13 +88,14 @@ namespace Barotrauma.Networking
 
             public object Value
             {
-                get { return property.GetValue(); }
+                get { return property.GetValue(serverSettings); }
             }
             
-            public NetPropertyData(SerializableProperty property,string typeString)
+            public NetPropertyData(ServerSettings serverSettings, SerializableProperty property, string typeString)
             {
                 this.property = property;
                 this.typeString = typeString;
+                this.serverSettings = serverSettings;
             }
             
             public void Read(NetBuffer msg)
@@ -105,20 +111,20 @@ namespace Barotrauma.Networking
                 {
                     case "float":
                         if (size != 4) break;
-                        property.SetValue(msg.ReadFloat());
+                        property.SetValue(serverSettings, msg.ReadFloat());
                         return;
                     case "vector2":
                         if (size != 8) break;
                         x = msg.ReadFloat();
                         y = msg.ReadFloat();
-                        property.SetValue(new Vector2(x, y));
+                        property.SetValue(serverSettings, new Vector2(x, y));
                         return;
                     case "vector3":
                         if (size != 12) break;
                         x = msg.ReadFloat();
                         y = msg.ReadFloat();
                         z = msg.ReadFloat();
-                        property.SetValue(new Vector3(x, y, z));
+                        property.SetValue(serverSettings, new Vector3(x, y, z));
                         return;
                     case "vector4":
                         if (size != 16) break;
@@ -126,7 +132,7 @@ namespace Barotrauma.Networking
                         y = msg.ReadFloat();
                         z = msg.ReadFloat();
                         w = msg.ReadFloat();
-                        property.SetValue(new Vector4(x, y, z, w));
+                        property.SetValue(serverSettings, new Vector4(x, y, z, w));
                         return;
                     case "color":
                         if (size != 4) break;
@@ -134,7 +140,7 @@ namespace Barotrauma.Networking
                         g = msg.ReadByte();
                         b = msg.ReadByte();
                         a = msg.ReadByte();
-                        property.SetValue(new Color(r, g, b, a));
+                        property.SetValue(serverSettings, new Color(r, g, b, a));
                         return;
                     case "rectangle":
                         if (size != 16) break;
@@ -142,12 +148,12 @@ namespace Barotrauma.Networking
                         iy = msg.ReadInt32();
                         width = msg.ReadInt32();
                         height = msg.ReadInt32();
-                        property.SetValue(new Rectangle(ix, iy, width, height));
+                        property.SetValue(serverSettings, new Rectangle(ix, iy, width, height));
                         return;
                     default:
                         msg.Position = oldPos; //reset position to properly read the string
                         string incVal = msg.ReadString();
-                        property.TrySetValue(incVal);
+                        property.TrySetValue(serverSettings, incVal);
                         return;
                 }
 
@@ -155,9 +161,9 @@ namespace Barotrauma.Networking
                 msg.Position += 8 * size;
             }
 
-            public void Write(NetBuffer msg,object overrideValue=null)
+            public void Write(NetBuffer msg, object overrideValue = null)
             {
-                if (overrideValue == null) overrideValue = property.GetValue();
+                if (overrideValue == null) overrideValue = property.GetValue(serverSettings);
                 switch (typeString)
                 {
                     case "float":
@@ -226,6 +232,7 @@ namespace Barotrauma.Networking
 
             ExtraCargo = new Dictionary<ItemPrefab, int>();
 
+            PermissionPreset.LoadAll(PermissionPresetFile);
             InitProjSpecific();
 
             ServerName = serverName;
@@ -242,13 +249,13 @@ namespace Barotrauma.Networking
                 var saveProperties = SerializableProperty.GetProperties<Serialize>(this);
                 foreach (var property in saveProperties)
                 {
-                    object value = property.GetValue();
+                    object value = property.GetValue(this);
                     if (value == null) continue;
 
                     string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
-                        NetPropertyData netPropertyData = new NetPropertyData(property, typeName);
+                        NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
 
                         UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
 
@@ -291,6 +298,13 @@ namespace Barotrauma.Networking
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
         public WhiteList Whitelist { get; private set; }
+        
+        [Serialize(20, true)]
+        public int TickRate
+        {
+            get;
+            set;
+        }
 
         [Serialize(true, true)]
         public bool RandomizeSeed
@@ -586,13 +600,13 @@ namespace Barotrauma.Networking
             this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
         }
 
-        public bool IsPasswordCorrect(string input,int nonce)
+        public bool IsPasswordCorrect(string input, int nonce)
         {
             if (!HasPassword) return true;
             string saltedPw = password;
             saltedPw = saltedPw + Convert.ToString(nonce);
             saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            return input == password;
+            return input == saltedPw;
         }
 
         /// <summary>
@@ -649,11 +663,11 @@ namespace Barotrauma.Networking
             UInt32 count = msg.ReadUInt32();
             if (ExtraCargo == null || count != ExtraCargo.Count) changed = true;
             Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
-            for (int i=0;i<count;i++)
+            for (int i = 0; i < count; i++)
             {
                 string prefabName = msg.ReadString();
                 byte amount = msg.ReadByte();
-                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName,StringComparison.InvariantCulture)) as ItemPrefab;
+                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName, StringComparison.InvariantCulture)) as ItemPrefab;
                 if (ip != null && amount > 0)
                 {
                     if (changed || !ExtraCargo.ContainsKey(ip) || ExtraCargo[ip] != amount) changed = true;

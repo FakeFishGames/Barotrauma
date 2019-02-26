@@ -10,6 +10,11 @@ namespace Barotrauma
         private const int IconSize = 32;
         private static int[] iconIndices = { 3, 0, 1, 2 };
 
+        public override bool IsVisible(Rectangle worldView)
+        {
+            return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing && !GameMain.DebugDraw) return;

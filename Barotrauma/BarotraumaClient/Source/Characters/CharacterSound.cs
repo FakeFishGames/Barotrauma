@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         public enum SoundType
         {
-            Idle, Attack, Die
+            Idle, Attack, Die, Damage
         }
 
         private readonly RoundSound roundSound;
@@ -31,7 +31,7 @@ namespace Barotrauma
         public CharacterSound(XElement element)
         {
             roundSound = Submarine.LoadRoundSound(element);
-            Enum.TryParse<SoundType>(element.GetAttributeString("state", "Idle"), true, out Type);
+            Enum.TryParse(element.GetAttributeString("state", "Idle"), true, out Type);
         }
     }
 }

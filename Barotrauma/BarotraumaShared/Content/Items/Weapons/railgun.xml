@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
+  
   <Item name="Railgun" identifier="railgun" 
         description="A heavy turret that uses electromagnetic force to launch shells at very high velocities. Requires very large surges of power (usually supplied by supercapacitors) and has a low rate of fire, and as such it's most often used against large and heavily armored targets."
         Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
@@ -7,18 +8,18 @@
     <StaticBody width="80" radius="80" />
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="126, 89" rotationlimits="180,360" powerconsumption="20000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="100" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
       <StatusEffect type="OnUse" target="This">
-        <sound file="Content/Items/Weapons/railgun1.ogg" range="10000" type="OnUse" />
-        <sound file="Content/Items/Weapons/railgun2.ogg" range="10000" type="OnUse" />
-        <sound file="Content/Items/Weapons/railgun3.ogg" range="10000" type="OnUse" />
+        <sound file="Content/Items/Weapons/Railgun1.ogg" range="10000" type="OnUse" />
+        <sound file="Content/Items/Weapons/Railgun2.ogg" range="10000" type="OnUse" />
+        <sound file="Content/Items/Weapons/Railgun3.ogg" range="10000" type="OnUse" />
         <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" />
       </StatusEffect>
       <RailSprite texture="Content/Items/Weapons/railgunrail.png" origin="0.52, 0.59" depth="0.011" />
       <BarrelSprite texture="Content/Items/Weapons/railgunbarrel.png" origin="0.5, 0.85" depth="0.012" />
       <Crosshair texture="Content/Items/Weapons/crosshair.png" />
       <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
-      <MoveSound file="Content/Items/Weapons/railgunloop.ogg" />
-      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg" />
-      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg" />
+      <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />
+      <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg" />
+      <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg" />
       <RequiredSkill identifier="weapons" level="50" />
       <LightComponent LightColor="1.0,0.8,0.8,1.0" Flicker="0.0" range="2048" IsOn="true" drawbehindsubs="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0" />
@@ -33,6 +34,7 @@
       <input name="trigger_in" />
     </ConnectionPanel>
   </Item>
+  
   <Item name="Periscope"
         description="A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun."
         identifier="periscope" tags="railgunequipment" category="Machine" type="Controller" disableitemusagewhenselected="true" scale="0.5">
@@ -50,13 +52,14 @@
       <output name="trigger_out" />
     </ConnectionPanel>
   </Item>
+  
   <Item name="Railgun Loader" 
         identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true">
       <Containable identifiers="railgunammo" />
     </ItemContainer>
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="840" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="840" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="Equipped" />
@@ -65,18 +68,21 @@
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
+  
   <Item name="Railgun Loader Single" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="43,-130" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true">
       <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
+  
   <Item name="Railgun Loader Single" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="130,-43" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true">
       <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
+  
   <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
@@ -105,6 +111,7 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
+  
   <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
     <Price locationtype="Military" buyprice="200" />
     <Deconstruct time="10">
@@ -141,12 +148,11 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Alien Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+  
+  <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
     <Price locationtype="Military" buyprice="400" />
-    <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="uranium" />
-      <Item identifier="uex" />
+    <Deconstruct time="20">
+      <Item identifier="physicorium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,170,216,34" depth="0.55" origin="0.5,0.5" />
@@ -154,8 +160,8 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
-        <Affliction identifier="internaldamage" strength="100" />
-        <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="internaldamage" strength="150" />
+        <Affliction identifier="bleeding" strength="20" />
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000" />
