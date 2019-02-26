@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
             if (body != null)
             {
 #if CLIENT
-                light.Rotation = body.Dir > 0.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
+                light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
                 light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
 #endif
                 if (!body.Enabled)

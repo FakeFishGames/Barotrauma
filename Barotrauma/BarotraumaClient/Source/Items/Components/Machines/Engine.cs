@@ -22,6 +22,12 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), GuiFrame.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.15f) }, 

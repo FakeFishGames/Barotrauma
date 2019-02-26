@@ -8,6 +8,13 @@ namespace Barotrauma
 {
     partial class Character
     {
+        public string OwnerClientIP;
+        public string OwnerClientName;
+        public bool ClientDisconnected;
+        public float KillDisconnectedTimer;
+
+        private bool networkUpdateSent;
+
         public float GetPositionUpdateInterval(Client recipient)
         {
             if (!Enabled) { return 1000.0f; }
@@ -248,7 +255,7 @@ namespace Barotrauma
                 {
                     case NetEntityEvent.Type.InventoryState:
                         msg.WriteRangedInteger(0, 3, 0);
-                        Inventory.ClientWrite(msg, extraData);
+                        Inventory.SharedWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(0, 3, 1);

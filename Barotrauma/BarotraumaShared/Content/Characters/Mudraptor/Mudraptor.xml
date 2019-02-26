@@ -12,6 +12,21 @@
   <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3"/>
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" state="Attack" range="1000"/>
+
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage1.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage2.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage3.ogg" state="Damage" range="1000"/>
+
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle1.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle2.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle3.ogg" state="Idle" range="1000"/>
+
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death1.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death2.ogg" state="Die" range="1000"/>
   
   <ai
     combatstrength="250"

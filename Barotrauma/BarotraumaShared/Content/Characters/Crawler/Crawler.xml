@@ -36,8 +36,9 @@
     hearing="1.0"
     fleehealththreshold="10"
     aggressiveboarding="true">
-    
-    <latchonto 
+
+    <latchonto
+      commonness="2.0"
       attachtowalls="true"
       attachtosub="true"
       mindeattachspeed="3.0"
@@ -46,7 +47,10 @@
       detachstun="5.0"
       attachlimb="Head"
       localattachpos="40,10"
-      attachlimbrotation="100"/>
+      attachlimbrotation="100"
+      aggressiongreed="20"
+      aggressionhurt="100"/>
+    
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="300"/>

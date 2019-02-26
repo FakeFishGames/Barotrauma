@@ -72,7 +72,13 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -169,9 +175,10 @@ namespace Barotrauma.Items.Components
                     item.IsHighlighted = false;
                 }
 
-                if (containedItem.body != null)
+                if (containedItem.body != null && 
+                    Math.Abs(containedItem.body.FarseerBody.Rotation - currentRotation) > 0.001f)
                 {
-                    containedItem.body.FarseerBody.Rotation = currentRotation;
+                    containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
                 }
 
                 containedItem.Sprite.Draw(

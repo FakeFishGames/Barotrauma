@@ -123,10 +123,10 @@ namespace Barotrauma
                                 memoryIndex = -1;
                                 break;
                             case ConsoleKey.LeftArrow:
-                                AutoComplete(input, -1);
+                                input = AutoComplete(input, -1);
                                 break;
                             case ConsoleKey.RightArrow:
-                                AutoComplete(input, 1);
+                                input = AutoComplete(input, 1);
                                 break;
                             case ConsoleKey.UpArrow:
                                 memoryIndex--;
@@ -159,7 +159,7 @@ namespace Barotrauma
                                     input += key.KeyChar;
                                     memoryIndex = -1;
                                 }
-                                DebugConsole.ResetAutoComplete();
+                                ResetAutoComplete();
                                 break;
                         }
                         
@@ -169,7 +169,7 @@ namespace Barotrauma
                     Thread.Yield();
                 }
             }
-            catch (ThreadAbortException e)
+            catch (ThreadAbortException)
             {
                 //don't have anything to do here yet
             }
@@ -183,7 +183,7 @@ namespace Barotrauma
             int consoleHeight = Console.WindowHeight;
             if (consoleHeight < 5) consoleHeight = 5;
 
-            string ln = input.Length>0 ? AutoComplete(input,0) : "";
+            string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
             ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.CursorLeft = 0;
@@ -548,12 +548,12 @@ namespace Barotrauma
                 }
             });
 
-            AssignOnExecute("togglekarma", (string[] args) =>
+            /*AssignOnExecute("togglekarma", (string[] args) =>
             {
-                throw new NotImplementedException();
+                return;
                 if (GameMain.Server == null) return;
                 GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
-            });
+            });*/
 
             AssignOnExecute("banip", (string[] args) =>
             {
@@ -1562,11 +1562,11 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    for (int i = 0; i < item.components.Count; i++)
+                    foreach (ItemComponent component in item.Components)
                     {
-                        if (item.components[i] is IServerSerializable)
+                        if (component is IServerSerializable)
                         {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(component) });
                         }
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null)

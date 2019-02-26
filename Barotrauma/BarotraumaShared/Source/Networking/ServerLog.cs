@@ -64,7 +64,6 @@ namespace Barotrauma.Networking
 
         private int unsavedLineCount;
 
-        private string msgFilter;
         private bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
 
         public int LinesPerFile

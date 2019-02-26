@@ -197,7 +197,7 @@ namespace Barotrauma
             var targetLimb = targetCharacter.CharacterHealth.GetAfflictionLimb(affliction);
 
             bool remove = false;
-            foreach (ItemComponent ic in item.components)
+            foreach (ItemComponent ic in item.Components)
             {
                 if (!ic.HasRequiredContainedItems(addMessage: false)) continue;
 #if CLIENT

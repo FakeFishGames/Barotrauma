@@ -397,9 +397,10 @@ namespace Barotrauma
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
         {
-            if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && Character.Controlled == Character)
+            if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && 
+                Character.Controlled == Character)
             {
-                SoundPlayer.PlaySound("drown");
+                SoundPlayer.PlaySound(Character.Info != null && Character.Info.Gender == Gender.Female ? "drownfemale" : "drownmale");
             }
         }
 

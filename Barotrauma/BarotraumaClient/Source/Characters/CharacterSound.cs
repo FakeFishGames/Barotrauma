@@ -6,7 +6,6 @@ namespace Barotrauma
 {
     class CharacterSound
     {
-        //TODO: implement damage sounds
         public enum SoundType
         {
             Idle, Attack, Die, Damage

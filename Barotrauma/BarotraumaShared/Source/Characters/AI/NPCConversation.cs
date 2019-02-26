@@ -236,7 +236,11 @@ namespace Barotrauma
                     foreach (Character potentialSpeaker in availableSpeakers)
                     {
                         //check if the character has an appropriate job to say the line
-                        if (selectedConversation.AllowedJobs.Count > 0 && !selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+                        if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) ||
+                            selectedConversation.AllowedJobs.Count > 0)
+                        {
+                            if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+                        }
 
                         //check if the character has all required flags to say the line
                         if (!ignoreFlags)

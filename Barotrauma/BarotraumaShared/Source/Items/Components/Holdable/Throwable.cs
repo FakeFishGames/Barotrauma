@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip(item);
+            if (item.body.Dir != picker.AnimController.Dir) Flip();
 
             AnimController ac = picker.AnimController;
 

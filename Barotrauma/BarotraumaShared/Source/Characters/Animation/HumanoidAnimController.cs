@@ -1628,7 +1628,7 @@ namespace Barotrauma
 
             if (!character.IsClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
-                Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
 
                 Vector2 diff = holdable.Aimable ? (mousePos - AimSourceSimPos) * Dir : Vector2.UnitX;
 
@@ -1891,15 +1891,16 @@ namespace Barotrauma
 
             for (int i = 0; i < character.SelectedItems.Length; i++)
             {
+                if (i == 1 && character.SelectedItems[0] == character.SelectedItems[1])
+                {
+                    break;
+                }
                 if (character.SelectedItems[i]?.body != null && !character.SelectedItems[i].Removed)
                 {
-                    difference = character.SelectedItems[i].body.SimPosition - torso.SimPosition;
-                    difference = Vector2.Transform(difference, torsoTransform);
-                    difference.Y = -difference.Y;
-
                     character.SelectedItems[i].body.SetTransform(
-                        torso.SimPosition + Vector2.Transform(difference, -torsoTransform),
-                        MathUtils.WrapAngleTwoPi(-character.SelectedItems[i].body.Rotation));
+                        character.SelectedItems[i].body.SimPosition,
+                        MathUtils.WrapAngleTwoPi(character.SelectedItems[i].body.Rotation + MathHelper.Pi));
+                    character.SelectedItems[i].GetComponent<Holdable>()?.Flip();
                 }
             }
 
@@ -1917,7 +1918,6 @@ namespace Barotrauma
                     case LimbType.RightHand:
                     case LimbType.RightArm:
                     case LimbType.RightForearm:
-                        mirror = true;
                         flipAngle = true;
                         break;
                     case LimbType.LeftThigh:

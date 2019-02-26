@@ -8,13 +8,13 @@
   </Item>
   <Item name="Medium Steel Cabinet" identifier="mediumsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="545,2,175,374" origin="0.5,0.5" />
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="15" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Medium Windowed Steel Cabinet" aliases="Diving Gear Cabinet" identifier="mediumwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="375,0,168,377" origin="0.5,0.5" />
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="15" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
@@ -47,7 +47,7 @@
   </Item>
   <Item name="Medicine Cabinet" identifier="medcabinet" linkable="true" pickdistance="150" waterproof="true">
     <Sprite texture="containers.png" depth="0.84" sourcerect="233,172,104,173" canflipx="false" />
-    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="30" canbeselected="true" hideitems="true">
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>

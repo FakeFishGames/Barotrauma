@@ -724,12 +724,8 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            //use faster smoothing if the drawOffset is large
-            float positionSmoothingFactor = MathHelper.Lerp(0.95f, 0.8f, MathHelper.Clamp(drawOffset.LengthSquared(), 0.0f, 1.0f));
-            float rotationSmoothingFactor = MathHelper.Lerp(0.95f, 0.8f, Math.Min(Math.Abs(rotationOffset), 1.0f));
-
-            drawOffset *= positionSmoothingFactor;
-            rotationOffset *= rotationSmoothingFactor;
+            drawOffset = NetConfig.InterpolateSimPositionError(drawOffset);
+            rotationOffset = NetConfig.InterpolateRotationError(rotationOffset);
         }
 
         public void UpdateDrawPosition()

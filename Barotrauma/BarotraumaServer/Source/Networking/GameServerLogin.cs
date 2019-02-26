@@ -90,7 +90,8 @@ namespace Barotrauma.Networking
             }
 
             unauthenticatedClients.RemoveAll(uc => uc.Connection == senderConnection);
-            var unauthClient = new UnauthenticatedClient(senderConnection, 0, clientSteamID)
+            int nonce = CryptoRandom.Instance.Next();
+            var unauthClient = new UnauthenticatedClient(senderConnection, nonce, clientSteamID)
             {
                 AuthTimer = 20
             };
@@ -203,7 +204,7 @@ namespace Barotrauma.Networking
         {
             DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
 
-            if (GameMain.Config.RequireSteamAuthentication && connection!=OwnerConnection && steamID == 0)
+            if (GameMain.Config.RequireSteamAuthentication && connection != OwnerConnection && steamID == 0)
             {
                 DebugConsole.Log("Disconnecting " + connection.RemoteEndPoint + ", Steam authentication required.");
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
@@ -238,14 +239,14 @@ namespace Barotrauma.Networking
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
-            if (!serverSettings.HasPassword)
-            {
-                nonceMsg.Write(false); //false = no password
-            }
-            else
+            if (serverSettings.HasPassword && connection != OwnerConnection)
             {
                 nonceMsg.Write(true); //true = password
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
+            }
+            else
+            {
+                nonceMsg.Write(false); //false = no password
             }
             CompressOutgoingMessage(nonceMsg);
             DebugConsole.Log("Sending auth response...");
@@ -272,11 +273,11 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (serverSettings.HasPassword)
+            if (serverSettings.HasPassword && inc.SenderConnection != OwnerConnection)
             {
                 //decrypt message and compare password
                 string clPw = inc.ReadString();
-                if (!serverSettings.IsPasswordCorrect(clPw,unauthClient.Nonce))
+                if (!serverSettings.IsPasswordCorrect(clPw, unauthClient.Nonce))
                 {
                     unauthClient.FailedAttempts++;
                     if (unauthClient.FailedAttempts > 3)

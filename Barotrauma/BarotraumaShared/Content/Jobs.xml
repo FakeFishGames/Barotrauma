@@ -174,6 +174,7 @@
 
   <Job name="Watchman" identifier="watchman"
        description=""
+       onlyjobspecificdialog="true"
        minnumber="0" maxnumber="0" initialcount="0">
     <Items>
       <Item identifier="watchmanclothes" equip="true"/>

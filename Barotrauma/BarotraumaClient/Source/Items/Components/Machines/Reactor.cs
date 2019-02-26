@@ -162,10 +162,6 @@ namespace Barotrauma.Items.Components
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
-                    if (nextServerLogWriteTime == null)
-                    {
-                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                    }
                     unsentChanges = true;
                     targetFissionRate = scrollAmount * 100.0f;
 
@@ -181,10 +177,6 @@ namespace Barotrauma.Items.Components
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
-                    if (nextServerLogWriteTime == null)
-                    {
-                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                    }
                     unsentChanges = true;
                     targetTurbineOutput = scrollAmount * 100.0f;
 
@@ -209,10 +201,6 @@ namespace Barotrauma.Items.Components
                 OnMoved = (scrollBar, scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
-                    if (nextServerLogWriteTime == null)
-                    {
-                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                    }
                     unsentChanges = true;
                     return true;
                 }
@@ -227,10 +215,6 @@ namespace Barotrauma.Items.Components
                 OnMoved = (scrollBar, scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
-                    if (nextServerLogWriteTime == null)
-                    {
-                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                    }
                     unsentChanges = true;
                     return true;
                 }

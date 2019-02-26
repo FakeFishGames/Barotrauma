@@ -2,7 +2,6 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -259,6 +258,11 @@ namespace Barotrauma
             return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
         }
 
+        public CampaignUI CampaignUI
+        {
+            get { return campaignUI; }
+        }
+
         public NetLobbyScreen()
         {
             defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center), style: null);
@@ -318,7 +322,7 @@ namespace Barotrauma
 
             playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
             {
-                OnSelected = SelectPlayer
+                OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
 
             //--------------------------------------------------------------------------------------------------------------------------------
@@ -353,10 +357,19 @@ namespace Barotrauma
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
             };
             clientDisabledElements.Add(ServerName);
-            
-            ServerMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+
+            var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) });
+            ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform))
             {
                 Wrap = true
+            };
+            ServerMessage.OnTextChanged += (textBox, text) =>
+            {
+                Vector2 textSize = textBox.Font.MeasureString(textBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Rect.Height, (int)textSize.Y + 10));
+                serverMessageContainer.UpdateScrollBarSize();
+                serverMessageContainer.BarScroll = 1.0f;
+                return true;
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
@@ -885,7 +898,10 @@ namespace Barotrauma
             playerInfoContainer.ClearChildren();
             
             GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
-                { Stretch = true };
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
 
@@ -989,6 +1005,21 @@ namespace Barotrauma
                         Rotation = MathHelper.Pi
                     };
                 }
+
+                GUITickBox randPrefTickBox = new GUITickBox(
+                       new RectTransform(new Vector2(0.5f, 0.05f), infoContainer.RectTransform)
+                       { RelativeOffset = new Vector2(-0.0f, 0.0f) },
+                       TextManager.Get("RandomPreferences"))
+                {
+                    OnSelected = (tickBox) =>
+                    {
+                        if (tickBox.Selected)
+                        {
+                            GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
+                        }
+                        return true;
+                    }
+                };
 
                 UpdateJobPreferences(jobList);
             }
@@ -1250,6 +1281,13 @@ namespace Barotrauma
                 CanBeFocused = true,
                 Visible = false
             };
+            new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, "")
+            {
+                Selected = true,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReadyToStartTickBox"),
+                UserData = "clientready"
+            };
         }
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
@@ -1282,11 +1320,8 @@ namespace Barotrauma
             if (child != null) { playerList.RemoveChild(child); }
         }
 
-        private bool SelectPlayer(GUIComponent component, object obj)
+        private bool SelectPlayer(Client selectedClient)
         {
-            var selectedClient = component.UserData as Client;
-            if (selectedClient == null) return false;
-
             bool myClient = selectedClient.ID == GameMain.Client.ID;
 
             playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
@@ -1342,7 +1377,7 @@ namespace Barotrauma
                         GameMain.Client.UpdateClientPermissions(client);
 
                         playerFrame = null;
-                        SelectPlayer(null, client);
+                        SelectPlayer(client);
                     }
                     return true;
                 };
@@ -1450,7 +1485,7 @@ namespace Barotrauma
                     var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
                         TextManager.Get("Ban"))
                     {
-                        UserData = obj
+                        UserData = selectedClient
                     };
                     banButton.OnClicked += BanPlayer;
                     banButton.OnClicked += ClosePlayerFrame;
@@ -1458,7 +1493,7 @@ namespace Barotrauma
                     var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
                         TextManager.Get("BanRange"))
                     {
-                        UserData = obj
+                        UserData = selectedClient
                     };
                     rangebanButton.OnClicked += BanPlayerRange;
                     rangebanButton.OnClicked += ClosePlayerFrame;
@@ -1481,7 +1516,7 @@ namespace Barotrauma
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
                     {
-                        UserData = obj
+                        UserData = selectedClient
                     };
                     kickButton.OnClicked = KickPlayer;
                     kickButton.OnClicked += ClosePlayerFrame;
@@ -1509,28 +1544,30 @@ namespace Barotrauma
         private bool ClosePlayerFrame(GUIButton button, object userData)
         {
             playerFrame = null;
-
             return true;
         }
 
         public bool KickPlayer(GUIButton button, object userData)
         {
-            if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), false);            
+            Client client = userData as Client;
+            if (client == null || GameMain.NetworkMember == null) return false;
+            GameMain.Client.CreateKickReasonPrompt(client.Name, false);            
             return false;
         }
 
         public bool BanPlayer(GUIButton button, object userData)
         {
+            Client client = userData as Client;
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, true);
             return false;
         }
 
         public bool BanPlayerRange(GUIButton button, object userData)
         {
+            Client client = userData as Client;
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true, true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
             return false;
         }
         
@@ -1624,6 +1661,14 @@ namespace Barotrauma
             if (GameMain.Client.CharacterInfo == null) return true;
             int dir = (int)userData;
             var info = GameMain.Client.CharacterInfo;
+            if (!info.HasGenders)
+            {
+                GameMain.Config.CharacterGender = Gender.None;
+            }
+            else if (GameMain.Config.CharacterGender == Gender.None)
+            {
+                GameMain.Config.CharacterGender = info.Gender;
+            }
             if (generatedHeads.Current == null)
             {
                 // Add the current head in the memory
@@ -1701,7 +1746,7 @@ namespace Barotrauma
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
             
-            if (SelectedMode?.Identifier == "multiplayercampaign" &&
+            if (campaignUI != null &&
                 ((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Identifier != "multiplayercampaign")
             {
                 ToggleCampaignMode(false);
