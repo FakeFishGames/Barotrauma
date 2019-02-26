@@ -78,40 +78,36 @@ namespace Barotrauma
             if (repairTool == null) { return; }
 
             Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
+            var humanoidController = character.AnimController as HumanoidAnimController;
 
             // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController humanoidController && 
-                Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            if (!character.AnimController.InWater && humanoidController != null && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
             {
                 ((HumanoidAnimController)character.AnimController).Crouching = true;
             }
 
-            if (gotoObjective != null)
+            float armLength = humanoidController != null ? ConvertUnits.ToDisplayUnits(humanoidController.ArmLength) : 100;
+            bool cannotReach = gapDiff.Length() > armLength + repairTool.Range;
+            if (cannotReach)
             {
-                // Check if the objective is already removed -> completed/impossible
-                if (!subObjectives.Contains(gotoObjective))
+                if (gotoObjective != null)
                 {
-                    gotoObjective = null;
-                }
-            }
-            else
-            {
-                var objective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character);
-                if (!objective.IsCompleted())
-                {
-                    pathUnreachable = !objective.CanBeCompleted;
-                    if (!pathUnreachable)
+                    // Check if the objective is already removed -> completed/impossible
+                    if (!subObjectives.Contains(gotoObjective))
                     {
-                        AddSubObjective(objective);
-                        gotoObjective = objective;
+                        gotoObjective = null;
                     }
                 }
                 else
                 {
-                    gotoObjective = null;
+                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character);
+                    if (!subObjectives.Contains(gotoObjective))
+                    {
+                        AddSubObjective(gotoObjective);
+                    }
                 }
             }
-            if (gotoObjective == null)
+            if (gotoObjective == null || gotoObjective.IsCompleted())
             {
                 if (operateObjective == null)
                 {
