@@ -500,7 +500,7 @@ namespace Barotrauma.Networking
                             }
 
                             DebugConsole.NewMessage(packetHeader.ToString(), Color.Lime);
-                            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
+                            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address, 0))
                             {
                                 inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
                             }
@@ -518,7 +518,7 @@ namespace Barotrauma.Networking
                                 else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                                 {
                                     ReadClientSteamAuthRequest(msgContent, inc.SenderConnection, out ulong clientSteamID);
-                                    if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
+                                    if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(null, clientSteamID))
                                     {
                                         inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
                                     }
@@ -600,7 +600,7 @@ namespace Barotrauma.Networking
         private void ReadDataMessage(NetIncomingMessage inc)
         {
             var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
-            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address.ToString(), connectedClient == null ? 0 : connectedClient.SteamID))
+            if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address, connectedClient == null ? 0 : connectedClient.SteamID))
             {
                 KickClient(inc.SenderConnection, "You have been banned from the server.");
                 return;
@@ -1895,7 +1895,9 @@ namespace Barotrauma.Networking
 
             if (client.SteamID == 0 || range)
             {
-                string ip = client.Connection.RemoteEndPoint.Address.ToString();
+                string ip = client.Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6 ?
+                    client.Connection.RemoteEndPoint.Address.MapToIPv4().ToString() :
+                    client.Connection.RemoteEndPoint.Address.ToString();
                 if (range) { ip = serverSettings.BanList.ToRange(ip); }
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);
             }
@@ -2313,12 +2315,18 @@ namespace Barotrauma.Networking
             }
             else
             {
-                serverSettings.ClientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
+                string addressStr = client.Connection.RemoteEndPoint.Address.ToString();
+                serverSettings.ClientPermissions.RemoveAll(cp => cp.IP == addressStr);
+                if (client.Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6)
+                {
+                    addressStr = client.Connection.RemoteEndPoint.Address.MapToIPv4().ToString();
+                    serverSettings.ClientPermissions.RemoveAll(cp => cp.IP == addressStr);
+                }
                 if (client.Permissions != ClientPermissions.None)
                 {
                     serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
                         client.Name,
-                        client.Connection.RemoteEndPoint.Address.ToString(),
+                        addressStr,
                         client.Permissions,
                         client.PermittedConsoleCommands));
                 }
@@ -2330,18 +2338,15 @@ namespace Barotrauma.Networking
             CompressOutgoingMessage(msg);
 
             //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
-            List<Client> recipients = new List<Client>() { client };
+            List<NetConnection> recipients = new List<NetConnection>() { client.Connection };
             foreach (Client otherClient in connectedClients)
             {
-                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient))
+                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient.Connection))
                 {
-                    recipients.Add(otherClient);
+                    recipients.Add(otherClient.Connection);
                 }
             }
-            foreach (Client recipient in recipients)
-            {
-                server.SendMessage(msg, recipient.Connection, NetDeliveryMethod.ReliableUnordered);
-            }
+            server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0);            
 
             serverSettings.SaveClientPermissions();
         }
@@ -2381,11 +2386,8 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
 
             CompressOutgoingMessage(msg);
-
-            foreach (Client client in connectedClients)
-            {
-                server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
-            }
+            
+            server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);            
         }
 
         public void SetClientCharacter(Client client, Character newCharacter)

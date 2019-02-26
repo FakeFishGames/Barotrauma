@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 
 namespace Barotrauma.Networking
 {
@@ -96,12 +97,22 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool IsWhiteListed(string name, string ip)
+        public bool IsWhiteListed(string name, IPAddress address)
         {
             if (!Enabled) return true;
             WhiteListedPlayer wlp = whitelistedPlayers.Find(p => p.Name == name);
             if (wlp == null) return false;
-            if (wlp.IP != ip && !string.IsNullOrWhiteSpace(wlp.IP)) return false;
+            if (!string.IsNullOrWhiteSpace(wlp.IP))
+            {
+                if (address.IsIPv4MappedToIPv6 && wlp.IP == address.MapToIPv4().ToString())
+                {
+                    return true;
+                }
+                else
+                {
+                    return wlp.IP == address.ToString();
+                }
+            }
             return true;
         }
 
