@@ -63,7 +63,8 @@ namespace Barotrauma.Networking
             DebugConsole.Log("  Auth ticket data: " + 
                 ((authTicketData == null) ? "null" : ToolBox.LimitString(string.Concat(authTicketData.Select(b => b.ToString("X2"))), 16)));
 
-            if (senderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
+            if (senderConnection != OwnerConnection && 
+                serverSettings.BanList.IsBanned(senderConnection.RemoteEndPoint.Address, clientSteamID))
             {
                 return;
             }
@@ -283,7 +284,7 @@ namespace Barotrauma.Networking
                     if (unauthClient.FailedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
-                        serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
+                        serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address, TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
                         DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
@@ -417,7 +418,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
@@ -482,10 +483,11 @@ namespace Barotrauma.Networking
             
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
+            var address = newClient.Connection.RemoteEndPoint.Address;
             var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 
                 cp.SteamID == newClient.SteamID :            
-                cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+                cp.IP == address.ToString() || (address.IsIPv4MappedToIPv6 && cp.IP == address.MapToIPv4().ToString()));
 
             if (savedPermissions != null)
             {
