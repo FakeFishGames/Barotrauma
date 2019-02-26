@@ -40,17 +40,14 @@ namespace Barotrauma.Networking
         {
             get
             {
-                if (Type != ChatMessageType.Server)
+                if (!Type.HasFlag(ChatMessageType.Server | ChatMessageType.Error))
                 {
-                    DebugConsole.NewMessage(Text);
                     return Text;
                 }
                 if (translatedText == null || translatedText.Length == 0)
                 {
                     translatedText = TextManager.GetServerMessage(Text);
                 }
-
-                DebugConsole.NewMessage(translatedText);
 
                 return translatedText;
             }
