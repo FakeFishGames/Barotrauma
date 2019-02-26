@@ -598,7 +598,6 @@ namespace Barotrauma
                 
                 if (selectedSlot == null)
                 {
-                    draggingItem.ParentInventory?.CreateNetworkEvent();
                     draggingItem.Drop();
                     GUI.PlayUISound(GUISoundType.DropItem);
                 }

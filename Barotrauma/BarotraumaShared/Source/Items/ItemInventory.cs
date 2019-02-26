@@ -89,7 +89,7 @@ namespace Barotrauma
             return wasPut;
         }
 
-        protected override void CreateNetworkEvent()
+        public override void CreateNetworkEvent()
         {
             int componentIndex = container.Item.GetComponentIndex(container);
             if (componentIndex == -1)

@@ -309,7 +309,7 @@ namespace Barotrauma
             }
         }
 
-        protected virtual void CreateNetworkEvent()
+        public virtual void CreateNetworkEvent()
         {
             if (GameMain.NetworkMember != null)
             {

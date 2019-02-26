@@ -1572,7 +1572,14 @@ namespace Barotrauma
 
         public void Drop(Character dropper = null)
         {
-            foreach (ItemComponent ic in components) ic.Drop(dropper);
+            if (parentInventory != null &&
+                GameMain.NetworkMember != null && 
+                (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+            {
+                parentInventory.CreateNetworkEvent();
+            }
+
+            foreach (ItemComponent ic in components) { ic.Drop(dropper); }
 
             if (Container != null)
             {
