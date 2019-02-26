@@ -58,6 +58,7 @@ namespace Barotrauma
             return textList;
         }
 
+#if DEBUG
         public void CheckForDuplicates(int index)
         {
             Dictionary<string, int> textCounts = new Dictionary<string, int>();
@@ -98,5 +99,6 @@ namespace Barotrauma
             file.WriteLine(sb.ToString()); // "sb" is the StringBuilder
             file.Close();
         }
+#endif
     }
 }

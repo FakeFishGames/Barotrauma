@@ -1038,12 +1038,13 @@ namespace Barotrauma
                 }
                 File.WriteAllLines(filePath, lines);
             }));
-
+#if DEBUG
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
                 if (args.Length != 1) return;
                 TextManager.CheckForDuplicates(args[0]);
             }));
+#endif
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
