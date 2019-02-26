@@ -9,6 +9,7 @@ namespace Barotrauma
     class AIObjectiveCombat : AIObjective
     {
         public override string DebugTag => "combat";
+        public override bool ForceRun => true;
 
         const float CoolDown = 10.0f;
 

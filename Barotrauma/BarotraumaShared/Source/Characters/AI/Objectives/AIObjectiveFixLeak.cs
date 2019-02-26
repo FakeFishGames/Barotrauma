@@ -8,6 +8,7 @@ namespace Barotrauma
     class AIObjectiveFixLeak : AIObjective
     {
         public override string DebugTag => "fix leak";
+        public override bool ForceRun => true;
 
         private readonly Gap leak;
 
