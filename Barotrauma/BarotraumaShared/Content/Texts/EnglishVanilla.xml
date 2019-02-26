@@ -182,31 +182,24 @@
   <Workshop.ContentTag.Monster>Monster</Workshop.ContentTag.Monster>
   <Workshop.ContentTag.Mission>Mission</Workshop.ContentTag.Mission>
   
-  <!-- Settings menu -->
+ <!-- Settings menu -->
   <Settings>Settings</Settings>
-  <Resolution>Resolution</Resolution>
-  <DisplayMode>Display mode</DisplayMode>
-  <Fullscreen>Fullscreen</Fullscreen>
-  <Windowed>Windowed</Windowed>
-  <BorderlessWindowed>Borderless windowed</BorderlessWindowed>
-  <EnableVSync>Enable vertical sync</EnableVSync>
-  <ParticleLimit>Particle limit</ParticleLimit>
-  <LosEffect>Line of sight effect</LosEffect>
-  <LosModeNone>None</LosModeNone>
-  <LosModeTransparent>Transparent</LosModeTransparent>
-  <LosModeOpaque>Opaque</LosModeOpaque>
-  <LightMapScale>Lighting resolution</LightMapScale>
-  <LightMapScaleToolTip>Lower values improve performance, but cause shadows to appear more pixellated.</LightMapScaleToolTip>
-  <SpecularLighting>Specular lighting</SpecularLighting>
-  <SpecularLightingToolTip>Enables specular lighting, an effect which creates brighter spots of light on shiny objects.</SpecularLightingToolTip>
-  <ChromaticAberration>Chromatic aberration</ChromaticAberration>
-  <ChromaticAberrationToolTip>Enables a subtle color distortion effect at the edges of the screen.</ChromaticAberrationToolTip>
-  <HUDScale>HUD scale</HUDScale>
-  <InventoryScale>Inventory scale</InventoryScale>
-  <SoundVolume>Sound volume</SoundVolume>
-  <MusicVolume>Music volume</MusicVolume>
-  <Controls>Controls</Controls>
-  <AimAssist>Aim assist</AimAssist>
+  <ApplySettingsButton>Apply</ApplySettingsButton>
+  <ApplySettingsButtonUnsavedChanges>Apply*</ApplySettingsButtonUnsavedChanges>
+  <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
+  <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
+  <ApplySettingsYes>Apply</ApplySettingsYes>
+  <ApplySettingsNo>Discard</ApplySettingsNo>
+  <RestartRequiredLabel>Restart required</RestartRequiredLabel>
+  <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
+  <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
+
+  <!-- General tab -->
+  <SettingsTab.General>General</SettingsTab.General>
+  <ContentPackage>Content package</ContentPackage>
+  <ContentPackages>Content packages</ContentPackages>
+  <CorePackageRequiredWarning>You cannot deselect the content package because it is a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
+  <IncorrectExe>The executable you have launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
   <Language>Language</Language>
   <Language.English>English</Language.English>
   <ContentPackage>Content package</ContentPackage>
@@ -226,7 +219,53 @@
   <IncompatibleContentPackageUnknownVersion>Content package "[packagename]" is not compatible with this version of Barotrauma. The package was made for an unknown version, your game version is [gameversion].</IncompatibleContentPackageUnknownVersion>
   <ContentPackageMissingCoreFiles>Content package "[packagename]" is marked as a core package but does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</ContentPackageMissingCoreFiles>
   <ContentPackageCantMakeCorePackage>Content package "[packagename]" cannot be marked as a core package because it does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</ContentPackageCantMakeCorePackage>
-  
+
+  <!-- Graphics tab -->
+  <SettingsTab.Graphics>Graphics</SettingsTab.Graphics>
+  <Resolution>Resolution</Resolution>
+  <DisplayMode>Display mode</DisplayMode>
+  <Fullscreen>Fullscreen</Fullscreen>
+  <Windowed>Windowed</Windowed>
+  <BorderlessWindowed>Borderless windowed</BorderlessWindowed>
+  <EnableVSync>Enable vertical sync</EnableVSync>
+  <EnableVSyncToolTip>Synchronizes the game's frame rate with your monitor's refresh rate. Helps prevent screen tearing artifacts.</EnableVSyncToolTip>
+  <ParticleLimit>Particle limit</ParticleLimit>
+  <LosEffect>Line of sight effect</LosEffect>
+  <LosModeNone>None</LosModeNone>
+  <LosModeTransparent>Transparent</LosModeTransparent>
+  <LosModeOpaque>Opaque</LosModeOpaque>
+  <LightMapScale>Lighting resolution</LightMapScale>
+  <LightMapScaleToolTip>Lower values improve performance, but cause shadows to appear more pixellated.</LightMapScaleToolTip>
+  <SpecularLighting>Specular lighting</SpecularLighting>
+  <SpecularLightingToolTip>Enables specular lighting, an effect which creates brighter spots of light on shiny objects.</SpecularLightingToolTip>
+  <ChromaticAberration>Chromatic aberration</ChromaticAberration>
+  <ChromaticAberrationToolTip>Enables a subtle color distortion effect at the edges of the screen.</ChromaticAberrationToolTip>
+  <HUDScale>HUD scale</HUDScale>
+  <InventoryScale>Inventory scale</InventoryScale>
+
+  <!-- Audio tab -->
+  <SettingsTab.Audio>Audio</SettingsTab.Audio>
+  <SoundVolume>Sound volume</SoundVolume>
+  <MusicVolume>Music volume</MusicVolume>
+  <VoiceChatVolume>Voice chat volume</VoiceChatVolume>
+  <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
+  <MuteOnFocusLostToolTip>Mutes the game when its window is not in focus.</MuteOnFocusLostToolTip>
+  <VoiceChat>Voice chat</VoiceChat>
+  <CurrentDevice>Current device</CurrentDevice>
+  <CurrentDeviceToolTip.OSX>This device will be used for voice chat. Unfortunately there is no way to change the input device on Mac OS X and it will instead use your system's default only.</CurrentDeviceToolTip.OSX>
+  <RefreshDefaultDevice>Refresh default device</RefreshDefaultDevice>
+  <RefreshDefaultDeviceToolTip>Refreshes the input device used for voice chat. If you swap/hotplug the default input on your system then press this to detect that change.</RefreshDefaultDeviceToolTip>
+  <VoiceMode.Disabled>Disabled</VoiceMode.Disabled>
+  <VoiceMode.DisabledToolTip>Voice chat is disabled.</VoiceMode.DisabledToolTip>
+  <VoiceMode.PushToTalk>Push-to-talk</VoiceMode.PushToTalk>
+  <VoiceMode.PushToTalkToolTip>Voice activity is sent only when a certain key is held down.</VoiceMode.PushToTalkToolTip>
+  <VoiceMode.Activity>Voice activity</VoiceMode.Activity>
+  <VoiceMode.ActivityToolTip>Voice activity is sent whenever the sound coming through surpasses the noise gate threshold.</VoiceMode.ActivityToolTip>
+  <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
+
+  <!-- Controls tab -->
+  <SettingsTab.Controls>Controls</SettingsTab.Controls>
+  <AimAssist>Aim assist</AimAssist>
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
   <InputType.Aim>Aim</InputType.Aim>
@@ -238,6 +277,7 @@
   <InputType.Run>Run</InputType.Run>
   <InputType.Crouch>Crouch</InputType.Crouch>
   <InputType.Chat>Chat</InputType.Chat>
+  <InputType.InfoTab>Info tab</InputType.InfoTab>
   <InputType.RadioChat>Radio chat</InputType.RadioChat>
   <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
   <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
@@ -245,6 +285,7 @@
   <InputType.Grab>Grab</InputType.Grab>
   <InputType.SelectNextCharacter>Next character</InputType.SelectNextCharacter>
   <InputType.SelectPreviousCharacter>Previous character</InputType.SelectPreviousCharacter>
+  <InputType.Voice>Push-to-talk</InputType.Voice>
   
   <!-- Server settings menu -->
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
