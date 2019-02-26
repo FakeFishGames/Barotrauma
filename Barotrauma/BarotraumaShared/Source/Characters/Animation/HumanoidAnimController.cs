@@ -130,6 +130,9 @@ namespace Barotrauma
         public bool Crouching;
 
         private float upperArmLength = 0.0f, forearmLength = 0.0f;
+
+        public float ArmLength => upperArmLength + forearmLength;
+
         public Vector2 RightHandIKPos
         {
             get;
