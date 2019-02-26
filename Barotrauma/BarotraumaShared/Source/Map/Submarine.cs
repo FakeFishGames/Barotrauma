@@ -1043,14 +1043,27 @@ namespace Barotrauma
 
         public List<Hull> GetHulls(bool alsoFromConnectedSubs)
         {
-            if (!alsoFromConnectedSubs)
-            {
-                return Hull.hullList.FindAll(h => h.Submarine == this);
-            }
-            else
+            if (alsoFromConnectedSubs)
             {
                 var connectedSubs = GetConnectedSubs();
                 return Hull.hullList.FindAll(h => h.Submarine == this || connectedSubs.Any(s => s == h.Submarine));
+            }
+            else
+            {
+                return Hull.hullList.FindAll(h => h.Submarine == this);
+            }
+        }
+
+        public List<Item> GetItems(bool alsoFromConnectedSubs)
+        {
+            if (alsoFromConnectedSubs)
+            {
+                var connectedSubs = GetConnectedSubs();
+                return Item.ItemList.FindAll(i => i.Submarine == this || connectedSubs.Any(s => s == i.Submarine));
+            }
+            else
+            {
+                return Item.ItemList.FindAll(i => i.Submarine == this);
             }
         }
 

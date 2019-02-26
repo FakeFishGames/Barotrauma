@@ -1,8 +1,7 @@
 ﻿using Barotrauma.Items.Components;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -10,83 +9,65 @@ namespace Barotrauma
     {
         public override string DebugTag => "pump water";
 
-        private const float FindPumpsInterval = 5.0f;
+        private const float findPumpsInterval = 5.0f;
 
         private string orderOption;
-        private List<Pump> pumps;
-        private float lastFindPumpsTime;
+        private readonly Dictionary<Pump, AIObjectiveOperateItem> objectives = new Dictionary<Pump, AIObjectiveOperateItem>();
+        private readonly List<Pump> targetPumps = new List<Pump>();
+        private readonly List<Pump> availablePumps;
+        private float findPumpsTimer;
 
-        public AIObjectivePumpWater(Character character, string option)
-            : base(character, option)
+        public AIObjectivePumpWater(Character character, string option) : base(character, option)
         {
             orderOption = option;
+            var allPumps = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
+            availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
+        }
+
+        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
+        {
+            if (findPumpsTimer < findPumpsInterval)
+            {
+                findPumpsTimer += deltaTime;
+            }
+            else
+            {
+                FindPumps();
+            }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (Timing.TotalTime >= lastFindPumpsTime + FindPumpsInterval)
-            {
-                FindPumps();
-            }
-
-            if (objectiveManager.CurrentOrder == this && pumps.Count > 0)
+            if (objectiveManager.CurrentOrder == this && targetPumps.Count > 0)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
             return 0.0f;
         }
 
-        public override bool IsCompleted()
-        {
-            return false;
-        }
+        public override bool IsCompleted() => false;
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectivePumpWater;
-        }
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater;
 
         protected override void Act(float deltaTime)
         {
-            if (Timing.TotalTime < lastFindPumpsTime + FindPumpsInterval)
+            SyncRemovedObjectives(objectives, availablePumps);
+            foreach (Pump pump in targetPumps)
             {
-                return;
+                if (!objectives.TryGetValue(pump, out AIObjectiveOperateItem obj))
+                {
+                    obj = new AIObjectiveOperateItem(pump, character, orderOption, false);
+                    AddSubObjective(obj);
+                }
             }
-
-            FindPumps();
         }
 
         private void FindPumps()
         {
-            lastFindPumpsTime = (float)Timing.TotalTime;
-
-            pumps = new List<Pump>();
-            foreach (Item item in Item.ItemList)
+            findPumpsTimer = 0;
+            targetPumps.Clear();
+            foreach (Pump pump in availablePumps)
             {
-                //don't attempt to use pumps outside the sub
-                if (item.Submarine == null) { continue; }
-
-                var pump = item.GetComponent<Pump>();
-                if (pump == null) continue;
-
-                if (item.HasTag("ballast")) continue;
-                
-                //if the pump is connected to an item with a steering component, it must be a ballast pump
-                //(This may not work correctly if the signals are passed through some fancy circuit or a wifi component,
-                //which is why sub creators are encouraged to tag the ballast pumps)
-                bool connectedToSteering = false;
-                foreach (Connection c in item.Connections)
-                {
-                    if (c.IsPower) continue;
-                    if (item.GetConnectedComponentsRecursive<Steering>(c).Count > 0)
-                    {
-                        connectedToSteering = true;
-                        break;
-                    }
-                }
-                if (connectedToSteering) continue;
-
                 if (orderOption.ToLowerInvariant() == "stop pumping")
                 {
                     if (!pump.IsActive || pump.FlowPercentage == 0.0f) continue;
@@ -96,14 +77,7 @@ namespace Barotrauma
                     if (!pump.Item.InWater) continue;
                     if (pump.IsActive && pump.FlowPercentage <= -90.0f) continue;
                 }
-
-                pumps.Add(pump);
-            }
-
-
-            foreach (Pump pump in pumps)
-            {
-                AddSubObjective(new AIObjectiveOperateItem(pump, character, orderOption, false));
+                targetPumps.Add(pump);
             }
         }
     }
