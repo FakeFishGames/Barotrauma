@@ -19,16 +19,18 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            // TODO: priority list?
             if (Item.Repairables.None()) { return 0; }
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
-            float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
+            float damagePriority = MathHelper.Lerp(1, 0, (Item.Condition + 10) / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
-            float isSelected = character.SelectedConstruction == Item ? 50 : 1;
-            return MathHelper.Clamp((priority + isSelected) * damagePriority * distanceFactor * successFactor, 0, 100);
+            float isSelected = character.SelectedConstruction == Item ? 50 : 0;
+            float baseLevel = Math.Max(priority + isSelected, 1);
+            return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 
         public override bool CanBeCompleted
