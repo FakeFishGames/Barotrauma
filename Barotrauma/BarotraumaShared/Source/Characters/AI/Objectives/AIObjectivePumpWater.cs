@@ -51,7 +51,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            SyncRemovedObjectives(objectives, availablePumps);
+            SyncRemovedObjectives(objectives, targetPumps);
             foreach (Pump pump in targetPumps)
             {
                 if (!objectives.TryGetValue(pump, out AIObjectiveOperateItem obj))
