@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
             float prevSize = listBox.BarSize;
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), 
-                $"{line.Time} {TextManager.GetServerMessage(line.Text)}", wrap: true, font: GUI.SmallFont);
+                line.Text, wrap: true, font: GUI.SmallFont);
             textBlock.TextColor = messageColor[(int)line.Type];
             textBlock.Visible = !msgTypeHidden[(int)line.Type];
             textBlock.CanBeFocused = false;

@@ -10,14 +10,12 @@ namespace Barotrauma.Networking
     {
         private struct LogMessage
         {
-            public readonly string Time;
             public readonly string Text;
             public readonly MessageType Type;
 
             public LogMessage(string text, MessageType type)
             {
-                Time = "[" + DateTime.Now.ToString() + "]";
-                Text = text;
+                Text = "[" + DateTime.Now.ToString() + "] " + text;
                 Type = type;
             }
         }

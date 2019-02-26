@@ -919,7 +919,7 @@ namespace Barotrauma.Networking
                     if (kickedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
-                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? "Kicked by " + sender.Name : kickReason);
+                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? $"ServerMessage.KickedBy_[initiator]={sender.Name}" : kickReason);
                     }
                     break;
                 case ClientPermissions.Ban:
@@ -1673,7 +1673,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
 
-            AddChatMessage("ServerMessage.HowToCommunicate", ChatMessageType.Server);
+            SendChatMessage("ServerMessage.HowToCommunicate", ChatMessageType.Server);
             
             gameStarted = true;
             initiatedStartGame = false;
