@@ -28,7 +28,7 @@ namespace Barotrauma
             GetRescueTargets();
             if (!rescueTargets.Any()) { return 0.0f; }
             
-            if (objectiveManager.CurrentObjective == this)
+            if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
