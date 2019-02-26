@@ -6,6 +6,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Facepunch.Steamworks;
+using Client = Barotrauma.Networking.Client;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
@@ -209,6 +212,13 @@ namespace Barotrauma
         {
             get
             {
+                //joblist if the server has already assigned the player a job 
+                //(e.g. the player has a pre-existing campaign character)
+                if (jobList?.Content == null)
+                {
+                    return new List<JobPrefab>();
+                }
+
                 List<JobPrefab> jobPreferences = new List<JobPrefab>();
                 foreach (GUIComponent child in jobList.Content.Children)
                 {
@@ -250,6 +260,11 @@ namespace Barotrauma
 
             if (autoRestartTimer == 0.0f) return "";
             return TextManager.Get("RestartingIn") + " " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
+        }
+
+        public CampaignUI CampaignUI
+        {
+            get { return campaignUI; }
         }
 
         public NetLobbyScreen()
@@ -311,7 +326,7 @@ namespace Barotrauma
 
             playerList = new GUIListBox(new RectTransform(Vector2.One, paddedPlayerListFrame.RectTransform))
             {
-                OnSelected = SelectPlayer
+                OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
 
             //--------------------------------------------------------------------------------------------------------------------------------
@@ -346,10 +361,19 @@ namespace Barotrauma
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
             };
             clientDisabledElements.Add(ServerName);
-            
-            ServerMessage = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) })
+
+            var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.15f), infoFrameContent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.07f) });
+            ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform))
             {
                 Wrap = true
+            };
+            ServerMessage.OnTextChanged += (textBox, text) =>
+            {
+                Vector2 textSize = textBox.Font.MeasureString(textBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Rect.Height, (int)textSize.Y + 10));
+                serverMessageContainer.UpdateScrollBarSize();
+                serverMessageContainer.BarScroll = 1.0f;
+                return true;
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
@@ -417,11 +441,13 @@ namespace Barotrauma
                 OnSelected = VotableClicked
             };
 
+#if !DEBUG
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform),
                 "Coming up: Multiplayer campaign", textAlignment: Alignment.Center, style: "ListBoxElement")
             {
                 ToolTip = "Multiplayer campaign mode is not available in this version of Barotrauma. Coming up in the Early Access release!"
             };
+#endif
 
             voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
@@ -613,7 +639,12 @@ namespace Barotrauma
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
-                OnClicked = (btn, obj) => { GameMain.Client.RequestStartRound(); return true; }
+                OnClicked = (btn, obj) => 
+                {
+                    GameMain.Client.RequestStartRound();
+                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton), "WaitForStartRound");
+                    return true;
+                }
             };
             clientHiddenElements.Add(StartButton);
 
@@ -632,6 +663,35 @@ namespace Barotrauma
 
             spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
+        }
+        
+        private IEnumerable<object> WaitForStartRound(GUIButton startButton)
+        {
+            string headerText = TextManager.Get("RoundStartingPleaseWait");
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("RoundStarting"), new string[] { TextManager.Get("Cancel") });
+
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                startButton.Enabled = true;
+                GameMain.Client.RequestRoundEnd();
+                CoroutineManager.StopCoroutines("WaitForStartRound");
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+            startButton.Enabled = false;
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (Selected != GameMain.GameScreen && DateTime.Now < timeOut)
+            {
+                msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                yield return CoroutineStatus.Running;
+            }
+
+            msgBox.Close();
+            startButton.Enabled = true;
+
+            yield return CoroutineStatus.Success;
         }
 
         public override void Deselect()
@@ -790,7 +850,7 @@ namespace Barotrauma
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
             ReadyToStartBox.Visible = !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
-            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !campaignContainer.Visible;
             ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
@@ -946,6 +1006,20 @@ namespace Barotrauma
                         Rotation = MathHelper.Pi
                     };
                 }
+                 GUITickBox randPrefTickBox = new GUITickBox(
+                        new RectTransform(new Vector2(0.05f, 0.05f), infoContainer.RectTransform)
+                            {RelativeOffset = new Vector2(-0.5f, 0.1f)},
+                        TextManager.Get("RandomPreferences"))
+                    {
+                        OnSelected = (tickBox) =>
+                        {
+                            if (tickBox.Selected)
+                            {
+                                GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
+                            }
+                            return true;
+                        }
+                    };
 
                 UpdateJobPreferences(jobList);
             }
@@ -1207,6 +1281,13 @@ namespace Barotrauma
                 CanBeFocused = true,
                 Visible = false
             };
+            new GUITickBox(new RectTransform(new Vector2(0.05f, 0.6f), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, "")
+            {
+                Selected = true,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReadyToStartTickBox"),
+                UserData = "clientready"
+            };
         }
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
@@ -1239,22 +1320,9 @@ namespace Barotrauma
             if (child != null) { playerList.RemoveChild(child); }
         }
 
-        private bool SelectPlayer(GUIComponent component, object obj)
+        private bool SelectPlayer(Client selectedClient)
         {
-            var selectedClient = component.UserData as Client;
-            if (selectedClient == null) return false;
-
-            /*if (GameMain.Client != null)
-            {
-                if (selectedClient.ID == GameMain.Client.ID) return false;
-
-                if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
-                    !GameMain.Client.HasPermission(ClientPermissions.Kick) &&
-                    !GameMain.Client.ServerSettings.Voting.AllowVoteKick)
-                {
-                    return false;
-                }
-            }*/
+            bool myClient = selectedClient.ID == GameMain.Client.ID;
 
             playerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
@@ -1285,7 +1353,8 @@ namespace Barotrauma
                 var rankDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("Rank"))
                 {
-                    UserData = selectedClient
+                    UserData = selectedClient,
+                    Enabled = !myClient
                 };
                 foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                 {
@@ -1308,7 +1377,7 @@ namespace Barotrauma
                         GameMain.Client.UpdateClientPermissions(client);
 
                         playerFrame = null;
-                        SelectPlayer(null, client);
+                        SelectPlayer(client);
                     }
                     return true;
                 };
@@ -1334,14 +1403,14 @@ namespace Barotrauma
 
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
-                    if (permission == ClientPermissions.None) continue;
+                    if (permission == ClientPermissions.None || permission == ClientPermissions.All) continue;
 
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
                         TextManager.Get("ClientPermission." + permission), font: GUI.SmallFont)
                     {
                         UserData = permission,
                         Selected = selectedClient.HasPermission(permission),
-
+                        Enabled = !myClient,
                         OnSelected = (tickBox) =>
                         {
                             //reset rank to custom
@@ -1378,6 +1447,7 @@ namespace Barotrauma
                         command.names[0], font: GUI.SmallFont)
                     {
                         Selected = selectedClient.PermittedConsoleCommands.Contains(command),
+                        Enabled = !myClient,
                         ToolTip = command.help,
                         UserData = command
                     };
@@ -1408,55 +1478,58 @@ namespace Barotrauma
             var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             
-            if (GameMain.Client.HasPermission(ClientPermissions.Ban))
+            if (!myClient)
             {
-                var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
-                    TextManager.Get("Ban"))
+                if (GameMain.Client.HasPermission(ClientPermissions.Ban))
                 {
-                    UserData = obj
-                };
-                banButton.OnClicked += BanPlayer;
-                banButton.OnClicked += ClosePlayerFrame;
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                        TextManager.Get("Ban"))
+                    {
+                        UserData = selectedClient
+                    };
+                    banButton.OnClicked += BanPlayer;
+                    banButton.OnClicked += ClosePlayerFrame;
 
-                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
-                    TextManager.Get("BanRange"))
+                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                        TextManager.Get("BanRange"))
+                    {
+                        UserData = selectedClient
+                    };
+                    rangebanButton.OnClicked += BanPlayerRange;
+                    rangebanButton.OnClicked += ClosePlayerFrame;
+                }
+
+
+                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
                 {
-                    UserData = obj
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                        TextManager.Get("VoteToKick"))
+                    {
+                        Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                        OnClicked = GameMain.Client.VoteForKick,
+                        UserData = selectedClient
+                    };
+                }
+
+                if (GameMain.Client.HasPermission(ClientPermissions.Kick))
+                {
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                        TextManager.Get("Kick"))
+                    {
+                        UserData = selectedClient
+                    };
+                    kickButton.OnClicked = KickPlayer;
+                    kickButton.OnClicked += ClosePlayerFrame;
+                }
+
+                new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
+                    TextManager.Get("Mute"))
+                {
+                    IgnoreLayoutGroups = true,
+                    Selected = selectedClient.MutedLocally,
+                    OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
                 };
-                rangebanButton.OnClicked += BanPlayerRange;
-                rangebanButton.OnClicked += ClosePlayerFrame;
             }
-
-
-            if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
-            {
-                var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
-                    TextManager.Get("VoteToKick"))
-                {
-                    Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
-                    OnClicked = GameMain.Client.VoteForKick,
-                    UserData = selectedClient
-                };
-            }
-
-            if (GameMain.Client.HasPermission(ClientPermissions.Kick))
-            {
-                var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
-                    TextManager.Get("Kick"))
-                {
-                    UserData = obj
-                };
-                kickButton.OnClicked = KickPlayer;
-                kickButton.OnClicked += ClosePlayerFrame;
-            }
-
-            var muteTickBox = new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaUpper.RectTransform, Anchor.TopRight),
-                TextManager.Get("Mute"))
-            {
-                IgnoreLayoutGroups = true,
-                Selected = selectedClient.MutedLocally,
-                OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
-            };
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))
@@ -1586,6 +1659,14 @@ namespace Barotrauma
             if (GameMain.Client.CharacterInfo == null) return true;
             int dir = (int)userData;
             var info = GameMain.Client.CharacterInfo;
+            if (!info.HasGenders)
+            {
+                GameMain.Config.CharacterGender = Gender.None;
+            }
+            else if (GameMain.Config.CharacterGender == Gender.None)
+            {
+                GameMain.Config.CharacterGender = info.Gender;
+            }
             if (generatedHeads.Current == null)
             {
                 // Add the current head in the memory
@@ -1663,7 +1744,7 @@ namespace Barotrauma
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
             
-            if (SelectedMode?.Identifier == "multiplayercampaign" &&
+            if (campaignUI != null &&
                 ((GameModePreset)modeList.Content.GetChild(modeIndex).UserData).Identifier != "multiplayercampaign")
             {
                 ToggleCampaignMode(false);
@@ -1720,7 +1801,8 @@ namespace Barotrauma
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && AllowSubSelection;
-            
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !enabled;
+
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
             
             if (enabled)
@@ -1731,7 +1813,11 @@ namespace Barotrauma
 
                     campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer)
                     {
-                        StartRound = null//TODO: shdkjshdf //() => { GameMain.Server.StartGame(); }
+                        StartRound = () => 
+                        {
+                            GameMain.Client.RequestStartRound();
+                            CoroutineManager.StartCoroutine(WaitForStartRound(campaignUI.StartButton), "WaitForStartRound");
+                        }
                     };
                     campaignUI.MapContainer.RectTransform.NonScaledSize = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 

@@ -135,7 +135,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
-            if (prevInfoKey != PlayerInput.KeyDown(InputType.InfoTab))
+            if (prevInfoKey != (PlayerInput.KeyDown(InputType.InfoTab) && GUI.KeyboardDispatcher.Subscriber == null))
             {
                 ToggleInfoFrame();
                 prevInfoKey = PlayerInput.KeyDown(InputType.InfoTab);

@@ -128,6 +128,7 @@
     <Compile Include="Source\Items\Components\Machines\Engine.cs" />
     <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
     <Compile Include="Source\Items\Components\Machines\Pump.cs" />
+    <Compile Include="Source\Items\Components\Machines\Reactor.cs" />
     <Compile Include="Source\Items\Components\Machines\Steering.cs" />
     <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
     <Compile Include="Source\Items\Components\Repairable.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="Source\Items\Item.cs" />
     <Compile Include="Source\Map\Hull.cs" />
     <Compile Include="Source\Map\Structure.cs" />
+    <Compile Include="Source\Map\Submarine.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
@@ -154,6 +156,7 @@
     <Compile Include="Source\Networking\Voip\VoipServer.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
+    <Compile Include="Source\Physics\PhysicsBody.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />

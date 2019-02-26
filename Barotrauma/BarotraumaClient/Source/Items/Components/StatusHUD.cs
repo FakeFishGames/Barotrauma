@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             visibleCharacters.Clear();
             foreach (Character c in Character.CharacterList)
             {
-                if (c == equipper) continue;
+                if (c == equipper || !c.Enabled || c.Removed) { continue; }
 
                 float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
@@ -111,10 +111,9 @@ namespace Barotrauma.Items.Components
 
             Character closestCharacter = null;
             float closestDist = float.PositiveInfinity;
-
             foreach (Character c in visibleCharacters)
             {
-                if (c == character) continue;
+                if (c == character || !c.Enabled || c.Removed) { continue; }
 
                 float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
                 if (dist < closestDist)

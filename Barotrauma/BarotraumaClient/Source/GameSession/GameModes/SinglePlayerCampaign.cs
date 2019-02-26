@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (!isRunning|| GUI.DisableHUD) return;
+            if (!isRunning|| GUI.DisableHUD || GUI.DisableUpperHUD) return;
             
             if (Submarine.MainSub == null) return;
 
@@ -180,7 +180,7 @@ namespace Barotrauma
                 ContextualTutorial.Update(deltaTime);
             }
 
-            if (!GUI.DisableHUD)
+            if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
             {
                 endRoundButton.UpdateManually(deltaTime);
             }

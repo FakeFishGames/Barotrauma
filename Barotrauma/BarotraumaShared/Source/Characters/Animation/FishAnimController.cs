@@ -131,22 +131,22 @@ namespace Barotrauma
         {
             if (Frozen) return;
             if (MainLimb == null) { return; }
-
-            if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
+            
+            if (!character.AllowInput)
             {
-                Collider.Enabled = false;
+                levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
-                //set linear velocity even though the collider is disabled, 
-                //because the character won't be able to switch back from ragdoll mode until the velocity of the collider is low enough
-                Collider.LinearVelocity = MainLimb.LinearVelocity;
-                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
-
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    Collider.LinearVelocity = MainLimb.LinearVelocity;
+                    Collider.FarseerBody.FixedRotation = false;
+                    Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
                     UpdateDying(deltaTime);                    
-                }
-                
+                }                
                 return;
             }
             else

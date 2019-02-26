@@ -113,7 +113,14 @@ namespace Barotrauma
                             msgBox.Buttons[0].OnClicked = msgBox.Close;
                             msgBox.Buttons[0].OnClicked += (button, obj) =>
                             {
-                                if (GUIMessageBox.MessageBoxes.Count == 0) StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                if (GUIMessageBox.MessageBoxes.Count == 0)
+                                {
+                                    StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                    if (isMultiplayer)
+                                    {
+                                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                                    }
+                                }
                                 return true;
                             };
 
@@ -126,7 +133,15 @@ namespace Barotrauma
                                 TextManager.Get("ShuttleWarning"),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
-                            msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
+                            msgBox.Buttons[0].OnClicked = (button, obj) => 
+                            {
+                                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                if (isMultiplayer)
+                                {
+                                    CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                                }
+                                return true;
+                            };
                             msgBox.Buttons[0].OnClicked += msgBox.Close;
 
                             msgBox.Buttons[1].OnClicked = msgBox.Close;
@@ -136,6 +151,10 @@ namespace Barotrauma
                     else
                     {
                         StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                        if (isMultiplayer)
+                        {
+                            CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                        }
                     }
 
                     return true;
@@ -143,6 +162,29 @@ namespace Barotrauma
             };
 
             UpdateLoadMenu(saveFiles);
+        }
+
+        private IEnumerable<object> WaitForCampaignSetup()
+        {
+            string headerText = TextManager.Get("CampaignStartingPleaseWait");
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new string[] { TextManager.Get("Cancel") });
+
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                GameMain.NetLobbyScreen.SelectMode(0);
+                CoroutineManager.StopCoroutines("WaitForCampaignSetup");
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (GameMain.NetLobbyScreen.CampaignUI == null && DateTime.Now < timeOut)
+            {
+                msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                yield return CoroutineStatus.Running;
+            }
+            msgBox.Close();
+            yield return CoroutineStatus.Success;
         }
 
         public void CreateDefaultSaveName()
@@ -289,6 +331,10 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
                     LoadGame?.Invoke(saveList.SelectedData as string);
+                    if (isMultiplayer)
+                    {
+                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                    }
                     return true;
                 },
                 Enabled = false

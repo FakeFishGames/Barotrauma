@@ -91,7 +91,7 @@ namespace Barotrauma
 
         protected override void CreateNetworkEvent()
         {
-            int componentIndex = container.Item.components.IndexOf(container);
+            int componentIndex = container.Item.GetComponentIndex(container);
             if (componentIndex == -1)
             {
                 DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
@@ -100,7 +100,7 @@ namespace Barotrauma
             
             if (GameMain.NetworkMember != null)
             {
-                if (GameMain.NetworkMember.IsClient) syncItemsDelay = 1.0f;
+                if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
                 GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
             }
         }    

@@ -69,7 +69,7 @@ namespace Barotrauma.Steam
         
         public static bool UnlockAchievement(string achievementName)
         {
-            if (instance == null || !instance.isInitialized)
+            if (instance == null || !instance.isInitialized || instance.client == null)
             {
                 return false;
             }

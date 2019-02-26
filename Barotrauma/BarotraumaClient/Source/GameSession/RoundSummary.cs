@@ -71,26 +71,13 @@ namespace Barotrauma
                 var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                     GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     wrap: true);
-
-                /*TODO: whoops this definitely does not belong here
-                if (GameMain.GameSession.Mission.Completed)
-                {
-                    GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
-                }*/
-
+                
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
                     var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                         TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                 }  
             }
-#if SERVER
-            //TODO: fix?
-            else
-            {
-                GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
-            }
-#endif
 
             foreach (GUIComponent child in infoTextBox.Content.Children)
             {

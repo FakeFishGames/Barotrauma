@@ -273,6 +273,23 @@ namespace Barotrauma.Sounds
             return false;
         }
 
+        public int CountPlayingInstances(Sound sound)
+        {
+            int count = 0;
+            lock (playingChannels)
+            {
+                for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
+                {
+                    if (playingChannels[(int)sound.SourcePoolIndex][i] != null && 
+                        playingChannels[(int)sound.SourcePoolIndex][i].Sound.Filename == sound.Filename)
+                    {
+                        if (playingChannels[(int)sound.SourcePoolIndex][i].IsPlaying) { count++; };
+                    }
+                }
+            }
+            return count;
+        }
+
         public SoundChannel GetChannelFromSound(Sound sound)
         {
             lock (playingChannels)

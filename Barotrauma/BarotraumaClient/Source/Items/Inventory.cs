@@ -128,12 +128,14 @@ namespace Barotrauma
         protected float prevUIScale = UIScale;
         protected float prevHUDScale = GUI.Scale;
 
-
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorHighlight;
         public static Sprite DropIndicator, DropIndicatorHighlight;
 
         public Rectangle BackgroundFrame { get; protected set; }
+        
+        private ushort[] receivedItemIDs;
+        private CoroutineHandle syncItemsCoroutine;
 
         public float HideTimer;
 
@@ -504,7 +506,7 @@ namespace Barotrauma
 
             if (Character.Controlled.SelectedConstruction != null)
             {
-                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.components)
+                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.Components)
                 {
                     var itemContainer = ic as ItemContainer;
                     if (itemContainer?.Inventory?.slots == null) continue;
@@ -962,8 +964,7 @@ namespace Barotrauma
             {
                 if (receivedItemIDs[i] > 0)
                 {
-                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null || Items[i] == item) continue;
+                    if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) continue;
 
                     TryPutItem(item, i, true, true, null, false);
                     for (int j = 0; j < capacity; j++)
@@ -977,6 +978,12 @@ namespace Barotrauma
             }
 
             receivedItemIDs = null;
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            SharedWrite(msg, extraData);
+            syncItemsDelay = 1.0f;
         }
     }
 }

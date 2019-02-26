@@ -49,7 +49,7 @@ namespace Barotrauma
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
                     if (preMultiplyAlpha)
                     {
-                        PreMultiplyAlpha(texture);
+                        PreMultiplyAlpha(ref texture);
                     }
                     return texture;
                 }
@@ -67,7 +67,7 @@ namespace Barotrauma
             try
             {
                 var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                PreMultiplyAlpha(texture);
+                PreMultiplyAlpha(ref texture);
                 return texture;
             }
             catch (Exception e)
@@ -77,26 +77,39 @@ namespace Barotrauma
             }
         }
 
-        private static void PreMultiplyAlpha(Texture2D texture)
+        private static void PreMultiplyAlpha(ref Texture2D texture)
         {
             UInt32[] data = new UInt32[texture.Width * texture.Height];
             texture.GetData(data);
-            for (int y = 0; y < texture.Height; y++)
+
+            for (int i = 0; i < data.Length; i++)
             {
-                for (int x = 0; x < texture.Width; x++)
+                uint a = (data[i] & 0xff000000) >> 24;
+                if (a == 0)
                 {
-                    uint a = (data[x + (y * texture.Width)] & 0xff000000) >> 24;
-                    uint r = (data[x + (y * texture.Width)] & 0x00ff0000) >> 16;
-                    uint g = (data[x + (y * texture.Width)] & 0x0000ff00) >> 8;
-                    uint b = (data[x + (y * texture.Width)] & 0x000000ff);
-                    // Monogame 3.7 needs the line below.
-                    a *= a; a /= 255;
-                    b *= a; b /= 255;
-                    g *= a; g /= 255;
-                    r *= a; r /= 255;
-                    data[x + (y * texture.Width)] = (a<<24) | (r<<16) | (g<<8) | b;
+                    data[i] = 0;
+                    continue;
                 }
+                else if (a == uint.MaxValue)
+                {
+                    continue;
+                }
+                uint r = (data[i] & 0x00ff0000) >> 16;
+                uint g = (data[i] & 0x0000ff00) >> 8;
+                uint b = (data[i] & 0x000000ff);
+                // Monogame 3.7 needs the line below.
+                a *= a; a /= 255;
+                b *= a; b /= 255;
+                g *= a; g /= 255;
+                r *= a; r /= 255;
+                data[i] = (a << 24) | (r << 16) | (g << 8) | b;
             }
+            
+            //not sure why this is needed, but it seems to cut the memory usage of the game almost in half
+            //GetData/SetData might be leaking memory?
+            int width = texture.Width; int height = texture.Height;
+            texture.Dispose();
+            texture = new Texture2D(_graphicsDevice, width, height);
             texture.SetData(data);
         }
        
