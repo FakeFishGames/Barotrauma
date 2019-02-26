@@ -575,7 +575,7 @@ namespace Barotrauma
                 Color nameColor = Color.White;
                 if (Controlled != null && TeamID != Controlled.TeamID)
                 {
-                    nameColor = Color.Red;
+                    nameColor = TeamID == 255 ? Color.LightBlue : Color.Red;
                 }
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
