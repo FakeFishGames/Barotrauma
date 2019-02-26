@@ -12,8 +12,11 @@ namespace Barotrauma
 
         private Dictionary<string, List<string>> texts;
 
+        private string filePath;
+
         public TextPack(string filePath)
         {
+            this.filePath = filePath;
             texts = new Dictionary<string, List<string>>();
 
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
@@ -53,6 +56,47 @@ namespace Barotrauma
             }
 
             return textList;
+        }
+
+        public void CheckForDuplicates(int index)
+        {
+            Dictionary<string, int> textCounts = new Dictionary<string, int>();
+
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            if (doc == null || doc.Root == null) return;
+
+            foreach (XElement subElement in doc.Root.Elements())
+            {
+                string infoName = subElement.Name.ToString().ToLowerInvariant();
+                if (!textCounts.ContainsKey(infoName))
+                {
+                    textCounts.Add(infoName, 1);
+                }
+                else
+                {
+                    textCounts[infoName] += 1;
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("Language: " + Language);
+            sb.AppendLine();
+            sb.Append("Duplicate entries:");
+            sb.AppendLine();
+            sb.AppendLine();
+
+            for (int i = 0; i < textCounts.Keys.Count; i++)
+            {
+                if (textCounts[texts.Keys.ElementAt(i)] > 1)
+                {
+                    sb.Append(texts.Keys.ElementAt(i) + " Count: " + textCounts[texts.Keys.ElementAt(i)]);
+                    sb.AppendLine();
+                }
+            }
+
+            System.IO.StreamWriter file = new System.IO.StreamWriter(@"duplicate_" + Language.ToLower() + "_" + index + ".txt");
+            file.WriteLine(sb.ToString()); // "sb" is the StringBuilder
+            file.Close();
         }
     }
 }

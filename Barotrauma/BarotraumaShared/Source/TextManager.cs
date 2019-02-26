@@ -235,6 +235,22 @@ namespace Barotrauma
             }
         }
 
+        public static void CheckForDuplicates(string lang)
+        {
+            if (!textPacks.ContainsKey(lang))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
+                return;
+            }
+
+            int packIndex = 0;
+            foreach (TextPack textPack in textPacks[lang])
+            {
+                textPack.CheckForDuplicates(packIndex);
+                packIndex++;
+            }
+        }
+
         private static string Capitalize(string str)
         {
             if (string.IsNullOrWhiteSpace(str))

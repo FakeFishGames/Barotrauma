@@ -184,15 +184,6 @@
   
  <!-- Settings menu -->
   <Settings>Settings</Settings>
-  <ApplySettingsButton>Apply</ApplySettingsButton>
-  <ApplySettingsButtonUnsavedChanges>Apply*</ApplySettingsButtonUnsavedChanges>
-  <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
-  <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
-  <ApplySettingsYes>Apply</ApplySettingsYes>
-  <ApplySettingsNo>Discard</ApplySettingsNo>
-  <RestartRequiredLabel>Restart required</RestartRequiredLabel>
-  <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
-  <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
 
   <!-- General tab -->
   <SettingsTab.General>General</SettingsTab.General>
@@ -202,15 +193,12 @@
   <IncorrectExe>The executable you have launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
   <Language>Language</Language>
   <Language.English>English</Language.English>
-  <ContentPackage>Content package</ContentPackage>
-  <ContentPackages>Content packages</ContentPackages>
-  <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
-  <IncorrectExe>The executable you've launched is not present in the content package [selectedpackage]. Do you want to launch [exename]?</IncorrectExe>
   <ApplySettingsButton>Apply</ApplySettingsButton>
   <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
   <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
   <ApplySettingsYes>Apply</ApplySettingsYes>
   <ApplySettingsNo>Discard</ApplySettingsNo>
+  <ApplySettingsButtonUnsavedChanges>Apply*</ApplySettingsButtonUnsavedChanges>
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
   <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
   <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
@@ -326,7 +314,6 @@
   <WhiteListIP>IP Address</WhiteListIP>
   <WhiteListAdd>Add to whitelist</WhiteListAdd>
   <WhiteListRemove>Remove</WhiteListRemove>
-  <BanRange>Ban range</BanRange>
   <BanListRemove>Remove</BanListRemove>
   <BanExpires>Expires [time]</BanExpires>
   <BanDuration>Duration</BanDuration>
@@ -359,10 +346,6 @@
   <QuickUseAction.PutToCharacter>Put to selected character</QuickUseAction.PutToCharacter>
   <QuickUseAction.UseTreatment>Use as treatment</QuickUseAction.UseTreatment>
 
-  <!-- Status -->
-  <StatusOK>OK</StatusOK>
-  <Unconscious>Unconscious</Unconscious>
-  <Injured>Injured</Injured>
 
   <!-- Limbs -->
   <LeftHand>Left hand</LeftHand>
@@ -455,11 +438,6 @@
   <PronounPossessiveFemale>Her</PronounPossessiveFemale>
   <PronounReflexiveFemale>Herself</PronounReflexiveFemale>
 
-  <!-- Mission info -->
-  <MissionInfo>Mission info</MissionInfo>
-  <NoMission>No mission</NoMission>
-  <MissionReward>Reward: [reward]</MissionReward>
-
   <!-- Campaign -->
   <CampaignSetup>Campaign Setup</CampaignSetup>
   <NewCampaign>New campaign</NewCampaign>
@@ -503,6 +481,8 @@
   <Reward>Reward: [reward] credits</Reward>
   <Credit>Credit</Credit>
   <PlayerCredits>Credits: [credits]</PlayerCredits>
+  <MissionInfo>Mission info</MissionInfo>
+  <MissionReward>Reward: [reward]</MissionReward>
 
   <!-- Ingame menus -->
   <InfoButton>Info</InfoButton>
@@ -605,7 +585,6 @@
   <Votes>Votes</Votes>
   <Manual>Manual</Manual>
   <Vote>Vote</Vote>
-  <Random>Random</Random>
   <GameMode>Game mode</GameMode>
   <MissionType>Mission type</MissionType>
   <Random>Random</Random>
@@ -636,7 +615,6 @@
   <Rank>Rank</Rank>
   <CustomRank>Custom</CustomRank>
   <Permissions>Permissions</Permissions>
-  <PermittedConsoleCommands>Permitted console commands</PermittedConsoleCommands>
   <Kick>Kick</Kick>
   <VoteToKick>Vote to kick</VoteToKick>
   <Ban>Ban</Ban>
@@ -1575,14 +1553,10 @@
   <EntityDescription.adrenaline>A naturally occuring hormone. Useful for crafting</EntityDescription.adrenaline>
 
   <!-- Misc -->
-  <EntityName.divingsuitlocker>Diving Suit Locker</EntityName.divingsuitlocker>
-  <EntityDescription.divingsuitlocker>A diving suit locker with one dive-ready suit.</EntityDescription.divingsuitlocker>
   <EntityName.swimbladder>Swim Bladder</EntityName.swimbladder>
   <EntityDescription.swimbladder>Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline.</EntityDescription.swimbladder>
   <EntityName.adrenalinegland>Adrenaline Gland</EntityName.adrenalinegland>
   <EntityDescription.adrenalinegland>Contains large amounts of adrenaline, which can be extracted using a deconstructor.</EntityDescription.adrenalinegland>
-  <EntityName.door>Door</EntityName.door>
-  <EntityDescription.door>A pre-wired door with two buttons.</EntityDescription.door>
   <EntityName.guitar>Guitar</EntityName.guitar>
   <EntityDescription.guitar>An old acoustic guitar.</EntityDescription.guitar>
   <EntityName.harmonica>Harmonica</EntityName.harmonica>
@@ -1613,6 +1587,8 @@
   <EntityDescription.medcabinet>Stow meds here</EntityDescription.medcabinet>
   <EntityName.toxcabinet>Toxic Cabinet</EntityName.toxcabinet>
   <EntityDescription.toxcabinet>Stow poisons here</EntityDescription.toxcabinet>
+  <EntityName.divingsuitlocker>Diving Suit Locker</EntityName.divingsuitlocker>
+  <EntityDescription.divingsuitlocker>A diving suit locker with one dive-ready suit.</EntityDescription.divingsuitlocker>
   <EntityName.divingsuitlocker2>Large Diving Suit Locker</EntityName.divingsuitlocker2>
   <EntityDescription.divingsuitlocker2>Neatly stores multiple diving suits</EntityDescription.divingsuitlocker2>
   <EntityName.oxygentankshelf>Oxygen Tank Shelf</EntityName.oxygentankshelf>
@@ -1755,8 +1731,6 @@
   <EntityDescription.automatichatch>A hatch that closes automatically in 5 seconds if there's no-one in the way.</EntityDescription.automatichatch>
   <EntityName.automaticwindoweddoor>Automatic Windowed Door</EntityName.automaticwindoweddoor>
   <EntityDescription.automaticwindoweddoor>A door that closes automatically after 5 seconds if there's no-one in the doorway.</EntityDescription.automaticwindoweddoor>
-  <EntityName.divingsuitlocker>Diving Suit Locker</EntityName.divingsuitlocker>
-  <EntityDescription.divingsuitlocker>A diving suit locker with one dive-ready suit.</EntityDescription.divingsuitlocker>
   <EntityName.door>Door</EntityName.door>
   <EntityDescription.door>A pre-wired door with two buttons.</EntityDescription.door>
   <EntityName.largedivinggearcabinet>Large Diving Gear Cabinet</EntityName.largedivinggearcabinet>
@@ -1764,7 +1738,7 @@
   <EntityName.largedivingsuitcabinet>Large Diving Suit Cabinet</EntityName.largedivingsuitcabinet>
   <EntityDescription.largedivingsuitcabinet>A cabinet with 5 dive-ready diving suits and 10 oxygen tanks</EntityDescription.largedivingsuitcabinet>
   <EntityName.smalldivinggearcabinet>Small Diving Gear Cabinet</EntityName.smalldivinggearcabinet>
-  <EntityDescription.largedivinggearcabinet>A cabinet with diving masks, underwater scooters and handheld sonars.</EntityDescription.largedivinggearcabinet>
+  <EntityDescription.smalldivinggearcabinet>A cabinet with diving masks, underwater scooters and handheld sonars.</EntityDescription.smalldivinggearcabinet>
   <EntityName.alienturretassembly>Alien Turret Assembly</EntityName.alienturretassembly>
   <EntityDescription.alienturretassembly><!-- No description --></EntityDescription.alienturretassembly>
   <EntityName.alienarmoryassembly1>AlienArmoryAssembly1</EntityName.alienarmoryassembly1>
@@ -2357,6 +2331,7 @@
   <Stunned>Stunned</Stunned>
   <HuskInfectionTransition>Velonaceps calyx infection</HuskInfectionTransition>
   <HuskInfectionActive>Advanced Velonaceps calyx infection</HuskInfectionActive>
+  <StatusOK>OK</StatusOK>
 
   <MinorBleeding>Minor bleeding</MinorBleeding>
   <Bleeding>Bleeding</Bleeding>
@@ -2366,6 +2341,7 @@
   <NoInjuries>No visible injuries</NoInjuries>
   <MinorInjuries>Minor injuries</MinorInjuries>
   <Injuries>Injured</Injuries>
+  <Injured>Injured</Injured>
   <MajorInjuries>Major injuries</MajorInjuries>
   <CriticalInjuries>Critically injured</CriticalInjuries>
 
