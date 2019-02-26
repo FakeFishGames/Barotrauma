@@ -482,12 +482,11 @@ namespace Barotrauma.Networking
             }
             
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
-
-            var address = newClient.Connection.RemoteEndPoint.Address;
+            
             var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 
                 cp.SteamID == newClient.SteamID :            
-                cp.IP == address.ToString() || (address.IsIPv4MappedToIPv6 && cp.IP == address.MapToIPv4().ToString()));
+                newClient.IPMatches(cp.IP));
 
             if (savedPermissions != null)
             {

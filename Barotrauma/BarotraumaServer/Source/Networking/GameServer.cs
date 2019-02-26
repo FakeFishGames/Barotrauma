@@ -2315,18 +2315,12 @@ namespace Barotrauma.Networking
             }
             else
             {
-                string addressStr = client.Connection.RemoteEndPoint.Address.ToString();
-                serverSettings.ClientPermissions.RemoveAll(cp => cp.IP == addressStr);
-                if (client.Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6)
-                {
-                    addressStr = client.Connection.RemoteEndPoint.Address.MapToIPv4().ToString();
-                    serverSettings.ClientPermissions.RemoveAll(cp => cp.IP == addressStr);
-                }
+                serverSettings.ClientPermissions.RemoveAll(cp => client.IPMatches(cp.IP));
                 if (client.Permissions != ClientPermissions.None)
                 {
                     serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
                         client.Name,
-                        addressStr,
+                        client.Connection.RemoteEndPoint.Address,
                         client.Permissions,
                         client.PermittedConsoleCommands));
                 }
