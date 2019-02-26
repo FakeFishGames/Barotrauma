@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -9,67 +10,54 @@ namespace Barotrauma
     {
         public override string DebugTag => "fix leaks";
 
-        const float UpdateGapListInterval = 5.0f;
-
-        private double lastGapUpdate;
+        const float updateGapListInterval = 5.0f;
+        private float updateCounter;
 
         private AIObjectiveIdle idleObjective;
 
         private AIObjectiveFindDivingGear findDivingGear;
 
-        private List<AIObjectiveFixLeak> objectiveList;
+        private List<AIObjectiveFixLeak> objectiveList = new List<AIObjectiveFixLeak>();
 
-        public AIObjectiveFixLeaks(Character character)
-            : base (character, "")
+        public AIObjectiveFixLeaks(Character character) : base (character, "")
         {
+            UpdateGapList();
         }
 
-        public override bool IsCompleted()
+        public override bool IsCompleted() => false;
+
+        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
+            if (updateCounter < updateGapListInterval)
+            {
+                updateCounter += deltaTime;
+            }
+            else
             {
                 UpdateGapList();
-                lastGapUpdate = Timing.TotalTime;
             }
-
-            return objectiveList.Count == 0;
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
-            {
-                UpdateGapList();
-                lastGapUpdate = Timing.TotalTime;
-            }
-
-            float priority = 0.0f;
+            priority = 0.0f;
             foreach (AIObjectiveFixLeak fixObjective in objectiveList)
             {
-                //gaps from outside to inside significantly increase the priority 
+                // Gaps from outside to inside significantly increase the priority 
                 if (!fixObjective.Leak.IsRoomToRoom)
                 {
+                    // Max 50 priority per gap
                     priority = Math.Max(priority + fixObjective.Leak.Open * 100.0f, 50.0f);
                 }
                 else
                 {
+                    // Max 10 priority per gap
                     priority += fixObjective.Leak.Open * 10.0f;
                 }
 
                 if (priority >= 100.0f) break;
             }
-
-            return Math.Min(priority, 100.0f);
+            priority = MathHelper.Clamp(priority, 0, 100);
         }
 
         protected override void Act(float deltaTime)
         {
-            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
-            {
-                UpdateGapList();
-                lastGapUpdate = Timing.TotalTime;
-            }
-
             if (objectiveList.Any())
             {
                 if (!objectiveList[objectiveList.Count - 1].Leak.IsRoomToRoom)
@@ -100,9 +88,8 @@ namespace Barotrauma
 
         private void UpdateGapList()
         {
-            if (objectiveList == null) { objectiveList = new List<AIObjectiveFixLeak>(); }
+            updateCounter = 0;
             objectiveList.Clear(); 
-
             foreach (Gap gap in Gap.GapList)
             {
                 if (gap.ConnectedWall == null) { continue; }
@@ -127,8 +114,7 @@ namespace Barotrauma
                 float gapPriority = GetGapFixPriority(gap);
 
                 int index = 0;
-                while (index < objectiveList.Count &&
-                    GetGapFixPriority(objectiveList[index].Leak) < gapPriority)
+                while (index < objectiveList.Count && GetGapFixPriority(objectiveList[index].Leak) < gapPriority)
                 {
                     index++;
                 }
