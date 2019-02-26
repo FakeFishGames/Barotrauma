@@ -805,7 +805,11 @@
   <MapEntityCategory.Alien>Alien</MapEntityCategory.Alien>
   <MapEntityCategory.ItemAssembly>ItemAssembly</MapEntityCategory.ItemAssembly>
   <MapEntityCategory.Legacy>Legacy</MapEntityCategory.Legacy>
-
+  
+  <!-- Display names (Fabricator) -->
+  <DisplayName.OxygenTankEmpty>Oxygen Tank (empty)</DisplayName.OxygenTankEmpty>
+  <DisplayName.WeldingFuelTankEmpty>Welding Fuel Tank (empty)</DisplayName.WeldingFuelTankEmpty>
+  
   <!-- Structure -->
   <EntityName.hull>Hull</EntityName.hull>
   <EntityDescription.hull>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</EntityDescription.hull>

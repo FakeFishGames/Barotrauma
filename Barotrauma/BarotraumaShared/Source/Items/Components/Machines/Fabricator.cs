@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
             }
 
             string displayName = element.GetAttributeString("displayname", "");
-            DisplayName = string.IsNullOrEmpty(displayName) ? TargetItem.Name : TextManager.Get(displayName);
+            DisplayName = string.IsNullOrEmpty(displayName) ? TargetItem.Name : TextManager.Get($"DisplayName.{displayName}");
 
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
