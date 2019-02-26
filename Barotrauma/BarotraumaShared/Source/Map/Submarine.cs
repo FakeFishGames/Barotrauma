@@ -1041,29 +1041,20 @@ namespace Barotrauma
             return closest;
         }
 
-        public List<Hull> GetHulls(bool alsoFromConnectedSubs)
-        {
-            if (alsoFromConnectedSubs)
-            {
-                var connectedSubs = GetConnectedSubs();
-                return Hull.hullList.FindAll(h => h.Submarine == this || connectedSubs.Any(s => s == h.Submarine));
-            }
-            else
-            {
-                return Hull.hullList.FindAll(h => h.Submarine == this);
-            }
-        }
+        public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.hullList);
+        public List<Gap> GetGaps(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Gap.GapList);
+        public List<Item> GetItems(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Item.ItemList);
 
-        public List<Item> GetItems(bool alsoFromConnectedSubs)
+        public List<T> GetEntities<T>(bool alsoFromConnectedSubs, List<T> list) where T : MapEntity
         {
             if (alsoFromConnectedSubs)
             {
                 var connectedSubs = GetConnectedSubs();
-                return Item.ItemList.FindAll(i => i.Submarine == this || connectedSubs.Any(s => s == i.Submarine));
+                return list.FindAll(i => i.Submarine == this || connectedSubs.Any(s => s == i.Submarine));
             }
             else
             {
-                return Item.ItemList.FindAll(i => i.Submarine == this);
+                return list.FindAll(i => i.Submarine == this);
             }
         }
 
