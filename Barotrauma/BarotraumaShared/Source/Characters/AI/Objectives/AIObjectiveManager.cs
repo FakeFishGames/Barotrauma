@@ -13,7 +13,7 @@ namespace Barotrauma
         // Constantly increases the priority of the selected objective, unless overridden
         public const float baseDevotion = 2;
 
-        private List<AIObjective> objectives;
+        public List<AIObjective> Objectives { get; private set; }
 
         private Character character;
 
@@ -29,14 +29,14 @@ namespace Barotrauma
         {
             this.character = character;
 
-            objectives = new List<AIObjective>();
+            Objectives = new List<AIObjective>();
         }
 
         public void AddObjective(AIObjective objective)
         {
-            if (objectives.Find(o => o.IsDuplicate(objective)) != null) return;
+            if (Objectives.Find(o => o.IsDuplicate(objective)) != null) return;
 
-            objectives.Add(objective);
+            Objectives.Add(objective);
         }
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
@@ -58,7 +58,7 @@ namespace Barotrauma
 
         public T GetObjective<T>() where T : AIObjective
         {
-            foreach (AIObjective objective in objectives)
+            foreach (AIObjective objective in Objectives)
             {
                 if (objective is T) return (T)objective;
             }
@@ -67,54 +67,58 @@ namespace Barotrauma
 
         private AIObjective GetCurrentObjective()
         {
-            if (CurrentOrder != null &&
-                (objectives.Count == 0 || CurrentOrder.GetPriority(this) > objectives[0].GetPriority(this)))
+            var firstObjective = Objectives.FirstOrDefault();
+            if (CurrentOrder != null && firstObjective != null && CurrentOrder.GetPriority(this) > firstObjective.GetPriority(this))
             {
-                return CurrentOrder;
+                CurrentObjective = CurrentOrder;
             }
-
-            return objectives.Count == 0 ? null : objectives[0];
+            else
+            {
+                CurrentObjective = firstObjective;
+            }
+            return CurrentObjective;
         }
 
         public float GetCurrentPriority()
         {
-            var currentObjective = GetCurrentObjective();
-            return currentObjective == null ? 0.0f : currentObjective.GetPriority(this);
+            return CurrentObjective == null ? 0.0f : CurrentObjective.GetPriority(this);
         }
 
         public void UpdateObjectives(float deltaTime)
         {
-            for (int i = 0; i < objectives.Count; i++)
+            CurrentOrder?.UpdatePriority(this, deltaTime);
+            for (int i = 0; i < Objectives.Count; i++)
             {
-                var objective = objectives[i];
+                var objective = Objectives[i];
                 if (objective.IsCompleted())
                 {
                     DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it is completed.");
-                    objectives.Remove(objective);
+                    Objectives.Remove(objective);
                 }
                 else if (!objective.CanBeCompleted)
                 {
                     DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it cannot be completed.");
-                    objectives.Remove(objective);
+                    Objectives.Remove(objective);
                 }
                 else
                 {
                     objective.UpdatePriority(this, deltaTime);
                 }
             }
+            GetCurrentObjective();
         }
 
         public void SortObjectives()
         {
-            if (objectives.None()) { return; }
-            objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
-            GetCurrentObjective()?.SortSubObjectives(this);
+            if (Objectives.Any())
+            {
+                Objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
+            }
+            CurrentObjective?.SortSubObjectives(this);
         }
         
         public void DoCurrentObjective(float deltaTime)
         {
-            CurrentObjective = GetCurrentObjective();
-
             if (CurrentObjective == null || (CurrentObjective.GetPriority(this) < OrderPriority && WaitTimer > 0.0f))
             {
                 WaitTimer -= deltaTime;
