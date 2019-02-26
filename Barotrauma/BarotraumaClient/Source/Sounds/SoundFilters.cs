@@ -247,9 +247,6 @@ namespace Barotrauma.Sounds
     /// </summary>
     public class HighpassFilter : BiQuad
     {
-        private int p1;
-        private double p2;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="HighpassFilter"/> class.
         /// </summary>

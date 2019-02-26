@@ -21,7 +21,7 @@ namespace Barotrauma
         static bool allowInput;
         static bool wasWindowActive;
 
-#if LINUX
+#if LINUX || OSX
         static readonly Keys[] manuallyHandledTextInputKeys = { Keys.Left, Keys.Right, Keys.Up, Keys.Down };
         const float AutoRepeatDelay = 0.5f;
         const float AutoRepeatRate = 25;
@@ -234,7 +234,7 @@ namespace Barotrauma
                 timeSinceClick = 0.0;
             }
 
-#if LINUX
+#if LINUX || OSX
             //arrow keys cannot be received using window.TextInput on Linux (see https://github.com/MonoGame/MonoGame/issues/5808)
             //so lets do it manually here and pass to the KeyboardDispatcher:
             foreach (Keys key in manuallyHandledTextInputKeys)

@@ -24,9 +24,7 @@ namespace Barotrauma.Items.Components
         //(adjusts the fission rate and turbine output automatically to keep the
         //amount of power generated balanced with the load)
         private bool autoTemp;
-
-        private Client BlameOnBroken;
-
+        
         //automatical adjustment to the power output when 
         //turbine output and temperature are in the optimal range
         private float autoAdjustAmount;
@@ -44,10 +42,7 @@ namespace Barotrauma.Items.Components
         private float sendUpdateTimer;
 
         private float degreeOfSuccess;
-
-        private float? nextServerLogWriteTime;
-        private float lastServerLogWriteTime;
-
+        
         private Vector2 optimalTemperature, allowedTemperature;
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
@@ -262,8 +257,7 @@ namespace Barotrauma.Items.Components
                     if (!connection.IsPower) continue;
                     foreach (Connection recipient in connection.Recipients)
                     {
-                        Item it = recipient.Item as Item;
-                        if (it == null) continue;
+                        if (!(recipient.Item is Item it)) continue;
 
                         PowerTransfer pt = it.GetComponent<PowerTransfer>();
                         if (pt == null) continue;
@@ -416,9 +410,9 @@ namespace Barotrauma.Items.Components
             }
 
 #if SERVER
-            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
+            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(blameOnBroken))
             {
-                BlameOnBroken.Karma = 0.0f;
+                blameOnBroken.Karma = 0.0f;
             }
 #endif
         }
@@ -430,9 +424,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-#if CLIENT
-            if (GameMain.Client != null) return false;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
 
@@ -545,49 +537,5 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            bool autoTemp       = msg.ReadBoolean();
-            bool shutDown       = msg.ReadBoolean();
-            float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            float turbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-
-            if (!item.CanClientAccess(c)) return;
-
-            if (!autoTemp && AutoTemp) BlameOnBroken = c;
-            if (turbineOutput < targetTurbineOutput) BlameOnBroken = c;
-            if (fissionRate > targetFissionRate) BlameOnBroken = c;
-            if (!this.shutDown && shutDown) BlameOnBroken = c;
-            
-            AutoTemp = autoTemp;
-            this.shutDown = shutDown;
-            targetFissionRate = fissionRate;
-            targetTurbineOutput = turbineOutput;
-
-            LastUser = c.Character;
-            if (nextServerLogWriteTime == null)
-            {
-                nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-            }
-
-#if CLIENT
-            fissionRateScrollBar.BarScroll = 1.0f - targetFissionRate / 100.0f;
-            turbineOutputScrollBar.BarScroll = 1.0f - targetTurbineOutput / 100.0f;
-            onOffSwitch.BarScroll = shutDown ? Math.Max(onOffSwitch.BarScroll, 0.55f) : Math.Min(onOffSwitch.BarScroll, 0.45f);
-#endif
-
-            //need to create a server event to notify all clients of the changed state
-            unsentChanges = true;
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(autoTemp);
-            msg.Write(shutDown);
-            msg.WriteRangedSingle(temperature, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(degreeOfSuccess, 0.0f, 1.0f, 8);
-        }
     }
 }

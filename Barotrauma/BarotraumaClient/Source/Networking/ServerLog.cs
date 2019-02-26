@@ -9,6 +9,8 @@ namespace Barotrauma.Networking
         public GUIButton LogFrame;
         private GUIListBox listBox;
 
+        private string msgFilter;
+
         public void CreateLogFrame()
         {
             LogFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")

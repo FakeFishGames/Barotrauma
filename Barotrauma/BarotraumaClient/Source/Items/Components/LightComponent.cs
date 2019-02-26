@@ -8,6 +8,11 @@ namespace Barotrauma.Items.Components
 {
     partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
+        public Vector2 DrawSize
+        {
+            get { return new Vector2(light.Range * 2, light.Range * 2); }
+        }
+
         private LightSource light;
         public LightSource Light
         {

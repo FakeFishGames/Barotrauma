@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 
 namespace Barotrauma
 {

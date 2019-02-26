@@ -50,17 +50,17 @@ namespace Barotrauma
         public bool Visible = true;
 
         public SpriteEffects SpriteEffects = SpriteEffects.None;
-        
+
         //components that determine the functionality of the item
-        public List<ItemComponent> components;
-        public List<IDrawableComponent> drawableComponents;
+        private Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
+        private List<ItemComponent> components;
+        private List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
 
         public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
-        private bool prevBodyAwake;
 
         private bool needsPositionUpdate;
         private float lastSentCondition;
@@ -92,9 +92,23 @@ namespace Barotrauma
             {
                 if (hasInGameEditableProperties == null)
                 {
-                    var inGameEditableProperties = GetProperties<InGameEditable>();
-                    hasInGameEditableProperties = inGameEditableProperties.Any(p =>
-                        !(p.ParentObject is ItemComponent) || ((ItemComponent)p.ParentObject).AllowInGameEditing);
+                    hasInGameEditableProperties = false;
+                    if (properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                    {
+                        hasInGameEditableProperties = true;
+                    }
+                    else
+                    {
+                        foreach (ItemComponent component in components)
+                        {
+                            if (!component.AllowInGameEditing) { continue; }
+                            if (component.properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                            {
+                                hasInGameEditableProperties = true;
+                                break;
+                            }
+                        }
+                    }
                 }
                 return (bool)hasInGameEditableProperties;
             }
@@ -135,7 +149,6 @@ namespace Barotrauma
         }
 
         private string description;
-        [Editable, Serialize("", true)]
         public string Description
         {
             get { return description ?? prefab.Description; }
@@ -405,6 +418,11 @@ namespace Barotrauma
             get { return repairables; }
         }
 
+        public IEnumerable<ItemComponent> Components
+        {
+            get { return components; }
+        }
+
         public override bool Linkable
         {
             get { return Prefab.Linkable; }
@@ -423,8 +441,7 @@ namespace Barotrauma
         {
             get
             {
-                List<ISerializableEntity> pobjects = new List<ISerializableEntity>();
-                pobjects.Add(this);
+                List<ISerializableEntity> pobjects = new List<ISerializableEntity>() { this };
                 foreach (ItemComponent ic in components)
                 {
                     pobjects.Add(ic);
@@ -503,7 +520,7 @@ namespace Barotrauma
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
                         if (ic == null) break;
 
-                        components.Add(ic);
+                        AddComponent(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
                         if (ic is Repairable) repairables.Add((Repairable)ic);
@@ -587,7 +604,7 @@ namespace Barotrauma
             foreach (KeyValuePair<string, SerializableProperty> property in properties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                clone.properties[property.Key].TrySetValue(property.Value.GetValue());
+                clone.properties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
 
             if (components.Count != clone.components.Count)
@@ -604,7 +621,7 @@ namespace Barotrauma
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                    clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
+                    clone.components[i].properties[property.Key].TrySetValue(clone.components[i], property.Value.GetValue(components[i]));
                 }
 
                 //clone requireditem identifiers
@@ -643,18 +660,57 @@ namespace Barotrauma
             return clone;
         }
 
-        public T GetComponent<T>()
+        public void AddComponent(ItemComponent component)
         {
-            foreach (ItemComponent ic in components)
+            components.Add(component);
+            Type type = component.GetType();
+            if (!componentsByType.ContainsKey(type))
             {
-                if (ic is T) return (T)(object)ic;
+                componentsByType.Add(type, component);
+                Type baseType = type.BaseType;
+                while (baseType != null && baseType != typeof(ItemComponent))
+                {
+                    if (!componentsByType.ContainsKey(baseType))
+                    {
+                        componentsByType.Add(baseType, component);
+                    }
+                    baseType = baseType.BaseType;
+                }
             }
+        }
 
+        public void EnableDrawableComponent(IDrawableComponent drawable)
+        {
+            if (!drawableComponents.Contains(drawable))
+            {
+                drawableComponents.Add(drawable);
+            }
+        }
+
+        public void DisableDrawableComponent(IDrawableComponent drawable)
+        {
+            drawableComponents.Remove(drawable);            
+        }
+
+        public int GetComponentIndex(ItemComponent component)
+        {
+            return components.IndexOf(component);
+        }
+
+        public T GetComponent<T>() where T : ItemComponent
+        {
+            if (componentsByType.TryGetValue(typeof(T), out ItemComponent component))
+            {
+                return (T)component;
+            }
+            
             return default(T);
         }
 
         public IEnumerable<T> GetComponents<T>()
         {
+            if (!componentsByType.ContainsKey(typeof(T))) { return Enumerable.Empty<T>(); }
+
             return components.Where(c => c is T).Cast<T>();
         }
         
@@ -1140,26 +1196,20 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsVisible(Rectangle worldView)
-        {
-            return drawableComponents.Count > 0 || body == null || body.Enabled;
-        }
-
-        public List<T> GetConnectedComponents<T>(bool recursive = false)
+        public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
             if (recursive)
             {
-                List<Item> alreadySearched = new List<Item>() {this};
-                GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
+                List<Item> alreadySearched = new List<Item>() { this };
+                GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
 
                 return connectedComponents;
             }
 
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) return connectedComponents;
-
 
             foreach (Connection c in connectionPanel.Connections)
             {
@@ -1174,7 +1224,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents)
+        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             alreadySearched.Add(this);
 
@@ -1200,16 +1250,16 @@ namespace Barotrauma
             }
         }
 
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c)
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();            
             List<Item> alreadySearched = new List<Item>() { this };
-            GetConnectedComponentsRecursive<T>(c, alreadySearched, connectedComponents);
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents)
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             alreadySearched.Add(this);
                         
@@ -1224,7 +1274,7 @@ namespace Barotrauma
                     connectedComponents.Add(component);
                 }
 
-                recipient.Item.GetConnectedComponentsRecursive<T>(recipient, alreadySearched, connectedComponents);                   
+                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
             }            
         }
 
@@ -1562,20 +1612,24 @@ namespace Barotrauma
         }
 
 
-        public List<SerializableProperty> GetProperties<T>()
+        public List<Pair<object, SerializableProperty>> GetProperties<T>()
         {
-            List<SerializableProperty> editableProperties = SerializableProperty.GetProperties<T>(this);
-            
+            List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+
+            List<SerializableProperty> itemProperties = SerializableProperty.GetProperties<T>(this);
+            foreach (var itemProperty in itemProperties)
+            {
+                allProperties.Add(new Pair<object, SerializableProperty>(this, itemProperty));
+            }            
             foreach (ItemComponent ic in components)
             {
                 List<SerializableProperty> componentProperties = SerializableProperty.GetProperties<T>(ic);
-                foreach (var property in componentProperties)
+                foreach (var componentProperty in componentProperties)
                 {
-                    editableProperties.Add(property);
+                    allProperties.Add(new Pair<object, SerializableProperty>(ic, componentProperty));
                 }
             }
-
-            return editableProperties;
+            return allProperties;
         }
 
         private void WritePropertyChange(NetBuffer msg, object[] extraData, bool inGameEditableOnly)
@@ -1586,10 +1640,10 @@ namespace Barotrauma
             {
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.IndexOf(property));
+                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.FindIndex(p => p.Second == property));
                 }
 
-                object value = property.GetValue();
+                object value = property.GetValue(this);
                 if (value is string)
                 {
                     msg.Write((string)value);
@@ -1606,9 +1660,8 @@ namespace Barotrauma
                 {
                     msg.Write((bool)value);
                 }
-                else if (value is Color)
+                else if (value is Color color)
                 {
-                    Color color = (Color)value;
                     msg.Write(color.R);
                     msg.Write(color.G);
                     msg.Write(color.B);
@@ -1650,7 +1703,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
+                    throw new NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
                 }
             }
             else
@@ -1662,7 +1715,7 @@ namespace Barotrauma
         private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly, Client sender = null)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
-            if (allProperties.Count == 0) return;
+            if (allProperties.Count == 0) { return; }
 
             int propertyIndex = 0;
             if (allProperties.Count > 1)
@@ -1670,9 +1723,10 @@ namespace Barotrauma
                 propertyIndex = msg.ReadRangedInteger(0, allProperties.Count - 1);
             }
 
-            bool allowEditing = true;            
-            SerializableProperty property = allProperties[propertyIndex];
-            if (inGameEditableOnly && property.ParentObject is ItemComponent ic)
+            bool allowEditing = true;
+            object parentObject = allProperties[propertyIndex].First;
+            SerializableProperty property = allProperties[propertyIndex].Second;
+            if (inGameEditableOnly && parentObject is ItemComponent ic)
             {
                 if (!ic.AllowInGameEditing) allowEditing = false;
             }
@@ -1686,59 +1740,59 @@ namespace Barotrauma
             if (type == typeof(string))
             {
                 string val = msg.ReadString();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(float))
             {
                 float val = msg.ReadFloat();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(int))
             {
                 int val = msg.ReadInt32();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(bool))
             {
                 bool val = msg.ReadBoolean();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Color))
             {
                 Color val = new Color(msg.ReadByte(), msg.ReadByte(), msg.ReadByte(), msg.ReadByte());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector2))
             {
                 Vector2 val = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector3))
             {
                 Vector3 val = new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector4))
             {
                 Vector4 val = new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Point))
             {
                 Point val = new Point(msg.ReadInt32(), msg.ReadInt32());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Rectangle))
             {
                 Rectangle val = new Rectangle(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (typeof(Enum).IsAssignableFrom(type))
             {
                 int intVal = msg.ReadInt32();
                 try
                 {
-                    if (allowEditing) property.TrySetValue(Enum.ToObject(type, intVal));
+                    if (allowEditing) property.TrySetValue(parentObject, Enum.ToObject(type, intVal));
                 }
                 catch (Exception e)
                 {
@@ -1813,9 +1867,7 @@ namespace Barotrauma
             foreach (XAttribute attribute in element.Attributes())
             {
                 if (!item.properties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
-
                 bool shouldBeLoaded = false;
-
                 foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                 {
                     if (propertyAttribute.isSaveable)
@@ -1825,7 +1877,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (shouldBeLoaded) property.TrySetValue(attribute.Value);
+                if (shouldBeLoaded) { property.TrySetValue(item, attribute.Value); }
             }
 
             string linkedToString = element.GetAttributeString("linked", "");

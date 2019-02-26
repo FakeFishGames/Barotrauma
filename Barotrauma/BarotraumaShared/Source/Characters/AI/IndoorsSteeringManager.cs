@@ -18,6 +18,10 @@ namespace Barotrauma
 
         private float findPathTimer;
 
+        private float buttonPressCooldown;
+
+        const float ButtonPressInterval = 0.5f;
+
         public SteeringPath CurrentPath
         {
             get { return currentPath; }
@@ -57,6 +61,7 @@ namespace Barotrauma
         {
             base.Update(speed);
 
+            buttonPressCooldown -= 1.0f / 60.0f;
             findPathTimer -= 1.0f / 60.0f;
         }
 
@@ -125,7 +130,7 @@ namespace Barotrauma
                 return currentTarget - pos2;
             }
             
-            if (canOpenDoors && !character.LockHands)
+            if (canOpenDoors && !character.LockHands && buttonPressCooldown <= 0.0f)
             {
                 CheckDoorsInPath();
             }
@@ -309,6 +314,7 @@ namespace Barotrauma
                         }
 
                         closestButton.Item.TryInteract(character, false, true, false);
+                        buttonPressCooldown = ButtonPressInterval;
                         break;
                     }
                 }

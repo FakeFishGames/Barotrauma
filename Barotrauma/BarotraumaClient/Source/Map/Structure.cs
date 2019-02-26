@@ -1,10 +1,10 @@
 ﻿using Barotrauma.Lights;
 using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -105,7 +105,17 @@ namespace Barotrauma
 
             return editingHUD;
         }
-        
+
+        public override bool IsVisible(Rectangle worldView)
+        {
+            Rectangle worldRect = WorldRect;
+
+            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) return false;
+            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) return false;
+
+            return true;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
@@ -159,7 +169,7 @@ namespace Barotrauma
 
             if (back && damageEffect == null)
             {
-                if (prefab.BackgroundSprite != null)
+                if (Prefab.BackgroundSprite != null)
                 {
                     bool drawDropShadow = Submarine != null && HasBody;
                     Vector2 dropShadowOffset = Vector2.Zero;
@@ -182,14 +192,14 @@ namespace Barotrauma
 
                     if (DrawTiled)
                     {
-                        SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
-                        prefab.BackgroundSprite.effects ^= SpriteEffects;
+                        SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
+                        Prefab.BackgroundSprite.effects ^= SpriteEffects;
 
                         Point backGroundOffset = new Point(
-                            MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
-                            MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
+                            MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width),
+                            MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height));
 
-                        prefab.BackgroundSprite.DrawTiled(
+                        Prefab.BackgroundSprite.DrawTiled(
                             spriteBatch,
                             new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                             new Vector2(rect.Width, rect.Height),
@@ -199,21 +209,21 @@ namespace Barotrauma
 
                         if (drawDropShadow)
                         {
-                            prefab.BackgroundSprite.DrawTiled(
+                            Prefab.BackgroundSprite.DrawTiled(
                                 spriteBatch,
                                 new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
                                 new Vector2(rect.Width, rect.Height),
                                 color: Color.Black * 0.5f,
                                 textureScale: TextureScale * Scale,
                                 startOffset: backGroundOffset,
-                                depth: (depth + prefab.BackgroundSprite.Depth) / 2.0f);
+                                depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
                         }
 
-                        prefab.BackgroundSprite.effects = oldEffects;
+                        Prefab.BackgroundSprite.effects = oldEffects;
                     }
                     else
                     {
-                        prefab.BackgroundSprite.Draw(
+                        Prefab.BackgroundSprite.Draw(
                             spriteBatch,
                             new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                             color,
@@ -224,7 +234,7 @@ namespace Barotrauma
 
                         if (drawDropShadow)
                         {
-                            prefab.BackgroundSprite.Draw(
+                            Prefab.BackgroundSprite.Draw(
                                 spriteBatch,
                                 new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
                                 Color.Black * 0.5f,
@@ -232,7 +242,7 @@ namespace Barotrauma
                                 scale: Scale,
                                 rotate: 0,
                                 spriteEffect: SpriteEffects,
-                                depth: (depth + prefab.BackgroundSprite.Depth) / 2.0f);
+                                depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
                         }
                     }
                 }
@@ -248,7 +258,7 @@ namespace Barotrauma
                     if (damageEffect != null)
                     {
                         float newCutoff = Sections[i].damage > 0 ?
-                            MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / prefab.Health) : 0.0f;
+                            MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / Prefab.Health) : 0.0f;
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
@@ -315,6 +325,15 @@ namespace Barotrauma
                             -Bodies[i].Rotation, Color.White);
                     }
                 }
+            }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            for (int i = 0; i < Sections.Length; i++)
+            {
+                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
+                SetDamage(i, damage);
             }
         }
     }

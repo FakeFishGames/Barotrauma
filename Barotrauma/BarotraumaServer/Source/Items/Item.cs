@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private bool prevBodyAwake;
+
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";

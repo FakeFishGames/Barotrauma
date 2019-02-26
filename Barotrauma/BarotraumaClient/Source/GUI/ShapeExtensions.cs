@@ -64,7 +64,7 @@ namespace Barotrauma
             var length = Vector2.Distance(point1, point2);
             var angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
             var scale = new Vector2(length, thickness);
-            spriteBatch.Draw(texture, point1, color: color, rotation: angle, scale: scale);
+            spriteBatch.Draw(GetTexture(spriteBatch), point1, null, color, angle, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Barotrauma
         {
             var scale = Vector2.One * size;
             var offset = new Vector2(0.5f) - new Vector2(size * 0.5f);
-            spriteBatch.Draw(GetTexture(spriteBatch), position + offset, color: color, scale: scale);
+            spriteBatch.Draw(GetTexture(spriteBatch), position + offset, null, color, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0);
         }
 
         public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color,

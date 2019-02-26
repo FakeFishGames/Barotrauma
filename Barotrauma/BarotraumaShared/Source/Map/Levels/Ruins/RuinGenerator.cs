@@ -636,14 +636,13 @@ namespace Barotrauma.RuinGeneration
             foreach (RuinEntity ruinEntity in ruinEntities)
             {
                 CreateConnections(ruinEntity);
-                ruinEntity.Entity.ParentRuin = this;
             }
 
             foreach (RuinEntity ruinEntity in ruinEntities)
             {
                 if (ruinEntity.Entity is Item item)
                 {
-                    foreach (ItemComponent ic in item.components)
+                    foreach (ItemComponent ic in item.Components)
                     {
                         // Prevent wiring & interacting
                         if (ic is ConnectionPanel connectionPanel)
@@ -735,6 +734,11 @@ namespace Barotrauma.RuinGeneration
                         ShouldBeSaved = false
                     };
                 }
+            }
+
+            foreach (RuinEntity ruinEntity in ruinEntities)
+            {
+                ruinEntity.Entity.ParentRuin = this;
             }
 
             bool hullXIntersect(Rectangle rect1, Rectangle rect2)

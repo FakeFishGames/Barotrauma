@@ -153,7 +153,7 @@ namespace Barotrauma
                     SerializableProperty property;
                     if (target.SerializableProperties.TryGetValue(AttributeName, out property))
                     {
-                        return Matches(property);
+                        return Matches(target, property);
                     }
                     return false;
                 case ConditionType.Name:
@@ -238,9 +238,9 @@ namespace Barotrauma
         }
         
         // TODO: refactor and add tests
-        private bool Matches(SerializableProperty property)
+        private bool Matches(ISerializableEntity target, SerializableProperty property)
         {
-            object propertyValue = property.GetValue();
+            object propertyValue = property.GetValue(target);
 
             if (propertyValue == null)
             {

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.RuinGeneration;
 using Barotrauma.Sounds;
 using FarseerPhysics;
 using Lidgren.Network;
@@ -91,6 +92,71 @@ namespace Barotrauma
                 RemoveRoundSound(roundSounds[i]);
             }
         }
+        
+        //drawing ----------------------------------------------------
+
+        public static void CullEntities(Camera cam)
+        {
+            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+            foreach (Submarine sub in Loaded)
+            {
+                if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
+
+                Rectangle worldBorders = new Rectangle(
+                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
+                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
+                    sub.Borders.Width + 1000,
+                    sub.Borders.Height + 1000);
+
+                if (RectsOverlap(worldBorders, cam.WorldView))
+                {
+                    visibleSubs.Add(sub);
+                }
+            }
+
+            HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
+            if (Level.Loaded != null)
+            {
+                foreach (Ruin ruin in Level.Loaded.Ruins)
+                {
+                    Rectangle worldBorders = new Rectangle(
+                        ruin.Area.X - 500,
+                        ruin.Area.Y + ruin.Area.Height + 500,
+                        ruin.Area.Width + 1000,
+                        ruin.Area.Height + 1000);
+
+                    if (RectsOverlap(worldBorders, cam.WorldView))
+                    {
+                        visibleRuins.Add(ruin);
+                    }
+                }
+            }
+
+            if (visibleEntities == null)
+            {
+                visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count);
+            }
+            else
+            {
+                visibleEntities.Clear();
+            }
+
+            Rectangle worldView = cam.WorldView;
+            foreach (MapEntity entity in MapEntity.mapEntityList)
+            {
+                if (entity.Submarine != null)
+                {
+                    if (!visibleSubs.Contains(entity.Submarine)) { continue; }
+                }
+                else if (entity.ParentRuin != null)
+                {
+                    if (!visibleRuins.Contains(entity.ParentRuin)) { continue; }
+                }
+
+                if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }
+            }
+        }
+
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {

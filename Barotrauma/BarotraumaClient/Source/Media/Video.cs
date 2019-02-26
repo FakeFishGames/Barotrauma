@@ -101,9 +101,9 @@ namespace Barotrauma.Media
         private object mutex;
         private VideoSound sound;
 
-        private IntPtr videoLockDelegate;
+        /*private IntPtr videoLockDelegate;
         private IntPtr videoUnlockDelegate;
-        private IntPtr videoDisplayDelegate;
+        private IntPtr videoDisplayDelegate;*/
 
         public uint Width { get; private set; }
         public uint Height { get; private set; }
@@ -221,7 +221,7 @@ namespace Barotrauma.Media
                 Marshal.Copy(arr, 0, changedPtr, 1);
             }
 
-            if (!sound.IsPlaying) videos[videoId].sound.Play();
+            if (!sound.IsPlaying()) videos[videoId].sound.Play();
 
             Monitor.Exit(mutex);
 
