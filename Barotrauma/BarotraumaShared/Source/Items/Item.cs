@@ -1572,9 +1572,8 @@ namespace Barotrauma
 
         public void Drop(Character dropper = null)
         {
-            if (parentInventory != null &&
-                GameMain.NetworkMember != null && 
-                (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+            if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
+                GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
             {
                 parentInventory.CreateNetworkEvent();
             }
