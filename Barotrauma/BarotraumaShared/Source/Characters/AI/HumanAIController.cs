@@ -93,7 +93,7 @@ namespace Barotrauma
             objectiveManager.DoCurrentObjective(deltaTime);
 
 
-            bool run = objectiveManager.GetCurrentPriority() > 10;
+            bool run = objectiveManager.GetCurrentPriority() > 30 || objectiveManager.CurrentObjective.ForceRun;
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&

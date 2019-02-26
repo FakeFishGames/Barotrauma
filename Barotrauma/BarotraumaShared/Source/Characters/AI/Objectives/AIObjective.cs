@@ -11,6 +11,7 @@ namespace Barotrauma
         public virtual float Devotion => AIObjectiveManager.baseDevotion;
 
         public abstract string DebugTag { get; }
+        public virtual bool ForceRun => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         protected float priority;

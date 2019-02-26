@@ -9,6 +9,7 @@ namespace Barotrauma
     class AIObjectiveFindSafety : AIObjective
     {
         public override string DebugTag => "find safety";
+        public override bool ForceRun => true;
 
         // TODO: expose?
         const float priorityIncrease = 25;
@@ -240,7 +241,7 @@ namespace Barotrauma
             float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
             float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
             int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
-            // The hull safety decreases 90% per enemy up to 100%
+            // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
             float enemyFactor = ignoreEnemies ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
             return MathHelper.Clamp(safety * 100, 0, 100);
