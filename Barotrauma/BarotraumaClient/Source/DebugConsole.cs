@@ -305,10 +305,10 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
                 {
                     ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
-                        (option) => 
+                        (option) =>
                         {
                             ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
-                                (option2) => 
+                                (option2) =>
                                 {
                                     if (option2.ToLower() == "y") { GameMain.SubEditorScreen.AutoHull(); }
                                 });
@@ -420,11 +420,11 @@ namespace Barotrauma
                 GameMain.GameScreen.Cam.Shake = 10.0f;
             }));
 
-            AssignOnExecute("los",(string[] args) =>
-            {
-                GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
-                NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
-            });
+            AssignOnExecute("los", (string[] args) =>
+             {
+                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
+                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
+             });
             AssignRelayToServer("los", false);
 
             AssignOnExecute("lighting|lights", (string[] args) =>
@@ -463,7 +463,7 @@ namespace Barotrauma
                     var lightComponent = item.GetComponent<LightComponent>();
                     if (lightComponent != null) lightComponent.LightColor =
                         new Color(
-                            (lightComponent.LightColor.R / 255.0f) * value.X, 
+                            (lightComponent.LightColor.R / 255.0f) * value.X,
                             (lightComponent.LightColor.G / 255.0f) * value.Y,
                             (lightComponent.LightColor.B / 255.0f) * value.Z,
                             (lightComponent.LightColor.A / 255.0f) * value.W);
@@ -522,7 +522,7 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: true));
-            
+
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
@@ -653,7 +653,7 @@ namespace Barotrauma
                 GameMain.ShowPerf = !GameMain.ShowPerf;
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
-            
+
             AssignOnClientExecute("netstats", (string[] args) =>
             {
                 if (GameMain.Client == null) return;
@@ -679,7 +679,7 @@ namespace Barotrauma
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             });
             AssignRelayToServer("togglehud|hud", false);
-            
+
             AssignOnExecute("toggleupperhud", (string[] args) =>
             {
                 GUI.DisableUpperHUD = !GUI.DisableUpperHUD;
@@ -714,7 +714,7 @@ namespace Barotrauma
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
             });
             AssignRelayToServer("toggleaitargets|aitargets", false);
-            
+
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
 
@@ -838,7 +838,7 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: false));
-            
+
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
@@ -877,7 +877,7 @@ namespace Barotrauma
                 Screen.Selected.Cam.MinZoom = minZoom;
                 Screen.Selected.Cam.MaxZoom = maxZoom;
             }));
-            
+
             commands.Add(new Command("waterparams", "waterparams [distortionscalex] [distortionscaley] [distortionstrengthx] [distortionstrengthy] [bluramount]: default 0.5 0.5 0.5 0.5 1", (string[] args) =>
             {
                 float distortScaleX = 0.5f, distortScaleY = 0.5f;
@@ -904,13 +904,13 @@ namespace Barotrauma
                         ThrowError("You have to select item(s) first!");
                     }
                     else
-                    {                        
+                    {
                         foreach (var mapEntity in MapEntity.SelectedList)
                         {
                             if (mapEntity is Item item)
                             {
-                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y, 
-                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale), 
+                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale),
                                     (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
                             }
                             else if (mapEntity is Structure structure)
@@ -1039,6 +1039,11 @@ namespace Barotrauma
                 File.WriteAllLines(filePath, lines);
             }));
 
+            commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
+            {
+                if (args.Length != 1) return;
+                TextManager.CheckForDuplicates(args[0]);
+            }));
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
