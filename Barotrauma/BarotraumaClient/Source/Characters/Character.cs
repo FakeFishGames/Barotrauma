@@ -107,7 +107,8 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XDocument doc)
         {
-            soundInterval = Rand.Range(0.0f, doc.Root.GetAttributeFloat("soundinterval", 10.0f));
+            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
+            soundTimer = Rand.Range(0.0f, soundInterval);
 
             BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
