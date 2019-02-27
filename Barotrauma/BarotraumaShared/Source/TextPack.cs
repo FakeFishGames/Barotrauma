@@ -96,7 +96,34 @@ namespace Barotrauma
             }
 
             System.IO.StreamWriter file = new System.IO.StreamWriter(@"duplicate_" + Language.ToLower() + "_" + index + ".txt");
-            file.WriteLine(sb.ToString()); // "sb" is the StringBuilder
+            file.WriteLine(sb.ToString());
+            file.Close();
+        }
+
+        public void WriteToCSV(int index)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < texts.Count; i++)
+            {
+                string key = texts.Keys.ElementAt(i);
+                texts.TryGetValue(key, out List<string> infoList);
+                
+                for (int j = 0; j < infoList.Count; j++)
+                {
+                    sb.Append(key); // ID
+                    sb.Append('*');
+                    sb.Append(infoList[j]); // Original
+                    sb.Append('*');
+                    // Translated
+                    sb.Append('*');
+                    // Comments
+                    sb.AppendLine();
+                }
+            }
+
+            System.IO.StreamWriter file = new System.IO.StreamWriter(@"csv_" + Language.ToLower() + "_" + index + ".csv");
+            file.WriteLine(sb.ToString());
             file.Close();
         }
 #endif

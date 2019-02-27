@@ -1044,6 +1044,12 @@ namespace Barotrauma
                 if (args.Length != 1) return;
                 TextManager.CheckForDuplicates(args[0]);
             }));
+
+            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            {
+                TextManager.WriteToCSV();
+                NPCConversation.WriteToCSV();
+            }));
 #endif
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
