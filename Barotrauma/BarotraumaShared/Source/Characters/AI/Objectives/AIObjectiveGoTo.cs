@@ -43,19 +43,27 @@ namespace Barotrauma
         {
             get
             {
-                if (FollowControlledCharacter && Character.Controlled == null) { return false; }
-
-                if (Target != null && Target.Removed) { return false; }
-
-                if (repeat || waitUntilPathUnreachable > 0.0f) { return true; }
-                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-
-                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: add a timer?
-                if (pathSteering?.CurrentPath == null) { return true; }
-
-                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { return false; }
-
-                return !pathSteering.CurrentPath.Unreachable;
+                bool canComplete = !cannotReach;
+                if (FollowControlledCharacter && Character.Controlled == null) { canComplete = false; }
+                else if (Target != null && Target.Removed) { canComplete = false; }
+                else if (repeat || waitUntilPathUnreachable > 0.0f) { canComplete = true; }
+                else
+                {
+                    var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                    //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: add a timer?
+                    if (pathSteering?.CurrentPath == null) { canComplete = true; }
+                    else if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { canComplete = false; }
+                    if (canComplete)
+                    {
+                        canComplete = !pathSteering.CurrentPath.Unreachable;
+                    }
+                }
+                if (!canComplete)
+                {
+                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target.");
+                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                }
+                return canComplete;
             }
         }
 
@@ -135,7 +143,6 @@ namespace Barotrauma
                 bool targetIsOutside = (Target != null && Target.Submarine == null) || (indoorSteering != null && indoorSteering.CurrentPath != null && indoorSteering.CurrentPath.HasOutdoorsNodes);
                 if (targetIsOutside && !AllowGoingOutside)
                 {
-                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotrepair", minDurationBetweenSimilar: 10.0f);
                     cannotReach = true;
                     character.AIController.SteeringManager.Reset();
                 }
