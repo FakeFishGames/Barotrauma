@@ -378,10 +378,32 @@ namespace Barotrauma.Networking
                 bool isCrewDead =
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious);
 
+                bool subAtLevelEnd = false;
+                if (Submarine.MainSub != null && Submarine.MainSubs[1] == null)
+                {
+                    if (Level.Loaded?.EndOutpost != null)
+                    {
+                        bool charactersInsideOutpost = connectedClients.Any(c => 
+                            c.Character != null && 
+                            !c.Character.IsDead && 
+                            c.Character.Submarine == Level.Loaded.EndOutpost);
+
+                        //level finished if the sub is docked to the outpost
+                        //or very close and someone from the crew made it inside the outpost
+                        subAtLevelEnd = 
+                            Submarine.MainSub.DockedTo.Contains(Level.Loaded.EndOutpost) ||
+                            (Submarine.MainSub.AtEndPosition && charactersInsideOutpost);                      
+                    }
+                    else
+                    {
+                        subAtLevelEnd = Submarine.MainSub.AtEndPosition;
+                    }
+                }
+
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((serverSettings.AutoRestart && isCrewDead)
                     ||
-                    (serverSettings.EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition && Submarine.MainSubs[1] == null))
+                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd))
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {
