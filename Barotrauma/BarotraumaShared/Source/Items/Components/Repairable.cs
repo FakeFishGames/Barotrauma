@@ -69,7 +69,7 @@ namespace Barotrauma.Items.Components
             get { return currentFixer; }
             set
             {
-                if (currentFixer == value || item.Condition >= 100.0f) return;
+                if (currentFixer == value || item.Condition >= item.Prefab.Health) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
             }
