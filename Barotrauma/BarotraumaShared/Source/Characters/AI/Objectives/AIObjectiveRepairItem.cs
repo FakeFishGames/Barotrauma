@@ -12,6 +12,12 @@ namespace Barotrauma
 
         public Item Item { get; private set; }
 
+        private AIObjectiveGoTo goToObjective;
+
+        private float previousCondition = -1;
+        private bool canReach = true;
+        private bool canRepair = true;
+
         public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
         {
             Item = item;
@@ -25,7 +31,7 @@ namespace Barotrauma
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
             float damagePriority = MathHelper.Lerp(1, 0, (Item.Condition + 10) / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
@@ -33,19 +39,7 @@ namespace Barotrauma
             return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 
-        public override bool CanBeCompleted
-        {
-            get
-            {
-                // If the current condition is not more than the previous condition, we can't repair the target. It probably is deteriorating at a greater speed than we can repair it.
-                bool canRepair = base.CanBeCompleted && Item.Condition > previousCondition;
-                if (!canRepair)
-                {
-                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
-                }
-                return canRepair;
-            }
-        }
+        public override bool CanBeCompleted => canReach && canRepair;
 
         public override bool IsCompleted()
         {
@@ -62,9 +56,17 @@ namespace Barotrauma
             return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.Item == Item;
         }
 
-        private float previousCondition = -1;
         protected override void Act(float deltaTime)
         {
+            if (goToObjective != null && !subObjectives.Contains(goToObjective))
+            {
+                if (!goToObjective.IsCompleted() && !goToObjective.CanBeCompleted)
+                {
+                    canReach = false;
+                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
+                }
+                goToObjective = null;
+            }
             foreach (Repairable repairable in Item.Repairables)
             {
                 //make sure we have all the items required to fix the target item
@@ -80,23 +82,33 @@ namespace Barotrauma
                     }
                 }
             }
-
             if (character.CanInteractWith(Item))
             {
                 foreach (Repairable repairable in Item.Repairables)
                 {
                     if (character.SelectedConstruction != Item)
                     {
-                        previousCondition = Item.Condition;
                         Item.TryInteract(character, true, true);
+                    }
+                    if (previousCondition == -1)
+                    {
+                        previousCondition = Item.Condition;
+                    }
+                    else if (Item.Condition < previousCondition)
+                    {
+                        // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
+                        canRepair = false;
+                        character?.Speak(TextManager.Get("DialogRepairFailed").Replace("[itemname]", Item.Name), null, 0.0f, "repairfailed", 10.0f);
                     }
                     repairable.CurrentFixer = character;
                     break;
                 }
             }
-            else
+            else if (goToObjective == null || goToObjective.Target != Item)
             {
-                AddSubObjective(new AIObjectiveGoTo(Item, character));
+                previousCondition = -1;
+                goToObjective = new AIObjectiveGoTo(Item, character);
+                AddSubObjective(goToObjective);
             }
         }
     }
