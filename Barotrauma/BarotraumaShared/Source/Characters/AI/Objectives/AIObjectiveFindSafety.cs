@@ -38,14 +38,7 @@ namespace Barotrauma
         }
 
         public override bool IsCompleted() => false;
-        public override bool CanBeCompleted
-        {
-            get
-            {
-                return (goToObjective == null || goToObjective.IsCompleted() || goToObjective.CanBeCompleted) &&
-                    (divingGearObjective == null || divingGearObjective.IsCompleted() || divingGearObjective.CanBeCompleted);
-            }
-        }
+        public override bool CanBeCompleted => true;
 
         protected override void Act(float deltaTime)
         {

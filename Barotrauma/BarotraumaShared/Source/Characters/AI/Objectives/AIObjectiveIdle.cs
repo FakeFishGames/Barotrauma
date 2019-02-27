@@ -27,10 +27,8 @@ namespace Barotrauma
             walkDuration = Rand.Range(0.0f, 10.0f);
         }
 
-        public override bool IsCompleted()
-        {
-            return false;
-        }
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
