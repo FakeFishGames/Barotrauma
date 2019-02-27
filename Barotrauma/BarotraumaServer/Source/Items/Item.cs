@@ -241,7 +241,7 @@ namespace Barotrauma
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
             {
-                teamID = wifiComponent.TeamID;
+                teamID = (byte)wifiComponent.TeamID;
                 break;
             }
 

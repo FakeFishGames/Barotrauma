@@ -108,16 +108,20 @@ namespace Barotrauma
                 //not linked to a hull -> ignore
                 if (gap.linkedTo.All(l => l == null)) { continue; }
                 
-                if (character.TeamID == 0)
+                if (character.TeamID == Character.TeamType.None)
                 {
+                    //TODO: make sure the gap isn't in another sub (outpost, respawn shuttle...?)
                     if (gap.Submarine == null) continue;
                 }
                 else
                 {
                     //prevent characters from attempting to fix leaks in the enemy sub
                     //team 1 plays in sub 0, team 2 in sub 1
-                    Submarine mySub = character.TeamID < 1 || character.TeamID > Submarine.MainSubs.Length ?
-                        Submarine.MainSub : Submarine.MainSubs[character.TeamID - 1];
+                    Submarine mySub = Submarine.MainSub;
+                    if (character.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1)
+                    {
+                        mySub = Submarine.MainSubs[1];
+                    }
 
                     if (gap.Submarine != mySub) continue;
                 }
