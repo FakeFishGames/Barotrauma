@@ -583,7 +583,7 @@ namespace Barotrauma.Tutorials
                         yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
                     }
                 }
-
+                
                 if (brokenBox != null && brokenBox.ConditionPercentage > 50.0f && pump.Voltage < pump.MinVoltage)
                 {
                     yield return new WaitForSeconds(1.0f);

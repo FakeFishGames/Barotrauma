@@ -357,7 +357,7 @@ namespace Barotrauma
 
                 character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
-                character.TeamID = teamID;
+                character.TeamID = (TeamType)teamID;
 
                 if (configPath == HumanConfigFile)
                 {
