@@ -17,7 +17,7 @@ namespace Barotrauma
             {
                 hullList = character.Submarine.GetHulls(true);
             }
-            if (IsCompleted())
+            if (hullList.None(h => h.FireSources.Count > 0))
             {
                 character?.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
             }
@@ -34,10 +34,8 @@ namespace Barotrauma
             return MathHelper.Clamp(fireCount * 20, 0, 100);
         }
 
-        public override bool IsCompleted()
-        {
-            return hullList.None(h => h.FireSources.Count > 0);
-        }
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {

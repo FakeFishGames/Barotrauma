@@ -37,6 +37,7 @@ namespace Barotrauma
         }
 
         public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
 

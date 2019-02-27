@@ -12,8 +12,7 @@ namespace Barotrauma
 
         private List<Character> rescueTargets;
         
-        public AIObjectiveRescueAll(Character character)
-            : base (character, "")
+        public AIObjectiveRescueAll(Character character) : base (character, "")
         {
             rescueTargets = new List<Character>();
         }
@@ -55,9 +54,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsCompleted()
-        {
-            return false;
-        }        
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
     }
 }
