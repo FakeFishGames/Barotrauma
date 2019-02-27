@@ -2241,6 +2241,7 @@ namespace Barotrauma
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
+                OnAttackedProjSpecific(attacker, attackResult);
             };
             AdjustKarma(attacker, attackResult);
 
