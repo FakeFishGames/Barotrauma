@@ -13,7 +13,7 @@ namespace Barotrauma
         private List<Character>[] crews;
 
         private int state = 0;
-        private int winner = -1;
+        private Character.TeamType winner = Character.TeamType.None;
 
         private string[] descriptions;
 
@@ -26,7 +26,7 @@ namespace Barotrauma
             get { return false; }
         }
 
-        public int Winner
+        public Character.TeamType? Winner
         {
             get { return winner; }
         }
@@ -38,14 +38,15 @@ namespace Barotrauma
                 if (descriptions == null) return "";
 
 #if CLIENT
-                if (GameMain.Client == null || GameMain.Client.Character == null)
+                if (GameMain.Client == null || 
+                    GameMain.Client.Character == null)
                 {
                     //non-team-specific description
                     return descriptions[0];
                 }
 
                 //team specific
-                return descriptions[GameMain.Client.Character.TeamID];
+                return descriptions[GameMain.Client.Character.TeamID == Character.TeamType.Team1 ? 1 : 2];
 #elif SERVER
                 //non-team-specific description
                 return descriptions[0];
@@ -58,11 +59,15 @@ namespace Barotrauma
         {
             get 
             {
-                if (winner == -1) return "";
+                if (winner == Character.TeamType.None) { return ""; }
+
+                var loser = winner == Character.TeamType.Team1 ? 
+                    Character.TeamType.Team2 : 
+                    Character.TeamType.Team1;
 
                 return base.SuccessMessage
-                    .Replace("[loser]", teamNames[1 - winner])
-                    .Replace("[winner]", teamNames[winner]);
+                    .Replace("[loser]", GetTeamName(loser))
+                    .Replace("[winner]", GetTeamName(winner));
             }
         }
 
@@ -91,25 +96,26 @@ namespace Barotrauma
             };
         }
 
-        public static string GetTeamName(int teamID)
+        public static string GetTeamName(Character.TeamType teamID)
         {
-            //team IDs start from 1, while teamName array starts from 0
-            teamID--;
-
-            if (teamID < 0 || teamID >= teamNames.Length)
+            if (teamID == Character.TeamType.Team1)
             {
-                return "Team " + teamID;
+                return teamNames.Length > 0 ? teamNames[0] : "Team 1";
+            }
+            else if (teamID == Character.TeamType.Team2)
+            {
+                return teamNames.Length > 1 ? teamNames[1] : "Team 2";
             }
 
-            return teamNames[teamID];
+            return "Invalid Team";
         }
 
         public bool IsInWinningTeam(Character character)
         {
-            return character != null && winner > -1 && character.TeamID - 1 == winner;
+            return character != null && winner != Character.TeamType.None && character.TeamID == winner;
         }
 
-        public override bool AssignTeamIDs(List<Client> clients, out byte hostTeam)
+        public override bool AssignTeamIDs(List<Client> clients)
         {
             List<Client> randList = new List<Client>(clients);
             for (int i = 0; i < randList.Count; i++)
@@ -125,26 +131,13 @@ namespace Barotrauma
             {
                 if (i < halfPlayers)
                 {
-                    randList[i].TeamID = 1;
+                    randList[i].TeamID = Character.TeamType.Team1;
                 }
                 else
                 {
-                    randList[i].TeamID = 2;
+                    randList[i].TeamID = Character.TeamType.Team2;
                 }
             }
-            if (halfPlayers * 2 == randList.Count)
-            {
-                hostTeam = (byte)Rand.Range(1, 2);
-            }
-            else if (halfPlayers * 2 < randList.Count)
-            {
-                hostTeam = 1;
-            }
-            else
-            {
-                hostTeam = 2;
-            }
-
             return true;
         }
 
@@ -157,7 +150,7 @@ namespace Barotrauma
             }
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
-            subs[0].TeamID = 1; subs[1].TeamID = 2;
+            subs[0].TeamID = Character.TeamType.Team1; subs[1].TeamID = Character.TeamType.Team2;
             subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
 
@@ -195,11 +188,11 @@ namespace Barotrauma
                 crews[1].Clear();
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.TeamID == 1)
+                    if (character.TeamID == Character.TeamType.Team1)
                     {
                         crews[0].Add(character);
                     }
-                    else if (character.TeamID == 2)
+                    else if (character.TeamID == Character.TeamType.Team2)
                     {
                         crews[1].Add(character);
                     }
@@ -231,7 +224,7 @@ namespace Barotrauma
                         //make sure nobody in the other team can be revived because that would be pretty weird
                         crews[1 - i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
 
-                        winner = i;
+                        winner = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
 
 #if CLIENT
                         ShowMessage(i);
@@ -243,10 +236,10 @@ namespace Barotrauma
             }
             else
             {
-                if (winner >= 0)
+                if (winner != Character.TeamType.None)
                 {
 #if CLIENT
-                    GameMain.GameSession.CrewManager.WinningTeam = winner + 1;
+                    GameMain.GameSession.CrewManager.WinningTeam = winner;
 #endif
 #if SERVER
                     if (GameMain.Server != null) GameMain.Server.EndGame();
@@ -257,9 +250,9 @@ namespace Barotrauma
             if (teamDead[0] && teamDead[1])
             {
 #if CLIENT
-                GameMain.GameSession.CrewManager.WinningTeam = 0;
+                GameMain.GameSession.CrewManager.WinningTeam = Character.TeamType.None;
 #endif
-                winner = -1;
+                winner = Character.TeamType.None;
 #if SERVER
                 if (GameMain.Server != null) GameMain.Server.EndGame();
 #endif
@@ -270,7 +263,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;            
             
-            if (winner > -1)
+            if (winner != Character.TeamType.None)
             {
                 GiveReward();
                 completed = true;

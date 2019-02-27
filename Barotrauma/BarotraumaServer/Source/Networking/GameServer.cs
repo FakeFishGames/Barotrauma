@@ -1500,8 +1500,6 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(roundStartSeed);
 
             int teamCount = 1;
-            byte hostTeam = 1;
-
             MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
@@ -1512,13 +1510,13 @@ namespace Barotrauma.Networking
             }
 
             if (GameMain.GameSession.GameMode.Mission != null &&
-                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(connectedClients, out hostTeam))
+                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(connectedClients))
             {
                 teamCount = 2;
             }
             else
             {
-                connectedClients.ForEach(c => c.TeamID = hostTeam);
+                connectedClients.ForEach(c => c.TeamID = Character.TeamType.Team1);
             }
 
             if (campaign != null)
@@ -1547,8 +1545,10 @@ namespace Barotrauma.Networking
             if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
 
             //assign jobs and spawnpoints separately for each team
-            for (int teamID = 1; teamID <= teamCount; teamID++)
+            for (int n = 0; n < teamCount; n++)
             {
+                var teamID = n == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
+
                 //find the clients in this team
                 List<Client> teamClients = teamCount == 1 ? new List<Client>(connectedClients) : connectedClients.FindAll(c => c.TeamID == teamID);
                 if (serverSettings.AllowSpectating)
@@ -1556,7 +1556,7 @@ namespace Barotrauma.Networking
                     teamClients.RemoveAll(c => c.SpectateOnly);
                 }
 
-                if (!teamClients.Any() && teamID > 1) continue;
+                if (!teamClients.Any() && n > 0) { continue; }
 
                 AssignJobs(teamClients);
 
@@ -1592,12 +1592,12 @@ namespace Barotrauma.Networking
                 }
                 AssignBotJobs(bots, teamID);
                 
-                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
+                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[n]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
                     Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, true, false);
                     spawnedCharacter.AnimController.Frozen = true;
-                    spawnedCharacter.TeamID = (byte)teamID;
+                    spawnedCharacter.TeamID = teamID;
                     var characterData = campaign?.GetClientCharacterData(teamClients[i]);
                     if (characterData == null)
                     {
@@ -1616,7 +1616,7 @@ namespace Barotrauma.Networking
                 for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)
                 {
                     Character spawnedCharacter = Character.Create(characterInfos[i], assignedWayPoints[i].WorldPosition, characterInfos[i].Name, false, true);
-                    spawnedCharacter.TeamID = (byte)teamID;
+                    spawnedCharacter.TeamID = teamID;
                     spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                 }
             }
@@ -2483,8 +2483,8 @@ namespace Barotrauma.Networking
                 assignedClientCount.Add(jp, 0);
             }
 
-            int teamID = 0;
-            if (unassigned.Count > 0) teamID = unassigned[0].TeamID;
+            Character.TeamType teamID = Character.TeamType.None;
+            if (unassigned.Count > 0) { teamID = unassigned[0].TeamID; }
 
             //if we're playing a multiplayer campaign, check which clients already have a character and a job
             //(characters are persistent in campaigns)
@@ -2590,7 +2590,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void AssignBotJobs(List<CharacterInfo> bots, int teamID)
+        public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
         {
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
             foreach (JobPrefab jp in JobPrefab.List)
