@@ -32,7 +32,7 @@ namespace Barotrauma
 
     partial class Submarine : Entity, IServerSerializable
     {
-        public byte TeamID = 1;
+        public Character.TeamType TeamID = Character.TeamType.None;
 
         public static string SavePath = "Submarines";
 

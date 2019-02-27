@@ -143,10 +143,9 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual bool AssignTeamIDs(List<Networking.Client> clients, out byte hostTeam)
+        public virtual bool AssignTeamIDs(List<Networking.Client> clients)
         {
-            clients.ForEach(c => c.TeamID = 1);
-            hostTeam = 1; 
+            clients.ForEach(c => c.TeamID = Character.TeamType.Team1);
             return false; 
         }
 
