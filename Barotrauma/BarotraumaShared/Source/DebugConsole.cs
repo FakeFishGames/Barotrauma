@@ -1115,7 +1115,7 @@ namespace Barotrauma
 
                 if (validArgs.Length == 0) return command;
 
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % validArgs.Length;
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, validArgs.Length);
                 string autoCompletedArg = validArgs[currentAutoCompletedIndex];
 
                 //add quotation marks to args that contain spaces
@@ -1387,7 +1387,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
                     {
                         //TODO: a way to select which team to spawn to?
-                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : (byte)1;
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;
                     }
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          

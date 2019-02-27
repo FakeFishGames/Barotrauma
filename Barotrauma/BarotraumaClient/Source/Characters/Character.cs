@@ -107,7 +107,8 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XDocument doc)
         {
-            soundInterval = Rand.Range(0.0f, doc.Root.GetAttributeFloat("soundinterval", 10.0f));
+            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
+            soundTimer = Rand.Range(0.0f, soundInterval);
 
             BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
@@ -578,7 +579,7 @@ namespace Barotrauma
                 Color nameColor = Color.White;
                 if (Controlled != null && TeamID != Controlled.TeamID)
                 {
-                    nameColor = TeamID == 255 ? Color.LightBlue : Color.Red;
+                    nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : Color.Red;
                 }
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);

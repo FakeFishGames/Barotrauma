@@ -27,7 +27,7 @@ namespace Barotrauma
 
         private Point screenResolution;
 
-        public int WinningTeam = 1;
+        public Character.TeamType? WinningTeam;
 
 
         #region UI
@@ -792,7 +792,7 @@ namespace Barotrauma
         /// </summary>
         private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
         {
-            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID > 1 && Submarine.MainSubs.Length > 1 ?
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
                 Submarine.MainSubs[1] :
                 Submarine.MainSub;
 
@@ -1178,9 +1178,9 @@ namespace Barotrauma
         /// </summary>
         public void CreateCrewListFrame(IEnumerable<Character> crew, GUIFrame crewFrame)
         {
-            List<byte> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
+            List<Character.TeamType> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
-            if (!teamIDs.Any()) teamIDs.Add(0);
+            if (!teamIDs.Any()) teamIDs.Add(Character.TeamType.None);
 
             int listBoxHeight = 300 / teamIDs.Count;
 
@@ -1290,7 +1290,7 @@ namespace Barotrauma
 
                 bool hasIntruders = Character.CharacterList.Any(c =>
                     c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
-                    (c.AIController is EnemyAIController || c.TeamID != Character.Controlled.TeamID));
+                    (c.AIController is EnemyAIController || (c.TeamID != Character.Controlled.TeamID && c.TeamID != Character.TeamType.FriendlyNPC)));
 
                 ToggleReportButton("reportintruders", hasIntruders);
 

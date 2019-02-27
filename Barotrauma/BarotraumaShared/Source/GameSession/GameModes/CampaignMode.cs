@@ -154,7 +154,7 @@ namespace Barotrauma
             character.CharacterHealth.Unkillable = true;
             character.CanInventoryBeAccessed = false;
             character.CanBeDragged = false;
-            character.TeamID = 255;
+            character.TeamID = Character.TeamType.FriendlyNPC;
             character.SetCustomInteract(
                 WatchmanInteract,
                 hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));

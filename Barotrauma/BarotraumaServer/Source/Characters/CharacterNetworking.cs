@@ -472,7 +472,7 @@ namespace Barotrauma
                 msg.Write(false);
             }
 
-            msg.Write(TeamID);
+            msg.Write((byte)TeamID);
             msg.Write(this is AICharacter);
             info.ServerWrite(msg);
 

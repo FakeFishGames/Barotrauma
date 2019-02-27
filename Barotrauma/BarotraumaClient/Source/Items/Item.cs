@@ -1006,7 +1006,7 @@ namespace Barotrauma
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {
-                wifiComponent.TeamID = teamID;
+                wifiComponent.TeamID = (Character.TeamType)teamID;
             }
             if (descriptionChanged) item.Description = itemDesc;
             if (tagsChanged) item.Tags = tags;
