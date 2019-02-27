@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Character name="mudraptor2" humanoid="false">
+  <ragdolls />
+  <animations />
+  
+  <health
+    vitality="120"
+    doesbleed="true"/>
+
+  <bloodemitter particle="blood" particleamount="1"/>
+  <bloodemitter particle="waterblood" particleamount="1"/>
+  <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3"/>
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
+
+  <sound file="Content/Characters/mudraptor2/mudraptor2_attack1.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_attack2.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_attack3.ogg" state="Attack" range="1000"/>
+
+  <sound file="Content/Characters/mudraptor2/mudraptor2_damage1.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_damage2.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_damage3.ogg" state="Damage" range="1000"/>
+
+  <sound file="Content/Characters/mudraptor2/mudraptor2_idle1.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_idle2.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_idle3.ogg" state="Idle" range="1000"/>
+
+  <sound file="Content/Characters/mudraptor2/mudraptor2_death1.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/mudraptor2/mudraptor2_death2.ogg" state="Die" range="1000"/>
+  
+  <ai
+    combatstrength="250"
+    sight="0.5"
+    hearing="1.0"
+    aggressiveboarding="true"
+    fleehealththreshold="20"
+    aggressiongreed="20"
+    aggressionhurt="100">
+
+    <Inventory slots="Any, Any" accessiblewhenalive="false">
+      <Item identifier="hydroxyapatite"/>
+    </Inventory>
+    
+    <latchonto
+      attachtowalls="true"/>
+
+    <targetpriority tag="decoy" state="Attack" priority="600" />
+    <targetpriority tag="provocative" state="Attack" priority="300"/>
+    <targetpriority tag="light" state="Attack" priority="110"/>
+    <targetpriority tag="stronger" state="Escape" priority="100"/>
+    <targetpriority tag="dead" state="Eat" priority="90"/> 
+    <targetpriority tag="human" state="Attack" priority="80"/>
+    <targetpriority tag="door" state="Attack" priority="65"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Attack" priority="50"/>
+    <targetpriority tag="room" state="Attack" priority="20"/>
+  </ai>
+</Character>
