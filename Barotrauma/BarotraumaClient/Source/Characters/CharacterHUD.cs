@@ -188,8 +188,14 @@ namespace Barotrauma
                     }
                     Vector2 textPos = startPos;
                     textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
+                    
+                    Color nameColor = Color.White;
+                    if (character.TeamID != character.FocusedCharacter.TeamID)
+                    {
+                        nameColor = character.FocusedCharacter.TeamID == Character.TeamType.FriendlyNPC ? Color.SkyBlue : Color.Red;
+                    }
 
-                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black * 0.7f, 2);
+                    GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2);
                     textPos.Y += 20;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
