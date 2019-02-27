@@ -73,8 +73,8 @@ namespace Barotrauma
 
             Prefab = prefab;
 
-            Description = prefab.Description;
-            SuccessMessage = prefab.SuccessMessage;
+            description = prefab.Description;
+            successMessage = prefab.SuccessMessage;
             FailureMessage = prefab.FailureMessage;
             Headers = new List<string>(prefab.Headers);
             Messages = new List<string>(prefab.Messages);
@@ -83,9 +83,9 @@ namespace Barotrauma
 
             for (int n = 0; n < 2; n++)
             {
-                if (Description != null) Description = Description.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                if (SuccessMessage != null) SuccessMessage = SuccessMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                if (FailureMessage != null) FailureMessage = FailureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (description != null) description = description.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (successMessage != null) successMessage = successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (failureMessage != null) failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
                 for (int m = 0; m < Messages.Count; m++)
                 {
                     Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);

@@ -1787,6 +1787,7 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerPacketHeader.ENDGAME);
                 msg.Write(endMessage);
                 msg.Write(mission != null && mission.Completed);
+                msg.Write(GameMain.GameSession?.WinningTeam == null ? (byte)0 : (byte)GameMain.GameSession.WinningTeam);
 
                 CompressOutgoingMessage(msg);
                 if (server.ConnectionsCount > 0)

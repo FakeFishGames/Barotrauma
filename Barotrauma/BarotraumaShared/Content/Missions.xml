@@ -545,9 +545,6 @@
     reward="2000"
     
     successmessage="The [loser] vessel has been defeated by the [winner] crew!"
-	  failuremessage="Both crews have perished.">
-    
-    <message header="Crew eliminated" text="The renegade crew has been defeated! The Coalition vessel has to make its way back to [location1]."/>
-    <message header="Crew eliminated" text="The Coalition crew has been defeated! The renegade vessel has to make its way back to [location2]."/>
+    failuremessage="Both crews have perished.">
   </CombatMission>
 </Missions>
