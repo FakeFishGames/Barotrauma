@@ -28,10 +28,13 @@ namespace Barotrauma
             get { return roundSound.Sound; }
         }
 
+        public readonly Gender Gender;
+
         public CharacterSound(XElement element)
         {
             roundSound = Submarine.LoadRoundSound(element);
             Enum.TryParse(element.GetAttributeString("state", "Idle"), true, out Type);
+            Enum.TryParse(element.GetAttributeString("gender", "None"), true, out Gender);
         }
     }
 }
