@@ -251,6 +251,24 @@ namespace Barotrauma
                 packIndex++;
             }
         }
+
+        public static void WriteToCSV()
+        {
+            string lang = "English";
+
+            if (!textPacks.ContainsKey(lang))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
+                return;
+            }
+
+            int packIndex = 0;
+            foreach (TextPack textPack in textPacks[lang])
+            {
+                textPack.WriteToCSV(packIndex);
+                packIndex++;
+            }
+        }
 #endif
 
         private static string Capitalize(string str)

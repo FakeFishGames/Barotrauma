@@ -346,7 +346,6 @@
   <QuickUseAction.PutToCharacter>Put to selected character</QuickUseAction.PutToCharacter>
   <QuickUseAction.UseTreatment>Use as treatment</QuickUseAction.UseTreatment>
 
-
   <!-- Limbs -->
   <LeftHand>Left hand</LeftHand>
   <RightHand>Right hand</RightHand>
@@ -484,12 +483,22 @@
   <MissionInfo>Mission info</MissionInfo>
   <MissionReward>Reward: [reward]</MissionReward>
 
-  <!-- Ingame menus -->
+  <!-- In-game menus -->
   <InfoButton>Info</InfoButton>
   <EndRound>End round</EndRound>
   <EnterLocation>Enter [locationname]</EnterLocation>
   <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
   <LeaveSubsBehind>Some of your vessels aren't at the exit yet. Do you want to leave them behind?</LeaveSubsBehind>
+
+  <!-- In-game UI -->
+  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning players in [time]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
+  <CamFollowSubmarine>Follow submarine</CamFollowSubmarine>
+
+  <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
+  <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>
 
   <!-- Server list -->
   <JoinServer>Join server</JoinServer>
@@ -658,7 +667,7 @@
   <ServerLog.ConsoleUsage>Console usage</ServerLog.ConsoleUsage>
   <ServerLog.Error>Error</ServerLog.Error>
 
-  <!-- Server Messages -->
+  <!-- Server Chat Messages -->
   <ServerMessage.Reason>Reason</ServerMessage.Reason>
   <ServerMessage.JoinedServer>[client] has joined the server.</ServerMessage.JoinedServer>
   <ServerMessage.KickedFromServer>[client] has been kicked from the server.</ServerMessage.KickedFromServer>
@@ -698,17 +707,7 @@
   <MissionType.Salvage>Salvage</MissionType.Salvage>
   <MissionType.Monster>Monster</MissionType.Monster>
   <MissionType.Cargo>Cargo</MissionType.Cargo>
-  <MissionType.Combat>Combat</MissionType.Combat>
-  
-  <!-- Ingame UI -->
-  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
-  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
-  <RespawningIn>Respawning players in [time]</RespawningIn>
-  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
-  <CamFollowSubmarine>Follow submarine</CamFollowSubmarine>
-
-  <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
-  <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>
+  <MissionType.Combat>Combat</MissionType.Combat> 
 
   <!-- Sub editor -->
   <Items>Items</Items>
