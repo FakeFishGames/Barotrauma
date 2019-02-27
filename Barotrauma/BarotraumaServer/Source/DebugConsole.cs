@@ -874,7 +874,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Enum.GetValues(typeof(MissionType)).Cast<string>().ToArray()
+                    Enum.GetNames(typeof(MissionType))
                 };
             }));
 

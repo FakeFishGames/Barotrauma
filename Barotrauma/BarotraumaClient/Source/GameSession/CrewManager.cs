@@ -26,10 +26,7 @@ namespace Barotrauma
         private List<Character> characters = new List<Character>();
 
         private Point screenResolution;
-
-        public Character.TeamType? WinningTeam;
-
-
+               
         #region UI
 
         private GUIFrame guiFrame;
