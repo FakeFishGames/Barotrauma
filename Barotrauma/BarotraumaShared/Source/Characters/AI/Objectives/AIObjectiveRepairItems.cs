@@ -12,6 +12,11 @@ namespace Barotrauma
 
         private Dictionary<Item, AIObjectiveRepairItem> repairObjectives = new Dictionary<Item, AIObjectiveRepairItem>();
         private readonly List<Item> itemList = new List<Item>();
+        private HashSet<Item> ignoreList = new HashSet<Item>();
+        private readonly float ignoreListClearIntervalBase = 30;
+        private readonly float ignoreListIntervalAddition = 10;
+        private float ignoreListClearInterval;
+        private float ignoreListTimer;
 
         /// <summary>
         /// Should the character only attempt to fix items they have the skills to fix, or any damaged item
@@ -21,6 +26,31 @@ namespace Barotrauma
         public AIObjectiveRepairItems(Character character) : base(character, "")
         {
             itemList = character.Submarine.GetItems(true);
+            ignoreListClearInterval = ignoreListClearIntervalBase;
+        }
+
+        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
+        {
+            base.UpdatePriority(objectiveManager, deltaTime);
+            if (ignoreListTimer > ignoreListClearInterval)
+            {
+                if (ignoreList.Any())
+                {
+                    // Increase the clear interval if there are items in the list -> reduces spam if items are added on the list over and over again.
+                    ignoreListClearInterval += ignoreListIntervalAddition;
+                }
+                else
+                {
+                    // Else reset the interval
+                    ignoreListClearInterval = ignoreListClearIntervalBase;
+                }
+                ignoreList.Clear();
+                ignoreListTimer = 0;
+            }
+            else
+            {
+                ignoreListTimer += deltaTime;
+            }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
@@ -45,10 +75,17 @@ namespace Barotrauma
 
         private void GetBrokenItems()
         {
+            foreach (var repairObjective in repairObjectives)
+            {
+                if (!repairObjective.Value.CanBeCompleted)
+                {
+                    ignoreList.Add(repairObjective.Key);
+                }
+            }
             SyncRemovedObjectives(repairObjectives, itemList);
             foreach (Item item in itemList)
             {
-                if (!item.IsFullCondition)
+                if (!item.IsFullCondition && !ignoreList.Contains(item))
                 {
                     foreach (Repairable repairable in item.Repairables)
                     {
