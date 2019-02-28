@@ -52,7 +52,6 @@ namespace Barotrauma.Networking
                 {
                     if (recipient == sender) { continue; }
 
-                    //TODO: some muffling/garbling when far away from the speaker
                     if (!CanReceive(sender, recipient)) { continue; }
 
                     NetOutgoingMessage msg = netServer.CreateMessage();

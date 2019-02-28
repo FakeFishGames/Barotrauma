@@ -14,6 +14,9 @@ namespace Barotrauma
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
 
+        public float StrengthDiminishMultiplier = 1.0f;
+        public Affliction MultiplierSource;
+
         /// <summary>
         /// Which character gave this affliction
         /// </summary>
@@ -115,12 +118,47 @@ namespace Barotrauma
             }
         }
 
+        public float GetResistance(string afflictionId)
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxResistance - currentEffect.MinResistance <= 0.0f) return 0.0f;
+            if (afflictionId != currentEffect.ResistanceFor) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinResistance,
+                currentEffect.MaxResistance,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }    
+
+        public float GetSpeedMultiplier()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 1.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 1.0f;
+            if (currentEffect.MaxSpeedMultiplier - currentEffect.MinSpeedMultiplier <= 0.0f) return 1.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinSpeedMultiplier,
+                currentEffect.MaxSpeedMultiplier,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return;
 
-            Strength += currentEffect.StrengthChange * deltaTime;
+            if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
+            {
+                Strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier;
+            }
+            else // Reduce strengthening of afflictions if resistant
+            {
+                Strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
+            }
+
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))

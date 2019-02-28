@@ -685,13 +685,17 @@ namespace Barotrauma
             lowpassHFGain *= Character.Controlled.LowPassMultiplier;
             if (lowpassHFGain < 0.5f) return true;
             
-
             Hull targetHull = Hull.FindHull(soundWorldPos, hullGuess, true);
             if (listener.CurrentHull == null || targetHull == null)
             {
                 return listener.CurrentHull != targetHull;
             }
-            return listener.CurrentHull.GetApproximateDistance(targetHull, range) > range;
+            Vector2 soundPos = soundWorldPos;
+            if (targetHull.Submarine != null)
+            {
+                soundPos += -targetHull.Submarine.WorldPosition + targetHull.Submarine.HiddenSubPosition;
+            }
+            return listener.CurrentHull.GetApproximateDistance(listener.Position, soundPos, targetHull, range) > range;
         }
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)

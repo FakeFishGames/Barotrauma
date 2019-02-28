@@ -3,11 +3,14 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        private UInt16 startWatchmanID, endWatchmanID;
+
         public static GUIComponent StartCampaignSetup(IEnumerable<string> saveFiles)
         {
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
@@ -73,11 +76,32 @@ namespace Barotrauma
             return background;
         }
 
-        
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+
+            if (startWatchmanID > 0 && startWatchman == null)
+            {
+                startWatchman = Entity.FindEntityByID(startWatchmanID) as Character;
+                if (startWatchman != null) { InitializeWatchman(startWatchman); }
+            }
+            if (endWatchmanID > 0 && endWatchman == null)
+            {
+                endWatchman = Entity.FindEntityByID(endWatchmanID) as Character;
+                if (endWatchman != null) { InitializeWatchman(endWatchman); }
+            }
+        }
+
+
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
             if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
                 (watchman.Submarine == Level.Loaded.EndOutpost && !Submarine.MainSub.AtEndPosition))
+            {
+                return;
+            }
+
+            if (GUIMessageBox.MessageBoxes.Any(mbox => mbox.UserData as string == "watchmanprompt"))
             {
                 return;
             }
@@ -87,7 +111,10 @@ namespace Barotrauma
             {
                 var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
                     .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
-                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                {
+                    UserData = "watchmanprompt"
+                };
                 msgBox.Buttons[0].OnClicked = (btn, userdata) =>
                 {
                     GameMain.Client.RequestRoundEnd();
@@ -124,6 +151,9 @@ namespace Barotrauma
             UInt16 currentLocIndex = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
             byte selectedMissionIndex = msg.ReadByte();
+
+            UInt16 startWatchmanID = msg.ReadUInt16();
+            UInt16 endWatchmanID = msg.ReadUInt16();
 
             int money = msg.ReadInt32();
 
@@ -179,6 +209,9 @@ namespace Barotrauma
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                 campaign.Map.SelectMission(selectedMissionIndex);
+
+                campaign.startWatchmanID = startWatchmanID;
+                campaign.endWatchmanID = endWatchmanID;
 
                 campaign.Money = money;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);

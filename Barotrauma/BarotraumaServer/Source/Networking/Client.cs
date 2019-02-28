@@ -24,6 +24,8 @@ namespace Barotrauma.Networking
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
 
+        public Pair<UInt16, float> LastCampaignSaveSendTime;
+
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
 
@@ -41,12 +43,14 @@ namespace Barotrauma.Networking
         //how many unique events the client missed before joining the server
         public UInt16 UnreceivedEntityEventCount;
         public UInt16 FirstNewEventID;
-
-
+        
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
         public readonly Dictionary<UInt16, float> EntityEventLastSent = new Dictionary<UInt16, float>();
-
+        
+        //when was a position update for a given entity last sent to the client
+        //  key = entity id, value = NetTime.Now when sending
+        public readonly Dictionary<UInt16, float> PositionUpdateLastSent = new Dictionary<UInt16, float>();
         public readonly Queue<Entity> PendingPositionUpdates = new Queue<Entity>();
 
         public bool ReadyToStart;
@@ -116,6 +120,17 @@ namespace Barotrauma.Networking
             }
 
             return true;
+        }
+
+        public bool IPMatches(string ip)
+        {
+            if (Connection?.RemoteEndPoint == null) { return false; }
+            if (Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6 && 
+                Connection.RemoteEndPoint.Address.MapToIPv4().ToString() == ip)
+            {
+                return true;
+            }
+            return Connection.RemoteEndPoint.Address.ToString() == ip;
         }
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)

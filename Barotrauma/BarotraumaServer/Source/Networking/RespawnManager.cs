@@ -1,7 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using FarseerPhysics;
-using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +22,7 @@ namespace Barotrauma.Networking
             if (server.ServerSettings.BotSpawnMode == BotSpawnMode.Normal)
             {
                 return Character.CharacterList
-                    .FindAll(c => c.TeamID == 1 && c.AIController != null && c.Info != null && c.IsDead)
+                    .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null && c.IsDead)
                     .Select(c => c.Info)
                     .ToList();
             }
@@ -34,7 +31,7 @@ namespace Barotrauma.Networking
             //if (server.CharacterInfo != null) currPlayerCount++;
 
             var existingBots = Character.CharacterList
-                .FindAll(c => c.TeamID == 1 && c.AIController != null && c.Info != null);
+                .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null);
 
             int requiredBots = server.ServerSettings.BotCount - currPlayerCount;
             requiredBots -= existingBots.Count(b => !b.IsDead);
@@ -69,17 +66,10 @@ namespace Barotrauma.Networking
             }*/
             bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * server.ServerSettings.MinRespawnRatio, 1.0f);
 
-            if (startCountdown)
+            if (startCountdown != CountdownStarted)
             {
-                if (!CountdownStarted)
-                {
-                    CountdownStarted = true;
-                    server.CreateEntityEvent(this);
-                }
-            }
-            else
-            {
-                CountdownStarted = false;
+                CountdownStarted = startCountdown;
+                server.CreateEntityEvent(this);                
             }
 
             if (!CountdownStarted) return;
@@ -149,7 +139,7 @@ namespace Barotrauma.Networking
             {
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
-                c.TeamID = 1;
+                c.TeamID = Character.TeamType.Team1;
                 if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, c.Name);
             }
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
@@ -181,7 +171,7 @@ namespace Barotrauma.Networking
                 bool bot = i >= clients.Count;
 
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !bot, bot);
-                character.TeamID = 1;
+                character.TeamID = Character.TeamType.Team1;
                 
                 if (bot)
                 {

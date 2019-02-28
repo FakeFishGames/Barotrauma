@@ -388,7 +388,12 @@ namespace Barotrauma
             {
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
-                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+
+                foreach (PhysicsBody body in PhysicsBody.List)
+                {
+                    body.SetPrevTransform(body.SimPosition, body.Rotation);
+                    body.Update((float)deltaTime);
+                }
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
                 if (!Character.DisableControls)
                 {
@@ -2403,20 +2408,40 @@ namespace Barotrauma
 
         private Limb GetClosestLimbOnRagdoll(Vector2 targetPos, Func<Limb, bool> filter = null)
         {
-            // TODO: optimize?
-            return character.AnimController.Limbs
-                .Where(l => filter == null ? true : filter(l))
-                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), targetPos))
-                .FirstOrDefault();
+            Limb closestLimb = null;
+            float closestDistance = float.MaxValue;
+            foreach (Limb l in character.AnimController.Limbs) 
+            {
+                if (filter == null ? true : filter(l)) 
+                {
+                    float distance = Vector2.DistanceSquared(SimToScreen(l.SimPosition), targetPos);
+                    if (distance < closestDistance) 
+                    {
+                        closestLimb = l;
+                        closestDistance = distance;
+                    }
+                }
+            }
+            return closestLimb;
         }
 
         private Limb GetClosestLimbOnSpritesheet(Vector2 targetPos, Func<Limb, bool> filter = null)
         {
-            // TODO: optimize?
-            return character.AnimController.Limbs
-                .Where(l => filter == null ? true : filter(l))
-                .OrderBy(l => Vector2.Distance(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos))
-                .FirstOrDefault();
+            Limb closestLimb = null;
+            float closestDistance = float.MaxValue;
+            foreach (Limb l in character.AnimController.Limbs) 
+            {
+                if (filter == null ? true : filter(l)) 
+                {
+                    float distance = Vector2.DistanceSquared(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos);
+                    if (distance < closestDistance) 
+                    {
+                        closestLimb = l;
+                        closestDistance = distance;
+                    }
+                }
+            }
+            return closestLimb;
         }
 
         private Rectangle GetLimbSpritesheetRect(Limb limb)
@@ -2562,7 +2587,7 @@ namespace Barotrauma
         {
             foreach (var item in Item.ItemList)
             {
-                foreach (var component in item.components)
+                foreach (var component in item.Components)
                 {
                     if (component is Items.Components.Door door)
                     {

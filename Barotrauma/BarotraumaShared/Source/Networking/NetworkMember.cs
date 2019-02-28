@@ -151,10 +151,22 @@ namespace Barotrauma.Networking
 
         protected RespawnManager respawnManager;
 
+        public bool ShowNetStats;
+
         public int Port
         {
             get;
             set;
+        }
+
+        public int TickRate
+        {
+            get { return serverSettings.TickRate; }
+            set
+            {
+                serverSettings.TickRate = MathHelper.Clamp(value, 1, 60);
+                updateInterval = new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / serverSettings.TickRate, 1, 500));
+            }
         }
         
         public string Name

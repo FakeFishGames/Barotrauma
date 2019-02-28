@@ -41,6 +41,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool OnlyJobSpecificDialog
+        {
+            get;
+            private set;
+        }
+
         //the number of these characters in the crew the player starts with in the single player campaign
         [Serialize(0, false)]
         public int InitialCount

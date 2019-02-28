@@ -147,7 +147,7 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
-                     textBox.Text = AutoComplete(textBox.Text);
+                     textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
                 if (PlayerInput.KeyHit(Keys.Enter))
@@ -242,7 +242,7 @@ namespace Barotrauma
             selectedIndex = Messages.Count;
         }
 
-        static partial void AddHelpMessage(Command command)
+        static partial void ShowHelpMessage(Command command)
         {
             if (listBox.Content.CountChildren > MaxMessages)
             {
@@ -398,6 +398,11 @@ namespace Barotrauma
             AssignRelayToServer("findentityids", false);
             AssignRelayToServer("campaigninfo", false);
             AssignRelayToServer("help", false);
+            AssignRelayToServer("verboselogging", false);
+            AssignRelayToServer("freecam", false);
+
+            commands.Add(new Command("clientlist", "", (string[] args) => { }));
+            AssignRelayToServer("clientlist", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -428,6 +433,19 @@ namespace Barotrauma
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             });
             AssignRelayToServer("lighting|lights", false);
+
+            AssignOnExecute("ambientlight", (string[] args) =>
+            {
+                if (Level.Loaded == null)
+                {
+                    ThrowError("Could not set ambient light color (no level loaded).");
+                    return;
+                }
+                Color color = XMLExtensions.ParseColor(string.Join("", args));
+                Level.Loaded.GenerationParams.AmbientLightColor = color;
+                NewMessage("Set ambient light color to " + color + ".", Color.White);
+            });
+            AssignRelayToServer("ambientlight", false);
 
             commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given Vector4 value (for example, 1,1,1,0.5).", (string[] args) =>
             {
@@ -635,6 +653,12 @@ namespace Barotrauma
                 GameMain.ShowPerf = !GameMain.ShowPerf;
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
+            
+            AssignOnClientExecute("netstats", (string[] args) =>
+            {
+                if (GameMain.Client == null) return;
+                GameMain.Client.ShowNetStats = !GameMain.Client.ShowNetStats;
+            });
 
             commands.Add(new Command("hudlayoutdebugdraw|debugdrawhudlayout", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {
@@ -655,6 +679,27 @@ namespace Barotrauma
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             });
             AssignRelayToServer("togglehud|hud", false);
+            
+            AssignOnExecute("toggleupperhud", (string[] args) =>
+            {
+                GUI.DisableUpperHUD = !GUI.DisableUpperHUD;
+                NewMessage(GUI.DisableUpperHUD ? "Disabled upper HUD" : "Enabled upper HUD", Color.White);
+            });
+            AssignRelayToServer("toggleupperhud", false);
+
+            AssignOnExecute("toggleitemhighlights", (string[] args) =>
+            {
+                GUI.DisableItemHighlights = !GUI.DisableItemHighlights;
+                NewMessage(GUI.DisableItemHighlights ? "Disabled item highlights" : "Enabled item highlights", Color.White);
+            });
+            AssignRelayToServer("toggleitemhighlights", false);
+
+            AssignOnExecute("togglecharacternames", (string[] args) =>
+            {
+                GUI.DisableCharacterNames = !GUI.DisableCharacterNames;
+                NewMessage(GUI.DisableCharacterNames ? "Disabled character names" : "Enabled character names", Color.White);
+            });
+            AssignRelayToServer("togglecharacternames", false);
 
             AssignOnExecute("followsub", (string[] args) =>
             {
@@ -1182,7 +1227,6 @@ namespace Barotrauma
                 "revokecommandperm",
                 (string[] args) =>
                 {
-                    //TODO: revoke lol
                     if (args.Length < 1) return;
 
                     if (!int.TryParse(args[0], out int id))
@@ -1191,9 +1235,9 @@ namespace Barotrauma
                         return;
                     }
 
-                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    ShowQuestionPrompt("Console command permissions to revoke from client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                        GameMain.Client.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
                     });
                 }
             );

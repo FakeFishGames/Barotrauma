@@ -10,13 +10,17 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Particles;
-using System.Linq;
 
 namespace Barotrauma
 {
     abstract partial class Ragdoll
     {
         public HashSet<SpriteDeformation> SpriteDeformations { get; protected set; } = new HashSet<SpriteDeformation>();
+
+        /// <summary>
+        /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
+        /// </summary>
+        protected Limb[] inversedLimbDrawOrder;
 
         partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
         {
@@ -53,7 +57,7 @@ namespace Barotrauma
                     {
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
-                            foreach (var ic in newSelectedConstruction.components)
+                            foreach (var ic in newSelectedConstruction.Components)
                             {
                                 if (ic.CanBeSelected) ic.Select(character);
                             }
@@ -70,30 +74,40 @@ namespace Barotrauma
                         character.AnimController.Anim = AnimController.Animation.None;
                     }
 
-                    Vector2 newVelocity = Vector2.Zero;
+                    Vector2 newVelocity = Collider.LinearVelocity;
                     Vector2 newPosition = Collider.SimPosition;
-                    Collider.CorrectPosition(character.MemState, deltaTime, out newVelocity, out newPosition);
+                    float newRotation = Collider.Rotation;
+                    float newAngularVelocity = Collider.AngularVelocity;
+                    Collider.CorrectPosition(character.MemState, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
 
                     newVelocity = newVelocity.ClampLength(100.0f);
-                    if (!MathUtils.IsValid(newVelocity)) newVelocity = Vector2.Zero;
-                    overrideTargetMovement = newVelocity;
+                    if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
+                    overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
+
                     Collider.LinearVelocity = newVelocity;
+                    Collider.AngularVelocity = newAngularVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    if (distSqrd > 10.0f)
+                    float errorTolerance = character.AllowInput ? 0.01f : 0.1f;
+                    if (distSqrd > errorTolerance)
                     {
-                        SetPosition(newPosition);
+                        if (distSqrd > 10.0f || !character.AllowInput)
+                        {
+                            Collider.TargetRotation = newRotation;
+                            SetPosition(newPosition, lerp: distSqrd < 1.0f);
+                        }
+                        else
+                        {
+                            Collider.TargetRotation = newRotation;
+                            Collider.TargetPosition = newPosition;
+                            Collider.MoveToTargetPosition(true);
+                        }
                     }
-                    else if (distSqrd > 0.01f)
-                    {
-                        Collider.SetTransform(newPosition, Collider.Rotation);
-                    }
-
+                    
                     //unconscious/dead characters can't correct their position using AnimController movement
                     // -> we need to correct it manually
                     if (!character.AllowInput)
                     {
-                        Collider.LinearVelocity = overrideTargetMovement;
                         MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
                         MainLimb.PullJointEnabled = true;
                     }
@@ -208,13 +222,16 @@ namespace Barotrauma
                         float errorMagnitude = positionError.Length();
                         if (errorMagnitude > 0.01f)
                         {
-                            Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
+                            Collider.TargetPosition = Collider.SimPosition + positionError;
+                            Collider.TargetRotation = Collider.Rotation + rotationError;
+                            Collider.MoveToTargetPosition(lerp: true);
                             if (errorMagnitude > 0.5f)
                             {
                                 character.MemLocalState.Clear();                 
                                 foreach (Limb limb in Limbs)
                                 {
-                                    limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
+                                    limb.body.TargetPosition = limb.body.SimPosition + positionError;
+                                    limb.body.MoveToTargetPosition(lerp: true);
                                 }
                             }
                         }

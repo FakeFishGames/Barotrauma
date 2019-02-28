@@ -640,7 +640,7 @@ namespace Barotrauma
                     {
                         if (target == null || target.SerializableProperties == null || 
                             !target.SerializableProperties.TryGetValue(propertyNames[i], out SerializableProperty property)) continue;
-                        ApplyToProperty(property, propertyEffects[i], deltaTime);
+                        ApplyToProperty(target, property, propertyEffects[i], deltaTime);
                     }
                 }                
             }
@@ -657,11 +657,11 @@ namespace Barotrauma
                     if (target is Character character)
                     {
                         character.LastDamageSource = entity;
-                        character.CharacterHealth.ApplyAffliction(null, multipliedAffliction);
+                        character.AddDamage(entity.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
+                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
                     }
                 }
 
@@ -766,36 +766,36 @@ namespace Barotrauma
 #endif
         }
 
-        private void ApplyToProperty(SerializableProperty property, object value, float deltaTime)
+        private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
             if (disableDeltaTime || setValue) deltaTime = 1.0f;
 
             Type type = value.GetType();
             if (type == typeof(float) ||
-                (type == typeof(int) && property.GetValue() is float))
+                (type == typeof(int) && property.GetValue(target) is float))
             {
                 float floatValue = Convert.ToSingle(value) * deltaTime;
-                
-                if (!setValue) floatValue += (float)property.GetValue();
-                property.TrySetValue(floatValue);
+
+                if (!setValue) floatValue += (float)property.GetValue(target);
+                property.TrySetValue(target, floatValue);
             }
             else if (type == typeof(int) && value is int)
             {
                 int intValue = (int)((int)value * deltaTime);
-                if (!setValue) intValue += (int)property.GetValue();
-                property.TrySetValue(intValue);
+                if (!setValue) intValue += (int)property.GetValue(target);
+                property.TrySetValue(target, intValue);
             }
             else if (type == typeof(bool) && value is bool)
             {
-                property.TrySetValue((bool)value);
+                property.TrySetValue(target, (bool)value);
             }
             else if (type == typeof(string))
             {
-                property.TrySetValue((string)value);
+                property.TrySetValue(target, (string)value);
             }
             else
             {
-                DebugConsole.ThrowError("Couldn't apply value " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                DebugConsole.ThrowError("Couldn't apply value " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue(target).GetType() + ")! "
                     + "Make sure the type of the value set in the config files matches the type of the property.");
             }
         }
@@ -826,19 +826,27 @@ namespace Barotrauma
                 {
                     for (int n = 0; n < element.Parent.propertyNames.Length; n++)
                     {
-                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out SerializableProperty property)) continue;
-                        element.Parent.ApplyToProperty(property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
+                        if (target == null ||
+                            target.SerializableProperties == null ||
+                            !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out SerializableProperty property))
+                        {
+                            continue;
+                        }
+                        element.Parent.ApplyToProperty(target, property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
                     }
 
                     foreach (Affliction affliction in element.Parent.Afflictions)
                     {
-                        if (target is Character)
+                        Affliction multipliedAffliction = affliction;
+                        if (!element.Parent.disableDeltaTime) { multipliedAffliction = affliction.CreateMultiplied(deltaTime); }
+
+                        if (target is Character character)
                         {
-                            ((Character)target).CharacterHealth.ApplyAffliction(null, affliction.CreateMultiplied(deltaTime));
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
                         }
                         else if (target is Limb limb)
                         {
-                            limb.character.CharacterHealth.ApplyAffliction(limb, affliction.CreateMultiplied(deltaTime));
+                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
                         }
                     }
 

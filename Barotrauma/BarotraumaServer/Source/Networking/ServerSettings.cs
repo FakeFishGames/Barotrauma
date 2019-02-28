@@ -13,14 +13,11 @@ namespace Barotrauma.Networking
     partial class ServerSettings
     {
         public const string SettingsFile = "serversettings.xml";
-        public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
 
         partial void InitProjSpecific()
         {
             LoadSettings();
-
-            PermissionPreset.LoadAll(PermissionPresetFile);
             LoadClientPermissions();
         }
 
@@ -51,6 +48,7 @@ namespace Barotrauma.Networking
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
+            outMsg.WriteRangedInteger(1, 60, TickRate);
 
             WriteExtraCargo(outMsg);
 
@@ -193,14 +191,14 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
-
-            doc.Root.SetAttributeValue("password", password);
             
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
-        
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Indent = true;
-            settings.NewLineOnAttributes = true;
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                NewLineOnAttributes = true
+            };
 
             using (var writer = XmlWriter.Create(SettingsFile, settings))
             {
@@ -224,9 +222,8 @@ namespace Barotrauma.Networking
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
-            
-            Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;
-            
+                        
+            Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;            
             Voting.AllowModeVoting = ModeSelectionMode == SelectionMode.Vote;
 
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
@@ -419,7 +416,7 @@ namespace Barotrauma.Networking
                 string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
                 string ip = separatedLine[separatedLine.Length - 2];
 
-                ClientPermissions permissions = Barotrauma.Networking.ClientPermissions.None;
+                ClientPermissions permissions = Networking.ClientPermissions.None;
                 if (Enum.TryParse(separatedLine.Last(), out permissions))
                 {
                     ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));

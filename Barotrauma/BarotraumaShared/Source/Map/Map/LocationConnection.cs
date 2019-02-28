@@ -1,14 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     class LocationConnection
     {
-        private Location[] locations;
-        private Level level;
-
         public Biome Biome;
 
         public float Difficulty;
@@ -17,24 +13,17 @@ namespace Barotrauma
 
         public bool Passed;
 
-        public Level Level
-        {
-            get { return level; }
-            set { level = value; }
-        }
+        public Level Level { get; set; }
 
         public Vector2 CenterPos
         {
             get
             {
-                return (locations[0].MapPosition + locations[1].MapPosition) / 2.0f;
+                return (Locations[0].MapPosition + Locations[1].MapPosition) / 2.0f;
             }
         }
 
-        public Location[] Locations
-        {
-            get { return locations; }
-        }
+        public Location[] Locations { get; private set; }
 
         public float Length
         {
@@ -44,20 +33,20 @@ namespace Barotrauma
 
         public LocationConnection(Location location1, Location location2)
         {
-            locations = new Location[] { location1, location2 };
+            Locations = new Location[] { location1, location2 };
             
             Length = Vector2.Distance(location1.MapPosition, location2.MapPosition);
         }
 
         public Location OtherLocation(Location location)
         {
-            if (locations[0] == location)
+            if (Locations[0] == location)
             {
-                return locations[1];
+                return Locations[1];
             }
-            else if (locations[1] == location)
+            else if (Locations[1] == location)
             {
-                return locations[0];
+                return Locations[0];
             }
             else
             {

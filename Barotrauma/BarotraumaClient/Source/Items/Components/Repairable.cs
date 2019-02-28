@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            if (!HasRequiredItems(character, false)) return false;
+            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
             return (item.Condition < ShowRepairUIThreshold || (currentFixer == character && item.Condition < item.Prefab.Health));
         }
 

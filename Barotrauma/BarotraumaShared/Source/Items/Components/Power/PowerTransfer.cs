@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
 #endif
 
                 //items in a bad condition are more sensitive to overvoltage
-                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / 100.0f);
+                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / item.Prefab.Health);
 
                 //if the item can't be fixed, don't allow it to break
                 if (!item.Repairables.Any() || !CanBeOverloaded) continue;
@@ -327,7 +327,7 @@ namespace Barotrauma.Items.Components
 
                     if (it.Condition <= 0.0f) continue;
 
-                    foreach (ItemComponent ic in it.components)
+                    foreach (ItemComponent ic in it.Components)
                     {
                         Powered powered = ic as Powered;
                         if (powered == null || !powered.IsActive) continue;
@@ -424,7 +424,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (recipient.Item == item || recipient.Item == source) continue;
 
-                    foreach (ItemComponent ic in recipient.Item.components)
+                    foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //powertransfer components don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
