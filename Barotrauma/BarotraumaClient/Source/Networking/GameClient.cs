@@ -27,6 +27,8 @@ namespace Barotrauma.Networking
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
 
+        private NetStats netStats;
+
         protected GUITickBox cameraFollowsSub;
 
         private ClientPermissions permissions = ClientPermissions.None;
@@ -94,6 +96,8 @@ namespace Barotrauma.Networking
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
+
+            netStats = new NetStats();
 
             inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
             {
@@ -174,7 +178,7 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, null)
             {
                 Job = null
             };
@@ -576,8 +580,32 @@ namespace Barotrauma.Networking
             {
                 c.UpdateSoundPosition();
             }
+            
+            if (VoipCapture.Instance != null)
+            {
+                if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
+                {
+                    var myClient = ConnectedClients.Find(c => c.ID == ID);
+                    if (Screen.Selected == GameMain.NetLobbyScreen)
+                    {
+                        GameMain.NetLobbyScreen.SetPlayerSpeaking(myClient);
+                    }
+                    else
+                    {
+                        GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(myClient);
+                    }
+                }
+            }
 
             if (gameStarted) SetRadioButtonColor();
+
+            if (ShowNetStats)
+            {
+                netStats.AddValue(NetStats.NetStatType.ReceivedBytes, client.ServerConnection.Statistics.ReceivedBytes);
+                netStats.AddValue(NetStats.NetStatType.SentBytes, client.ServerConnection.Statistics.SentBytes);
+                netStats.AddValue(NetStats.NetStatType.ResentMessages, client.ServerConnection.Statistics.ResentMessages);
+                netStats.Update(deltaTime);
+            }
 
             UpdateHUD(deltaTime);
 
@@ -615,12 +643,12 @@ namespace Barotrauma.Networking
                     respawnManager.Update(deltaTime);
                 }
 
-                if (updateTimer > DateTime.Now) return;
+                if (updateTimer > DateTime.Now) { return; }
                 SendIngameUpdate();
             }
             else
             {
-                if (updateTimer > DateTime.Now) return;
+                if (updateTimer > DateTime.Now) { return; }
                 SendLobbyUpdate();
             }
 
@@ -707,9 +735,8 @@ namespace Barotrauma.Networking
                                     GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
 
                                 WriteCharacterInfo(readyToStartMsg);
-
-                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
                                 
+                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);                                
                                 break;
                             case ServerPacketHeader.STARTGAME:
                                 startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
@@ -717,8 +744,10 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.ENDGAME:
                                 string endMessage = inc.ReadString();
                                 bool missionSuccessful = inc.ReadBoolean();
+                                Character.TeamType winningTeam = (Character.TeamType)inc.ReadByte();
                                 if (missionSuccessful && GameMain.GameSession?.Mission != null)
                                 {
+                                    GameMain.GameSession.WinningTeam = winningTeam;
                                     GameMain.GameSession.Mission.Completed = true;
                                 }
                                 CoroutineManager.StartCoroutine(EndGame(endMessage));
@@ -881,66 +910,74 @@ namespace Barotrauma.Networking
         private void ReadPermissions(NetIncomingMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
-            ClientPermissions newPermissions = (ClientPermissions)inc.ReadVariableUInt32();
-            if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
-            {
-                UInt16 consoleCommandCount = inc.ReadUInt16();
-                for (int i = 0; i < consoleCommandCount; i++)
-                {
-                    permittedConsoleCommands.Add(inc.ReadString());
-                }
-            }
+            byte clientID = inc.ReadByte();
 
-            SetPermissions(newPermissions, permittedConsoleCommands);
+            ClientPermissions permissions = ClientPermissions.None;
+            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+            Client.ReadPermissions(inc, out permissions, out permittedCommands);
+
+            Client targetClient = ConnectedClients.Find(c => c.ID == clientID);
+            if (targetClient != null)
+            {
+                targetClient.SetPermissions(permissions, permittedCommands);
+            }
+            if (clientID == myID)
+            {
+                SetMyPermissions(permissions, permittedCommands.Select(command => command.names[0]));
+            }
         }
 
-        private void SetPermissions(ClientPermissions newPermissions, List<string> permittedConsoleCommands)
+        private void SetMyPermissions(ClientPermissions newPermissions, IEnumerable<string> permittedConsoleCommands)
         {
             if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
                 permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
             {
                 if (newPermissions == permissions) return;
             }
-
-            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
-
-            string msg = "";
-            if (newPermissions == ClientPermissions.None)
-            {
-                msg = TextManager.Get("PermissionsRemoved");
-            }
-            else
-            {
-                msg = TextManager.Get("CurrentPermissions") + '\n';
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
-                {
-                    if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
-                    msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
-                }
-            }
-
+            
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
-            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
+            //don't show the "permissions changed" popup if the client owns the server
+            if (ownerKey == 0)
             {
-                UserData = "permissions"
-            };
+                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
 
-            if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
-            {
-                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
-                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.15f) },
-                     TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
-                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.55f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.25f) });
-                foreach (string permittedCommand in permittedConsoleCommands)
+                string msg = "";
+                if (newPermissions == ClientPermissions.None)
                 {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
-                        permittedCommand, font: GUI.SmallFont)
-                    {
-                        CanBeFocused = false
-                    };
+                    msg = TextManager.Get("PermissionsRemoved");
                 }
-            }
+                else
+                {
+                    msg = TextManager.Get("CurrentPermissions") + '\n';
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
+                        msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
+                    }
+                }
+
+                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
+                {
+                    UserData = "permissions"
+                };
+
+                if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
+                {
+                    int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
+                    new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.15f) },
+                         TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
+                    var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.55f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.25f) });
+                    foreach (string permittedCommand in permittedConsoleCommands)
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
+                            permittedCommand, font: GUI.SmallFont)
+                        {
+                            CanBeFocused = false
+                        };
+                    }
+                }
+            }            
 
             GameMain.NetLobbyScreen.UpdatePermissions();
         }
@@ -1104,7 +1141,7 @@ namespace Barotrauma.Networking
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
-
+            
             ReadPermissions(inc);
 
             if (gameStarted)
@@ -1162,6 +1199,10 @@ namespace Barotrauma.Networking
                         {
                             updateClientListId = false;
                         }
+                    }
+                    if (existingClient.ID == myID)
+                    {
+                        existingClient.SetPermissions(permissions, permittedConsoleCommands);
                     }
                     currentClients.Add(existingClient);
                 }
@@ -1674,7 +1715,7 @@ namespace Barotrauma.Networking
             msg.Write(characterInfo == null);
             if (characterInfo == null) return;
 
-            msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write((byte)characterInfo.Gender);
             msg.Write((byte)characterInfo.Race);
             msg.Write((byte)characterInfo.HeadSpriteId);
             msg.Write((byte)characterInfo.HairIndex);
@@ -1764,7 +1805,6 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((UInt16)ClientPermissions.ManagePermissions);
-            msg.Write(targetClient.ID);
             targetClient.WritePermissions(msg);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -2020,7 +2060,7 @@ namespace Barotrauma.Networking
 
         public virtual void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             if (gameStarted &&
                 Screen.Selected == GameMain.GameScreen)
@@ -2036,10 +2076,16 @@ namespace Barotrauma.Networking
 
         public void UpdateHUD(float deltaTime)
         {
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
+            GUITextBox msgBox = null;
+
+            if (Screen.Selected == GameMain.GameScreen)
+                { msgBox = chatBox.InputBox; }
+            else if (Screen.Selected == GameMain.NetLobbyScreen)
+                { msgBox = GameMain.NetLobbyScreen.TextBox; }
+            
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                if (!GUI.DisableHUD)
+                if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
@@ -2065,23 +2111,25 @@ namespace Barotrauma.Networking
                 }
             }
 
-
             //tab doesn't autoselect the chatbox when debug console is open, 
             //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
+            if (msgBox != null)
             {
-                if (msgBox.Selected)
+                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) && 
+                    GUI.KeyboardDispatcher.Subscriber == null)
                 {
-                    msgBox.Text = "";
-                    msgBox.Deselect();
-                }
-                else
-                {
-                    msgBox.Select();
-                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                    if (msgBox.Selected)
                     {
-                        msgBox.Text = "r; ";
+                        msgBox.Text = "";
+                        msgBox.Deselect();
+                    }
+                    else
+                    {
+                        msgBox.Select();
+                        if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                        {
+                            msgBox.Text = "r; ";
+                        }
                     }
                 }
             }
@@ -2091,7 +2139,7 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD || GUI.DisableUpperHUD) return;
 
             inGameHUD.DrawManually(spriteBatch);
 
@@ -2161,7 +2209,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (!GameMain.DebugDraw) return;
+            if (!ShowNetStats) return;
+
+            netStats.Draw(spriteBatch, new Rectangle(300, 10, 300, 150));
 
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);

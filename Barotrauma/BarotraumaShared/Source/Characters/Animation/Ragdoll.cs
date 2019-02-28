@@ -441,12 +441,7 @@ namespace Barotrauma
         }
 
         partial void SetupDrawOrder();
-
-        /// <summary>
-        /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
-        /// </summary>
-        protected Limb[] inversedLimbDrawOrder;
-
+        
         /// <summary>
         /// Saves all serializable data in the currently selected ragdoll params. This method should properly handle character flipping.
         /// </summary>
@@ -594,7 +589,6 @@ namespace Barotrauma
           
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            Structure structure = f2.Body.UserData as Structure;
 
             if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) return false;
 
@@ -602,7 +596,7 @@ namespace Barotrauma
             if (f2.Body.UserData as string == "blocker" && f2.Body != outsideCollisionBlocker) return false;
 
             //always collides with bodies other than structures
-            if (structure == null)
+            if (!(f2.Body.UserData is Structure structure))
             {
                 CalculateImpact(f1, f2, contact);
                 return true;
@@ -638,8 +632,7 @@ namespace Barotrauma
                 if (contact.Manifold.LocalNormal.Y < 0.0f) return false;
 
                 //4. contact points is above the bottom half of the collider
-                Vector2 normal; FarseerPhysics.Common.FixedArray2<Vector2> points;
-                contact.GetWorldManifold(out normal, out points);
+                contact.GetWorldManifold(out Vector2 normal, out FarseerPhysics.Common.FixedArray2<Vector2> points);
                 if (points[0].Y > Collider.SimPosition.Y) return false;
                 
                 //5. in water
@@ -991,6 +984,12 @@ namespace Barotrauma
 
             SetPosition(Collider.SimPosition + moveAmount);
             character.CursorPosition += moveAmount;
+
+            Collider?.UpdateDrawPosition();
+            foreach (Limb limb in Limbs)
+            {
+                limb.body.UpdateDrawPosition();
+            }
         }
 
         private void UpdateCollisionCategories()
@@ -1164,10 +1163,7 @@ namespace Barotrauma
             {
                 if (contacts.Contact.Enabled && contacts.Contact.IsTouching)
                 {
-                    Vector2 normal;
-                    FarseerPhysics.Common.FixedArray2<Vector2> points;
-
-                    contacts.Contact.GetWorldManifold(out normal, out points);
+                    contacts.Contact.GetWorldManifold(out Vector2 normal, out FarseerPhysics.Common.FixedArray2<Vector2> points);
 
                     switch (contacts.Contact.FixtureA.CollisionCategories)
                     {
@@ -1371,7 +1367,15 @@ namespace Barotrauma
 
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 
-            Collider.SetTransform(simPosition, Collider.Rotation);
+            if (lerp)
+            {
+                Collider.TargetPosition = simPosition;
+                Collider.MoveToTargetPosition(true);
+            }
+            else
+            {
+                Collider.SetTransform(simPosition, Collider.Rotation);
+            }
 
             foreach (Limb limb in Limbs)
             {
@@ -1536,11 +1540,8 @@ namespace Barotrauma
             {
                 for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
                 {
-                    FarseerPhysics.Collision.AABB aabb;
-                    FarseerPhysics.Common.Transform transform;
-
-                    Collider.FarseerBody.GetTransform(out transform);
-                    Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+                    Collider.FarseerBody.GetTransform(out FarseerPhysics.Common.Transform transform);
+                    Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out FarseerPhysics.Collision.AABB aabb, ref transform, i);
 
                     lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
                 }

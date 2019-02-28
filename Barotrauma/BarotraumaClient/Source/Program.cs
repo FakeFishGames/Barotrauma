@@ -30,10 +30,13 @@ namespace Barotrauma
         static void Main()
         {
             GameMain game = null;
+#if !DEBUG
             try
             {
+#endif
                 game = new GameMain();
-                game.GraphicsDevice.PresentationParameters.IsFullScreen = false;
+                //game.GraphicsDevice.PresentationParameters.IsFullScreen = false;
+#if !DEBUG
             }
             catch (Exception e)
             {
@@ -41,7 +44,8 @@ namespace Barotrauma
                 CrashDump(null, "crashreport.log", e);
                 return;
             }
-            
+#endif
+
 #if DEBUG
             game.Run();
 #else
@@ -55,7 +59,7 @@ namespace Barotrauma
                     attemptRestart = false;
                 }
                 catch (Exception e)
-                {                   
+                {
                     if (restartAttempts < 5 && CheckException(game, e))
                     {
                         attemptRestart = true;
@@ -71,14 +75,18 @@ namespace Barotrauma
             } while (attemptRestart);
 #endif
 
+#if !DEBUG
             try
             {
+#endif
                 game.Dispose();
+#if !DEBUG
             }
             catch (Exception e)
             {
                 CrashDump(null, "crashreport.log", e);
             }
+#endif
         }
 
         private static bool CheckException(GameMain game, Exception e)
@@ -118,7 +126,7 @@ namespace Barotrauma
                             default:
                                 DebugConsole.NewMessage("Failed to resolve the DXGI_ERROR_NOT_CURRENTLY_AVAILABLE exception. Give up and let it crash :(", Microsoft.Xna.Framework.Color.Red);
                                 return false;
-                            
+
                         }
                     case 0x80070057: //E_INVALIDARG/Invalid Arguments
                         DebugConsole.NewMessage("Invalid graphics settings, attempting to fix...", Microsoft.Xna.Framework.Color.Red);
@@ -138,8 +146,8 @@ namespace Barotrauma
             }
 
 #endif
-                
-            return false;            
+
+            return false;
         }
 
         public static void CrashMessageBox(string message)
@@ -184,7 +192,7 @@ namespace Barotrauma
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
-            
+
             if (GameMain.Client != null)
             {
                 sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
@@ -193,7 +201,7 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
-            
+
             if (game == null)
             {
                 sb.AppendLine("    Game not initialized");
@@ -257,4 +265,4 @@ namespace Barotrauma
         }
     }
 #endif
-        }
+}

@@ -10,13 +10,17 @@
     vitality="1000"
     doesbleed="false"/>
   
-  <sound file="Content/Characters/Carrier/alarm1.ogg" state="Attack" range="2000"/>
-  <sound file="Content/Characters/Carrier/carrier1.ogg" state="Attack" range="2000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_attack1.ogg" state="Attack" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_attack2.ogg" state="Attack" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_attack3.ogg" state="Attack" range="3000"/>
 
-  <sound file="Content/Characters/Carrier/carrier2.ogg" state="None" range="3000"/>
-  <sound file="Content/Characters/Carrier/carrier3.ogg" state="None" range="4000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_idle1.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_idle2.ogg" state="None" range="3000"/>
 
-  <sound file="Content/Characters/Carrier/ping.ogg" state="Die" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_damage1.ogg" state="Damage" range="3000"/>
+  <sound file="Content/Characters/Carrier/CARRIER_damage2.ogg" state="Damage" range="3000"/>
+  
+  <sound file="Content/Characters/Carrier/CARRIER_death1.ogg" state="Die" range="5000"/>
 
   <ai
     combatstrength="1000"

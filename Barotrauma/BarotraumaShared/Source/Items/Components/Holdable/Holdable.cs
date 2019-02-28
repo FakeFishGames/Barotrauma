@@ -478,7 +478,7 @@ namespace Barotrauma.Items.Components
             
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip(item);
+            if (item.body.Dir != picker.AnimController.Dir) Flip();
 
             item.Submarine = picker.Submarine;
             
@@ -514,7 +514,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected void Flip(Item item)
+        public void Flip()
         {
             handlePos[0].X = -handlePos[0].X;
             handlePos[1].X = -handlePos[1].X;

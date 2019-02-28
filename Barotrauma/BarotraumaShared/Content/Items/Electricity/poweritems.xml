@@ -24,9 +24,12 @@
       <output name="signal_2" />
       <output name="signal_3" />
     </ConnectionPanel>
-	<Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="15" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+	<Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
+      <StatusEffect type="OnFailure" target="Character">
+        <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+      </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
@@ -57,7 +60,7 @@
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
       <Containable identifiers="loadable" />
     </ItemContainer>
-	  <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+	  <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
@@ -111,7 +114,7 @@
       <input name="power_out" />
       <input name="power_in" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
@@ -135,7 +138,7 @@
     <Pickable slots="Any,RightHand,LeftHand" />
   </Item>
   
-  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
+  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium.">
     <Deconstruct time="10">
       <Item identifier="zinc" mincondition="0.5"/>
       <Item identifier="fulgurium" mincondition="0.5"/>

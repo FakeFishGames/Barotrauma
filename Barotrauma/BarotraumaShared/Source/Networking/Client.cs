@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
         
-        public byte TeamID = 0;
+        public Character.TeamType TeamID;
 
         private Character character;
         public Character Character
@@ -30,7 +30,13 @@ namespace Barotrauma.Networking
                     }
                 }
                 character = value;
-                if (character != null) HasSpawned = true;
+                if (character != null)
+                {
+                    HasSpawned = true;
+#if CLIENT
+                    GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
+#endif
+                }
             }
         }
 
@@ -44,6 +50,7 @@ namespace Barotrauma.Networking
                 muted = value;
 #if CLIENT
                 GameMain.NetLobbyScreen.SetPlayerVoiceIconState(this, muted, mutedLocally);
+                GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 #endif
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
@@ -148,8 +155,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void WritePermissions(NetOutgoingMessage msg)
+        public void WritePermissions(NetBuffer msg)
         {
+            msg.Write(ID);
             msg.Write((UInt16)Permissions);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
@@ -160,7 +168,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        public static void ReadPermissions(NetIncomingMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
+        public static void ReadPermissions(NetBuffer inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
             UInt16 permissionsInt = inc.ReadUInt16();
 

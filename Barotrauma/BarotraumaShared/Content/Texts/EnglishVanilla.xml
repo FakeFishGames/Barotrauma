@@ -21,7 +21,7 @@
 
     <EntityName.weldingtool>Eldingway Ooltay</EntityName.weldingtool>
     <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</EntityDescription.weldingtool>
-  
+
   - Job names and descriptions can be translated using the identifier of the job:
     <JobName.captain>капитан</JobName.captain>
     <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
@@ -114,7 +114,7 @@
   <GameMode.sandbox>Sandbox</GameMode.sandbox>
   <GameMode.mission>Mission</GameMode.mission>
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
-  
+
   <!-- Steam Workshop menu -->
   <DownloadButton>Download</DownloadButton>
   <SubscribedMods>Mods</SubscribedMods>
@@ -166,7 +166,7 @@
   <WorkshopItemPublished>"[itemname]" is now available in the Steam Workshop!</WorkshopItemPublished>
   <WorkshopItemPublishFailed>Publishing "[itemname]" in the Steam Workshop failed.</WorkshopItemPublishFailed>
   <WorkshopItemPreviewImageDialogTitle>Select the preview image for the Steam Workshop item.</WorkshopItemPreviewImageDialogTitle>
-  <WorkshopItemPreviewImageTooLarge>The file size of the preview image has to be less than 1 MB.</WorkshopItemPreviewImageTooLarge>  
+  <WorkshopItemPreviewImageTooLarge>The file size of the preview image has to be less than 1 MB.</WorkshopItemPreviewImageTooLarge>
   <WorkshopErrorInstallRequiredToEdit>Cannot edit the workshop item "[itemname]" because it has not been installed.</WorkshopErrorInstallRequiredToEdit>
   <WorkshopErrorInstallRequiredToEnable>Cannot enable the workshop item "[itemname]" because it has not been installed.</WorkshopErrorInstallRequiredToEnable>
   <WorkshopErrorOverwriteOnEnable>Cannot enable workshop item "[itemname]". The file "[filename]" would be overwritten by the item.</WorkshopErrorOverwriteOnEnable>
@@ -174,10 +174,11 @@
   <WorkshopErrorEnableFailed>Enabling the workshop item "[itemname]" failed.</WorkshopErrorEnableFailed>
   <WorkshopItemIncompatible>Incompatible</WorkshopItemIncompatible>
   <WorkshopItemIncompatibleTooltip>This Workshop item is not compatible with your version of Barotrauma.</WorkshopItemIncompatibleTooltip>
-  
+
   <!-- Settings menu -->
   <Settings>Settings</Settings>
   <ApplySettingsButton>Apply</ApplySettingsButton>
+  <ApplySettingsButtonUnsavedChanges>Apply*</ApplySettingsButtonUnsavedChanges>
   <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
   <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
   <ApplySettingsYes>Apply</ApplySettingsYes>
@@ -239,6 +240,7 @@
   <SettingsTab.Audio>Audio</SettingsTab.Audio>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
+  <VoiceChatVolume>Voice chat volume</VoiceChatVolume>
   <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
   <MuteOnFocusLostToolTip>Mutes the game when its window is not in focus.</MuteOnFocusLostToolTip>
   <VoiceChat>Voice chat</VoiceChat>
@@ -268,6 +270,7 @@
   <InputType.Run>Run</InputType.Run>
   <InputType.Crouch>Crouch</InputType.Crouch>
   <InputType.Chat>Chat</InputType.Chat>
+  <InputType.InfoTab>Info tab</InputType.InfoTab>
   <InputType.RadioChat>Radio chat</InputType.RadioChat>
   <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
   <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
@@ -439,7 +442,9 @@
   <MapSeed>Map seed</MapSeed>
   <StartCampaignButton>Start</StartCampaignButton>
   <CampaignEnterOutpostPrompt>Do you want to enter [locationname]?</CampaignEnterOutpostPrompt>
-  
+  <CampaignStartingPleaseWait>Please wait</CampaignStartingPleaseWait>
+  <CampaignStarting>Waiting for the campaign to start.</CampaignStarting>
+
   <ShuttleSelected>Shuttle selected</ShuttleSelected>
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
@@ -466,7 +471,6 @@
   <PlayerCredits>Credits: [credits]</PlayerCredits>
 
   <!-- Ingame menus -->
-  <InfoButton>Info</InfoButton>
   <EndRound>End round</EndRound>
   <EnterLocation>Enter [locationname]</EnterLocation>
   <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
@@ -572,10 +576,13 @@
   <PlayYourself>Play yourself</PlayYourself>
   <StartGameButton>Start</StartGameButton>
   <ReadyToStartTickBox>Ready to start</ReadyToStartTickBox>
+  <RoundStartingPleaseWait>Please wait</RoundStartingPleaseWait>
+  <RoundStarting>Waiting for the round to start.</RoundStarting>
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
   <JobPreferences>Job preferences</JobPreferences>
+  <RandomPreferences>Random Preferences</RandomPreferences>
   <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
   <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
   <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
@@ -1034,7 +1041,7 @@
   <OrderDialog.wait>[name], stay where you are!</OrderDialog.wait>
   <OrderDialogSelf.wait>I'll wait here!</OrderDialogSelf.wait>
   <OrderDialog.dismissed>[name], you are dismissed!</OrderDialog.dismissed>
-  <OrderDialogSelf.dismissed><!--say nothing--></OrderDialogSelf.dismissed> 
+  <OrderDialogSelf.dismissed><!--say nothing--></OrderDialogSelf.dismissed>
   <OrderDialog.operatereactor>[name], operate the reactor!</OrderDialog.operatereactor>
   <OrderDialog.operatereactor>[name], man the reactor!</OrderDialog.operatereactor>
   <OrderDialogSelf.operatereactor>I'll operate the reactor!</OrderDialogSelf.operatereactor>
@@ -1182,11 +1189,11 @@
 
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
-  
+
   <!-- Contextual tutorial -->
   <Welcome>Welcome</Welcome>
   <WelcomeText>"Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?"</WelcomeText>
-  <ReactorCommand>Command Reactor</ReactorCommand>  
+  <ReactorCommand>Command Reactor</ReactorCommand>
   <NavConsole>Navigation Console</NavConsole>
   <DestinationObjective>Destination</DestinationObjective>
   <DestinationObjectiveText>"Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up."</DestinationObjectiveText>
@@ -1197,24 +1204,106 @@
   <Degrading1Text>"This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this."</Degrading1Text>
   <Degrading2>Command Repair</Degrading2>
   <Medical>Medical</Medical>
-  <Approach1>Approach I</Approach1>  
+  <Approach1>Approach I</Approach1>
   <Approach2>Approach II</Approach2>
   <Approach2Text>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2Text>
+
+  <!-- Afflictions -->
+  <AfflictionName.InternalDamage>Internal Damage</AfflictionName.InternalDamage>
+  <AfflictionDescription.InternalDamage>The area is an ugly shade of purple, and apparently very painful to touch. You suspect a bone might be broken.</AfflictionDescription.InternalDamage>
+  <AfflictionCauseOfDeath.InternalDamage>Died of internal injuries.</AfflictionCauseOfDeath.InternalDamage>
+  <AfflictionCauseOfDeathSelf.InternalDamage>You have succumbed to your internal injuries.</AfflictionCauseOfDeathSelf.InternalDamage>
+
+  <AfflictionName.Bleeding>Bleeding</AfflictionName.Bleeding>
+  <AfflictionDescription.Bleeding>Blood pours freely from this ragged and particularly nasty open wound.</AfflictionDescription.Bleeding>
+  <AfflictionCauseOfDeath.Bleeding>Bled to death.</AfflictionCauseOfDeath.Bleeding>
+  <AfflictionCauseOfDeathSelf.Bleeding>You have bled to death.</AfflictionCauseOfDeathSelf.Bleeding>
+
+  <AfflictionName.Burn>Burn</AfflictionName.Burn>
+  <AfflictionDescription.Burn>The area is blistered and red, and skin is already beginning to peel away in sheets. The patient is in a great deal of pain.</AfflictionDescription.Burn>
+  <AfflictionCauseOfDeath.Burn>Burned to death.</AfflictionCauseOfDeath.Burn>
+  <AfflictionCauseOfDeathSelf.Burn>You have burned to death.</AfflictionCauseOfDeathSelf.Burn>
+
+  <AfflictionName.OxygenLow>Oxygen low</AfflictionName.OxygenLow>
+  <AfflictionDescription.OxygenLow>The skin is pale and clammy, and the lips turning blue.</AfflictionDescription.OxygenLow>
+  <AfflictionCauseOfDeath.OxygenLow>Suffocated.</AfflictionCauseOfDeath.OxygenLow>
+  <AfflictionCauseOfDeathSelf.OxygenLow>You have suffocated.</AfflictionCauseOfDeathSelf.OxygenLow>
+
+  <AfflictionName.Bloodloss>Bloodloss</AfflictionName.Bloodloss>
+  <AfflictionDescription.Bloodloss>The patient is pale and cold. Their heart beats in an alarmingly rapid fashion.</AfflictionDescription.Bloodloss>
+  <AfflictionCauseOfDeath.Bloodloss>Bled to death.</AfflictionCauseOfDeath.Bloodloss>
+  <AfflictionCauseOfDeathSelf.Bloodloss>You have bled to death.</AfflictionCauseOfDeathSelf.Bloodloss>
+
+  <AfflictionName.Stun>Stun</AfflictionName.Stun>
+  <AfflictionDescription.Stun>The patient is dazed and unresponsive.</AfflictionDescription.Stun>
+
+  <AfflictionName.Pressure>Barotrauma</AfflictionName.Pressure>
+  <AfflictionDescription.Pressure>There is obvious massive organ damage and the blood vessels of the eye have burst, creating an unnerving red gaze.</AfflictionDescription.Pressure>
+  <AfflictionCauseOfDeath.Pressure>Crushed by water pressure.</AfflictionCauseOfDeath.Pressure>
+  <AfflictionCauseOfDeathSelf.Pressure>You have been crushed by water pressure.</AfflictionCauseOfDeathSelf.Pressure>
+
+  <AfflictionName.HuskInfection>Husk infection</AfflictionName.HuskInfection>
+  <AfflictionDescription.HuskInfection>Something dark and unpleasant moves in the mouth. They are rendered completely mute, save for occasional clicking sounds apparently emanating from deep within the throat.</AfflictionDescription.HuskInfection>
+  <AfflictionCauseOfDeath.HuskInfection>Taken over by a husk parasite.</AfflictionCauseOfDeath.HuskInfection>
+  <AfflictionCauseOfDeathSelf.HuskInfection>You have been taken over by the husk parasite.</AfflictionCauseOfDeathSelf.HuskInfection>
+
+  <AfflictionName.Psychosis>Psychosis</AfflictionName.Psychosis>
+  <AfflictionDescription.Psychosis>The patient rants and mutters in an agitated fashion, a steady commentary of unseen events.</AfflictionDescription.Psychosis>
+
+  <AfflictionName.Drunk>Drunk</AfflictionName.Drunk>
+  <AfflictionDescription.Drunk>The smell of alcohol rises from them like a vapor, their speech slurs a little, and their eyes fail to focus.</AfflictionDescription.Drunk>
+  <AfflictionCauseOfDeath.Drunk>Died of alcohol poisoning.</AfflictionCauseOfDeath.Drunk>
+  <AfflictionCauseOfDeathSelf.Drunk>You have died of alcohol poisoning.</AfflictionCauseOfDeathSelf.Drunk>
+
+  <AfflictionName.OpiateWithdrawal>Opiate withdrawal</AfflictionName.OpiateWithdrawal>
+  <AfflictionDescription.OpiateWithdrawal>Agitation and a tremor are obvious, as are the signs of nausea.</AfflictionDescription.OpiateWithdrawal>
+  <AfflictionCauseOfDeath.OpiateWithdrawal>Died of opiate withdrawal.</AfflictionCauseOfDeath.OpiateWithdrawal>
+  <AfflictionCauseOfDeathSelf.OpiateWithdrawal>You have died of opiate withdrawal.</AfflictionCauseOfDeathSelf.OpiateWithdrawal>
+
+  <AfflictionName.OpiateOverdose>Opiate overdose</AfflictionName.OpiateOverdose>
+  <AfflictionDescription.OpiateOverdose>The patient has pinpoint pupils and icy cold skin. They struggle to breathe and swallow.</AfflictionDescription.OpiateOverdose>
+  <AfflictionCauseOfDeath.OpiateOverdose>Died of opiate overdose.</AfflictionCauseOfDeath.OpiateOverdose>
+  <AfflictionCauseOfDeathSelf.OpiateOverdose>You have died of opiate overdose.</AfflictionCauseOfDeathSelf.OpiateOverdose>
+
+  <AfflictionName.OpiateAddiction>Opiate addiction</AfflictionName.OpiateAddiction>
+  <AfflictionDescription.OpiateAddiction>The patient is happy enough... so long as they get what they need.</AfflictionDescription.OpiateAddiction>
+
+  <AfflictionName.GunshotWound>Gunshot wound</AfflictionName.GunshotWound>
+  <AfflictionDescription.GunshotWound>The entry site is a small, dark, bruised hole oozing a little blood. The exit wound however is a large ragged mess of exposed tissue and pouring blood.</AfflictionDescription.GunshotWound>
+  <AfflictionCauseOfDeath.GunshotWound>Shot to death.</AfflictionCauseOfDeath.GunshotWound>
+  <AfflictionCauseOfDeathSelf.GunshotWound>You have died of gunshot wounds.</AfflictionCauseOfDeathSelf.GunshotWound>
+
+  <AfflictionName.MorbusinePoisoning>Morbusine poisoning</AfflictionName.MorbusinePoisoning>
+  <AfflictionDescription.MorbusinePoisoning>The patient can't breathe at all, and their heartrate is slowing rapidly.</AfflictionDescription.MorbusinePoisoning>
+  <AfflictionCauseOfDeath.MorbusinePoisoning>Died of morbusine poisoning.</AfflictionCauseOfDeath.MorbusinePoisoning>
+  <AfflictionCauseOfDeathSelf.MorbusinePoisoning>You have died of morbusine poisoning.</AfflictionCauseOfDeathSelf.MorbusinePoisoning>
+
+  <AfflictionName.SufforinPoisoning>Sufforin poisoning</AfflictionName.SufforinPoisoning>
+  <AfflictionDescription.SufforinPoisoning>Without prompt treatment, sufforine poisoning leads to delusions and rapid death.</AfflictionDescription.SufforinPoisoning>
+  <AfflictionCauseOfDeath.SufforinPoisoning>Died of sufforin poisoning.</AfflictionCauseOfDeath.SufforinPoisoning>
+  <AfflictionCauseOfDeathSelf.SufforinPoisoning>You have died of sufforin poisoning.</AfflictionCauseOfDeathSelf.SufforinPoisoning>
+
+  <AfflictionName.CyanidePoisoning>Cyanide poisoning</AfflictionName.CyanidePoisoning>
+  <AfflictionDescription.CyanidePoisoning>The patient is confused and has trouble breathing. Their skin is red and they have occasional muscle spasms.</AfflictionDescription.CyanidePoisoning>
+  <AfflictionCauseOfDeath.CyanidePoisoning>Died of cyanide poisoning.</AfflictionCauseOfDeath.CyanidePoisoning>
+  <AfflictionCauseOfDeathSelf.CyanidePoisoning>You have died of cyanide poisoning.</AfflictionCauseOfDeathSelf.CyanidePoisoning>
   
+  <!-- Buffs -->
+  <AfflictionName.DurationIncrease>Slow metabolism</AfflictionName.DurationIncrease>
+  <AfflictionDescription.DurationIncrease>Causes chemicals to last longer.</AfflictionDescription.DurationIncrease>
 
+  <AfflictionName.Haste>Hyperactivity</AfflictionName.Haste>
+  <AfflictionDescription.Haste>Movement speed and reflexes are heightened.</AfflictionDescription.Haste>
 
+  <AfflictionName.HuskInfectionResistance>Husk infection resistance</AfflictionName.HuskInfectionResistance>
+  <AfflictionDescription.HuskInfectionResistance>Patient's immune system is more attuned to alien parasites.</AfflictionDescription.HuskInfectionResistance>
 
+  <AfflictionName.PsychosisResistance>Psychosis resistance</AfflictionName.PsychosisResistance>
+  <AfflictionDescription.PsychosisResistance>Patient exhibits high mental fortitude.</AfflictionDescription.PsychosisResistance>
 
+  <AfflictionName.PressureResistance>Pressure resistance</AfflictionName.PressureResistance>
+  <AfflictionDescription.PressureResistance>Internal organs are more accustomed to high pressures.</AfflictionDescription.PressureResistance>
 
-
-
-
-
-
-
-
-
-
-
-
+  <AfflictionName.Strengthen>Vigor</AfflictionName.Strengthen>
+  <AfflictionDescription.Strengthen>Patient's pain receptors are numbed.</AfflictionDescription.Strengthen>
 </infotexts>

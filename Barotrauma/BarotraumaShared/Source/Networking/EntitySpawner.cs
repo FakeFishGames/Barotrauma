@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -26,14 +27,14 @@ namespace Barotrauma
 
             public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, float? condition = null)
             {
-                Prefab = prefab;
+                Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = worldPosition;
                 Condition = condition ?? prefab.Health;
             }
 
             public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub, float? condition = null)
             {
-                Prefab = prefab;
+                Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = position;
                 Submarine = sub;
                 Condition = condition ?? prefab.Health;
@@ -41,13 +42,17 @@ namespace Barotrauma
             
             public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory, float? condition = null)
             {
-                Prefab = prefab;
+                Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Inventory = inventory;
                 Condition = condition ?? prefab.Health;
             }
 
             public Entity Spawn()
             {                
+                if (Prefab == null)
+                {
+                    return null;
+                }
                 Item spawnedItem = null;
                 if (Inventory != null)
                 {
@@ -87,37 +92,47 @@ namespace Barotrauma
 
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (itemPrefab == null)
+            {
+                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, condition));
         }
 
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (itemPrefab == null)
+            {
+                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, condition));
         }
 
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (itemPrefab == null)
+            {
+                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, condition));
         }
 
         public void AddToRemoveQueue(Entity entity)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-            if (removeQueue.Contains(entity) || entity.Removed) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (removeQueue.Contains(entity) || entity.Removed || entity == null) { return; }
             if (entity is Character)
             {
                 Character character = entity as Character;
@@ -135,10 +150,8 @@ namespace Barotrauma
 
         public void AddToRemoveQueue(Item item)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-            if (removeQueue.Contains(item) || item.Removed) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (removeQueue.Contains(item) || item.Removed) { return; }
 
             removeQueue.Enqueue(item);
             if (item.ContainedItems == null) return;
@@ -150,10 +163,7 @@ namespace Barotrauma
 
         public void Update()
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             while (spawnQueue.Count > 0)
             {
                 var entitySpawnInfo = spawnQueue.Dequeue();

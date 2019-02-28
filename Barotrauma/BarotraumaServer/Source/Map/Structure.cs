@@ -1,15 +1,5 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
-using FarseerPhysics.Factories;
 using Lidgren.Network;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -21,10 +11,9 @@ namespace Barotrauma
             {
                 if (Submarine == null) return;
                 if (attacker == null) return;
-                if (attacker is Character)
+                if (attacker is Character attackerCharacter)
                 {
-                    Character attackerCharacter = attacker as Character;
-                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
+                    Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
                     if (attackerClient != null)
                     {
                         if (attackerCharacter.TeamID == Submarine.TeamID)
@@ -33,6 +22,14 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            for (int i = 0; i < Sections.Length; i++)
+            {
+                msg.WriteRangedSingle(Sections[i].damage / Health, 0.0f, 1.0f, 8);
             }
         }
     }

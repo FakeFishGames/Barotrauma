@@ -48,7 +48,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 //ignore items that are in full condition
-                if (item.Condition >= 100.0f) continue;
+                if (item.Condition >= item.Prefab.Health) continue;
                 foreach (Repairable repairable in item.Repairables)
                 {
                     //ignore ones that are already fixed

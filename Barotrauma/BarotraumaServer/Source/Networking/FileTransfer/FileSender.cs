@@ -120,18 +120,20 @@ namespace Barotrauma.Networking
             {
                 return null;
             }
-            
+
             if (!File.Exists(filePath))
             {
-                DebugConsole.ThrowError("Failed to initiate file transfer (file \""+filePath+"\" not found.");
+                DebugConsole.ThrowError("Failed to initiate file transfer (file \"" + filePath + "\" not found.");
                 return null;
             }
 
             FileTransferOut transfer = null;
             try
             {
-                transfer = new FileTransferOut(recipient, fileType, filePath);
-                transfer.SequenceChannel = 1;
+                transfer = new FileTransferOut(recipient, fileType, filePath)
+                {
+                    SequenceChannel = 1
+                };
                 while (activeTransfers.Any(t => t.Connection == recipient && t.SequenceChannel == transfer.SequenceChannel))
                 {
                     transfer.SequenceChannel++;
@@ -171,8 +173,8 @@ namespace Barotrauma.Networking
                 if (transfer.WaitTimer > 0.0f) continue;
                 
                 if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, 1)) continue;
-                
-                transfer.WaitTimer = transfer.Connection.AverageRoundtripTime;
+
+                transfer.WaitTimer = 0.05f;// transfer.Connection.AverageRoundtripTime;
 
                 // send another part of the file
                 long remaining = transfer.Data.Length - transfer.SentOffset;
@@ -239,7 +241,7 @@ namespace Barotrauma.Networking
             GameMain.Server.SendCancelTransferMsg(transfer);
         }
 
-        public void ReadFileRequest(NetIncomingMessage inc)
+        public void ReadFileRequest(NetIncomingMessage inc, Client client)
         {
             byte messageType = inc.ReadByte();
 
@@ -266,9 +268,14 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case (byte)FileTransferType.CampaignSave:
-                    if (GameMain.GameSession != null)
-                    {
+                    if (GameMain.GameSession != null &&
+                        !ActiveTransfers.Any(t => t.Connection == inc.SenderConnection && t.FileType == FileTransferType.CampaignSave))
+                    {                       
                         StartTransfer(inc.SenderConnection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
+                        if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
+                        {
+                            client.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)NetTime.Now);
+                        }
                     }
                     break;
             }

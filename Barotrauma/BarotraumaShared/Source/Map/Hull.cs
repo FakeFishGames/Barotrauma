@@ -49,16 +49,13 @@ namespace Barotrauma
         private bool update;
 
         public bool Visible = true;
-        
-        float[] waveY; //displacement from the surface of the water
-        float[] waveVel; //velocity of the point
 
-        float[] leftDelta;
-        float[] rightDelta;
+        private float[] waveY; //displacement from the surface of the water
+        private float[] waveVel; //velocity of the point
 
-        private float lastSentVolume, lastSentOxygen;
-        private float sendUpdateTimer;
-        
+        private float[] leftDelta;
+        private float[] rightDelta;
+                
         public List<Gap> ConnectedGaps;
 
         public override string Name
@@ -617,15 +614,18 @@ namespace Barotrauma
         /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
         /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
         /// </summary>
-        public float GetApproximateDistance(Hull target, float maxDistance)
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance)
         {
-            return GetApproximateHullDistance(new HashSet<Hull>(), target, 0.0f, maxDistance);
+            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance);
         }
 
-        private float GetApproximateHullDistance(HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
         {
             if (distance >= maxDistance) return float.MaxValue;
-            if (this == target) return distance;
+            if (this == target)
+            {
+                return distance + Vector2.Distance(startPos, endPos);
+            }
 
             connectedHulls.Add(this);
 
@@ -648,7 +648,7 @@ namespace Barotrauma
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        float dist = hull.GetApproximateHullDistance(connectedHulls, target, distance + Vector2.Distance(g.Position, this.Position), maxDistance);
+                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
                         if (dist < float.MaxValue) return dist;
                     }
                 }

@@ -10,15 +10,21 @@
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
   <health
-    vitality="70"
+    vitality="50"
     doesbleed="true"/>
 
-  <!-- TODO: sounds -->
-  <sound file="Content/Characters/Legacycrawler/attack1.ogg" state="Attack" range="500"/>
-  <sound file="Content/Characters/Legacycrawler/attack2.ogg" state="Attack" range="500"/>
-
-  <sound file="Content/Characters/Legacycrawler/idle1.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Legacycrawler/idle2.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack1.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack2.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack3.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_attack4.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" state="Idle" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_death1.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_death2.ogg" state="Die" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_damage1.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_damage2.ogg" state="Damage" range="1000"/>
+  <sound file="Content/Characters/Crawler/CRAWLER_damage3.ogg" state="Damage" range="1000"/>
 
   <Inventory slots="Any, Any" accessiblewhenalive="false">
     <Item identifier="alienblood"/>
@@ -30,8 +36,9 @@
     hearing="1.0"
     fleehealththreshold="10"
     aggressiveboarding="true">
-    
-    <latchonto 
+
+    <latchonto
+      commonness="2.0"
       attachtowalls="true"
       attachtosub="true"
       mindeattachspeed="3.0"
@@ -40,10 +47,15 @@
       detachstun="5.0"
       attachlimb="Head"
       localattachpos="40,10"
-      attachlimbrotation="100"/>
+      attachlimbrotation="100"
+      aggressiongreed="20"
+      aggressionhurt="100"/>
+    
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="provocative" state="Attack" priority="300"/>
+    <targetpriority tag="light" state="Escape" priority="250"/>
+    <targetpriority tag="human" state="Attack" priority="200"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>
     <targetpriority tag="stronger" state="Escape" priority="60"/>
     <targetpriority tag="dead" state="Eat" priority="55"/>

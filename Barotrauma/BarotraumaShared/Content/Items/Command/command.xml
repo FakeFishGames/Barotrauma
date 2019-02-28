@@ -8,10 +8,10 @@
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.2" powerconsumption="5" IsOn="true" castshadows="false" allowingameediting="false">
         <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0" />
       </LightComponent>
@@ -47,8 +47,9 @@
       <output name="signal_out1" />
       <output name="signal_out2" />
       <output name="signal_out3" />
+      <output name="signal_out4" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="180" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="30" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.2" mindeteriorationdelay="180" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="equipped" />
@@ -65,10 +66,9 @@
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
     </Steering>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
@@ -94,7 +94,7 @@
       <output name="velocity_y_out" />
       <output name="signal_out1" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="equipped" />
@@ -110,10 +110,9 @@
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap5.ogg" range="500" loop="false" />
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
@@ -124,7 +123,7 @@
       <requireditem identifier="screwdriver" type="Equipped" />
       <input name="power_in" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="equipped" />
@@ -140,10 +139,9 @@
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI" />
       <AlternativeLayout relativesize="0.4,0.4" />
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false" />
-      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
+      <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
     </MiniMap>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -153,7 +151,7 @@
       <input name="water_data_in" />
       <input name="oxygen_data_in" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="0" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
       <RequiredItem identifier="screwdriver" type="equipped" />

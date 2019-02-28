@@ -253,7 +253,7 @@ namespace Barotrauma
                 {
 #if CLIENT
                     //all characters that are alive and in the winning team get an achievement
-                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + combatMission.Winner, true, 
+                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
 #endif
                 }

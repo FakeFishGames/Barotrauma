@@ -9,8 +9,8 @@
     
     <trigger/>
 
-    <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
-    <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="50" />
+    <Sprite texture="reactor.png" sourcerect="0,0,321,191" depth="0.8"/>
+    <BrokenSprite texture="reactor.png" sourcerect="0,192,321,193" depth="0.8" maxcondition="50" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false">
@@ -26,7 +26,7 @@
       
       <RequiredSkill identifier="mechanical" level="30"/>
 
-      <sound file="Content/Items/Reactor/reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
+      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All"/>
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
@@ -56,7 +56,7 @@
       </Containable>
     </ItemContainer>
     
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="10" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="480" MinDeteriorationCondition="10" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem identifier="wrench" type="equipped" />

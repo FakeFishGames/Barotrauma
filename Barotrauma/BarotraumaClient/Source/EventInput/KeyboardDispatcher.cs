@@ -27,7 +27,7 @@ namespace EventInput
             EventInput.KeyDown += EventInput_KeyDown;
         }
 
-        void EventInput_KeyDown(object sender, KeyEventArgs e)
+        public void EventInput_KeyDown(object sender, KeyEventArgs e)
         {
             if (_subscriber == null)
                 return;

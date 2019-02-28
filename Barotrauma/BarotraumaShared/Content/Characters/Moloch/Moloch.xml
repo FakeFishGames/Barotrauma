@@ -8,14 +8,26 @@
   <gibemitter particle="blackwaterblood" particleamount="40" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
 
   <health
-    vitality="1000"
+    vitality="850"
     doesbleed="true"/>
 
-  <!-- TODO: new sounds -->
-  <sound file="Content/Characters/Legacymoloch/attack1.ogg" state="Attack" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/attack2.ogg" state="Attack" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="None" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_attack1.ogg" state="Attack" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_attack2.ogg" state="Attack" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_attack3.ogg" state="Attack" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_attack4.ogg" state="Attack" range="5000"/>
+
+  <sound file="Content/Characters/Moloch/MOLOCH_damage1.ogg" state="Damage" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_damage2.ogg" state="Damage" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_damage3.ogg" state="Damage" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_damage4.ogg" state="Damage" range="5000"/>
+  
+  <sound file="Content/Characters/Moloch/MOLOCH_idle1.ogg" state="Idle" range="8000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_idle2.ogg" state="Idle" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_idle3.ogg" state="Idle" range="8000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_idle4.ogg" state="Idle" range="5000"/>
+  
+  <sound file="Content/Characters/Moloch/MOLOCH_death1.ogg" state="Die" range="5000"/>
+  <sound file="Content/Characters/Moloch/MOLOCH_death2.ogg" state="Die" range="5000"/>
   
   <Inventory slots="Any, Any, Any" accessiblewhenalive="false">
     <Item identifier="hydroxyapatite"/>

@@ -74,7 +74,7 @@ namespace Barotrauma
             {
                 return Afflictions.FindAll(a => a.Prefab.AfflictionType == afflictionType);
             }
-        }
+        }       
 
         const float InsufficientOxygenThreshold = 30.0f;
         const float LowOxygenThreshold = 50.0f;
@@ -339,7 +339,20 @@ namespace Barotrauma
             else
             {
                 AddAffliction(affliction);
-            }            
+            }
+        }
+
+        public float GetResistance(string resistanceId)
+        {
+            float resistance = 0.0f;
+            for (int i = 0; i < afflictions.Count; i++)
+            {
+                if (!afflictions[i].Prefab.IsBuff) continue;
+                float temp = afflictions[i].GetResistance(resistanceId);
+                if (temp > resistance) resistance = temp;
+            }
+
+            return resistance;
         }
 
         public void ReduceAffliction(Limb targetLimb, string affliction, float amount)
@@ -459,7 +472,7 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + (newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier))));
                     affliction.Source = newAffliction.Source;
                     CalculateVitality();
                     if (Vitality <= MinVitality) Kill();
@@ -469,11 +482,12 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-
             var copyAffliction = newAffliction.Prefab.Instantiate(
-                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
+                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab.Identifier))),
                 newAffliction.Source);
             limbHealth.Afflictions.Add(copyAffliction);
+            
+            Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -492,7 +506,7 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    float newStrength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    float newStrength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + (newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier))));
                     if (affliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                     affliction.Strength = newStrength;
                     affliction.Source = newAffliction.Source;
@@ -505,8 +519,10 @@ namespace Barotrauma
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
             afflictions.Add(newAffliction.Prefab.Instantiate(
-                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality)),
+                Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab.Identifier))),
                 source: newAffliction.Source));
+
+            Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
             if (Vitality <= MinVitality) Kill();
@@ -537,22 +553,26 @@ namespace Barotrauma
                     {
                         UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
                     }
+                    Character.SpeedMultiplier = affliction.GetSpeedMultiplier();
                 }
             }
             
             for (int i = afflictions.Count - 1; i >= 0; i--)
             {
-                if (irremovableAfflictions.Contains(afflictions[i])) continue;
-                if (afflictions[i].Strength <= 0.0f)
+                var affliction = afflictions[i];
+                if (irremovableAfflictions.Contains(affliction)) continue;
+                if (affliction.Strength <= 0.0f)
                 {
-                    SteamAchievementManager.OnAfflictionRemoved(afflictions[i], Character);
+                    SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
                     afflictions.RemoveAt(i);
                 }
             }
             for (int i = 0; i < afflictions.Count; i++)
             {
-                afflictions[i].Update(this, null, deltaTime);
-                afflictions[i].DamagePerSecondTimer += deltaTime;
+                var affliction = afflictions[i];
+                affliction.Update(this, null, deltaTime);
+                affliction.DamagePerSecondTimer += deltaTime;
+                Character.SpeedMultiplier = affliction.GetSpeedMultiplier();
             }
             
             UpdateLimbAfflictionOverlays();
@@ -588,6 +608,8 @@ namespace Barotrauma
             Vitality = MaxVitality;
             if (Unkillable) { return; }
 
+            float damageResistanceMultiplier = 1f - GetResistance("damage");
+
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
@@ -601,6 +623,7 @@ namespace Barotrauma
                     {
                         vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
                     }
+                    vitalityDecrease *= damageResistanceMultiplier;
                     Vitality -= vitalityDecrease;
                     affliction.CalculateDamagePerSecond(vitalityDecrease);
                 }
@@ -609,6 +632,7 @@ namespace Barotrauma
             foreach (Affliction affliction in afflictions)
             {
                 float vitalityDecrease = affliction.GetVitalityDecrease(this);
+                vitalityDecrease *= damageResistanceMultiplier;
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
             }
@@ -617,6 +641,7 @@ namespace Barotrauma
         private void Kill()
         {
             if (Unkillable) { return; }
+            
             var causeOfDeath = GetCauseOfDeath();
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
         }
@@ -687,7 +712,9 @@ namespace Barotrauma
             foreach (Affliction affliction in activeAfflictions)
             {
                 msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(affliction.Prefab));
-                msg.Write(affliction.Strength);
+                msg.WriteRangedSingle(
+                    MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
+                    0.0f, affliction.Prefab.MaxStrength, 8);
             }
 
             List<Pair<LimbHealth, Affliction>> limbAfflictions = new List<Pair<LimbHealth, Affliction>>();
@@ -705,7 +732,9 @@ namespace Barotrauma
             {
                 msg.WriteRangedInteger(0, limbHealths.Count - 1, limbHealths.IndexOf(limbAffliction.First));
                 msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab));
-                msg.Write(limbAffliction.Second.Strength);
+                msg.WriteRangedSingle(
+                    MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
+                    0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);
             }
         }
 

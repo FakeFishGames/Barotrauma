@@ -173,13 +173,9 @@ namespace Barotrauma
                             keys[(int)InputType.Crouch].SetState(false, crouching);
                         }
 
-                        bool hasAttackLimb = msg.ReadBoolean();
-                        if (hasAttackLimb)
-                        {
-                            bool attackInput = msg.ReadBoolean();
-                            keys[(int)InputType.Attack].Held = attackInput;
-                            keys[(int)InputType.Attack].SetState(false, attackInput);
-                        }
+                        bool attackInput = msg.ReadBoolean();
+                        keys[(int)InputType.Attack].Held = attackInput;
+                        keys[(int)InputType.Attack].SetState(false, attackInput);
 
                         if (aimInput)
                         {
@@ -215,10 +211,26 @@ namespace Barotrauma
                     Vector2 pos = new Vector2(
                         msg.ReadFloat(),
                         msg.ReadFloat());
+                    float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
+                    Vector2 linearVelocity = new Vector2(
+                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
+                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
 
-                    float rotation = msg.ReadFloat();
+                    bool fixedRotation = msg.ReadBoolean();
+                    float rotation = AnimController.Collider.Rotation;
+                    float angularVelocity = AnimController.Collider.AngularVelocity;
+                    if (!fixedRotation)
+                    {
+                        rotation = msg.ReadFloat();
+                        float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
+                        angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
+                    }
 
-                    ReadStatus(msg);
+                    bool readStatus = msg.ReadBoolean();
+                    if (readStatus)
+                    {
+                        ReadStatus(msg);
+                    }
 
                     msg.ReadPadBits();
 
@@ -226,17 +238,17 @@ namespace Barotrauma
                     if (GameMain.Client.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
-
                         memState.Insert(index, posInfo);
                     }
                     else
                     {
-                        var posInfo = new CharacterStateInfo(pos, rotation, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(pos, rotation, linearVelocity, angularVelocity, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
-
                         memState.Insert(index, posInfo);
                     }
 
@@ -309,21 +321,27 @@ namespace Barotrauma
 
             bool noInfo = inc.ReadBoolean();
             ushort id = inc.ReadUInt16();
-            string configPath = inc.ReadString();
+            string speciesName = inc.ReadString();
             string seed = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
             bool enabled = inc.ReadBoolean();
 
-            DebugConsole.Log("Received spawn data for " + configPath);
+            DebugConsole.Log("Received spawn data for " + speciesName);
+
+            string configPath = GetConfigFile(speciesName);
+            if (string.IsNullOrEmpty(configPath))
+            {
+                throw new Exception("Error in character spawn data - could not find a config file for the character \"" + configPath + "\"!");
+            }
 
             Character character = null;
             if (noInfo)
             {
                 if (!spawn) return null;
 
-                character = Character.Create(configPath, position, seed, null, true);
+                character = Create(configPath, position, seed, null, true);
                 character.ID = id;
             }
             else
@@ -339,7 +357,7 @@ namespace Barotrauma
 
                 character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
-                character.TeamID = teamID;
+                character.TeamID = (TeamType)teamID;
 
                 if (configPath == HumanConfigFile)
                 {
@@ -404,9 +422,6 @@ namespace Barotrauma
                 if (IsDead) Revive();
                 
                 CharacterHealth.ClientRead(msg);
-                
-                bool ragdolled = msg.ReadBoolean();
-                IsRagdolled = ragdolled;
             }
         }
     }

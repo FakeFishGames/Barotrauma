@@ -63,7 +63,8 @@ namespace Barotrauma.Networking
             DebugConsole.Log("  Auth ticket data: " + 
                 ((authTicketData == null) ? "null" : ToolBox.LimitString(string.Concat(authTicketData.Select(b => b.ToString("X2"))), 16)));
 
-            if (senderConnection != OwnerConnection && serverSettings.BanList.IsBanned("", clientSteamID))
+            if (senderConnection != OwnerConnection && 
+                serverSettings.BanList.IsBanned(senderConnection.RemoteEndPoint.Address, clientSteamID))
             {
                 return;
             }
@@ -90,7 +91,8 @@ namespace Barotrauma.Networking
             }
 
             unauthenticatedClients.RemoveAll(uc => uc.Connection == senderConnection);
-            var unauthClient = new UnauthenticatedClient(senderConnection, 0, clientSteamID)
+            int nonce = CryptoRandom.Instance.Next();
+            var unauthClient = new UnauthenticatedClient(senderConnection, nonce, clientSteamID)
             {
                 AuthTimer = 20
             };
@@ -203,7 +205,7 @@ namespace Barotrauma.Networking
         {
             DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
 
-            if (GameMain.Config.RequireSteamAuthentication && connection!=OwnerConnection && steamID == 0)
+            if (GameMain.Config.RequireSteamAuthentication && connection != OwnerConnection && steamID == 0)
             {
                 DebugConsole.Log("Disconnecting " + connection.RemoteEndPoint + ", Steam authentication required.");
                 connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
@@ -238,14 +240,14 @@ namespace Barotrauma.Networking
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
-            if (!serverSettings.HasPassword)
-            {
-                nonceMsg.Write(false); //false = no password
-            }
-            else
+            if (serverSettings.HasPassword && connection != OwnerConnection)
             {
                 nonceMsg.Write(true); //true = password
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
+            }
+            else
+            {
+                nonceMsg.Write(false); //false = no password
             }
             CompressOutgoingMessage(nonceMsg);
             DebugConsole.Log("Sending auth response...");
@@ -272,17 +274,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (serverSettings.HasPassword)
+            if (serverSettings.HasPassword && inc.SenderConnection != OwnerConnection)
             {
                 //decrypt message and compare password
                 string clPw = inc.ReadString();
-                if (!serverSettings.IsPasswordCorrect(clPw,unauthClient.Nonce))
+                if (!serverSettings.IsPasswordCorrect(clPw, unauthClient.Nonce))
                 {
                     unauthClient.FailedAttempts++;
                     if (unauthClient.FailedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
-                        serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
+                        serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address, TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
                         DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
@@ -416,7 +418,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
@@ -480,11 +482,11 @@ namespace Barotrauma.Networking
             }
             
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
-
+            
             var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 
                 cp.SteamID == newClient.SteamID :            
-                cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+                newClient.IPMatches(cp.IP));
 
             if (savedPermissions != null)
             {

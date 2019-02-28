@@ -303,7 +303,7 @@ namespace Barotrauma.Sounds
         {
             get;
             private set;
-        }
+        } = -1;
 
         public bool IsStream
         {
@@ -348,7 +348,11 @@ namespace Barotrauma.Sounds
 
             lock (mutex)
             {
-                ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
+                if (sound.Owner.CountPlayingInstances(sound) < sound.MaxSimultaneousInstances)
+                {
+                    ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
+                }
+
                 if (ALSourceIndex >= 0)
                 {
                     if (!IsStream)
@@ -566,6 +570,11 @@ namespace Barotrauma.Sounds
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         if (FilledByNetwork)
                         {
+                            if (Sound is VoipSound voipSound)
+                            {
+                                voipSound.ApplyFilters(buffer, readSamples);
+                            }
+
                             if (readSamples <= 0)
                             {
                                 decayTimer++;

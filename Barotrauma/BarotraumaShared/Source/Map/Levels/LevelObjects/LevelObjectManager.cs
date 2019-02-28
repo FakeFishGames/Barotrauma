@@ -338,10 +338,12 @@ namespace Barotrauma
             {
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    if (obj.NeedsNetworkSyncing)
+                    obj.NetworkUpdateTimer -= deltaTime;
+                    if (obj.NeedsNetworkSyncing && obj.NetworkUpdateTimer <= 0.0f)
                     {
                         GameMain.NetworkMember.CreateEntityEvent(this, new object[] { obj });
                         obj.NeedsNetworkSyncing = false;
+                        obj.NetworkUpdateTimer = LevelObject.NetworkUpdateInterval;
                     }
                 }
 

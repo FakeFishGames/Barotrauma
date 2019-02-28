@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 
 namespace Barotrauma.Networking
@@ -18,7 +17,7 @@ namespace Barotrauma.Networking
             public void AssignGUIComponent(GUIComponent component)
             {
                 GUIComponent = component;
-                GUIComponentValue = property.GetValue();
+                GUIComponentValue = property.GetValue(serverSettings);
                 TempValue = GUIComponentValue;
             }
 
@@ -128,6 +127,8 @@ namespace Barotrauma.Networking
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
+            TickRate = incMsg.ReadRangedInteger(1, 60);
+            GameMain.NetworkMember.TickRate = TickRate;
 
             ReadExtraCargo(incMsg);
 
@@ -141,7 +142,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend,int missionType=0,float? levelDifficulty=null,bool? autoRestart=null,int traitorSetting=0,int botCount=0,int botSpawnMode=0)
+        public void ClientAdminWrite(NetFlags dataToSend, int missionType = 0, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -217,6 +218,7 @@ namespace Barotrauma.Networking
         //GUI stuff
         private GUIFrame settingsFrame;
         private GUIFrame[] settingsTabs;
+        private GUIButton[] tabButtons;
         private int settingsTabIndex;
         
         enum SettingsTab
@@ -263,7 +265,7 @@ namespace Barotrauma.Networking
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.7f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), "Settings", font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), "Settings", font: GUI.LargeFont);
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
             {
@@ -279,19 +281,20 @@ namespace Barotrauma.Networking
                 tabNames[i] = TextManager.Get("ServerSettings" + tabValues[i] + "Tab");
             }
             settingsTabs = new GUIFrame[tabNames.Length];
+            tabButtons = new GUIButton[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
             {
                 settingsTabs[i] = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.79f), paddedFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) },
                     style: "InnerFrame");
 
-                var tabButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), tabNames[i])
+                tabButtons[i] = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), tabNames[i], style: "GUITabButton")
                 {
                     UserData = i,
                     OnClicked = SelectSettingsTab
                 };
             }
 
-            SelectSettingsTab(null, 0);
+            SelectSettingsTab(tabButtons[0], 0);
 
             //"Close"
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
@@ -737,6 +740,7 @@ namespace Barotrauma.Networking
             for (int i = 0; i < settingsTabs.Length; i++)
             {
                 settingsTabs[i].Visible = i == settingsTabIndex;
+                tabButtons[i].Selected = i == settingsTabIndex;
             }
 
             return true;
