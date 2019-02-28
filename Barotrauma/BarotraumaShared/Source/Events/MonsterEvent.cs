@@ -162,7 +162,7 @@ namespace Barotrauma
 
                 //only found a spawnpos that's very far from the sub, pick one that's closer
                 //and wait for the sub to move further before spawning
-                if (closestDist > 10000.0f * 10000.0f)
+                if (closestDist > 15000.0f * 15000.0f)
                 {
                     foreach (Vector2 position in availablePositions)
                     {
@@ -193,8 +193,8 @@ namespace Barotrauma
 
         private float GetMinDistanceToSub(Submarine submarine)
         {
-            //12000 units is slightly more than the default range of the sonar
-            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 12000.0f);
+            //9000 units is slightly less than the default range of the sonar
+            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 9000.0f);
         }
 
         public override void Update(float deltaTime)
@@ -240,7 +240,7 @@ namespace Barotrauma
 
             Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
 #if CLIENT
-            if (Character.Controlled != null) targetEntity=(Entity)Character.Controlled;
+            if (Character.Controlled != null) targetEntity = (Entity)Character.Controlled;
 #endif
             
             bool monstersDead = true;
