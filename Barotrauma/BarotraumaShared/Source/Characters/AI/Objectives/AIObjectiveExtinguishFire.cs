@@ -77,7 +77,9 @@ namespace Barotrauma
 
             foreach (FireSource fs in targetHull.FireSources)
             {
-                if (!character.IsClimbing && fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range)) || useExtinquisherTimer > 0.0f)
+                // TODO: check if in the same room?
+                bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
+                if (!character.IsClimbing && (inRange || useExtinquisherTimer > 0.0f))
                 {
                     useExtinquisherTimer += deltaTime;
                     if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
