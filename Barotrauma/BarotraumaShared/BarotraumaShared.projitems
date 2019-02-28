@@ -111,6 +111,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Huskappendage.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\HuskStinger.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Ragdolls\HuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3151,7 +3154,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\ConditionalSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />

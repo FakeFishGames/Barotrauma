@@ -11,4 +11,5 @@
   footangle="-50"
   footrotatestrength="25"
   cyclespeed="1"
-  animationtype="SwimSlow" />
+  animationtype="SwimSlow"
+  handmovestrength="0.5" />
