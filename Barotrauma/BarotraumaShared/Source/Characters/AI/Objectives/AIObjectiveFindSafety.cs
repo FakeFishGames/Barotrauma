@@ -17,7 +17,6 @@ namespace Barotrauma
         const float SearchHullInterval = 3.0f;
         const float hullSafetyThreshold = 50;
 
-        private List<Hull> hullList;
         private List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
@@ -29,20 +28,14 @@ namespace Barotrauma
 
         public float? OverrideCurrentHullSafety;
 
-        public AIObjectiveFindSafety(Character character) : base(character, "")
-        {
-            if (character.Submarine != null)
-            {
-                hullList = character.Submarine.GetHulls(true);
-            }
-        }
+        public AIObjectiveFindSafety(Character character) : base(character, "") {  }
 
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
         protected override void Act(float deltaTime)
         {
-            var currentHull = character.AnimController.CurrentHull;            
+            var currentHull = character.AnimController.CurrentHull;           
             if (HumanAIController.NeedsDivingGear(character))
             {
                 // Stop seeking diving gear if the task is impossible.
@@ -155,25 +148,27 @@ namespace Barotrauma
 
         private Hull FindBestHull()
         {
-            Hull bestHull = null;
+            Hull bestHull = character.CurrentHull;
             float bestValue = currenthullSafety;
-
-            foreach (Hull hull in hullList)
+            foreach (Hull hull in Hull.hullList)
             {
-                if (hull == character.AnimController.CurrentHull || unreachable.Contains(hull)) continue;
-
-                float hullValue = GetHullSafety(hull, character);
-                //slight preference over hulls that are closer
-                hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X)) * 0.1f;
-                hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)) * 0.2f;
-
-                if (bestHull == null || hullValue > bestValue)
+                if (unreachable.Contains(hull)) { continue; }
+                foreach (var sub in Submarine.Loaded)
                 {
-                    bestHull = hull;
-                    bestValue = hullValue;
+                    if (sub.TeamID != character.TeamID) { continue; }
+                    // If the character is inside, only take connected hulls into account.
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                    float hullValue = GetHullSafety(hull, character);
+                    // Slight preference over hulls that are closer
+                    hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X)) * 0.1f;
+                    hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)) * 0.2f;
+                    if (hullValue > bestValue)
+                    {
+                        bestHull = hull;
+                        bestValue = hullValue;
+                    }
                 }
             }
-
             return bestHull;
         }
 

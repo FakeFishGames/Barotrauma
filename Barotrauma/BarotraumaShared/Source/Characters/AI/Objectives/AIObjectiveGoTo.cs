@@ -154,6 +154,7 @@ namespace Barotrauma
                     {
                         if (targetIsOutside || HumanAIController.NeedsDivingGear(character))
                         {
+                            // TODO: cache
                             AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                         }
                     }

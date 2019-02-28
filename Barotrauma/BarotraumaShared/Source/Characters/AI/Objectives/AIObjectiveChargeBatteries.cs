@@ -10,33 +10,20 @@ namespace Barotrauma
     {
         public override string DebugTag => "charge batteries";
 
-        private List<PowerContainer> availableBatteries = new List<PowerContainer>();
+        private List<PowerContainer> targets = new List<PowerContainer>();
         private Dictionary<PowerContainer, AIObjectiveOperateItem> chargeObjectives = new Dictionary<PowerContainer, AIObjectiveOperateItem>();
         private string orderOption;
         
         public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
         {
             orderOption = option;
-            
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.Submarine == null) continue;
-                if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) continue;
-
-                var powerContainer = item.GetComponent<PowerContainer>();
-                availableBatteries.Add(powerContainer);
-            }
-
-            if (availableBatteries.Count == 0)
-            {
-                character?.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
-            }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (availableBatteries.None()) { return 0; }
-            float avgNeedOfCharge = availableBatteries.Average(b => 100 - b.ChargePercentage);
+            if (targets.None()) { GetTargets(); }
+            if (targets.None()) { return 0; }
+            float avgNeedOfCharge = targets.Average(b => 100 - b.ChargePercentage);
             if (objectiveManager.CurrentOrder == this && avgNeedOfCharge > 10)
             {
                 return AIObjectiveManager.OrderPriority;
@@ -54,18 +41,43 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            SyncRemovedObjectives(chargeObjectives, availableBatteries);
-            availableBatteries.Sort((x, y) => x.ChargePercentage.CompareTo(y.ChargePercentage));
-            foreach (PowerContainer battery in availableBatteries)
+            SyncRemovedObjectives(chargeObjectives, targets);
+        }
+
+        private void GetTargets()
+        {
+            targets.Clear();
+            foreach (Item item in Item.ItemList)
             {
-                // Ignore batteries that are almost full
-                if (battery.ChargePercentage > 90) { continue; }
-                if (!chargeObjectives.TryGetValue(battery, out AIObjectiveOperateItem objective))
+                if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) { continue; }
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    objective = new AIObjectiveOperateItem(battery, character, orderOption, false);
-                    chargeObjectives.Add(battery, objective);
-                    AddSubObjective(objective);
+                    if (sub.TeamID != character.TeamID) { continue; }
+                    // If the character is inside, only take items in connected hulls into account.
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                    var battery = item.GetComponent<PowerContainer>();
+                    if (!targets.Contains(battery))
+                    {
+                        targets.Add(battery);
+                        if (battery.ChargePercentage < 90)
+                        {
+                            if (!chargeObjectives.TryGetValue(battery, out AIObjectiveOperateItem objective))
+                            {
+                                objective = new AIObjectiveOperateItem(battery, character, orderOption, false);
+                                chargeObjectives.Add(battery, objective);
+                                AddSubObjective(objective);
+                            }
+                        }
+                    }
                 }
+            }
+            if (targets.None())
+            {
+                character.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
+            }
+            else
+            {
+                targets.Sort((x, y) => x.ChargePercentage.CompareTo(y.ChargePercentage));
             }
         }
     }
