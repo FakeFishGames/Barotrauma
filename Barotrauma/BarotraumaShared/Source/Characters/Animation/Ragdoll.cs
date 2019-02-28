@@ -1030,6 +1030,8 @@ namespace Barotrauma
         {
             if (!character.Enabled || Frozen) return;
 
+            CheckValidity();
+
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
@@ -1288,6 +1290,54 @@ namespace Barotrauma
                 }
             }
             UpdateProjSpecific(deltaTime);
+        }
+
+        private void CheckValidity()
+        {
+            CheckValidity(Collider);
+            foreach (Limb limb in limbs)
+            {
+                CheckValidity(limb.body);
+            }
+        }
+
+        private void CheckValidity(PhysicsBody body)
+        {
+            string errorMsg = null;
+            string bodyName = body.UserData is Limb ? "Limb" : "Collider";
+            if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
+            {
+                errorMsg = bodyName+ " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
+            {
+                errorMsg = bodyName + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            else if (!MathUtils.IsValid(body.Rotation))
+            {
+                errorMsg = bodyName + " rotation invalid (" + body.Rotation + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            else if (!MathUtils.IsValid(body.AngularVelocity) || Math.Abs(body.AngularVelocity) > 1000f)
+            {
+                errorMsg = bodyName + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            if (errorMsg != null)
+            {
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+
+                if (!MathUtils.IsValid(Collider.SimPosition) || Math.Abs(Collider.SimPosition.X) > 1e10f || Math.Abs(Collider.SimPosition.Y) > 1e10f)
+                {
+                    Collider.SetTransform(Vector2.Zero, 0.0f);
+                }
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.SetTransform(Collider.SimPosition, 0.0f);
+                    limb.body.ResetDynamics();
+                }
+                SetInitialLimbPositions();
+                return;
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime);
