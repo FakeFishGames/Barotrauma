@@ -240,6 +240,11 @@ namespace Barotrauma
             get { return body.Rotation; }
         }
 
+        /// <summary>
+        /// Takes flipping (Dir) into account.
+        /// </summary>
+        public float TransformedRotation => Dir < 0 ? Rotation - MathHelper.Pi : Rotation;
+
         public Vector2 LinearVelocity
         {
             get { return body.LinearVelocity; }
