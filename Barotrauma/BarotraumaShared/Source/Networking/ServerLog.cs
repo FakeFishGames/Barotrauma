@@ -64,7 +64,6 @@ namespace Barotrauma.Networking
 
         private int unsavedLineCount;
 
-        private string msgFilter;
         private bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
 
         public int LinesPerFile
@@ -86,7 +85,7 @@ namespace Barotrauma.Networking
             //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
 #if SERVER
-            DebugConsole.NewMessage(line, Color.White); //TODO: REMOVE
+            DebugConsole.NewMessage(line, messageColor[(int)messageType]); //TODO: REMOVE
 #endif
 
             var newText = new LogMessage(line, messageType);

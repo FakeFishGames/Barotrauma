@@ -88,9 +88,7 @@ namespace Barotrauma
         
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
-
-        private float eatTimer;
-        
+                
         private Dictionary<AITarget, AITargetMemory> targetMemories;
 
         //the eyesight of the NPC (0.0 = blind, 1.0 = sees every target within sightRange)
@@ -435,7 +433,7 @@ namespace Barotrauma
             if (SelectedAiTarget.Entity is Item item)
             {
                 // If the item is held by a character, attack the character instead.
-                var pickable = item.components.Select(c => c as Pickable).FirstOrDefault();
+                var pickable = item.GetComponent<Pickable>();
                 if (pickable != null)
                 {
                     var target = pickable.Picker?.AiTarget;
@@ -567,7 +565,7 @@ namespace Barotrauma
                             if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
                             {
                                 // Don't allow attacking when the attack target has changed.
-                                if (SelectedAiTarget != _previousAiTarget)
+                                if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
                                 {
                                     canAttack = false;
                                     if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
@@ -692,7 +690,7 @@ namespace Barotrauma
                     !l.IsStuck &&
                     l.attack.IsValidContext(currentContext) &&
                     l.attack.IsValidTarget(target) &&
-                    l.attack.Conditionals.All(c => (target is ISerializableEntity se && c.Matches(se)) || !(target is ISerializableEntity)))
+                    l.attack.Conditionals.All(c => (target is ISerializableEntity se && c.Matches(se)) || !(target is ISerializableEntity) || !(target is Character)))
                 .OrderByDescending(l => l.attack.Priority)
                 .ThenBy(l => ConvertUnits.ToDisplayUnits(Vector2.Distance(l.SimPosition, attackSimPosition)));
             // TODO: priority should probably not override the distance -> use values instead of booleans
@@ -890,8 +888,6 @@ namespace Barotrauma
         //sight/hearing range
         public void UpdateTargets(Character character, out TargetingPriority targetingPriority)
         {
-            var prevAiTarget = SelectedAiTarget;
-
             targetingPriority = null;
             SelectedAiTarget = null;
             selectedTargetMemory = null;
@@ -951,11 +947,9 @@ namespace Barotrauma
                     //skip the target if it's a room and the character is already inside a sub
                     if (character.CurrentHull != null && target.Entity is Hull) continue;
                     
-                    //multiply the priority of the target if it's a door from outside to inside and the AI is an aggressive boarder
                     Door door = null;
                     if (target.Entity is Item item)
                     {
-
                         //item inside and we're outside -> attack the hull
                         if (item.CurrentHull != null && character.CurrentHull == null)
                         {
@@ -978,21 +972,20 @@ namespace Barotrauma
                     }
 
                     if (door != null)
-                    { 
+                    {
                         //increase priority if the character is outside and an aggressive boarder, and the door is from outside to inside
                         if (character.CurrentHull == null && aggressiveBoarding && !door.LinkedGap.IsRoomToRoom)
                         {
-                            valueModifier = door.IsOpen ? 5.0f : 3.0f;
+                            valueModifier = door.IsOpen ? 10 : 5;
                         }
                         else if (door.IsOpen || door.Item.Condition <= 0.0f) //ignore broken and open doors
                         {
                             continue;
                         }
                     }
-                    else
+                    else if (target.Entity is IDamageable targetDamageable && targetDamageable.Health <= 0.0f)
                     {
-                        IDamageable targetDamageable = target.Entity as IDamageable;
-                        if (targetDamageable != null && targetDamageable.Health <= 0.0f) continue;
+                         continue;
                     }
                 }
 
@@ -1003,7 +996,8 @@ namespace Barotrauma
 
                 if (valueModifier == 0.0f) continue;
 
-                dist = Vector2.Distance(character.WorldPosition, target.WorldPosition);
+                Vector2 toTarget = target.WorldPosition - character.WorldPosition;
+                dist = toTarget.Length();
 
                 //if the target has been within range earlier, the character will notice it more easily
                 //(i.e. remember where the target was)
@@ -1018,6 +1012,11 @@ namespace Barotrauma
                 dist = Math.Max(dist, 100.0f);
 
                 AITargetMemory targetMemory = FindTargetMemory(target);
+                if (Character.CurrentHull != null && Math.Abs(toTarget.Y) > Character.CurrentHull.Size.Y)
+                {
+                    // Inside the sub, treat objects that are up or down, as they were farther away.
+                    dist *= 3;
+                }
                 valueModifier = valueModifier * targetMemory.Priority / (float)Math.Sqrt(dist);
 
                 if (valueModifier > targetValue)
@@ -1029,10 +1028,11 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedAiTarget != prevAiTarget)
+            if (SelectedAiTarget != _previousAiTarget)
             {
                 wallTarget = null;
-            }           
+            }
+            _previousAiTarget = SelectedAiTarget;
         }
 
         //find the targetMemory that corresponds to some AItarget or create if there isn't one yet

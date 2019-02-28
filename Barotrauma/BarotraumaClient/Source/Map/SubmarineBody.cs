@@ -8,13 +8,15 @@ namespace Barotrauma
     {
         partial void ClientUpdatePosition(float deltaTime)
         {
+            if (GameMain.Client == null) { return; }
+
             Vector2 newVelocity = Body.LinearVelocity;
             Vector2 newPosition = Body.SimPosition;
 
             Body.CorrectPosition(positionBuffer, out newPosition, out newVelocity, out _, out _);
             Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
             newVelocity = newVelocity.ClampLength(100.0f);
-            if (!MathUtils.IsValid(newVelocity))
+            if (!MathUtils.IsValid(newVelocity) || moveAmount.LengthSquared() < 0.0001f)
             {
                 return;
             }

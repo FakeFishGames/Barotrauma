@@ -147,7 +147,7 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
-                     textBox.Text = AutoComplete(textBox.Text);
+                     textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
                 if (PlayerInput.KeyHit(Keys.Enter))
@@ -242,7 +242,7 @@ namespace Barotrauma
             selectedIndex = Messages.Count;
         }
 
-        static partial void AddHelpMessage(Command command)
+        static partial void ShowHelpMessage(Command command)
         {
             if (listBox.Content.CountChildren > MaxMessages)
             {
@@ -399,10 +399,10 @@ namespace Barotrauma
             AssignRelayToServer("campaigninfo", false);
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
+            AssignRelayToServer("freecam", false);
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
-
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -686,6 +686,13 @@ namespace Barotrauma
                 NewMessage(GUI.DisableUpperHUD ? "Disabled upper HUD" : "Enabled upper HUD", Color.White);
             });
             AssignRelayToServer("toggleupperhud", false);
+
+            AssignOnExecute("toggleitemhighlights", (string[] args) =>
+            {
+                GUI.DisableItemHighlights = !GUI.DisableItemHighlights;
+                NewMessage(GUI.DisableItemHighlights ? "Disabled item highlights" : "Enabled item highlights", Color.White);
+            });
+            AssignRelayToServer("toggleitemhighlights", false);
 
             AssignOnExecute("togglecharacternames", (string[] args) =>
             {
@@ -1220,7 +1227,6 @@ namespace Barotrauma
                 "revokecommandperm",
                 (string[] args) =>
                 {
-                    //TODO: revoke lol
                     if (args.Length < 1) return;
 
                     if (!int.TryParse(args[0], out int id))
@@ -1229,9 +1235,9 @@ namespace Barotrauma
                         return;
                     }
 
-                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    ShowQuestionPrompt("Console command permissions to revoke from client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                        GameMain.Client.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
                     });
                 }
             );

@@ -23,6 +23,7 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
             : base(file, position, seed, characterInfo, isNetworkPlayer, ragdoll)
         {
+            InitProjSpecific();
         }
 
         partial void InitProjSpecific();
@@ -83,14 +84,11 @@ namespace Barotrauma
             if (!aiController.Enabled) return;
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) return;
             if (Controlled == this) return;
-
-            SoundUpdate(deltaTime);
-
+            
             if (!IsRemotePlayer)
             {
                 aiController.Update(deltaTime);
             }
         }
-        partial void SoundUpdate(float deltaTime);
     }
 }

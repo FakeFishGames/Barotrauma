@@ -735,9 +735,8 @@ namespace Barotrauma.Networking
                                     GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
 
                                 WriteCharacterInfo(readyToStartMsg);
-
-                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
                                 
+                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);                                
                                 break;
                             case ServerPacketHeader.STARTGAME:
                                 startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
@@ -745,8 +744,10 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.ENDGAME:
                                 string endMessage = inc.ReadString();
                                 bool missionSuccessful = inc.ReadBoolean();
+                                Character.TeamType winningTeam = (Character.TeamType)inc.ReadByte();
                                 if (missionSuccessful && GameMain.GameSession?.Mission != null)
                                 {
+                                    GameMain.GameSession.WinningTeam = winningTeam;
                                     GameMain.GameSession.Mission.Completed = true;
                                 }
                                 CoroutineManager.StartCoroutine(EndGame(endMessage));
@@ -2075,7 +2076,13 @@ namespace Barotrauma.Networking
 
         public void UpdateHUD(float deltaTime)
         {
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
+            GUITextBox msgBox = null;
+
+            if (Screen.Selected == GameMain.GameScreen)
+                { msgBox = chatBox.InputBox; }
+            else if (Screen.Selected == GameMain.NetLobbyScreen)
+                { msgBox = GameMain.NetLobbyScreen.TextBox; }
+            
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
@@ -2104,23 +2111,25 @@ namespace Barotrauma.Networking
                 }
             }
 
-
             //tab doesn't autoselect the chatbox when debug console is open, 
             //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
+            if (msgBox != null)
             {
-                if (msgBox.Selected)
+                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) && 
+                    GUI.KeyboardDispatcher.Subscriber == null)
                 {
-                    msgBox.Text = "";
-                    msgBox.Deselect();
-                }
-                else
-                {
-                    msgBox.Select();
-                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                    if (msgBox.Selected)
                     {
-                        msgBox.Text = "r; ";
+                        msgBox.Text = "";
+                        msgBox.Deselect();
+                    }
+                    else
+                    {
+                        msgBox.Select();
+                        if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                        {
+                            msgBox.Text = "r; ";
+                        }
                     }
                 }
             }

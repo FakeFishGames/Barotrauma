@@ -24,6 +24,8 @@ namespace Barotrauma.Networking
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
 
+        public Pair<UInt16, float> LastCampaignSaveSendTime;
+
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
 
@@ -118,6 +120,17 @@ namespace Barotrauma.Networking
             }
 
             return true;
+        }
+
+        public bool IPMatches(string ip)
+        {
+            if (Connection?.RemoteEndPoint == null) { return false; }
+            if (Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6 && 
+                Connection.RemoteEndPoint.Address.MapToIPv4().ToString() == ip)
+            {
+                return true;
+            }
+            return Connection.RemoteEndPoint.Address.ToString() == ip;
         }
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)

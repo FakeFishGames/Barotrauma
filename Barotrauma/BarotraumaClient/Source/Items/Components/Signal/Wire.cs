@@ -41,7 +41,12 @@ namespace Barotrauma.Items.Components
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
-        
+
+        public Vector2 DrawSize
+        {
+            get { return sectionExtents; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (sections.Count == 0 && !IsActive || Hidden)

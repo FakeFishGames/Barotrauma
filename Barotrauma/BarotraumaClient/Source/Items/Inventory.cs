@@ -128,12 +128,14 @@ namespace Barotrauma
         protected float prevUIScale = UIScale;
         protected float prevHUDScale = GUI.Scale;
 
-
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorHighlight;
         public static Sprite DropIndicator, DropIndicatorHighlight;
 
         public Rectangle BackgroundFrame { get; protected set; }
+        
+        private ushort[] receivedItemIDs;
+        private CoroutineHandle syncItemsCoroutine;
 
         public float HideTimer;
 
@@ -504,7 +506,7 @@ namespace Barotrauma
 
             if (Character.Controlled.SelectedConstruction != null)
             {
-                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.components)
+                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.Components)
                 {
                     var itemContainer = ic as ItemContainer;
                     if (itemContainer?.Inventory?.slots == null) continue;
@@ -596,7 +598,6 @@ namespace Barotrauma
                 
                 if (selectedSlot == null)
                 {
-                    draggingItem.ParentInventory?.CreateNetworkEvent();
                     draggingItem.Drop();
                     GUI.PlayUISound(GUISoundType.DropItem);
                 }
@@ -788,7 +789,7 @@ namespace Barotrauma
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
                             new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.Prefab.Health), 8),
-                            Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f) * 0.8f, true);
+                            Color.Lerp(Color.Red, Color.Green, item.Condition / item.Prefab.Health) * 0.8f, true);
                     }
 
                     if (itemContainer != null)
@@ -796,12 +797,12 @@ namespace Barotrauma
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)
                         {
-                            containedState = item.Condition / 100.0f;
+                            containedState = item.Condition / item.Prefab.Health;
                         }
                         else
                         {
                             containedState = itemContainer.Inventory.Capacity == 1 ?
-                                (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / 100.0f) :
+                                (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / item.Prefab.Health) :
                                 itemContainer.Inventory.Items.Count(i => i != null) / (float)itemContainer.Inventory.capacity;
                         }
 
@@ -962,8 +963,7 @@ namespace Barotrauma
             {
                 if (receivedItemIDs[i] > 0)
                 {
-                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null || Items[i] == item) continue;
+                    if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) continue;
 
                     TryPutItem(item, i, true, true, null, false);
                     for (int j = 0; j < capacity; j++)
@@ -977,6 +977,12 @@ namespace Barotrauma
             }
 
             receivedItemIDs = null;
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            SharedWrite(msg, extraData);
+            syncItemsDelay = 1.0f;
         }
     }
 }

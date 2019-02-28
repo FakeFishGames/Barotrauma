@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -100,12 +101,20 @@ namespace Barotrauma
                 return;
             }
 
+            if (GUIMessageBox.MessageBoxes.Any(mbox => mbox.UserData as string == "watchmanprompt"))
+            {
+                return;
+            }
+
             if (GameMain.Client != null && interactor == Character.Controlled && 
                     (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || GameMain.Client.HasPermission(ClientPermissions.ManageCampaign)))
             {
                 var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
                     .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
-                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                {
+                    UserData = "watchmanprompt"
+                };
                 msgBox.Buttons[0].OnClicked = (btn, userdata) =>
                 {
                     GameMain.Client.RequestRoundEnd();

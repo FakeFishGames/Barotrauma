@@ -180,7 +180,7 @@ namespace Barotrauma.Items.Components
                     source.LastSentSignalRecipients.Add(recipient.item);
                 }
 
-                foreach (ItemComponent ic in recipient.item.components)
+                foreach (ItemComponent ic in recipient.item.Components)
                 {
                     ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
                 }

@@ -45,7 +45,20 @@ namespace Barotrauma
                 return true;
             }
         }
-        
+
+        public override bool IsVisible(Rectangle worldView)
+        {
+            if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw)
+            {
+                if (decals.Count == 0) { return false; }
+
+                Rectangle worldRect = WorldRect;
+                if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) { return false; }
+                if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) { return false; }
+            }
+            return true;
+        }
+
         public override bool IsMouseOn(Vector2 position)
         {
             if (!GameMain.DebugDraw && !ShowHulls) return false;
@@ -214,8 +227,7 @@ namespace Barotrauma
                 return;
             }
 
-            Rectangle drawRect;
-            if (!Visible)
+            /*if (!Visible)
             {
                 drawRect =
                     Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
@@ -225,7 +237,7 @@ namespace Barotrauma
                     new Vector2(rect.Width, rect.Height),
                     Color.Black, true,
                     0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
-            }
+            }*/
 
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
@@ -233,7 +245,7 @@ namespace Barotrauma
 
             if (aiTarget != null) aiTarget.Draw(spriteBatch);
 
-            drawRect =
+           Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
             GUI.DrawRectangle(spriteBatch,

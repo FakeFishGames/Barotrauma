@@ -350,14 +350,21 @@ namespace Barotrauma
                 int ownerId = hasOwner ? inc.ReadByte() : -1;
                 byte teamID = inc.ReadByte();
                 bool hasAi = inc.ReadBoolean();
+                string infoSpeciesName = inc.ReadString();
 
                 if (!spawn) return null;
 
-                CharacterInfo info = CharacterInfo.ClientRead(configPath, inc);
+                string infoConfigPath = GetConfigFile(infoSpeciesName);
+                if (string.IsNullOrEmpty(infoConfigPath))
+                {
+                    throw new Exception("Error in character spawn data - could not find a config file for the character info \"" + configPath + "\"!");
+                }
+
+                CharacterInfo info = CharacterInfo.ClientRead(infoConfigPath, inc);
 
                 character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
-                character.TeamID = teamID;
+                character.TeamID = (TeamType)teamID;
 
                 if (configPath == HumanConfigFile)
                 {

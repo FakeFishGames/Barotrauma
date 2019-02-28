@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 
 namespace Barotrauma.Networking
 {
@@ -45,70 +46,84 @@ namespace Barotrauma.Networking
                 return ipCompare.Substring(0, rangeBanIndex) == IP.Substring(0, rangeBanIndex);
             }
         }
+
+        public bool CompareTo(IPAddress ipCompare)
+        {
+            if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4().ToString()))
+            {
+                return true;
+            }
+            return CompareTo(ipCompare.ToString());
+        }
     }
 
     partial class BanList
     {
         partial void InitProjectSpecific()
         {
-            if (File.Exists(SavePath))
+            if (!File.Exists(SavePath)) { return; }
+
+            string[] lines;
+            try
             {
-                string[] lines;
-                try
-                {
-                    lines = File.ReadAllLines(SavePath);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to open the list of banned players in " + SavePath, e);
-                    return;
-                }
+                lines = File.ReadAllLines(SavePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to open the list of banned players in " + SavePath, e);
+                return;
+            }
 
-                foreach (string line in lines)
+            foreach (string line in lines)
+            {
+                string[] separatedLine = line.Split(',');
+                if (separatedLine.Length < 2) continue;
+
+                string name = separatedLine[0];
+                string identifier = separatedLine[1];
+
+                DateTime? expirationTime = null;
+                if (separatedLine.Length > 2 && !string.IsNullOrEmpty(separatedLine[2]))
                 {
-                    string[] separatedLine = line.Split(',');
-                    if (separatedLine.Length < 2) continue;
-
-                    string name = separatedLine[0];
-                    string identifier = separatedLine[1];
-
-                    DateTime? expirationTime = null;
-                    if (separatedLine.Length > 2 && !string.IsNullOrEmpty(separatedLine[2]))
+                    if (DateTime.TryParse(separatedLine[2], out DateTime parsedTime))
                     {
-                        if (DateTime.TryParse(separatedLine[2], out DateTime parsedTime))
-                        {
-                            expirationTime = parsedTime;
-                        }
+                        expirationTime = parsedTime;
                     }
-                    string reason = separatedLine.Length > 3 ? string.Join(",", separatedLine.Skip(3)) : "";
+                }
+                string reason = separatedLine.Length > 3 ? string.Join(",", separatedLine.Skip(3)) : "";
 
-                    if (expirationTime.HasValue && DateTime.Now > expirationTime.Value) continue;
+                if (expirationTime.HasValue && DateTime.Now > expirationTime.Value) continue;
 
-                    if (identifier.Contains("."))
+                if (identifier.Contains(".") || identifier.Contains(":"))
+                {
+                    //identifier is an ip
+                    bannedPlayers.Add(new BannedPlayer(name, identifier, reason, expirationTime));
+                }
+                else
+                {
+                    //identifier should be a steam id
+                    if (ulong.TryParse(identifier, out ulong steamID))
                     {
-                        //identifier is an ip
-                        bannedPlayers.Add(new BannedPlayer(name, identifier, reason, expirationTime));
+                        bannedPlayers.Add(new BannedPlayer(name, steamID, reason, expirationTime));
                     }
                     else
                     {
-                        //identifier should be a steam id
-                        if (ulong.TryParse(identifier, out ulong steamID))
-                        {
-                            bannedPlayers.Add(new BannedPlayer(name, steamID, reason, expirationTime));
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError("Error in banlist: \"" + identifier + "\" is not a valid IP or a Steam ID");
-                        }
+                        DebugConsole.ThrowError("Error in banlist: \"" + identifier + "\" is not a valid IP or a Steam ID");
                     }
                 }
             }
         }
 
-        public bool IsBanned(string IP, ulong steamID)
+        public bool IsBanned(IPAddress IP, ulong steamID)
         {
             bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
-            return bannedPlayers.Any(bp => bp.CompareTo(IP) || (steamID != 0 && bp.SteamID == steamID));
+            return bannedPlayers.Any(bp => bp.CompareTo(IP) || (steamID > 0 && bp.SteamID == steamID));
+        }
+
+        public void BanPlayer(string name, IPAddress ip, string reason, TimeSpan? duration)
+        {
+            string ipStr = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
+            BanPlayer(name, ipStr, 0, reason, duration);
         }
 
         public void BanPlayer(string name, string ip, string reason, TimeSpan? duration)
