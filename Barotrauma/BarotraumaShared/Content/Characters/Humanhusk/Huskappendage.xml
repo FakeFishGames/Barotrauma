@@ -13,5 +13,5 @@
   </limb>
   
   <!-- body to husk appendage -->
-  <joint name="Huskappendage" limb1="1" limb2="13" limb1anchor="23.83297,8.276317" limb2anchor="24.10002,0.321171" upperlimit="-50" lowerlimit="-90" canbesevered="False" limitenabled="True" stiffness="0.25" />
+  <joint name="Huskappendage" limb1="1" limb2="13" limb1anchor="18.0,7.1" limb2anchor="24.10002,0.321171" upperlimit="-23" lowerlimit="-90" canbesevered="False" limitenabled="True" stiffness="0.25" />
 </huskappendage>
