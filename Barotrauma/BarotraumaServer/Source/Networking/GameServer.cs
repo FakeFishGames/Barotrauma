@@ -1429,6 +1429,8 @@ namespace Barotrauma.Networking
 
         public bool StartGame()
         {
+            Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
+
             Submarine selectedSub = null;
             Submarine selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
             bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle;
@@ -1554,8 +1556,7 @@ namespace Barotrauma.Networking
             {
                 GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, serverSettings.SelectedLevelDifficulty, teamCount > 1);
             }
-
-            Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
+            
             Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
             Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
             Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
@@ -1687,6 +1688,8 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
+            
+            Log("Round started.", ServerLog.MessageType.ServerMessage);
 
             AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
             
@@ -1766,6 +1769,7 @@ namespace Barotrauma.Networking
         public void EndGame()
         {
             if (!gameStarted) return;
+            Log("Ending the round...", ServerLog.MessageType.ServerMessage);
 
             string endMessage = "The round has ended." + '\n';
 
@@ -1845,6 +1849,7 @@ namespace Barotrauma.Networking
             entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.Select();
+            Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
             yield return CoroutineStatus.Success;
         }
