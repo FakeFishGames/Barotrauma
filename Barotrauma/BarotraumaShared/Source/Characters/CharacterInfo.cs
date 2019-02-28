@@ -128,6 +128,8 @@ namespace Barotrauma
             }
         }
 
+        public string SpeciesName => SourceElement.GetAttributeString("name", string.Empty);
+
         /// <summary>
         /// Note: Can be null.
         /// </summary>
@@ -326,7 +328,7 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    string speciesName = SourceElement.GetAttributeString("name", string.Empty);
+                    string speciesName = SpeciesName;
                     bool isHumanoid = SourceElement.GetAttributeBool("humanoid", false);
                     ragdoll = isHumanoid 
                         ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)

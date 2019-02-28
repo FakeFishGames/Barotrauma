@@ -16,7 +16,7 @@ namespace Barotrauma
 
         private InfectionState state;
 
-        private Limb huskAppendage;
+        private List<Limb> huskAppendage;
         
         public InfectionState State
         {
@@ -99,46 +99,44 @@ namespace Barotrauma
         private void ActivateHusk(Character character)
         {
             character.NeedsAir = false;
-            AttachHuskAppendage(character);
+            if (huskAppendage == null)
+            {
+                huskAppendage = AttachHuskAppendage(character);
+                character.SetStun(0.5f);
+            }
         }
 
-        private void AttachHuskAppendage(Character character)
+        public static List<Limb> AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
         {
-            //husk appendage already created, don't do anything
-            if (huskAppendage != null) return;
-
-            // TODO: Currently it's not possible to rename the huskappendage -> define the appendage path in xml
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(Path.GetDirectoryName(Character.HumanConfigFile), "Huskappendage.xml"));
-            if (doc == null || doc.Root == null) return;
-
-            var limbElement = doc.Root.Element("limb");
-            if (limbElement == null)
+            var huskDoc = XMLExtensions.TryLoadXml(Character.GetConfigFile("humanhusk"));
+            string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
+            XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
+            if (doc == null || doc.Root == null) { return null; }
+            if (ragdoll == null)
             {
-                DebugConsole.ThrowError("Error in huskappendage.xml - limb element not found");
-                return;
+                ragdoll = character.AnimController;
             }
-
-            var jointElement = doc.Root.Element("joint");
-            if (jointElement == null)
+            if (ragdoll.Dir < 1.0f)
             {
-                DebugConsole.ThrowError("Error in huskappendage.xml - joint element not found");
-                return;
+                ragdoll.Flip();
             }
-
-            character.SetStun(0.5f);
-            if (character.AnimController.Dir < 1.0f)
+            var huskAppendages = new List<Limb>();
+            var limbElements = doc.Root.Elements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
+            foreach (var jointElement in doc.Root.Elements("joint"))
             {
-                character.AnimController.Flip();
+                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
+                {
+                    JointParams jointParams = new JointParams(jointElement, ragdoll.RagdollParams);
+                    Limb attachLimb = ragdoll.Limbs[jointParams.Limb1];
+                    Limb huskAppendage = new Limb(ragdoll, character, new LimbParams(limbElement, ragdoll.RagdollParams));
+                    huskAppendage.body.Submarine = character.Submarine;
+                    huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
+                    ragdoll.AddLimb(huskAppendage);
+                    ragdoll.AddJoint(jointParams);
+                    huskAppendages.Add(huskAppendage);
+                }
             }
-
-            var torso = character.AnimController.GetLimb(LimbType.Torso);
-            
-            huskAppendage = new Limb(character.AnimController, character, new LimbParams(limbElement, character.AnimController.RagdollParams));
-            huskAppendage.body.Submarine = character.Submarine;
-            huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
-
-            character.AnimController.AddLimb(huskAppendage);
-            character.AnimController.AddJoint(jointElement);
+            return huskAppendages;
         }
 
         private void DeactivateHusk(Character character)
@@ -150,8 +148,7 @@ namespace Barotrauma
         private void RemoveHuskAppendage(Character character)
         {
             if (huskAppendage == null) return;
-
-            character.AnimController.RemoveLimb(huskAppendage);
+            huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
             huskAppendage = null;
         }
 
@@ -185,25 +182,24 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-            var configFile = characterFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f)?.ToLowerInvariant() == "humanhusk");
+            var configFile = Character.GetConfigFile("humanhusk");
 
             if (string.IsNullOrEmpty(configFile))
             {
-                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - humanhusk config file not found.");
+                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
                 yield return CoroutineStatus.Success;
             }
 
-            XDocument doc = XMLExtensions.TryLoadXml(configFile);
-            if (doc?.Root == null)
-            {
-                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - humanhusk config file ("+configFile+") could not be read.");
-                yield return CoroutineStatus.Success;
-            }
+            //XDocument doc = XMLExtensions.TryLoadXml(configFile);
+            //if (doc?.Root == null)
+            //{
+            //    DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file ("+configFile+") could not be read.");
+            //    yield return CoroutineStatus.Success;
+            //}
             
-            character.Info.Ragdoll = null;
-            character.Info.SourceElement = doc.Root;
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, false, true);
+            //character.Info.Ragdoll = null;
+            //character.Info.SourceElement = doc.Root;
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Humanhusk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false">
+<Character name="Humanhusk" humanoid="true" needsair="false" genders="true" canspeak="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
+  <huskappendage path="Content/Characters/Humanhusk/Huskappendage.xml"/>
 
   <bloodemitter particle="blackblood" particleamount="5"/>
   <bloodemitter particle="blackwaterblood" particleamount="1"/>
@@ -40,7 +41,7 @@
     </Limb>
   </health>
 
-  <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+  <name firstname="Content/Characters/Human/firstnames_[GENDER].txt" lastname="Content/Characters/Human/lastnames.txt" />
 
   <ai
     combatstrength="100"
@@ -53,6 +54,7 @@
     <targetpriority tag="weaker" state="Attack" priority="50"/>
     <targetpriority tag="stronger" state="Escape" priority="30"/>
     <targetpriority tag="room" state="Attack" priority="5"/>
+    <!--Ignore-->
     <targetpriority tag="husk" state="Attack" priority="0"/>
   </ai>
 
