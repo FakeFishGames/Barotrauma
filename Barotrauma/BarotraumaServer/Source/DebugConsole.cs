@@ -574,7 +574,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
+                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.IPMatches(args[0]));
                         if (clients.Count == 0)
                         {
                             GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
@@ -874,7 +874,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Enum.GetValues(typeof(MissionType)).Cast<string>().ToArray()
+                    Enum.GetNames(typeof(MissionType))
                 };
             }));
 
@@ -980,7 +980,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
                     if (args.Length < 1) return;
-                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
+                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.IPMatches(args[0]));
                     TimeSpan? duration = null;
                     if (args.Length > 1)
                     {
@@ -1636,9 +1636,10 @@ namespace Barotrauma
             }
         }
 
-        static partial void AddHelpMessage(Command command)
+        static partial void ShowHelpMessage(Command command)
         {
-            NewMessage(command.help, Color.Cyan);
+            NewMessage(command.names[0], Color.Cyan);
+            NewMessage(command.help, Color.Gray);
         }
     }
 }

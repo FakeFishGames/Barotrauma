@@ -595,6 +595,12 @@ namespace Barotrauma
                             }
                             GUI.KeyboardDispatcher.Subscriber = null;
                         }
+                        //if a verification prompt (are you sure you want to x) is open, close it
+                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null && 
+                                GUIMessageBox.VisibleBox.UserData as string == "verificationprompt")
+                        {
+                            ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
+                        }
                         else // Otherwise toggle pausing.
                         {
                             GUI.TogglePauseMenu();

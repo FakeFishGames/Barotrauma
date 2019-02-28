@@ -68,8 +68,16 @@ namespace Barotrauma
         protected Key[] keys;
         private Item[] selectedItems;
 
-        private byte teamID;
-        public byte TeamID
+        public enum TeamType
+        {
+            None,
+            Team1,
+            Team2,
+            FriendlyNPC
+        }
+
+        private TeamType teamID;
+        public TeamType TeamID
         {
             get { return teamID; }
             set
@@ -2244,6 +2252,7 @@ namespace Barotrauma
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
+                OnAttackedProjSpecific(attacker, attackResult);
             };
             AdjustKarma(attacker, attackResult);
 

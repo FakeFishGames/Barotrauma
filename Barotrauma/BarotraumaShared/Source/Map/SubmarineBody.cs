@@ -690,7 +690,9 @@ namespace Barotrauma
 
         private void ApplyImpact(float impact, Vector2 direction, Contact contact, bool applyDamage = true)
         {
-            if (impact < 3.0f) return;
+            float minImpact = 3.0f;
+
+            if (impact < minImpact) { return; }
 
             contact.GetWorldManifold(out Vector2 tempNormal, out FixedArray2<Vector2> worldPoints);
             Vector2 lastContactPoint = worldPoints[0];
@@ -728,18 +730,17 @@ namespace Barotrauma
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
             }
-
-            if (!applyDamage)
-            {
-                impact = 0;
-            }
-            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
+            
+            var damagedStructures = Explosion.RangedStructureDamage(
+                ConvertUnits.ToDisplayUnits(lastContactPoint), 
+                impact * 50.0f, 
+                applyDamage ? impact * ImpactDamageMultiplier : 0.0f);
 
 #if CLIENT
             //play a damage sound for the structure that took the most damage
             float maxDamage = 0.0f;
             Structure maxDamageStructure = null;
-            foreach (KeyValuePair<Structure,float> structureDamage in damagedStructures)
+            foreach (KeyValuePair<Structure, float> structureDamage in damagedStructures)
             {
                 if (maxDamageStructure == null || structureDamage.Value > maxDamage)
                 {
@@ -754,7 +755,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Clamp(maxDamage * 4.0f, 2000.0f, 10000.0f),
+                    MathHelper.Lerp(2000.0f, 10000.0f, (impact - minImpact) / 2.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

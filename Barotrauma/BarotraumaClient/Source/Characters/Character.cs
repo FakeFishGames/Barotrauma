@@ -1,5 +1,6 @@
 using Barotrauma.Networking;
 using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -107,7 +108,8 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XDocument doc)
         {
-            soundInterval = Rand.Range(0.0f, doc.Root.GetAttributeFloat("soundinterval", 10.0f));
+            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
+            soundTimer = Rand.Range(0.0f, soundInterval);
 
             BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
 
@@ -261,10 +263,9 @@ namespace Barotrauma
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
         {
             if (attackResult.Damage <= 0) { return; }
-            soundTimer = Rand.Range(0.0f, soundInterval);
             if (soundTimer < soundInterval * 0.5f)
             {
-                PlaySound(CharacterSound.SoundType.Attack);
+                PlaySound(CharacterSound.SoundType.Damage);
                 soundTimer = soundInterval;
             }
         }
@@ -332,9 +333,12 @@ namespace Barotrauma
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
+            //use the list of visible entities if it exists
+            var entityList = Submarine.VisibleEntities ?? Item.ItemList;
+
             Item closestItem = null;
             float closestItemDistance = aimAssistAmount;
-            foreach (MapEntity entity in Submarine.VisibleEntities)
+            foreach (MapEntity entity in entityList)
             {
                 if (!(entity is Item item))
                 {
@@ -427,6 +431,26 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            if (!IsDead && !IsUnconscious)
+            {
+                if (soundTimer > 0)
+                {
+                    soundTimer -= deltaTime;
+                }
+                else if (AIController != null)
+                {                    
+                    switch (AIController.State)
+                    {
+                        case AIController.AIState.Attack:
+                            PlaySound(CharacterSound.SoundType.Attack);
+                            break;
+                        default:
+                            PlaySound(CharacterSound.SoundType.Idle);
+                            break;
+                    }
+                }
+            }
+
             if (info != null || Vitality < MaxVitality * 0.98f)
             {
                 hudInfoTimer -= deltaTime;
@@ -575,7 +599,7 @@ namespace Barotrauma
                 Color nameColor = Color.White;
                 if (Controlled != null && TeamID != Controlled.TeamID)
                 {
-                    nameColor = TeamID == 255 ? Color.LightBlue : Color.Red;
+                    nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : Color.Red;
                 }
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
@@ -606,8 +630,7 @@ namespace Barotrauma
         {
             if (controlled != this) return null;
 
-            HUDProgressBar progressBar = null;
-            if (!hudProgressBars.TryGetValue(linkedObject, out progressBar))
+            if (!hudProgressBars.TryGetValue(linkedObject, out HUDProgressBar progressBar))
             {
                 progressBar = new HUDProgressBar(worldPosition, Submarine, emptyColor, fullColor);
                 hudProgressBars.Add(linkedObject, progressBar);
@@ -620,15 +643,21 @@ namespace Barotrauma
             return progressBar;
         }
 
+        private SoundChannel soundChannel;
         public void PlaySound(CharacterSound.SoundType soundType)
         {
-            if (sounds == null || sounds.Count == 0) return;
+            if (sounds == null || sounds.Count == 0) { return; }
+            if (soundChannel != null && soundChannel.IsPlaying) { return; }
 
-            var matchingSounds = sounds.FindAll(s => s.Type == soundType);
-            if (matchingSounds.Count == 0) return;
+            var matchingSounds = sounds.Where(s => 
+                s.Type == soundType && 
+                (s.Gender == Gender.None || (info != null && info.Gender == s.Gender)));
+            if (!matchingSounds.Any()) { return; }
 
-            var selectedSound = matchingSounds[Rand.Int(matchingSounds.Count)];
-            SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
+            var matchingSoundsList = matchingSounds.ToList();
+            var selectedSound = matchingSoundsList[Rand.Int(matchingSoundsList.Count)];
+            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
+            soundTimer = soundInterval;
         }
 
         partial void ImplodeFX()

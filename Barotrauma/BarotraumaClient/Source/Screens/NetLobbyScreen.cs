@@ -2,13 +2,9 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Facepunch.Steamworks;
-using Client = Barotrauma.Networking.Client;
-using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
@@ -902,7 +898,10 @@ namespace Barotrauma
             playerInfoContainer.ClearChildren();
             
             GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
-                { Stretch = true };
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
 
@@ -1006,20 +1005,21 @@ namespace Barotrauma
                         Rotation = MathHelper.Pi
                     };
                 }
-                 GUITickBox randPrefTickBox = new GUITickBox(
-                        new RectTransform(new Vector2(0.05f, 0.05f), infoContainer.RectTransform)
-                            {RelativeOffset = new Vector2(-0.5f, 0.1f)},
-                        TextManager.Get("RandomPreferences"))
+
+                GUITickBox randPrefTickBox = new GUITickBox(
+                       new RectTransform(new Vector2(0.5f, 0.05f), infoContainer.RectTransform)
+                       { RelativeOffset = new Vector2(-0.0f, 0.0f) },
+                       TextManager.Get("RandomPreferences"))
+                {
+                    OnSelected = (tickBox) =>
                     {
-                        OnSelected = (tickBox) =>
+                        if (tickBox.Selected)
                         {
-                            if (tickBox.Selected)
-                            {
-                                GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
-                            }
-                            return true;
+                            GameMain.Config.JobPreferences = (new List<string>(GameMain.Config.JobPreferences.Randomize()));
                         }
-                    };
+                        return true;
+                    }
+                };
 
                 UpdateJobPreferences(jobList);
             }
@@ -1544,28 +1544,30 @@ namespace Barotrauma
         private bool ClosePlayerFrame(GUIButton button, object userData)
         {
             playerFrame = null;
-
             return true;
         }
 
         public bool KickPlayer(GUIButton button, object userData)
         {
-            if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), false);            
+            Client client = userData as Client;
+            if (client == null || GameMain.NetworkMember == null) return false;
+            GameMain.Client.CreateKickReasonPrompt(client.Name, false);            
             return false;
         }
 
         public bool BanPlayer(GUIButton button, object userData)
         {
+            Client client = userData as Client;
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, true);
             return false;
         }
 
         public bool BanPlayerRange(GUIButton button, object userData)
         {
+            Client client = userData as Client;
             if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(userData.ToString(), true, true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
             return false;
         }
         

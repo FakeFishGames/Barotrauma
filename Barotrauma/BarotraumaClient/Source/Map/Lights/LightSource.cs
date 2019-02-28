@@ -718,7 +718,11 @@ namespace Barotrauma.Lights
             if (OverrideLightTexture != null)
             {
                 overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
-                uvOffset = (OverrideLightTexture.Origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
+
+                Vector2 origin = OverrideLightTexture.Origin;
+                if (LightSpriteEffect == SpriteEffects.FlipHorizontally) origin.X = OverrideLightTexture.SourceRect.Width - origin.X;
+                if (LightSpriteEffect == SpriteEffects.FlipVertically) origin.Y = (OverrideLightTexture.SourceRect.Height - origin.Y);
+                uvOffset = (origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
             }
 
             // Add a vertex for the center of the mesh

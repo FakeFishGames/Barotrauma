@@ -81,7 +81,7 @@ namespace Barotrauma
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
-        static partial void AddHelpMessage(Command command);
+        static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
@@ -126,11 +126,7 @@ namespace Barotrauma
                     foreach (Command c in commands)
                     {
                         if (string.IsNullOrEmpty(c.help)) continue;
-#if CLIENT
-                        AddHelpMessage(c);
-#else
-                        NewMessage(c.help, Color.Cyan);
-#endif
+                        ShowHelpMessage(c);
                     }
                 }
                 else
@@ -142,7 +138,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        AddHelpMessage(matchingCommand);
+                        ShowHelpMessage(matchingCommand);
                     }
                 }
             }, 
@@ -1115,7 +1111,7 @@ namespace Barotrauma
 
                 if (validArgs.Length == 0) return command;
 
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % validArgs.Length;
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, validArgs.Length);
                 string autoCompletedArg = validArgs[currentAutoCompletedIndex];
 
                 //add quotation marks to args that contain spaces
@@ -1387,7 +1383,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
                     {
                         //TODO: a way to select which team to spawn to?
-                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : (byte)1;
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;
                     }
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          

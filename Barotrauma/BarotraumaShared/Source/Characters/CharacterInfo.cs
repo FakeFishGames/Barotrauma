@@ -235,7 +235,7 @@ namespace Barotrauma
 
         public CauseOfDeath CauseOfDeath;
 
-        public byte TeamID;
+        public Character.TeamType TeamID;
 
         private NPCPersonalityTrait personalityTrait;
 
