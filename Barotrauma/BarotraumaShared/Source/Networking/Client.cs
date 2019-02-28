@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
         
-        public byte TeamID = 0;
+        public Character.TeamType TeamID;
 
         private Character character;
         public Character Character

@@ -416,7 +416,7 @@ namespace Barotrauma.Networking
                 string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
                 string ip = separatedLine[separatedLine.Length - 2];
 
-                ClientPermissions permissions = Barotrauma.Networking.ClientPermissions.None;
+                ClientPermissions permissions = Networking.ClientPermissions.None;
                 if (Enum.TryParse(separatedLine.Last(), out permissions))
                 {
                     ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));

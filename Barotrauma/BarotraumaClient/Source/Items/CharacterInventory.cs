@@ -458,8 +458,8 @@ namespace Barotrauma
                             slots[i].QuickUseTimer = Math.Max(0.1f, slots[i].QuickUseTimer + deltaTime);
                             if (slots[i].QuickUseTimer >= 1.0f)
                             {
-                                CreateNetworkEvent();
                                 Items[i].Drop(Character.Controlled);
+                                GUI.PlayUISound(GUISoundType.DropItem);
                             }
                         }
                         else

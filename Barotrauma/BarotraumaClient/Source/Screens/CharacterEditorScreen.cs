@@ -395,7 +395,12 @@ namespace Barotrauma
             {
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
-                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+
+                foreach (PhysicsBody body in PhysicsBody.List)
+                {
+                    body.SetPrevTransform(body.SimPosition, body.Rotation);
+                    body.Update((float)deltaTime);
+                }
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
                 if (!Character.DisableControls)
                 {

@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        public byte TeamID;
+        public Character.TeamType TeamID;
 
         [Serialize(20000.0f, false)]
         public float Range

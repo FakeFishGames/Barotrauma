@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -56,6 +57,13 @@ namespace Barotrauma.Networking
 
             public ClientPermissions Permissions;
 
+            public SavedClientPermission(string name, IPAddress ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            {
+                this.Name = name;
+                this.IP = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
+                this.Permissions = permissions;
+                this.PermittedCommands = permittedCommands;
+            }
             public SavedClientPermission(string name, string ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;

@@ -598,7 +598,6 @@ namespace Barotrauma
                 
                 if (selectedSlot == null)
                 {
-                    draggingItem.ParentInventory?.CreateNetworkEvent();
                     draggingItem.Drop();
                     GUI.PlayUISound(GUISoundType.DropItem);
                 }
@@ -790,7 +789,7 @@ namespace Barotrauma
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
                             new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.Prefab.Health), 8),
-                            Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f) * 0.8f, true);
+                            Color.Lerp(Color.Red, Color.Green, item.Condition / item.Prefab.Health) * 0.8f, true);
                     }
 
                     if (itemContainer != null)
@@ -798,12 +797,12 @@ namespace Barotrauma
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)
                         {
-                            containedState = item.Condition / 100.0f;
+                            containedState = item.Condition / item.Prefab.Health;
                         }
                         else
                         {
                             containedState = itemContainer.Inventory.Capacity == 1 ?
-                                (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / 100.0f) :
+                                (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / item.Prefab.Health) :
                                 itemContainer.Inventory.Items.Count(i => i != null) / (float)itemContainer.Inventory.capacity;
                         }
 

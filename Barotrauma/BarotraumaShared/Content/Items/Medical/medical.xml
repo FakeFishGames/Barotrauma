@@ -963,7 +963,13 @@
   
   
   <TonicLiquid name="Tonic Liquid" identifier="tonicliquid" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A medical solution that's mildy effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds." useinhealthinterface="true" scale="0.3">
-    <SuitableTreatment identifier="internaldamage" suitability="10" />
+    <SuitableTreatment identifier="internaldamage" suitability="-10" />
+    <SuitableTreatment identifier="damage" suitability="-10" />
+    <SuitableTreatment identifier="burn" suitability="-10" />
+    <SuitableTreatment identifier="opiateoverdose" suitability="-10" />
+    <SuitableTreatment identifier="oxygenlow" suitability="-10" />
+    <SuitableTreatment identifier="opiatewithdrawal" suitability="-10" />
+    
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="138,759,63,150" depth="0.6" origin="0.5,0.5" />
     <Body radius="60" height="140" density="9" />

@@ -41,12 +41,12 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Interpolates the positional error of a physics body towards zero.
         /// </summary>
-        public static Vector2 InterpolateSimPositionError(Vector2 simPositionError)
+        public static Vector2 InterpolateSimPositionError(Vector2 simPositionError, float? smoothingFactor = null)
         {
             float lengthSqr = simPositionError.LengthSquared();
             //correct immediately if the error is very large
-            if (lengthSqr > 10.0f) { return Vector2.Zero; }
-            float positionSmoothingFactor = MathHelper.Lerp(0.95f, 0.8f, MathHelper.Clamp(lengthSqr, 0.0f, 1.0f));
+            if (lengthSqr > 100.0f) { return Vector2.Zero; }
+            float positionSmoothingFactor = smoothingFactor ?? MathHelper.Lerp(0.95f, 0.8f, MathHelper.Clamp(lengthSqr, 0.0f, 1.0f));
             return simPositionError *= positionSmoothingFactor;
         }
 

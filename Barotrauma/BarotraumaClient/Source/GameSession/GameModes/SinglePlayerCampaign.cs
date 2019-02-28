@@ -206,11 +206,19 @@ namespace Barotrauma
                 return;
             }
 
+
             CreateDialog(new List<Character> { watchman }, "WatchmanInteract", 1.0f);
 
+            if (GUIMessageBox.MessageBoxes.Any(mbox => mbox.UserData as string == "watchmanprompt"))
+            {
+                return;
+            }
             var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
                 .Replace("[locationname]", leavingSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
-                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "watchmanprompt"
+            };
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
                 if (!isRunning) { return true; }

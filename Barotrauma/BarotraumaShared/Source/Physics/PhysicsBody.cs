@@ -125,6 +125,8 @@ namespace Barotrauma
 
         private float lastProcessedNetworkState;
 
+        public float? PositionSmoothingFactor;
+
         public Shape BodyShape
         {
             get { return bodyShape; }
@@ -724,7 +726,11 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            drawOffset = NetConfig.InterpolateSimPositionError(drawOffset);
+            if (drawOffset.LengthSquared() < 0.01f)
+            {
+                PositionSmoothingFactor = null;
+            }
+            drawOffset = NetConfig.InterpolateSimPositionError(drawOffset, PositionSmoothingFactor);
             rotationOffset = NetConfig.InterpolateRotationError(rotationOffset);
         }
 

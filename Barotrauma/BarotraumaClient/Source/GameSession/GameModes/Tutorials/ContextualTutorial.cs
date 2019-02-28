@@ -325,7 +325,7 @@ namespace Barotrauma.Tutorials
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
+                        if (!item.Repairables.Any() || item.Condition > item.Prefab.Health / 2.0f) continue;
                         degradedEquipmentFound = true;
                         break;
                     }
