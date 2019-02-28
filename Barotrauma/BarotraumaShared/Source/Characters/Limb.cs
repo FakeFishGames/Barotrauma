@@ -476,13 +476,6 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime);
             
-            if (LinearVelocity.X > 500.0f)
-            {
-                //DebugConsole.ThrowError("CHARACTER EXPLODED");
-                body.ResetDynamics();
-                body.SetTransform(character.SimPosition, 0.0f);           
-            }
-
             if (inWater)
             {
                 body.ApplyWaterForces();
