@@ -11,7 +11,6 @@ namespace Barotrauma
         public override string DebugTag => "repair items";
 
         private Dictionary<Item, AIObjectiveRepairItem> repairObjectives = new Dictionary<Item, AIObjectiveRepairItem>();
-        private readonly List<Item> itemList = new List<Item>();
         private HashSet<Item> ignoreList = new HashSet<Item>();
         private readonly float ignoreListClearIntervalBase = 30;
         private readonly float ignoreListIntervalAddition = 10;
@@ -25,7 +24,6 @@ namespace Barotrauma
 
         public AIObjectiveRepairItems(Character character) : base(character, "")
         {
-            itemList = character.Submarine.GetItems(true);
             ignoreListClearInterval = ignoreListClearIntervalBase;
         }
 
@@ -69,6 +67,7 @@ namespace Barotrauma
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
+        // TODO: This can allow two active repair items objectives, if RequireAdequateSkills is not at the same value. We don't want that.
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
 
         protected override void Act(float deltaTime) => GetBrokenItems();
@@ -82,11 +81,15 @@ namespace Barotrauma
                     ignoreList.Add(repairObjective.Key);
                 }
             }
-            SyncRemovedObjectives(repairObjectives, itemList);
-            foreach (Item item in itemList)
+            SyncRemovedObjectives(repairObjectives, Item.ItemList);
+            foreach (Item item in Item.ItemList)
             {
-                if (!item.IsFullCondition && !ignoreList.Contains(item))
+                if (item.IsFullCondition || ignoreList.Contains(item)) { continue; }
+                foreach (Submarine sub in Submarine.Loaded)
                 {
+                    if (sub.TeamID != character.TeamID) { continue; }
+                    // If the character is inside, only take connected hulls into account.
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                     foreach (Repairable repairable in item.Repairables)
                     {
                         if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }

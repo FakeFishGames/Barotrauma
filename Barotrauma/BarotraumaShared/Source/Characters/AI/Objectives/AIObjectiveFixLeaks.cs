@@ -13,15 +13,17 @@ namespace Barotrauma
         const float updateGapListInterval = 3.0f;
         private float updateCounter;
 
-        private AIObjectiveIdle idleObjective;
+        private float ignoreListClearInterval = 60;
+        private float ignoreListTimer;
 
         private AIObjectiveFindDivingGear findDivingGear;
-
-        private List<AIObjectiveFixLeak> objectiveList = new List<AIObjectiveFixLeak>();
+        private List<Gap> gaps = new List<Gap>();
+        private Dictionary<Gap, AIObjectiveFixLeak> fixObjectives = new Dictionary<Gap, AIObjectiveFixLeak>();
+        private HashSet<Gap> ignoreList = new HashSet<Gap>();
 
         public AIObjectiveFixLeaks(Character character) : base (character, "")
         {
-            UpdateGapList();
+            UpdateObjectiveList();
         }
 
         public override bool IsCompleted() => false;
@@ -29,27 +31,36 @@ namespace Barotrauma
 
         public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
+            if (ignoreListTimer > ignoreListClearInterval)
+            {
+                ignoreList.Clear();
+                ignoreListTimer = 0;
+            }
+            else
+            {
+                ignoreListTimer += deltaTime;
+            }
             if (updateCounter < updateGapListInterval)
             {
                 updateCounter += deltaTime;
             }
             else
             {
-                UpdateGapList();
+                UpdateObjectiveList();
             }
             priority = 0.0f;
-            foreach (AIObjectiveFixLeak fixObjective in objectiveList)
+            foreach (Gap gap in gaps)
             {
                 // Gaps from outside to inside significantly increase the priority 
-                if (!fixObjective.Leak.IsRoomToRoom)
+                if (!gap.IsRoomToRoom)
                 {
                     // Max 50 priority per gap
-                    priority = Math.Max(priority + fixObjective.Leak.Open * 100.0f, 50.0f);
+                    priority = Math.Max(priority + gap.Open * 100.0f, 50.0f);
                 }
                 else
                 {
                     // Max 10 priority per gap
-                    priority += fixObjective.Leak.Open * 10.0f;
+                    priority += gap.Open * 10.0f;
                 }
 
                 if (priority >= 100.0f) break;
@@ -57,75 +68,75 @@ namespace Barotrauma
             priority = MathHelper.Clamp(priority, 0, 100);
         }
 
+        private bool cannotFindDivingGear;
         protected override void Act(float deltaTime)
         {
-            if (objectiveList.Any())
+            if (gaps.None()) { return; }
+            foreach (var objective in fixObjectives)
             {
-                if (!objectiveList[objectiveList.Count - 1].Leak.IsRoomToRoom)
+                if (!objective.Value.CanBeCompleted)
                 {
-                    if (findDivingGear == null) findDivingGear = new AIObjectiveFindDivingGear(character, true);
-
-                    if (!findDivingGear.IsCompleted() && findDivingGear.CanBeCompleted)
-                    {
-                        findDivingGear.TryComplete(deltaTime);
-                        return;
-                    }
-                }
-
-                objectiveList[objectiveList.Count - 1].TryComplete(deltaTime);
-
-                if (!objectiveList[objectiveList.Count - 1].CanBeCompleted ||
-                    objectiveList[objectiveList.Count - 1].IsCompleted())
-                {
-                    objectiveList.RemoveAt(objectiveList.Count - 1);
+                    ignoreList.Add(objective.Key);
                 }
             }
-            else
+            SyncRemovedObjectives(fixObjectives, gaps);
+            if (fixObjectives.None())
             {
-                if (idleObjective == null) idleObjective = new AIObjectiveIdle(character);
-                idleObjective.TryComplete(deltaTime);
+                // Objectives not yet created.
+                if (!cannotFindDivingGear && gaps.Any(g => g.IsRoomToRoom))
+                {
+                    if (findDivingGear == null)
+                    {
+                        findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                        if (!findDivingGear.IsCompleted())
+                        {
+                            findDivingGear.TryComplete(deltaTime);
+                        }
+                    }
+                    if (!findDivingGear.CanBeCompleted)
+                    {
+                        cannotFindDivingGear = true;
+                    }
+                }
+                if (findDivingGear == null || findDivingGear.IsCompleted() || cannotFindDivingGear)
+                {
+                    foreach (var gap in gaps)
+                    {
+                        if (!fixObjectives.TryGetValue(gap, out AIObjectiveFixLeak objective))
+                        {
+                            objective = new AIObjectiveFixLeak(gap, character);
+                            fixObjectives.Add(gap, objective);
+                            AddSubObjective(objective);
+                        }
+                    }
+                }
             }
         }
 
-        private void UpdateGapList()
+        private void UpdateObjectiveList()
         {
             updateCounter = 0;
-            objectiveList.Clear(); 
+            gaps.Clear();
             foreach (Gap gap in Gap.GapList)
             {
                 if (gap.ConnectedWall == null) { continue; }
+                // Door or not open
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
-                //not linked to a hull -> ignore
+                // Not linked to a hull -> ignore
                 if (gap.linkedTo.All(l => l == null)) { continue; }
-                
-                if (character.TeamID == Character.TeamType.None)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    //TODO: make sure the gap isn't in another sub (outpost, respawn shuttle...?)
-                    if (gap.Submarine == null) continue;
-                }
-                else
-                {
-                    //prevent characters from attempting to fix leaks in the enemy sub
-                    //team 1 plays in sub 0, team 2 in sub 1
-                    Submarine mySub = Submarine.MainSub;
-                    if (character.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1)
+                    if (sub.TeamID != character.TeamID) { continue; }
+                    // If the character is inside, only take connected hulls into account.
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { continue; }
+                    if (cannotFindDivingGear && gap.IsRoomToRoom) { continue; }
+                    if (!gaps.Contains(gap))
                     {
-                        mySub = Submarine.MainSubs[1];
+                        gaps.Add(gap);
                     }
-
-                    if (gap.Submarine != mySub) continue;
                 }
-
-                float gapPriority = GetGapFixPriority(gap);
-
-                int index = 0;
-                while (index < objectiveList.Count && GetGapFixPriority(objectiveList[index].Leak) < gapPriority)
-                {
-                    index++;
-                }
-
-                objectiveList.Insert(index, new AIObjectiveFixLeak(gap, character));
             }
+            gaps.Sort((x, y) => GetGapFixPriority(y).CompareTo(GetGapFixPriority(x)));
         }
 
         private float GetGapFixPriority(Gap gap)

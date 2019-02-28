@@ -13,13 +13,11 @@ namespace Barotrauma
 
         const float WallAvoidDistance = 150.0f;
 
-        private AITarget currentTarget;
+        private Hull currentTarget;
         private float newTargetTimer;
 
         private float standStillTimer;
         private float walkDuration;
-
-        private AIObjectiveFindSafety findSafety;
 
         public AIObjectiveIdle(Character character) : base(character, "")
         {
@@ -49,39 +47,30 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-            
-            if (character.AnimController.InWater)
-            {
-                //attempt to find a safer place if in water
-                if (findSafety == null) findSafety = new AIObjectiveFindSafety(character);
-                findSafety.TryComplete(deltaTime);
-                return;
-            }
 
             if (newTargetTimer <= 0.0f)
             {
-                currentTarget = FindRandomTarget();
+                currentTarget = FindRandomHull();
 
                 if (currentTarget != null)
                 {
                     Vector2 pos = character.SimPosition;
                     if (character != null && character.Submarine == null) { pos -= Submarine.MainSub.SimPosition; }
 
-                    string errorMsg = "(Character " + character.Name + " idling, target "
-                        + ((currentTarget.Entity is Hull hull && hull.RoomName != null) ? hull.RoomName : currentTarget.Entity.ToString()) + ")";
-
+                    string errorMsg = string.Empty;
+#if DEBUG
+                    bool isRoomNameFound = currentTarget.RoomName != null;
+                    errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.RoomName : currentTarget.ToString()) + ")";
+#endif
                     var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition, errorMsg);
-                    if (path.Cost > 1000.0f && character.AnimController.CurrentHull!=null) return;
-
+                    if (path.Cost > 1000.0f && character.AnimController.CurrentHull != null) { return; }
                     pathSteering.SetPath(path);
                 }
-
 
                 newTargetTimer = currentTarget == null ? 5.0f : 15.0f;
             }
             
             newTargetTimer -= deltaTime;
-
 
             //wander randomly 
             // - if reached the end of the path 
@@ -145,67 +134,72 @@ namespace Barotrauma
 
                 return;                
             }
-             
-            if (currentTarget?.Entity == null) return;
-            if (currentTarget.Entity.Removed)
-            {
-                currentTarget = null;
-                return;
-            }
-            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(true));
+
+            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(false));
         }
 
-        private AITarget FindRandomTarget()
-        {
-            //random chance of navigating back to the room where the character spawned
-            if (Rand.Int(5) == 1)
-            {
-                var idCard = character.Inventory.FindItemByIdentifier("idcard");
-                if (idCard == null) return null;
+        private readonly List<Hull> targetHulls = new List<Hull>(20);
+        private readonly List<float> hullValues = new List<float>(20);
 
+        private Hull FindRandomHull()
+        {
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
+            Hull targetHull = null;
+            //random chance of navigating back to the room where the character spawned
+            if (Rand.Int(5) == 1 && idCard != null)
+            {
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) continue;
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) { continue; }
 
                     foreach (string tag in wp.IdCardTags)
                     {
-                        if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;
+                        if (idCard.HasTag(tag))
+                        {
+                            targetHull = wp.CurrentHull;
+                        }
                     }
                 }
             }
-            else
+            if (targetHull == null)
             {
-                List<Hull> targetHulls = new List<Hull>(Hull.hullList);
-                //ignore all hulls with fires or water in them
-                targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
-                if (character.Submarine != null)
+                targetHulls.Clear();
+                hullValues.Clear();
+                foreach (var hull in Hull.hullList)
                 {
-                    targetHulls.RemoveAll(h => h.Submarine != character.Submarine);
-                }
-
-                //remove ballast hulls
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.HasTag("ballast") && targetHulls.Contains(item.CurrentHull))
+                    foreach (Submarine sub in Submarine.Loaded)
                     {
-                        targetHulls.Remove(item.CurrentHull);
+                        if (sub.TeamID != character.TeamID) { continue; }
+                        // If the character is inside, only take connected hulls into account.
+                        if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                        if (hull.FireSources.Any() || hull.WaterPercentage > 10) { continue; }
+                        // Ignore ballast hulls
+                        bool isBallast = false;
+                        foreach (Item item in Item.ItemList)
+                        {
+                            if (item.CurrentHull == hull && item.HasTag("ballast"))
+                            {
+                                isBallast = true;
+                            }
+                        }
+                        if (isBallast) { continue; }
+                        // Ignore hulls that are too low to stand inside
+                        if (character.AnimController is HumanoidAnimController animController)
+                        {
+                            if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
+                            {
+                                continue;
+                            }
+                        }
+                        targetHulls.Add(hull);
+                        hullValues.Add(hull.Volume);
                     }
                 }
-
-                //ignore hulls that are too low to stand inside
-                if (character.AnimController is HumanoidAnimController animController)
-                {
-                    float minHeight = ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value);
-                    targetHulls.RemoveAll(h => h.CeilingHeight < minHeight);
-                }
-                if (!targetHulls.Any()) return null;
-                
-                //prefer larger hulls
-                var targetHull = ToolBox.SelectWeightedRandom(targetHulls, targetHulls.Select(h => h.Volume).ToList(), Rand.RandSync.Unsynced);
-                return targetHull?.AiTarget;
+                // TODO: prefer safe hulls?
+                // Prefer larger hulls over smaller
+                return ToolBox.SelectWeightedRandom(targetHulls, hullValues, Rand.RandSync.Unsynced);
             }
-
-            return null;
+            return targetHull;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

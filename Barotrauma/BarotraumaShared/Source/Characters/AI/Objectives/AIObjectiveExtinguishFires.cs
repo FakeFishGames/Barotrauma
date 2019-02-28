@@ -8,24 +8,14 @@ namespace Barotrauma
     class AIObjectiveExtinguishFires : AIObjective
     {
         public override string DebugTag => "extinguish fires";
-        private List<Hull> hullList = new List<Hull>();
         private Dictionary<Hull, AIObjectiveExtinguishFire> extinguishObjectives = new Dictionary<Hull, AIObjectiveExtinguishFire>();
 
-        public AIObjectiveExtinguishFires(Character character) : base(character, "")
-        {
-            if (character.Submarine != null)
-            {
-                hullList = character.Submarine.GetHulls(true);
-            }
-            if (hullList.None(h => h.FireSources.Count > 0))
-            {
-                character?.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
-            }
-        }
+        public AIObjectiveExtinguishFires(Character character) : base(character, "") { }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            int fireCount = hullList.Sum(h => h.FireSources.Count);
+            if (character.Submarine == null) { return 0; }
+            int fireCount = character.Submarine.GetHulls(true).Sum(h => h.FireSources.Count);
             if (objectiveManager.CurrentOrder == this && fireCount > 0)
             {
                 return AIObjectiveManager.OrderPriority;
@@ -44,15 +34,27 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            SyncRemovedObjectives(extinguishObjectives, hullList);
-            foreach (Hull hull in hullList)
+            SyncRemovedObjectives(extinguishObjectives, Hull.hullList);
+            if (character.Submarine == null) { return; }
+            foreach (Hull hull in Hull.hullList)
             {
-                if (hull.FireSources.Count > 0 && !extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
+                if (hull.FireSources.None()) { continue; }
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    objective = new AIObjectiveExtinguishFire(character, hull);
-                    extinguishObjectives.Add(hull, objective);
-                    AddSubObjective(objective);
+                    if (sub.TeamID != character.TeamID) { continue; }
+                    // If the character is inside, only take connected hulls into account.
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                    if (!extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
+                    {
+                        objective = new AIObjectiveExtinguishFire(character, hull);
+                        extinguishObjectives.Add(hull, objective);
+                        AddSubObjective(objective);
+                    }
                 }
+            }
+            if (extinguishObjectives.None())
+            {
+                character?.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
             }
         }
     }
