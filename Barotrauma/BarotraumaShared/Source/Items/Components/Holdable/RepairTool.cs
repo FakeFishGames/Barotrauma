@@ -288,8 +288,8 @@ namespace Barotrauma.Items.Components
                 Vector2 standPos = leak.IsHorizontal ? new Vector2(Math.Sign(-fromItemToLeak.X), 0.0f) : new Vector2(0.0f, Math.Sign(-fromItemToLeak.Y) * 0.5f);
                 standPos = leak.WorldPosition + standPos * Range;
                 // TODO: check if too close to the stand pos -> move away so that the tool can hit the target and not through it?
-                Vector2 velocity = (standPos - character.WorldPosition) / 1000.0f;
-                character.AIController.SteeringManager.SteeringManual(deltaTime, velocity.ClampLength(character.AnimController.GetCurrentSpeed(false)));
+                Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
+                character.AIController.SteeringManager.SteeringManual(deltaTime, dir * character.AnimController.GetCurrentSpeed(false) / 2);
             }
             else
             {
@@ -301,8 +301,7 @@ namespace Barotrauma.Items.Components
             character.CursorPosition = leak.Position;
             character.SetInput(InputType.Aim, false, true);
 
-            float rotation = item.body.Dir < 0 ? item.body.Rotation - MathHelper.Pi : item.body.Rotation;
-            if (VectorExtensions.Angle(VectorExtensions.Forward(rotation), fromItemToLeak) < MathHelper.PiOver4)
+            if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
             {
                 // Press the trigger only when the tool is approximately facing the target.
                 Use(deltaTime, character);
