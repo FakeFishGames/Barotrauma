@@ -1107,7 +1107,7 @@ namespace Barotrauma
             else
             {
                 smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
-                SmoothedCursorPosition += smoothedCursorDiff;
+                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
