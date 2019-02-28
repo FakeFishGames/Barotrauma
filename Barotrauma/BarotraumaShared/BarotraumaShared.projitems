@@ -16,7 +16,6 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian2\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Ragdolls\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\" />
@@ -94,7 +93,28 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Human.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Huskappendage.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskRun.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskSwimFast.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskSwimSlow.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskWalk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Humanhusk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Huskappendage.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\HuskStinger.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Ragdolls\HuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">
@@ -124,16 +144,16 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Hammerhead\Ragdolls\HammerheadDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskRun.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Animations\HumanhuskWalk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\head_female_asian1.png">
@@ -229,22 +249,19 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Ragdolls\HumanDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Ragdolls\HumanhuskDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Animations\LegacyhuskRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskRun.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Animations\LegacyhuskSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Animations\LegacyhuskSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Animations\LegacyhuskWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Animations\HuskWalk.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Ragdolls\HuskDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Ragdolls\LegacyhuskDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochbaby\Animations\MolochbabySwimFast.xml">
@@ -859,7 +876,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\firstnames_male.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Humanhusk\Humanhusk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Husk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\HumanRun.xml">
@@ -954,13 +971,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\DivingSuit.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\DivingSuit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\Husk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\Legacyhusk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\legs.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacyhusk\legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Animations\MantisRun.xml">
@@ -3137,6 +3154,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\ConditionalSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformableSprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AdderComponent.cs" />

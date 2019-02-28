@@ -335,9 +335,19 @@ namespace Barotrauma
             {
                 foreach (var kvp in items)
                 {
-                    var limb = limbs[kvp.Key.ID];
+                    int id = kvp.Key.ID;
+                    // This can be the case if we manipulate the ragdoll in runtime (husk appendage, limb severance)
+                    if (id > limbs.Length - 1) { continue; }
+                    var limb = limbs[id];
                     var itemList = kvp.Value;
                     limb.WearingItems.AddRange(itemList);
+                }
+            }
+            if (character.SpeciesName.ToLowerInvariant() == "humanhusk")
+            {
+                if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
+                {
+                    AfflictionHusk.AttachHuskAppendage(character, this);
                 }
             }
         }
@@ -490,9 +500,7 @@ namespace Barotrauma
 
         public void AddJoint(JointParams jointParams)
         {
-            byte limb1ID = Convert.ToByte(jointParams.Limb1);
-            byte limb2ID = Convert.ToByte(jointParams.Limb2);
-            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], jointParams, this);
+            LimbJoint joint = new LimbJoint(Limbs[jointParams.Limb1], Limbs[jointParams.Limb2], jointParams, this);
             GameMain.World.AddJoint(joint);
             for (int i = 0; i < LimbJoints.Length; i++)
             {
@@ -502,11 +510,6 @@ namespace Barotrauma
             }
             Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
             LimbJoints[LimbJoints.Length - 1] = joint;
-        }
-
-        public void AddJoint(XElement subElement, float scale = 1.0f)
-        {
-            AddJoint(new JointParams(subElement, RagdollParams));
         }
 
         protected void AddLimb(LimbParams limbParams)
