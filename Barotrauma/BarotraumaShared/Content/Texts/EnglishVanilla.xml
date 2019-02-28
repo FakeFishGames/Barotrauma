@@ -796,135 +796,135 @@
   <EntityDescription.waypoint>Used by AI characters to navigate inside the submarine.</EntityDescription.waypoint>
   <EntityName.spawnpoint>Spawnpoint</EntityName.spawnpoint>
   <EntityDescription.spawnpoint>Determines which rooms the crew spawns inside.</EntityDescription.spawnpoint>
-  <EntityName.ff_x_wall>InWall L 0</EntityName.ff_x_wall>
+  <EntityName.ff_x_wall>Inside Wall L 0</EntityName.ff_x_wall>
   <EntityDescription.ff_x_wall>A large horizontal wall with collision detection</EntityDescription.ff_x_wall>
-  <EntityName.ff_x_wall_cables>InWall L 0 Cables</EntityName.ff_x_wall_cables>
+  <EntityName.ff_x_wall_cables>Inside Wall L 0 Cables</EntityName.ff_x_wall_cables>
   <EntityDescription.ff_x_wall_cables>A large vertical wall with collision detection</EntityDescription.ff_x_wall_cables>
-  <EntityName.ff_y_wall>InWall L 90</EntityName.ff_y_wall>
+  <EntityName.ff_y_wall>Inside Wall L 90</EntityName.ff_y_wall>
   <EntityDescription.ff_y_wall>A large vertical wall with collision detection</EntityDescription.ff_y_wall>
-  <EntityName.inwalll90cables>InWall L 90 cables</EntityName.inwalll90cables>
+  <EntityName.inwalll90cables>Inside Wall L 90 cables</EntityName.inwalll90cables>
   <EntityDescription.inwalll90cables>A large vertical wall with collision detection</EntityDescription.inwalll90cables>
-  <EntityName.inwalllcaph1>InWall L Cap H1</EntityName.inwalllcaph1>
+  <EntityName.inwalllcaph1>Large Inside Wall Cap H1</EntityName.inwalllcaph1>
   <EntityDescription.inwalllcaph1>A large wall cap</EntityDescription.inwalllcaph1>
-  <EntityName.inwalllcaph2>InWall L Cap H2</EntityName.inwalllcaph2>
+  <EntityName.inwalllcaph2>Large Inside Wall Cap H2</EntityName.inwalllcaph2>
   <EntityDescription.inwalllcaph2>A large wall cap</EntityDescription.inwalllcaph2>
-  <EntityName.inwalllcaph3>InWall L Cap H3</EntityName.inwalllcaph3>
+  <EntityName.inwalllcaph3>Large Inside Wall Cap H3</EntityName.inwalllcaph3>
   <EntityDescription.inwalllcaph3>A large wall cap</EntityDescription.inwalllcaph3>
-  <EntityName.inwalllcapy1>InWall L Cap V1</EntityName.inwalllcapy1>
+  <EntityName.inwalllcapy1>Large Inside Wall Cap V1</EntityName.inwalllcapy1>
   <EntityDescription.inwalllcapy1>A large wall cap</EntityDescription.inwalllcapy1>
-  <EntityName.inwalllcapy2>InWall L Cap V2</EntityName.inwalllcapy2>
+  <EntityName.inwalllcapy2>Large Inside Wall Cap V2</EntityName.inwalllcapy2>
   <EntityDescription.inwalllcapy2>A large wall cap</EntityDescription.inwalllcapy2>
-  <EntityName.inwalllcapy4>InWall L Cap V4</EntityName.inwalllcapy4>
+  <EntityName.inwalllcapy4>Large Inside Wall Cap V4</EntityName.inwalllcapy4>
   <EntityDescription.inwalllcapy4>A large wall cap</EntityDescription.inwalllcapy4>
-  <EntityName.inwallltieh1>InWall L tie H1</EntityName.inwallltieh1>
-  <EntityDescription.inwallltieh1>A large wall cap</EntityDescription.inwallltieh1>
-  <EntityName.inwallltieh2>InWall L tie H2</EntityName.inwallltieh2>
-  <EntityDescription.inwallltieh2>A large wall cap</EntityDescription.inwallltieh2>
-  <EntityName.inwallltieh3>InWall L tie H3</EntityName.inwallltieh3>
-  <EntityDescription.inwallltieh3>A large wall cap</EntityDescription.inwallltieh3>
-  <EntityName.inwallltiev1>InWall L tie V1</EntityName.inwallltiev1>
-  <EntityDescription.inwallltiev1>A large wall cap</EntityDescription.inwallltiev1>
-  <EntityName.inwallltiev2>InWall L tie V2</EntityName.inwallltiev2>
-  <EntityDescription.inwallltiev2>A large wall cap</EntityDescription.inwallltiev2>
-  <EntityName.inwallltiev3>InWall L tie V3</EntityName.inwallltiev3>
-  <EntityDescription.inwallltiev3>A large wall cap</EntityDescription.inwallltiev3>
-  <EntityName.FF_Wall_B>BackWall Ballast A1</EntityName.FF_Wall_B>
+  <EntityName.inwallltieh1>Large Inside Wall Tie H1</EntityName.inwallltieh1>
+  <EntityDescription.inwallltieh1>A large wall tie</EntityDescription.inwallltieh1>
+  <EntityName.inwallltieh2>Large Inside Wall Tie H2</EntityName.inwallltieh2>
+  <EntityDescription.inwallltieh2>A large wall tie</EntityDescription.inwallltieh2>
+  <EntityName.inwallltieh3>Large Inside Wall Tie H3</EntityName.inwallltieh3>
+  <EntityDescription.inwallltieh3>A large wall tie</EntityDescription.inwallltieh3>
+  <EntityName.inwallltiev1>Large Inside Wall Tie V1</EntityName.inwallltiev1>
+  <EntityDescription.inwallltiev1>A large wall tie</EntityDescription.inwallltiev1>
+  <EntityName.inwallltiev2>Large Inside Wall Tie V2</EntityName.inwallltiev2>
+  <EntityDescription.inwallltiev2>A large wall tie</EntityDescription.inwallltiev2>
+  <EntityName.inwallltiev3>Large Inside Wall Tie V3</EntityName.inwallltiev3>
+  <EntityDescription.inwallltiev3>A large wall tie</EntityDescription.inwallltiev3>
+  <EntityName.FF_Wall_B>Back Wall Ballast A1</EntityName.FF_Wall_B>
   <EntityDescription.FF_Wall_B>Ballast back wall</EntityDescription.FF_Wall_B>
-  <EntityName.FF_Wall_BP>BackWall Ballast A2</EntityName.FF_Wall_BP>
+  <EntityName.FF_Wall_BP>Back Wall Ballast A2</EntityName.FF_Wall_BP>
   <EntityDescription.FF_Wall_BP>Ballast back wall with pipe</EntityDescription.FF_Wall_BP>
-  <EntityName.bwbc>BackWall Ballast C</EntityName.bwbc>
+  <EntityName.bwbc>Back Wall Ballast C</EntityName.bwbc>
   <EntityDescription.bwbc>Ballast back wall with pipe</EntityDescription.bwbc>
-  <EntityName.FF_Wall_C1>BackWall C1</EntityName.FF_Wall_C1>
+  <EntityName.FF_Wall_C1>Back Wall C1</EntityName.FF_Wall_C1>
   <EntityDescription.FF_Wall_C1>Mushy grey wall</EntityDescription.FF_Wall_C1>
-  <EntityName.FF_Wall_C2>BackWall C2</EntityName.FF_Wall_C2>
+  <EntityName.FF_Wall_C2>Back Wall C2</EntityName.FF_Wall_C2>
   <EntityDescription.FF_Wall_C2>Mushy grey wall</EntityDescription.FF_Wall_C2>
-  <EntityName.FF_Wall_C3>BackWall C3</EntityName.FF_Wall_C3>
+  <EntityName.FF_Wall_C3>Back Wall C3</EntityName.FF_Wall_C3>
   <EntityDescription.FF_Wall_C3>Mushy grey Greeble wall</EntityDescription.FF_Wall_C3>
-  <EntityName.FF_Wall_D1>BackWall D1</EntityName.FF_Wall_D1>
+  <EntityName.FF_Wall_D1>Back Wall D1</EntityName.FF_Wall_D1>
   <EntityDescription.FF_Wall_D1>Metal wall 1</EntityDescription.FF_Wall_D1>
-  <EntityName.FF_Wall_D2>BackWall D2</EntityName.FF_Wall_D2>
+  <EntityName.FF_Wall_D2>Back Wall D2</EntityName.FF_Wall_D2>
   <EntityDescription.FF_Wall_D2>Metal wall 2</EntityDescription.FF_Wall_D2>
-  <EntityName.FF_Wall_D3>BackWall D3</EntityName.FF_Wall_D3>
+  <EntityName.FF_Wall_D3>Back Wall D3</EntityName.FF_Wall_D3>
   <EntityDescription.FF_Wall_D3>Metal wall 3</EntityDescription.FF_Wall_D3>
-  <EntityName.FF_Wall_E>BackWall E</EntityName.FF_Wall_E>
+  <EntityName.FF_Wall_E>Back Wall E</EntityName.FF_Wall_E>
   <EntityDescription.FF_Wall_E>Block wall lit</EntityDescription.FF_Wall_E>
-  <EntityName.FF_Wall_G1>BackWall G1</EntityName.FF_Wall_G1>
-  <EntityDescription.FF_Wall_G1>General grey back wall 1</EntityDescription.FF_Wall_G1>
-  <EntityName.FF_Wall_G2>BackWall G2</EntityName.FF_Wall_G2>
-  <EntityDescription.FF_Wall_G2>General grey back wall 2</EntityDescription.FF_Wall_G2>
-  <EntityName.FF_Wall_G3>BackWall G3</EntityName.FF_Wall_G3>
-  <EntityDescription.FF_Wall_G3>General grey back wall 3</EntityDescription.FF_Wall_G3>
-  <EntityName.FF_Wall_H1>BackWall H1</EntityName.FF_Wall_H1>
+  <EntityName.FF_Wall_G1>Back Wall G1</EntityName.FF_Wall_G1>
+  <EntityDescription.FF_Wall_G1>General grey back wall</EntityDescription.FF_Wall_G1>
+  <EntityName.FF_Wall_G2>Back Wall G2</EntityName.FF_Wall_G2>
+  <EntityDescription.FF_Wall_G2>General grey back wall</EntityDescription.FF_Wall_G2>
+  <EntityName.FF_Wall_G3>Back Wall G3</EntityName.FF_Wall_G3>
+  <EntityDescription.FF_Wall_G3>General grey back wall</EntityDescription.FF_Wall_G3>
+  <EntityName.FF_Wall_H1>Back Wall H1</EntityName.FF_Wall_H1>
   <EntityDescription.FF_Wall_H1>Airlock Background</EntityDescription.FF_Wall_H1>
   <EntityName.extA_Tail>Tail Fin Old A</EntityName.extA_Tail>
-  <EntityDescription.extA_Tail>Submarine tail temp</EntityDescription.extA_Tail>
+  <EntityDescription.extA_Tail>Submarine tail</EntityDescription.extA_Tail>
   <EntityName.tailfina>Tail Fin A</EntityName.tailfina>
-  <EntityDescription.tailfina>Submarine tail temp</EntityDescription.tailfina>
+  <EntityDescription.tailfina>Submarine tail</EntityDescription.tailfina>
   <EntityName.tailfinb>Tail Fin B</EntityName.tailfinb>
-  <EntityDescription.tailfinb>Submarine tail temp</EntityDescription.tailfinb>
+  <EntityDescription.tailfinb>Submarine tail</EntityDescription.tailfinb>
   <EntityName.tailfinc>Tail Fin C</EntityName.tailfinc>
-  <EntityDescription.tailfinc>Submarine tail temp</EntityDescription.tailfinc>
+  <EntityDescription.tailfinc>Submarine tail</EntityDescription.tailfinc>
   <EntityName.tailfind>Tail Fin D</EntityName.tailfind>
-  <EntityDescription.tailfind>Submarine tail temp</EntityDescription.tailfind>
-  <EntityName.extA_Front>Front</EntityName.extA_Front>
-  <EntityDescription.extA_Front>Submarine front A temp</EntityDescription.extA_Front>
-  <EntityName.subfrontb>Front</EntityName.subfrontb>
-  <EntityDescription.subfrontb>Submarine front B temp</EntityDescription.subfrontb>
-  <EntityName.shella90deg>Shell A 90 deg</EntityName.shella90deg>
+  <EntityDescription.tailfind>Submarine tail</EntityDescription.tailfind>
+  <EntityName.extA_Front>Submarine front A</EntityName.extA_Front>
+  <EntityDescription.extA_Front>Front</EntityDescription.extA_Front>
+  <EntityName.subfrontb>Submarine front B</EntityName.subfrontb>
+  <EntityDescription.subfrontb>Front</EntityDescription.subfrontb>
+  <EntityName.shella90deg>Shell A 90 degrees</EntityName.shella90deg>
   <EntityDescription.shella90deg>Submarine wall</EntityDescription.shella90deg>
-  <EntityName.shella16deg>Shell A 16 deg</EntityName.shella16deg>
+  <EntityName.shella16deg>Shell A 16 degrees</EntityName.shella16deg>
   <EntityDescription.shella16deg>Submarine wall</EntityDescription.shella16deg>
-  <EntityName.shella34deg>Shell A 34 deg</EntityName.shella34deg>
+  <EntityName.shella34deg>Shell A 34 degrees</EntityName.shella34deg>
   <EntityDescription.shella34deg>Submarine wall</EntityDescription.shella34deg>
-  <EntityName.shella0deg>Shell A 0 deg</EntityName.shella0deg>
+  <EntityName.shella0deg>Shell A 0 degrees</EntityName.shella0deg>
   <EntityDescription.shella0deg>Submarine wall</EntityDescription.shella0deg>
-  <EntityName.shella04deg>Shell A 04 deg</EntityName.shella04deg>
+  <EntityName.shella04deg>Shell A 04 degrees</EntityName.shella04deg>
   <EntityDescription.shella04deg>Submarine wall</EntityDescription.shella04deg>
-  <EntityName.shella14adeg>Shell A 14 deg</EntityName.shella14adeg>
+  <EntityName.shella14adeg>Shell A 14 degrees</EntityName.shella14adeg>
   <EntityDescription.shella14adeg>Submarine wall</EntityDescription.shella14adeg>
-  <EntityName.shella52deg>Shell A 52 deg</EntityName.shella52deg>
+  <EntityName.shella52deg>Shell A 52 degrees</EntityName.shella52deg>
   <EntityDescription.shella52deg>Submarine wall</EntityDescription.shella52deg>
-  <EntityName.shella16degb>Shell A 16 deg B</EntityName.shella16degb>
+  <EntityName.shella16degb>Shell A 16 degrees B</EntityName.shella16degb>
   <EntityDescription.shella16degb>Submarine wall</EntityDescription.shella16degb>
-  <EntityName.shella25deg>Shell A 25 deg</EntityName.shella25deg>
+  <EntityName.shella25deg>Shell A 25 degrees</EntityName.shella25deg>
   <EntityDescription.shella25deg>Submarine wall</EntityDescription.shella25deg>
-  <EntityName.shella45deg>Shell A 45 deg</EntityName.shella45deg>
+  <EntityName.shella45deg>Shell A 45 degrees</EntityName.shella45deg>
   <EntityDescription.shella45deg>Submarine wall</EntityDescription.shella45deg>
-  <EntityName.shella32deg>Shell A 32 deg</EntityName.shella32deg>
+  <EntityName.shella32deg>Shell A 32 degrees</EntityName.shella32deg>
   <EntityDescription.shella32deg>Submarine wall</EntityDescription.shella32deg>
-  <EntityName.shella14degb>Shell A 14 deg B</EntityName.shella14degb>
+  <EntityName.shella14degb>Shell A 14 degrees B</EntityName.shella14degb>
   <EntityDescription.shella14degb>Submarine wall</EntityDescription.shella14degb>
-  <EntityName.shella43deg>Shell A 43 deg</EntityName.shella43deg>
+  <EntityName.shella43deg>Shell A 43 degrees</EntityName.shella43deg>
   <EntityDescription.shella43deg>Submarine wall</EntityDescription.shella43deg>
-  <EntityName.Shella51deg>Shell A 51 deg</EntityName.Shella51deg>
+  <EntityName.Shella51deg>Shell A 51 degrees</EntityName.Shella51deg>
   <EntityDescription.Shella51deg>Submarine wall</EntityDescription.Shella51deg>
-  <EntityName.Shella47deg>Shell A 47 deg</EntityName.Shella47deg>
+  <EntityName.Shella47deg>Shell A 47 degrees</EntityName.Shella47deg>
   <EntityDescription.Shella47deg>Submarine wall</EntityDescription.Shella47deg>
-  <EntityName.Shella60deg>Shell A 60 deg</EntityName.Shella60deg>
+  <EntityName.Shella60deg>Shell A 60 degrees</EntityName.Shella60deg>
   <EntityDescription.Shella60deg>Submarine wall</EntityDescription.Shella60deg>
-  <EntityName.Shella18deg>Shell A 18 deg</EntityName.Shella18deg>
+  <EntityName.Shella18deg>Shell A 18 degrees</EntityName.Shella18deg>
   <EntityDescription.Shella18deg>Submarine wall</EntityDescription.Shella18deg>
-  <EntityName.Shella70deg>Shell A 70 deg</EntityName.Shella70deg>
+  <EntityName.Shella70deg>Shell A 70 degrees</EntityName.Shella70deg>
   <EntityDescription.Shella70deg>Submarine wall</EntityDescription.Shella70deg>
-  <EntityName.shella90degcurve>Shell A 90 deg Curve</EntityName.shella90degcurve>
+  <EntityName.shella90degcurve>Shell A 90 degrees Curve</EntityName.shella90degcurve>
   <EntityDescription.shella90degcurve>Submarine wall</EntityDescription.shella90degcurve>
-  <EntityName.shella45degb>Shell A 45 deg B</EntityName.shella45degb>
+  <EntityName.shella45degb>Shell A 45 degrees B</EntityName.shella45degb>
   <EntityDescription.shella45degb>Submarine wall</EntityDescription.shella45degb>
-  <EntityName.shella57deg>Shell A 57 deg</EntityName.shella57deg>
+  <EntityName.shella57deg>Shell A 57 degrees</EntityName.shella57deg>
   <EntityDescription.shella57deg>Submarine wall</EntityDescription.shella57deg>
-  <EntityName.shella40deg>Shell A 40 deg</EntityName.shella40deg>
+  <EntityName.shella40deg>Shell A 40 degrees</EntityName.shella40deg>
   <EntityDescription.shella40deg>Submarine wall</EntityDescription.shella40deg>
-  <EntityName.shella61deg>Shell A 61 deg</EntityName.shella61deg>
+  <EntityName.shella61deg>Shell A 61 degrees</EntityName.shella61deg>
   <EntityDescription.shella61deg>Submarine wall</EntityDescription.shella61deg>
-  <EntityName.shella17deg>Shell A 17 deg</EntityName.shella17deg>
+  <EntityName.shella17deg>Shell A 17 degrees</EntityName.shella17deg>
   <EntityDescription.shella17deg>Submarine wall</EntityDescription.shella17deg>
-  <EntityName.shella34degb>Shell A 34 deg B</EntityName.shella34degb>
+  <EntityName.shella34degb>Shell A 34 degrees B</EntityName.shella34degb>
   <EntityDescription.shella34degb>Submarine wall</EntityDescription.shella34degb>
-  <EntityName.shella26deg>Shell A 26 deg</EntityName.shella26deg>
+  <EntityName.shella26deg>Shell A 26 degrees</EntityName.shella26deg>
   <EntityDescription.shella26deg>Submarine wall</EntityDescription.shella26deg>
-  <EntityName.shella54deg>Shell A 54 deg</EntityName.shella54deg>
+  <EntityName.shella54deg>Shell A 54 degrees</EntityName.shella54deg>
   <EntityDescription.shella54deg>Submarine wall</EntityDescription.shella54deg>
-  <EntityName.shella38deg>Shell A 38 deg</EntityName.shella38deg>
+  <EntityName.shella38deg>Shell A 38 degrees</EntityName.shella38deg>
   <EntityDescription.shella38deg>Submarine wall</EntityDescription.shella38deg>
   <EntityName.shellacombo11>Shell A combo 1 1</EntityName.shellacombo11>
   <EntityDescription.shellacombo11>Submarine wall</EntityDescription.shellacombo11>
@@ -1086,19 +1086,19 @@
   <EntityDescription.largeplatform>Walkable platform which a character may optionally drop down from or climb on</EntityDescription.largeplatform>
   <EntityName.platform>Platform Basic</EntityName.platform>
   <EntityDescription.platform>Walkable platform which a character may optionally drop down from or climb on</EntityDescription.platform>
-  <EntityName.roughbgwall>BackWall Rough</EntityName.roughbgwall>
+  <EntityName.roughbgwall>Back Wall Rough</EntityName.roughbgwall>
   <EntityDescription.roughbgwall><!-- No description --></EntityDescription.roughbgwall>
-  <EntityName.cleanbgwall>BackWall Clean</EntityName.cleanbgwall>
+  <EntityName.cleanbgwall>Back Wall Clean</EntityName.cleanbgwall>
   <EntityDescription.cleanbgwall><!-- No description --></EntityDescription.cleanbgwall>
-  <EntityName.bgpanels>BackWall Panels</EntityName.bgpanels>
+  <EntityName.bgpanels>Back Wall Panels</EntityName.bgpanels>
   <EntityDescription.bgpanels><!-- No description --></EntityDescription.bgpanels>
-  <EntityName.bgpanelswindow>BackWall Window</EntityName.bgpanelswindow>
+  <EntityName.bgpanelswindow>Back Wall Window</EntityName.bgpanelswindow>
   <EntityDescription.bgpanelswindow><!-- No description --></EntityDescription.bgpanelswindow>
-  <EntityName.bgorangepanels>BackWall Orange Panels</EntityName.bgorangepanels>
+  <EntityName.bgorangepanels>Back Wall Orange Panels</EntityName.bgorangepanels>
   <EntityDescription.bgorangepanels><!-- No description --></EntityDescription.bgorangepanels>
-  <EntityName.bgorangepanelwindow>BackWall Orange Panels Window</EntityName.bgorangepanelwindow>
+  <EntityName.bgorangepanelwindow>Back Wall Orange Panels Window</EntityName.bgorangepanelwindow>
   <EntityDescription.bgorangepanelwindow><!-- No description --></EntityDescription.bgorangepanelwindow>
-  <EntityName.PipesBackground>BackWall Pipes</EntityName.PipesBackground>
+  <EntityName.PipesBackground>Back Wall Pipes</EntityName.PipesBackground>
   <EntityDescription.PipesBackground><!-- No description --></EntityDescription.PipesBackground>
   <EntityName.SlopeForward>Slope Forwards</EntityName.SlopeForward>
   <EntityDescription.SlopeForward><!-- No description --></EntityDescription.SlopeForward>
@@ -1164,9 +1164,9 @@
   <EntityDescription.periscope>A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun.</EntityDescription.periscope>
   <EntityName.railgunloader>Railgun Loader</EntityName.railgunloader>
   <EntityDescription.railgunloader>Feeds railgun ammunition into a linked railgun</EntityDescription.railgunloader>
-  <EntityName.railgunloadersinglevertical>Railgun Loader Single</EntityName.railgunloadersinglevertical>
+  <EntityName.railgunloadersinglevertical>Railgun Loader Single Vertical</EntityName.railgunloadersinglevertical>
   <EntityDescription.railgunloadersinglevertical>Feeds railgun ammunition into a linked railgun. Single shot version</EntityDescription.railgunloadersinglevertical>
-  <EntityName.railgunloadersinglehorizontal>Railgun Loader Single</EntityName.railgunloadersinglehorizontal>
+  <EntityName.railgunloadersinglehorizontal>Railgun Loader Single Horizontal</EntityName.railgunloadersinglehorizontal>
   <EntityDescription.railgunloadersinglehorizontal>Feeds railgun ammunition into a linked railgun. Single shot version</EntityDescription.railgunloadersinglehorizontal>
 
   <!-- Equipment -->
@@ -1187,7 +1187,7 @@
   <EntityName.bluejumpsuit>Blue Jumpsuit</EntityName.bluejumpsuit>
   <EntityDescription.bluejumpsuit>The fire-resistant fabric offers some protection against fires.</EntityDescription.bluejumpsuit>
   <EntityName.toolbox>Toolbox</EntityName.toolbox>
-  <EntityDescription.toolbox><!-- No description --></EntityDescription.toolbox>
+  <EntityDescription.toolbox>A portable container for storing tools</EntityDescription.toolbox>
   <EntityName.headset>Headset</EntityName.headset>
   <EntityDescription.headset>Allows remote communication between the crew.</EntityDescription.headset>
   <EntityName.clownmask>Clown Mask</EntityName.clownmask>
@@ -1243,7 +1243,7 @@
   <EntityName.flare>Flare</EntityName.flare>
   <EntityDescription.flare>Temporary handheld light. Useful for marking a path while exploring outside the sub</EntityDescription.flare>
   <EntityName.alienflare>Alien Flare</EntityName.alienflare>
-  <EntityDescription.alienflare>Temporary handheld light. Useful for marking a path while exploring outside the sub. Burns for longer</EntityDescription.alienflare>
+  <EntityDescription.alienflare>Temporary handheld light. Useful for marking a path while exploring outside the sub. Burns for longer than a regular flare.</EntityDescription.alienflare>
   <EntityName.coilgunammobox>Coilgun Ammunition Box</EntityName.coilgunammobox>
   <EntityDescription.coilgunammobox>Ammunition for the coilgun</EntityDescription.coilgunammobox>
   <EntityName.uex>UEX</EntityName.uex>
@@ -1298,7 +1298,7 @@
   <EntityDescription.junctionbox>Serves as a hub for power distribution and relaying signals between devices.</EntityDescription.junctionbox>
   <EntityName.battery>Battery</EntityName.battery>
   <EntityDescription.battery>Generally used for storing backup power in case of a reactor failure.</EntityDescription.battery>
-  <EntityName.shuttlebattery>ShuttleBattery</EntityName.shuttlebattery>
+  <EntityName.shuttlebattery>Shuttle Battery</EntityName.shuttlebattery>
   <EntityDescription.shuttlebattery>Generally used for storing backup power in case of a reactor failure.</EntityDescription.shuttlebattery>
   <EntityName.supercapacitor>Supercapacitor</EntityName.supercapacitor>
   <EntityDescription.supercapacitor>Can deliver charge much faster than batteries.</EntityDescription.supercapacitor>
@@ -1597,7 +1597,7 @@
   <EntityName.securemetalcrate>Secure Metal Crate</EntityName.securemetalcrate>
   <EntityDescription.securemetalcrate>A secure vessel in which items may be stored</EntityDescription.securemetalcrate>
   <EntityName.explosivecrate>Explosive Crate</EntityName.explosivecrate>
-  <EntityDescription.explosivecrate>A vessel in which exlposives may be stored</EntityDescription.explosivecrate>
+  <EntityDescription.explosivecrate>A vessel in which explosives may be stored</EntityDescription.explosivecrate>
   <EntityName.chemicalcrate>Chemical Crate</EntityName.chemicalcrate>
   <EntityDescription.chemicalcrate>A vessel in which chemicals may be stored</EntityDescription.chemicalcrate>
   <EntityName.extinguisherbracket>Fire Extinguisher Bracket</EntityName.extinguisherbracket>
@@ -1656,11 +1656,11 @@
   <EntityDescription.RuinWallHorizontalSmall>A small wall with collision for alien ruins.</EntityDescription.RuinWallHorizontalSmall>
   <EntityName.RuinWallVerticalSmall>Ruin Wall Small Vertical</EntityName.RuinWallVerticalSmall>
   <EntityDescription.RuinWallVerticalSmall>A small wall with collision for alien ruins.</EntityDescription.RuinWallVerticalSmall>
-  <EntityName.RuinBack>Ruin BackWall Basic</EntityName.RuinBack>
+  <EntityName.RuinBack>Ruin Back Wall Basic</EntityName.RuinBack>
   <EntityDescription.RuinBack>A back wall for alien ruins.</EntityDescription.RuinBack>
-  <EntityName.RuinBackCarvings>Ruin BackWall Carvings</EntityName.RuinBackCarvings>
+  <EntityName.RuinBackCarvings>Ruin Back Wall Carvings</EntityName.RuinBackCarvings>
   <EntityDescription.RuinBackCarvings>A back wall with carven symbols for alien ruins.</EntityDescription.RuinBackCarvings>
-  <EntityName.RuinBackFractal>Ruin BackWall Fractal</EntityName.RuinBackFractal>
+  <EntityName.RuinBackFractal>Ruin Back Wall Fractal</EntityName.RuinBackFractal>
   <EntityDescription.RuinBackFractal>A back wall with fractal pattern for alien ruins.</EntityDescription.RuinBackFractal>
   <EntityName.RuinBlock>Ruin Prop Block</EntityName.RuinBlock>
   <EntityDescription.RuinBlock>A decorative prop for alien ruins.</EntityDescription.RuinBlock>
@@ -1668,15 +1668,15 @@
   <EntityDescription.RuinFractalBall>A decorative prop for alien ruins.</EntityDescription.RuinFractalBall>
   <EntityName.RuinClaw>Ruin Prop Claw</EntityName.RuinClaw>
   <EntityDescription.RuinClaw>A decorative prop for alien ruins.</EntityDescription.RuinClaw>
-  <EntityName.skyholderartifact>Alien Artifact</EntityName.skyholderartifact>
+  <EntityName.skyholderartifact>Sky Alien Artifact</EntityName.skyholderartifact>
   <EntityDescription.skyholderartifact>Artifact found in alien ruins.</EntityDescription.skyholderartifact>
-  <EntityName.thermalartifact>Alien Artifact</EntityName.thermalartifact>
+  <EntityName.thermalartifact>Thermal Alien Artifact</EntityName.thermalartifact>
   <EntityDescription.thermalartifact>Artifact found in alien ruins.</EntityDescription.thermalartifact>
-  <EntityName.faradayartifact>Alien Artifact</EntityName.faradayartifact>
+  <EntityName.faradayartifact>Faraday Alien Artifact</EntityName.faradayartifact>
   <EntityDescription.faradayartifact>Artifact found in alien ruins.</EntityDescription.faradayartifact>
-  <EntityName.nasonovartifact>Alien Artifact</EntityName.nasonovartifact>
+  <EntityName.nasonovartifact>Nasonov Alien Artifact</EntityName.nasonovartifact>
   <EntityDescription.nasonovartifact>Artifact found in alien ruins.</EntityDescription.nasonovartifact>
-  <EntityName.psychosisartifact>Alien Artifact</EntityName.psychosisartifact>
+  <EntityName.psychosisartifact>Psychosis Alien Artifact</EntityName.psychosisartifact>
   <EntityDescription.psychosisartifact>Artifact found in alien ruins.</EntityDescription.psychosisartifact>
   <EntityName.alientrinket1>Alien Trinket</EntityName.alientrinket1>
   <EntityDescription.alientrinket1>Minor artifact found in alien ruins.</EntityDescription.alientrinket1>
@@ -1740,61 +1740,61 @@
   <EntityDescription.smalldivinggearcabinet>A cabinet with diving masks, underwater scooters and handheld sonars.</EntityDescription.smalldivinggearcabinet>
   <EntityName.alienturretassembly>Alien Turret Assembly</EntityName.alienturretassembly>
   <EntityDescription.alienturretassembly><!-- No description --></EntityDescription.alienturretassembly>
-  <EntityName.alienarmoryassembly1>AlienArmoryAssembly1</EntityName.alienarmoryassembly1>
+  <EntityName.alienarmoryassembly1>Alien Armory Assembly</EntityName.alienarmoryassembly1>
   <EntityDescription.alienarmoryassembly1><!-- No description --></EntityDescription.alienarmoryassembly1>
-  <EntityName.aliencellbottom>AlienCellBottom</EntityName.aliencellbottom>
+  <EntityName.aliencellbottom>Alien Cell Bottom</EntityName.aliencellbottom>
   <EntityDescription.aliencellbottom><!-- No description --></EntityDescription.aliencellbottom>
-  <EntityName.aliencelltop>AlienCellTop</EntityName.aliencelltop>
+  <EntityName.aliencelltop>Alien Cell Top</EntityName.aliencelltop>
   <EntityDescription.aliencelltop><!-- No description --></EntityDescription.aliencelltop>
-  <EntityName.alienchestlarge>AlienChestLarge</EntityName.alienchestlarge>
+  <EntityName.alienchestlarge>Alien Chest Large</EntityName.alienchestlarge>
   <EntityDescription.alienchestlarge><!-- No description --></EntityDescription.alienchestlarge>
-  <EntityName.alienchestsmall>AlienChestSmall</EntityName.alienchestsmall>
+  <EntityName.alienchestsmall>Alien Chest Small</EntityName.alienchestsmall>
   <EntityDescription.alienchestsmall><!-- No description --></EntityDescription.alienchestsmall>
-  <EntityName.aliendoorassembly1>AlienDoorAssembly1</EntityName.aliendoorassembly1>
+  <EntityName.aliendoorassembly1>Alien Door Assembly 1</EntityName.aliendoorassembly1>
   <EntityDescription.aliendoorassembly1><!-- No description --></EntityDescription.aliendoorassembly1>
-  <EntityName.aliendoorassembly2>AlienDoorAssembly2</EntityName.aliendoorassembly2>
+  <EntityName.aliendoorassembly2>Alien Door Assembly 2</EntityName.aliendoorassembly2>
   <EntityDescription.aliendoorassembly2><!-- No description --></EntityDescription.aliendoorassembly2>
-  <EntityName.aliendoorassembly5>AlienDoorAssembly5</EntityName.aliendoorassembly5>
+  <EntityName.aliendoorassembly5>Alien Door Assembly 5</EntityName.aliendoorassembly5>
   <EntityDescription.aliendoorassembly5><!-- No description --></EntityDescription.aliendoorassembly5>
-  <EntityName.alienfractalspawnpoint>AlienFractalSpawnpoint</EntityName.alienfractalspawnpoint>
+  <EntityName.alienfractalspawnpoint>Alien Fractal Spawnpoint</EntityName.alienfractalspawnpoint>
   <EntityDescription.alienfractalspawnpoint><!-- No description --></EntityDescription.alienfractalspawnpoint>
-  <EntityName.aliengenericroomassembly1>AlienGenericRoomAssembly1</EntityName.aliengenericroomassembly1>
+  <EntityName.aliengenericroomassembly1>Alien Generic Room Assembly 1</EntityName.aliengenericroomassembly1>
   <EntityDescription.aliengenericroomassembly1><!-- No description --></EntityDescription.aliengenericroomassembly1>
-  <EntityName.aliengenericroomassembly2>AlienGenericRoomAssembly2</EntityName.aliengenericroomassembly2>
+  <EntityName.aliengenericroomassembly2>Alien Generic Room Assembly 2</EntityName.aliengenericroomassembly2>
   <EntityDescription.aliengenericroomassembly2><!-- No description --></EntityDescription.aliengenericroomassembly2>
-  <EntityName.aliengenericroomassembly3>AlienGenericRoomAssembly3</EntityName.aliengenericroomassembly3>
+  <EntityName.aliengenericroomassembly3>Alien Generic Room Assembly 3</EntityName.aliengenericroomassembly3>
   <EntityDescription.aliengenericroomassembly3><!-- No description --></EntityDescription.aliengenericroomassembly3>
-  <EntityName.aliengenericroomassembly4>AlienGenericRoomAssembly4</EntityName.aliengenericroomassembly4>
+  <EntityName.aliengenericroomassembly4>Alien Generic Room Assembly 4</EntityName.aliengenericroomassembly4>
   <EntityDescription.aliengenericroomassembly4><!-- No description --></EntityDescription.aliengenericroomassembly4>
-  <EntityName.aliengenericroomassembly5>AlienGenericRoomAssembly5</EntityName.aliengenericroomassembly5>
+  <EntityName.aliengenericroomassembly5>Alien Generic Room Assembly 5</EntityName.aliengenericroomassembly5>
   <EntityDescription.aliengenericroomassembly5><!-- No description --></EntityDescription.aliengenericroomassembly5>
-  <EntityName.aliengenericroomassembly6>AlienGenericRoomAssembly6</EntityName.aliengenericroomassembly6>
+  <EntityName.aliengenericroomassembly6>Alien Generic Room Assembly 6</EntityName.aliengenericroomassembly6>
   <EntityDescription.aliengenericroomassembly6><!-- No description --></EntityDescription.aliengenericroomassembly6>
-  <EntityName.aliengenericroomassembly7>AlienGenericRoomAssembly7</EntityName.aliengenericroomassembly7>
+  <EntityName.aliengenericroomassembly7>Alien Generic Room Assembly 7</EntityName.aliengenericroomassembly7>
   <EntityDescription.aliengenericroomassembly7><!-- No description --></EntityDescription.aliengenericroomassembly7>
-  <EntityName.aliengenericroomassembly8>AlienGenericRoomAssembly8</EntityName.aliengenericroomassembly8>
+  <EntityName.aliengenericroomassembly8>Alien Generic Room Assembly 8</EntityName.aliengenericroomassembly8>
   <EntityDescription.aliengenericroomassembly8><!-- No description --></EntityDescription.aliengenericroomassembly8>
-  <EntityName.aliengenericroomassembly9>AlienGenericRoomAssembly9</EntityName.aliengenericroomassembly9>
+  <EntityName.aliengenericroomassembly9>Alien Generic Room Assembly9</EntityName.aliengenericroomassembly9>
   <EntityDescription.aliengenericroomassembly9><!-- No description --></EntityDescription.aliengenericroomassembly9>
-  <EntityName.alienhatchassembly>AlienHatchAssembly</EntityName.alienhatchassembly>
+  <EntityName.alienhatchassembly>Alien Hatch Assembly</EntityName.alienhatchassembly>
   <EntityDescription.alienhatchassembly><!-- No description --></EntityDescription.alienhatchassembly>
-  <EntityName.alienhatchassembly2>AlienHatchAssembly2</EntityName.alienhatchassembly2>
+  <EntityName.alienhatchassembly2>Alien Hatch Assembly 2</EntityName.alienhatchassembly2>
   <EntityDescription.alienhatchassembly2><!-- No description --></EntityDescription.alienhatchassembly2>
-  <EntityName.alienpumpassembly>AlienPumpAssembly</EntityName.alienpumpassembly>
+  <EntityName.alienpumpassembly>Alien Pump Assembly</EntityName.alienpumpassembly>
   <EntityDescription.alienpumpassembly><!-- No description --></EntityDescription.alienpumpassembly>
-  <EntityName.alienpumpassembly1>AlienPumpAssembly1</EntityName.alienpumpassembly1>
+  <EntityName.alienpumpassembly1>Alien Pump Assembly 1</EntityName.alienpumpassembly1>
   <EntityDescription.alienpumpassembly1><!-- No description --></EntityDescription.alienpumpassembly1>
-  <EntityName.alienpumpassembly2>AlienPumpAssembly2</EntityName.alienpumpassembly2>
+  <EntityName.alienpumpassembly2>Alien Pump Assembly 2</EntityName.alienpumpassembly2>
   <EntityDescription.alienpumpassembly2><!-- No description --></EntityDescription.alienpumpassembly2>
-  <EntityName.alienvaultassembly1>AlienVaultAssembly1</EntityName.alienvaultassembly1>
+  <EntityName.alienvaultassembly1>Alien Vault Assembly 1</EntityName.alienvaultassembly1>
   <EntityDescription.alienvaultassembly1><!-- No description --></EntityDescription.alienvaultassembly1>
-  <EntityName.alienverticalassembly1>AlienVerticalAssembly1</EntityName.alienverticalassembly1>
+  <EntityName.alienverticalassembly1>Alien Vertical Assembly 1</EntityName.alienverticalassembly1>
   <EntityDescription.alienverticalassembly1><!-- No description --></EntityDescription.alienverticalassembly1>
-  <EntityName.alienverticalassembly2>AlienVerticalAssembly2</EntityName.alienverticalassembly2>
+  <EntityName.alienverticalassembly2>Alien Vertical Assembly 2</EntityName.alienverticalassembly2>
   <EntityDescription.alienverticalassembly2><!-- No description --></EntityDescription.alienverticalassembly2>
-  <EntityName.alienverticalassembly3>AlienVerticalAssembly3</EntityName.alienverticalassembly3>
+  <EntityName.alienverticalassembly3>Alien Vertical Assembly 3</EntityName.alienverticalassembly3>
   <EntityDescription.alienverticalassembly3><!-- No description --></EntityDescription.alienverticalassembly3>
-  <EntityName.chargedaliengenerator>ChargedAlienGenerator</EntityName.chargedaliengenerator>
+  <EntityName.chargedaliengenerator>Charged Alien Generator</EntityName.chargedaliengenerator>
   <EntityDescription.chargedaliengenerator><!-- No description --></EntityDescription.chargedaliengenerator>
 
   <!-- Particle editor -->
