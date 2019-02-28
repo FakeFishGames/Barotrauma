@@ -10,11 +10,17 @@
     vitality="400"
     doesbleed="false"/>
 
-  <!-- TODO: new sounds -->
-  <sound file="Content/Characters/Legacymoloch/attack1.ogg" state="Attack" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/attack2.ogg" state="Attack" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="None" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_attack1.ogg" state="Attack" range="5000"/>
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_attack2.ogg" state="Attack" range="5000"/>
+  
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_damage1.ogg" state="Damage" range="5000"/>
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_damage1.ogg" state="Damage" range="5000"/>
+  
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_death1.ogg" state="Die" range="5000"/>
+  
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle1.ogg" state="Idle" range="8000"/>
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle2.ogg" state="Idle" range="8000"/>
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle3.ogg" state="Idle" range="8000"/>  
 
   <ai
     combatstrength="1200"

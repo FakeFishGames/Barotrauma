@@ -662,7 +662,7 @@ namespace Barotrauma
         public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
         public virtual void AddToEditor(ParamsEditor editor)
         {
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true);
             SubParams.ForEach(sp => sp.AddToEditor(editor));
         }
      #endif

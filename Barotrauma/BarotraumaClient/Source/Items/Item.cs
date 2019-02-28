@@ -129,12 +129,36 @@ namespace Barotrauma
             }
         }
 
+        public override bool IsVisible(Rectangle worldView)
+        {
+            //no drawable components and the body has been disabled = nothing to draw
+            if (drawableComponents.Count == 0 && body != null && !body.Enabled)
+            {
+                return false;
+            }
+
+            float padding = 100.0f;
+            Vector2 size = new Vector2(rect.Width + padding, rect.Height + padding);
+            foreach (IDrawableComponent drawable in drawableComponents)
+            {
+                size.X = Math.Max(drawable.DrawSize.X, size.X);
+                size.Y = Math.Max(drawable.DrawSize.Y, size.Y);
+            }
+            size *= 0.5f;
+
+            Vector2 worldPosition = WorldPosition;
+            if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
+            if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;
+
+            return true;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
+            if (!Visible || (!editing && hiddenInGame)) return;
             if (editing && !ShowItems) return;
             
-            Color color = isHighlighted ? Color.Orange : GetSpriteColor();
+            Color color = isHighlighted && !GUI.DisableItemHighlights ? Color.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
             Sprite activeSprite = prefab.sprite;
@@ -821,18 +845,24 @@ namespace Barotrauma
 
         partial void UpdateNetPosition()
         {
+            if (GameMain.Client == null) { return; }
+
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;
             float newAngularVelocity = body.AngularVelocity;
             float newRotation = body.Rotation;
             body.CorrectPosition(positionBuffer, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
 
-            body.TargetPosition = newPosition;
             body.LinearVelocity = newVelocity;
-            body.TargetRotation = newRotation;
             body.AngularVelocity = newAngularVelocity;
-            body.MoveToTargetPosition(lerp: true);
-            
+            if (Vector2.DistanceSquared(newPosition, body.SimPosition) > 0.0001f ||
+                Math.Abs(newRotation - body.Rotation) > 0.01f)
+            {
+                body.TargetPosition = newPosition;
+                body.TargetRotation = newRotation;
+                body.MoveToTargetPosition(lerp: true);
+            }
+
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
@@ -976,7 +1006,7 @@ namespace Barotrauma
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {
-                wifiComponent.TeamID = teamID;
+                wifiComponent.TeamID = (Character.TeamType)teamID;
             }
             if (descriptionChanged) item.Description = itemDesc;
             if (tagsChanged) item.Tags = tags;

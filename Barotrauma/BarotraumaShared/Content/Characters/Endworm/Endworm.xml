@@ -11,9 +11,19 @@
     vitality="10000.0"
     doesbleed="false"/>
 
-  <sound file="Content/Characters/Endworm/endwormidle.ogg" state="None" range="8000" />
-  <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
-  <sound file="Content/Characters/Endworm/endwormattack2.ogg" state="Attack" range="8000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_idle1.ogg" state="None" range="10000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_idle2.ogg" state="None" range="10000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_idle3.ogg" state="None" range="10000" />
+
+  <sound file="Content/Characters/Endworm/ENDWORM_attack1.ogg" state="Attack" range="8000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_attack2.ogg" state="Attack" range="8000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_attack3.ogg" state="Attack" range="8000" />
+  
+  <sound file="Content/Characters/Endworm/ENDWORM_damage1.ogg" state="Damage" range="8000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_damage2.ogg" state="Damage" range="8000" />
+  <sound file="Content/Characters/Endworm/ENDWORM_damage3.ogg" state="Damage" range="8000" />
+  
+  <sound file="Content/Characters/Endworm/ENDWORM_death1.ogg" state="Die" range="8000" />
 
   <ai
     combatstrength="10000"

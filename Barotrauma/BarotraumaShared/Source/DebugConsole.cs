@@ -81,7 +81,7 @@ namespace Barotrauma
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
-        static partial void AddHelpMessage(Command command);
+        static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
@@ -126,11 +126,7 @@ namespace Barotrauma
                     foreach (Command c in commands)
                     {
                         if (string.IsNullOrEmpty(c.help)) continue;
-#if CLIENT
-                        AddHelpMessage(c);
-#else
-                        NewMessage(c.help, Color.Cyan);
-#endif
+                        ShowHelpMessage(c);
                     }
                 }
                 else
@@ -142,7 +138,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        AddHelpMessage(matchingCommand);
+                        ShowHelpMessage(matchingCommand);
                     }
                 }
             }, 
@@ -284,7 +280,7 @@ namespace Barotrauma
             
             commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
 
-            commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
+            //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
@@ -1040,6 +1036,7 @@ namespace Barotrauma
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
+            commands.Add(new Command("toggleitemhighlights", "Toggle the item highlight effect on/off (client-only).", null));
             commands.Add(new Command("togglecharacternames", "Toggle the names hovering above characters on/off (client-only).", null));
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
@@ -1114,7 +1111,7 @@ namespace Barotrauma
 
                 if (validArgs.Length == 0) return command;
 
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % validArgs.Length;
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, validArgs.Length);
                 string autoCompletedArg = validArgs[currentAutoCompletedIndex];
 
                 //add quotation marks to args that contain spaces
@@ -1147,8 +1144,8 @@ namespace Barotrauma
                 }
 
                 if (matchingCommands.Count == 0) return command;
-
-                currentAutoCompletedIndex = (currentAutoCompletedIndex + increment) % matchingCommands.Count;
+                
+                currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, matchingCommands.Count);
                 return matchingCommands[currentAutoCompletedIndex];
             }
         }
@@ -1386,7 +1383,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
                     {
                         //TODO: a way to select which team to spawn to?
-                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : (byte)1;
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;
                     }
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          

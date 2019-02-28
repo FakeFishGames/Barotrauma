@@ -476,13 +476,6 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime);
             
-            if (LinearVelocity.X > 500.0f)
-            {
-                //DebugConsole.ThrowError("CHARACTER EXPLODED");
-                body.ResetDynamics();
-                body.SetTransform(character.SimPosition, 0.0f);           
-            }
-
             if (inWater)
             {
                 body.ApplyWaterForces();
@@ -531,9 +524,10 @@ namespace Barotrauma
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
                             
-                            if (damageTarget is Item && structureBody?.UserData is Item)
+                            if (damageTarget is Item)
                             {
-                                // If the attack is aimed to an item and hits an item, it's successful
+                                // If the attack is aimed to an item and hits an item, it's successful.
+                                // Ignore blocking on items, because it causes cases where a Mudraptor cannot hit the hatch, for example.
                                 wasHit = true;
                             }
                             else if (damageTarget is Structure && structureBody?.UserData is Structure)

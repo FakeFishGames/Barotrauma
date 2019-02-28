@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private bool prevBodyAwake;
+
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";
@@ -239,7 +241,7 @@ namespace Barotrauma
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
             {
-                teamID = wifiComponent.TeamID;
+                teamID = (byte)wifiComponent.TeamID;
                 break;
             }
 

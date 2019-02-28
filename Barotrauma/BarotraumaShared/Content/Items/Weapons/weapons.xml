@@ -132,10 +132,9 @@
     <Body width="28" height="20" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" />
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
-      <Sound file="Content/Items/Weapons/revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
-      <Sound file="Content/Items/Weapons/revolver2.ogg" type="OnUse" range="3000" />
-      <Sound file="Content/Items/Weapons/revolver3.ogg" type="OnUse" range="3000" />
-      <Sound file="Content/Items/Weapons/revolver4.ogg" type="OnUse" range="3000" />
+      <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
+      <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
+      <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
@@ -189,7 +188,8 @@
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
+        <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
         <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
           <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
@@ -197,7 +197,8 @@
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="1000" selectionmode="All" />
+        <sound file="Content/Items/Weapons/Emp.ogg" range="1000" />
         <Explosion range="500" stun="0.5" force="0.1" smoke="false" sparks="true" empstrength="10">
           <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
@@ -245,7 +246,7 @@
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <sound file="Content/Items/Weapons/IncendiumGrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
           <Affliction identifier="burn" strength="100" />
@@ -255,7 +256,7 @@
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <sound file="Content/Items/Weapons/IncendiumGrenade.ogg" />
         <Explosion range="500" stun="1" force="0.1">
           <Affliction identifier="internaldamage" strength="5" />
           <Affliction identifier="burn" strength="100" />
@@ -277,22 +278,22 @@
     <Body width="90" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75">
       <Attack stun="0.2">
-        <Sound file="Content/Items/Weapons/smack.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="2" />
       </Attack>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/stunbaton1.ogg" selectionmode="random" range="500" />
-        <sound file="Content/Items/Weapons/stunbaton2.ogg" range="500" />
-        <sound file="Content/Items/Weapons/stunbaton3.ogg" range="500" />
-        <sound file="Content/Items/Weapons/stunbaton4.ogg" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/stunbaton1.ogg" selectionmode="random" range="500" />
-        <sound file="Content/Items/Weapons/stunbaton2.ogg" range="500" />
-        <sound file="Content/Items/Weapons/stunbaton3.ogg" range="500" />
-        <sound file="Content/Items/Weapons/stunbaton4.ogg" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
+        <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
         <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>

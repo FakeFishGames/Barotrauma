@@ -29,6 +29,7 @@
   <Conversation line="Buckle down, we've got a long road ahead of us!" flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye!" speaker="1"/>
+    <Conversation line="Good luck, guys!" allowedjobs="watchman" speaker="1"/>
   </Conversation>
 
   <Conversation line="Welcome on board! Please keep your hands and arms inside the vehicle at all times." flags="Initial" speakertags="joker" allowedjobs="captain" speaker="0">
@@ -40,6 +41,7 @@
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye!" speaker="1"/>
     <Conversation line="Honkmother have mercy on our souls." speakertags="crazy" speaker="1"/>
+    <Conversation line="Good luck, guys!" allowedjobs="watchman" speaker="1"/>
   </Conversation>
 
   <Conversation line="Is captain speaking! Ready for mission crew and good luck!" flags="Initial" speakertags="brokenenglish" allowedjobs="captain" speaker="0">
@@ -278,9 +280,10 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="This sucks!" speakertags="tough" speaker="0">
+  <Conversation line="This sucks!" speakertags="fearful" speaker="0">
     <Conversation line="I wanna go home!"/>
   </Conversation>
+  
   <Conversation line="I want some action!" maxintensity="0.2" speakertags="tough"/>
   <Conversation line="Smooth seas don't make skillful sailors." speakertags="tough">
     <Conversation line="Rough sea make dead sailors!" speakertags="brokenenglish" speaker="1"/>

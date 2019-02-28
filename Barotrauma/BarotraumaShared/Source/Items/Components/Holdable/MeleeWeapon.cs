@@ -140,7 +140,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip(item);
+            if (item.body.Dir != picker.AnimController.Dir) Flip();
 
             AnimController ac = picker.AnimController;
 
@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
                 string logStr = picker?.LogName + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)
                 {
-                    logStr += "(" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
+                    logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
                 }
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);

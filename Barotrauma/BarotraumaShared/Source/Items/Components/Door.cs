@@ -16,35 +16,21 @@ namespace Barotrauma.Items.Components
     partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private Gap linkedGap;
-
-        private Rectangle window;
-
         private bool isOpen;
 
         private float openState;
-
-        private PhysicsBody body;
-
         private Sprite doorSprite, weldedSprite, brokenSprite;
         private bool scaleBrokenSprite, fadeBrokenSprite;
-
-        private bool isHorizontal;
-
         private bool createdNewGap;
         private bool autoOrientGap;
 
         private bool isStuck;
-        
-        private bool? predictedState;
         private float resetPredictionTimer;
 
         private Rectangle doorRect;
 
         private bool isBroken;
-
-        //openState when the vertices of the convex hull were last calculated
-        private float lastConvexHullState;
-
+        
         public bool IsBroken
         {
             get { return isBroken; }
@@ -63,10 +49,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public PhysicsBody Body
-        {
-            get { return body; }
-        }
+        public PhysicsBody Body { get; private set; }
 
         private float stuck;
         [Serialize(0.0f, false)]
@@ -82,10 +65,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool? PredictedState
-        {
-            get { return predictedState; }
-        }
+        public bool? PredictedState { get; private set; }
 
         public Gap LinkedGap
         {
@@ -98,12 +78,12 @@ namespace Barotrauma.Items.Components
                     linkedGap = e as Gap;
                     if (linkedGap != null)
                     {
-                        linkedGap.PassAmbientLight = window != Rectangle.Empty;
+                        linkedGap.PassAmbientLight = Window != Rectangle.Empty;
                         return linkedGap;
                     }
                 }
                 Rectangle rect = item.Rect;
-                if (isHorizontal)
+                if (IsHorizontal)
                 {
                     rect.Y += 5;
                     rect.Height += 10;
@@ -114,10 +94,10 @@ namespace Barotrauma.Items.Components
                     rect.Width += 10;
                 }
 
-                linkedGap = new Gap(rect, !isHorizontal, Item.Submarine)
+                linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
                     Submarine = item.Submarine,
-                    PassAmbientLight = window != Rectangle.Empty,
+                    PassAmbientLight = Window != Rectangle.Empty,
                     Open = openState
                 };
                 item.linkedTo.Add(linkedGap);
@@ -126,18 +106,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool IsHorizontal
-        {
-            get { return isHorizontal; }
-        }
-        
+        public bool IsHorizontal { get; private set; }
+
         [Serialize("0.0,0.0,0.0,0.0", false)]
-        public Rectangle Window
-        {
-            get { return window; }
-            set { window = value; }
-        }
-        
+        public Rectangle Window { get; set; }
+
         [Editable, Serialize(false, true)]
         public bool IsOpen
         {
@@ -156,7 +129,7 @@ namespace Barotrauma.Items.Components
             {                
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                float size = isHorizontal ? item.Rect.Width : item.Rect.Height;
+                float size = IsHorizontal ? item.Rect.Width : item.Rect.Height;
                 if (Math.Abs(lastConvexHullState - openState) * size < 5.0f) { return; }
                 UpdateConvexHulls();
                 lastConvexHullState = openState;
@@ -174,7 +147,7 @@ namespace Barotrauma.Items.Components
         public Door(Item item, XElement element)
             : base(item, element)
         {
-            isHorizontal = element.GetAttributeBool("horizontal", false);
+            IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
 
@@ -203,7 +176,7 @@ namespace Barotrauma.Items.Components
                 (int)(doorSprite.size.X * item.Scale),
                 (int)(doorSprite.size.Y * item.Scale));
 
-            body = new PhysicsBody(
+            Body = new PhysicsBody(
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
                 0.0f,
@@ -214,7 +187,7 @@ namespace Barotrauma.Items.Components
                 BodyType = BodyType.Static,
                 Friction = 0.5f
             };
-            body.SetTransform(
+            Body.SetTransform(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
             
@@ -225,7 +198,7 @@ namespace Barotrauma.Items.Components
         {
             base.Move(amount);
             
-            body?.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            Body?.SetTransform(Body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
 #if CLIENT
             UpdateConvexHulls();
@@ -249,7 +222,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f) return true; //repairs
 
-            SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
+            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
 #if CLIENT
             PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
 #endif
@@ -267,7 +240,7 @@ namespace Barotrauma.Items.Components
             if (isBroken)
             {
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.Condition > 50.0f)
+                if (item.Condition > item.Prefab.Health / 2.0f)
                 {
                     IsBroken = false;
                 }
@@ -277,20 +250,20 @@ namespace Barotrauma.Items.Components
             bool isClosing = false;
             if (!isStuck)
             {
-                if (predictedState == null)
+                if (PredictedState == null)
                 {
                     OpenState += deltaTime * (isOpen ? 2.0f : -2.0f);
                     isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * ((bool)predictedState ? 2.0f : -2.0f);
-                    isClosing = openState > 0.0f && openState < 1.0f && !(bool)predictedState;
+                    OpenState += deltaTime * ((bool)PredictedState ? 2.0f : -2.0f);
+                    isClosing = openState > 0.0f && openState < 1.0f && !(bool)PredictedState;
 
                     resetPredictionTimer -= deltaTime;
                     if (resetPredictionTimer <= 0.0f)
                     {
-                        predictedState = null;
+                        PredictedState = null;
                     }
                 }
 
@@ -303,7 +276,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                body.Enabled = Impassable || openState < 1.0f;                
+                Body.Enabled = Impassable || openState < 1.0f;                
             }
 
             //don't use the predicted state here, because it might set
@@ -320,7 +293,7 @@ namespace Barotrauma.Items.Components
         {
             if (!Impassable)
             {
-                body.FarseerBody.IsSensor = false;
+                Body.FarseerBody.IsSensor = false;
             }
 #if CLIENT
             UpdateConvexHulls();
@@ -334,7 +307,7 @@ namespace Barotrauma.Items.Components
             //because otherwise repairtool raycasts won't hit it
             if (!Impassable)
             {
-                body.FarseerBody.IsSensor = true;
+                Body.FarseerBody.IsSensor = true;
             }
             linkedGap.Open = 1.0f;
             IsOpen = false;
@@ -354,7 +327,7 @@ namespace Barotrauma.Items.Components
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
 
             convexHull = new ConvexHull(corners, Color.Black, item);
-            if (window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);
+            if (Window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);
 
             UpdateConvexHulls();
 #endif
@@ -364,10 +337,10 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
-            if (body != null)
+            if (Body != null)
             {
-                body.Remove();
-                body = null;
+                Body.Remove();
+                Body = null;
             }
             
             //no need to remove the gap if we're unloading the whole submarine
@@ -399,7 +372,7 @@ namespace Barotrauma.Items.Components
             //push characters out of the doorway when the door is closing/opening
             Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
 
-            Vector2 currSize = isHorizontal ?
+            Vector2 currSize = IsHorizontal ?
                 new Vector2(item.Rect.Width * (1.0f - openState), doorSprite.size.Y * item.Scale) :
                 new Vector2(doorSprite.size.X * item.Scale, item.Rect.Height * (1.0f - openState));
 
@@ -417,7 +390,7 @@ namespace Barotrauma.Items.Components
                         " Remoteplayer: " + c.IsRemotePlayer);
                     continue;
                 }
-                int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
+                int dir = IsHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
                 List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
                 bodies.Add(c.AnimController.Collider);
@@ -435,7 +408,7 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
 
-                    if (isHorizontal)
+                    if (IsHorizontal)
                     {
                         if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
                         diff = body.SimPosition.Y - item.SimPosition.Y;
@@ -452,7 +425,7 @@ namespace Barotrauma.Items.Components
                         SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, body);
 #endif
 
-                        if (isHorizontal)
+                        if (IsHorizontal)
                         {
                             body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), body.Rotation);
                             body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
@@ -464,7 +437,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
 
-                    if (isHorizontal)
+                    if (IsHorizontal)
                     {
                         if (Math.Abs(body.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
 
@@ -486,7 +459,7 @@ namespace Barotrauma.Items.Components
         {
             if (isStuck) return;
 
-            bool wasOpen = predictedState == null ? isOpen : predictedState.Value;
+            bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
 
             if (connection.Name == "toggle")
             {
@@ -498,10 +471,9 @@ namespace Barotrauma.Items.Components
             }
 
 #if SERVER
-            bool newState = predictedState == null ? isOpen : predictedState.Value;
-            if (sender != null && wasOpen != newState)
+            if (sender != null && wasOpen != isOpen)
             {
-                GameServer.Log(sender.LogName + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(sender.LogName + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
         }
@@ -511,6 +483,6 @@ namespace Barotrauma.Items.Components
             SetState(open, isNetworkMessage, sendNetworkMessage);
         }
 
-        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false);
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage);
     }
 }

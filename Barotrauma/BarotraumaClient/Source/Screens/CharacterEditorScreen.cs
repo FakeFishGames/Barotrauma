@@ -388,7 +388,12 @@ namespace Barotrauma
             {
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
-                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+
+                foreach (PhysicsBody body in PhysicsBody.List)
+                {
+                    body.SetPrevTransform(body.SimPosition, body.Rotation);
+                    body.Update((float)deltaTime);
+                }
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
                 if (!Character.DisableControls)
                 {
@@ -1105,7 +1110,7 @@ namespace Barotrauma
             }
             else
             {
-                character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), new CharacterInfo(configFile), hasAi: false, ragdoll: ragdoll);
+                character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
                 selectedJob = null;
             }
             character.dontFollowCursor = dontFollowCursor;
@@ -2286,30 +2291,42 @@ namespace Barotrauma
             }
             else
             {
-                if (selectedJoints.Any())
+                //if (selectedJoints.Any())
+                //{
+                //    foreach (var jointParams in RagdollParams.Joints)
+                //    {
+                //        if (selectedJoints.Any(j => j.jointParams == jointParams))
+                //        {
+                //            jointParams?.AddToEditor(ParamsEditor.Instance);
+                //        }
+                //    }
+                //}
+                //if (selectedLimbs.Any())
+                //{
+                //    foreach (var limbParams in RagdollParams.Limbs)
+                //    {
+                //        if (limbParams == null) { continue; }
+                //        var selectedLimb = selectedLimbs.Find(l => l.limbParams == limbParams);
+                //        if (selectedLimb != null)
+                //        {
+                //            limbParams.AddToEditor(ParamsEditor.Instance);
+                //            if (selectedLimb.attack != null)
+                //            {
+                //                var attackEditor = new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, selectedLimb.attack, false, true);
+                //            }
+                //        }
+                //    }
+                //}
+                foreach (var joint in selectedJoints)
                 {
-                    foreach (var jointParams in RagdollParams.Joints)
-                    {
-                        if (selectedJoints.Any(j => j.jointParams == jointParams))
-                        {
-                            jointParams?.AddToEditor(ParamsEditor.Instance);
-                        }
-                    }
+                    joint.jointParams.AddToEditor(ParamsEditor.Instance);
                 }
-                if (selectedLimbs.Any())
+                foreach (var limb in selectedLimbs)
                 {
-                    foreach (var limbParams in RagdollParams.Limbs)
+                    limb.limbParams.AddToEditor(ParamsEditor.Instance);
+                    if (limb.attack != null)
                     {
-                        if (limbParams == null) { continue; }
-                        var selectedLimb = selectedLimbs.Find(l => l.limbParams == limbParams);
-                        if (selectedLimb != null)
-                        {
-                            limbParams.AddToEditor(ParamsEditor.Instance);
-                            if (selectedLimb.attack != null)
-                            {
-                                var attackEditor = new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, selectedLimb.attack, false, true);
-                            }
-                        }
+                        new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
                     }
                 }
                 if (selectedJoints.None() && selectedLimbs.None())
@@ -2391,20 +2408,40 @@ namespace Barotrauma
 
         private Limb GetClosestLimbOnRagdoll(Vector2 targetPos, Func<Limb, bool> filter = null)
         {
-            // TODO: optimize?
-            return character.AnimController.Limbs
-                .Where(l => filter == null ? true : filter(l))
-                .OrderBy(l => Vector2.Distance(SimToScreen(l.SimPosition), targetPos))
-                .FirstOrDefault();
+            Limb closestLimb = null;
+            float closestDistance = float.MaxValue;
+            foreach (Limb l in character.AnimController.Limbs) 
+            {
+                if (filter == null ? true : filter(l)) 
+                {
+                    float distance = Vector2.DistanceSquared(SimToScreen(l.SimPosition), targetPos);
+                    if (distance < closestDistance) 
+                    {
+                        closestLimb = l;
+                        closestDistance = distance;
+                    }
+                }
+            }
+            return closestLimb;
         }
 
         private Limb GetClosestLimbOnSpritesheet(Vector2 targetPos, Func<Limb, bool> filter = null)
         {
-            // TODO: optimize?
-            return character.AnimController.Limbs
-                .Where(l => filter == null ? true : filter(l))
-                .OrderBy(l => Vector2.Distance(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos))
-                .FirstOrDefault();
+            Limb closestLimb = null;
+            float closestDistance = float.MaxValue;
+            foreach (Limb l in character.AnimController.Limbs) 
+            {
+                if (filter == null ? true : filter(l)) 
+                {
+                    float distance = Vector2.DistanceSquared(GetLimbSpritesheetRect(l).Center.ToVector2(), targetPos);
+                    if (distance < closestDistance) 
+                    {
+                        closestLimb = l;
+                        closestDistance = distance;
+                    }
+                }
+            }
+            return closestLimb;
         }
 
         private Rectangle GetLimbSpritesheetRect(Limb limb)
@@ -2550,7 +2587,7 @@ namespace Barotrauma
         {
             foreach (var item in Item.ItemList)
             {
-                foreach (var component in item.components)
+                foreach (var component in item.Components)
                 {
                     if (component is Items.Components.Door door)
                     {
