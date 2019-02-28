@@ -76,13 +76,11 @@ namespace Barotrauma
                 host.Steering = Vector2.Zero;
                 return;
             }
-
-            float steeringSpeed = steering.Length();
-            if (steeringSpeed > speed)
+            if (steering.LengthSquared() > speed * speed)
             {
+                // Don't allow to exceed the current movement speed (lower speed is allowed).
                 steering = Vector2.Normalize(steering) * Math.Abs(speed);
             }
-
             host.Steering = steering;
         }
 
