@@ -1636,9 +1636,10 @@ namespace Barotrauma
             }
         }
 
-        static partial void AddHelpMessage(Command command)
+        static partial void ShowHelpMessage(Command command)
         {
-            NewMessage(command.help, Color.Cyan);
+            NewMessage(command.names[0], Color.Cyan);
+            NewMessage(command.help, Color.Gray);
         }
     }
 }

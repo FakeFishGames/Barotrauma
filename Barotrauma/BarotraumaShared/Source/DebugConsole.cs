@@ -81,7 +81,7 @@ namespace Barotrauma
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
-        static partial void AddHelpMessage(Command command);
+        static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
@@ -126,11 +126,7 @@ namespace Barotrauma
                     foreach (Command c in commands)
                     {
                         if (string.IsNullOrEmpty(c.help)) continue;
-#if CLIENT
-                        AddHelpMessage(c);
-#else
-                        NewMessage(c.help, Color.Cyan);
-#endif
+                        ShowHelpMessage(c);
                     }
                 }
                 else
@@ -142,7 +138,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        AddHelpMessage(matchingCommand);
+                        ShowHelpMessage(matchingCommand);
                     }
                 }
             }, 
