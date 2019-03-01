@@ -46,13 +46,13 @@ namespace Barotrauma.Networking
 
         private readonly string[] messageTypeName =
         {
-            "Chat message",
-            "Item interaction",
-            "Inventory usage",
-            "Attack & death",
+            "ChatMessage",
+            "ItemInteraction",
+            "InventoryUsage",
+            "AttackDeath",
             "Spawning",
-            "Server message",
-            "Console usage",
+            "ServerMessage",
+            "ConsoleUsage",
             "Error"
         };
 

@@ -47,7 +47,7 @@
       <output name="meltdown_warning"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="Fuel Rods">
+    <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="FuelRods">
       <Containable identifiers="fuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>

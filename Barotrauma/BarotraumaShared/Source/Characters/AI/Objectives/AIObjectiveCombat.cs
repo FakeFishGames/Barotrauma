@@ -60,10 +60,10 @@ namespace Barotrauma
                     weapon.GetComponent<RepairTool>() as ItemComponent;
                 if (weaponComponent != null && weaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
                 {
-                    Item[] containedItems = weapon.ContainedItems;
+                    var containedItems = weapon.ContainedItems;
                     foreach (RelatedItem requiredItem in weaponComponent.requiredItems[RelatedItem.RelationType.Contained])
                     {
-                        Item containedItem = Array.Find(containedItems, it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                        Item containedItem = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
                         if (containedItem == null)
                         {
                             var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, weapon.GetComponent<ItemContainer>());

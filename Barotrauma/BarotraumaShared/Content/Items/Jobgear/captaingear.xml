@@ -5,7 +5,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <Sprite name="Captain's Cap Icon" texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32" />
+    <Sprite name="Captain's Cap Icon" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="200,109,78,54" />
     <Body width="25" height="15" density="30" />
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite name="Captain's Cap" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="false" inheritsourcerect="true" sheetindex="2,1" sourcerect="192,96,96,96" origin="0.5,0.6485507" />

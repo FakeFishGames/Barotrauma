@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
             }
 
             Projectile projectile = null;
-            Item[] containedItems = item.ContainedItems;
+            var containedItems = item.ContainedItems;
             if (containedItems == null) return true;
 
             foreach (Item item in containedItems)
@@ -113,7 +113,8 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (Item item in containedItems)
                     {
-                        Item[] containedSubItems = item.ContainedItems;
+                        var containedSubItems = item.ContainedItems;
+                        if (containedSubItems == null) { continue; }
                         foreach (Item subItem in containedSubItems)
                         {
                             projectile = subItem.GetComponent<Projectile>();

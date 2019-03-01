@@ -1,10 +1,8 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Steam;
+﻿using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -66,7 +64,7 @@ namespace Barotrauma
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
                 GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform) { RelativeOffset = new Vector2(0.4f + 0.15f * i, 0.0f) },
-                    tab.ToString())
+                    TextManager.Get(tab.ToString() + "Tab"))
                 {
                     UserData = tab,
                     OnClicked = (btn, userData) => { SelectTab((Tab)userData); return true; }
@@ -628,7 +626,10 @@ namespace Barotrauma
             for (int i = 0; i < item.Tags.Length && i < 5; i++)
             {
                 if (string.IsNullOrEmpty(item.Tags[i])) { continue; }
-                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform), item.Tags[i].CapitaliseFirstInvariant(), style: "ListBoxElement");
+                string tag = TextManager.Get("Workshop.ContentTag." + item.Tags[i], true);
+                if (tag.Length == 0) tag = item.Tags[i].CapitaliseFirstInvariant();
+
+                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform), tag, style: "ListBoxElement");
             }
             
             var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
