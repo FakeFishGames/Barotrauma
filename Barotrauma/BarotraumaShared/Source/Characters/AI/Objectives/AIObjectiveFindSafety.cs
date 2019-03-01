@@ -15,7 +15,7 @@ namespace Barotrauma
         const float priorityIncrease = 25;
         const float priorityDecrease = 5;
         const float SearchHullInterval = 3.0f;
-        const float hullSafetyThreshold = 50;
+        public const float HULL_SAFETY_THRESHOLD = 50;
 
         private List<Hull> unreachable = new List<Hull>();
 
@@ -49,7 +49,7 @@ namespace Barotrauma
             {
                 searchHullTimer -= deltaTime;
             }
-            else if (currenthullSafety < hullSafetyThreshold)
+            else if (currenthullSafety < HULL_SAFETY_THRESHOLD)
             {
                 var bestHull = FindBestHull();
                 if (bestHull != null)
@@ -159,9 +159,39 @@ namespace Barotrauma
                     // If the character is inside, only take connected hulls into account.
                     if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
                     float hullValue = GetHullSafety(hull, character);
-                    // Slight preference over hulls that are closer
-                    hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X)) * 0.1f;
-                    hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)) * 0.2f;
+                    if (character.Submarine == null)
+                    {
+                        if (hull.RoomName?.ToLowerInvariant() == "airlock")
+                        {
+                            hullValue = 100;
+                        }
+                        else
+                        {
+                            // TODO: could also target gaps that get us inside?
+                            foreach (Item item in Item.ItemList)
+                            {
+                                if (item.CurrentHull == hull && item.HasTag("airlock"))
+                                {
+                                    hullValue = 100;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Huge preference for closer targets
+                        float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
+                        hullValue *= distanceFactor;
+                    }
+                    else
+                    {
+                        // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                        float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
+                        float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
+                        hullValue *= distanceFactor;
+                        //// Slight preference over hulls that are closer
+                        //hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X)) * 0.1f;
+                        //hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)) * 0.2f;
+                    }
                     if (hullValue > bestValue)
                     {
                         bestHull = hull;
@@ -189,7 +219,7 @@ namespace Barotrauma
                 character.AIController.ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
             bool ignoreWater = HumanAIController.HasDivingSuit(character);
             currenthullSafety = OverrideCurrentHullSafety ?? GetHullSafety(character.CurrentHull, character, ignoreWater, ignoreWater, ignoreFire);
-            if (currenthullSafety > hullSafetyThreshold)
+            if (currenthullSafety > HULL_SAFETY_THRESHOLD)
             {
                 priority -= priorityDecrease * deltaTime;
             }
