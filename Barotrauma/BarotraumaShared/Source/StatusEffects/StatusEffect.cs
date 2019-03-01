@@ -107,6 +107,7 @@ namespace Barotrauma
         public string[] propertyNames;
         private object[] propertyEffects;
 
+        private PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.And;
         private List<PropertyConditional> propertyConditionals;
 
         private bool setValue;
@@ -205,12 +206,7 @@ namespace Barotrauma
                 switch (attribute.Name.ToString())
                 {
                     case "type":
-                        try
-                        {
-                            type = (ActionType)Enum.Parse(typeof(ActionType), attribute.Value, true);
-                        }
-
-                        catch
+                        if (!Enum.TryParse(attribute.Value, true, out type))
                         {
                             DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
@@ -219,9 +215,15 @@ namespace Barotrauma
                         string[] Flags = attribute.Value.Split(',');
                         foreach (string s in Flags)
                         {
-                            targetTypes |= (TargetType)Enum.Parse(typeof(TargetType), s, true);
+                            if (!Enum.TryParse(s, true, out TargetType targetType))
+                            {
+                                DebugConsole.ThrowError("Invalid target type \"" + s + "\" in StatusEffect (" + parentDebugName + ")");
+                            }
+                            else
+                            {
+                                targetTypes |= targetType;
+                            }
                         }
-
                         break;
                     case "disabledeltatime":
                         disableDeltaTime = attribute.GetAttributeBool(false);
@@ -248,6 +250,13 @@ namespace Barotrauma
                         break;
                     case "checkconditionalalways":
                         CheckConditionalAlways = attribute.GetAttributeBool(false);
+                        break;
+                    case "conditionalcomparison":
+                    case "comparison":
+                        if (!Enum.TryParse(attribute.Value, out conditionalComparison))
+                        {
+                            DebugConsole.ThrowError("Invalid conditional comparison type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
+                        }
                         break;
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
@@ -448,15 +457,31 @@ namespace Barotrauma
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
             if (!propertyConditionals.Any()) return true;
-            foreach (ISerializableEntity target in targets)
+            switch (conditionalComparison)
             {
-                if (target == null || target.SerializableProperties == null) continue;
-                foreach (PropertyConditional pc in propertyConditionals)
-                {
-                    if (pc.Matches(target)) return true;
-                }
+                case PropertyConditional.Comparison.Or:
+                    foreach (ISerializableEntity target in targets)
+                    {
+                        if (target == null || target.SerializableProperties == null) { continue; }
+                        foreach (PropertyConditional pc in propertyConditionals)
+                        {
+                            if (pc.Matches(target)) { return true; }
+                        }
+                    }
+                    return false;
+                case PropertyConditional.Comparison.And:
+                    foreach (ISerializableEntity target in targets)
+                    {
+                        if (target == null || target.SerializableProperties == null) { continue; }
+                        foreach (PropertyConditional pc in propertyConditionals)
+                        {
+                            if (!pc.Matches(target)) { return false; }
+                        }
+                    }
+                    return true;
+                default:
+                    throw new NotImplementedException();
             }
-            return false;
         }
 
         protected bool IsValidTarget(ISerializableEntity entity)
