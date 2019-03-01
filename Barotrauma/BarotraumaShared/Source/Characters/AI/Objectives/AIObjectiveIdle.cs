@@ -175,16 +175,16 @@ namespace Barotrauma
                         if (AIObjectiveFindSafety.GetHullSafety(hull, character) < AIObjectiveFindSafety.HULL_SAFETY_THRESHOLD) { continue; }
                         // Ignore ballasts and airlocks
                         string hullName = hull.RoomName?.ToLowerInvariant();
-                        bool isOutOfBounds = hullName == "ballast" || hullName == "airlock";
+                        bool isForbidden = hullName == "ballast" || hullName == "airlock";
                         foreach (Item item in Item.ItemList)
                         {
                             if (item.CurrentHull == hull && (item.HasTag("ballast") || item.HasTag("airlock")))
                             {
-                                isOutOfBounds = true;
+                                isForbidden = true;
                                 break;
                             }
                         }
-                        if (isOutOfBounds) { continue; }
+                        if (isForbidden) { continue; }
                         // Ignore hulls that are too low to stand inside
                         if (character.AnimController is HumanoidAnimController animController)
                         {
