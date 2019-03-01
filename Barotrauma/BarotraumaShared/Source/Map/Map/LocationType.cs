@@ -26,9 +26,8 @@ namespace Barotrauma
         
         public Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
 
+        public readonly string Identifier;
         public readonly string Name;
-
-        public readonly string DisplayName;
 
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
         
@@ -55,14 +54,9 @@ namespace Barotrauma
         
         private LocationType(XElement element)
         {
-            Name = element.Name.ToString();
-            DisplayName = element.GetAttributeString("name", "Name");
-            
-            nameFormats = new List<string>();
-            foreach (XAttribute nameFormat in element.Element("nameformats").Attributes())
-            {
-                nameFormats.Add(nameFormat.Value);
-            }
+            Identifier = element.Name.ToString();
+            Name = TextManager.Get("LocationName." + Identifier);
+            nameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
 
             string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
             try
@@ -71,7 +65,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to read name file for location type \""+Name+"\"!", e);
+                DebugConsole.ThrowError("Failed to read name file for location type \""+Identifier+"\"!", e);
                 names = new List<string>() { "Name file not found" };
             }
 
@@ -83,7 +77,7 @@ namespace Barotrauma
                     !int.TryParse(splitCommonnessPerZone[0].Trim(), out int zoneIndex) ||
                     !float.TryParse(splitCommonnessPerZone[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoneCommonness))
                 {
-                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Name + "\" - commonness should be given in the format \"zone0index: zone0commonness, zone1index: zone1commonness\"");
+                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone0index: zone0commonness, zone1index: zone1commonness\"");
                     break;
                 }
                 CommonnessPerZone[zoneIndex] = zoneCommonness;
@@ -99,7 +93,7 @@ namespace Barotrauma
                         JobPrefab jobPrefab = null;
                         if (jobIdentifier == "")
                         {
-                            DebugConsole.ThrowError("Error in location type \""+ Name + "\" - hireable jobs should be configured using identifiers instead of names.");
+                            DebugConsole.ThrowError("Error in location type \""+ Identifier + "\" - hireable jobs should be configured using identifiers instead of names.");
                             jobIdentifier = subElement.GetAttributeString("name", "");
                             jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
                         }
@@ -109,7 +103,7 @@ namespace Barotrauma
                         }
                         if (jobPrefab == null)
                         {
-                            DebugConsole.ThrowError("Error in  in location type " + Name + " - could not find a job with the identifier \"" + jobIdentifier + "\".");
+                            DebugConsole.ThrowError("Error in  in location type " + Identifier + " - could not find a job with the identifier \"" + jobIdentifier + "\".");
                             continue;
                         }
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
@@ -122,7 +116,7 @@ namespace Barotrauma
                         SpriteColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "changeto":
-                        CanChangeTo.Add(new LocationTypeChange(subElement));
+                        CanChangeTo.Add(new LocationTypeChange(Identifier, subElement));
                         break;
                     case "portrait":
                         var portrait = new Sprite(subElement);

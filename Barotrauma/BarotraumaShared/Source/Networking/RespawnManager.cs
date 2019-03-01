@@ -164,7 +164,7 @@ namespace Barotrauma.Networking
                 nClient.Character != null &&
                 nClient.Character.Submarine == respawnShuttle)
             {
-                nClient.AddChatMessage("The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.", ChatMessageType.Server);
+                nClient.AddChatMessage("ServerMessage.ShuttleLeaving", ChatMessageType.Server);
             }
 #endif
 
