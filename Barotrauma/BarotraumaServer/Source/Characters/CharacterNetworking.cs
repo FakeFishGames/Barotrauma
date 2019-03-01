@@ -474,6 +474,7 @@ namespace Barotrauma
 
             msg.Write((byte)TeamID);
             msg.Write(this is AICharacter);
+            msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
 
             DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - msgLength));

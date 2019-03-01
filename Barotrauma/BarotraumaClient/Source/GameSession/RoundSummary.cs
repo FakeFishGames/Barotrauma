@@ -92,7 +92,7 @@ namespace Barotrauma
             foreach (CharacterInfo characterInfo in gameSession.CrewManager.GetCharacterInfos())
             {
                 if (GameMain.GameSession.Mission is CombatMission &&
-                    characterInfo.TeamID != GameMain.GameSession.CrewManager.WinningTeam)
+                    characterInfo.TeamID != GameMain.GameSession.WinningTeam)
                 {
                     continue;
                 }

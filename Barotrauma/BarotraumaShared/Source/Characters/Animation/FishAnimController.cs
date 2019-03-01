@@ -707,6 +707,7 @@ namespace Barotrauma
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
                     true);
+                l.body.PositionSmoothingFactor = 0.8f;
             }
         }
   

@@ -107,6 +107,7 @@
     <Compile Include="Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
+    <Compile Include="Source\Events\Missions\CombatMission.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ContextualTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\ScenarioTutorial.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />

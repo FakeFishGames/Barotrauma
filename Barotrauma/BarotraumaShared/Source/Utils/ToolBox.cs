@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Reflection;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -160,6 +161,51 @@ namespace Barotrauma
             if (inputType == "SecondaryHit" || inputType == "Secondary") return "Aim";
 
             return inputType;
+        }
+
+        // Convert an RGB value into an HLS value.
+        public static Vector3 RgbToHLS(Vector3 color)
+        {
+            double h, l, s;
+            
+            double double_r = color.X;
+            double double_g = color.Y;
+            double double_b = color.Z;
+
+            // Get the maximum and minimum RGB components.
+            double max = double_r;
+            if (max < double_g) max = double_g;
+            if (max < double_b) max = double_b;
+
+            double min = double_r;
+            if (min > double_g) min = double_g;
+            if (min > double_b) min = double_b;
+
+            double diff = max - min;
+            l = (max + min) / 2;
+            if (Math.Abs(diff) < 0.00001)
+            {
+                s = 0;
+                h = 0;  // H is really undefined.
+            }
+            else
+            {
+                if (l <= 0.5) s = diff / (max + min);
+                else s = diff / (2 - max - min);
+
+                double r_dist = (max - double_r) / diff;
+                double g_dist = (max - double_g) / diff;
+                double b_dist = (max - double_b) / diff;
+
+                if (double_r == max) h = b_dist - g_dist;
+                else if (double_g == max) h = 2 + r_dist - b_dist;
+                else h = 4 + g_dist - r_dist;
+
+                h = h * 60;
+                if (h < 0) h += 360;
+            }
+
+            return new Vector3((float)h, (float)l, (float)s);
         }
 
         /// <summary>

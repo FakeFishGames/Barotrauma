@@ -1,0 +1,14 @@
+﻿<LegacyhuskSwimSlow
+  movementspeed="1"
+  steertorque="25"
+  headangle="42.5"
+  torsoangle="0"
+  legmoveamount="0.371273"
+  handmoveamount="0.9017621,0.2128462"
+  handmoveoffset="0,0"
+  handcyclespeed="3.607048"
+  legcyclelength="6.800001"
+  footangle="0"
+  footrotatestrength="25"
+  cyclespeed="1"
+  animationtype="SwimSlow" />

@@ -378,10 +378,32 @@ namespace Barotrauma.Networking
                 bool isCrewDead =
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious);
 
+                bool subAtLevelEnd = false;
+                if (Submarine.MainSub != null && Submarine.MainSubs[1] == null)
+                {
+                    if (Level.Loaded?.EndOutpost != null)
+                    {
+                        bool charactersInsideOutpost = connectedClients.Any(c => 
+                            c.Character != null && 
+                            !c.Character.IsDead && 
+                            c.Character.Submarine == Level.Loaded.EndOutpost);
+
+                        //level finished if the sub is docked to the outpost
+                        //or very close and someone from the crew made it inside the outpost
+                        subAtLevelEnd = 
+                            Submarine.MainSub.DockedTo.Contains(Level.Loaded.EndOutpost) ||
+                            (Submarine.MainSub.AtEndPosition && charactersInsideOutpost);                      
+                    }
+                    else
+                    {
+                        subAtLevelEnd = Submarine.MainSub.AtEndPosition;
+                    }
+                }
+
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((serverSettings.AutoRestart && isCrewDead)
                     ||
-                    (serverSettings.EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition && Submarine.MainSubs[1] == null))
+                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd))
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {
@@ -1407,6 +1429,8 @@ namespace Barotrauma.Networking
 
         public bool StartGame()
         {
+            Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
+
             Submarine selectedSub = null;
             Submarine selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
             bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle;
@@ -1532,8 +1556,7 @@ namespace Barotrauma.Networking
             {
                 GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, serverSettings.SelectedLevelDifficulty, teamCount > 1);
             }
-
-            Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
+            
             Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
             Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
             Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
@@ -1665,6 +1688,8 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
+            
+            Log("Round started.", ServerLog.MessageType.ServerMessage);
 
             AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
             
@@ -1744,6 +1769,7 @@ namespace Barotrauma.Networking
         public void EndGame()
         {
             if (!gameStarted) return;
+            Log("Ending the round...", ServerLog.MessageType.ServerMessage);
 
             string endMessage = "The round has ended." + '\n';
 
@@ -1787,6 +1813,7 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerPacketHeader.ENDGAME);
                 msg.Write(endMessage);
                 msg.Write(mission != null && mission.Completed);
+                msg.Write(GameMain.GameSession?.WinningTeam == null ? (byte)0 : (byte)GameMain.GameSession.WinningTeam);
 
                 CompressOutgoingMessage(msg);
                 if (server.ConnectionsCount > 0)
@@ -1822,6 +1849,7 @@ namespace Barotrauma.Networking
             entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.Select();
+            Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
             yield return CoroutineStatus.Success;
         }

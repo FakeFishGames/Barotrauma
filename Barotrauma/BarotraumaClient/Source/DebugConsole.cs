@@ -242,7 +242,7 @@ namespace Barotrauma
             selectedIndex = Messages.Count;
         }
 
-        static partial void AddHelpMessage(Command command)
+        static partial void ShowHelpMessage(Command command)
         {
             if (listBox.Content.CountChildren > MaxMessages)
             {
