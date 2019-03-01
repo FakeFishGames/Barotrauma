@@ -48,6 +48,10 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
+            if (currentTarget == null && (IsForbidden(character.CurrentHull) || !IsSafe(character.CurrentHull)))
+            {
+                newTargetTimer = 0;
+            }
             if (newTargetTimer <= 0.0f)
             {
                 currentTarget = FindRandomHull();
@@ -63,7 +67,8 @@ namespace Barotrauma
                     errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.RoomName : currentTarget.ToString()) + ")";
 #endif
                     var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition, errorMsg);
-                    if (path.Cost > 1000.0f && character.AnimController.CurrentHull != null) { return; }
+                    // TODO: fix, causes the character to remain still where it should move to the next room.
+                    //if (path.Cost > 1000.0f && character.AnimController.CurrentHull != null) { return; }
                     pathSteering.SetPath(path);
                 }
 
@@ -172,19 +177,9 @@ namespace Barotrauma
                         if (sub.TeamID != character.TeamID) { continue; }
                         // If the character is inside, only take connected hulls into account.
                         if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                        if (AIObjectiveFindSafety.GetHullSafety(hull, character) < AIObjectiveFindSafety.HULL_SAFETY_THRESHOLD) { continue; }
+                        if (!IsSafe(hull)) { continue; }
                         // Ignore ballasts and airlocks
-                        string hullName = hull.RoomName?.ToLowerInvariant();
-                        bool isForbidden = hullName == "ballast" || hullName == "airlock";
-                        foreach (Item item in Item.ItemList)
-                        {
-                            if (item.CurrentHull == hull && (item.HasTag("ballast") || item.HasTag("airlock")))
-                            {
-                                isForbidden = true;
-                                break;
-                            }
-                        }
-                        if (isForbidden) { continue; }
+                        if (IsForbidden(hull)) { continue; }
                         // Ignore hulls that are too low to stand inside
                         if (character.AnimController is HumanoidAnimController animController)
                         {
@@ -201,6 +196,24 @@ namespace Barotrauma
                 return ToolBox.SelectWeightedRandom(targetHulls, hullValues, Rand.RandSync.Unsynced);
             }
             return targetHull;
+        }
+
+        private bool IsSafe(Hull hull) => AIObjectiveFindSafety.GetHullSafety(hull, character) > AIObjectiveFindSafety.HULL_SAFETY_THRESHOLD;
+
+        private bool IsForbidden(Hull hull)
+        {
+            if (hull == null) { return true; }
+            string hullName = hull.RoomName?.ToLowerInvariant();
+            bool isForbidden = hullName == "ballast" || hullName == "airlock";
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.CurrentHull == hull && (item.HasTag("ballast") || item.HasTag("airlock")))
+                {
+                    isForbidden = true;
+                    break;
+                }
+            }
+            return isForbidden;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
