@@ -165,6 +165,16 @@ namespace Barotrauma
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : SpeciesName;
             }
         }
+
+        private string displayName;
+        public string DisplayName
+        {
+            get
+            {
+                return displayName != null && displayName.Length > 0 ? displayName : Name;
+            }
+        }
+
         //Only used by server logs to determine "true identity" of the player for cases when they're disguised
         public string LogName
         {
@@ -692,8 +702,9 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
 
             InitProjSpecific(doc);
+            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
+            displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
-            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");            
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
@@ -2279,8 +2290,18 @@ namespace Barotrauma
         {
             foreach (StatusEffect statusEffect in statusEffects)
             {
-                if (statusEffect.type != actionType) continue;
-                statusEffect.Apply(actionType, deltaTime, this, this);
+                if (statusEffect.type != actionType) { continue; }
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                {
+                    var targets = new List<ISerializableEntity>();
+                    statusEffect.GetNearbyTargets(WorldPosition, targets);
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, this, targets);
+                }
+                else
+                {
+                    statusEffect.Apply(actionType, deltaTime, this, this);
+                }
             }
         }
 
@@ -2345,18 +2366,7 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
-
-#if SERVER
-            if (causeOfDeath == CauseOfDeathType.Affliction)
-            {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
-            }
-            else
-            {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
-            }
-#endif
-
+            
             if (GameSettings.SendUserStatistics)
             {
                 string characterType = "Unknown";
@@ -2382,7 +2392,7 @@ namespace Barotrauma
 
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
 
-            KillProjSpecific();
+            KillProjSpecific(causeOfDeath, causeOfDeathAffliction);
 
             IsDead = true;
 
@@ -2407,7 +2417,7 @@ namespace Barotrauma
                 GameMain.GameSession.KillCharacter(this);
             }
         }
-        partial void KillProjSpecific();
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction);
 
         public void Revive()
         {

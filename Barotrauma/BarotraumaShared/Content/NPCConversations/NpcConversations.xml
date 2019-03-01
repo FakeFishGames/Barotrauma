@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Conversations identifier="vanillaconversations" Language="English">
-  <PersonalityTrait name="Professinal" alloweddialogtags="professional,none" commonness="1"/>
+  <PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1"/>
   <PersonalityTrait name="Laid-back" alloweddialogtags="laid-back,none" commonness="1"/>
   <PersonalityTrait name="Rude" alloweddialogtags="rude,none" commonness="1"/>
   <PersonalityTrait name="Tough" alloweddialogtags="tough,none" commonness="1"/>

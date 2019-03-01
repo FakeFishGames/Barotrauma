@@ -460,6 +460,15 @@ namespace Barotrauma.Steam
             }
 
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
+            //item already installed, copy it from the game folder
+            if (existingItem != null && CheckWorkshopItemEnabled(existingItem, checkContentFiles: false))
+            {
+                string installedItemPath = GetWorkshopItemContentPackagePath(tempContentPackage);
+                if (File.Exists(installedItemPath))
+                {
+                    tempContentPackage = new ContentPackage(installedItemPath);
+                }
+            }
             if (File.Exists(tempContentPackage.Path))
             {
                 string newContentPackagePath = Path.Combine(WorkshopItemStagingFolder, MetadataFileName);
@@ -467,7 +476,15 @@ namespace Barotrauma.Steam
                 contentPackage = new ContentPackage(newContentPackagePath);
                 foreach (ContentFile contentFile in tempContentPackage.Files)
                 {
-                    string sourceFile = Path.Combine(existingItem.Directory.FullName, contentFile.Path);
+                    string sourceFile;
+                    if (contentFile.Type == ContentType.Submarine && File.Exists(contentFile.Path))
+                    {
+                        sourceFile = contentFile.Path;
+                    }
+                    else
+                    {
+                        sourceFile = Path.Combine(existingItem.Directory.FullName, contentFile.Path);
+                    }
                     if (!File.Exists(sourceFile)) { continue; }
                     //make sure the destination directory exists
                     string destinationPath = Path.Combine(WorkshopItemStagingFolder, contentFile.Path);
@@ -765,7 +782,7 @@ namespace Barotrauma.Steam
             return contentPackage.IsCompatible();
         }
 
-        public static bool CheckWorkshopItemEnabled(Workshop.Item item)
+        public static bool CheckWorkshopItemEnabled(Workshop.Item item, bool checkContentFiles = true)
         {
             if (!item.Installed) return false;
 
@@ -784,9 +801,12 @@ namespace Barotrauma.Steam
             {
                 return false;
             }
-            foreach (ContentFile contentFile in contentPackage.Files)
+            if (checkContentFiles)
             {
-                if (!File.Exists(contentFile.Path)) return false;
+                foreach (ContentFile contentFile in contentPackage.Files)
+                {
+                    if (!File.Exists(contentFile.Path)) return false;
+                }
             }
 
             return true;

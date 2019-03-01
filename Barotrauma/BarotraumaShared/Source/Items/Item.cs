@@ -395,11 +395,11 @@ namespace Barotrauma
             }
         }
 
-        public Item[] ContainedItems
+        public IEnumerable<Item> ContainedItems
         {
             get
             {
-                return (ownInventory == null) ? null : Array.FindAll(ownInventory.Items, i => i != null);
+                return ownInventory?.Items.Where(i => i != null);
             }
         }
 
@@ -437,17 +437,10 @@ namespace Barotrauma
 #endif
         }
 
-        public List<ISerializableEntity> AllPropertyObjects
+        private readonly List<ISerializableEntity> allPropertyObjects = new List<ISerializableEntity>();
+        public IEnumerable<ISerializableEntity> AllPropertyObjects
         {
-            get
-            {
-                List<ISerializableEntity> pobjects = new List<ISerializableEntity>() { this };
-                foreach (ItemComponent ic in components)
-                {
-                    pobjects.Add(ic);
-                }
-                return pobjects;
-            }
+            get { return allPropertyObjects; }
         }
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
@@ -480,6 +473,8 @@ namespace Barotrauma
                         
             condition = itemPrefab.Health;
             lastSentCondition = condition;
+
+            allPropertyObjects.Add(this);
 
             XElement element = itemPrefab.ConfigElement;
             if (element == null) return;
@@ -662,6 +657,7 @@ namespace Barotrauma
 
         public void AddComponent(ItemComponent component)
         {
+            allPropertyObjects.Add(component);
             components.Add(component);
             Type type = component.GetType();
             if (!componentsByType.ContainsKey(type))
@@ -901,6 +897,8 @@ namespace Barotrauma
             }
         }
         
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
         {
             if (!isNetworkEvent && checkCondition)
@@ -910,12 +908,13 @@ namespace Barotrauma
             if (effect.type != type) return;
             
             bool hasTargets = (effect.TargetIdentifiers == null);
-            List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-            Item[] containedItems = ContainedItems;  
-            if (containedItems != null)
+            targets.Clear();
+            
+            if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                var containedItems = ContainedItems;
+                if (containedItems != null)
                 {
                     foreach (Item containedItem in containedItems)
                     {
@@ -933,7 +932,13 @@ namespace Barotrauma
                 }
             }
 
-            if (!hasTargets) return;
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            {
+                effect.GetNearbyTargets(WorldPosition, targets);
+                if (targets.Count > 0) { hasTargets = true; }
+            }
+
+            if (!hasTargets) { return; }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
             {
@@ -968,12 +973,7 @@ namespace Barotrauma
             {
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
-
-            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
-            {
-                effect.GetNearbyTargets(WorldPosition, targets);
-            }
-
+            
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            

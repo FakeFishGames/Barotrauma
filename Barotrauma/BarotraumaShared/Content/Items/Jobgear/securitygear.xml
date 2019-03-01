@@ -33,8 +33,8 @@
       <Item identifier="ballisticfiber" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,256,64,64" />
-    <Sprite texture="securitygear.png" sourcerect="68,0,60,31" depth="0.6" />
-    <Body width="52" height="17" density="40" />
+    <Sprite texture="securitygear.png" sourcerect="0,0,39,55" depth="0.6" />
+    <Body radius="15" height="20" density="40" />
     <Wearable slots="Any,OuterClothes">
       <damagemodifier afflictiontypes="burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />

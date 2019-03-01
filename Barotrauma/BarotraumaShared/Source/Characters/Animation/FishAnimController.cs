@@ -266,6 +266,11 @@ namespace Barotrauma
             }
         }
 
+        private bool CanDrag(Character target)
+        {
+            return Mass / target.Mass > 0.1f;
+        }
+
         private float eatTimer = 0.0f;
 
         public override void DragCharacter(Character target, float deltaTime)
@@ -294,9 +299,12 @@ namespace Barotrauma
             {
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
-                targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
-                targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation);
-                targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                if (CanDrag(target))
+                {
+                    targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                    targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, 20.0f);
+                    targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                }
 
                 //pull the character's mouth to the target character (again with a fluctuating force)
                 float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
@@ -709,7 +717,15 @@ namespace Barotrauma
                     true);
                 l.body.PositionSmoothingFactor = 0.8f;
             }
-        }
-  
+            if (character.SelectedCharacter != null && CanDrag(character.SelectedCharacter))
+            {
+                float diff = character.SelectedCharacter.SimPosition.X - centerOfMass.X;
+                if (diff < 100.0f)
+                {
+                    character.SelectedCharacter.AnimController.SetPosition(
+                        new Vector2(centerOfMass.X - diff, character.SelectedCharacter.SimPosition.Y), lerp: true);
+                }
+            }
+        }  
     }
 }
