@@ -21,6 +21,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (character.Submarine == null) { return 0; }
             if (targets.None()) { GetTargets(); }
             if (targets.None()) { return 0; }
             float avgNeedOfCharge = targets.Average(b => 100 - b.ChargePercentage);

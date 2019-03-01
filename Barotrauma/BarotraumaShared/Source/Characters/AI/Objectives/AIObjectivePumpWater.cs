@@ -38,6 +38,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (character.Submarine == null) { return 0; }
             if (objectiveManager.CurrentOrder == this && targetPumps.Count > 0)
             {
                 return AIObjectiveManager.OrderPriority;
