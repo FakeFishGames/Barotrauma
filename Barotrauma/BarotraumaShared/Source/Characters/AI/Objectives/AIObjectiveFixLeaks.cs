@@ -128,6 +128,7 @@ namespace Barotrauma
             gaps.Clear();
             foreach (Gap gap in Gap.GapList)
             {
+                if (ignoreList.Contains(gap)) { continue; }
                 if (gap.ConnectedWall == null) { continue; }
                 // Door or not open
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
