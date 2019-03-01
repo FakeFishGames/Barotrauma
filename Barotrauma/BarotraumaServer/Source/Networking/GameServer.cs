@@ -1697,9 +1697,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Select();
             
             Log("Round started.", ServerLog.MessageType.ServerMessage);
-
-            SendChatMessage("ServerMessage.HowToCommunicate", ChatMessageType.Server);
-            
+                    
             gameStarted = true;
             initiatedStartGame = false;
             GameMain.ResetFrameTime();
