@@ -85,7 +85,7 @@ namespace Barotrauma.Networking
             //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
 #if SERVER
-            DebugConsole.NewMessage(line, Color.White); //TODO: REMOVE
+            DebugConsole.NewMessage(line, messageColor[(int)messageType]); //TODO: REMOVE
 #endif
 
             var newText = new LogMessage(line, messageType);

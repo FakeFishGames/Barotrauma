@@ -335,9 +335,19 @@ namespace Barotrauma
             {
                 foreach (var kvp in items)
                 {
-                    var limb = limbs[kvp.Key.ID];
+                    int id = kvp.Key.ID;
+                    // This can be the case if we manipulate the ragdoll in runtime (husk appendage, limb severance)
+                    if (id > limbs.Length - 1) { continue; }
+                    var limb = limbs[id];
                     var itemList = kvp.Value;
                     limb.WearingItems.AddRange(itemList);
+                }
+            }
+            if (character.SpeciesName.ToLowerInvariant() == "humanhusk")
+            {
+                if (Limbs.None(l => l.Name.ToLowerInvariant() == "huskappendage"))
+                {
+                    AfflictionHusk.AttachHuskAppendage(character, this);
                 }
             }
         }
@@ -490,9 +500,7 @@ namespace Barotrauma
 
         public void AddJoint(JointParams jointParams)
         {
-            byte limb1ID = Convert.ToByte(jointParams.Limb1);
-            byte limb2ID = Convert.ToByte(jointParams.Limb2);
-            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], jointParams, this);
+            LimbJoint joint = new LimbJoint(Limbs[jointParams.Limb1], Limbs[jointParams.Limb2], jointParams, this);
             GameMain.World.AddJoint(joint);
             for (int i = 0; i < LimbJoints.Length; i++)
             {
@@ -502,11 +510,6 @@ namespace Barotrauma
             }
             Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
             LimbJoints[LimbJoints.Length - 1] = joint;
-        }
-
-        public void AddJoint(XElement subElement, float scale = 1.0f)
-        {
-            AddJoint(new JointParams(subElement, RagdollParams));
         }
 
         protected void AddLimb(LimbParams limbParams)
@@ -1027,6 +1030,8 @@ namespace Barotrauma
         {
             if (!character.Enabled || Frozen) return;
 
+            CheckValidity();
+
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
@@ -1285,6 +1290,54 @@ namespace Barotrauma
                 }
             }
             UpdateProjSpecific(deltaTime);
+        }
+
+        private void CheckValidity()
+        {
+            CheckValidity(Collider);
+            foreach (Limb limb in limbs)
+            {
+                CheckValidity(limb.body);
+            }
+        }
+
+        private void CheckValidity(PhysicsBody body)
+        {
+            string errorMsg = null;
+            string bodyName = body.UserData is Limb ? "Limb" : "Collider";
+            if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
+            {
+                errorMsg = bodyName+ " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
+            {
+                errorMsg = bodyName + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            else if (!MathUtils.IsValid(body.Rotation))
+            {
+                errorMsg = bodyName + " rotation invalid (" + body.Rotation + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            else if (!MathUtils.IsValid(body.AngularVelocity) || Math.Abs(body.AngularVelocity) > 1000f)
+            {
+                errorMsg = bodyName + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+            }
+            if (errorMsg != null)
+            {
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+
+                if (!MathUtils.IsValid(Collider.SimPosition) || Math.Abs(Collider.SimPosition.X) > 1e10f || Math.Abs(Collider.SimPosition.Y) > 1e10f)
+                {
+                    Collider.SetTransform(Vector2.Zero, 0.0f);
+                }
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.SetTransform(Collider.SimPosition, 0.0f);
+                    limb.body.ResetDynamics();
+                }
+                SetInitialLimbPositions();
+                return;
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime);

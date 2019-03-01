@@ -744,8 +744,10 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.ENDGAME:
                                 string endMessage = inc.ReadString();
                                 bool missionSuccessful = inc.ReadBoolean();
+                                Character.TeamType winningTeam = (Character.TeamType)inc.ReadByte();
                                 if (missionSuccessful && GameMain.GameSession?.Mission != null)
                                 {
+                                    GameMain.GameSession.WinningTeam = winningTeam;
                                     GameMain.GameSession.Mission.Completed = true;
                                 }
                                 CoroutineManager.StartCoroutine(EndGame(endMessage));
