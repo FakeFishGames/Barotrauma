@@ -330,13 +330,14 @@ namespace Barotrauma.Items.Components
             if (character != null)
             {
                 string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
-                if (projectiles[0].Item.ContainedItems == null || projectiles[0].Item.ContainedItems.All(i => i == null))
+                var containedItems = projectiles[0].Item.ContainedItems;
+                if (containedItems == null || !containedItems.Any())
                 {
                     msg += ")";
                 }
                 else
                 {
-                    msg += ", contained items: " + string.Join(", ", Array.FindAll(projectiles[0].Item.ContainedItems, i => i != null).Select(i => i.Name)) + ")";
+                    msg += ", contained items: " + string.Join(", ", containedItems.Select(i => i.Name)) + ")";
                 }
                 GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
             }
@@ -422,18 +423,9 @@ namespace Barotrauma.Items.Components
                 if (containedItems != null)
                 {
                     var container = projectileContainer.GetComponent<ItemContainer>();
-                    if (containedItems != null) maxProjectileCount += container.Capacity;
+                    maxProjectileCount += container.Capacity;
 
-                    int projectiles = 0;
-
-                    for (int i = 0; i < containedItems.Length; i++)
-                    {
-                        if (containedItems[i].Condition > 0.0f)
-                        {
-                            projectiles++;
-                        }
-                    }
-
+                    int projectiles = containedItems.Count(it => it.Condition > 0.0f);
                     usableProjectileCount += projectiles;
                 }
             }
@@ -573,9 +565,9 @@ namespace Barotrauma.Items.Components
             var containedItems = projectileContainer.ContainedItems;
             if (containedItems == null) return;
 
-            for (int i = 0; i < containedItems.Length; i++)
+            foreach (Item containedItem in containedItems)
             {
-                var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                var projectileComponent = containedItem.GetComponent<Projectile>();
                 if (projectileComponent != null)
                 {
                     projectiles.Add(projectileComponent);
@@ -584,10 +576,10 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     //check if the contained item is another itemcontainer with projectiles inside it
-                    if (containedItems[i].ContainedItems == null) continue;
-                    for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
+                    if (containedItem.ContainedItems == null) continue;
+                    foreach (Item subContainedItem in containedItem.ContainedItems)
                     {
-                        projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
+                        projectileComponent = subContainedItem.GetComponent<Projectile>();
                         if (projectileComponent != null)
                         {
                             projectiles.Add(projectileComponent);
