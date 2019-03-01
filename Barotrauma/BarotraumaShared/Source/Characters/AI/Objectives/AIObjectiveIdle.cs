@@ -172,14 +172,16 @@ namespace Barotrauma
                         if (sub.TeamID != character.TeamID) { continue; }
                         // If the character is inside, only take connected hulls into account.
                         if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                        if (hull.FireSources.Any() || hull.WaterPercentage > 10) { continue; }
+                        if (AIObjectiveFindSafety.GetHullSafety(hull, character) < AIObjectiveFindSafety.HULL_SAFETY_THRESHOLD) { continue; }
                         // Ignore ballasts and airlocks
-                        bool isOutOfBounds = false;
+                        string hullName = hull.RoomName?.ToLowerInvariant();
+                        bool isOutOfBounds = hullName == "ballast" || hullName == "airlock";
                         foreach (Item item in Item.ItemList)
                         {
                             if (item.CurrentHull == hull && (item.HasTag("ballast") || item.HasTag("airlock")))
                             {
                                 isOutOfBounds = true;
+                                break;
                             }
                         }
                         if (isOutOfBounds) { continue; }
@@ -192,11 +194,10 @@ namespace Barotrauma
                             }
                         }
                         targetHulls.Add(hull);
+                        // Prefer larger hulls over smaller
                         hullValues.Add(hull.Volume);
                     }
                 }
-                // TODO: prefer safe hulls?
-                // Prefer larger hulls over smaller
                 return ToolBox.SelectWeightedRandom(targetHulls, hullValues, Rand.RandSync.Unsynced);
             }
             return targetHull;
