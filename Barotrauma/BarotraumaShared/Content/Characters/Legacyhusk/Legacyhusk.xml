@@ -12,9 +12,9 @@
     vitality="100"
     doesbleed="false"/>
 
-  <sound file="Content/Characters/Husk/Husk1.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Husk/Husk2.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Husk/Husk3.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Legacyhusk/Husk1.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Legacyhusk/Husk2.ogg" state="Attack" range="1000"/>
+  <sound file="Content/Characters/Legacyhusk/Husk3.ogg" state="Attack" range="1000"/>
 
   <ai
     combatstrength="100"
