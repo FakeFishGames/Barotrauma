@@ -370,16 +370,18 @@ namespace Barotrauma
                         break;
                     case "sound":
                         var sound = Submarine.LoadRoundSound(subElement);
-                        loopSound = subElement.GetAttributeBool("loop", false);
-                        if (subElement.Attribute("selectionmode") != null)
+                        if (sound != null)
                         {
-                            if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                            loopSound = subElement.GetAttributeBool("loop", false);
+                            if (subElement.Attribute("selectionmode") != null)
                             {
-                                soundSelectionMode = selectionMode;
+                                if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                                {
+                                    soundSelectionMode = selectionMode;
+                                }
                             }
+                            sounds.Add(sound);
                         }
-
-                        sounds.Add(sound);
                         break;
 #endif
                 }

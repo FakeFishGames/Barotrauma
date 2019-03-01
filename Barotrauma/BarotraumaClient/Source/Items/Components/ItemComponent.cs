@@ -426,6 +426,7 @@ namespace Barotrauma.Items.Components
                     }
                     
                     RoundSound sound = Submarine.LoadRoundSound(subElement);
+                    if (sound == null) { break; }
                     ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
                     {
                         VolumeProperty = subElement.GetAttributeString("volumeproperty", "").ToLowerInvariant()
