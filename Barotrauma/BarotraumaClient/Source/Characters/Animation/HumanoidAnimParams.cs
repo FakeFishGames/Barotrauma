@@ -26,6 +26,8 @@ namespace Barotrauma
             }
         }
 
+#if FALSE
+        //TODO: fix
         public void Save()
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
@@ -44,5 +46,6 @@ namespace Barotrauma
                 writer.Flush();
             }
         }
+#endif
     }
 }
