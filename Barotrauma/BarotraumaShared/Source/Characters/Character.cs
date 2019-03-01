@@ -2276,8 +2276,18 @@ namespace Barotrauma
         {
             foreach (StatusEffect statusEffect in statusEffects)
             {
-                if (statusEffect.type != actionType) continue;
-                statusEffect.Apply(actionType, deltaTime, this, this);
+                if (statusEffect.type != actionType) { continue; }
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                {
+                    var targets = new List<ISerializableEntity>();
+                    statusEffect.GetNearbyTargets(WorldPosition, targets);
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, this, targets);
+                }
+                else
+                {
+                    statusEffect.Apply(actionType, deltaTime, this, this);
+                }
             }
         }
 
