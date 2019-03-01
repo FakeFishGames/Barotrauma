@@ -1074,7 +1074,9 @@ namespace Barotrauma.Networking
             gameStarted = true;
 
             GameMain.GameScreen.Select();
-            
+
+            AddChatMessage($"ServerMessage.HowToCommunicate_[chatbutton]={GameMain.Config.KeyBind(InputType.Chat).ToString()}_[radiobutton]={GameMain.Config.KeyBind(InputType.RadioChat).ToString()}", ChatMessageType.Server);
+
             yield return CoroutineStatus.Success;
         }
 
