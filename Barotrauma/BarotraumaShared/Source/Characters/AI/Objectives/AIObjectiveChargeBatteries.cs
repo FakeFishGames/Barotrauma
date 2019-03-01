@@ -13,7 +13,13 @@ namespace Barotrauma
         private List<PowerContainer> batteries = new List<PowerContainer>();
         private Dictionary<PowerContainer, AIObjectiveOperateItem> chargeObjectives = new Dictionary<PowerContainer, AIObjectiveOperateItem>();
         private string orderOption;
-        
+
+        private HashSet<PowerContainer> ignoreList = new HashSet<PowerContainer>();
+        private readonly float ignoreListClearIntervalBase = 30;
+        private readonly float ignoreListIntervalAddition = 10;
+        private float ignoreListClearInterval;
+        private float ignoreListTimer;
+
         public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
         {
             orderOption = option;
@@ -21,6 +27,35 @@ namespace Barotrauma
 
         public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
+            base.UpdatePriority(objectiveManager, deltaTime);
+            if (ignoreListTimer > ignoreListClearInterval)
+            {
+                if (ignoreList.Any())
+                {
+                    // Increase the clear interval if there are items in the list -> reduces spam if items are added on the list over and over again.
+                    ignoreListClearInterval += ignoreListIntervalAddition;
+                }
+                else
+                {
+                    // Else reset the interval
+                    ignoreListClearInterval = ignoreListClearIntervalBase;
+                }
+                ignoreList.Clear();
+                ignoreListTimer = 0;
+                FindBatteries();
+                CreateObjectives();
+            }
+            else
+            {
+                ignoreListTimer += deltaTime;
+            }
+            foreach (var objective in chargeObjectives)
+            {
+                if (!objective.Value.CanBeCompleted)
+                {
+                    ignoreList.Add(objective.Key);
+                }
+            }
             SyncRemovedObjectives(chargeObjectives, batteries);
             if (batteries.None())
             {
@@ -87,6 +122,7 @@ namespace Barotrauma
         {
             foreach (var battery in batteries)
             {
+                if (ignoreList.Contains(battery)) { continue; }
                 if (!chargeObjectives.TryGetValue(battery, out AIObjectiveOperateItem objective))
                 {
                     objective = new AIObjectiveOperateItem(battery, character, orderOption, false);
