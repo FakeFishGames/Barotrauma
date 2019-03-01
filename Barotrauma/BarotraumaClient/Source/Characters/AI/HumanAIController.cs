@@ -1,6 +1,5 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System.Linq;
+﻿using Microsoft.Xna.Framework;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -76,7 +75,7 @@ namespace Barotrauma
             }
             else
             {
-                GUI.DrawLine(spriteBatch, pos, pos + new Vector2(Steering.X, -Steering.Y), Color.Blue, width: 5);
+                GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 5);
             }
 
             if (Character.IsKeyDown(InputType.Aim))
