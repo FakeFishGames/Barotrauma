@@ -499,7 +499,7 @@ namespace Barotrauma
                                     " -ownerkey " + ownerKey.ToString();
 
                 string filename = "DedicatedServer.exe";
-#if LINUX
+#if LINUX || OSX
                 filename = "mono";
                 arguments = "./DedicatedServer.exe " + arguments;
 #endif
@@ -594,7 +594,7 @@ namespace Barotrauma
 
             if (Array.Find(existingSaveFiles, s => s == saveName) != null)
             {
-                new GUIMessageBox("Save name already in use", "Please choose another name for the save file");
+                new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;
             }
 

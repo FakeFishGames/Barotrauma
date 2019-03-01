@@ -270,7 +270,7 @@ namespace Barotrauma
             }
         }
 
-        partial void KillProjSpecific()
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction)
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {

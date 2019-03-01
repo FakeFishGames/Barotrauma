@@ -194,6 +194,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Sounds.Length; i++)
             {
+                if (Sounds[i] == null) { continue; }
                 if (SoundTriggers[i] == null || SoundTriggers[i].IsTriggered)
                 {
                     RoundSound roundSound = Sounds[i];
