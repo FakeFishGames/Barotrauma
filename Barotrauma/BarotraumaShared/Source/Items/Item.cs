@@ -929,7 +929,13 @@ namespace Barotrauma
                 }
             }
 
-            if (!hasTargets) return;
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            {
+                effect.GetNearbyTargets(WorldPosition, targets);
+                if (targets.Count > 0) { hasTargets = true; }
+            }
+
+            if (!hasTargets) { return; }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
             {
@@ -964,12 +970,7 @@ namespace Barotrauma
             {
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
-
-            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
-            {
-                effect.GetNearbyTargets(WorldPosition, targets);
-            }
-
+            
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            

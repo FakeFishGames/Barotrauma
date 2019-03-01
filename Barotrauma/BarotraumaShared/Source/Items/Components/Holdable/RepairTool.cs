@@ -321,10 +321,8 @@ namespace Barotrauma.Items.Components
 
         private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)
         {
-            if (statusEffectLists == null) return;
-
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(actionType, out statusEffects)) return;
+            if (statusEffectLists == null) { return; }
+            if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
 
             foreach (StatusEffect effect in statusEffects)
             {

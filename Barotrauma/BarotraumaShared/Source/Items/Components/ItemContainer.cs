@@ -141,6 +141,13 @@ namespace Barotrauma.Items.Components
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained)) 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
+                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                {
+                    var targets = new List<ISerializableEntity>();
+                    effect.GetNearbyTargets(item.WorldPosition, targets);
+                    effect.Apply(ActionType.OnActive, deltaTime, item, targets);
+                }
             }
         }
 

@@ -430,7 +430,7 @@ namespace Barotrauma
             {
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (!c.Enabled) { continue; }
+                    if (!c.Enabled || c.Removed || !IsValidTarget(c)) { continue; }
                     float xDiff = Math.Abs(c.WorldPosition.X - worldPosition.X);
                     if (xDiff > Range) { continue; }
                     float yDiff = Math.Abs(c.WorldPosition.Y - worldPosition.Y);
@@ -443,6 +443,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Removed || !IsValidTarget(item)) { continue; }
                     float xDiff = Math.Abs(item.WorldPosition.X - worldPosition.X);
                     if (xDiff > Range) { continue; }
                     float yDiff = Math.Abs(item.WorldPosition.Y - worldPosition.Y);
@@ -451,7 +452,6 @@ namespace Barotrauma
                     if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(item); }
                 }
             }
-            return;
         }
 
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
