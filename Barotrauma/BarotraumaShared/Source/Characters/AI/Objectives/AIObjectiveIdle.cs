@@ -173,16 +173,16 @@ namespace Barotrauma
                         // If the character is inside, only take connected hulls into account.
                         if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
                         if (hull.FireSources.Any() || hull.WaterPercentage > 10) { continue; }
-                        // Ignore ballast hulls
-                        bool isBallast = false;
+                        // Ignore ballasts and airlocks
+                        bool isOutOfBounds = false;
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull == hull && item.HasTag("ballast"))
+                            if (item.CurrentHull == hull && (item.HasTag("ballast") || item.HasTag("airlock")))
                             {
-                                isBallast = true;
+                                isOutOfBounds = true;
                             }
                         }
-                        if (isBallast) { continue; }
+                        if (isOutOfBounds) { continue; }
                         // Ignore hulls that are too low to stand inside
                         if (character.AnimController is HumanoidAnimController animController)
                         {
