@@ -51,6 +51,7 @@ namespace Barotrauma
             if (currentTarget == null && (IsForbidden(character.CurrentHull) || !IsSafe(character.CurrentHull)))
             {
                 newTargetTimer = 0;
+                standStillTimer = 0;
             }
             if (newTargetTimer <= 0.0f)
             {
