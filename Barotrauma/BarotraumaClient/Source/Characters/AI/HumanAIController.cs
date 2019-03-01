@@ -62,7 +62,7 @@ namespace Barotrauma
                             new Vector2(path.CurrentNode.DrawPosition.X, -path.CurrentNode.DrawPosition.Y),
                             Color.BlueViolet, 0, 3);
 
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60), "Cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, pos + textOffset - new Vector2(0, 20), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
                     }
                     for (int i = 1; i < path.Nodes.Count; i++)
                     {
