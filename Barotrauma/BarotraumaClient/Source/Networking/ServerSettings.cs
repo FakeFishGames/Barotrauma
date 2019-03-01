@@ -265,7 +265,7 @@ namespace Barotrauma.Networking
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.7f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), "Settings", font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), TextManager.Get("Settings"), font: GUI.LargeFont);
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
             {
@@ -322,7 +322,7 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
                 selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
             DebugConsole.NewMessage(SubSelectionMode.ToString(),Color.White);
@@ -338,7 +338,7 @@ namespace Barotrauma.Networking
             selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
                 selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
             }
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
@@ -424,7 +424,7 @@ namespace Barotrauma.Networking
             {
                 if (barScroll == 1.0f)
                 {
-                    ((GUITextBlock)scrollBar.UserData).Text = respawnDurationLabel + "unlimited";
+                    ((GUITextBlock)scrollBar.UserData).Text = respawnDurationLabel + TextManager.Get("Unlimited");
                 }
                 else
                 {
@@ -467,8 +467,9 @@ namespace Barotrauma.Networking
             tempMonsterEnabled = new Dictionary<string, bool>(MonsterEnabled);
             foreach (string s in monsterNames)
             {
+                string translatedLabel = TextManager.Get($"Character.{s}", true);
                 var monsterEnabledBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), monsterFrame.Content.RectTransform) { MinSize = new Point(0, 25) },
-                    label: s)
+                    label: translatedLabel != null ? translatedLabel : s)
                 {
                     Selected = tempMonsterEnabled[s],
                     OnSelected = (GUITickBox tb) =>
