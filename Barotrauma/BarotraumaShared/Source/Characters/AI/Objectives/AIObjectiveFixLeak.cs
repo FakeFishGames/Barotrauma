@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -66,7 +67,7 @@ namespace Barotrauma
                 var containedItems = weldingTool.ContainedItems;
                 if (containedItems == null) return;
                 
-                var fuelTank = Array.Find(containedItems, i => i.HasTag("weldingfueltank") && i.Condition > 0.0f);
+                var fuelTank = containedItems.FirstOrDefault(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f);
                 if (fuelTank == null)
                 {
                     AddSubObjective(new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>()));

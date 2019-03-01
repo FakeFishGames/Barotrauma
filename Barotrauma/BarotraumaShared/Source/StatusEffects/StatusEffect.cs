@@ -107,6 +107,7 @@ namespace Barotrauma
         public string[] propertyNames;
         private object[] propertyEffects;
 
+        private PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.And;
         private List<PropertyConditional> propertyConditionals;
 
         private bool setValue;
@@ -205,12 +206,7 @@ namespace Barotrauma
                 switch (attribute.Name.ToString())
                 {
                     case "type":
-                        try
-                        {
-                            type = (ActionType)Enum.Parse(typeof(ActionType), attribute.Value, true);
-                        }
-
-                        catch
+                        if (!Enum.TryParse(attribute.Value, true, out type))
                         {
                             DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
@@ -219,9 +215,15 @@ namespace Barotrauma
                         string[] Flags = attribute.Value.Split(',');
                         foreach (string s in Flags)
                         {
-                            targetTypes |= (TargetType)Enum.Parse(typeof(TargetType), s, true);
+                            if (!Enum.TryParse(s, true, out TargetType targetType))
+                            {
+                                DebugConsole.ThrowError("Invalid target type \"" + s + "\" in StatusEffect (" + parentDebugName + ")");
+                            }
+                            else
+                            {
+                                targetTypes |= targetType;
+                            }
                         }
-
                         break;
                     case "disabledeltatime":
                         disableDeltaTime = attribute.GetAttributeBool(false);
@@ -248,6 +250,13 @@ namespace Barotrauma
                         break;
                     case "checkconditionalalways":
                         CheckConditionalAlways = attribute.GetAttributeBool(false);
+                        break;
+                    case "conditionalcomparison":
+                    case "comparison":
+                        if (!Enum.TryParse(attribute.Value, out conditionalComparison))
+                        {
+                            DebugConsole.ThrowError("Invalid conditional comparison type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
+                        }
                         break;
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
@@ -370,16 +379,18 @@ namespace Barotrauma
                         break;
                     case "sound":
                         var sound = Submarine.LoadRoundSound(subElement);
-                        loopSound = subElement.GetAttributeBool("loop", false);
-                        if (subElement.Attribute("selectionmode") != null)
+                        if (sound != null)
                         {
-                            if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                            loopSound = subElement.GetAttributeBool("loop", false);
+                            if (subElement.Attribute("selectionmode") != null)
                             {
-                                soundSelectionMode = selectionMode;
+                                if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                                {
+                                    soundSelectionMode = selectionMode;
+                                }
                             }
+                            sounds.Add(sound);
                         }
-
-                        sounds.Add(sound);
                         break;
 #endif
                 }
@@ -419,7 +430,7 @@ namespace Barotrauma
             {
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (!c.Enabled) { continue; }
+                    if (!c.Enabled || c.Removed || !IsValidTarget(c)) { continue; }
                     float xDiff = Math.Abs(c.WorldPosition.X - worldPosition.X);
                     if (xDiff > Range) { continue; }
                     float yDiff = Math.Abs(c.WorldPosition.Y - worldPosition.Y);
@@ -432,6 +443,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Removed || !IsValidTarget(item)) { continue; }
                     float xDiff = Math.Abs(item.WorldPosition.X - worldPosition.X);
                     if (xDiff > Range) { continue; }
                     float yDiff = Math.Abs(item.WorldPosition.Y - worldPosition.Y);
@@ -440,21 +452,36 @@ namespace Barotrauma
                     if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(item); }
                 }
             }
-            return;
         }
 
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
             if (!propertyConditionals.Any()) return true;
-            foreach (ISerializableEntity target in targets)
+            switch (conditionalComparison)
             {
-                if (target == null || target.SerializableProperties == null) continue;
-                foreach (PropertyConditional pc in propertyConditionals)
-                {
-                    if (pc.Matches(target)) return true;
-                }
+                case PropertyConditional.Comparison.Or:
+                    foreach (ISerializableEntity target in targets)
+                    {
+                        if (target == null || target.SerializableProperties == null) { continue; }
+                        foreach (PropertyConditional pc in propertyConditionals)
+                        {
+                            if (pc.Matches(target)) { return true; }
+                        }
+                    }
+                    return false;
+                case PropertyConditional.Comparison.And:
+                    foreach (ISerializableEntity target in targets)
+                    {
+                        if (target == null || target.SerializableProperties == null) { continue; }
+                        foreach (PropertyConditional pc in propertyConditionals)
+                        {
+                            if (!pc.Matches(target)) { return false; }
+                        }
+                    }
+                    return true;
+                default:
+                    throw new NotImplementedException();
             }
-            return false;
         }
 
         protected bool IsValidTarget(ISerializableEntity entity)
@@ -498,7 +525,7 @@ namespace Barotrauma
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target);
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.FirstOrDefault() == target);
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
@@ -513,23 +540,30 @@ namespace Barotrauma
             Apply(deltaTime, entity, targets);
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
+        protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets)
         {
             if (this.type != type) return;
 
-            //remove invalid targets
-            if (targetIdentifiers != null)
+            currentTargets.Clear();
+            foreach (ISerializableEntity target in targets)
             {
-                targets.RemoveAll(t => !IsValidTarget(t));
-                if (targets.Count == 0) return;
+                if (targetIdentifiers != null)
+                {
+                    //ignore invalid targets
+                    if (!IsValidTarget(target)) { continue; }
+                }
+                currentTargets.Add(target);
             }
 
-            if (!HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+            if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
+
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) return;
 
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(targets));
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(currentTargets));
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
@@ -537,7 +571,7 @@ namespace Barotrauma
                 }
             }
 
-            Apply(deltaTime, entity, targets);
+            Apply(deltaTime, entity, currentTargets);
         }
 
         protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
@@ -609,7 +643,7 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                foreach (Item item in targets.Where(t => t is Item).Cast<Item>())
                 {
                     Entity.Spawner?.AddToRemoveQueue(item);
                 }

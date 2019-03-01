@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -172,6 +173,13 @@ namespace Barotrauma
                 if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                }
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) || 
+                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                {
+                    var targets = new List<ISerializableEntity>();
+                    statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets);
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targets);
                 }
             }
         }

@@ -17,18 +17,12 @@ namespace Barotrauma.Items.Components
         private readonly List<string> fixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
-
+        
         [Serialize(0.0f, false)]
         public float Range { get; set; }
 
         [Serialize(0.0f, false)]
         public float StructureFixAmount
-        {
-            get; set;
-        }
-
-        [Serialize(0.0f, false)]
-        public float LimbFixAmount
         {
             get; set;
         }
@@ -59,6 +53,11 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             this.item = item;
+
+            if (element.Attribute("limbfixamount") != null)
+            {
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
+            }
 
             fixableEntities = new List<string>();
             foreach (XElement subElement in element.Elements())
@@ -218,20 +217,14 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Character targetCharacter)
             {
-                Vector2 hitPos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetCharacter.Submarine != null) hitPos += targetCharacter.Submarine.Position;
-
                 targetCharacter.LastDamageSource = item;
-                targetCharacter.AddDamage(hitPos,
-                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 targetLimb.character.LastDamageSource = item;
-                targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb,
-                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
-
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
             }
             else if (targetBody.UserData is Item targetItem)
@@ -240,7 +233,7 @@ namespace Barotrauma.Items.Components
 
                 float prevCondition = targetItem.Condition;
 
-                ApplyStatusEffectsOnTarget(deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
@@ -325,15 +318,14 @@ namespace Barotrauma.Items.Components
             return leakFixed;
         }
 
-        private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)
+        private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, IEnumerable<ISerializableEntity> targets)
         {
-            if (statusEffectLists == null) return;
-
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(actionType, out statusEffects)) return;
+            if (statusEffectLists == null) { return; }
+            if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
 
             foreach (StatusEffect effect in statusEffects)
             {
+                effect.SetUser(user);
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(actionType, deltaTime, item, targets);

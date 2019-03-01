@@ -481,8 +481,8 @@ namespace Barotrauma.Networking
                 GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
             }
             
-            GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
-            
+            GameMain.Server.SendChatMessage($"ServerMessage.JoinedServer_[client]={clName}", ChatMessageType.Server, null);
+
             var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 
                 cp.SteamID == newClient.SteamID :            
