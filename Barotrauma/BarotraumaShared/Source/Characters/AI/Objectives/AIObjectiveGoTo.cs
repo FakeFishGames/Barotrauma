@@ -47,11 +47,10 @@ namespace Barotrauma
                 if (FollowControlledCharacter && Character.Controlled == null) { canComplete = false; }
                 else if (Target != null && Target.Removed) { canComplete = false; }
                 else if (repeat || waitUntilPathUnreachable > 0.0f) { canComplete = true; }
-                else
+                else if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering)
                 {
-                    var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
                     //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: add a timer?
-                    if (pathSteering?.CurrentPath == null) { canComplete = true; }
+                    if (pathSteering.CurrentPath == null) { canComplete = true; }
                     else if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { canComplete = false; }
                     if (canComplete)
                     {
