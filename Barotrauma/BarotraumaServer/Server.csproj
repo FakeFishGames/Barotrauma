@@ -120,8 +120,8 @@
     <Compile Include="Source\GameMain.cs" />
     <Compile Include="Source\GameSession\CrewManager.cs" />
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
@@ -210,7 +210,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
-  <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
+  <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
+  <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\build\net45\GameAnalytics.Mono.SDK.targets" Condition="Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\build\net45\GameAnalytics.Mono.SDK.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
