@@ -24,6 +24,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (character.Submarine == null) { return 0; }
             GetRescueTargets();
             if (!rescueTargets.Any()) { return 0.0f; }
             

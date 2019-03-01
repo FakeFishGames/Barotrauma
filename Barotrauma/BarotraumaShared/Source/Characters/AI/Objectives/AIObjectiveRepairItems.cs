@@ -53,6 +53,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (character.Submarine == null) { return 0; }
             GetBrokenItems();
             if (repairObjectives.None()) { return 0; }
             else if (objectiveManager.CurrentOrder == this)

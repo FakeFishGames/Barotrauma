@@ -49,21 +49,30 @@ namespace Barotrauma
                 UpdateObjectiveList();
             }
             priority = 0.0f;
-            foreach (Gap gap in gaps)
+            if (character.Submarine == null)
             {
-                // Gaps from outside to inside significantly increase the priority 
-                if (!gap.IsRoomToRoom)
+                // Don't fix leaks when outside, should go back inside instead.
+                // The ai should not go out on own -> the player has controlled the character and left it here.
+                priority = 0;
+            }
+            else
+            {
+                foreach (Gap gap in gaps)
                 {
-                    // Max 50 priority per gap
-                    priority = Math.Max(priority + gap.Open * 100.0f, 50.0f);
-                }
-                else
-                {
-                    // Max 10 priority per gap
-                    priority += gap.Open * 10.0f;
-                }
+                    // Gaps from outside to inside significantly increase the priority 
+                    if (!gap.IsRoomToRoom)
+                    {
+                        // Max 50 priority per gap
+                        priority = Math.Max(priority + gap.Open * 100.0f, 50.0f);
+                    }
+                    else
+                    {
+                        // Max 10 priority per gap
+                        priority += gap.Open * 10.0f;
+                    }
 
-                if (priority >= 100.0f) break;
+                    if (priority >= 100.0f) break;
+                }
             }
             priority = MathHelper.Clamp(priority, 0, 100);
         }
