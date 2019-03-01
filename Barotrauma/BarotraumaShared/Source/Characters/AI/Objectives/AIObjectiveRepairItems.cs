@@ -44,24 +44,35 @@ namespace Barotrauma
                 }
                 ignoreList.Clear();
                 ignoreListTimer = 0;
+                GetBrokenItems();
             }
             else
             {
                 ignoreListTimer += deltaTime;
+            }
+            foreach (var repairObjective in repairObjectives)
+            {
+                if (!repairObjective.Value.CanBeCompleted)
+                {
+                    ignoreList.Add(repairObjective.Key);
+                }
+            }
+            SyncRemovedObjectives(repairObjectives, Item.ItemList);
+            if (repairObjectives.None())
+            {
+                GetBrokenItems();
             }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (character.Submarine == null) { return 0; }
-            GetBrokenItems();
             if (repairObjectives.None()) { return 0; }
-            else if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-            // Don't use the itemlist, because it can be huge.
             float avg = repairObjectives.Average(ro => 100 - ro.Key.ConditionPercentage);
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority - MathHelper.Max(0, AIObjectiveManager.OrderPriority - avg);
+            }
             return MathHelper.Lerp(0, 50, avg / 100);
         }
 
@@ -71,18 +82,10 @@ namespace Barotrauma
         // TODO: This can allow two active repair items objectives, if RequireAdequateSkills is not at the same value. We don't want that.
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
 
-        protected override void Act(float deltaTime) => GetBrokenItems();
+        protected override void Act(float deltaTime) { }
 
         private void GetBrokenItems()
         {
-            foreach (var repairObjective in repairObjectives)
-            {
-                if (!repairObjective.Value.CanBeCompleted)
-                {
-                    ignoreList.Add(repairObjective.Key);
-                }
-            }
-            SyncRemovedObjectives(repairObjectives, Item.ItemList);
             foreach (Item item in Item.ItemList)
             {
                 if (item.IsFullCondition || ignoreList.Contains(item)) { continue; }
