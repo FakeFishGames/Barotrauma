@@ -2342,18 +2342,7 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
-
-#if SERVER
-            if (causeOfDeath == CauseOfDeathType.Affliction)
-            {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
-            }
-            else
-            {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
-            }
-#endif
-
+            
             if (GameSettings.SendUserStatistics)
             {
                 string characterType = "Unknown";
@@ -2379,7 +2368,7 @@ namespace Barotrauma
 
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
 
-            KillProjSpecific();
+            KillProjSpecific(causeOfDeath, causeOfDeathAffliction);
 
             IsDead = true;
 
@@ -2404,7 +2393,7 @@ namespace Barotrauma
                 GameMain.GameSession.KillCharacter(this);
             }
         }
-        partial void KillProjSpecific();
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction);
 
         public void Revive()
         {
