@@ -525,7 +525,7 @@ namespace Barotrauma
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target);
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.FirstOrDefault() == target);
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
@@ -540,23 +540,30 @@ namespace Barotrauma
             Apply(deltaTime, entity, targets);
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
+        protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets)
         {
             if (this.type != type) return;
 
-            //remove invalid targets
-            if (targetIdentifiers != null)
+            currentTargets.Clear();
+            foreach (ISerializableEntity target in targets)
             {
-                targets.RemoveAll(t => !IsValidTarget(t));
-                if (targets.Count == 0) return;
+                if (targetIdentifiers != null)
+                {
+                    //ignore invalid targets
+                    if (!IsValidTarget(target)) { continue; }
+                }
+                currentTargets.Add(target);
             }
 
-            if (!HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+            if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
+
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) return;
 
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(targets));
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(currentTargets));
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
@@ -564,7 +571,7 @@ namespace Barotrauma
                 }
             }
 
-            Apply(deltaTime, entity, targets);
+            Apply(deltaTime, entity, currentTargets);
         }
 
         protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
@@ -636,7 +643,7 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                foreach (Item item in targets.Where(t => t is Item).Cast<Item>())
                 {
                     Entity.Spawner?.AddToRemoveQueue(item);
                 }

@@ -26,7 +26,7 @@ namespace Barotrauma
         public override void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target)) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) return;
             
             if (targetIdentifiers != null && !IsValidTarget(target)) return;
             if (!HasRequiredConditions(new List<ISerializableEntity>() { target })) return;
@@ -42,26 +42,30 @@ namespace Barotrauma
             DelayList.Add(element);
         }
 
-        public override void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
+        public override void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) return;
-
-            //remove invalid targets
-            if (targetIdentifiers != null)
+            
+            currentTargets.Clear();
+            foreach (ISerializableEntity target in targets)
             {
-                targets.RemoveAll(t => !IsValidTarget(t));
-                if (targets.Count == 0) return;
+                if (targetIdentifiers != null)
+                {
+                    //ignore invalid targets
+                    if (!IsValidTarget(target)) { continue; }
+                }
+                currentTargets.Add(target);
             }
 
-            if (!HasRequiredConditions(targets)) return;
+            if (!HasRequiredConditions(currentTargets)) return;
 
             DelayedListElement element = new DelayedListElement
             {
                 Parent = this,
                 StartTimer = delay,
                 Entity = entity,
-                Targets = targets
+                Targets = currentTargets
             };
 
             DelayList.Add(element);
