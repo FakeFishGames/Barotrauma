@@ -29,8 +29,6 @@ namespace Barotrauma
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        const float MaxVel = 64.0f;
-
         public static List<Item> ItemList = new List<Item>();
         public ItemPrefab Prefab => prefab as ItemPrefab;
 
@@ -52,17 +50,17 @@ namespace Barotrauma
         public bool Visible = true;
 
         public SpriteEffects SpriteEffects = SpriteEffects.None;
-        
+
         //components that determine the functionality of the item
-        public List<ItemComponent> components;
-        public List<IDrawableComponent> drawableComponents;
+        private Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
+        private List<ItemComponent> components;
+        private List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
 
         public readonly XElement StaticBodyConfig;
         
         private Vector2 lastSentPos;
-        private bool prevBodyAwake;
 
         private bool needsPositionUpdate;
         private float lastSentCondition;
@@ -94,9 +92,23 @@ namespace Barotrauma
             {
                 if (hasInGameEditableProperties == null)
                 {
-                    var inGameEditableProperties = GetProperties<InGameEditable>();
-                    hasInGameEditableProperties = inGameEditableProperties.Any(p =>
-                        !(p.ParentObject is ItemComponent) || ((ItemComponent)p.ParentObject).AllowInGameEditing);
+                    hasInGameEditableProperties = false;
+                    if (properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                    {
+                        hasInGameEditableProperties = true;
+                    }
+                    else
+                    {
+                        foreach (ItemComponent component in components)
+                        {
+                            if (!component.AllowInGameEditing) { continue; }
+                            if (component.properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                            {
+                                hasInGameEditableProperties = true;
+                                break;
+                            }
+                        }
+                    }
                 }
                 return (bool)hasInGameEditableProperties;
             }
@@ -137,7 +149,6 @@ namespace Barotrauma
         }
 
         private string description;
-        [Editable, Serialize("", true)]
         public string Description
         {
             get { return description ?? prefab.Description; }
@@ -249,7 +260,9 @@ namespace Barotrauma
             get { return condition; }
             set 
             {
+#if CLIENT
                 if (GameMain.Client != null) return;
+#endif
                 if (!MathUtils.IsValid(value)) return;
                 if (Indestructible) return;
 
@@ -266,14 +279,14 @@ namespace Barotrauma
 #endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                 }
-
+                
                 SetActiveSprite();
 
-                if (GameMain.Server != null && lastSentCondition != condition)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && lastSentCondition != condition)
                 {
                     if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == Prefab.Health)
                     {
-                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                         lastSentCondition = condition;
                     }
                 }
@@ -378,11 +391,11 @@ namespace Barotrauma
             }
         }
 
-        public Item[] ContainedItems
+        public IEnumerable<Item> ContainedItems
         {
             get
             {
-                return (ownInventory == null) ? null : Array.FindAll(ownInventory.Items, i => i != null);
+                return ownInventory?.Items.Where(i => i != null);
             }
         }
 
@@ -401,6 +414,11 @@ namespace Barotrauma
             get { return repairables; }
         }
 
+        public IEnumerable<ItemComponent> Components
+        {
+            get { return components; }
+        }
+
         public override bool Linkable
         {
             get { return Prefab.Linkable; }
@@ -415,18 +433,10 @@ namespace Barotrauma
 #endif
         }
 
-        public List<ISerializableEntity> AllPropertyObjects
+        private readonly List<ISerializableEntity> allPropertyObjects = new List<ISerializableEntity>();
+        public IEnumerable<ISerializableEntity> AllPropertyObjects
         {
-            get
-            {
-                List<ISerializableEntity> pobjects = new List<ISerializableEntity>();
-                pobjects.Add(this);
-                foreach (ItemComponent ic in components)
-                {
-                    pobjects.Add(ic);
-                }
-                return pobjects;
-            }
+            get { return allPropertyObjects; }
         }
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
@@ -459,6 +469,8 @@ namespace Barotrauma
                         
             condition = itemPrefab.Health;
             lastSentCondition = condition;
+
+            allPropertyObjects.Add(this);
 
             XElement element = itemPrefab.ConfigElement;
             if (element == null) return;
@@ -499,7 +511,7 @@ namespace Barotrauma
                         ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
                         if (ic == null) break;
 
-                        components.Add(ic);
+                        AddComponent(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
                         if (ic is Repairable) repairables.Add((Repairable)ic);
@@ -583,7 +595,7 @@ namespace Barotrauma
             foreach (KeyValuePair<string, SerializableProperty> property in properties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                clone.properties[property.Key].TrySetValue(property.Value.GetValue());
+                clone.properties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
 
             if (components.Count != clone.components.Count)
@@ -600,7 +612,7 @@ namespace Barotrauma
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                    clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
+                    clone.components[i].properties[property.Key].TrySetValue(clone.components[i], property.Value.GetValue(components[i]));
                 }
 
                 //clone requireditem identifiers
@@ -639,18 +651,58 @@ namespace Barotrauma
             return clone;
         }
 
-        public T GetComponent<T>()
+        public void AddComponent(ItemComponent component)
         {
-            foreach (ItemComponent ic in components)
+            allPropertyObjects.Add(component);
+            components.Add(component);
+            Type type = component.GetType();
+            if (!componentsByType.ContainsKey(type))
             {
-                if (ic is T) return (T)(object)ic;
+                componentsByType.Add(type, component);
+                Type baseType = type.BaseType;
+                while (baseType != null && baseType != typeof(ItemComponent))
+                {
+                    if (!componentsByType.ContainsKey(baseType))
+                    {
+                        componentsByType.Add(baseType, component);
+                    }
+                    baseType = baseType.BaseType;
+                }
             }
+        }
 
+        public void EnableDrawableComponent(IDrawableComponent drawable)
+        {
+            if (!drawableComponents.Contains(drawable))
+            {
+                drawableComponents.Add(drawable);
+            }
+        }
+
+        public void DisableDrawableComponent(IDrawableComponent drawable)
+        {
+            drawableComponents.Remove(drawable);            
+        }
+
+        public int GetComponentIndex(ItemComponent component)
+        {
+            return components.IndexOf(component);
+        }
+
+        public T GetComponent<T>() where T : ItemComponent
+        {
+            if (componentsByType.TryGetValue(typeof(T), out ItemComponent component))
+            {
+                return (T)component;
+            }
+            
             return default(T);
         }
 
         public IEnumerable<T> GetComponents<T>()
         {
+            if (!componentsByType.ContainsKey(typeof(T))) { return Enumerable.Empty<T>(); }
+
             return components.Where(c => c is T).Cast<T>();
         }
         
@@ -841,6 +893,8 @@ namespace Barotrauma
             }
         }
         
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
         {
             if (!isNetworkEvent && checkCondition)
@@ -850,12 +904,13 @@ namespace Barotrauma
             if (effect.type != type) return;
             
             bool hasTargets = (effect.TargetIdentifiers == null);
-            List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-            Item[] containedItems = ContainedItems;  
-            if (containedItems != null)
+            targets.Clear();
+            
+            if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                var containedItems = ContainedItems;
+                if (containedItems != null)
                 {
                     foreach (Item containedItem in containedItems)
                     {
@@ -873,7 +928,13 @@ namespace Barotrauma
                 }
             }
 
-            if (!hasTargets) return;
+            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
+            {
+                effect.GetNearbyTargets(WorldPosition, targets);
+                if (targets.Count > 0) { hasTargets = true; }
+            }
+
+            if (!hasTargets) { return; }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
             {
@@ -908,12 +969,7 @@ namespace Barotrauma
             {
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
-
-            if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
-            {
-                effect.GetNearbyTargets(WorldPosition, targets);
-            }
-
+            
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -1037,11 +1093,12 @@ namespace Barotrauma
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
-            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            if (Math.Abs(body.LinearVelocity.X) > NetConfig.MaxPhysicsBodyVelocity || 
+                Math.Abs(body.LinearVelocity.Y) > NetConfig.MaxPhysicsBodyVelocity)
             {
                 body.LinearVelocity = new Vector2(
-                    MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                    MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
             }
         }
 
@@ -1076,7 +1133,9 @@ namespace Barotrauma
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
+#if CLIENT
             if (GameMain.Client != null) return true;
+#endif
 
             Vector2 normal = contact.Manifold.LocalNormal;
             
@@ -1085,7 +1144,9 @@ namespace Barotrauma
             if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
             {
                 ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+#if SERVER
                 GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
+#endif
             }
 
             var containedItems = ContainedItems;
@@ -1131,26 +1192,20 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsVisible(Rectangle worldView)
-        {
-            return drawableComponents.Count > 0 || body == null || body.Enabled;
-        }
-
-        public List<T> GetConnectedComponents<T>(bool recursive = false)
+        public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
             if (recursive)
             {
-                List<Item> alreadySearched = new List<Item>() {this};
-                GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
+                List<Item> alreadySearched = new List<Item>() { this };
+                GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
 
                 return connectedComponents;
             }
 
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) return connectedComponents;
-
 
             foreach (Connection c in connectionPanel.Connections)
             {
@@ -1165,7 +1220,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents)
+        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             alreadySearched.Add(this);
 
@@ -1191,16 +1246,16 @@ namespace Barotrauma
             }
         }
 
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c)
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();            
             List<Item> alreadySearched = new List<Item>() { this };
-            GetConnectedComponentsRecursive<T>(c, alreadySearched, connectedComponents);
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents)
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             alreadySearched.Add(this);
                         
@@ -1215,7 +1270,7 @@ namespace Barotrauma
                     connectedComponents.Add(component);
                 }
 
-                recipient.Item.GetConnectedComponentsRecursive<T>(recipient, alreadySearched, connectedComponents);                   
+                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
             }            
         }
 
@@ -1311,9 +1366,9 @@ namespace Barotrauma
                         pickHit = picker.IsKeyHit(ic.PickKey);
                         selectHit = picker.IsKeyHit(ic.SelectKey);
 
+#if CLIENT
                         //if the cursor is on a UI component, disable interaction with the left mouse button
                         //to prevent accidentally selecting items when clicking UI elements
-#if CLIENT
                         if (picker == Character.Controlled && GUI.MouseOn != null)
                         {
                             if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
@@ -1327,20 +1382,21 @@ namespace Barotrauma
                 if (!pickHit && !selectHit) continue;
 
                 if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
-
-                if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
-
-                bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
+                
+                bool showUiMsg = false;
+#if CLIENT
+                showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
+#endif
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
                 if ((ic.CanBePicked && pickHit && ic.Pick(picker)) ||
                     (ic.CanBeSelected && selectHit && ic.Select(picker)))
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-
 #if CLIENT
                     if (picker == Character.Controlled) GUI.ForceMouseOn(null);
 #endif
+                    if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
                     if (ic.CanBeSelected) selected = true;
                 }
@@ -1383,7 +1439,11 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                bool isControlled = false;
+#if CLIENT
+                isControlled = character == Character.Controlled;
+#endif
+                if (!ic.HasRequiredContainedItems(isControlled)) continue;
                 if (ic.Use(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1412,7 +1472,11 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                bool isControlled = false;
+#if CLIENT
+                isControlled = character == Character.Controlled;
+#endif
+                if (!ic.HasRequiredContainedItems(isControlled)) continue;
                 if (ic.SecondaryUse(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1461,10 +1525,13 @@ namespace Barotrauma
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
 
-                GameMain.Server?.CreateEntityEvent(this, new object[]
+                if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
                 {
-                    NetEntityEvent.Type.ApplyStatusEffect, actionType, ic, character.ID, targetLimb
-                });
+                    GameMain.NetworkMember.CreateEntityEvent(this, new object[]
+                    {
+                        NetEntityEvent.Type.ApplyStatusEffect, actionType, ic, character.ID, targetLimb
+                    });
+                }
 
                 if (ic.DeleteOnUse) remove = true;
             }
@@ -1503,7 +1570,13 @@ namespace Barotrauma
 
         public void Drop(Character dropper = null)
         {
-            foreach (ItemComponent ic in components) ic.Drop(dropper);
+            if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
+                GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+            {
+                parentInventory.CreateNetworkEvent();
+            }
+
+            foreach (ItemComponent ic in components) { ic.Drop(dropper); }
 
             if (Container != null)
             {
@@ -1539,200 +1612,24 @@ namespace Barotrauma
         }
 
 
-        public List<SerializableProperty> GetProperties<T>()
+        public List<Pair<object, SerializableProperty>> GetProperties<T>()
         {
-            List<SerializableProperty> editableProperties = SerializableProperty.GetProperties<T>(this);
-            
+            List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+
+            List<SerializableProperty> itemProperties = SerializableProperty.GetProperties<T>(this);
+            foreach (var itemProperty in itemProperties)
+            {
+                allProperties.Add(new Pair<object, SerializableProperty>(this, itemProperty));
+            }            
             foreach (ItemComponent ic in components)
             {
                 List<SerializableProperty> componentProperties = SerializableProperty.GetProperties<T>(ic);
-                foreach (var property in componentProperties)
+                foreach (var componentProperty in componentProperties)
                 {
-                    editableProperties.Add(property);
+                    allProperties.Add(new Pair<object, SerializableProperty>(ic, componentProperty));
                 }
             }
-
-            return editableProperties;
-        }
-        
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
-        {
-            string errorMsg = "";
-            if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
-            {
-                if (extraData == null)
-                {
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was null.";
-                }
-                else if (extraData.Length == 0)
-                {
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was empty.";
-                }
-                else
-                {
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event type not set.";
-                }
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
-                DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                return;
-            }
-
-            int initialWritePos = msg.LengthBits;
-
-            NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
-            switch (eventType)
-            {
-                case NetEntityEvent.Type.ComponentState:
-                    if (extraData.Length < 2 || !(extraData[1] is int))
-                    {
-                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index not given.";
-                        break;
-                    }
-                    int componentIndex = (int)extraData[1];
-                    if (componentIndex < 0 || componentIndex >= components.Count)
-                    {
-                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index out of range (" + componentIndex + ").";
-                        break;
-                    }
-                    else if (!(components[componentIndex] is IServerSerializable))
-                    {
-                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
-                        break;
-                    }
-                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-                    (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
-                    break;
-                case NetEntityEvent.Type.InventoryState:
-                    if (extraData.Length < 2 || !(extraData[1] is int))
-                    {
-                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component index not given.";
-                        break;
-                    }
-                    int containerIndex = (int)extraData[1];
-                    if (containerIndex < 0 || containerIndex >= components.Count)
-                    {
-                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - container index out of range (" + containerIndex + ").";
-                        break;
-                    }
-                    else if (!(components[containerIndex] is ItemContainer))
-                    {
-                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component \"" + components[containerIndex] + "\" is not server serializable.";
-                        break;
-                    }
-                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
-                    (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
-                    break;
-                case NetEntityEvent.Type.Status:
-                    msg.Write(condition);
-                    break;
-                case NetEntityEvent.Type.Treatment:
-                    {
-                        ItemComponent targetComponent = (ItemComponent)extraData[1];
-                        ActionType actionType = (ActionType)extraData[2];
-                        ushort targetID = (ushort)extraData[3];
-                        Limb targetLimb = (Limb)extraData[4];
-
-                        Character targetCharacter = FindEntityByID(targetID) as Character;
-                        byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
-
-                        msg.Write((byte)components.IndexOf(targetComponent));
-                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
-                        msg.Write(targetID);
-                        msg.Write(targetLimbIndex);
-                    }
-                    break;
-                case NetEntityEvent.Type.ApplyStatusEffect:
-                    {
-                        ActionType actionType = (ActionType)extraData[1];
-                        ItemComponent targetComponent = extraData.Length > 2 ? (ItemComponent)extraData[2] : null;
-                        ushort targetID = extraData.Length > 3 ? (ushort)extraData[3] : (ushort)0;
-                        Limb targetLimb = extraData.Length > 4 ? (Limb)extraData[4] : null;
-
-                        Character targetCharacter = FindEntityByID(targetID) as Character;
-                        byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
-
-                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
-                        msg.Write((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
-                        msg.Write(targetID);
-                        msg.Write(targetLimbIndex);
-                    }
-                    break;
-                case NetEntityEvent.Type.ChangeProperty:
-                    try
-                    {
-                        WritePropertyChange(msg, extraData, false);
-                    }
-                    catch (Exception e)
-                    {
-                        errorMsg = "Failed to write a ChangeProperty network event for the item \"" + Name + "\" (" + e.Message + ")";
-                    }
-                    break;
-                default:
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
-                    break;
-            }
-
-            if (!string.IsNullOrEmpty(errorMsg))
-            {
-                //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
-                msg.ReadBits(msg.Data, 0, initialWritePos);
-                msg.LengthBits = initialWritePos;
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
-                DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-            }
-
-        }
-
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c) 
-        {
-            NetEntityEvent.Type eventType =
-                (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-            
-            c.KickAFKTimer = 0.0f;
-
-            switch (eventType)
-            {
-                case NetEntityEvent.Type.ComponentState:
-                    int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                    (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
-                    break;
-                case NetEntityEvent.Type.InventoryState:
-                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                    (components[containerIndex] as ItemContainer).Inventory.ServerRead(type, msg, c);
-                    break;
-                case NetEntityEvent.Type.Treatment:
-                    if (c.Character == null || !c.Character.CanInteractWith(this)) return;
-                    
-                    UInt16 characterID = msg.ReadUInt16();
-                    byte limbIndex = msg.ReadByte();
-
-                    Character targetCharacter = FindEntityByID(characterID) as Character;
-                    if (targetCharacter == null) break;
-                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
-
-                    Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
-                    
-                    if (ContainedItems == null || ContainedItems.All(i => i == null))
-                    {
-                        GameServer.Log(c.Character.LogName + " used item " + Name, ServerLog.MessageType.ItemInteraction);
-                    }
-                    else
-                    {
-                        GameServer.Log(
-                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")",
-                            ServerLog.MessageType.ItemInteraction);
-                    }
-
-                    ApplyTreatment(c.Character, targetCharacter, targetLimb);
-                    
-                    break;
-                case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg, true, c);
-                    break;
-            }
+            return allProperties;
         }
 
         private void WritePropertyChange(NetBuffer msg, object[] extraData, bool inGameEditableOnly)
@@ -1743,10 +1640,10 @@ namespace Barotrauma
             {
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.IndexOf(property));
+                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.FindIndex(p => p.Second == property));
                 }
 
-                object value = property.GetValue();
+                object value = property.GetValue(this);
                 if (value is string)
                 {
                     msg.Write((string)value);
@@ -1763,9 +1660,8 @@ namespace Barotrauma
                 {
                     msg.Write((bool)value);
                 }
-                else if (value is Color)
+                else if (value is Color color)
                 {
-                    Color color = (Color)value;
                     msg.Write(color.R);
                     msg.Write(color.G);
                     msg.Write(color.B);
@@ -1807,7 +1703,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
+                    throw new NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
                 }
             }
             else
@@ -1819,7 +1715,7 @@ namespace Barotrauma
         private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly, Client sender = null)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
-            if (allProperties.Count == 0) return;
+            if (allProperties.Count == 0) { return; }
 
             int propertyIndex = 0;
             if (allProperties.Count > 1)
@@ -1827,14 +1723,15 @@ namespace Barotrauma
                 propertyIndex = msg.ReadRangedInteger(0, allProperties.Count - 1);
             }
 
-            bool allowEditing = true;            
-            SerializableProperty property = allProperties[propertyIndex];
-            if (inGameEditableOnly && property.ParentObject is ItemComponent ic)
+            bool allowEditing = true;
+            object parentObject = allProperties[propertyIndex].First;
+            SerializableProperty property = allProperties[propertyIndex].Second;
+            if (inGameEditableOnly && parentObject is ItemComponent ic)
             {
                 if (!ic.AllowInGameEditing) allowEditing = false;
             }
 
-            if (GameMain.Server != null && !CanClientAccess(sender))
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !CanClientAccess(sender))
             {
                 allowEditing = false;
             }
@@ -1843,59 +1740,59 @@ namespace Barotrauma
             if (type == typeof(string))
             {
                 string val = msg.ReadString();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(float))
             {
                 float val = msg.ReadFloat();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(int))
             {
                 int val = msg.ReadInt32();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(bool))
             {
                 bool val = msg.ReadBoolean();
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Color))
             {
                 Color val = new Color(msg.ReadByte(), msg.ReadByte(), msg.ReadByte(), msg.ReadByte());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector2))
             {
                 Vector2 val = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector3))
             {
                 Vector3 val = new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector4))
             {
                 Vector4 val = new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Point))
             {
                 Point val = new Point(msg.ReadInt32(), msg.ReadInt32());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Rectangle))
             {
                 Rectangle val = new Rectangle(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32());
-                if (allowEditing) property.TrySetValue(val);
+                if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (typeof(Enum).IsAssignableFrom(type))
             {
                 int intVal = msg.ReadInt32();
                 try
                 {
-                    if (allowEditing) property.TrySetValue(Enum.ToObject(type, intVal));
+                    if (allowEditing) property.TrySetValue(parentObject, Enum.ToObject(type, intVal));
                 }
                 catch (Exception e)
                 {
@@ -1912,231 +1809,15 @@ namespace Barotrauma
             {
                 return;
             }
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-            }
-        }
-
-        public void WriteSpawnData(NetBuffer msg)
-        {
-            if (GameMain.Server == null) return;
             
-            msg.Write(Prefab.Name);
-            msg.Write(Prefab.Identifier);
-            msg.Write(Description != prefab.Description);
-            if (Description != prefab.Description)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                msg.Write(Description);
-            }            
-
-            msg.Write(ID);
-
-            if (ParentInventory == null || ParentInventory.Owner == null)
-            {
-                msg.Write((ushort)0);
-
-                msg.Write(Position.X);
-                msg.Write(Position.Y);
-                msg.Write(Submarine != null ? Submarine.ID : (ushort)0);
+                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
             }
-            else
-            {
-                msg.Write(ParentInventory.Owner.ID);
-
-                //find the index of the ItemContainer this item is inside to get the item to
-                //spawn in the correct inventory in multi-inventory items like fabricators
-                byte containerIndex = 0;
-                if (Container != null)
-                {
-                    for (int i = 0; i < Container.components.Count; i++)
-                    {
-                        if (Container.components[i] is ItemContainer container && 
-                            container.Inventory == ParentInventory)
-                        {
-                            containerIndex = (byte)i;
-                            break;
-                        }
-                    }
-                }
-                msg.Write(containerIndex);
-
-                int slotIndex = ParentInventory.FindIndex(this);
-                msg.Write(slotIndex < 0 ? (byte)255 : (byte)slotIndex);
-            }
-
-            byte teamID = 0;
-            foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
-            {
-                teamID = wifiComponent.TeamID;
-                break;
-            }
-
-            msg.Write(teamID);
-            bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
-            msg.Write(tagsChanged);
-            if (tagsChanged)
-            {
-                msg.Write(Tags);
-            }
-
         }
 
-        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
-        {
-            if (GameMain.Server != null) return null;
-
-            string itemName = msg.ReadString();
-            string itemIdentifier = msg.ReadString();
-            bool descriptionChanged = msg.ReadBoolean();
-            string itemDesc = "";
-            if (descriptionChanged)
-            {
-                itemDesc = msg.ReadString();
-            }
-            ushort itemId = msg.ReadUInt16();
-            ushort inventoryId = msg.ReadUInt16();
-
-            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
-
-            Vector2 pos = Vector2.Zero;
-            Submarine sub = null;
-            int itemContainerIndex = -1;
-            int inventorySlotIndex = -1;
-
-            if (inventoryId > 0)
-            {
-                itemContainerIndex = msg.ReadByte();
-                inventorySlotIndex = msg.ReadByte();
-            }
-            else
-            {
-                pos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-
-                ushort subID = msg.ReadUInt16();
-                if (subID > 0)
-                {
-                    sub = Submarine.Loaded.Find(s => s.ID == subID);
-                }
-            }
-
-            byte teamID = msg.ReadByte();
-            bool tagsChanged = msg.ReadBoolean();
-            string tags = "";
-            if (tagsChanged)
-            {
-                tags = msg.ReadString();
-            }
-            
-            if (!spawn) return null;
-
-            //----------------------------------------
-            
-            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
-            if (itemPrefab == null) return null;
-
-            Inventory inventory = null;
-
-            var inventoryOwner = FindEntityByID(inventoryId);
-            if (inventoryOwner != null)
-            {
-                if (inventoryOwner is Character)
-                {
-                    inventory = (inventoryOwner as Character).Inventory;
-                }
-                else if (inventoryOwner is Item)
-                {
-                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
-                    {
-                        inventory = container.Inventory;
-                    }
-                }
-            }
-
-            var item = new Item(itemPrefab, pos, sub)
-            {
-                ID = itemId
-            };
-
-            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
-            {
-                wifiComponent.TeamID = teamID;
-            }
-            if (descriptionChanged) item.Description = itemDesc;
-            if (tagsChanged) item.Tags = tags;
-
-            if (sub != null)
-            {
-                item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
-                item.Submarine = item.CurrentHull?.Submarine;
-            }
-
-            if (inventory != null)
-            {
-                if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
-                {
-                    return null;
-                }
-                inventory.TryPutItem(item, null, item.AllowedSlots, false);
-            }
-
-            return item;
-        }
-
-        private void UpdateNetPosition()
-        {
-            if (GameMain.Server == null || parentInventory != null) return;
-            
-            if (prevBodyAwake != body.FarseerBody.Awake || Vector2.Distance(lastSentPos, SimPosition) > NetConfig.ItemPosUpdateDistance)
-            {
-                needsPositionUpdate = true;
-            }
-
-            prevBodyAwake = body.FarseerBody.Awake;            
-        }
-
-        public void ServerWritePosition(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(ID);
-            //length in bytes
-            if (body.FarseerBody.Awake)
-            {
-                msg.Write((byte)(4 + 4 + 1 + 3));
-            }
-            else
-            {
-                msg.Write((byte)(4 + 4 + 1));
-            }
-
-            msg.Write(SimPosition.X);
-            msg.Write(SimPosition.Y);
-
-            msg.WriteRangedSingle(MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 7);
-
-#if DEBUG
-            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-            {
-
-                DebugConsole.ThrowError("Item velocity out of range (" + body.LinearVelocity + ")");
-
-            }
-#endif
-
-            msg.Write(body.FarseerBody.Awake);
-            if (body.FarseerBody.Awake)
-            {
-                body.Enabled = true;
-                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
-                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
-            }
-
-            msg.WritePadBits();
-
-            lastSentPos = SimPosition;
-        }
-
+        partial void UpdateNetPosition();
+        
         public static Item Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;            
@@ -2186,9 +1867,7 @@ namespace Barotrauma
             foreach (XAttribute attribute in element.Attributes())
             {
                 if (!item.properties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
-
                 bool shouldBeLoaded = false;
-
                 foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                 {
                     if (propertyAttribute.isSaveable)
@@ -2198,7 +1877,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (shouldBeLoaded) property.TrySetValue(attribute.Value);
+                if (shouldBeLoaded) { property.TrySetValue(item, attribute.Value); }
             }
 
             string linkedToString = element.GetAttributeString("linked", "");
@@ -2265,12 +1944,7 @@ namespace Barotrauma
             if (linkedTo != null && linkedTo.Count > 0)
             {
                 var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
-                string[] linkedToIDs = new string[saveableLinked.Count];
-                for (int i = 0; i < saveableLinked.Count; i++)
-                {
-                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
-                }
-                element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
+                element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
 
             SerializableProperty.SerializeProperties(this, element);
@@ -2293,16 +1967,6 @@ namespace Barotrauma
             {
                 ic.OnMapLoaded();
             }
-        }
-        
-        public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable
-        {
-            if (GameMain.Server == null) return;
-
-            int index = components.IndexOf(ic);
-            if (index == -1) return;
-
-            GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
         
         /// <summary>

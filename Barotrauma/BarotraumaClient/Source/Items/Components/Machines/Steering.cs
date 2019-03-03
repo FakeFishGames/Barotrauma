@@ -10,7 +10,19 @@ namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
+        enum Mode
+        {
+            AutoPilot,
+            Manual
+        };
         private GUITickBox autopilotTickBox, manualTickBox;
+
+        enum Destination
+        {
+            MaintainPos,
+            LevelEnd,
+            LevelStart
+        };
         private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
 
         private GUIFrame autoPilotControlsDisabler;
@@ -104,8 +116,11 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox> { manualTickBox, autopilotTickBox });
-
+            GUIRadioButtonGroup modes = new GUIRadioButtonGroup();
+            modes.AddRadioButton(Mode.AutoPilot, autopilotTickBox);
+            modes.AddRadioButton(Mode.Manual, manualTickBox);
+            modes.Selected = Mode.Manual;
+            
             var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), paddedControlContainer.RectTransform), "InnerFrame");
             var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.8f), autoPilotControls.RectTransform, Anchor.Center))
             {
@@ -205,7 +220,12 @@ namespace Barotrauma.Items.Components
 
             autoPilotControlsDisabler = new GUIFrame(new RectTransform(Vector2.One, autoPilotControls.RectTransform), "InnerFrame");
 
-            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox> { maintainPosTickBox, levelStartTickBox, levelEndTickBox });
+            GUIRadioButtonGroup destinations = new GUIRadioButtonGroup();
+            destinations.AddRadioButton(Destination.MaintainPos, maintainPosTickBox);
+            destinations.AddRadioButton(Destination.LevelStart, levelStartTickBox);
+            destinations.AddRadioButton(Destination.LevelEnd, levelEndTickBox);
+            destinations.Selected = maintainPos        ? Destination.MaintainPos :
+                                    levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd;
             
             string steeringVelX = TextManager.Get("SteeringVelocityX");
             string steeringVelY = TextManager.Get("SteeringVelocityY");

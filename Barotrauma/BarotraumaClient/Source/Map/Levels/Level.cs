@@ -93,8 +93,6 @@ namespace Barotrauma
         
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            if (GameMain.Server != null) return;
-
             foreach (LevelWall levelWall in extraWalls)
             {
                 if (levelWall.Body.BodyType == BodyType.Static) continue;

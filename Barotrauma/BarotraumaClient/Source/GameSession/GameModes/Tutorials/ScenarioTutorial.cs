@@ -36,7 +36,7 @@ namespace Barotrauma.Tutorials
             }
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
+                new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
 
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
@@ -101,7 +101,7 @@ namespace Barotrauma.Tutorials
             messageBox.Buttons[0].OnClicked += messageBox.Close;
 
 
-            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
+            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu;
             messageBox.Buttons[1].OnClicked += messageBox.Close;
 
             yield return CoroutineStatus.Success;

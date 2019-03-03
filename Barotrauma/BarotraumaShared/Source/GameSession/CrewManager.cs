@@ -71,6 +71,7 @@ namespace Barotrauma
             }
             activeOrders.RemoveAll(o => o.Second <= 0.0f);
 
+            UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);
         }
 
@@ -82,29 +83,14 @@ namespace Barotrauma
             pendingConversationLines.AddRange(conversationLines);
         }
 
+        partial void CreateRandomConversation();
+
         private void UpdateConversations(float deltaTime)
         {
             conversationTimer -= deltaTime;
             if (conversationTimer <= 0.0f)
             {
-#if CLIENT
-                List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters().ToList();
-                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || c.SpeechImpediment >= 100.0f);
-                if (GameMain.Server != null)
-                {
-                    foreach (Client client in GameMain.Server.ConnectedClients)
-                    {
-                        if (client.Character != null) availableSpeakers.Remove(client.Character);
-                    }
-                    if (GameMain.Server.Character != null) availableSpeakers.Remove(GameMain.Server.Character);
-                }
-#else
-                List<Character> availableSpeakers = Character.CharacterList.FindAll(c => 
-                    c.AIController is HumanAIController && 
-                    !c.IsDead && 
-                    c.SpeechImpediment <= 100.0f);
-#endif
-                pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+                CreateRandomConversation();
                 conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
             }
 

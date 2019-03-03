@@ -87,6 +87,7 @@ namespace Barotrauma
         const float FireSoundRange = 1000.0f;
         const float FireSoundLargeLimit = 200.0f; //switch to large fire sound when the size of a firesource is above this
 
+        // TODO: could use a dictionary to split up the list into smaller lists of same type?
         private static List<DamageSound> damageSounds;
 
         private static Sound startUpSound;
@@ -162,7 +163,7 @@ namespace Barotrauma
 
                             damageSounds.Add(new DamageSound(
                                 damageSound, 
-                                soundElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
+                                soundElement.GetAttributeVector2("damagerange", Vector2.Zero), 
                                 damageSoundType, 
                                 soundElement.GetAttributeString("requiredtag", "")));
 
@@ -513,7 +514,9 @@ namespace Barotrauma
                 }
                                 
                 //get the appropriate intensity layers for current situation
-                IEnumerable<BackgroundMusic> suitableIntensityMusic = GetSuitableMusicClips("intensity", currentIntensity);
+                IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
+                    GetSuitableMusicClips("intensity", currentIntensity) :
+                    Enumerable.Empty<BackgroundMusic>();
 
                 for (int i = 1; i < MaxMusicChannels; i++)
                 {
@@ -604,7 +607,12 @@ namespace Barotrauma
         private static string GetCurrentMusicType()
         {
             if (OverrideMusicType != null) return OverrideMusicType;
-            
+
+            if (Screen.Selected != GameMain.GameScreen)
+            {
+                return "menu";
+            }
+
             if (Character.Controlled != null &&
                 Level.Loaded != null && Level.Loaded.Ruins != null &&
                 Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
@@ -667,7 +675,7 @@ namespace Barotrauma
             {
                 return "start";
             }
-
+            
             return "default";
         }
 
@@ -684,13 +692,17 @@ namespace Barotrauma
             lowpassHFGain *= Character.Controlled.LowPassMultiplier;
             if (lowpassHFGain < 0.5f) return true;
             
-
             Hull targetHull = Hull.FindHull(soundWorldPos, hullGuess, true);
             if (listener.CurrentHull == null || targetHull == null)
             {
                 return listener.CurrentHull != targetHull;
             }
-            return listener.CurrentHull.GetApproximateDistance(targetHull, range) > range;
+            Vector2 soundPos = soundWorldPos;
+            if (targetHull.Submarine != null)
+            {
+                soundPos += -targetHull.Submarine.WorldPosition + targetHull.Submarine.HiddenSubPosition;
+            }
+            return listener.CurrentHull.GetApproximateDistance(listener.Position, soundPos, targetHull, range) > range;
         }
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)
@@ -711,9 +723,8 @@ namespace Barotrauma
         {
             damage = MathHelper.Clamp(damage + Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
             var sounds = damageSounds.FindAll(s =>
-                s.damageRange == null ||
-                (damage >= s.damageRange.X &&
-                damage <= s.damageRange.Y) &&
+                (s.damageRange == Vector2.Zero ||
+                (damage >= s.damageRange.X && damage <= s.damageRange.Y)) &&
                 s.damageType == damageType &&
                 (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag)));
 

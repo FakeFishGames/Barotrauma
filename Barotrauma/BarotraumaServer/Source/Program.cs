@@ -21,26 +21,30 @@ namespace Barotrauma
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             GameMain game = null;
             Thread inputThread = null;
-            
+
+#if !DEBUG
             try
             {
-                game = new GameMain();
-                inputThread = new Thread(new ThreadStart(game.ProcessInput));
+#endif
+                game = new GameMain(args);
+                inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
                 inputThread.Start();
                 game.Run();
                 inputThread.Abort(); inputThread.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
                 SteamManager.ShutDown();
+#if !DEBUG
             }
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.log", e);
                 inputThread.Abort(); inputThread.Join();
             }
+#endif
         }
         
         static void CrashDump(GameMain game, string filePath, Exception exception)

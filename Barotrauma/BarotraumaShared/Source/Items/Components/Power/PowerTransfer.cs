@@ -169,12 +169,14 @@ namespace Barotrauma.Items.Components
                 pt.Item.SendSignal(0, "", "power", null, voltage);
                 pt.Item.SendSignal(0, "", "power_out", null, voltage);
 
+#if CLIENT
                 //damage the item if voltage is too high 
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
+#endif
 
                 //items in a bad condition are more sensitive to overvoltage
-                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / 100.0f);
+                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / item.Prefab.Health);
 
                 //if the item can't be fixed, don't allow it to break
                 if (!item.Repairables.Any() || !CanBeOverloaded) continue;
@@ -313,26 +315,24 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
+
             foreach (Connection c in PowerConnections)
             {
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {
-                    if (recipient == null) continue;
+                    if (recipient?.Item == null) continue;
 
                     Item it = recipient.Item;
-                    if (it == null) continue;
-
                     if (it.Condition <= 0.0f) continue;
 
-                    foreach (ItemComponent ic in it.components)
+                    foreach (ItemComponent ic in it.Components)
                     {
-                        Powered powered = ic as Powered;
-                        if (powered == null || !powered.IsActive) continue;
+                        if (!(ic is Powered powered) || !powered.IsActive) continue;
                         if (connectedList.Contains(powered)) continue;
 
-                        PowerTransfer powerTransfer = powered as PowerTransfer;
-                        if (powerTransfer != null)
+                        if (powered is PowerTransfer powerTransfer)
                         {
                             if (this is RelayComponent == powerTransfer is RelayComponent)
                             {
@@ -348,8 +348,7 @@ namespace Barotrauma.Items.Components
                             continue;
                         }
 
-                        PowerContainer powerContainer = powered as PowerContainer;
-                        if (powerContainer != null)
+                        if (powered is PowerContainer powerContainer)
                         {
                             if (recipient.Name == "power_in")
                             {
@@ -357,7 +356,7 @@ namespace Barotrauma.Items.Components
                             }
                             else
                             {
-                                fullPower += powerContainer.CurrPowerOutput;
+                                fullPower += Math.Min(powerContainer.CurrPowerOutput, maxPower);
                             }
                         }
                         else
@@ -372,7 +371,7 @@ namespace Barotrauma.Items.Components
                             //negative power consumption = the construction is a 
                             //generator/battery or another junction box
                             {
-                                fullPower -= powered.CurrPowerConsumption;
+                                fullPower -= Math.Max(powered.CurrPowerConsumption, -maxPower);
                             }
                         }
                     }                    
@@ -422,7 +421,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (recipient.Item == item || recipient.Item == source) continue;
 
-                    foreach (ItemComponent ic in recipient.Item.components)
+                    foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //powertransfer components don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes

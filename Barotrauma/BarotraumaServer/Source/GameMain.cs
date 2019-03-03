@@ -22,7 +22,6 @@ namespace Barotrauma
         public static GameSettings Config;
 
         public static GameServer Server;
-        public const GameClient Client = null;
         public static NetworkMember NetworkMember
         {
             get { return Server as NetworkMember; }
@@ -47,30 +46,28 @@ namespace Barotrauma
         
         public static bool ShouldRun = true;
 
+        private static Stopwatch stopwatch;
+
         public static HashSet<ContentPackage> SelectedPackages
         {
             get { return Config.SelectedContentPackages; }
         }
 
-        public GameMain()
+        public readonly string[] CommandLineArgs;
+
+        public GameMain(string[] args)
         {
             Instance = this;
-            
+
+            CommandLineArgs = args;
+
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
-            Config = new GameSettings("config.xml");
-            if (Config.WasGameUpdated)
-            {
-                UpdaterUtil.CleanOldFiles();
-                Config.WasGameUpdated = false;
-                Config.Save();
-            }
-
-            TextManager.LoadTextPacks();
+            Config = new GameSettings();
 
             SteamManager.Initialize();
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
@@ -89,6 +86,7 @@ namespace Barotrauma
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            ItemAssemblyPrefab.LoadAll();
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
@@ -142,22 +140,81 @@ namespace Barotrauma
 
         public void StartServer()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(GameServer.SettingsFile);
-            if (doc == null)
+            string name = "Server";
+            int port = NetConfig.DefaultPort;
+            int queryPort = NetConfig.DefaultQueryPort;
+            bool publiclyVisible = false;
+            string password = "";
+            bool enableUpnp = false;
+            int maxPlayers = 10;
+            int ownerKey = 0;
+
+            XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
+            if (doc?.Root == null)
             {
-                DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
-                Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
-                return;
+                DebugConsole.ThrowError("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
+            }
+            else
+            {
+                name = doc.Root.GetAttributeString("name", "Server");
+                port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
+                queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
+                publiclyVisible = doc.Root.GetAttributeBool("public", false);
+                password = doc.Root.GetAttributeString("password", "");
+                enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
+                maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
+                ownerKey = 0;
+            }
+            
+            for (int i = 0; i < CommandLineArgs.Length; i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-name":
+                        name = CommandLineArgs[i + 1];
+                        i++;
+                        break;
+                    case "-port":
+                        int.TryParse(CommandLineArgs[i + 1], out port);
+                        i++;
+                        break;
+                    case "-queryport":
+                        int.TryParse(CommandLineArgs[i + 1], out queryPort);
+                        i++;
+                        break;
+                    case "-public":
+                        bool.TryParse(CommandLineArgs[i + 1], out publiclyVisible);
+                        i++;
+                        break;
+                    case "-password":
+                        password = CommandLineArgs[i + 1];
+                        i++;
+                        break;
+                    case "-upnp":
+                    case "-enableupnp":
+                        bool.TryParse(CommandLineArgs[i + 1], out enableUpnp);
+                        i++;
+                        break;
+                    case "-maxplayers":
+                        int.TryParse(CommandLineArgs[i + 1], out maxPlayers);
+                        i++;
+                        break;
+                    case "-ownerkey":
+                        int.TryParse(CommandLineArgs[i + 1], out ownerKey);
+                        i++;
+                        break;
+                }
             }
 
             Server = new GameServer(
-                doc.Root.GetAttributeString("name", "Server"),
-                doc.Root.GetAttributeInt("port", NetConfig.DefaultPort),
-                doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort),
-                doc.Root.GetAttributeBool("public", false),
-                doc.Root.GetAttributeString("password", ""),
-                doc.Root.GetAttributeBool("enableupnp", false),
-                doc.Root.GetAttributeInt("maxplayers", 10));
+                name,
+                port,
+                queryPort,
+                publiclyVisible,
+                password,
+                enableUpnp,
+                maxPlayers,
+                ownerKey);
         }
 
         public void CloseServer()
@@ -176,7 +233,7 @@ namespace Barotrauma
             Init();
             StartServer();
 
-            Timing.Accumulator = 0.0;
+            ResetFrameTime();
 
             double frequency = (double)Stopwatch.Frequency;
             if (frequency <= 1500)
@@ -184,13 +241,18 @@ namespace Barotrauma
                 DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
             }
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            stopwatch = Stopwatch.StartNew();
             long prevTicks = stopwatch.ElapsedTicks;
             while (ShouldRun)
             {
                 long currTicks = stopwatch.ElapsedTicks;
-                double elapsedTime = (currTicks - prevTicks) / frequency;
+                double elapsedTime = Math.Max(currTicks - prevTicks, 0) / frequency;
                 Timing.Accumulator += elapsedTime;
+                if (Timing.Accumulator > 1.0)
+                {
+                    //prevent spiral of death
+                    Timing.Accumulator = Timing.Step;
+                }
                 Timing.TotalTime += elapsedTime;
                 prevTicks = currTicks;
                 while (Timing.Accumulator >= Timing.Step)
@@ -204,6 +266,7 @@ namespace Barotrauma
                     Timing.Accumulator -= Timing.Step;
                 }
                 int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency) * 1000.0);
+                frameTime = Math.Max(0, frameTime);
                 Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime) / 2, 0));
             }
             stopwatch.Stop();
@@ -213,19 +276,14 @@ namespace Barotrauma
             SteamManager.ShutDown();
             if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
         }
-        
-        public void ProcessInput()
-        {
-            while (true)
-            {
-                string input = Console.ReadLine();
-                lock (DebugConsole.QueuedCommands)
-                {
-                    DebugConsole.QueuedCommands.Add(input);
-                }
-            }
-        }
 
+        public static void ResetFrameTime()
+        {
+            Timing.Accumulator = 0.0f;
+            stopwatch?.Reset();
+            stopwatch?.Start();
+        }
+        
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);

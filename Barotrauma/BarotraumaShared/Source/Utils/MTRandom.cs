@@ -36,7 +36,6 @@ namespace Barotrauma
         /// <summary>
         /// Constructor with provided 32 bit seed
         /// </summary>
-        [CLSCompliant(false)]
         public MTRandom(int seed)
         {
             Initialize((uint)Math.Abs(seed));
@@ -45,7 +44,6 @@ namespace Barotrauma
         /// <summary>
         /// (Re)initialize this instance with provided 32 bit seed
         /// </summary>
-        [CLSCompliant(false)]
         private void Initialize(uint seed)
         {
             mt = new UInt32[N];
@@ -59,7 +57,6 @@ namespace Barotrauma
         /// <summary>
         /// Generates a random value from UInt32.MinValue to UInt32.MaxValue, inclusively
         /// </summary>
-        [CLSCompliant(false)]
         private uint NextUInt32()
         {
             UInt32 y;

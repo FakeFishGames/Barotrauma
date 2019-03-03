@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             }
 
             var progressBar = user.UpdateHUDProgressBar(
-                targetStructure,
+                targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
                 progressBarPos,
                 1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
                 Color.Red, Color.Green);
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                 var progressBar = user.UpdateHUDProgressBar(
                     targetItem,
                     progressBarPos,
-                    targetItem.Condition / 100.0f,
+                    targetItem.Prefab.Health <= 0.0f ? 0.0f : targetItem.Condition / targetItem.Prefab.Health,
                     Color.Red, Color.Green);
                 if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
             }

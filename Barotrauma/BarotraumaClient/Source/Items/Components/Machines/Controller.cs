@@ -8,7 +8,7 @@ namespace Barotrauma.Items.Components
         {
             if (focusTarget != null && character.ViewTarget == focusTarget)
             {
-                foreach (ItemComponent ic in focusTarget.components)
+                foreach (ItemComponent ic in focusTarget.Components)
                 {
                     ic.DrawHUD(spriteBatch, character);
                 }

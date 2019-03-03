@@ -14,30 +14,14 @@ namespace Barotrauma.Items.Components
     partial class RepairTool : ItemComponent
     {
         private readonly List<string> fixableEntities;
-
-        private float range;
-
         private Vector2 pickedPosition;
-
-        private Vector2 barrelPos;
-        
         private float activeTimer;
-
+        
         [Serialize(0.0f, false)]
-        public float Range
-        {
-            get { return range; }
-            set { range = value; }
-        }
+        public float Range { get; set; }
 
         [Serialize(0.0f, false)]
         public float StructureFixAmount
-        {
-            get; set;
-        }
-
-        [Serialize(0.0f, false)]
-        public float LimbFixAmount
         {
             get; set;
         }
@@ -46,20 +30,19 @@ namespace Barotrauma.Items.Components
         {
             get; set;
         }
-        
+
         [Serialize("0.0,0.0", false)]
-        public Vector2 BarrelPos
-        {
-            get { return barrelPos; }
-            set { barrelPos = value; }
-        }
+        public Vector2 BarrelPos { get; set; }
+
+        [Serialize(false, false)]
+        public bool RepairThroughWalls { get; set; }
 
         public Vector2 TransformedBarrelPos
         {
             get
             {
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
-                Vector2 flippedPos = barrelPos;
+                Vector2 flippedPos = BarrelPos;
                 if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
                 return (Vector2.Transform(flippedPos, bodyTransform));
             }
@@ -69,6 +52,11 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             this.item = item;
+
+            if (element.Attribute("limbfixamount") != null)
+            {
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
+            }
 
             fixableEntities = new List<string>();
             foreach (XElement subElement in element.Elements())
@@ -116,7 +104,7 @@ namespace Barotrauma.Items.Components
             Vector2 targetPosition = item.WorldPosition;
             targetPosition += new Vector2(
                 (float)Math.Cos(item.body.Rotation),
-                (float)Math.Sin(item.body.Rotation)) * range * item.body.Dir;
+                (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir;
 
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
@@ -154,9 +142,20 @@ namespace Barotrauma.Items.Components
 
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
-                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
-
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            if (RepairThroughWalls)
+            {
+                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false);
+                foreach (Body body in bodies)
+                {
+                    FixBody(user, deltaTime, degreeOfSuccess, body);
+                }
+            }
+            else
+            {
+                FixBody(user, deltaTime, degreeOfSuccess, Submarine.PickBody(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false));
+            }
+            
             if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
             {
                 List<FireSource> fireSourcesInRange = new List<FireSource>();
@@ -164,7 +163,7 @@ namespace Barotrauma.Items.Components
                 for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
-                    if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }                    
+                    if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
 
                     Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
                     if (hull == null) continue;
@@ -182,11 +181,14 @@ namespace Barotrauma.Items.Components
                     fs.Extinguish(deltaTime, ExtinguishAmount);
                 }
             }
+        }
 
-            if (targetBody == null || targetBody.UserData == null) return;
+        private void FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
+        {
+            if (targetBody?.UserData == null) { return; }
 
             pickedPosition = Submarine.LastPickedPosition;
-            
+
             if (targetBody.UserData is Structure targetStructure)
             {
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) return;
@@ -197,7 +199,7 @@ namespace Barotrauma.Items.Components
 
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
-                
+
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
                 for (int i = -1; i < 2; i += 2)
@@ -214,20 +216,14 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Character targetCharacter)
             {
-                Vector2 hitPos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetCharacter.Submarine != null) hitPos += targetCharacter.Submarine.Position;
-
                 targetCharacter.LastDamageSource = item;
-                targetCharacter.AddDamage(hitPos,
-                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 targetLimb.character.LastDamageSource = item;
-                targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
-                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
-
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
             }
             else if (targetBody.UserData is Item targetItem)
@@ -236,7 +232,7 @@ namespace Barotrauma.Items.Components
 
                 float prevCondition = targetItem.Condition;
 
-                ApplyStatusEffectsOnTarget(deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
@@ -254,6 +250,7 @@ namespace Barotrauma.Items.Components
                 FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
             }
         }
+    
 
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
@@ -267,7 +264,7 @@ namespace Barotrauma.Items.Components
             float dist = Vector2.Distance(leak.WorldPosition, item.WorldPosition);
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > range * 5.0f) return true;
+            if (dist > Range * 5.0f) return true;
 
             Vector2 gapDiff = leak.WorldPosition - item.WorldPosition;
             if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
@@ -277,13 +274,13 @@ namespace Barotrauma.Items.Components
             }
 
             //steer closer if almost in range
-            if (dist > range)
+            if (dist > Range)
             {
                 Vector2 standPos = leak.IsHorizontal ?
                     new Vector2(Math.Sign(-gapDiff.X), 0.0f)
                     : new Vector2(0.0f, Math.Sign(-gapDiff.Y) * 0.5f);
 
-                standPos = leak.WorldPosition + standPos * range;
+                standPos = leak.WorldPosition + standPos * Range;
 
                 character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);
             }
@@ -315,15 +312,14 @@ namespace Barotrauma.Items.Components
             return leakFixed;
         }
 
-        private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)
+        private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, IEnumerable<ISerializableEntity> targets)
         {
-            if (statusEffectLists == null) return;
-
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(actionType, out statusEffects)) return;
+            if (statusEffectLists == null) { return; }
+            if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
 
             foreach (StatusEffect effect in statusEffects)
             {
+                effect.SetUser(user);
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(actionType, deltaTime, item, targets);

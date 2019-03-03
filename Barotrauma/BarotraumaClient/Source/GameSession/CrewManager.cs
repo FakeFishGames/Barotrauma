@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,10 +26,7 @@ namespace Barotrauma
         private List<Character> characters = new List<Character>();
 
         private Point screenResolution;
-
-        public int WinningTeam = 1;
-
-
+               
         #region UI
 
         private GUIFrame guiFrame;
@@ -47,7 +45,7 @@ namespace Barotrauma
         private ChatBox chatBox;
 
         private float prevUIScale;
-        
+
         private GUIComponent orderTargetFrame, orderTargetFrameShadow;
 
         public bool ToggleCrewAreaOpen
@@ -144,11 +142,20 @@ namespace Barotrauma
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
                         }
                         textbox.Deselect();
                         textbox.Text = "";
                         return true;
-                    }                    
+                    }
+                };
+                chatBox.InputBox.OnDeselected += (gui, Keys) =>
+                {
+                    this.chatBox.InputBox.Text = "";
                 };
                 chatBox.InputBox.OnTextChanged += chatBox.TypingChatMessage;
             }
@@ -328,7 +335,7 @@ namespace Barotrauma
 
             int spacing = (int)(10 * GUI.Scale);
             int height = (int)(45 * GUI.Scale);
-            characterInfoWidth = (int)(170 * GUI.Scale);
+            characterInfoWidth = (int)(200 * GUI.Scale);
 
             float charactersPerView = characterListBox.Rect.Height / (float)(height + characterListBox.Spacing);
 
@@ -341,6 +348,7 @@ namespace Barotrauma
 
             int iconSize = (int)(height * 0.8f);
 
+
             var frame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, height), parent.RectTransform), style: "InnerFrame")
             {
                 UserData = character,
@@ -349,7 +357,16 @@ namespace Barotrauma
             frame.Color = character.Info.Job.Prefab.UIColor;
             frame.SelectedColor = Color.Lerp(frame.Color, Color.White, 0.5f);
             frame.HoverColor = Color.Lerp(frame.Color, Color.White, 0.9f);
-
+            
+            new GUIFrame(new RectTransform(new Point(characterInfoWidth, (int)(frame.Rect.Height * 1.3f)), frame.RectTransform, Anchor.CenterLeft), style: "OuterGlow")
+            {
+                UserData = "highlight",
+                Color = frame.SelectedColor,
+                HoverColor = frame.SelectedColor,
+                PressedColor = frame.SelectedColor,
+                SelectedColor = frame.SelectedColor,
+                CanBeFocused = false
+            };
             //---------------- character area ----------------
 
             string characterToolTip = character.Info.Name;
@@ -365,6 +382,23 @@ namespace Barotrauma
                 HoverColor = frame.HoverColor,
                 ToolTip = characterToolTip
             };
+            
+            var soundIcon = new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+                "GUISoundIcon")
+            {
+                UserData = "soundicon",
+                CanBeFocused = false,
+                Visible = true
+            };
+            soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+                "GUISoundIconDisabled")
+            {
+                UserData = "soundicondisabled",
+                CanBeFocused = true,
+                Visible = false
+            };
+
             if (isSinglePlayer)
             {
                 characterArea.OnClicked = CharacterClicked;
@@ -375,7 +409,7 @@ namespace Barotrauma
                 characterArea.CanBeSelected = false;
             }
 
-            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
+            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
                 onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
                 CanBeFocused = false,
@@ -384,7 +418,8 @@ namespace Barotrauma
                 ToolTip = characterToolTip
             };
 
-            var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width, characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterRight),
+            var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width - soundIcon.Rect.Width - 10, characterArea.Rect.Height),
+                characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(soundIcon.Rect.Width + 10, 0) },
                 character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
             {
                 Color = frame.Color,
@@ -423,8 +458,8 @@ namespace Barotrauma
                 var order = orders[i];
                 if (order.TargetAllCharacters) continue;
 
-                RectTransform btnParent = (i >= correctOrderCount + neutralOrderCount) ? 
-                    wrongOrderList.Content.RectTransform : 
+                RectTransform btnParent = (i >= correctOrderCount + neutralOrderCount) ?
+                    wrongOrderList.Content.RectTransform :
                     orderButtonFrame.RectTransform;
 
                 var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
@@ -445,11 +480,11 @@ namespace Barotrauma
                 img.Color = Color.Lerp(order.Color, frame.Color, 0.5f);
                 img.ToolTip = order.Name;
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
-                
+
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
                     if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
-                    
+
                     if (btn.GetChildByUserData("selected").Visible)
                     {
                         SetCharacterOrder(character, Order.PrefabList.Find(o => o.AITag == "dismissed"), null, Character.Controlled);
@@ -526,23 +561,6 @@ namespace Barotrauma
             return true;
         }
 
-        /// <summary>
-        /// Sets which character is selected in the crew UI (highlight effect etc)
-        /// </summary>
-        public void SetCharacterSelected(Character character)
-        {
-            if (character != null && !characters.Contains(character)) return;
-
-            //GUIComponent selectedCharacterFrame = null;
-            foreach (GUIComponent child in characterListBox.Content.Children)
-            {
-                GUIButton button = child.Children.FirstOrDefault(c => c.UserData is Character) as GUIButton;
-                if (button == null) continue;
-
-                child.Visible = (Character)button.UserData != character;
-            }
-        }
-
         public void ReviveCharacter(Character revivedCharacter)
         {
             if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
@@ -566,8 +584,8 @@ namespace Barotrauma
             if (characterListBox.Content.CountChildren == 0) return false;
             int dir = (int)obj;
 
-            float step = 
-                (characterListBox.Content.Children.First().Rect.Height + characterListBox.Spacing) / 
+            float step =
+                (characterListBox.Content.Children.First().Rect.Height + characterListBox.Spacing) /
                 (characterListBox.TotalSize - characterListBox.Rect.Height);
             characterListBox.BarScroll -= characterListBox.BarScroll % step;
             characterListBox.BarScroll += dir * step;
@@ -606,7 +624,6 @@ namespace Barotrauma
         #endregion
 
         #region Dialog
-        
         /// <summary>
         /// Adds the message to the single player chatbox.
         /// </summary>
@@ -617,6 +634,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
                 return;
             }
+            if (string.IsNullOrEmpty(text)) { return; }
 
             chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
@@ -632,6 +650,52 @@ namespace Barotrauma
             return radioItem.GetComponent<WifiComponent>();
         }
 
+        partial void CreateRandomConversation()
+        {
+            if (GameMain.Client != null)
+            {
+                //let the server create random conversations in MP
+                return;
+            }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
+                c.AIController is HumanAIController &&
+                !c.IsDead &&
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+        }
+
+        #endregion
+
+
+        #region Voice chat
+        
+        public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
+        {
+            if (client?.Character == null) { return; }
+
+            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
+
+            if (!soundIcon.Visible)
+            {
+                soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            }
+            soundIcon.Visible = !muted && !mutedLocally;
+            soundIconDisabled.Visible = muted || mutedLocally;
+            soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
+        }
+
+        public void SetPlayerSpeaking(Client client)
+        {
+            if (client?.Character == null) { return; }
+
+            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            soundIcon.Color = new Color(soundIcon.Color, 1.0f);
+        }
         #endregion
 
         /// <summary>
@@ -648,7 +712,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
-                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName), ChatMessageType.Order);
+                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
@@ -657,19 +721,15 @@ namespace Barotrauma
                     {
                         GameMain.Client.SendChatMessage(msg);
                     }
-                    else if (GameMain.Server != null)
-                    {
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
                 }
                 return;
             }
 
-            character.SetOrder(order, option, orderGiver);
+            character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), null);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
             }
             else if (orderGiver != null)
             {
@@ -678,16 +738,12 @@ namespace Barotrauma
                 {
                     GameMain.Client.SendChatMessage(msg);
                 }
-                else if (GameMain.Server != null)
-                {
-                    GameMain.Server.SendOrderChatMessage(msg);
-                }
             }
             DisplayCharacterOrder(character, order);
         }
 
         /// <summary>
-        /// Displays the specified order in the crew UI next to the character. 
+        /// Displays the specified order in the crew UI next to the character.
         /// </summary>
         public void DisplayCharacterOrder(Character character, Order order)
         {
@@ -697,7 +753,7 @@ namespace Barotrauma
                 if (characterFrame == null) continue;
 
                 var orderButtonFrame = characterListElement.GetChildByUserData("orderbuttons");
-                
+
                 //get all order buttons from the frame
                 List<GUIButton> orderButtons = new List<GUIButton>();
                 foreach (GUIComponent child in orderButtonFrame.Children)
@@ -728,13 +784,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Create the UI panel that's used to select the target and options for a given order 
+        /// Create the UI panel that's used to select the target and options for a given order
         /// (which railgun to use, whether to power up the reactor or shut it down...)
         /// </summary>
         private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
         {
-            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID > 1 && Submarine.MainSubs.Length > 1 ?
-                Submarine.MainSubs[1] : 
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+                Submarine.MainSubs[1] :
                 Submarine.MainSub;
 
             List<Item> matchingItems = new List<Item>();
@@ -742,12 +798,12 @@ namespace Barotrauma
             {
                 matchingItems = order.ItemIdentifiers.Length > 0 ?
                     Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
-                    Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == order.ItemComponentType));
 
                 matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
                 matchingItems.RemoveAll(it => it.Submarine != null && it.Submarine.IsOutpost);
             }
-            
+
             //more than one target item -> create a minimap-like selection with a pic of the sub
             if (matchingItems.Count > 1)
             {
@@ -800,6 +856,12 @@ namespace Barotrauma
                         style: "InnerFrame");
                     optionFrames.Add(optionFrame);
 
+                    new GUIFrame(new RectTransform(Vector2.One, optionFrame.RectTransform, Anchor.Center),
+                        style: "OuterGlow")
+                    {
+                        Color = Color.Black * 0.7f
+                    };
+
                     var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, Anchor.Center))
                     {
                         Stretch = true,
@@ -813,7 +875,7 @@ namespace Barotrauma
                         var optionButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), optionContainer.RectTransform),
                             order.OptionNames[i], style: "GUITextBox")
                         {
-                            UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                            UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                             Font = GUI.SmallFont,
                             OnClicked = (btn, userData) =>
                             {
@@ -841,7 +903,7 @@ namespace Barotrauma
                 //line connecting the order button to the option buttons
                 //TODO: sprite
                 new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), orderTargetFrame.RectTransform), style: null);
-                
+
                 for (int i = 0; i < order.Options.Length; i++)
                 {
                     Item item = matchingItems.Count > 0 ? matchingItems[0] : null;
@@ -849,7 +911,7 @@ namespace Barotrauma
                     var optionButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), orderTargetFrame.RectTransform),
                         order.OptionNames[i], style: "GUITextBox")
                     {
-                        UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType)),
+                        UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                         OnClicked = (btn, userData) =>
                         {
                             if (Character.Controlled == null) return false;
@@ -868,8 +930,12 @@ namespace Barotrauma
             }
             int shadowSize = (int)(200 * GUI.Scale);
             orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
-                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, style: "OuterGlow", color: Color.Black * 0.65f);
+                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) },
+                style: "OuterGlow",
+                color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
+
+#region Updating and drawing the UI
 
         private void DrawMiniMapOverlay(SpriteBatch spriteBatch, GUICustomComponent container)
         {
@@ -887,7 +953,7 @@ namespace Barotrauma
             float displayScale = ConvertUnits.ToDisplayUnits(scale);
             Vector2 offset = (sub.WorldPosition - new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)) * scale;
             Vector2 center = container.Rect.Center.ToVector2();
-            
+
             for (int i = 0; i < sub.HullVertices.Count; i++)
             {
                 Vector2 start = (sub.HullVertices[i] * displayScale + offset);
@@ -895,14 +961,12 @@ namespace Barotrauma
                 Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] * displayScale + offset);
                 end.Y = -end.Y;
                 GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
-            }            
+            }
         }
-
-        #region Updating and drawing the UI
 
         public void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y ||
                 prevUIScale != GUI.Scale)
             {
@@ -981,7 +1045,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
             if (chatBox != null)
             {
                 chatBox.Update(deltaTime);
@@ -989,23 +1053,17 @@ namespace Barotrauma
 
                 if (!DebugConsole.IsOpen && chatBox.InputBox.Visible)
                 {
-                    if (PlayerInput.KeyHit(InputType.Chat))
+                    if (PlayerInput.KeyHit(InputType.Chat) && !chatBox.InputBox.Selected)
                     {
-                        if (chatBox.InputBox.Selected)
-                        {
-                            chatBox.InputBox.Text = "";
-                            chatBox.InputBox.Deselect();
-                        }
-                        else
-                        {
-                            chatBox.InputBox.Select();
-                        }
+                        chatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
+                        chatBox.InputBox.Select();
                     }
 
                     if (PlayerInput.KeyHit(InputType.RadioChat) && !chatBox.InputBox.Selected)
                     {
+                        chatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
                         chatBox.InputBox.Select();
-                        chatBox.InputBox.Text = "r; ";                        
+                        chatBox.InputBox.Text = "r; ";
                     }
                 }
             }
@@ -1018,12 +1076,22 @@ namespace Barotrauma
 
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
-                child.Visible = 
-                    Character.Controlled == null || 
-                    (Character.Controlled != ((Character)child.UserData) && Character.Controlled.TeamID == ((Character)child.UserData).TeamID);
+                Character character = (Character)child.UserData;
+                child.Visible =
+                    Character.Controlled == null ||
+                    (Character.Controlled.TeamID == character.TeamID);
 
                 if (child.Visible)
                 {
+                    child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
+                    
+                    var soundIcon = child.FindChild(character)?.FindChild("soundicon");
+                    if (soundIcon != null)
+                    {
+                        soundIcon.Color = new Color(soundIcon.Color, (soundIcon.Color.A / 255.0f) - deltaTime);
+                    }
+
+
                     GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
                     if (wrongOrderList != null)
                     {
@@ -1038,8 +1106,8 @@ namespace Barotrauma
                             hoverRect.Inflate((int)(30 * GUI.Scale), (int)(0 * GUI.Scale));
                         }
 
-                        bool toggleOpen = 
-                            characterListBox.Content.Rect.Contains(PlayerInput.MousePosition) && 
+                        bool toggleOpen =
+                            characterListBox.Content.Rect.Contains(PlayerInput.MousePosition) &&
                             hoverRect.Contains(PlayerInput.MousePosition);
                         wrongOrderList.CanBeFocused = toggleOpen;
                         wrongOrderList.Content.CanBeFocused = toggleOpen;
@@ -1084,7 +1152,6 @@ namespace Barotrauma
             }
 
             UpdateReports(deltaTime);
-            UpdateConversations(deltaTime);
 
             if (orderTargetFrame != null)
             {
@@ -1103,16 +1170,16 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Creates a listbox that includes all the characters in the crew, can be used externally (round info menus etc)
         /// </summary>
         public void CreateCrewListFrame(IEnumerable<Character> crew, GUIFrame crewFrame)
         {
-            List<byte> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
+            List<Character.TeamType> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
-            if (!teamIDs.Any()) teamIDs.Add(0);
+            if (!teamIDs.Any()) teamIDs.Add(Character.TeamType.None);
 
             int listBoxHeight = 300 / teamIDs.Count;
 
@@ -1143,7 +1210,7 @@ namespace Barotrauma
                     GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), crewList.Content.RectTransform), style: "ListBoxElement")
                     {
                         UserData = character,
-                        Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent
+                        Color = (GameMain.NetworkMember != null && GameMain.Client.Character == character) ? Color.Gold * 0.2f : Color.Transparent
                     };
 
                     var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
@@ -1151,7 +1218,7 @@ namespace Barotrauma
                         RelativeSpacing = 0.05f,
                         Stretch = true
                     };
-                    
+
                     new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform, Anchor.CenterLeft),
                         onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
                     {
@@ -1161,7 +1228,7 @@ namespace Barotrauma
                     };
 
                     GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedFrame.RectTransform),
-                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height), 
+                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height),
                         textColor: character.Info.Job.Prefab.UIColor);
                 }
             }
@@ -1186,12 +1253,12 @@ namespace Barotrauma
 
             character.Info.CreateInfoFrame(previewPlayer);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(character, previewPlayer);
+            if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
 
             return true;
         }
 
-        #region Reports
+#region Reports
 
         /// <summary>
         /// Enables/disables report buttons when needed
@@ -1209,7 +1276,7 @@ namespace Barotrauma
             {
                 reportButtonFrame.Visible = true;
 
-                var reportButtonParent = chatBox ?? GameMain.NetworkMember.ChatBox;
+                var reportButtonParent = chatBox ?? GameMain.Client.ChatBox;
                 reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
                     reportButtonParent.GUIFrame.Rect.Y);
@@ -1222,7 +1289,7 @@ namespace Barotrauma
 
                 bool hasIntruders = Character.CharacterList.Any(c =>
                     c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
-                    (c.AIController is EnemyAIController || c.TeamID != Character.Controlled.TeamID));
+                    (c.AIController is EnemyAIController || (c.TeamID != Character.Controlled.TeamID && c.TeamID != Character.TeamType.FriendlyNPC)));
 
                 ToggleReportButton("reportintruders", hasIntruders);
 
@@ -1232,7 +1299,7 @@ namespace Barotrauma
                     if (highlight.Visible)
                     {
                         highlight.RectTransform.LocalScale = new Vector2(1.25f + (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.25f);
-                    }                    
+                    }
                 }
             }
             else
@@ -1248,7 +1315,7 @@ namespace Barotrauma
         {
             return CharacterHealth.OpenHealthWindow == null;
         }
-        
+
         private bool ReportButtonClicked(GUIButton button, object userData)
         {
             //order targeted to all characters
@@ -1265,7 +1332,7 @@ namespace Barotrauma
         private void ToggleReportButton(string orderAiTag, bool enabled)
         {
             Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
-                        
+
             //already reported, disable the button
             /*if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
                 o.First.TargetEntity == Character.Controlled.CurrentHull &&
@@ -1278,10 +1345,10 @@ namespace Barotrauma
             if (reportButton != null)
             {
                 reportButton.GetChildByUserData("highlighted").Visible = enabled;
-            }            
+            }
         }
 
-        #endregion
+#endregion
 
         public void InitSinglePlayerRound()
         {
@@ -1292,13 +1359,13 @@ namespace Barotrauma
 
             for (int i = 0; i < waypoints.Length; i++)
             {
-                Character character;                
+                Character character;
                 character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
                 if (character.Info != null && !character.Info.StartItemsGiven)
                 {
                     character.GiveJobItems(waypoints[i]);
                     character.Info.StartItemsGiven = true;
-                }                
+                }
 
                 if (character.Info?.InventoryData != null)
                 {

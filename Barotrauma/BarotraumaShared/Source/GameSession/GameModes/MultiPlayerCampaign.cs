@@ -14,14 +14,26 @@ namespace Barotrauma
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
         {
-            get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
+            get
+            {
+#if SERVER
+                if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++;
+#endif
+                return lastUpdateID;
+            }
             set { lastUpdateID = value; }
         }
 
         private UInt16 lastSaveID;
         public UInt16 LastSaveID
         {
-            get { if (GameMain.Server != null && lastSaveID < 1) lastSaveID++; return lastSaveID; }
+            get
+            {
+#if SERVER
+                if (GameMain.Server != null && lastSaveID < 1) lastSaveID++;
+#endif
+                return lastSaveID;
+            }
             set { lastSaveID = value; }
         }
         
@@ -47,124 +59,34 @@ namespace Barotrauma
             CampaignID = currentCampaignID;
         }
         
-        private void SetDelegates()
-        {
-            if (GameMain.Server != null)
-            {
-                CargoManager.OnItemsChanged += () => { LastUpdateID++; };
-                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
-                Map.OnMissionSelected += (loc, mission) => { LastUpdateID++; };
-            }
-        }
-
-        public void DiscardClientCharacterData(Client client)
-        {
-            characterData.RemoveAll(cd => cd.MatchesClient(client));
-        }
-
-        public CharacterCampaignData GetClientCharacterData(Client client)
-        {
-            return characterData.Find(cd => cd.MatchesClient(client));
-        }
-
-        public CharacterCampaignData GetHostCharacterData()
-        {
-            return characterData.Find(cd => cd.IsHostCharacter);
-        }
-
-        public void AssignPlayerCharacterInfos(IEnumerable<Client> connectedClients, bool assignHost)
-        {
-            foreach (Client client in connectedClients)
-            {
-                if (client.SpectateOnly && GameMain.Server.AllowSpectating) continue;
-                var matchingData = GetClientCharacterData(client);
-                if (matchingData != null) client.CharacterInfo = matchingData.CharacterInfo;
-            }
-
-            if (assignHost)
-            {
-                var hostCharacterData = GetHostCharacterData();
-                if (hostCharacterData?.CharacterInfo != null)
-                {
-                    GameMain.Server.CharacterInfo = hostCharacterData.CharacterInfo;
-                }
-            }
-        }
-
-        public Dictionary<Client, Job> GetAssignedJobs(IEnumerable<Client> connectedClients)
-        {
-            var assignedJobs = new Dictionary<Client, Job>();
-            foreach (Client client in connectedClients)
-            {
-                var matchingData = GetClientCharacterData(client);
-                if (matchingData != null) assignedJobs.Add(client, matchingData.CharacterInfo.Job);
-            }
-            return assignedJobs;
-        }
-
         public override void Start()
         {
             base.Start();            
-            lastUpdateID++;
+            if (GameMain.NetworkMember.IsServer) lastUpdateID++;
         }
-
-
-        protected override void WatchmanInteract(Character watchman, Character interactor)
-        {
-            if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
-                (watchman.Submarine == Level.Loaded.EndOutpost && !Submarine.MainSub.AtEndPosition))
-            {
-                if (GameMain.Server != null)
-                {
-                    CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);
-                }
-                return;
-            }
-
-            bool hasPermissions = true;
-            if (GameMain.Server != null)
-            {
-                var client = GameMain.Server.ConnectedClients.Find(c => c.Character == interactor);
-                hasPermissions = client != null &&
-                    (client.HasPermission(ClientPermissions.EndRound) || client.HasPermission(ClientPermissions.ManageCampaign));
-                    CreateDialog(new List<Character> { watchman }, hasPermissions ? "WatchmanInteract" : "WatchmanInteractNotAllowed", 1.0f);
-            }
-#if CLIENT
-            else if (GameMain.Client != null && interactor == Character.Controlled && hasPermissions)
-            {
-                var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
-                    .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
-                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
-                {
-                    GameMain.Client.RequestRoundEnd();
-                    return true;
-                };
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
-            
-            }
-#endif
-        }
-
+        
         public override void End(string endMessage = "")
         {
             isRunning = false;
 
+#if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.GameSession.EndRound("");
-#if CLIENT
                 GameMain.GameSession.CrewManager.EndRound();
-#endif
                 return;                
             }
-            
+#endif
+
+#if SERVER
             lastUpdateID++;
 
-            bool success = 
-                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
-                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+            bool success =
+                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+
+#if CLIENT
+            success = success || (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+#endif
 
             /*if (success)
             {
@@ -191,23 +113,6 @@ namespace Barotrauma
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
                     characterData.Add(new CharacterCampaignData(c));
-                }
-            }
-
-#if CLIENT
-            GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
-#endif
-
-            if (GameMain.Server.Character != null)
-            {
-                characterData.RemoveAll(cd => cd.IsHostCharacter);
-                if (!GameMain.Server.Character.IsDead)
-                {
-                    var hostCharacterData = new CharacterCampaignData(GameMain.Server);
-                    characterData.Add(hostCharacterData);
-#if CLIENT
-                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(hostCharacterData.CharacterInfo);
-#endif
                 }
             }
 
@@ -250,8 +155,11 @@ namespace Barotrauma
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
+#endif
         }
-        
+
+        partial void SetDelegates();
+
         public static MultiPlayerCampaign LoadNew(XElement element)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.List.Find(gm => gm.Identifier == "multiplayercampaign"), null);
@@ -310,23 +218,13 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Server != null)
+            characterData.Clear();
+            string characterDataPath = GetCharacterDataSavePath();
+            var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
+            if (characterDataDoc?.Root == null) return;
+            foreach (XElement subElement in characterDataDoc.Root.Elements())
             {
-                characterData.Clear();
-                string characterDataPath = GetCharacterDataSavePath();
-                var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
-                if (characterDataDoc?.Root == null) return;
-                foreach (XElement subElement in characterDataDoc.Root.Elements())
-                {
-                    characterData.Add(new CharacterCampaignData(subElement));
-                }
-#if CLIENT
-                var hostCharacterData = GetHostCharacterData();
-                if (hostCharacterData?.CharacterInfo != null)
-                {
-                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(hostCharacterData.CharacterInfo);
-                }
-#endif
+                characterData.Add(new CharacterCampaignData(subElement));
             }
         }
 
@@ -355,77 +253,6 @@ namespace Barotrauma
             }
 
             lastSaveID++;
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c)
-        {
-            System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
-
-            msg.Write(CampaignID);
-            msg.Write(lastUpdateID);
-            msg.Write(lastSaveID);
-            msg.Write(map.Seed);
-            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
-
-            msg.Write(Money);
-
-            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
-            {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
-                msg.Write((UInt16)pi.Quantity);
-            }
-
-            var characterData = GetClientCharacterData(c);
-            if (characterData?.CharacterInfo == null)
-            {
-                msg.Write(false);
-            }
-            else
-            {
-                msg.Write(true);
-                characterData.CharacterInfo.ServerWrite(msg);
-            }
-        }
-        
-        public void ServerRead(NetBuffer msg, Client sender)
-        {
-            UInt16 selectedLocIndex = msg.ReadUInt16();
-            byte selectedMissionIndex = msg.ReadByte();
-            UInt16 purchasedItemCount = msg.ReadUInt16();
-
-            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
-            for (int i = 0; i < purchasedItemCount; i++)
-            {
-                UInt16 itemPrefabIndex = msg.ReadUInt16();
-                UInt16 itemQuantity = msg.ReadUInt16();
-                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
-            }
-
-            if (!sender.HasPermission(ClientPermissions.ManageCampaign))
-            {
-                DebugConsole.ThrowError("Client \"" + sender.Name + "\" does not have a permission to manage the campaign");
-                return;
-            }
-
-            Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-            if (Map.SelectedConnection != null)
-            {
-                Map.SelectMission(selectedMissionIndex);
-            }
-
-            List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
-            foreach (PurchasedItem pi in currentItems)
-            {
-                CargoManager.SellItem(pi, pi.Quantity);
-            }
-
-            foreach (PurchasedItem pi in purchasedItems)
-            {
-                CargoManager.PurchaseItem(pi.ItemPrefab, pi.Quantity);
-            }
         }
     }
 }

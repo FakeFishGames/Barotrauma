@@ -53,8 +53,9 @@
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" /> 
   <Character file="Content/Characters/Human/Human.xml" />
-  <Character file="Content/Characters/Humanhusk/Humanhusk.xml" />
   <Character file="Content/Characters/Husk/Husk.xml" />
+  <Character file="Content/Characters/Humanhusk/Humanhusk.xml" />
+  <Character file="Content/Characters/Legacyhusk/Legacyhusk.xml" />
   <Character file="Content/Characters/Legacycrawler/Legacycrawler.xml" />
   <Character file="Content/Characters/Legacymoloch/Legacymoloch.xml" />
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
@@ -70,6 +71,7 @@
   <Submarine file="Submarines/Orca.sub" />
   <Submarine file="Submarines/Typhon.sub" />
   <Submarine file="Submarines/Muikku.sub" />
+  <Submarine file="Submarines/Bunyip.sub" />
   <Submarine file="Submarines/Humpback.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
   <Text file="Content/Texts/EnglishVanillaLoadingTips.xml" />
@@ -91,5 +93,5 @@
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <Executable file="Barotrauma.exe" />
-  <ServerExecutable file="BarotraumaServer.exe" />
+  <ServerExecutable file="DedicatedServer.exe" />
 </contentpackage>

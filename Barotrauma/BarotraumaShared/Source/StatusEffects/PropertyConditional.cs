@@ -23,6 +23,12 @@ namespace Barotrauma
             Affliction
         }
 
+        public enum Comparison
+        {
+            And,
+            Or
+        }
+
         public enum OperatorType
         {
             Equals,
@@ -41,7 +47,7 @@ namespace Barotrauma
 
         public readonly string TargetItemComponentName;
 
-        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk" };
+        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk", "huskinfection" };
 
         private readonly int cancelStatusEffect;
 
@@ -129,6 +135,10 @@ namespace Barotrauma
                 if (afflictionNames.Any(n => n == AttributeName))
                 {
                     Type = ConditionType.Affliction;
+                    if (AttributeName == "husk" || AttributeName == "huskaffliction")
+                    {
+                        AttributeName = "huskinfection";
+                    }
                 }
                 else
                 {
@@ -153,7 +163,7 @@ namespace Barotrauma
                     SerializableProperty property;
                     if (target.SerializableProperties.TryGetValue(AttributeName, out property))
                     {
-                        return Matches(property);
+                        return Matches(target, property);
                     }
                     return false;
                 case ConditionType.Name:
@@ -209,7 +219,9 @@ namespace Barotrauma
                 case ConditionType.Affliction:
                     if (target is Character targetChar)
                     {
-                        var affliction = targetChar.CharacterHealth.GetAffliction(AttributeName);
+                        var health = targetChar.CharacterHealth;
+                        if (health == null) { return false; }
+                        var affliction = health.GetAffliction(AttributeName);
                         if (affliction == null) { return false; }
                         if (FloatValue.HasValue)
                         {
@@ -231,16 +243,16 @@ namespace Barotrauma
                             }
                         }
                     }
-                    return true;
+                    return false;
                 default:
                     return false;
             }
         }
         
         // TODO: refactor and add tests
-        private bool Matches(SerializableProperty property)
+        private bool Matches(ISerializableEntity target, SerializableProperty property)
         {
-            object propertyValue = property.GetValue();
+            object propertyValue = property.GetValue(target);
 
             if (propertyValue == null)
             {

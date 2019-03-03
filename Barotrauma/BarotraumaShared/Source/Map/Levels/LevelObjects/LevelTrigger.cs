@@ -279,6 +279,9 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            forceFluctuationTimer = Rand.Range(0.0f, ForceFluctuationInterval);
+            randomTriggerTimer = Rand.Range(0.0f, randomTriggerInterval);
         }
 
         private void UpdateCollisionCategories()
@@ -420,7 +423,12 @@ namespace Barotrauma
 
             triggerers.RemoveWhere(t => t.Removed);
 
-            if (!UseNetworkSyncing || GameMain.Client == null)
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (!UseNetworkSyncing || isNotClient)
             {
                 if (ForceFluctuationStrength > 0.0f)
                 {

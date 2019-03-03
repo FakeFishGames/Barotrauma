@@ -70,11 +70,12 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null)
             {
-                List<string> monsterNames = GameMain.NetworkMember.monsterEnabled.Keys.ToList();
+                List<string> monsterNames = GameMain.NetworkMember.ServerSettings.MonsterEnabled.Keys.ToList();
                 string tryKey = monsterNames.Find(s => characterFileName == s.ToLower());
+
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
-                    if (!GameMain.NetworkMember.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
+                    if (!GameMain.NetworkMember.ServerSettings.MonsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
                 }
             }
         }
@@ -161,7 +162,7 @@ namespace Barotrauma
 
                 //only found a spawnpos that's very far from the sub, pick one that's closer
                 //and wait for the sub to move further before spawning
-                if (closestDist > 10000.0f * 10000.0f)
+                if (closestDist > 15000.0f * 15000.0f)
                 {
                     foreach (Vector2 position in availablePositions)
                     {
@@ -192,8 +193,8 @@ namespace Barotrauma
 
         private float GetMinDistanceToSub(Submarine submarine)
         {
-            //12000 units is slightly more than the default range of the sonar
-            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 12000.0f);
+            //9000 units is slightly less than the default range of the sonar
+            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 9000.0f);
         }
 
         public override void Update(float deltaTime)
@@ -224,16 +225,23 @@ namespace Barotrauma
 
                 for (int i = 0; i < amount; i++)
                 {
+                    bool isClient = false;
+#if CLIENT
+                    isClient = GameMain.Client != null;
+#endif
+
                     monsters[i] = Character.Create(
                         characterFile, spawnPos + Rand.Vector(100.0f, Rand.RandSync.Server), 
-                        i.ToString(), null, GameMain.Client != null, true, true);
+                        i.ToString(), null, isClient, true, true);
                 }
 
                 spawnPending = false;
             }
 
-            Entity targetEntity = Character.Controlled != null ? 
-                (Entity)Character.Controlled : Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+#if CLIENT
+            if (Character.Controlled != null) targetEntity = (Entity)Character.Controlled;
+#endif
             
             bool monstersDead = true;
             foreach (Character monster in monsters)

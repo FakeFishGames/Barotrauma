@@ -11,6 +11,12 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        enum Mode
+        {
+            Active,
+            Passive
+        };
+
         private bool unsentChanges;
         private float networkUpdateTimer;
 
@@ -86,17 +92,12 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
                 {
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    IsActive = box.Selected;
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
-                    IsActive = box.Selected;
-
                     return true;
                 }
             };
@@ -111,11 +112,7 @@ namespace Barotrauma.Items.Components
                 OnMoved = (scrollbar, scroll) =>
                 {
                     zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
@@ -136,11 +133,7 @@ namespace Barotrauma.Items.Components
                 OnSelected = (tickBox) =>
                 {
                     useDirectionalPing = tickBox.Selected;
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
@@ -154,11 +147,7 @@ namespace Barotrauma.Items.Components
                 {
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
-                    if (GameMain.Server != null)
-                    {
-                        unsentChanges = true;
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
@@ -168,9 +157,12 @@ namespace Barotrauma.Items.Components
             };
             
             signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
-            
-            GUITickBox.CreateRadioButtonGroup(new List<GUITickBox>() { activeTickBox, passiveTickBox });
 
+            GUIRadioButtonGroup sonarMode = new GUIRadioButtonGroup();
+            sonarMode.AddRadioButton(Mode.Active, activeTickBox);
+            sonarMode.AddRadioButton(Mode.Passive, passiveTickBox);
+            sonarMode.Selected = Mode.Passive;
+            
             GuiFrame.CanBeFocused = false;
         }
 
@@ -183,27 +175,20 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (unsentChanges)
+            if (GameMain.Client != null)
             {
-                if (networkUpdateTimer <= 0.0f)
+                if (unsentChanges)
                 {
-#if CLIENT
-                    if (GameMain.Client != null)
+                    if (networkUpdateTimer <= 0.0f)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
+                        networkUpdateTimer = 0.1f;
+                        unsentChanges = false;
                     }
-#endif
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                    }
-
-                    networkUpdateTimer = 0.1f;
-                    unsentChanges = false;
                 }
+                networkUpdateTimer -= deltaTime;
             }
-            networkUpdateTimer -= deltaTime;
 
             if (sonarView.Rect.Contains(PlayerInput.MousePosition))
             {
@@ -215,7 +200,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float distort = 1.0f - item.Condition / 100.0f;
+            float distort = 1.0f - item.Condition / item.Prefab.Health;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
                 sonarBlips[i].FadeTimer -= deltaTime * MathHelper.Lerp(0.5f, 2.0f, distort);
@@ -304,18 +289,22 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            float passivePingRadius = (float)Math.Sin(Timing.TotalTime * 10);
+            float passivePingRadius = (float)(Timing.TotalTime % 1.0f);
             if (passivePingRadius > 0.0f)
             {
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f || !t.Enabled) continue;
+                    if (t.SoundRange <= 0.0f || !t.Enabled) { continue; }
+                    
+                    float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
+                    if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
 
-                    if (Vector2.DistanceSquared(t.WorldPosition, transducerCenter) < t.SoundRange * t.SoundRange)
+                    float dist = (float)Math.Sqrt(distSqr);
+                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range)
                     {
-                        Ping(t.WorldPosition, transducerCenter, 
-                            t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 
+                        Ping(t.WorldPosition, transducerCenter,
+                            Math.Min(t.SoundRange, range * 0.5f) * displayScale, 0, displayScale, Math.Min(t.SoundRange, range * 0.5f), 
                             passive: true, pingStrength: 0.5f);
                         sonarBlips.Add(new SonarBlip(t.WorldPosition, 1.0f, 1.0f));
                     }
@@ -653,25 +642,25 @@ namespace Barotrauma.Items.Components
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y), 
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y), 
-                    transducerPos,
+                    pingSource, transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
-                    transducerPos,
+                    pingSource, transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y),
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
-                    transducerPos,
+                    pingSource, transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y),
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
-                    transducerPos,
+                    pingSource, transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
 
                 return;
@@ -708,7 +697,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         start + submarine.WorldPosition,
                         end + submarine.WorldPosition,
-                        transducerPos,
+                        pingSource, transducerPos,
                         pingRadius, prevPingRadius,
                         200.0f, 2.0f, range, 1.0f, passive);
                 }
@@ -721,7 +710,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         new Vector2(pingSource.X - range, Level.Loaded.Size.Y),
                         new Vector2(pingSource.X + range, Level.Loaded.Size.Y),
-                        transducerPos,
+                        pingSource, transducerPos,
                         pingRadius, prevPingRadius,
                         250.0f, 150.0f, range, pingStrength, passive);
                 }
@@ -742,7 +731,7 @@ namespace Barotrauma.Items.Components
                         CreateBlipsForLine(
                             edge.Point1 + cell.Translation,
                             edge.Point2 + cell.Translation,
-                            transducerPos,
+                            pingSource, transducerPos,
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength, passive);
                     }
@@ -763,7 +752,7 @@ namespace Barotrauma.Items.Components
 
                             CreateBlipsForLine(
                                 wall.A, wall.B,
-                                transducerPos,
+                                pingSource, transducerPos,
                                 pingRadius, prevPingRadius,
                                 100.0f, 1000.0f, range, pingStrength, passive);
                         }
@@ -813,7 +802,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 transducerPos, float pingRadius, float prevPingRadius,
+        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius,
             float lineStep, float zStep, float range, float pingStrength, bool passive)
         {
             lineStep /= zoom;
@@ -824,19 +813,25 @@ namespace Barotrauma.Items.Components
             for (float x = 0; x < length; x += lineStep * Rand.Range(0.8f, 1.2f))
             {
                 Vector2 point = point1 + lineDir * x;
-                //point += cell.Translation;
 
-                Vector2 pointDiff = point - transducerPos;
-                float pointDist = pointDiff.Length();
-                float displayPointDist = pointDist * displayScale;
+                //ignore if outside the display
+                Vector2 transducerDiff = point - transducerPos;
+                Vector2 transducerDisplayDiff = transducerDiff * displayScale;
+                if (transducerDisplayDiff.LengthSquared() > DisplayRadius * DisplayRadius) continue;
 
-                if (displayPointDist > DisplayRadius) continue;
-                if (displayPointDist < prevPingRadius || displayPointDist > pingRadius) continue;
+                //ignore if the point is not within the ping
+                Vector2 pointDiff = point - pingSource;
+                Vector2 displayPointDiff = pointDiff * displayScale;
+                float displayPointDistSqr = displayPointDiff.LengthSquared();
+                if (displayPointDistSqr < prevPingRadius * prevPingRadius || displayPointDistSqr > pingRadius * pingRadius) continue;
 
+                //ignore if direction is disrupted
+                float transducerDist = transducerDiff.Length();
+                Vector2 pingDirection = transducerDiff / transducerDist;
                 bool disrupted = false;
                 foreach (Pair<Vector2, float> disruptDir in disruptedDirections)
                 {
-                    float dot = Vector2.Dot(pointDiff / pointDist, disruptDir.First);
+                    float dot = Vector2.Dot(pingDirection, disruptDir.First);
                     if (dot >  1.0f - disruptDir.Second)
                     {
                         disrupted = true;
@@ -845,10 +840,11 @@ namespace Barotrauma.Items.Components
                 }
                 if (disrupted) continue;
 
+                float displayPointDist = (float)Math.Sqrt(displayPointDistSqr);
                 float alpha = pingStrength * Rand.Range(1.5f, 2.0f);
-                for (float z = 0; z < DisplayRadius - displayPointDist; z += zStep)
+                for (float z = 0; z < DisplayRadius - transducerDist * displayScale; z += zStep)
                 {
-                    Vector2 pos = point + Rand.Vector(150.0f / zoom) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale;
+                    Vector2 pos = point + Rand.Vector(150.0f / zoom) + pingDirection * z / displayScale;
                     float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
                     int minDist = (int)(200 / zoom);
@@ -902,7 +898,7 @@ namespace Barotrauma.Items.Components
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
 
-            float distort = 1.0f - item.Condition / 100.0f;
+            float distort = 1.0f - item.Condition / item.Prefab.Health;
             
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;

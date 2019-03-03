@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Reflection;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -36,6 +38,38 @@ namespace Barotrauma
 
     public static partial class ToolBox
     {
+        static internal class Epoch
+        {
+            private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            /// <summary>
+            /// Returns the current Unix Epoch
+            /// </summary>
+            public static int Now
+            {
+                get
+                {
+                    return (int)(DateTime.UtcNow.Subtract(epoch).TotalSeconds);
+                }
+            }
+
+            /// <summary>
+            /// Convert an epoch to a datetime
+            /// </summary>
+            public static DateTime ToDateTime(decimal unixTime)
+            {
+                return epoch.AddSeconds((long)unixTime);
+            }
+
+            /// <summary>
+            /// Convert a DateTime to a unix time
+            /// </summary>
+            public static uint FromDateTime(DateTime dt)
+            {
+                return (uint)(dt.Subtract(epoch).TotalSeconds);
+            }
+        }
+
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
@@ -127,6 +161,51 @@ namespace Barotrauma
             if (inputType == "SecondaryHit" || inputType == "Secondary") return "Aim";
 
             return inputType;
+        }
+
+        // Convert an RGB value into an HLS value.
+        public static Vector3 RgbToHLS(Vector3 color)
+        {
+            double h, l, s;
+            
+            double double_r = color.X;
+            double double_g = color.Y;
+            double double_b = color.Z;
+
+            // Get the maximum and minimum RGB components.
+            double max = double_r;
+            if (max < double_g) max = double_g;
+            if (max < double_b) max = double_b;
+
+            double min = double_r;
+            if (min > double_g) min = double_g;
+            if (min > double_b) min = double_b;
+
+            double diff = max - min;
+            l = (max + min) / 2;
+            if (Math.Abs(diff) < 0.00001)
+            {
+                s = 0;
+                h = 0;  // H is really undefined.
+            }
+            else
+            {
+                if (l <= 0.5) s = diff / (max + min);
+                else s = diff / (2 - max - min);
+
+                double r_dist = (max - double_r) / diff;
+                double g_dist = (max - double_g) / diff;
+                double b_dist = (max - double_b) / diff;
+
+                if (double_r == max) h = b_dist - g_dist;
+                else if (double_g == max) h = 2 + r_dist - b_dist;
+                else h = 4 + g_dist - r_dist;
+
+                h = h * 60;
+                if (h < 0) h += 360;
+            }
+
+            return new Vector3((float)h, (float)l, (float)s);
         }
 
         /// <summary>
@@ -252,6 +331,20 @@ namespace Barotrauma
             return default(T);
         }
 
+        public static UInt32 StringToUInt32Hash(string str, MD5 md5)
+        {
+            //calculate key based on MD5 hash instead of string.GetHashCode
+            //to ensure consistent results across platforms
+            byte[] inputBytes = Encoding.ASCII.GetBytes(str);
+            byte[] hash = md5.ComputeHash(inputBytes);
+
+            UInt32 key = (UInt32)((str.Length & 0xff) << 24); //could use more of the hash here instead?
+            key |= (UInt32)(hash[hash.Length - 3] << 16);
+            key |= (UInt32)(hash[hash.Length - 2] << 8);
+            key |= (UInt32)(hash[hash.Length - 1]);
+
+            return key;
+        }
         /// <summary>
         /// Returns a new instance of the class with all properties and fields copied.
         /// </summary>

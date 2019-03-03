@@ -85,7 +85,7 @@ namespace Barotrauma
             foreach (string identifier in itemIdentifiers)
             {
                 itemToContain = character.Inventory.FindItemByIdentifier(identifier) ?? character.Inventory.FindItemByTag(identifier);
-                if (itemToContain != null) break;
+                if (itemToContain != null && itemToContain.Condition > 0.0f) break;
             }
             
             if (itemToContain == null)
@@ -138,8 +138,6 @@ namespace Barotrauma
             }
 
             return true;
-        }
-
-    
+        }    
     }
 }

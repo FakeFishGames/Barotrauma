@@ -5,6 +5,11 @@ namespace Barotrauma.Items.Components
 {
     partial class WifiComponent : IDrawableComponent
     {
+        public Vector2 DrawSize
+        {
+            get { return new Vector2(range * 2); }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (!editing || !MapEntity.SelectedList.Contains(item)) return;

@@ -27,7 +27,7 @@ namespace EventInput
             EventInput.KeyDown += EventInput_KeyDown;
         }
 
-        void EventInput_KeyDown(object sender, KeyEventArgs e)
+        public void EventInput_KeyDown(object sender, KeyEventArgs e)
         {
             if (_subscriber == null)
                 return;
@@ -74,6 +74,7 @@ namespace EventInput
             get { return _subscriber; }
             set
             {
+                if (_subscriber == value) return;
                 if (_subscriber != null)
                     _subscriber.Selected = false;
                 _subscriber = value;

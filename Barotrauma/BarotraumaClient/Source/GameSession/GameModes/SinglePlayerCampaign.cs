@@ -38,7 +38,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
-                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", jobPrefab));
                 }
             }
 
@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (!isRunning|| GUI.DisableHUD) return;
+            if (!isRunning|| GUI.DisableHUD || GUI.DisableUpperHUD) return;
             
             if (Submarine.MainSub == null) return;
 
@@ -180,7 +180,7 @@ namespace Barotrauma
                 ContextualTutorial.Update(deltaTime);
             }
 
-            if (!GUI.DisableHUD)
+            if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
             {
                 endRoundButton.UpdateManually(deltaTime);
             }
@@ -206,11 +206,19 @@ namespace Barotrauma
                 return;
             }
 
+
             CreateDialog(new List<Character> { watchman }, "WatchmanInteract", 1.0f);
 
+            if (GUIMessageBox.MessageBoxes.Any(mbox => mbox.UserData as string == "watchmanprompt"))
+            {
+                return;
+            }
             var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
                 .Replace("[locationname]", leavingSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
-                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            {
+                UserData = "watchmanprompt"
+            };
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
                 if (!isRunning) { return true; }

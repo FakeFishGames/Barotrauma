@@ -24,9 +24,7 @@ namespace Barotrauma.Items.Components
         //(adjusts the fission rate and turbine output automatically to keep the
         //amount of power generated balanced with the load)
         private bool autoTemp;
-
-        private Client BlameOnBroken;
-
+        
         //automatical adjustment to the power output when 
         //turbine output and temperature are in the optimal range
         private float autoAdjustAmount;
@@ -44,10 +42,7 @@ namespace Barotrauma.Items.Components
         private float sendUpdateTimer;
 
         private float degreeOfSuccess;
-
-        private float? nextServerLogWriteTime;
-        private float lastServerLogWriteTime;
-
+        
         private Vector2 optimalTemperature, allowedTemperature;
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
@@ -174,6 +169,7 @@ namespace Barotrauma.Items.Components
                 
         public override void Update(float deltaTime, Camera cam)
         {
+#if SERVER
             if (GameMain.Server != null && nextServerLogWriteTime != null)
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
@@ -189,6 +185,7 @@ namespace Barotrauma.Items.Components
                     lastServerLogWriteTime = (float)Timing.TotalTime;
                 }
             }
+#endif
 
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -260,8 +257,7 @@ namespace Barotrauma.Items.Components
                     if (!connection.IsPower) continue;
                     foreach (Connection recipient in connection.Recipients)
                     {
-                        Item it = recipient.Item as Item;
-                        if (it == null) continue;
+                        if (!(recipient.Item is Item it)) continue;
 
                         PowerTransfer pt = it.GetComponent<PowerTransfer>();
                         if (pt == null) continue;
@@ -300,12 +296,14 @@ namespace Barotrauma.Items.Components
 
             if (unsentChanges && sendUpdateTimer <= 0.0f)
             {
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
                 }
+#endif
 #if CLIENT
-                else if (GameMain.Client != null)
+                if (GameMain.Client != null)
                 {
                     item.CreateClientEvent(this);
                 }
@@ -321,7 +319,7 @@ namespace Barotrauma.Items.Components
             {
                 item.SendSignal(0, "1", "meltdown_warning", null);
                 //faster meltdown if the item is in a bad condition
-                meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
+                meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.Prefab.Health);
 
                 if (meltDownTimer > MeltdownDelay)
                 {
@@ -338,7 +336,7 @@ namespace Barotrauma.Items.Components
             if (temperature > optimalTemperature.Y)
             {
                 float prevFireTimer = fireTimer;
-                fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
+                fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.Prefab.Health);
 
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
@@ -388,9 +386,14 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f || GameMain.Client != null) return;
+            if (item.Condition <= 0.0f) return;
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
 
+#if SERVER
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
+#endif
 
             item.Condition = 0.0f;
             fireTimer = 0.0f;
@@ -405,11 +408,13 @@ namespace Barotrauma.Items.Components
                     containedItem.Condition = 0.0f;
                 }
             }
-            
-            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
+
+#if SERVER
+            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(blameOnBroken))
             {
-                BlameOnBroken.Karma = 0.0f;
-            }            
+                blameOnBroken.Karma = 0.0f;
+            }
+#endif
         }
 
         public override bool Pick(Character picker)
@@ -419,7 +424,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (GameMain.Client != null) return false;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
 
@@ -532,49 +537,5 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            bool autoTemp       = msg.ReadBoolean();
-            bool shutDown       = msg.ReadBoolean();
-            float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            float turbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-
-            if (!item.CanClientAccess(c)) return;
-
-            if (!autoTemp && AutoTemp) BlameOnBroken = c;
-            if (turbineOutput < targetTurbineOutput) BlameOnBroken = c;
-            if (fissionRate > targetFissionRate) BlameOnBroken = c;
-            if (!this.shutDown && shutDown) BlameOnBroken = c;
-            
-            AutoTemp = autoTemp;
-            this.shutDown = shutDown;
-            targetFissionRate = fissionRate;
-            targetTurbineOutput = turbineOutput;
-
-            LastUser = c.Character;
-            if (nextServerLogWriteTime == null)
-            {
-                nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-            }
-
-#if CLIENT
-            fissionRateScrollBar.BarScroll = 1.0f - targetFissionRate / 100.0f;
-            turbineOutputScrollBar.BarScroll = 1.0f - targetTurbineOutput / 100.0f;
-            onOffSwitch.BarScroll = shutDown ? Math.Max(onOffSwitch.BarScroll, 0.55f) : Math.Min(onOffSwitch.BarScroll, 0.45f);
-#endif
-
-            //need to create a server event to notify all clients of the changed state
-            unsentChanges = true;
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.Write(autoTemp);
-            msg.Write(shutDown);
-            msg.WriteRangedSingle(temperature, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(degreeOfSuccess, 0.0f, 1.0f, 8);
-        }
     }
 }

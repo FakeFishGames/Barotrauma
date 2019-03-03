@@ -6,6 +6,12 @@ namespace Barotrauma.Items.Components
     {
         private string output, falseOutput;
 
+        //how often the detector can switch from state to another
+        const float StateSwitchInterval = 1.0f;
+
+        private bool isInWater;
+        private float stateSwitchDelay;
+
         [InGameEditable, Serialize("1", true)]
         public string Output
         {
@@ -28,22 +34,37 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            string signalOut = falseOutput;
-            if (item.InWater)
+            if (stateSwitchDelay > 0.0f)
             {
-                //item in water -> we definitely want to send the True output
-                signalOut = Output;
+                stateSwitchDelay -= deltaTime;
             }
-            else if (item.CurrentHull != null)
+            else
             {
-                //item in not water -> check if there's water anywhere within the rect of the item
-                if (item.CurrentHull.Surface > item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height + 1 &&
-                    item.CurrentHull.Surface > item.Rect.Y - item.Rect.Height)
+                bool prevState = isInWater;
+
+                isInWater = false;
+                if (item.InWater)
                 {
-                    signalOut = output;
+                    //item in water -> we definitely want to send the True output
+                    isInWater = true;
+                }
+                else if (item.CurrentHull != null)
+                {
+                    //item in not water -> check if there's water anywhere within the rect of the item
+                    if (item.CurrentHull.Surface > item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height + 1 &&
+                        item.CurrentHull.Surface > item.Rect.Y - item.Rect.Height)
+                    {
+                        isInWater = true;
+                    }
+                }
+
+                if (prevState != isInWater)
+                {
+                    stateSwitchDelay = StateSwitchInterval;
                 }
             }
 
+            string signalOut = isInWater ? output : falseOutput;
             if (!string.IsNullOrEmpty(signalOut))
             {
                 item.SendSignal(0, signalOut, "signal_out", null);

@@ -13,8 +13,8 @@ namespace Barotrauma
             ClientOnly = 1 //set to match between clients (used for misc elements that the server doesn't track, but clients want to match anyway)
         }
 
-        private static Random localRandom = new Random();
-        private static Random[] syncedRandom = new MTRandom[] {
+        private static readonly Random localRandom = new Random();
+        private static readonly Random[] syncedRandom = new MTRandom[] {
             new MTRandom(), new MTRandom()
         };
 
@@ -29,43 +29,28 @@ namespace Barotrauma
             syncedRandom[(int)RandSync.ClientOnly] = new MTRandom(seed);
         }
         
-        private static void Assert(RandSync sync)
-        {
-            //TODO: REMOVE AFTER FINDING ALL WRONG RNG USAGE
-#if false
-            string trace = Environment.StackTrace.ToString();
-            if (sync != RandSync.Server) return;
-            if (trace.ToLower().Contains("barotraumaclient\\source")) DebugConsole.NewMessage("WARNING: Client code using RandSync.Server\n"+trace,Color.Yellow);
-#endif
-        }
-
         public static float Range(float minimum, float maximum, RandSync sync=RandSync.Unsynced)
         {
-            Assert(sync);
             return (float)(sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
         public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)
         {
-            Assert(sync);
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
         public static int Range(int minimum, int maximum, RandSync sync = RandSync.Unsynced)
         {
-            Assert(sync);
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(maximum - minimum) + minimum;
         }
 
         public static int Int(int max, RandSync sync = RandSync.Unsynced)
         {
-            Assert(sync);
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(max);
         }
 
         public static Vector2 Vector(float length, RandSync sync = RandSync.Unsynced)
         {
-            Assert(sync);
             Vector2 randomVector = new Vector2(Range(-1.0f, 1.0f, sync), Range(-1.0f, 1.0f, sync));
 
             if (randomVector.LengthSquared() < 0.001f) return new Vector2(0.0f, length);
@@ -95,7 +80,6 @@ namespace Barotrauma
 
         public static DoubleVector2 Vector(double length, RandSync sync = RandSync.Unsynced)
         {
-            Assert(sync);
             double x = Range(-1.0, 1.0, sync);
             double y = Range(-1.0, 1.0, sync);
 

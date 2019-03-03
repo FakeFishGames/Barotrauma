@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
             //pumps consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.Prefab.Health);
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 currForce = new Vector2((force / 100.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
                 //less effective when in a bad condition
-                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / 100.0f);
+                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.Prefab.Health);
 
                 item.Submarine.ApplyForce(currForce);
 
@@ -154,30 +154,6 @@ namespace Barotrauma.Items.Components
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                 }
             }  
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            //force can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(targetForce / 10.0f));
-        }
-
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            float newTargetForce = msg.ReadRangedInteger(-10, 10) * 10.0f;
-
-            if (item.CanClientAccess(c))
-            {
-                if (Math.Abs(newTargetForce - targetForce) > 0.01f)
-                {
-                    GameServer.Log(c.Character.LogName + " set the force of " + item.Name + " to " + (int)(newTargetForce) + " %", ServerLog.MessageType.ItemInteraction);
-                }
-
-                targetForce = newTargetForce;
-            }
-
-            //notify all clients of the changed state
-            item.CreateServerEvent(this);
         }
     }
 }
