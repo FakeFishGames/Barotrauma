@@ -154,6 +154,10 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="..\BarotraumaShared\libsteam_api.dylib">
+      <Link>libsteam_api.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="ClientCode.projitems" Label="Shared" />
