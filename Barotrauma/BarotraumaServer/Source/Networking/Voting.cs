@@ -67,7 +67,7 @@ namespace Barotrauma
                         kicked.AddKickVote(sender);
                         Client.UpdateKickVotes(GameMain.Server.ConnectedClients);
 
-                        GameMain.Server.SendChatMessage(sender.Name + " has voted to kick " + kicked.Name, ChatMessageType.Server, null);
+                        GameMain.Server.SendChatMessage($"ServerMessage.HasVotedToKick_[initiator]={sender.Name}_[target]={kicked.Name}", ChatMessageType.Server, null);
                     }
 
                     break;
