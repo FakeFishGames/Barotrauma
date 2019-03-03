@@ -69,8 +69,9 @@
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" />
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10">
-      <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse" />
-      <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/HarpoonGun2.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/HarpoonGun3.ogg" type="OnUse" />
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
@@ -95,7 +96,8 @@
     <Body width="90" radius="40" density="50" />
     <Holdable slots="RightHand+LeftHand,Any" controlpose="true" aimpos="35,0" handle1="0,-7" handle2="80, 5"/>
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
-      <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/SyringeGun1.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/SyringeGun2.ogg" type="OnUse" />
       <RequiredItems identifier="syringe" type="Contained" msg="ItemMsgSyringeRequired" />
       <RequiredSkill identifier="weapons" level="15" />
       <RequiredSkill identifier="medical" level="30" />
@@ -273,7 +275,7 @@
       <Item identifier="steel" />
       <Item identifier="button" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,0,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,0,58,64" />
     <Sprite texture="weapons.png" sourcerect="19,0,76,24" depth="0.55" />
     <Body width="90" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75">

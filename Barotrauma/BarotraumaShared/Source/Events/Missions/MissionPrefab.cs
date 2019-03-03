@@ -138,10 +138,10 @@ namespace Barotrauma
             foreach (Pair<string, string> allowedLocationType in AllowedLocationTypes)
             {
                 if (allowedLocationType.First.ToLowerInvariant() == "any" ||
-                    allowedLocationType.First.ToLowerInvariant() == from.Type.Name.ToLowerInvariant())
+                    allowedLocationType.First.ToLowerInvariant() == from.Type.Identifier.ToLowerInvariant())
                 {
                     if (allowedLocationType.Second.ToLowerInvariant() == "any" ||
-                        allowedLocationType.Second.ToLowerInvariant() == to.Type.Name.ToLowerInvariant())
+                        allowedLocationType.Second.ToLowerInvariant() == to.Type.Identifier.ToLowerInvariant())
                     {
                         return true;
                     }

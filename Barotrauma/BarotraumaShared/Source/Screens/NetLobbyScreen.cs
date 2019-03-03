@@ -78,7 +78,7 @@ namespace Barotrauma
             }
 #endif
 #if CLIENT
-            (botSpawnModeText as GUITextBlock).Text = botSpawnMode.ToString();
+            (botSpawnModeText as GUITextBlock).Text = TextManager.Get(botSpawnMode.ToString());
 #endif
         }
 
@@ -88,7 +88,7 @@ namespace Barotrauma
             if (GameMain.Server != null) GameMain.Server.ServerSettings.TraitorsEnabled = enabled;
 #endif
 #if CLIENT
-            (traitorProbabilityText as GUITextBlock).Text = enabled.ToString();
+            (traitorProbabilityText as GUITextBlock).Text = TextManager.Get(enabled.ToString());
 #endif
         }
     }

@@ -32,15 +32,33 @@ namespace Barotrauma.Networking
             new Color(255, 255, 255),   //messagebox
             new Color(255, 128, 0)      //order
         };
-        
+
         public readonly string Text;
+
+        private string translatedText;
+        public string TranslatedText
+        {
+            get
+            {
+                if (!Type.HasFlag(ChatMessageType.Server | ChatMessageType.Error))
+                {
+                    return Text;
+                }
+                if (translatedText == null || translatedText.Length == 0)
+                {
+                    translatedText = TextManager.GetServerMessage(Text);
+                }
+
+                return translatedText;
+            }
+        }
 
         public ChatMessageType Type;
 
         public readonly Character Sender;
 
         public readonly string SenderName;
-        
+
         public Color Color
         {
             get { return MessageColor[(int)Type]; }
@@ -48,8 +66,10 @@ namespace Barotrauma.Networking
 
         public string TextWithSender
         {
-            get;
-            private set;
+            get
+            {
+                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : SenderName + ": " + TranslatedText;
+            }
         }
 
         public static UInt16 LastID = 0;
@@ -68,8 +88,6 @@ namespace Barotrauma.Networking
             Sender = sender;
 
             SenderName = senderName;
-
-            TextWithSender = string.IsNullOrWhiteSpace(senderName) ? text : senderName + ": " + text;
         }        
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)

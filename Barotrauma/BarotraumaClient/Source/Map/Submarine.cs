@@ -63,7 +63,15 @@ namespace Barotrauma
 
             if (existingSound == null)
             {
-                existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+                try
+                {
+                    existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+                }
+                catch (FileNotFoundException e)
+                {
+                    DebugConsole.ThrowError("Failed to load sound file \"" + filename + "\".", e);
+                    return null;
+                }
             }
 
             RoundSound newSound = new RoundSound(element, existingSound);

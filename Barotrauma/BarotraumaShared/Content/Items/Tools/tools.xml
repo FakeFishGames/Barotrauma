@@ -16,7 +16,7 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" />
-    <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="35,13" particles="weld" repairthroughwalls="true">
+    <RepairTool structurefixamount="5.0" range="100" barrelpos="35,13" particles="weld" repairthroughwalls="true">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitter particle="weld" particlespersecond="50" />
@@ -31,6 +31,10 @@
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="incendiumfueltank" Condition="-0.6" />
       <!-- welding a door, it will get stuck after a while -->
       <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
+      <!-- do burn damage to characters -->
+      <StatusEffect type="OnUse" target="UseTarget">
+        <Affliction identifier="burn" amount="0.5" />        
+      </StatusEffect>
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable identifier="structure" />
       <!-- mechanic skill 20 required to use the item -->
@@ -60,11 +64,14 @@
     <Sprite texture="tools_new.png" sourcerect="0,0,224,110" depth="0.55" origin="0.5,0.5" />
     <Body width="220" height="105" density="40" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-25" handle2="-10,-27"/>
-    <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="45,10">
+    <RepairTool structurefixamount="-2.0" range="100" barrelpos="45,10">
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygentank" Condition="-1.0" />
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygenitetank" Condition="-0.5" />
       <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock,aliendoor,alienhatch" Stuck="-20.0" Condition="-3.0" />
+      <StatusEffect type="OnUse" target="UseTarget">
+        <Affliction identifier="burn" amount="0.5" />
+      </StatusEffect>
       <ParticleEmitter particle="plasma" particlespersecond="50" />
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
@@ -142,7 +149,7 @@
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
-      <sound file="Content/Items/Tools/extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
+      <sound file="Content/Items/Tools/Extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
     </RepairTool>
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>

@@ -71,7 +71,7 @@ namespace Barotrauma
 
             if (!isMultiplayer)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), "Tutorial active" + ":", textAlignment: Alignment.BottomLeft);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("TutorialActive") + ":", textAlignment: Alignment.BottomLeft);
                 contextualTutorialBox = new GUITickBox(new RectTransform(new Point(30, 30), rightColumn.RectTransform), string.Empty);
                 UpdateTutorialSelection();
             }

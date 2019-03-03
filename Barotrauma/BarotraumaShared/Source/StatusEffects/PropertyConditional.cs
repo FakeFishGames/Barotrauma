@@ -23,6 +23,12 @@ namespace Barotrauma
             Affliction
         }
 
+        public enum Comparison
+        {
+            And,
+            Or
+        }
+
         public enum OperatorType
         {
             Equals,

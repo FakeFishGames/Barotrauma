@@ -109,6 +109,12 @@ namespace Barotrauma
             set { name = value; }
         }
 
+        private string displayName;
+        public string DisplayName
+        {
+            get { return displayName; }
+        }
+
         public bool ShowSonarMarker = true;
 
         public string Description
@@ -316,7 +322,12 @@ namespace Barotrauma
 
                 if (doc != null && doc.Root != null)
                 {
-                    Description = doc.Root.GetAttributeString("description", "");
+                    displayName = TextManager.Get("Submarine.Name." + name, true);
+                    if (displayName == null || displayName.Length == 0) displayName = name;
+
+                    Description = TextManager.Get("Submarine.Description." + name, true);
+                    if (Description == null || Description.Length == 0) Description = doc.Root.GetAttributeString("description", "");
+
                     GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
                     Enum.TryParse(doc.Root.GetAttributeString("tags", ""), out tags);
                     Dimensions = doc.Root.GetAttributeVector2("dimensions", Vector2.Zero);

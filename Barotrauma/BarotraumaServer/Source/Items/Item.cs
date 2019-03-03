@@ -178,7 +178,7 @@ namespace Barotrauma
                     else
                     {
                         GameServer.Log(
-                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")",
+                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", ContainedItems.Select(i => i.Name)) + ")",
                             ServerLog.MessageType.ItemInteraction);
                     }
 
