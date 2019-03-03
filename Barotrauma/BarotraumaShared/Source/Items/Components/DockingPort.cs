@@ -167,6 +167,8 @@ namespace Barotrauma.Items.Components
                 DockingTarget = null;
                 return;
             }
+            
+            target.InitializeLinks();            
 
 #if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition);
@@ -209,15 +211,19 @@ namespace Barotrauma.Items.Components
             
             CreateJoint(false);
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 item.CreateServerEvent(this);
             }
+#endif
         }
 
         public void Lock(bool isNetworkMessage, bool forcePosition = false)
         {
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
+#endif
 
             if (DockingTarget == null)
             {
@@ -249,10 +255,12 @@ namespace Barotrauma.Items.Components
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
 
+#if SERVER
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
                 }
+#endif
             }
 
 
@@ -730,10 +738,12 @@ namespace Barotrauma.Items.Components
                 bodies = null;
             }
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 item.CreateServerEvent(this);
             }
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -819,8 +829,13 @@ namespace Barotrauma.Items.Components
             gap?.Remove(); gap = null;
         }
 
-        public override void OnMapLoaded()
+        private bool initialized = false;
+        private void InitializeLinks()
         {
+            if (initialized) { return; }
+            initialized = true;
+
+            float closestDist = 30.0f * 30.0f;
             foreach (Item it in Item.ItemList)
             {
                 if (it.Submarine != item.Submarine) continue;
@@ -828,10 +843,11 @@ namespace Barotrauma.Items.Components
                 var doorComponent = it.GetComponent<Door>();
                 if (doorComponent == null) continue;
 
-                if (Vector2.Distance(item.Position, doorComponent.Item.Position) < Submarine.GridSize.X)
+                float distSqr = Vector2.Distance(item.Position, it.Position);
+                if (distSqr < closestDist)
                 {
-                    this.door = doorComponent;
-                    break;
+                    door = doorComponent;
+                    closestDist = distSqr;
                 }
             }
 
@@ -852,9 +868,20 @@ namespace Barotrauma.Items.Components
                     gap.Remove();
                     continue;
                 }
+            }
+        }
 
+        public override void OnMapLoaded()
+        {
+            InitializeLinks();
+
+            if (!item.linkedTo.Any()) return;
+
+            List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
+            foreach (MapEntity entity in linked)
+            {
                 Item linkedItem = entity as Item;
-                if (linkedItem == null) continue;
+                if (linkedItem == null) { continue; }
 
                 var dockingPort = linkedItem.GetComponent<DockingPort>();
                 if (dockingPort != null)
@@ -866,7 +893,9 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
+#if CLIENT
             if (GameMain.Client != null) return;
+#endif
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;
@@ -882,6 +911,7 @@ namespace Barotrauma.Items.Components
                     break;
             }
 
+#if SERVER
             if (sender != null && docked != wasDocked)
             {
                 if (docked)
@@ -895,6 +925,7 @@ namespace Barotrauma.Items.Components
                         GameServer.Log(sender.LogName + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
+#endif
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)

@@ -14,7 +14,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class SubmarineBody
+    partial class SubmarineBody
     {
         public const float NeutralBallastPercentage = 0.07f;
 
@@ -39,7 +39,7 @@ namespace Barotrauma
 
         public readonly PhysicsBody Body;
 
-        private List<PosInfo> memPos = new List<PosInfo>();
+        private List<PosInfo> positionBuffer = new List<PosInfo>();
 
         public Rectangle Borders
         {
@@ -62,9 +62,9 @@ namespace Barotrauma
             get { return ConvertUnits.ToDisplayUnits(Body.SimPosition); }
         }
 
-        public List<PosInfo> MemPos
+        public List<PosInfo> PositionBuffer
         {
-            get { return memPos; }
+            get { return positionBuffer; }
         }
         
         public bool AtDamageDepth
@@ -246,58 +246,8 @@ namespace Barotrauma
         {
             if (Body.FarseerBody.IsStatic) { return; }
 
-            if (GameMain.Client != null)
-            {
-                if (memPos.Count == 0) return;
-                
-                Vector2 newVelocity = Body.LinearVelocity;
-                Vector2 newPosition = Body.SimPosition;
-
-                Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
-                Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
-                newVelocity = newVelocity.ClampLength(100.0f);
-                if (!MathUtils.IsValid(newVelocity))
-                {
-                    return;
-                }
-
-                List<Submarine> subsToMove = submarine.GetConnectedSubs();
-                foreach (Submarine dockedSub in subsToMove)
-                {
-                    if (dockedSub == submarine) continue;
-                    //clear the position buffer of the docked subs to prevent unnecessary position corrections
-                    dockedSub.SubBody.memPos.Clear();
-                }
-
-                Submarine closestSub = null;
-                if (Character.Controlled == null)
-                {
-                    closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
-                }
-                else
-                {
-                    closestSub = Character.Controlled.Submarine;
-                }
-
-                bool displace = moveAmount.LengthSquared() > 100.0f * 100.0f;
-                foreach (Submarine sub in subsToMove)
-                {
-                    sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
-                    sub.PhysicsBody.LinearVelocity = newVelocity;
-
-                    if (displace) sub.SubBody.DisplaceCharacters(moveAmount);
-                }
-
-                if (closestSub != null && subsToMove.Contains(closestSub))
-                {
-                    GameMain.GameScreen.Cam.Position += moveAmount;
-                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;
-
-                    if (Character.Controlled != null) Character.Controlled.CursorPosition += moveAmount;
-                }
-
-                return;
-            }
+            ClientUpdatePosition(deltaTime);
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             
             //if outside left or right edge of the level
             if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
@@ -348,7 +298,9 @@ namespace Barotrauma
 
             UpdateDepthDamage(deltaTime);
         }
-        
+
+        partial void ClientUpdatePosition(float deltaTime);
+
         /// <summary>
         /// Moves away any character that is inside the bounding box of the sub (but not inside the sub)
         /// </summary>
@@ -537,10 +489,10 @@ namespace Barotrauma
 
                 float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
 
-                ApplyImpact(impact, -normal, contact);
+                ApplyImpact(impact, -normal, contact, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
+                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact, applyDamage: false);
                 }
             }
 
@@ -581,7 +533,7 @@ namespace Barotrauma
                 avgContactNormal += contactNormal;
 
                 //apply impacts at the positions where this sub is touching the limb
-                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact);
+                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact, applyDamage: false);
             }
             avgContactNormal /= levelContacts.Count;
             
@@ -736,9 +688,11 @@ namespace Barotrauma
             }            
         }
 
-        private void ApplyImpact(float impact, Vector2 direction, Contact contact)
+        private void ApplyImpact(float impact, Vector2 direction, Contact contact, bool applyDamage = true)
         {
-            if (impact < 3.0f) return;
+            float minImpact = 3.0f;
+
+            if (impact < minImpact) { return; }
 
             contact.GetWorldManifold(out Vector2 tempNormal, out FixedArray2<Vector2> worldPoints);
             Vector2 lastContactPoint = worldPoints[0];
@@ -776,14 +730,17 @@ namespace Barotrauma
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
             }
-
-            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
+            
+            var damagedStructures = Explosion.RangedStructureDamage(
+                ConvertUnits.ToDisplayUnits(lastContactPoint), 
+                impact * 50.0f, 
+                applyDamage ? impact * ImpactDamageMultiplier : 0.0f);
 
 #if CLIENT
             //play a damage sound for the structure that took the most damage
             float maxDamage = 0.0f;
             Structure maxDamageStructure = null;
-            foreach (KeyValuePair<Structure,float> structureDamage in damagedStructures)
+            foreach (KeyValuePair<Structure, float> structureDamage in damagedStructures)
             {
                 if (maxDamageStructure == null || structureDamage.Value > maxDamage)
                 {
@@ -798,7 +755,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Clamp(maxDamage * 4.0f, 2000.0f, 10000.0f),
+                    MathHelper.Lerp(2000.0f, 10000.0f, (impact - minImpact) / 2.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

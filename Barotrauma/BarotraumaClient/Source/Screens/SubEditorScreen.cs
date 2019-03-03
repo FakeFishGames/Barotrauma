@@ -60,8 +60,6 @@ namespace Barotrauma
 
         private GUIFrame wiringToolPanel;
 
-        private Tutorials.EditorTutorial tutorial;
-
         private DateTime editorSelectedTime;
 
         private readonly string containerDeleteTag = "containerdelete";
@@ -83,7 +81,7 @@ namespace Barotrauma
 
         private string GetStructureCount()
         {
-            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
+            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
         }
 
         private string GetTotalHullVolume()
@@ -532,7 +530,7 @@ namespace Barotrauma
             }
             else
             {
-                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
+                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, TextManager.Get("UnspecifiedSubFileName") + ".sub"), "", false);
                 cam.Position = Submarine.MainSub.Position;
             }
 
@@ -846,11 +844,7 @@ namespace Barotrauma
             
             foreach (SubmarineTag tag in Enum.GetValues(typeof(SubmarineTag)))
             {
-                FieldInfo fi = typeof(SubmarineTag).GetField(tag.ToString());
-                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-                string tagStr = attributes.Length > 0 ? attributes[0].Description : "";
-
+                string tagStr = TextManager.Get(tag.ToString());
                 var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Content.RectTransform),
                     tagStr, font: GUI.SmallFont)
                 {
@@ -1215,11 +1209,8 @@ namespace Barotrauma
                 return false;
             }
 
-            if (subList.SelectedComponent == null) return false;
-
-            Submarine selectedSub = subList.SelectedComponent.UserData as Submarine;
-
-            if (selectedSub == null) return false;
+            if (subList.SelectedComponent == null) { return false; }
+            if (!(subList.SelectedComponent.UserData is Submarine selectedSub)) { return false; }
 
             Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
@@ -1433,9 +1424,8 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
-                var itemPrefab = ep as ItemPrefab;
-                if (itemPrefab == null || itemPrefab.Name == null) continue;
-                if (!itemPrefab.Name.Contains("Wire") && (itemPrefab.Aliases == null || !itemPrefab.Aliases.Any(a => a.Contains("Wire")))) continue;
+                if (!(ep is ItemPrefab itemPrefab) || itemPrefab.Name == null) { continue; }
+                if (!itemPrefab.Tags.Contains("wire")) { continue; }
 
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width - 20, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -1453,13 +1443,9 @@ namespace Barotrauma
 
         private bool SelectLinkedSub(GUIComponent selected, object userData)
         {
-            var submarine = selected.UserData as Submarine;
-            if (submarine == null) return false;
-
+            if (!(selected.UserData is Submarine submarine)) return false;
             var prefab = new LinkedSubmarinePrefab(submarine);
-
             MapEntityPrefab.SelectPrefab(prefab);
-
             return true;
         }
 
@@ -1877,8 +1863,6 @@ namespace Barotrauma
         
         public override void AddToGUIUpdateList()
         {
-            if (tutorial != null) tutorial.AddToGUIUpdateList();
-
             if (MapEntity.SelectedList.Count == 1)
             {
                 MapEntity.SelectedList[0].AddToGUIUpdateList();
@@ -1932,8 +1916,6 @@ namespace Barotrauma
                 CreateUI();
             }
 
-            if (tutorial != null) tutorial.Update((float)deltaTime);
-            
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
             

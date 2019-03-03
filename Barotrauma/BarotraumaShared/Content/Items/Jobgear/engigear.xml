@@ -104,7 +104,7 @@
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1">
       <Attack structuredamage="10" stun="0.6">
         <Affliction identifier="internaldamage" strength="8" />
-        <Sound file="Content/Items/Weapons/smack2.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
     

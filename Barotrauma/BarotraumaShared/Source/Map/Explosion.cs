@@ -119,33 +119,35 @@ namespace Barotrauma
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
             DamageCharacters(worldPosition, attack, force, damageSource);
-
-            if (flames && GameMain.Client == null)
+            
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
-                foreach (Item item in Item.ItemList)
+                if (flames)
                 {
-                    if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
-
-                    //don't apply OnFire effects if the item is inside a fireproof container
-                    //(or if it's inside a container that's inside a fireproof container, etc)
-                    Item container = item.Container;
-                    while (container != null)
+                    foreach (Item item in Item.ItemList)
                     {
-                        if (container.FireProof) return;
-                        container = container.Container;
-                    }
+                        if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
 
-                    if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
+                        //don't apply OnFire effects if the item is inside a fireproof container
+                        //(or if it's inside a container that's inside a fireproof container, etc)
+                        Item container = item.Container;
+                        while (container != null)
+                        {
+                            if (container.FireProof) return;
+                            container = container.Container;
+                        }
 
-                    item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+                        if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
 
-                    if (item.Condition <= 0.0f && GameMain.Server != null)
-                    {
-                        GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                        item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+                        
+                        if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                        {
+                            GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                        }
                     }
                 }
             }
-
         }
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);

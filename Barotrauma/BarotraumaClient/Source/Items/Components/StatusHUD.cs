@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             visibleCharacters.Clear();
             foreach (Character c in Character.CharacterList)
             {
-                if (c == equipper) continue;
+                if (c == equipper || !c.Enabled || c.Removed) { continue; }
 
                 float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
@@ -111,10 +111,9 @@ namespace Barotrauma.Items.Components
 
             Character closestCharacter = null;
             float closestDist = float.PositiveInfinity;
-
             foreach (Character c in visibleCharacters)
             {
-                if (c == character) continue;
+                if (c == character || !c.Enabled || c.Removed) { continue; }
 
                 float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
                 if (dist < closestDist)
@@ -175,14 +174,14 @@ namespace Barotrauma.Items.Components
                 {
                     int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
-                    textColors.Add(Color.Lerp(Color.Red, Color.Green, target.Bleeding / 100.0f));
+                    textColors.Add(Color.Lerp(Color.Orange, Color.Red, target.Bleeding / 100.0f));
                 }
 
                 var allAfflictions = target.CharacterHealth.GetAllAfflictions();
                 Dictionary<AfflictionPrefab, float> combinedAfflictionStrengths = new Dictionary<AfflictionPrefab, float>();
                 foreach (Affliction affliction in allAfflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ActivationThreshold || affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
+                    if (affliction.Strength < affliction.Prefab.ActivationThreshold || affliction.Strength <= 0.0f) continue;
                     if (combinedAfflictionStrengths.ContainsKey(affliction.Prefab))
                     {
                         combinedAfflictionStrengths[affliction.Prefab] += affliction.Strength;
@@ -196,13 +195,16 @@ namespace Barotrauma.Items.Components
                 foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
                 {
                     texts.Add(affliction.Name + ": " + ((int)combinedAfflictionStrengths[affliction]).ToString() + " %");
-                    textColors.Add(Color.Lerp(Color.Red, Color.Green, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
+                    textColors.Add(Color.Lerp(Color.Orange, Color.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
                 }
             }
 
             GUI.DrawString(spriteBatch, hudPos, texts[0], textColors[0] * alpha, Color.Black * 0.7f * alpha, 2);
             hudPos.X += 5.0f;
             hudPos.Y += 24.0f;
+
+            hudPos.X = (int)hudPos.X;
+            hudPos.Y = (int)hudPos.Y;
 
             for (int i = 1; i < texts.Count; i++)
             {

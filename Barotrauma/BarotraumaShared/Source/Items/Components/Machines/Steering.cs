@@ -187,10 +187,12 @@ namespace Barotrauma.Items.Components
                     }
                     else
 #endif
+#if SERVER
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
                     }
+#endif
 
                     networkUpdateTimer = 0.1f;
                     unsentChanges = false;

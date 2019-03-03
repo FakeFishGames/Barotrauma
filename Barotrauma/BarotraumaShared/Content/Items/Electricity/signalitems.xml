@@ -227,14 +227,9 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,384,64,64" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16" origin="0.5,0.5" />
-    <RelayComponent canbeselected="true" vulnerabletoemp="false">
+    <RelayComponent canbeselected="true" vulnerabletoemp="false" canbeoverloaded="false">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
     </RelayComponent>
-    <Repairable selectkey="Action" name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5" msg="ItemMsgRepairScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
-      <RequiredSkill identifier="electrical" level="40" />
-      <RequiredItem identifier="screwdriver" type="equipped" />
-    </Repairable>
     <Body width="16" height="16" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
@@ -502,7 +497,7 @@
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemComponent>
-      <sound file="Content/Items/warningSiren.ogg" type="OnActive" range="2000.0" loop="true" />
+      <sound file="Content/Items/WarningSiren.ogg" type="OnActive" range="2000.0" loop="true" volume="0.5"/>
     </ItemComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -527,7 +522,7 @@
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemComponent>
-      <sound file="Content/Items/warningBeep.ogg" type="OnActive" range="1000.0" loop="true" />
+      <sound file="Content/Items/WarningBeep.ogg" type="OnActive" range="1000.0" loop="true" volume="0.5"/>
     </ItemComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />

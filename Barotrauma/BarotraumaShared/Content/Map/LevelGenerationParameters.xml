@@ -48,7 +48,7 @@
     levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
-    ItemCount="100"
+    ItemCount="400"
     SeaFloorDepth="-300000"
     MountainHeightMin="10000"
     MountainHeightMax="20000">
@@ -56,7 +56,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </ColdCavernsBasic>
 
   <ColdCavernsMaze
@@ -75,6 +77,7 @@
     RuinCount="3"
     BottomHoleProbability="0.5"
     levelobjectamount="1000"
+    ItemCount="400"
     MountainCountMin="2"
     MountainCountMax="3"
     SeaFloorDepth="-300000"
@@ -85,7 +88,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </ColdCavernsMaze>
   
   <RidgeBasic
@@ -105,6 +110,7 @@
     FloatingIceChunkCount="3"
     BottomHoleProbability="0.6"
     levelobjectamount="1500"
+    ItemCount="400"
     MountainCountMin="1"
     MountainCountMax="1"
     SeaFloorDepth="-100000"
@@ -115,7 +121,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/BackgroundColorful.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </RidgeBasic>
 
   <PlateauBasic
@@ -132,6 +140,7 @@
     RuinCount="1"
     BottomHoleProbability="0.9"
     levelobjectamount="1000"
+    ItemCount="400"
     SeaFloorDepth="0"
     SeaFloorVariance="500"
     MountainCountMin="1"
@@ -142,7 +151,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </PlateauBasic>
 
   <VoidBasic
@@ -159,6 +170,7 @@
     SmallTunnelCount="3"
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
+    ItemCount="400"
     FloatingIceChunkCount="20"
     BottomHoleProbability="1"
     levelobjectamount="800">
@@ -166,7 +178,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </VoidBasic>
 
   <WastesBasic
@@ -185,6 +199,7 @@
     RuinCount="1"
     BottomHoleProbability="0.8"
     levelobjectamount="1000"
+    ItemCount="400"
     MountainCountMin="2"
     MountainCountMax="3"
     SeaFloorDepth="-50000"
@@ -196,7 +211,9 @@
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/BackgroundSmoke.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
+    <WallSpecular texture="Content/Map/IceBackgroundSpecular.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
+    <WallEdgeSpecular texture="Content/Map/IceWallEdgeSpecular.png"/>
   </WastesBasic>
 
   <!--

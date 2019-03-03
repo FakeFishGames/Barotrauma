@@ -15,6 +15,8 @@ namespace Barotrauma
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
         public static bool ShowItems = true;
+        
+        private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
@@ -127,12 +129,36 @@ namespace Barotrauma
             }
         }
 
+        public override bool IsVisible(Rectangle worldView)
+        {
+            //no drawable components and the body has been disabled = nothing to draw
+            if (drawableComponents.Count == 0 && body != null && !body.Enabled)
+            {
+                return false;
+            }
+
+            float padding = 100.0f;
+            Vector2 size = new Vector2(rect.Width + padding, rect.Height + padding);
+            foreach (IDrawableComponent drawable in drawableComponents)
+            {
+                size.X = Math.Max(drawable.DrawSize.X, size.X);
+                size.Y = Math.Max(drawable.DrawSize.Y, size.Y);
+            }
+            size *= 0.5f;
+
+            Vector2 worldPosition = WorldPosition;
+            if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
+            if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;
+
+            return true;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible || (!editing && hiddenInGame)) return; // TODO: Prevent drawing hiddenInGame objects via cheating with server-side checks
+            if (!Visible || (!editing && hiddenInGame)) return;
             if (editing && !ShowItems) return;
             
-            Color color = isHighlighted ? Color.Orange : GetSpriteColor();
+            Color color = isHighlighted && !GUI.DisableItemHighlights ? Color.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
             Sprite activeSprite = prefab.sprite;
@@ -816,41 +842,53 @@ namespace Barotrauma
             }
             msg.WritePadBits();
         }
-        
+
+        partial void UpdateNetPosition()
+        {
+            if (GameMain.Client == null) { return; }
+
+            Vector2 newVelocity = body.LinearVelocity;
+            Vector2 newPosition = body.SimPosition;
+            float newAngularVelocity = body.AngularVelocity;
+            float newRotation = body.Rotation;
+            body.CorrectPosition(positionBuffer, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
+
+            body.LinearVelocity = newVelocity;
+            body.AngularVelocity = newAngularVelocity;
+            if (Vector2.DistanceSquared(newPosition, body.SimPosition) > 0.0001f ||
+                Math.Abs(newRotation - body.Rotation) > 0.01f)
+            {
+                body.TargetPosition = newPosition;
+                body.TargetRotation = newRotation;
+                body.MoveToTargetPosition(lerp: true);
+            }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+        }
+
         public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            Vector2 newPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-            float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
-            bool awake = msg.ReadBoolean();
-            Vector2 newVelocity = Vector2.Zero;
-            
-            if (awake)
-            {
-                newVelocity = new Vector2(
-                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
-                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
-            }
-
-            if (!MathUtils.IsValid(newPosition) || !MathUtils.IsValid(newRotation) || !MathUtils.IsValid(newVelocity))
-            {
-                string errorMsg = "Received invalid position data for the item \"" + Name
-                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ")";
-#if DEBUG
-                DebugConsole.ThrowError(errorMsg);
-#endif
-                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:InvalidData" + ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    errorMsg);
-                return;
-            }
-
             if (body == null)
             {
                 DebugConsole.ThrowError("Received a position update for an item with no physics body (" + Name + ")");
                 return;
             }
 
-            body.FarseerBody.Awake = awake;
+            var posInfo = body.ClientRead(type, msg, sendingTime, parentDebugName: Name);
+            msg.ReadPadBits();
+            if (posInfo != null)
+            {
+                int index = 0;
+                while (index < positionBuffer.Count && sendingTime > positionBuffer[index].Timestamp)
+                {
+                    index++;
+                }
+
+                positionBuffer.Insert(index, posInfo);
+            }
+            /*body.FarseerBody.Awake = awake;
             if (body.FarseerBody.Awake)
             {
                 if ((newVelocity - body.LinearVelocity).LengthSquared() > 8.0f * 8.0f) body.LinearVelocity = newVelocity;
@@ -879,7 +917,7 @@ namespace Barotrauma
                     rect.X = (int)(displayPos.X - rect.Width / 2.0f);
                     rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
                 }
-            }
+            }*/
         }
 
         public void CreateClientEvent<T>(T ic) where T : ItemComponent, IClientSerializable
@@ -890,6 +928,106 @@ namespace Barotrauma
             if (index == -1) return;
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
+        }
+        
+        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
+        {
+            string itemName = msg.ReadString();
+            string itemIdentifier = msg.ReadString();
+            bool descriptionChanged = msg.ReadBoolean();
+            string itemDesc = "";
+            if (descriptionChanged)
+            {
+                itemDesc = msg.ReadString();
+            }
+            ushort itemId = msg.ReadUInt16();
+            ushort inventoryId = msg.ReadUInt16();
+
+            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
+
+            Vector2 pos = Vector2.Zero;
+            Submarine sub = null;
+            int itemContainerIndex = -1;
+            int inventorySlotIndex = -1;
+
+            if (inventoryId > 0)
+            {
+                itemContainerIndex = msg.ReadByte();
+                inventorySlotIndex = msg.ReadByte();
+            }
+            else
+            {
+                pos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+
+                ushort subID = msg.ReadUInt16();
+                if (subID > 0)
+                {
+                    sub = Submarine.Loaded.Find(s => s.ID == subID);
+                }
+            }
+
+            byte teamID = msg.ReadByte();
+            bool tagsChanged = msg.ReadBoolean();
+            string tags = "";
+            if (tagsChanged)
+            {
+                tags = msg.ReadString();
+            }
+
+            if (!spawn) return null;
+
+            //----------------------------------------
+
+            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
+            if (itemPrefab == null) return null;
+
+            Inventory inventory = null;
+
+            var inventoryOwner = FindEntityByID(inventoryId);
+            if (inventoryOwner != null)
+            {
+                if (inventoryOwner is Character)
+                {
+                    inventory = (inventoryOwner as Character).Inventory;
+                }
+                else if (inventoryOwner is Item)
+                {
+                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
+                    {
+                        inventory = container.Inventory;
+                    }
+                }
+            }
+
+            var item = new Item(itemPrefab, pos, sub)
+            {
+                ID = itemId
+            };
+
+            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+            {
+                wifiComponent.TeamID = (Character.TeamType)teamID;
+            }
+            if (descriptionChanged) item.Description = itemDesc;
+            if (tagsChanged) item.Tags = tags;
+
+            if (sub != null)
+            {
+                item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
+                item.Submarine = item.CurrentHull?.Submarine;
+            }
+
+            if (inventory != null)
+            {
+                if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
+                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
+                {
+                    return null;
+                }
+                inventory.TryPutItem(item, null, item.AllowedSlots, false);
+            }
+
+            return item;
         }
 
         partial void RemoveProjSpecific()

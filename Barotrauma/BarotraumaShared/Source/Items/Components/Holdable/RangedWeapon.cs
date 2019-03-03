@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
             }
 
             Projectile projectile = null;
-            Item[] containedItems = item.ContainedItems;
+            var containedItems = item.ContainedItems;
             if (containedItems == null) return true;
 
             foreach (Item item in containedItems)
@@ -105,18 +105,29 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Item item in containedItems)
                 {
-                    Item[] containedSubItems = item.ContainedItems;
-                    foreach (Item subItem in containedSubItems)
+                    projectile = item.GetComponent<Projectile>();
+                    if (projectile != null) break;
+                }
+                //projectile not found, see if one of the contained items contains projectiles
+                if (projectile == null)
+                {
+                    foreach (Item item in containedItems)
                     {
-                        projectile = subItem.GetComponent<Projectile>();
-                        
-                        //apply OnUse statuseffects to the container in case it has to react to it somehow
-                        //(play a sound, spawn more projectiles, reduce condition...)
-                        subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
-                        if (projectile != null) break;
+                        var containedSubItems = item.ContainedItems;
+                        if (containedSubItems == null) { continue; }
+                        foreach (Item subItem in containedSubItems)
+                        {
+                            projectile = subItem.GetComponent<Projectile>();
+
+                            //apply OnUse statuseffects to the container in case it has to react to it somehow
+                            //(play a sound, spawn more projectiles, reduce condition...)
+                            subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
+                            if (projectile != null) break;
+                        }
                     }
                 }
             }
+            
             if (projectile == null) return true;
             
             float spread = MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));

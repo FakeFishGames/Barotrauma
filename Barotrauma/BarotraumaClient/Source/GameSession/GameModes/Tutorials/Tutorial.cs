@@ -31,7 +31,7 @@ namespace Barotrauma.Tutorials
             {
                 if (completed == value) return;
                 completed = value;
-                GameMain.Config.Save();
+                GameMain.Config.SaveNewPlayerConfig();
             }
         }
 
@@ -105,7 +105,7 @@ namespace Barotrauma.Tutorials
         {
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
-            Completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
+            completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
             Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
         }
         
@@ -167,7 +167,7 @@ namespace Barotrauma.Tutorials
                 };
             }
             
-            GUI.PlayUISound(GUISoundType.Message);
+            GUI.PlayUISound(GUISoundType.UIMessage);
 
             return infoBlock;
         }
@@ -211,7 +211,7 @@ namespace Barotrauma.Tutorials
                 };
             }
 
-            GUI.PlayUISound(GUISoundType.Message);
+            GUI.PlayUISound(GUISoundType.UIMessage);
 
             return infoBlock;
         }

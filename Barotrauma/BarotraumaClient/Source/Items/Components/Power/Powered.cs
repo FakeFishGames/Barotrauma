@@ -22,7 +22,8 @@ namespace Barotrauma.Items.Components
                         powerOnSound = Submarine.LoadRoundSound(subElement, false);
                         break;
                     case "sparksound":
-                        sparkSounds.Add(Submarine.LoadRoundSound(subElement, false));
+                        var sparkSound = Submarine.LoadRoundSound(subElement, false);
+                        if (sparkSound != null) { sparkSounds.Add(sparkSound); }
                         break;
                 }
             }

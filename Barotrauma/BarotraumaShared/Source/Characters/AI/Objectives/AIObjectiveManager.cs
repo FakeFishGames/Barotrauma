@@ -132,7 +132,8 @@ namespace Barotrauma
                     {
                         CloseEnough = 1.5f,
                         AllowGoingOutside = true,
-                        IgnoreIfTargetDead = true
+                        IgnoreIfTargetDead = true,
+                        FollowControlledCharacter = orderGiver == character
                     };
                     break;
                 case "wait":

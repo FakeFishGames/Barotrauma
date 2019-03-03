@@ -14,6 +14,29 @@
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
   <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
 
+  <sound file="Content/Characters/Human/female_damage1.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage2.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage3.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage4.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage5.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage6.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage7.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage8.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage9.ogg"  gender="Female" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/female_damage10.ogg"  gender="Female" state="Damage" range="500"/>
+
+  <sound file="Content/Characters/Human/male_damage1.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage2.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage3.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage4.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage5.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage6.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage7.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage8.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage9.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage10.ogg"  gender="Male" state="Damage" range="500"/>
+  <sound file="Content/Characters/Human/male_damage11.ogg"  gender="Male" state="Damage" range="500"/>
+  
   <health
     usehealthwindow="true"
     vitality="100"

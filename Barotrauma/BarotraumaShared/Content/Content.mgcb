@@ -49,8 +49,3 @@
 /processorParam:DebugMode=Auto
 /build:Effects/watershader.fx
 
-#begin splashscreen.mp4
-/importer:H264Importer
-/processor:VideoProcessor
-/build:splashscreen.mp4
-

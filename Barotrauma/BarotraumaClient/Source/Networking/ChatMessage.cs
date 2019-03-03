@@ -60,7 +60,7 @@ namespace Barotrauma.Networking
                 {
                     orderOption = order.Options[optionIndex];
                 }
-                txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.RoomName, orderOption);
+                txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.RoomName, givingOrderToSelf: targetCharacter == senderCharacter, orderOption: orderOption);
 
                 if (order.TargetAllCharacters)
                 {
@@ -99,7 +99,7 @@ namespace Barotrauma.Networking
                         {
                             return;
                         }
-                        GameMain.Client.ServerLog?.WriteLine(txt, messageType);
+                        GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);

@@ -59,12 +59,16 @@
     <Body width="26" height="18" density="15" />
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="1,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
-      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true" />
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">
         <RequiredItem identifier="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem identifier="weldingfueltank" type="Contained" />
+      </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
+        <RequiredItem identifier="incendiumfueltank" type="Contained" />
+        <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3">
         <RequiredItem identifier="oxygeniteshard" type="Contained" />
@@ -75,7 +79,7 @@
     </Wearable>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank" />
+      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank,incendiumfueltank" />
     </ItemContainer>
   </Item>
   <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" scale="0.5" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
@@ -100,11 +104,11 @@
     <Wearable slots="OuterClothes">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
       <sprite texture="DivingSuit_Torso.png" limb="Torso" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true">
-        <LightComponent range="100.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="10" IsOn="true">
+        <LightComponent range="300.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true">
             <Conditional IsDead="false" />
           </StatusEffect>
-          <sprite texture="Content/Items/Diving/DivingSuitLight.png" depth="0.025" origin="0.1,0.82" alpha="1.0" />
+          <LightTexture texture="Content/Lights/lightcone.png" origin="0.025, 0.652" size="1.0,1.0" />
         </LightComponent>
       </sprite>
       <sprite texture="DivingSuit_Legs.png" limb="Waist" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
@@ -118,12 +122,18 @@
       <sprite texture="DivingSuit_Legs.png" limb="LeftLeg" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="RightFoot" sound="footstep_armor" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="LeftFoot" sound="footstep_armor" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true" />
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true">
+        <Sound file="Content/Items/Diving/DivingSuitLoop1.ogg" range="500" />      
+      </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3">
         <RequiredItem identifier="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem identifier="weldingfueltank" type="Contained" />
+      </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
+        <RequiredItem identifier="incendiumfueltank" type="Contained" />
+        <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3">
         <RequiredItem identifier="oxygeniteshard" type="Contained" />
@@ -138,11 +148,11 @@
     </Wearable>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
-      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank" />
+      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank,incendiumfueltank" />
       <StatusEffect type="OnWearing" target="Contained">
         <RequiredItem identifier="oxygensource" type="Contained" />
         <Conditional condition="lt 5.0" />
-        <Sound file="Content/Items/warningBeep.ogg" range="500" />
+        <Sound file="Content/Items/WarningBeep.ogg" range="500" />
       </StatusEffect>
     </ItemContainer>
   </Item>
@@ -163,8 +173,8 @@
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />
       <sound file="Content/Items/Diving/ScooterLoop.ogg" type="OnUse" range="500.0" loop="true" />
-      <LightComponent LightColor="1.0,1.0,1.0,0.8" range="200">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0" />
+      <LightComponent LightColor="1.0,1.0,1.0,0.8" range="1000">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="1.0,1.0" />
       </LightComponent>
     </Propulsion>
     <ItemContainer capacity="1" hideitems="true">

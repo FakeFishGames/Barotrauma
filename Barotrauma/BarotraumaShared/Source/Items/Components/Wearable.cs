@@ -197,9 +197,11 @@ namespace Barotrauma.Items.Components
                         foreach (XElement lightElement in subElement.Elements())
                         {
                             if (lightElement.Name.ToString().ToLowerInvariant() != "lightcomponent") continue;
-                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement);
-                            wearableSprites[i].LightComponent.Parent = this;
-                            item.components.Add(wearableSprites[i].LightComponent);
+                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement)
+                            {
+                                Parent = this
+                            };
+                            item.AddComponent(wearableSprites[i].LightComponent);
                         }
 
                         i++;
@@ -225,9 +227,12 @@ namespace Barotrauma.Items.Components
                 }
 
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
-                if (equipLimb == null) continue;
+                if (equipLimb == null) { continue; }
                 
-                item.body.Enabled = false;
+                if (item.body != null)
+                {
+                    item.body.Enabled = false;
+                }
                 IsActive = true;
                 if (wearableSprite.LightComponent != null)
                 {

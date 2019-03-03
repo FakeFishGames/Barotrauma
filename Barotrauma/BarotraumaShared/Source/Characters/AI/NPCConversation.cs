@@ -236,7 +236,11 @@ namespace Barotrauma
                     foreach (Character potentialSpeaker in availableSpeakers)
                     {
                         //check if the character has an appropriate job to say the line
-                        if (selectedConversation.AllowedJobs.Count > 0 && !selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+                        if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) ||
+                            selectedConversation.AllowedJobs.Count > 0)
+                        {
+                            if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+                        }
 
                         //check if the character has all required flags to say the line
                         if (!ignoreFlags)
@@ -310,6 +314,81 @@ namespace Barotrauma
 
             return 1.0f - 1.0f / (index + 1);
         }
+
+#if DEBUG
+        public static void WriteToCSV()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                NPCConversation current = list[i];
+                WriteConversation(sb, current, 0);
+                WriteSubConversations(sb, current.Responses, 1);
+                WriteEmptyRow(sb);
+            }
+
+            StreamWriter file = new StreamWriter(@"NPCConversations.csv");
+            file.WriteLine(sb.ToString());
+            file.Close();
+        }
+
+        private static void WriteConversation(System.Text.StringBuilder sb, NPCConversation conv, int depthIndex)
+        {
+            sb.Append(conv.speakerIndex);                           // Speaker index
+            sb.Append('*');
+            sb.Append(depthIndex);                                  // Depth index
+            sb.Append('*');
+            sb.Append(conv.Line);                                   // Original
+            sb.Append('*');
+            // Translated
+            sb.Append('*');
+            sb.Append(string.Join(",", conv.Flags));                // Flags
+            sb.Append('*');
+
+            for (int i = 0; i < conv.AllowedJobs.Count; i++)        // Jobs
+            {
+                sb.Append(conv.AllowedJobs[i].Identifier);
+
+                if (i < conv.AllowedJobs.Count - 1)
+                {
+                    sb.Append(",");
+                }
+            }
+
+            sb.Append('*');
+            sb.Append(string.Join(",", conv.allowedSpeakerTags));   // Traits
+            sb.Append('*');
+            sb.Append(conv.minIntensity);                           // Minimum intensity
+            sb.Append('*');
+            sb.Append(conv.maxIntensity);                           // Maximum intensity
+            sb.Append('*');
+            // Comments
+            sb.AppendLine();
+        }
+
+        private static void WriteSubConversations(System.Text.StringBuilder sb, List<NPCConversation> responses, int depthIndex)
+        {
+            for (int i = 0; i < responses.Count; i++)
+            {
+                WriteConversation(sb, responses[i], depthIndex);
+
+                if (responses[i].Responses != null && responses[i].Responses.Count > 0)
+                {
+                    WriteSubConversations(sb, responses[i].Responses, depthIndex + 1);
+                }
+            }
+        }
+
+        private static void WriteEmptyRow(System.Text.StringBuilder sb)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                sb.Append('*');
+            }
+            sb.AppendLine();
+        }
+#endif
     }
 
 }

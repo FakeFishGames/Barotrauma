@@ -9,8 +9,8 @@
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.02" changespeed="10" blendmode="add"/>
     </deformablesprite>    
     -->
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
   <!-- tail root -->
   <limb id="1" width="42" height="61" mass="6" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="">
@@ -21,8 +21,8 @@
       <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
     </deformablesprite>    
     -->
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
   <!-- tail middle -->
   <limb id="2" width="35" height="52" mass="6" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="">
@@ -34,8 +34,8 @@
       <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
     </deformablesprite>    
     -->
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
   <!-- tail end -->
   <limb id="3" radius="20" mass="6" type="Tail" flip="True" bodytype="Dynamic" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" width="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 3" notes="">
@@ -47,8 +47,8 @@
       <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
     </deformablesprite>    
     -->
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="180,0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
   <!-- leg -->
   <limb id="4" width="15" height="63" mass="4" refjoint="3" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" ignorecollisions="False" name="Limb 4" notes="">

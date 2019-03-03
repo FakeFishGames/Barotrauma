@@ -14,8 +14,10 @@ namespace Barotrauma.Items.Components
 
             public bool Distort;
             public float DistortionTimer;
+
+            public List<Hull> LinkedHulls = new List<Hull>();
         }
-        
+
         private DateTime resetDataTime;
 
         private bool hasPower;
@@ -71,7 +73,7 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
-            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.Prefab.Health);
 
             hasPower = voltage > minVoltage;
             if (hasPower)

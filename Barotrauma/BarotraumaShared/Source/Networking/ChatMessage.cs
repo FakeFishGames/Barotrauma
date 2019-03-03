@@ -32,15 +32,33 @@ namespace Barotrauma.Networking
             new Color(255, 255, 255),   //messagebox
             new Color(255, 128, 0)      //order
         };
-        
+
         public readonly string Text;
+
+        private string translatedText;
+        public string TranslatedText
+        {
+            get
+            {
+                if (!Type.HasFlag(ChatMessageType.Server | ChatMessageType.Error))
+                {
+                    return Text;
+                }
+                if (translatedText == null || translatedText.Length == 0)
+                {
+                    translatedText = TextManager.GetServerMessage(Text);
+                }
+
+                return translatedText;
+            }
+        }
 
         public ChatMessageType Type;
 
         public readonly Character Sender;
 
         public readonly string SenderName;
-        
+
         public Color Color
         {
             get { return MessageColor[(int)Type]; }
@@ -48,8 +66,10 @@ namespace Barotrauma.Networking
 
         public string TextWithSender
         {
-            get;
-            private set;
+            get
+            {
+                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : SenderName + ": " + TranslatedText;
+            }
         }
 
         public static UInt16 LastID = 0;
@@ -68,8 +88,6 @@ namespace Barotrauma.Networking
             Sender = sender;
 
             SenderName = senderName;
-
-            TextWithSender = string.IsNullOrWhiteSpace(senderName) ? text : senderName + ": " + text;
         }        
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)
@@ -103,6 +121,19 @@ namespace Barotrauma.Networking
             return command;
         }
 
+        public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
+        {
+            if (listener.WorldPosition == sender.WorldPosition) { return 0.0f; }
+
+            float dist = Vector2.Distance(listener.WorldPosition, sender.WorldPosition);
+            if (dist > range) { return 0.0f; }
+
+            if (Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
+            if (dist > range) { return 0.0f; }
+
+            return dist / range;
+        }
+
         public string ApplyDistanceEffect(Character listener)
         {
             if (Sender == null) return Text;
@@ -110,17 +141,9 @@ namespace Barotrauma.Networking
             return ApplyDistanceEffect(listener, Sender, Text, SpeakRange);
         }
 
-        public static string ApplyDistanceEffect(Entity listener, Entity Sender, string text, float range, float obstructionmult = 2.0f)
+        public static string ApplyDistanceEffect(Entity listener, Entity sender, string text, float range, float obstructionmult = 2.0f)
         {
-            if (listener.WorldPosition == Sender.WorldPosition) return text;
-
-            float dist = Vector2.Distance(listener.WorldPosition, Sender.WorldPosition);
-            if (dist > range) return "";
-
-            if (Submarine.CheckVisibility(listener.SimPosition, Sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
-            if (dist > range) return "";
-            
-            return ApplyDistanceEffect(text, dist / range);
+            return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionmult));
         }
 
         public static string ApplyDistanceEffect(string text, float garbleAmount)
@@ -182,138 +205,6 @@ namespace Barotrauma.Networking
             return message;
         }
 
-        public static void ServerRead(NetIncomingMessage msg, Client c)
-        {
-            c.KickAFKTimer = 0.0f;
-
-            UInt16 ID = msg.ReadUInt16();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();
-            string txt = "";
-
-            int orderIndex = -1;
-            Character orderTargetCharacter = null;
-            Entity orderTargetEntity = null;
-            int orderOptionIndex = -1;
-            OrderChatMessage orderMsg = null;
-            if (type == ChatMessageType.Order)
-            {
-                orderIndex = msg.ReadByte();
-                orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
-                orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
-                orderOptionIndex = msg.ReadByte();
-
-                if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
-                {
-                    DebugConsole.ThrowError("Invalid order message from client \"" + c.Name + "\" - order index out of bounds.");
-                    return;
-                }
-
-                Order order = Order.PrefabList[orderIndex];
-                string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
-                orderMsg = new OrderChatMessage(order, orderOption, orderTargetEntity, orderTargetCharacter, c.Character);
-                txt = orderMsg.Text;
-            }
-            else
-            {
-                txt = msg.ReadString() ?? "";
-            }
-
-            if (!NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) return;
-
-            c.LastSentChatMsgID = ID;
-
-            if (txt.Length > MaxLength)
-            {
-                txt = txt.Substring(0, MaxLength);
-            }
-
-            c.LastSentChatMessages.Add(txt);
-            if (c.LastSentChatMessages.Count > 10)
-            {
-                c.LastSentChatMessages.RemoveRange(0, c.LastSentChatMessages.Count - 10);
-            }
-
-            float similarity = 0.0f;
-            //don't do message similarity checks on order messages
-            if (orderMsg == null)
-            {
-                for (int i = 0; i < c.LastSentChatMessages.Count; i++)
-                {
-                    float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
-                    if (string.IsNullOrEmpty(txt))
-                    {
-                        similarity += closeFactor;
-                    }
-                    else
-                    {
-                        int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
-                        similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
-                    }                
-                }
-            }
-
-            if (similarity + c.ChatSpamSpeed > 5.0f)
-            {
-                c.ChatSpamCount++;
-
-                if (c.ChatSpamCount > 3)
-                {
-                    //kick for spamming too much
-                    GameMain.Server.KickClient(c, TextManager.Get("SpamFilterKicked"));
-                }
-                else
-                {
-                    ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
-                    c.ChatSpamTimer = 10.0f;
-                    GameMain.Server.SendDirectChatMessage(denyMsg, c);
-                }
-                return;
-            }
-
-            c.ChatSpamSpeed += similarity + 0.5f;
-
-            if (c.ChatSpamTimer > 0.0f)
-            {
-                ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
-                c.ChatSpamTimer = 10.0f;
-                GameMain.Server.SendDirectChatMessage(denyMsg, c);
-                return;
-            }
-            
-            if (type == ChatMessageType.Order)
-            {
-                if (c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) return;
-
-                ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
-                if (orderMsg.Order.TargetAllCharacters)
-                {
-#if CLIENT
-                    //add the order to the crewmanager only if the host is not controlling a character 
-                    //OR the character is close enough to hear it
-                    if (Character.Controlled == null || 
-                        !string.IsNullOrEmpty(ApplyDistanceEffect(orderMsg.Text, messageType, orderMsg.Sender, Character.Controlled)))
-                    {
-                        GameMain.GameSession?.CrewManager?.AddOrder(
-                            new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()),
-                            orderMsg.Order.Prefab.FadeOutTime);
-                    }
-#endif
-                }
-                else if (orderTargetCharacter != null)
-                {
-                    orderTargetCharacter.SetOrder(
-                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()), 
-                            orderMsg.OrderOption, orderMsg.Sender);                    
-                }
-
-                GameMain.Server.SendOrderChatMessage(orderMsg);
-            }
-            else
-            {
-                GameMain.Server.SendChatMessage(txt, null, c);
-            }
-        }
-
         public int EstimateLengthBytesClient()
         {
             int length =    1 + //(byte)ServerNetObject.CHAT_MESSAGE
@@ -323,46 +214,19 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public int EstimateLengthBytesServer(Client c)
-        {
-            int length =    1 + //(byte)ServerNetObject.CHAT_MESSAGE
-                            2 + //(UInt16)NetStateID
-                            1 + //(byte)Type
-                            Encoding.UTF8.GetBytes(Text).Length + 2;
-
-            if (Sender != null && c.InGame)
-            {
-                length += 2; //sender ID (UInt16)
-            }
-            else if (SenderName != null)
-            {
-                length += Encoding.UTF8.GetBytes(SenderName).Length + 2;
-            }
-
-            return length;
-        }
-
         public static bool CanUseRadio(Character sender)
         {
-            if (sender == null) return false;
-            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            return senderItem != null && sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit();
+            return CanUseRadio(sender, out _);
         }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg, Client c)
+        public static bool CanUseRadio(Character sender, out WifiComponent radio)
         {
-            msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
-            msg.Write((byte)Type);
-            msg.Write(Text);
-
-            msg.Write(SenderName);
-            msg.Write(Sender != null && c.InGame);
-            if (Sender != null && c.InGame)
-            {
-                msg.Write(Sender.ID);
-            }
+            radio = null;
+            if (sender == null) { return false; }
+            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+            if (senderItem == null) { return false; }
+            radio = senderItem.GetComponent<WifiComponent>();
+            return sender.HasEquippedItem(senderItem) && radio.CanTransmit();
         }
-
     }
 }

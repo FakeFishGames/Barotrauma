@@ -152,7 +152,6 @@ namespace Barotrauma.Tutorials
             if (!Initialized) return;
 
             PreloadVideoContent();
-            Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
 
             base.Start();
 
@@ -194,6 +193,7 @@ namespace Barotrauma.Tutorials
             }
 
             crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
+            Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
             started = true;
         }
 
@@ -325,7 +325,7 @@ namespace Barotrauma.Tutorials
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
+                        if (!item.Repairables.Any() || item.Condition > item.Prefab.Health / 2.0f) continue;
                         degradedEquipmentFound = true;
                         break;
                     }
@@ -464,7 +464,7 @@ namespace Barotrauma.Tutorials
                     spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
                     break;
                 case ContentTypes.Text:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.GetFormatted(activeSegment.Content.GetAttributeString("tag", ""), false, args),
                                               activeSegment.Content.GetAttributeInt("width", 300),
                                               activeSegment.Content.GetAttributeInt("height", 80),
                                               activeSegment.Content.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);

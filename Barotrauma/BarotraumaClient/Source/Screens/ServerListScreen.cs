@@ -129,7 +129,7 @@ namespace Barotrauma
             GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
                 TextManager.Get("Back"), style: "GUIButtonLarge")
             {
-                OnClicked = GameMain.MainMenuScreen.SelectTab
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
 
 			var refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
@@ -591,7 +591,7 @@ namespace Barotrauma
             }
 
             GameMain.Config.DefaultPlayerName = clientNameBox.Text;
-            GameMain.Config.Save();
+            GameMain.Config.SaveNewPlayerConfig();
 
             string ip = null;
             if (ipBox.UserData is ServerInfo serverInfo)
@@ -617,17 +617,18 @@ namespace Barotrauma
         
         private IEnumerable<object> ConnectToServer(string ip)
         {
+#if !DEBUG
             try
             {
-                GameMain.NetworkMember = new GameClient(clientNameBox.Text);
-                GameMain.Client.ConnectToServer(ip);             
+#endif
+                GameMain.Client = new GameClient(clientNameBox.Text, ip);
+#if !DEBUG
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start the client", e);
             }
-
+#endif
 
             yield return CoroutineStatus.Success;
         }
@@ -714,9 +715,11 @@ namespace Barotrauma
                     }
                     catch (PingException ex)
                     {
-                        string errorMsg = "Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + ex.Message;
+                        string errorMsg = "Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + (ex?.InnerException?.Message ?? ex.Message);
                         GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + serverInfo.IP, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+#if DEBUG
                         DebugConsole.NewMessage(errorMsg, Color.Red);
+#endif
                     }
                 }
             }

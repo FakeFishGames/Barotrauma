@@ -41,6 +41,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool OnlyJobSpecificDialog
+        {
+            get;
+            private set;
+        }
+
         //the number of these characters in the crew the player starts with in the single player campaign
         [Serialize(0, false)]
         public int InitialCount
@@ -101,12 +108,8 @@ namespace Barotrauma
         public JobPrefab(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
-
-            string translatedName = TextManager.Get("JobName." + Identifier, true);
-            if (!string.IsNullOrEmpty(translatedName)) Name = translatedName;
-
-            string translatedDescription = TextManager.Get("JobDescription." + Identifier, true);
-            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
+            Name = TextManager.Get("JobName." + Identifier);
+            Description = TextManager.Get("JobDescription." + Identifier);
 
             ItemNames = new List<string>();
 

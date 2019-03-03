@@ -390,17 +390,17 @@ namespace Barotrauma
             pullJoint.LocalAnchorA = new Vector2(-pullJoint.LocalAnchorA.X, pullJoint.LocalAnchorA.Y);
         }
         
-        public AttackResult AddDamage(Vector2 position, float damage, float bleedingDamage, float burnDamage, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, float damage, float bleedingDamage, float burnDamage, bool playSound)
         {
             List<Affliction> afflictions = new List<Affliction>();
             if (damage > 0.0f) afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage));
             if (bleedingDamage > 0.0f) afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));
             if (burnDamage > 0.0f) afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage));
 
-            return AddDamage(position, afflictions, playSound);
+            return AddDamage(simPosition, afflictions, playSound);
         }
 
-        public AttackResult AddDamage(Vector2 position, List<Affliction> afflictions, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, List<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
             //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
@@ -410,7 +410,7 @@ namespace Barotrauma
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
-                    if (SectorHit(damageModifier.ArmorSector, position))
+                    if (SectorHit(damageModifier.ArmorSector, simPosition))
                     {
                         afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
@@ -422,7 +422,7 @@ namespace Barotrauma
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
                         if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
-                        if (SectorHit(damageModifier.ArmorSector, position))
+                        if (SectorHit(damageModifier.ArmorSector, simPosition))
                         {
                             afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);
@@ -431,39 +431,51 @@ namespace Barotrauma
                 }
             }
 
-            AddDamageProjSpecific(position, afflictions, playSound, appliedDamageModifiers);
+            AddDamageProjSpecific(simPosition, afflictions, playSound, appliedDamageModifiers);
 
             return new AttackResult(afflictions, this, appliedDamageModifiers);
         }
 
-        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
+        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
 
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
-            if (armorSector == Vector2.Zero) return false;
-            
-            float rot = body.Rotation;
-            if (Dir == -1) rot -= MathHelper.Pi;
+            if (armorSector == Vector2.Zero) { return false; }
 
-            Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
+            // Can't get this to work properly.
+            //float rot = body.Rotation;
+            //if (Dir == -1) { rot -= MathHelper.Pi; }
+            //Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
+            //float mid = (armorLimits.X + armorLimits.Y) / 2;
+            //float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
+            //return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2);
 
-            float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
-            float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
+            // Alternative implementation
+            float offset = GetArmorSectorRotationOffset(armorSector, body.Rotation);
+            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
+            float hitAngle = VectorExtensions.Angle(forward, simPosition - SimPosition);
+            float sectorSize = MathHelper.ToDegrees(GetArmorSectorSize(armorSector));
+            return hitAngle < sectorSize / 2;
+        }
 
-            return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2.0f);
+        protected float GetArmorSectorRotationOffset(Vector2 armorSector, float bodyRotation)
+        {
+            float midAngle = MathUtils.GetMidAngle(armorSector.X, armorSector.Y);
+            float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+            return bodyRotation + (midAngle + spritesheetOrientation) * Dir;
+        }
+
+        protected float GetArmorSectorSize(Vector2 armorSector)
+        {
+            float min = Math.Min(armorSector.X, armorSector.Y);
+            float max = Math.Max(armorSector.X, armorSector.Y);
+            return max - min;
         }
 
         public void Update(float deltaTime)
         {
             UpdateProjSpecific(deltaTime);
             
-            if (LinearVelocity.X > 500.0f)
-            {
-                //DebugConsole.ThrowError("CHARACTER EXPLODED");
-                body.ResetDynamics();
-                body.SetTransform(character.SimPosition, 0.0f);           
-            }
-
             if (inWater)
             {
                 body.ApplyWaterForces();
@@ -512,9 +524,10 @@ namespace Barotrauma
                                 SimPosition, attackPosition,
                                 ignoredBodies, Physics.CollisionWall);
                             
-                            if (damageTarget is Item && structureBody?.UserData is Item)
+                            if (damageTarget is Item)
                             {
-                                // If the attack is aimed to an item and hits an item, it's successful
+                                // If the attack is aimed to an item and hits an item, it's successful.
+                                // Ignore blocking on items, because it causes cases where a Mudraptor cannot hit the hatch, for example.
                                 wasHit = true;
                             }
                             else if (damageTarget is Structure && structureBody?.UserData is Structure)

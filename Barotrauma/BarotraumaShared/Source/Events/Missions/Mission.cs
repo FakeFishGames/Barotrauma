@@ -73,8 +73,8 @@ namespace Barotrauma
 
             Prefab = prefab;
 
-            Description = prefab.Description;
-            SuccessMessage = prefab.SuccessMessage;
+            description = prefab.Description;
+            successMessage = prefab.SuccessMessage;
             FailureMessage = prefab.FailureMessage;
             Headers = new List<string>(prefab.Headers);
             Messages = new List<string>(prefab.Messages);
@@ -83,9 +83,9 @@ namespace Barotrauma
 
             for (int n = 0; n < 2; n++)
             {
-                if (Description != null) Description = Description.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                if (SuccessMessage != null) SuccessMessage = SuccessMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                if (FailureMessage != null) FailureMessage = FailureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (description != null) description = description.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (successMessage != null) successMessage = successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (failureMessage != null) failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
                 for (int m = 0; m < Messages.Count; m++)
                 {
                     Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
@@ -103,10 +103,12 @@ namespace Barotrauma
             if (missionType == MissionType.Random)
             {
                 allowedMissions.AddRange(MissionPrefab.List);
+#if SERVER
                 if (GameMain.Server != null)
                 {
-                    allowedMissions.RemoveAll(mission => !GameMain.Server.AllowedRandomMissionTypes.Contains(mission.type));
+                    allowedMissions.RemoveAll(mission => !GameMain.Server.ServerSettings.AllowedRandomMissionTypes.Contains(mission.type));
                 }
+#endif
             }
             else if (missionType == MissionType.None)
             {
@@ -141,10 +143,9 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual bool AssignTeamIDs(List<Networking.Client> clients, out byte hostTeam)
+        public virtual bool AssignTeamIDs(List<Networking.Client> clients)
         {
-            clients.ForEach(c => c.TeamID = 1);
-            hostTeam = 1; 
+            clients.ForEach(c => c.TeamID = Character.TeamType.Team1);
             return false; 
         }
 

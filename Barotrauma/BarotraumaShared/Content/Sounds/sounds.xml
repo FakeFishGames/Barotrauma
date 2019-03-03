@@ -1,21 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <sounds>
-  <startupsound file="Content/Sounds/startDrone.ogg"/>
+  <startupsound file="Content/Sounds/StartDrone.ogg"/>
   
   <damagesound file="Content/Sounds/Damage/StructureBlunt1.ogg" damagerange="0.0,30.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="20.0,30.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt3.ogg" damagerange="25.0,50.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt4.ogg" damagerange="25.0,50.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt5.ogg" damagerange="40.0,60.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt6.ogg" damagerange="40.0,70.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt7.ogg" damagerange="60.0,90.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt8.ogg" damagerange="60.0,90.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt9.ogg" damagerange="80.0,100.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt10.ogg" damagerange="80.0,100.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="10.0,50.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt3.ogg" damagerange="25.0,70.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt4.ogg" damagerange="25.0,70.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt5.ogg" damagerange="40.0,80.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt6.ogg" damagerange="40.0,100.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt7.ogg" damagerange="60.0,1000.0" damagesoundtype="StructureBlunt"/>
 
   <damagesound file="Content/Sounds/Damage/GlassImpact1.ogg" damagerange="0.0,10.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
   <damagesound file="Content/Sounds/Damage/GlassImpact2.ogg" damagerange="5.0,15.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
-  <damagesound file="Content/Sounds/Damage/GlassImpact3.ogg" damagerange="10.0,20.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact3.ogg" damagerange="10.0,50.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassImpact4.ogg" damagerange="10.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
 
   <damagesound file="Content/Sounds/Damage/GlassBreak1.ogg" damagerange="20.0,50.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
   <damagesound file="Content/Sounds/Damage/GlassBreak2.ogg" damagerange="25.0,80.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
@@ -40,26 +38,27 @@
   <damagesound file="Content/Sounds/Damage/LimbSlash5.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
   <damagesound file="Content/Sounds/Damage/LimbSlash6.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
 
-  <damagesound file="Content/Sounds/Damage/HitArmor1.ogg" damagerange="5.0,80.0" damagesoundtype="LimbArmor"/>
-  <damagesound file="Content/Sounds/Damage/HitArmor2.ogg" damagerange="5.0,80.0" damagesoundtype="LimbArmor"/>
-  <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagerange="40.0,100.0" damagesoundtype="LimbArmor"/> 
+  <damagesound file="Content/Sounds/Damage/HitArmor1.ogg" damagesoundtype="LimbArmor"/>
+  <damagesound file="Content/Sounds/Damage/HitArmor2.ogg" damagesoundtype="LimbArmor"/>
+  <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagesoundtype="LimbArmor"/> 
+  <damagesound file="Content/Sounds/Damage/HitArmor4.ogg" damagesoundtype="LimbArmor"/> 
 
-  <damagesound file="Content/Sounds/Damage/HitClown1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
-  <damagesound file="Content/Sounds/Damage/HitClown2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
-  <damagesound file="Content/Sounds/Damage/HitClown3.ogg" damagerange="25.0,75.0" damagesoundtype="LimbClown"/>  
-  <damagesound file="Content/Sounds/Damage/HitClown4.ogg" damagerange="50.0,100.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown1.ogg" damagerange="0.0,75.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown2.ogg" damagerange="25.0,100.0" damagesoundtype="LimbClown"/>
 
-  <damagesound file="Content/Sounds/Damage/creak1.ogg" damagesoundtype="Pressure"/>
-  <damagesound file="Content/Sounds/Damage/creak2.ogg" damagesoundtype="Pressure"/>
-  <damagesound file="Content/Sounds/Damage/creak3.ogg" damagesoundtype="Pressure"/>
-  <damagesound file="Content/Sounds/Damage/creak4.ogg" damagesoundtype="Pressure"/>
-  <damagesound file="Content/Sounds/Damage/creak5.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/Creak1.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/Creak2.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/Creak3.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/Creak4.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/Creak5.ogg" damagesoundtype="Pressure"/>
 
   <implode file="Content/Sounds/Damage/implode.ogg"/>
-  <drown file="Content/Sounds/Water/Drown1.ogg"/>
-  <drown file="Content/Sounds/Water/Drown2.ogg"/>
-  <drown file="Content/Sounds/Water/Drown3.ogg"/>
-  <drown file="Content/Sounds/Water/Drown4.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale1.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale2.ogg"/>
+  <drownmale file="Content/Sounds/Water/DrownMale3.ogg"/>
+  <drownfemale file="Content/Sounds/Water/DrownFemale1.ogg"/>
+  <drownfemale file="Content/Sounds/Water/DrownFemale2.ogg"/>
+  <drownfemale file="Content/Sounds/Water/DrownFemale3.ogg"/>
 
   <splash file="Content/Sounds/Water/Splash0.ogg"/>
   <splash file="Content/Sounds/Water/Splash1.ogg"/>
@@ -76,8 +75,8 @@
   <flow file="Content/Sounds/Water/FlowMedium.ogg"/>
   <flow file="Content/Sounds/Water/FlowLarge.ogg"/>
 
-  <fire file="Content/Sounds/fire.ogg"/>
-  <firelarge file="Content/Sounds/firelarge.ogg"/>
+  <fire file="Content/Sounds/FireSmall.ogg"/>
+  <firelarge file="Content/Sounds/FireLarge.ogg"/>
 
   <waterambience file="Content/Sounds/Water/WaterAmbience1.ogg"/>
   <waterambience file="Content/Sounds/Water/WaterAmbience2.ogg"/>
@@ -118,8 +117,6 @@
   <ambient file="Content/Sounds/Ambient/Ambient9.ogg"/>
   <ambient file="Content/Sounds/Ambient/Ambient10.ogg"/>
   <ambient file="Content/Sounds/Ambient/Ambient11.ogg"/>
-  <ambient file="Content/Sounds/Ambient/Ambient12.ogg"/>
-  <ambient file="Content/Sounds/Ambient/Ambient13.ogg"/>
   <ambient file="Content/Sounds/Ambient/DistantPod1.ogg"/>
   <ambient file="Content/Sounds/Ambient/DistantPod2.ogg"/>
   <ambient file="Content/Sounds/Ambient/DistantPod3.ogg"/>
@@ -130,6 +127,8 @@
   <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
   -->
 
+  <music file="Content/Sounds/Music/Main Menu Music.ogg" type="menu"/>
+  
   <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
   
   <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>

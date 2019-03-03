@@ -39,6 +39,11 @@ namespace Barotrauma
 
         public GUIComponent MapContainer { get; private set; }
 
+        public GUIButton StartButton
+        {
+            get { return startButton; }
+        }
+
         public CampaignMode Campaign { get; }
 
         public CampaignUI(CampaignMode campaign, GUIFrame container)
@@ -74,6 +79,7 @@ namespace Barotrauma
 
             int i = 0;
             var tabValues = Enum.GetValues(typeof(Tab));
+            float minTextScale = 1.0f;
             foreach (Tab tab in tabValues)
             {
                 var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonContainer.RectTransform),
@@ -90,7 +96,14 @@ namespace Barotrauma
                     (int)(tabButton.Rect.Height * (buttonSprite.Sprite.size.X / buttonSprite.Sprite.size.Y)), int.MaxValue);
                 tabButtons.Add(tabButton);
                 tabButton.Font = GUI.LargeFont;
+                tabButton.TextBlock.AutoScale = true;
+                minTextScale = Math.Min(tabButton.TextBlock.TextScale, minTextScale);
                 i++;
+            }
+
+            foreach (GUIButton tabButton in tabButtons)
+            {
+                tabButton.TextBlock.TextScale = minTextScale;
             }
 
             // crew tab -------------------------------------------------------------------------
@@ -180,9 +193,10 @@ namespace Barotrauma
                 };
                 itemCategoryButtons.Add(categoryButton);
 
-                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter),
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) },
                    TextManager.Get("MapEntityCategory." + category), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
                 {
+                    Padding = Vector4.Zero,
                     AutoScale = true,
                     Color = Color.Transparent,
                     HoverColor = Color.Transparent,
@@ -374,13 +388,13 @@ namespace Barotrauma
             {
                 AutoScale = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.DisplayName);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.Name);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             new GUIImage(new RectTransform(new Vector2(1.0f, 0.6f),
                 container.RectTransform), portrait, scaleToFit: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), "Select a mission", font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), TextManager.Get("SelectMission"), font: GUI.LargeFont)
             {
                 AutoScale = true
             };
@@ -424,7 +438,7 @@ namespace Barotrauma
                     };
                     missionTickBoxes.Add(tickBox);
                 }
-                GUITickBox.CreateRadioButtonGroup(missionTickBoxes);
+                
                 RefreshMissionTab(selectedMission);
 
                 startButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
@@ -448,6 +462,11 @@ namespace Barotrauma
                 GameMain.GameSession.Map.CurrentLocation.AvailableMissions.Contains(selectedMission)));
             
             GameMain.GameSession.Map.CurrentLocation.SelectedMission = selectedMission;
+
+            foreach (GUITickBox missionTickBox in missionTickBoxes)
+            {
+                missionTickBox.Selected = missionTickBox.UserData == selectedMission;
+            }
 
             selectedMissionInfo.ClearChildren();
             var container = selectedMissionInfo.Content;
@@ -485,13 +504,14 @@ namespace Barotrauma
 
             ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Rect.Width - 50, 25), frame.RectTransform, Anchor.CenterLeft)
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Rect.Width - (pi.Quantity > 0 ? 160 : 120), 25), frame.RectTransform, Anchor.CenterLeft)
             {
-                AbsoluteOffset = new Point(40, 0)
+                AbsoluteOffset = new Point(40, 0),
             }, pi.ItemPrefab.Name, font: font)
-            {
+            {                
                 ToolTip = pi.ItemPrefab.Description
             };
+            textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
             Sprite itemIcon = pi.ItemPrefab.InventoryIcon ?? pi.ItemPrefab.sprite;
 
@@ -504,12 +524,12 @@ namespace Barotrauma
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
 
-            textBlock = new GUITextBlock(new RectTransform(new Point(120, 25), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(20, 0) }, 
-                priceInfo.BuyPrice.ToString(), font: font)
+            textBlock = new GUITextBlock(new RectTransform(new Point(60, 25), frame.RectTransform, Anchor.CenterRight)
+            { AbsoluteOffset = new Point(pi.Quantity > 0 ? 70 : 25, 0) }, 
+                priceInfo.BuyPrice.ToString(), font: font, textAlignment: Alignment.CenterRight)
             {
                 ToolTip = pi.ItemPrefab.Description
             };
-
 
             //If its the store menu, quantity will always be 0
             if (pi.Quantity > 0)

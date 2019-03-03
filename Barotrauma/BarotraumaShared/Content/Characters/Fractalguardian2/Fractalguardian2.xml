@@ -8,10 +8,20 @@
     vitality="100"
     doesbleed="false"/>
 
-  <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />
-  <sound file="Content/Characters/Fractalguardian/guardian2.ogg" state="Attack" range="3000" />
-  <sound file="Content/Characters/Fractalguardian/Die1.ogg" state="Die" range="3000" />
-  <sound file="Content/Characters/Fractalguardian/Die2.ogg" state="Die" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_idle1.ogg" state="Idle" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_idle2.ogg" state="Idle" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_idle3.ogg" state="Idle" range="3000" />
+
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_attack1.ogg" state="Attack" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_attack2.ogg" state="Attack" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_attack3.ogg" state="Attack" range="3000" />
+
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_damage1.ogg" state="Damage" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_damage2.ogg" state="Damage" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_damage3.ogg" state="Damage" range="3000" />
+
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_death1.ogg" state="Die" range="3000" />
+  <sound file="Content/Characters/Fractalguardian2/FRACTALGUARDIAN2_death2.ogg" state="Die" range="3000" />
 
   <ai
     combatstrength="500"

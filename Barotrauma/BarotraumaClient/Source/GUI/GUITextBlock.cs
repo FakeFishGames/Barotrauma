@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma
 {
@@ -216,25 +217,36 @@ namespace Barotrauma
             if (autoScale && textScale > 0.1f &&
                 (TextSize.X * textScale > rect.Width - padding.X - padding.Z || TextSize.Y * textScale > rect.Height - padding.Y - padding.W))
             {
-                TextScale -= 0.05f;
+                TextScale = Math.Max(0.1f, Math.Min(
+                    (rect.Width - padding.X - padding.Z) / TextSize.X, 
+                    (rect.Height - padding.Y - padding.W) / TextSize.Y)) - 0.01f;
                 return;
             }
 
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
-            origin = TextSize / textScale * 0.5f;
+            origin = TextSize * 0.5f;
 
             if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
-                origin.X += (rect.Width / 2.0f - TextSize.X / 2) / textScale - padding.X;
-            
+            {
+                textPos.X = padding.X;
+                origin.X = 0;
+            }            
             if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
-                origin.X -= (rect.Width / 2.0f - TextSize.X / 2) / textScale - padding.Z;
-
+            {
+                textPos.X = rect.Width - padding.Z;
+                origin.X = TextSize.X;
+            }
             if (textAlignment.HasFlag(Alignment.Top))
-                origin.Y += (rect.Height / 2.0f - TextSize.Y / 2) / textScale - padding.Y;
-
+            {
+                textPos.Y = padding.Y;
+                origin.Y = 0;
+            }
             if (textAlignment.HasFlag(Alignment.Bottom))
-                origin.Y -= (rect.Height / 2.0f - TextSize.Y / 2) / textScale - padding.W;
-            
+            {
+                textPos.Y = rect.Height - padding.W;
+                origin.Y = TextSize.Y;
+            }
+
             origin.X = (int)(origin.X);
             origin.Y = (int)(origin.Y);
 
