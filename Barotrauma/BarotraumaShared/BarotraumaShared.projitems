@@ -2553,10 +2553,13 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\ExplosionSmall3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\harpoon1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\HarpoonGun1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\harpoon2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\HarpoonGun2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\HarpoonGun3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\honk.ogg">
