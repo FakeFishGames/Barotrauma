@@ -486,6 +486,8 @@ namespace Barotrauma
 
         protected bool IsValidTarget(ISerializableEntity entity)
         {
+            if (targetIdentifiers == null) { return true; }
+
             if (entity is Item item)
             {
                 if (item.HasTag(targetIdentifiers)) return true;
