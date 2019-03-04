@@ -1987,7 +1987,7 @@ namespace Barotrauma.Networking
             }
 
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "ServerMessage.YouLeftServer";            
-            if (!string.IsNullOrWhiteSpace(reason)) msg += $";ServerMessage.Reason;{reason}";
+            if (!string.IsNullOrWhiteSpace(reason)) msg += $"; ;ServerMessage.Reason;: ;{reason}";
 
             Log(msg, ServerLog.MessageType.ServerMessage);
 
