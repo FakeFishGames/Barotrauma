@@ -54,7 +54,7 @@ namespace Barotrauma.Networking
             else
             {
                 if (VoipCapture.Instance == null) VoipCapture.Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
-                if (VoipCapture.Instance.EnqueuedTotalLength <= 0) return;
+                if (VoipCapture.Instance == null || VoipCapture.Instance.EnqueuedTotalLength <= 0) return;
             }
 
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
