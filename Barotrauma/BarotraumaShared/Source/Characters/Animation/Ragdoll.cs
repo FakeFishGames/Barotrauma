@@ -1297,6 +1297,7 @@ namespace Barotrauma
             CheckValidity(Collider);
             foreach (Limb limb in limbs)
             {
+                if (limb.body == null || !limb.body.Enabled) { continue; }
                 CheckValidity(limb.body);
             }
         }
