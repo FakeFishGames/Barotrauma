@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
 using Barotrauma.Extensions;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -2165,16 +2166,17 @@ namespace Barotrauma
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
-                string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
+                StringBuilder sb = new StringBuilder();
+                sb.Append(LogName + " attacked by " + attackingCharacter.LogName + ".");
                 if (attackResult.Afflictions != null)
                 {
                     foreach (Affliction affliction in attackResult.Afflictions)
                     {
                         if (affliction.Strength == 0.0f) continue;
-                        logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                        sb.Append($" {affliction.Prefab.Name}: {affliction.Strength}");
                     }
                 }
-                GameServer.Log(logMsg, ServerLog.MessageType.Attack);            
+                GameServer.Log(sb.ToString(), ServerLog.MessageType.Attack);            
             }
 #endif
 
