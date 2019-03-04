@@ -347,7 +347,7 @@
     </EventSet>
 
     <!-- 0-3 crawlers after 16 minutes or passing 65% -->
-    <EventSet chooserandom="false" mindistancetraveled="0.55" minmissiontime="960"> minintensity="0.0" maxintensity="0.6">
+    <EventSet chooserandom="false" mindistancetraveled="0.55" minmissiontime="960" minintensity="0.0" maxintensity="0.6">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
@@ -470,7 +470,7 @@
     </EventSet>
 
     <!-- 0-3 mudraptors after 16 minutes or passing 65% -->
-    <EventSet chooserandom="false" mindistancetraveled="0.55" minmissiontime="960"> minintensity="0.0" maxintensity="0.6">
+    <EventSet chooserandom="false" mindistancetraveled="0.55" minmissiontime="960" minintensity="0.0" maxintensity="0.6">
       <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
