@@ -28,14 +28,17 @@ namespace Barotrauma
                     if (sub.TeamID != character.TeamID) { continue; }
                     // If the character is inside, only take connected hulls into account.
                     if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                    if (!targets.Contains(item))
+                    foreach (Repairable repairable in item.Repairables)
                     {
-                        targets.Add(item);
+                        if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
+                        if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { continue; }
+                        if (!targets.Contains(item))
+                        {
+                            targets.Add(item);
+                        }
                     }
                 }
             }
-            // TODO: the order dosen't matter, because the objectives are sorted by the priority?
-            targets.Sort((x, y) => x.ConditionPercentage.CompareTo(y.ConditionPercentage));
         }
 
         protected override void CreateObjectives()
@@ -44,8 +47,6 @@ namespace Barotrauma
             {
                 foreach (Repairable repairable in item.Repairables)
                 {
-                    if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
-                    if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { continue; }
                     if (!objectives.TryGetValue(item, out AIObjective objective))
                     {
                         objective = new AIObjectiveRepairItem(character, item);
@@ -57,6 +58,6 @@ namespace Barotrauma
             }
         }
 
-        protected override float AverageFunction(Item item) => 100 - item.ConditionPercentage;
+        protected override float Average(Item item) => 100 - item.ConditionPercentage;
     }
 }

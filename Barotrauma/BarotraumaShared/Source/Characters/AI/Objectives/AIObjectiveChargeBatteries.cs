@@ -61,6 +61,6 @@ namespace Barotrauma
             }
         }
 
-        protected override float AverageFunction(PowerContainer battery) => 100 - battery.ChargePercentage;
+        protected override float Average(PowerContainer battery) => 100 - battery.ChargePercentage;
     }
 }

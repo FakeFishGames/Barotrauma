@@ -21,7 +21,7 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, targets.Average(t => AverageFunction(t)));
+            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, targets.Average(t => Average(t)));
         }
 
         protected override void FindTargets()
@@ -117,6 +117,6 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
 
-        protected override float AverageFunction(Gap gap) => gap.Open;
+        protected override float Average(Gap gap) => gap.Open;
     }
 }
