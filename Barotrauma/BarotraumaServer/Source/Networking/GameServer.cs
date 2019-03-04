@@ -956,11 +956,11 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
                         if (durationSeconds > 0)
                         {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range, TimeSpan.FromSeconds(durationSeconds));
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy_[initiator]={sender.Name}" : banReason, range, TimeSpan.FromSeconds(durationSeconds));
                         }
                         else
                         {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range);
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy_[initiator]={sender.Name}" : banReason, range);
                         }
                     }
                     break;
@@ -1981,13 +1981,13 @@ namespace Barotrauma.Networking
             client.HasSpawned = false;
             client.InGame = false;
 
-            if (string.IsNullOrWhiteSpace(msg))
+            if (string.IsNullOrWhiteSpace(msg)) msg = $"ServerMessage.ClientLeftServer_[client]={client.Name}";
+            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "ServerMessage.YouLeftServer";
+            if (!string.IsNullOrWhiteSpace(reason))
             {
-                msg = $"ServerMessage.ClientLeftServer_[client]={client.Name}";
+                msg += $"; ;ServerMessage.Reason;: ;{reason}";
+                targetmsg += $";\n;ServerMessage.Reason;: ;{reason}";
             }
-
-            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "ServerMessage.YouLeftServer";            
-            if (!string.IsNullOrWhiteSpace(reason)) msg += $"; ;ServerMessage.Reason;: ;{reason}";
 
             Log(msg, ServerLog.MessageType.ServerMessage);
 
