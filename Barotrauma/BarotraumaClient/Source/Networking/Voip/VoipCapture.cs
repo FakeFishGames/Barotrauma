@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public DateTime LastEnqueueAudio; 
+        public DateTime LastEnqueueAudio;
 
         public override byte QueueID
         {
@@ -70,7 +70,7 @@ namespace Barotrauma.Networking
             {
                 throw new Exception("Failed to open capture device: " + alError.ToString() + " (AL)");
             }
-            
+
             Alc.CaptureStart(captureDevice);
             alcError = Alc.GetError(captureDevice);
             if (alcError != AlcError.NoError)
@@ -159,7 +159,7 @@ namespace Barotrauma.Networking
                     }
                     else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
                     {
-                        if (PlayerInput.KeyDown(InputType.Voice))
+                        if (PlayerInput.KeyDown(InputType.Voice) && GUI.KeyboardDispatcher.Subscriber == null)
                         {
                             allowEnqueue = true;
                         }

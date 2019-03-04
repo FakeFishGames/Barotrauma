@@ -1386,9 +1386,7 @@ namespace Barotrauma
                 if (!pickHit && !selectHit) continue;
 
                 if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
-
-                if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
-
+                
                 bool showUiMsg = false;
 #if CLIENT
                 showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
@@ -1399,10 +1397,10 @@ namespace Barotrauma
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-
 #if CLIENT
                     if (picker == Character.Controlled) GUI.ForceMouseOn(null);
 #endif
+                    if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
                     if (ic.CanBeSelected) selected = true;
                 }
