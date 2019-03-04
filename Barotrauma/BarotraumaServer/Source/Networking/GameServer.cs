@@ -483,7 +483,7 @@ namespace Barotrauma.Networking
                 (OwnerConnection == null || c.Connection != OwnerConnection));
             foreach (Client c in kickAFK)
             {
-                KickClient(c, TextManager.Get("DisconnectMessage.AFK"));
+                KickClient(c, "DisconnectMessage.AFK");
             }
 
             NetIncomingMessage inc = null;
