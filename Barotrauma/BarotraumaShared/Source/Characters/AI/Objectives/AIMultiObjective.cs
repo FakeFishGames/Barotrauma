@@ -21,6 +21,10 @@ namespace Barotrauma
             CreateObjectives();
         }
 
+        protected override void Act(float deltaTime) { }
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
+
         public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
         {
             base.UpdatePriority(objectiveManager, deltaTime);
@@ -29,7 +33,6 @@ namespace Barotrauma
                 ignoreList.Clear();
                 ignoreListTimer = 0;
                 FindTargets();
-                CreateObjectives();
             }
             else
             {
@@ -44,22 +47,6 @@ namespace Barotrauma
             {
                 targetUpdateTimer += deltaTime;
             }
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.Submarine == null) { return 0; }
-            if (targets.None()) { return 0; }
-            float avg = targets.Average(t => AverageFunction(t));
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority - MathHelper.Max(0, AIObjectiveManager.OrderPriority - avg);
-            }
-            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, avg / 100);
-        }
-
-        protected override void Act(float deltaTime)
-        {
             foreach (var objective in objectives)
             {
                 if (!objective.Value.CanBeCompleted)
@@ -68,21 +55,26 @@ namespace Barotrauma
                 }
             }
             SyncRemovedObjectives(objectives, targets);
-            if (targets.None())
-            {
-                FindTargets();
-            }
             if (objectives.None())
             {
                 CreateObjectives();
             }
         }
 
-        public override bool IsCompleted() => false;
-        public override bool CanBeCompleted => true;
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (character.Submarine == null) { return 0; }
+            if (targets.None()) { return 0; }
+            float avg = targets.Average(t => Average(t));
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority - MathHelper.Max(0, AIObjectiveManager.OrderPriority - avg);
+            }
+            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, avg / 100);
+        }
 
         protected abstract void FindTargets();
         protected abstract void CreateObjectives();
-        protected abstract float AverageFunction(T target);
+        protected abstract float Average(T target);
     }
 }
