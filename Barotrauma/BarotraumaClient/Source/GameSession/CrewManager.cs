@@ -26,7 +26,7 @@ namespace Barotrauma
         private List<Character> characters = new List<Character>();
 
         private Point screenResolution;
-               
+
         #region UI
 
         private GUIFrame guiFrame;
@@ -153,10 +153,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
-                chatBox.InputBox.OnDeselected += (gui, Keys) =>
-                {
-                    this.chatBox.InputBox.Text = "";
-                };
+
                 chatBox.InputBox.OnTextChanged += chatBox.TypingChatMessage;
             }
 
@@ -357,7 +354,7 @@ namespace Barotrauma
             frame.Color = character.Info.Job.Prefab.UIColor;
             frame.SelectedColor = Color.Lerp(frame.Color, Color.White, 0.5f);
             frame.HoverColor = Color.Lerp(frame.Color, Color.White, 0.9f);
-            
+
             new GUIFrame(new RectTransform(new Point(characterInfoWidth, (int)(frame.Rect.Height * 1.3f)), frame.RectTransform, Anchor.CenterLeft), style: "OuterGlow")
             {
                 UserData = "highlight",
@@ -382,7 +379,7 @@ namespace Barotrauma
                 HoverColor = frame.HoverColor,
                 ToolTip = characterToolTip
             };
-            
+
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
                 "GUISoundIcon")
             {
@@ -668,7 +665,7 @@ namespace Barotrauma
 
 
         #region Voice chat
-        
+
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
         {
             if (client?.Character == null) { return; }
@@ -1084,7 +1081,7 @@ namespace Barotrauma
                 if (child.Visible)
                 {
                     child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
-                    
+
                     var soundIcon = child.FindChild(character)?.FindChild("soundicon");
                     if (soundIcon != null)
                     {

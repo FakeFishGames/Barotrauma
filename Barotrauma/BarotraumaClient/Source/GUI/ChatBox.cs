@@ -11,7 +11,7 @@ namespace Barotrauma
     class ChatBox
     {
         private static Sprite radioIcon;
-        
+
         private GUIFrame guiFrame;
 
         private GUIListBox chatBox;
@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private bool isSinglePlayer;
         public bool IsSinglePlayer => isSinglePlayer;
-               
+
         private bool toggleOpen = true;
         private float openState;
 
@@ -78,7 +78,7 @@ namespace Barotrauma
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), guiFrame.RectTransform), style: "ChatBox");
             toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
                 style: "UIToggleButton");
-            
+
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleOpen = !toggleOpen;
@@ -89,12 +89,16 @@ namespace Barotrauma
                 }
                 return true;
             };
-            
+
             inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
                 style: "ChatTextBox")
             {
                 Font = GUI.SmallFont,
                 MaxTextLength = ChatMessage.MaxLength
+            };
+            inputBox.OnDeselected += (gui, Keys) =>
+            {
+                gui.Text = "";
             };
 
             radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 2.0f), inputBox.RectTransform,
@@ -132,7 +136,7 @@ namespace Barotrauma
                 {
                     command = "";
                 }
-            }            
+            }
 
             switch (command)
             {
@@ -169,7 +173,7 @@ namespace Barotrauma
             {
                 chatBox.RemoveChild(chatBox.Content.Children.First());
             }
-            
+
             float prevSize = chatBox.BarSize;
 
             string displayedText = message.TranslatedText;
@@ -202,8 +206,8 @@ namespace Barotrauma
                 CanBeFocused = true
             };
 
-            if (message is OrderChatMessage orderChatMsg && 
-                Character.Controlled != null && 
+            if (message is OrderChatMessage orderChatMsg &&
+                Character.Controlled != null &&
                 orderChatMsg.TargetCharacter == Character.Controlled)
             {
                 msgHolder.Flash(Color.OrangeRed * 0.6f, flashDuration: 5.0f);
@@ -237,7 +241,7 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
                 int textWidth = (int)Math.Max(
-                    msgText.Font.MeasureString(msgText.WrappedText).X, 
+                    msgText.Font.MeasureString(msgText.WrappedText).X,
                     senderText.Font.MeasureString(senderText.WrappedText).X);
                 popupMsg.RectTransform.Resize(new Point(textWidth + 20, msgText.Rect.Bottom - senderText.Rect.Y), resizeChildren: false);
                 popupMessages.Enqueue(popupMsg);
@@ -265,7 +269,7 @@ namespace Barotrauma
             {
                 timer += CoroutineManager.DeltaTime;
                 float wavePhase = timer / animDuration * MathHelper.TwoPi;
-                message.RectTransform.ScreenSpaceOffset = 
+                message.RectTransform.ScreenSpaceOffset =
                     new Point((int)(Math.Sin(wavePhase) * (1.0f - timer / animDuration) * 50.0f), 0);
                 yield return CoroutineStatus.Running;
             }
@@ -294,7 +298,7 @@ namespace Barotrauma
                 new Point(HUDLayoutSettings.ChatBoxArea.X, HUDLayoutSettings.ChatBoxArea.Y) :
                 new Point(HUDLayoutSettings.ChatBoxArea.Right - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y);
         }
-                
+
         public void Update(float deltaTime)
         {
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale)
@@ -305,7 +309,7 @@ namespace Barotrauma
             }
 
 
-            
+
             if (toggleOpen || (inputBox != null && inputBox.Selected))
             {
                 openState += deltaTime * 5.0f;

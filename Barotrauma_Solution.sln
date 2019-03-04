@@ -67,12 +67,12 @@ Global
 		Barotrauma\BarotraumaShared\SharedContent.projitems*{85232b20-074d-4723-b0c6-91495391e448}*SharedItemsImports = 4
 		Barotrauma\BarotraumaShared\SharedContent.projitems*{a67d00eb-8f3d-49c9-9e01-94ed90b6bf2b}*SharedItemsImports = 13
 		Libraries\SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{c293db32-fa42-486d-b128-5a12522fae4e}*SharedItemsImports = 4
-		Barotrauma\BarotraumaClient\ClientCode.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedCode.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedContent.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
 		Barotrauma\BarotraumaClient\ClientCode.projitems*{cc996bb6-3781-4868-b996-07f9cdc936ed}*SharedItemsImports = 4
 		Barotrauma\BarotraumaShared\SharedCode.projitems*{cc996bb6-3781-4868-b996-07f9cdc936ed}*SharedItemsImports = 4
 		Barotrauma\BarotraumaShared\SharedContent.projitems*{cc996bb6-3781-4868-b996-07f9cdc936ed}*SharedItemsImports = 4
+		Barotrauma\BarotraumaClient\ClientCode.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
+		Barotrauma\BarotraumaShared\SharedCode.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
+		Barotrauma\BarotraumaShared\SharedContent.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		DebugLinux|Any CPU = DebugLinux|Any CPU
@@ -308,19 +308,19 @@ Global
 		{D7F9FDD3-AF03-46AD-A2C2-F590899712B7}.ReleaseWindows|x64.ActiveCfg = ReleaseLinux|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugLinux|Any CPU.ActiveCfg = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugLinux|x64.ActiveCfg = DebugMac|x64
-		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugLinux|x64.Build.0 = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugMac|Any CPU.ActiveCfg = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugMac|Any CPU.Build.0 = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugMac|x64.ActiveCfg = DebugMac|x64
+		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugMac|x64.Build.0 = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugWindows|Any CPU.ActiveCfg = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugWindows|Any CPU.Build.0 = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.DebugWindows|x64.ActiveCfg = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseLinux|Any CPU.ActiveCfg = ReleaseMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseLinux|x64.ActiveCfg = ReleaseMac|x64
-		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseLinux|x64.Build.0 = ReleaseMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseMac|Any CPU.ActiveCfg = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseMac|Any CPU.Build.0 = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseMac|x64.ActiveCfg = ReleaseMac|x64
+		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseMac|x64.Build.0 = ReleaseMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseWindows|Any CPU.ActiveCfg = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseWindows|Any CPU.Build.0 = DebugMac|x64
 		{CC996BB6-3781-4868-B996-07F9CDC936ED}.ReleaseWindows|x64.ActiveCfg = ReleaseMac|x64
@@ -329,7 +329,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{DBCF6FF0-3DE9-11E9-B3EF-63280FDBDA4A} = {F35DF9BF-0BED-4FEF-A51C-DD83C531882F}
 		{008C0F83-E914-4966-9135-EA885059EDD8} = {78A9F0AA-5519-407A-9B72-2A09F5DF7068}
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{3B8F9EDB-6E5E-450C-ABC2-EC49075D0B50} = {DE36F45F-F09E-4719-B953-00D148F7722A}
@@ -348,6 +347,7 @@ Global
 		{830461AA-3E2E-4BDE-9B27-1B3280836521} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{B2C129F2-8E5C-419A-98EB-161AA5B5FC71} = {F35DF9BF-0BED-4FEF-A51C-DD83C531882F}
 		{D7F9FDD3-AF03-46AD-A2C2-F590899712B7} = {B2C129F2-8E5C-419A-98EB-161AA5B5FC71}
+		{DBCF6FF0-3DE9-11E9-B3EF-63280FDBDA4A} = {F35DF9BF-0BED-4FEF-A51C-DD83C531882F}
 		{CC996BB6-3781-4868-B996-07F9CDC936ED} = {DBCF6FF0-3DE9-11E9-B3EF-63280FDBDA4A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
