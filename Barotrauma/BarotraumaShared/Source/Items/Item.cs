@@ -391,11 +391,11 @@ namespace Barotrauma
             }
         }
 
-        public Item[] ContainedItems
+        public IEnumerable<Item> ContainedItems
         {
             get
             {
-                return (ownInventory == null) ? null : Array.FindAll(ownInventory.Items, i => i != null);
+                return ownInventory?.Items.Where(i => i != null);
             }
         }
 
@@ -433,17 +433,10 @@ namespace Barotrauma
 #endif
         }
 
-        public List<ISerializableEntity> AllPropertyObjects
+        private readonly List<ISerializableEntity> allPropertyObjects = new List<ISerializableEntity>();
+        public IEnumerable<ISerializableEntity> AllPropertyObjects
         {
-            get
-            {
-                List<ISerializableEntity> pobjects = new List<ISerializableEntity>() { this };
-                foreach (ItemComponent ic in components)
-                {
-                    pobjects.Add(ic);
-                }
-                return pobjects;
-            }
+            get { return allPropertyObjects; }
         }
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
@@ -476,6 +469,8 @@ namespace Barotrauma
                         
             condition = itemPrefab.Health;
             lastSentCondition = condition;
+
+            allPropertyObjects.Add(this);
 
             XElement element = itemPrefab.ConfigElement;
             if (element == null) return;
@@ -658,6 +653,7 @@ namespace Barotrauma
 
         public void AddComponent(ItemComponent component)
         {
+            allPropertyObjects.Add(component);
             components.Add(component);
             Type type = component.GetType();
             if (!componentsByType.ContainsKey(type))
@@ -897,6 +893,8 @@ namespace Barotrauma
             }
         }
         
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
         {
             if (!isNetworkEvent && checkCondition)
@@ -906,12 +904,13 @@ namespace Barotrauma
             if (effect.type != type) return;
             
             bool hasTargets = (effect.TargetIdentifiers == null);
-            List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-            Item[] containedItems = ContainedItems;  
-            if (containedItems != null)
+            targets.Clear();
+            
+            if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                var containedItems = ContainedItems;
+                if (containedItems != null)
                 {
                     foreach (Item containedItem in containedItems)
                     {
@@ -1383,9 +1382,7 @@ namespace Barotrauma
                 if (!pickHit && !selectHit) continue;
 
                 if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
-
-                if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
-
+                
                 bool showUiMsg = false;
 #if CLIENT
                 showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
@@ -1396,10 +1393,10 @@ namespace Barotrauma
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-
 #if CLIENT
                     if (picker == Character.Controlled) GUI.ForceMouseOn(null);
 #endif
+                    if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
                     if (ic.CanBeSelected) selected = true;
                 }

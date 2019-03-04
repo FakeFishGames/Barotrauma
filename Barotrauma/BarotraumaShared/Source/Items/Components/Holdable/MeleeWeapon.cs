@@ -309,7 +309,7 @@ namespace Barotrauma.Items.Components
                 });
 
                 string logStr = picker?.LogName + " used " + item.Name;
-                if (item.ContainedItems != null && item.ContainedItems.Length > 0)
+                if (item.ContainedItems != null && item.ContainedItems.Any())
                 {
                     logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
                 }
