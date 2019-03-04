@@ -514,7 +514,9 @@ namespace Barotrauma
                 }
                                 
                 //get the appropriate intensity layers for current situation
-                IEnumerable<BackgroundMusic> suitableIntensityMusic = GetSuitableMusicClips("intensity", currentIntensity);
+                IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
+                    GetSuitableMusicClips("intensity", currentIntensity) :
+                    Enumerable.Empty<BackgroundMusic>();
 
                 for (int i = 1; i < MaxMusicChannels; i++)
                 {
@@ -605,7 +607,12 @@ namespace Barotrauma
         private static string GetCurrentMusicType()
         {
             if (OverrideMusicType != null) return OverrideMusicType;
-            
+
+            if (Screen.Selected != GameMain.GameScreen)
+            {
+                return "menu";
+            }
+
             if (Character.Controlled != null &&
                 Level.Loaded != null && Level.Loaded.Ruins != null &&
                 Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
@@ -668,7 +675,7 @@ namespace Barotrauma
             {
                 return "start";
             }
-
+            
             return "default";
         }
 
