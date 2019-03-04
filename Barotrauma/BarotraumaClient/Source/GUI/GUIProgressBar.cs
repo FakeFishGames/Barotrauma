@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma
 {
@@ -24,6 +25,14 @@ namespace Barotrauma
             get { return barSize; }
             set
             {
+                if (!MathUtils.IsValid(value))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "GUIProgressBar.BarSize_setter", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Attempted to set the BarSize of a GUIProgressBar to an invalid value (" + value + ")\n" + Environment.StackTrace);
+                    return;
+                }
                 barSize = MathHelper.Clamp(value, 0.0f, 1.0f);
                 //UpdateRect();
             }
