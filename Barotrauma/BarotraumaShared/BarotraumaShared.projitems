@@ -2908,7 +2908,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\HitClown2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\implode.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\Implode.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\LimbSlash1.ogg">

@@ -163,7 +163,7 @@
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <sound file="Content/Items/Weapons/StunGrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
@@ -171,7 +171,7 @@
     </ItemComponent>
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0">
       <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
-        <sound file="Content/Items/Weapons/stungrenade.ogg" />
+        <sound file="Content/Items/Weapons/StunGrenade.ogg" />
         <Explosion range="500" stun="25" force="0.1" smoke="false">
           <Affliction identifier="internaldamage" strength="5" />
         </Explosion>
