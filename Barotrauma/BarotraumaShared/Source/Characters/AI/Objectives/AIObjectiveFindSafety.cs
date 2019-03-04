@@ -207,7 +207,7 @@ namespace Barotrauma
             return (otherObjective is AIObjectiveFindSafety);
         }
 
-        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
+        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
             if (character.CurrentHull == null)
             {
