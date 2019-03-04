@@ -493,7 +493,6 @@ namespace Barotrauma.Items.Components
                         AutoTemp = false;
                         unsentChanges = true;
                         UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, 1.0f);
-
                     }
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;
@@ -505,6 +504,11 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     onOffSwitch.BarScroll = 1.0f;
 #endif
+                    if (AutoTemp || !shutDown || targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
+                    {
+                        unsentChanges = true;
+                    }
+
                     AutoTemp = false;
                     shutDown = true;
                     targetFissionRate = 0.0f;
