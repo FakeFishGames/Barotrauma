@@ -16,6 +16,7 @@ bld/
 *.v12.suo
 *.suo
 *.csproj.user
+*.shproj.user
 
 #performance reports & sessions
 *.vsp
