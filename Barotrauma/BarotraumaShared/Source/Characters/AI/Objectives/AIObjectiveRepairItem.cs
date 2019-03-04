@@ -15,7 +15,6 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
 
         private float previousCondition = -1;
-        private bool abandon;
 
         public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
         {
@@ -114,6 +113,10 @@ namespace Barotrauma
             else if (goToObjective == null || goToObjective.Target != Item)
             {
                 previousCondition = -1;
+                if (goToObjective != null)
+                {
+                    subObjectives.Remove(goToObjective);
+                }
                 goToObjective = new AIObjectiveGoTo(Item, character);
                 AddSubObjective(goToObjective);
             }

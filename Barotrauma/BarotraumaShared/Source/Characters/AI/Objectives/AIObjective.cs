@@ -17,8 +17,9 @@ namespace Barotrauma
         protected float priority;
         protected readonly Character character;
         protected string option;
+        protected bool abandon;
 
-        public virtual bool CanBeCompleted => subObjectives.All(so => so.CanBeCompleted);
+        public virtual bool CanBeCompleted => !abandon && subObjectives.All(so => so.CanBeCompleted);
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
         public AIObjective CurrentSubObjective { get; private set; }
 

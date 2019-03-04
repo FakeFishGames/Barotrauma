@@ -8,6 +8,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "go to";
 
+        private AIObjectiveFindDivingGear findDivingGear;
+
         private Vector2 targetPos;
 
         private bool repeat;
@@ -42,7 +44,7 @@ namespace Barotrauma
         {
             get
             {
-                bool canComplete = !cannotReach;
+                bool canComplete = !cannotReach && !abandon;
                 if (FollowControlledCharacter && Character.Controlled == null) { canComplete = false; }
                 else if (Target != null && Target.Removed) { canComplete = false; }
                 else if (repeat || waitUntilPathUnreachable > 0.0f) { canComplete = true; }
@@ -150,10 +152,20 @@ namespace Barotrauma
                     character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
                     if (getDivingGearIfNeeded)
                     {
-                        if (targetIsOutside || HumanAIController.NeedsDivingGear(character))
+                        if (targetIsOutside ||
+                            Target is Hull h && HumanAIController.NeedsDivingGear(h) ||
+                            Target is Item i && HumanAIController.NeedsDivingGear(i.CurrentHull) ||
+                            Target is Character c && HumanAIController.NeedsDivingGear(c.CurrentHull))
                         {
-                            // TODO: cache
-                            AddSubObjective(new AIObjectiveFindDivingGear(character, true));
+                            if (findDivingGear == null)
+                            {
+                                findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                                AddSubObjective(findDivingGear);
+                            }
+                            else if (!findDivingGear.CanBeCompleted)
+                            {
+                                abandon = true;
+                            }
                         }
                     }
                 }
