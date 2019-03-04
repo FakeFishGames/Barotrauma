@@ -149,7 +149,7 @@
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
-      <sound file="Content/Items/Tools/extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
+      <sound file="Content/Items/Tools/Extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
     </RepairTool>
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>
@@ -218,7 +218,7 @@
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
     <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true" />
-      <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="1000.0" />
+      <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI" />
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />

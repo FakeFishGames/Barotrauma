@@ -52,7 +52,7 @@
   <damagesound file="Content/Sounds/Damage/Creak4.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/Creak5.ogg" damagesoundtype="Pressure"/>
 
-  <implode file="Content/Sounds/Damage/implode.ogg"/>
+  <implode file="Content/Sounds/Damage/Implode.ogg"/>
   <drownmale file="Content/Sounds/Water/DrownMale1.ogg"/>
   <drownmale file="Content/Sounds/Water/DrownMale2.ogg"/>
   <drownmale file="Content/Sounds/Water/DrownMale3.ogg"/>
@@ -127,6 +127,8 @@
   <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
   -->
 
+  <music file="Content/Sounds/Music/Main Menu Music.ogg" type="menu"/>
+  
   <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
   
   <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
