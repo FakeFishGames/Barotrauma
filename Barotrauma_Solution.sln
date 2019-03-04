@@ -50,10 +50,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Linux", "Linux", "{B2C129F2-8E5C-419A-98EB-161AA5B5FC71}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinuxClient", "Barotrauma\BarotraumaClient\LinuxClient.csproj", "{D7F9FDD3-AF03-46AD-A2C2-F590899712B7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{85232B20-074D-4723-B0C6-91495391E448} = {85232B20-074D-4723-B0C6-91495391E448}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mac", "Mac", "{DBCF6FF0-3DE9-11E9-B3EF-63280FDBDA4A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MacClient", "Barotrauma\BarotraumaClient\MacClient.csproj", "{CC996BB6-3781-4868-B996-07F9CDC936ED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{85232B20-074D-4723-B0C6-91495391E448} = {85232B20-074D-4723-B0C6-91495391E448}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
