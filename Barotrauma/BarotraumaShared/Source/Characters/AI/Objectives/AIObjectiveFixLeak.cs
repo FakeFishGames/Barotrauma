@@ -12,10 +12,11 @@ namespace Barotrauma
 
         private readonly Gap leak;
 
+        private AIObjectiveFindDivingGear findDivingGear;
         private AIObjectiveGoTo gotoObjective;
         private AIObjectiveOperateItem operateObjective;
 
-        private bool pathUnreachable;
+        private bool abandon;
         
         public Gap Leak
         {
@@ -29,15 +30,14 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return leak.Open <= 0.0f || leak.Removed || pathUnreachable;
+            return leak.Open <= 0.0f || leak.Removed;
         }
 
-        public override bool CanBeCompleted => !pathUnreachable && base.CanBeCompleted;
+        public override bool CanBeCompleted => !abandon && base.CanBeCompleted;
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (leak.Open == 0.0f) { return 0.0f; }
-            if (pathUnreachable) { return 0.0f; }
 
             float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
 
@@ -55,6 +55,20 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (!leak.IsRoomToRoom)
+            {
+                if (findDivingGear == null)
+                {
+                    findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                    AddSubObjective(findDivingGear);
+                }
+                else if (!findDivingGear.CanBeCompleted)
+                {
+                    abandon = true;
+                    return;
+                }
+            }
+
             var weldingTool = character.Inventory.FindItemByTag("weldingtool");
 
             if (weldingTool == null)

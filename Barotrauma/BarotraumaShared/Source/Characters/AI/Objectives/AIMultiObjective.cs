@@ -32,7 +32,7 @@ namespace Barotrauma
             {
                 ignoreList.Clear();
                 ignoreListTimer = 0;
-                FindTargets();
+                UpdateTargets();
             }
             else
             {
@@ -41,7 +41,7 @@ namespace Barotrauma
             if (targetUpdateTimer > targetUpdateInterval)
             {
                 targetUpdateTimer = 0;
-                FindTargets();
+                UpdateTargets();
             }
             else
             {
@@ -54,7 +54,7 @@ namespace Barotrauma
                     ignoreList.Add(objective.Key);
                 }
             }
-            SyncRemovedObjectives(objectives, targets);
+            SyncRemovedObjectives(objectives, GetList());
             if (objectives.None())
             {
                 CreateObjectives();
@@ -73,6 +73,17 @@ namespace Barotrauma
             return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, avg / 100);
         }
 
+        protected void UpdateTargets()
+        {
+            targets.Clear();
+            FindTargets();
+            CreateObjectives();
+        }
+
+        /// <summary>
+        /// List of all possible items of the specified type. Used for filtering the removed objectives.
+        /// </summary>
+        protected abstract IEnumerable<T> GetList();
         protected abstract void FindTargets();
         protected abstract void CreateObjectives();
         protected abstract float Average(T target);

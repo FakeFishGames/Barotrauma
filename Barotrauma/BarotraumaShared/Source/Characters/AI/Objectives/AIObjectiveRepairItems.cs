@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using System.Collections.Generic;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -18,7 +19,6 @@ namespace Barotrauma
 
         protected override void FindTargets()
         {
-            targets.Clear();
             foreach (Item item in Item.ItemList)
             {
                 if (ignoreList.Contains(item)) { continue; }
@@ -59,5 +59,7 @@ namespace Barotrauma
         }
 
         protected override float Average(Item item) => 100 - item.ConditionPercentage;
+
+        protected override IEnumerable<Item> GetList() => Item.ItemList;
     }
 }

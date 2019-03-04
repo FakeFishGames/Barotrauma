@@ -1,5 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -7,10 +9,12 @@ namespace Barotrauma
     {
         public override string DebugTag => "charge batteries";
         private string orderOption;
+        private readonly IEnumerable<PowerContainer> batteryList;
 
         public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
         {
             orderOption = option;
+            batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
         }
 
         // TODO: currently there can be multiple objectives with different order options. We don't want that
@@ -21,7 +25,6 @@ namespace Barotrauma
 
         protected override void FindTargets()
         {
-            targets.Clear();
             foreach (Item item in Item.ItemList)
             {
                 if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) { continue; }
@@ -62,5 +65,6 @@ namespace Barotrauma
         }
 
         protected override float Average(PowerContainer battery) => 100 - battery.ChargePercentage;
+        protected override IEnumerable<PowerContainer> GetList() => batteryList;
     }
 }
