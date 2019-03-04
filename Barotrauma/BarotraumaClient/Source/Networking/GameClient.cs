@@ -861,9 +861,10 @@ namespace Barotrauma.Networking
                 else
                 {
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
+
                     for (int i = 1; i < splitMsg.Length; i++)
                     {
-                        msg += splitMsg[i];
+                        msg += TextManager.GetServerMessage(splitMsg[i]);
                     }
                 }
                 var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
