@@ -5,7 +5,7 @@
     identifier="salvageskyholderartifactruins"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="10"
+    commonness="5"
     reward="1000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -35,7 +35,7 @@
     identifier="salvagethermalartifactruins"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="10"
+    commonness="5"
     reward="2000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -65,7 +65,7 @@
     identifier="salvagethermalartifactcave"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="5"
+    commonness="2"
     reward="1500"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -95,7 +95,7 @@
     identifier="salvagenasonovartifactruin"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="10"
+    commonness="5"
     reward="2000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -125,7 +125,7 @@
     identifier="salvagenasonovartifactcave"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="5"
+    commonness="2"
     reward="1500"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -155,7 +155,7 @@
     identifier="killmoloch"
     type="Monster"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 5000 credits has been promised to those who kill the creature."
-    commonness="10"
+    commonness="5"
     reward="5000"
     sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
@@ -182,7 +182,7 @@
     identifier="killtigerthresher"
     type="Monster"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
-    commonness="10"
+    commonness="5"
     reward="1000"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
@@ -212,7 +212,7 @@
   identifier="killhammerhead"
   type="Monster"
   description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
-  commonness="10"
+  commonness="5"
   reward="1000"
   sonarlabel="Hammerhead"
   successmessage="The Hammerhead has been killed."
@@ -271,7 +271,7 @@
     identifier="killendworm"
     type="Monster"
     description="Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of 10,000 has been promised to those who get rid of whatever is causing the seismic activity."
-    commonness="2"
+    commonness="1"
     reward="10000"
     sonarlabel="Target"
     successmessage="The End Worm is dead and the passageway is open for transport again."
@@ -291,7 +291,7 @@
     identifier="salvagekillmoloch"
     type="Monster"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="5"
+    commonness="2"
     reward="5000"
     sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
@@ -316,7 +316,7 @@
     identifier="salvagekillcarrier"
     type="Monster"
     description="A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo."
-    commonness="10"
+    commonness="5"
     reward="1000"
     sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
@@ -339,7 +339,7 @@
     identifier="cargocompoundn"
     type="Cargo"
     description="A local arms dealer is offering 500 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
-    commonness="10"
+    commonness="5"
     reward="500"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
@@ -374,7 +374,7 @@
     identifier="cargovolatilecompoundn"
     type="Cargo"
     description="A local arms dealer is offering 500 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
-    commonness="5"
+    commonness="2"
     reward="500"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
@@ -412,7 +412,7 @@
     identifier="cargochemicals"
     type="Cargo"
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits."
-    commonness="10"
+    commonness="6"
     reward="250"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered."
@@ -445,7 +445,7 @@
     identifier="cargohuskeggs"
     type="Cargo"
     description="Local researchers are offering 250 credits for delivering a container of husk parasite eggs to [location2]."
-    commonness="10"
+    commonness="5"
     reward="250"
     achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
@@ -471,7 +471,7 @@
     identifier="cargonitroglycerin"
     type="Cargo"
     description="Local researchers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
-    commonness="15"
+    commonness="6"
     reward="2000"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered.">
@@ -504,7 +504,7 @@
     identifier="cargoclowngear"
     type="Cargo"
     description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
-    commonness="2"
+    commonness="5"
     reward="100"
     achievementidentifier="cargomission"
     successmessage="The clown gear has been successfully delivered."
@@ -524,8 +524,151 @@
     <LocationType from="Outpost" to="City"/>
     <LocationType from="Outpost" to="Outpost"/>
     
-  </CargoMission> 
+  </CargoMission>
+
+
+  <CargoMission
+    name="Mining outpost material transport"
+    identifier="cargoconstructionminerals"
+    type="Cargo"
+    description="A consignment of materials for construction needs to be transported to [location2] and the crew chief here is prepared to pay 150 credits for your trouble."
+    commonness="10"
+    reward="150"
+    achievementidentifier="cargomission"
+    successmessage="The materials have been successfully delivered."
+    requireddeliveryamount="40">
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="iron" amount="10"/>
+        <Item identifier="lead" amount="10"/>
+      </Item>
+      
+      <Item identifier="metalcrate">
+        <Item identifier="copper" amount="10"/>
+        <Item identifier="titanium" amount="10"/>
+      </Item>
+    </Items>
+
+    <LocationType from="MiningOutpost" to="City"/>
+    <LocationType from="MiningOutpost" to="Outpost"/>
+    <LocationType from="MiningOutpost" to="MiningOutpost"/>
+
+  </CargoMission>
+
+
+  <CargoMission
+    name="Mining outpost material transport"
+    identifier="cargosecurityminerals"
+    type="Cargo"
+    description="The security team at [location2] needs to be resupplied with materials for weapon fabrication. There's 150 credits for you if you get these supplies to them."
+    commonness="5"
+    reward="150"
+    achievementidentifier="cargomission"
+    successmessage="The materials have been successfully delivered."
+    requireddeliveryamount="40">
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="magnesium" amount="5"/>
+        <Item identifier="lead" amount="5"/>
+        <Item identifier="sodium" amount="5"/>
+        <Item identifier="potassium" amount="5"/>
+      </Item>
+
+      <Item identifier="metalcrate">
+        <Item identifier="aluminium" amount="5"/>
+        <Item identifier="iron" amount="10"/>
+        <Item identifier="titanium" amount="5"/>
+      </Item>
+    </Items>
+
+    <LocationType from="MiningOutpost" to="MilitaryOutpost"/>
+
+  </CargoMission>
+
+  <CargoMission
+    name="Medical item transport"
+    identifier="cargomeditems"
+    type="Cargo"
+    description="A consignment of medical items needs to be transported to [location2]. There's 150 credits if you can get them there."
+    commonness="10"
+    reward="150"
+    achievementidentifier="cargomission"
+    successmessage="The materials have been successfully delivered."
+    requireddeliveryamount="40">
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="antidama1" amount="5"/>
+        <Item identifier="antidama2" amount="5"/>
+        <Item identifier="antibloodloss1" amount="5"/>
+        <Item identifier="antibiotics" amount="5"/>      
+      </Item>
+
+      <Item identifier="metalcrate">
+        <Item identifier="antibleeding1" amount="10"/>
+        <Item identifier="antibleeding3" amount="10"/>
+      </Item>
+    </Items>
+
+    <LocationType from="ResearchOutpost" to="City"/>
+    <LocationType from="ResearchOutpost" to="Outpost"/>
+    <LocationType from="ResearchOutpost" to="ResearchOutpost"/>
+
+  </CargoMission>
   
+    <CargoMission
+    name="Medical item transport"
+    identifier="cargomeditems"
+    type="Cargo"
+    description="A consignment of medical items needs to be transported to [location2]. There's 150 credits if you can get them there."
+    commonness="10"
+    reward="150"
+    achievementidentifier="cargomission"
+    successmessage="The materials have been successfully delivered."
+    requireddeliveryamount="40">
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="antidama1" amount="5"/>
+        <Item identifier="antidama2" amount="5"/>
+        <Item identifier="antibloodloss1" amount="5"/>
+        <Item identifier="antibiotics" amount="5"/>      
+      </Item>
+
+      <Item identifier="metalcrate">
+        <Item identifier="antibleeding1" amount="10"/>
+        <Item identifier="antibleeding3" amount="10"/>
+      </Item>
+    </Items>
+
+    <LocationType from="ResearchOutpost" to="City"/>
+    <LocationType from="ResearchOutpost" to="Outpost"/>
+    <LocationType from="ResearchOutpost" to="ResearchOutpost"/>
+
+  </CargoMission>
+
+  <CargoMission
+    name="Medical item transport"
+    identifier="cargomedemergency"
+    type="Cargo"
+    description="A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid 300 credits on delivery."
+    commonness="5"
+    reward="300"
+    achievementidentifier="cargomission"
+    successmessage="The antidote has been successfully delivered."
+    requireddeliveryamount="5">
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="morbusineantidote" amount="5"/>
+      </Item>
+
+    </Items>
+
+    <LocationType from="ResearchOutpost" to="City"/>
+    <LocationType from="ResearchOutpost" to="Outpost"/>
+    <LocationType from="ResearchOutpost" to="MilitaryOutpost"/>
+    <LocationType from="ResearchOutpost" to="MiningOutpost"/>
+
+  </CargoMission>
+
   <CombatMission
     name="Search and Destroy"
     identifier="pvpmission"
