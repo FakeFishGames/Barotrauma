@@ -40,16 +40,19 @@ namespace Barotrauma.Networking
         {
             get
             {
-                if (!Type.HasFlag(ChatMessageType.Server | ChatMessageType.Error))
+                if (Type.HasFlag(ChatMessageType.Server) || Type.HasFlag(ChatMessageType.Error) || Type.HasFlag(ChatMessageType.ServerLog))
+                {
+                    if (translatedText == null || translatedText.Length == 0)
+                    {
+                        translatedText = TextManager.GetServerMessage(Text);
+                    }
+
+                    return translatedText;
+                }
+                else
                 {
                     return Text;
                 }
-                if (translatedText == null || translatedText.Length == 0)
-                {
-                    translatedText = TextManager.GetServerMessage(Text);
-                }
-
-                return translatedText;
             }
         }
 

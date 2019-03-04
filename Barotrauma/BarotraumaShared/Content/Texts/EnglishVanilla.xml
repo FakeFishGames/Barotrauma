@@ -250,6 +250,7 @@
   <VoiceMode.Activity>Voice activity</VoiceMode.Activity>
   <VoiceMode.ActivityToolTip>Voice activity is sent whenever the sound coming through surpasses the noise gate threshold.</VoiceMode.ActivityToolTip>
   <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
+  <VoipCaptureDeviceNotFound>Could not start voice capture, suitable capture device not found.</VoipCaptureDeviceNotFound>
 
   <!-- Controls tab -->
   <SettingsTab.Controls>Controls</SettingsTab.Controls>
@@ -677,6 +678,7 @@
   <ServerMessage.ClientLeftServer>[client] has left the server.</ServerMessage.ClientLeftServer>
   <ServerMessage.HasVotedToKick>[initiator] has voted to kick [target].</ServerMessage.HasVotedToKick>
   <ServerMessage.KickedBy>Kicked by [initiator].</ServerMessage.KickedBy>
+  <ServerMessage.BannedBy>Banned by [initiator].</ServerMessage.BannedBy>
   <ServerMessage.BannedFromServer>[client] has been banned from the server.</ServerMessage.BannedFromServer>
   <ServerMessage.HasDisconnected>[client] has disconnected.</ServerMessage.HasDisconnected>
   <ServerMessage.ExcessiveDesync>You have been disconnected because of excessive desync.</ServerMessage.ExcessiveDesync>

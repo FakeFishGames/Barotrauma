@@ -47,10 +47,14 @@ namespace Barotrauma.Networking
                 throw new Exception("Tried to instance more than one VoipCapture object");
             }
 
-            Instance = new VoipCapture(deviceName)
+            var capture = new VoipCapture(deviceName)
             {
                 LatestBufferID = storedBufferID ?? BUFFER_COUNT - 1
             };
+            if (capture.captureDevice != IntPtr.Zero)
+            {
+                Instance = capture;
+            }
         }
 
         private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0, true, false)
@@ -59,6 +63,14 @@ namespace Barotrauma.Networking
 
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
+
+            if (captureDevice == IntPtr.Zero)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"));
+                Instance?.Dispose();
+                Instance = null;
+                return;
+            }
 
             ALError alError = AL.GetError();
             AlcError alcError = Alc.GetError(captureDevice);
@@ -201,7 +213,7 @@ namespace Barotrauma.Networking
         {
             Instance = null;
             capturing = false;
-            captureThread.Join();
+            captureThread?.Join();
             captureThread = null;
         }
     }
