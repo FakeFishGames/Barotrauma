@@ -549,9 +549,9 @@
       </Item>
     </Items>
 
-    <LocationType from="MiningOutpost" to="City"/>
-    <LocationType from="MiningOutpost" to="Outpost"/>
-    <LocationType from="MiningOutpost" to="MiningOutpost"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Mine"/>
 
   </CargoMission>
 
@@ -581,7 +581,7 @@
       </Item>
     </Items>
 
-    <LocationType from="MiningOutpost" to="MilitaryOutpost"/>
+    <LocationType from="Mine" to="Military"/>
 
   </CargoMission>
 
@@ -609,41 +609,12 @@
       </Item>
     </Items>
 
-    <LocationType from="ResearchOutpost" to="City"/>
-    <LocationType from="ResearchOutpost" to="Outpost"/>
-    <LocationType from="ResearchOutpost" to="ResearchOutpost"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Research"/>
 
   </CargoMission>
   
-    <CargoMission
-    name="Medical item transport"
-    identifier="cargomeditems"
-    type="Cargo"
-    description="A consignment of medical items needs to be transported to [location2]. There's 150 credits if you can get them there."
-    commonness="10"
-    reward="150"
-    achievementidentifier="cargomission"
-    successmessage="The materials have been successfully delivered."
-    requireddeliveryamount="40">
-    <Items>
-      <Item identifier="metalcrate">
-        <Item identifier="antidama1" amount="5"/>
-        <Item identifier="antidama2" amount="5"/>
-        <Item identifier="antibloodloss1" amount="5"/>
-        <Item identifier="antibiotics" amount="5"/>      
-      </Item>
-
-      <Item identifier="metalcrate">
-        <Item identifier="antibleeding1" amount="10"/>
-        <Item identifier="antibleeding3" amount="10"/>
-      </Item>
-    </Items>
-
-    <LocationType from="ResearchOutpost" to="City"/>
-    <LocationType from="ResearchOutpost" to="Outpost"/>
-    <LocationType from="ResearchOutpost" to="ResearchOutpost"/>
-
-  </CargoMission>
 
   <CargoMission
     name="Medical item transport"
@@ -662,10 +633,10 @@
 
     </Items>
 
-    <LocationType from="ResearchOutpost" to="City"/>
-    <LocationType from="ResearchOutpost" to="Outpost"/>
-    <LocationType from="ResearchOutpost" to="MilitaryOutpost"/>
-    <LocationType from="ResearchOutpost" to="MiningOutpost"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Mine"/>
 
   </CargoMission>
 
