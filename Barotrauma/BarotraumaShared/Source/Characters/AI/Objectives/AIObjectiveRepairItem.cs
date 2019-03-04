@@ -15,8 +15,7 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
 
         private float previousCondition = -1;
-        private bool canReach = true;
-        private bool canRepair = true;
+        private bool abandon;
 
         public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
         {
@@ -39,7 +38,7 @@ namespace Barotrauma
             return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 
-        public override bool CanBeCompleted => canReach && canRepair;
+        public override bool CanBeCompleted => !abandon;
 
         public override bool IsCompleted()
         {
@@ -62,7 +61,7 @@ namespace Barotrauma
             {
                 if (!goToObjective.IsCompleted() && !goToObjective.CanBeCompleted)
                 {
-                    canReach = false;
+                    abandon = true;
                     character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
                 }
                 goToObjective = null;
@@ -86,21 +85,29 @@ namespace Barotrauma
             {
                 foreach (Repairable repairable in Item.Repairables)
                 {
-                    if (character.SelectedConstruction != Item)
+                    if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
                     {
-                        Item.TryInteract(character, true, true);
+                        // Someone else is repairing the target. Abandon the objective if the other is better at this then us.
+                        abandon = repairable.DegreeOfSuccess(character) < repairable.DegreeOfSuccess(repairable.CurrentFixer);
                     }
-                    if (previousCondition == -1)
+                    if (!abandon)
                     {
-                        previousCondition = Item.Condition;
+                        if (character.SelectedConstruction != Item)
+                        {
+                            Item.TryInteract(character, true, true);
+                        }
+                        if (previousCondition == -1)
+                        {
+                            previousCondition = Item.Condition;
+                        }
+                        else if (Item.Condition < previousCondition)
+                        {
+                            // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
+                            abandon = true;
+                            character?.Speak(TextManager.Get("DialogRepairFailed").Replace("[itemname]", Item.Name), null, 0.0f, "repairfailed", 10.0f);
+                        }
                     }
-                    else if (Item.Condition < previousCondition)
-                    {
-                        // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
-                        canRepair = false;
-                        character?.Speak(TextManager.Get("DialogRepairFailed").Replace("[itemname]", Item.Name), null, 0.0f, "repairfailed", 10.0f);
-                    }
-                    repairable.CurrentFixer = character;
+                    repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;
                     break;
                 }
             }
