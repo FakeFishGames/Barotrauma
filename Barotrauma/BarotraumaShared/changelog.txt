@@ -79,6 +79,7 @@ Additions:
 - Some new random events.
 - A bunch of new afflictions and medical items.
 - Some new item sprites.
+- A couple of new cargo missions.
 - Added some new items that can be crafted from alien materials.
 - Display linked hulls as one room on the status monitor.
 - Tons of new sound effects.
