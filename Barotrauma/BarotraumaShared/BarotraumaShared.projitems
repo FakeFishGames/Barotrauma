@@ -3080,6 +3080,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\ISteerable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\LatchOntoAI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\NPCConversation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIMultiObjective.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveChargeBatteries.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveCombat.cs" />
