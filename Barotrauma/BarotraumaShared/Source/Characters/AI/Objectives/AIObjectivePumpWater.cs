@@ -24,7 +24,7 @@ namespace Barotrauma
             availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
         }
 
-        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
+        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
             if (findPumpsTimer < findPumpsInterval)
             {

@@ -86,7 +86,7 @@ namespace Barotrauma
 
         public void UpdateObjectives(float deltaTime)
         {
-            CurrentOrder?.UpdatePriority(this, deltaTime);
+            CurrentOrder?.Update(this, deltaTime);
             for (int i = 0; i < Objectives.Count; i++)
             {
                 var objective = Objectives[i];
@@ -102,7 +102,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    objective.UpdatePriority(this, deltaTime);
+                    objective.Update(this, deltaTime);
                 }
             }
             GetCurrentObjective();

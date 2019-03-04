@@ -25,9 +25,9 @@ namespace Barotrauma
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
-        public override void UpdatePriority(AIObjectiveManager objectiveManager, float deltaTime)
+        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            base.UpdatePriority(objectiveManager, deltaTime);
+            base.Update(objectiveManager, deltaTime);
             if (ignoreListTimer > ignoreListClearInterval)
             {
                 ignoreList.Clear();
