@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -508,6 +509,13 @@ namespace Barotrauma
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
                             VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
+                        }
+                        if (VoipCapture.Instance == null)
+                        {
+                            VoiceSetting = vMode = VoiceMode.Disabled;
+                            voiceInputContainer.Visible = false;
+                            voiceActivityGroup.Visible = false;
+                            return;
                         }
                     }
                     else

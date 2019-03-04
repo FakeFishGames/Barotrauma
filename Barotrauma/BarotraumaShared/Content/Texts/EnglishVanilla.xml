@@ -250,6 +250,7 @@
   <VoiceMode.Activity>Voice activity</VoiceMode.Activity>
   <VoiceMode.ActivityToolTip>Voice activity is sent whenever the sound coming through surpasses the noise gate threshold.</VoiceMode.ActivityToolTip>
   <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
+  <VoipCaptureDeviceNotFound>Could not start voice capture, suitable capture device not found.</VoipCaptureDeviceNotFound>
 
   <!-- Controls tab -->
   <SettingsTab.Controls>Controls</SettingsTab.Controls>
