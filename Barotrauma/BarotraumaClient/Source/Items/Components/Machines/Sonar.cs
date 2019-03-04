@@ -982,7 +982,7 @@ namespace Barotrauma.Items.Components
             Vector2 textSize = GUI.SmallFont.MeasureString(wrappedLabel);
 
             //flip the text to left side when the marker is on the left side or goes outside the right edge of the interface
-            if (dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) labelPos.X -= textSize.X + 10;
+            if ((dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) && labelPos.X - textSize.X > 0) labelPos.X -= textSize.X + 10;
 
             GUI.DrawString(spriteBatch,
                 new Vector2(labelPos.X + 10, labelPos.Y),

@@ -498,28 +498,36 @@ namespace Barotrauma
             voiceMode.OnSelect = (GUIRadioButtonGroup rbg, Enum value) =>
             {
                 if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
-                VoiceMode vMode = (VoiceMode)value;
-                VoiceSetting = vMode;
-
-                if (vMode == VoiceMode.Activity)
+                try
                 {
-                    voiceActivityGroup.Visible = true;
-                    if (GameMain.Client == null && VoipCapture.Instance == null)
+                    VoiceMode vMode = (VoiceMode)value;
+                    VoiceSetting = vMode;
+                    if (vMode == VoiceMode.Activity)
                     {
-                        VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
+                        voiceActivityGroup.Visible = true;
+                        if (GameMain.Client == null && VoipCapture.Instance == null)
+                        {
+                            VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
+                        }
                     }
-                }
-                else
-                {
-                    voiceActivityGroup.Visible = false;
-                    if (GameMain.Client == null)
+                    else
                     {
-                        VoipCapture.Instance?.Dispose();
+                        voiceActivityGroup.Visible = false;
+                        if (GameMain.Client == null)
+                        {
+                            VoipCapture.Instance?.Dispose();
+                        }
                     }
-                }
 
-                voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
-                UnsavedSettings = true;
+                    voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
+                    UnsavedSettings = true;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to set voice capture mode.", e);
+                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace);
+                    VoiceSetting = VoiceMode.Disabled;
+                }
             };
             voiceMode.Selected = VoiceSetting;
 
