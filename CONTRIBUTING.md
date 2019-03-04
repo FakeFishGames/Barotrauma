@@ -17,7 +17,7 @@ You need a version of Visual Studio that supports C# 6.0 to compile game. If you
 
 Make sure you select ".NET desktop development" during the install process to make sure you have the required features to work with Barotrauma.
 
-###Linux
+### Linux
 All that is required to build Barotrauma on Linux is the `mono-devel` package that you can install by following the instructions on the following page: https://www.mono-project.com/download/stable/#download-lin
 
 You may optionally install [MonoDevelop](https://www.monodevelop.com/) to navigate and modify the solution.
