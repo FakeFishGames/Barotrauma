@@ -594,6 +594,8 @@ namespace Barotrauma
         {
             List<GUIComponent> components = component.GetAllChildren().ToList();
             components.Add(component);
+            components.RemoveAll(c => c.UserData as string == "soundicon" || c.UserData as string == "soundicondisabled");
+
             foreach (GUIComponent comp in components)
             {
                 comp.Color = Color.DarkRed;
