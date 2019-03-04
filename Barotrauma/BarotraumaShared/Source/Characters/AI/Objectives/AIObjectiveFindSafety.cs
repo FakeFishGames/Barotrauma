@@ -36,7 +36,7 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             var currentHull = character.AnimController.CurrentHull;           
-            if (HumanAIController.NeedsDivingGear(character))
+            if (HumanAIController.NeedsDivingGear(currentHull))
             {
                 // Stop seeking diving gear if the task is impossible.
                 if (divingGearObjective == null || divingGearObjective.CanBeCompleted)
@@ -58,6 +58,7 @@ namespace Barotrauma
                     {
                         if (goToObjective.Target != bestHull)
                         {
+                            subObjectives.Remove(goToObjective);
                             goToObjective = new AIObjectiveGoTo(bestHull, character)
                             {
                                 AllowGoingOutside = true
@@ -229,7 +230,7 @@ namespace Barotrauma
                 priority += dangerFactor * priorityIncrease * deltaTime;
             }
             priority = MathHelper.Clamp(priority, 0, 100);
-            if (HumanAIController.NeedsDivingGear(character))
+            if (HumanAIController.NeedsDivingGear(character.CurrentHull))
             {
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
                 {

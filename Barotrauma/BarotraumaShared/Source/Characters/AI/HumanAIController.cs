@@ -140,7 +140,7 @@ namespace Barotrauma
             //    }
             //}
 
-            if (!NeedsDivingGear(Character))
+            if (!NeedsDivingGear(Character.CurrentHull))
             {
                 bool shouldRemoveDivingGear = Character.Oxygen < 50.0f || (objectiveManager.CurrentObjective is AIObjectiveIdle && Character.AnimController.CurrentHull.WaterPercentage < 1 && !isClimbing);
                 if (shouldRemoveDivingGear)
@@ -323,11 +323,7 @@ namespace Barotrauma
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
-        public static bool NeedsDivingGear(Character character) =>
-            character.AnimController.CurrentHull == null ||
-            character.AnimController.CurrentHull.OxygenPercentage < 30 ||
-            character.AnimController.CurrentHull.WaterPercentage > 50;
-
+        public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < 30 || hull.WaterPercentage > 50;
 
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.

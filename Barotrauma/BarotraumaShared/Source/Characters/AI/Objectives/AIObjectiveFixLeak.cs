@@ -15,8 +15,6 @@ namespace Barotrauma
         private AIObjectiveFindDivingGear findDivingGear;
         private AIObjectiveGoTo gotoObjective;
         private AIObjectiveOperateItem operateObjective;
-
-        private bool abandon;
         
         public Gap Leak
         {
