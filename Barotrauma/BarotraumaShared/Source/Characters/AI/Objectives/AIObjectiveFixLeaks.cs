@@ -2,14 +2,13 @@
 using System;
 using System.Linq;
 using Barotrauma.Extensions;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     class AIObjectiveFixLeaks : AIMultiObjective<Gap>
     {
         public override string DebugTag => "fix leaks";
-        private AIObjectiveFindDivingGear findDivingGear;
-        private bool cannotFindDivingGear;
 
         public AIObjectiveFixLeaks(Character character) : base (character, "") { }
 
@@ -26,11 +25,9 @@ namespace Barotrauma
 
         protected override void FindTargets()
         {
-            targets.Clear();
             foreach (Gap gap in Gap.GapList)
             {
                 if (ignoreList.Contains(gap)) { continue; }
-                if (cannotFindDivingGear && gap.IsRoomToRoom) { continue; }
                 if (gap.ConnectedWall == null) { continue; }
                 // Door
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
@@ -63,41 +60,6 @@ namespace Barotrauma
             }
         }
 
-        protected override void Act(float deltaTime)
-        {
-            foreach (var objective in objectives)
-            {
-                if (!objective.Value.CanBeCompleted)
-                {
-                    ignoreList.Add(objective.Key);
-                }
-            }
-            SyncRemovedObjectives(objectives, targets);
-            if (targets.None())
-            {
-                FindTargets();
-            }
-            if (!cannotFindDivingGear && targets.Any(g => g.IsRoomToRoom))
-            {
-                if (findDivingGear == null)
-                {
-                    findDivingGear = new AIObjectiveFindDivingGear(character, true);
-                    AddSubObjective(findDivingGear);
-                }
-                else if (!findDivingGear.CanBeCompleted)
-                {
-                    cannotFindDivingGear = true;
-                }
-            }
-            else if (findDivingGear == null || findDivingGear.IsCompleted() || cannotFindDivingGear)
-            {
-                if (objectives.None())
-                {
-                    CreateObjectives();
-                }
-            }
-        }
-
         private float GetGapFixPriority(Gap gap)
         {
             if (gap == null) return 0.0f;
@@ -118,5 +80,7 @@ namespace Barotrauma
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
 
         protected override float Average(Gap gap) => gap.Open;
+
+        protected override IEnumerable<Gap> GetList() => Gap.GapList;
     }
 }

@@ -5,6 +5,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    // TODO: use AIMultiObjective?
     class AIObjectivePumpWater : AIObjective
     {
         public override string DebugTag => "pump water";
@@ -53,7 +54,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            SyncRemovedObjectives(objectives, targetPumps);
+            SyncRemovedObjectives(objectives, availablePumps);
             foreach (Pump pump in targetPumps)
             {
                 if (!objectives.TryGetValue(pump, out AIObjectiveOperateItem obj))
