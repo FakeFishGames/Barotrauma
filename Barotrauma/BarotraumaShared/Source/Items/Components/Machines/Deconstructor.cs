@@ -105,6 +105,8 @@ namespace Barotrauma.Items.Components
                     progressTimer = 0.0f;
                 }
             }
+
+            voltage -= deltaTime * 10.0f;
         }
 
         private void PutItemsToLinkedContainer()
