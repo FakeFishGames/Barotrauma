@@ -116,22 +116,12 @@ namespace Barotrauma.Networking
                 ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
                 if (orderMsg.Order.TargetAllCharacters)
                 {
-#if CLIENT
-                    //add the order to the crewmanager only if the host is not controlling a character 
-                    //OR the character is close enough to hear it
-                    if (Character.Controlled == null || 
-                        !string.IsNullOrEmpty(ApplyDistanceEffect(orderMsg.Text, messageType, orderMsg.Sender, Character.Controlled)))
-                    {
-                        GameMain.GameSession?.CrewManager?.AddOrder(
-                            new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()),
-                            orderMsg.Order.Prefab.FadeOutTime);
-                    }
-#endif
+                    //do nothing
                 }
                 else if (orderTargetCharacter != null)
                 {
                     orderTargetCharacter.SetOrder(
-                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()),
+                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == orderMsg.Order.ItemComponentType)),
                             orderMsg.OrderOption, orderMsg.Sender);
                 }
 

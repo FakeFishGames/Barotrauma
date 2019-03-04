@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using System;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -65,13 +66,13 @@ namespace Barotrauma.Networking
                 if (order.TargetAllCharacters)
                 {
                     GameMain.GameSession?.CrewManager?.AddOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), 
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)), 
                         order.Prefab.FadeOutTime);
                 }
                 else if (targetCharacter != null)
                 {
                     targetCharacter.SetOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()),
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                             orderOption, senderCharacter);
                 }
 
