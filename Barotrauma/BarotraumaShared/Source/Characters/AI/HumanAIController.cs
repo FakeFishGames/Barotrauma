@@ -340,7 +340,8 @@ namespace Barotrauma
         {
             var divingSuit = character.Inventory.FindItemByTag("divingsuit");
             return divingSuit != null && 
-                divingSuit.ConditionPercentage > 30 && 
+                divingSuit.ConditionPercentage > 30 &&
+                character.HasEquippedItem(divingSuit) &&
                 divingSuit.ContainedItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage > 30);
         }
 
@@ -352,6 +353,7 @@ namespace Barotrauma
             var divingGear = character.Inventory.FindItemByTag("diving");
             return divingGear != null &&
                 divingGear.ConditionPercentage > 30 &&
+                character.HasEquippedItem(divingGear) &&
                 divingGear.ContainedItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage > 30);
         }
     }
