@@ -92,6 +92,11 @@ namespace Barotrauma.Networking
 
         private int ownerKey;
 
+        public bool IsServerOwner
+        {
+            get { return ownerKey > 0; }
+        }
+
         public GameClient(string newName, string ip, int ownerKey=0)
         {
             //TODO: gui stuff should probably not be here?

@@ -9,9 +9,11 @@ namespace Barotrauma.Networking
     {
         private List<Client> GetClientsToRespawn()
         {
+            GameServer server = networkMember as GameServer;
+
             return networkMember.ConnectedClients.FindAll(c =>
                 c.InGame &&
-                (!c.SpectateOnly || !((GameServer)networkMember).ServerSettings.AllowSpectating) &&
+                (!c.SpectateOnly || (!server.ServerSettings.AllowSpectating && server.OwnerConnection != c.Connection)) &&
                 (c.Character == null || c.Character.IsDead));
         }
 
@@ -27,8 +29,9 @@ namespace Barotrauma.Networking
                     .ToList();
             }
 
-            int currPlayerCount = server.ConnectedClients.Count(c => c.InGame && (!c.SpectateOnly || !server.ServerSettings.AllowSpectating));
-            //if (server.CharacterInfo != null) currPlayerCount++;
+            int currPlayerCount = server.ConnectedClients.Count(c => 
+                c.InGame && 
+                (!c.SpectateOnly || (!server.ServerSettings.AllowSpectating && server.OwnerConnection != c.Connection));
 
             var existingBots = Character.CharacterList
                 .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null);
