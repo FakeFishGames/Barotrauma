@@ -32,6 +32,7 @@ namespace Barotrauma
         //availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
         protected override void FindTargets()
         {
+            if (orderOption == null) { return; }
             foreach (Item item in Item.ItemList)
             {
                 if (item.HasTag("ballast")) { continue; }
@@ -43,7 +44,7 @@ namespace Barotrauma
                 {
                     if (!ignoreList.Contains(pump))
                     {
-                        if (orderOption.ToLowerInvariant() == "stop pumping")
+                        if (orderOption == "stoppumping")
                         {
                             if (!pump.IsActive || pump.FlowPercentage == 0.0f) { continue; }
                         }
