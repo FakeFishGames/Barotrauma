@@ -143,7 +143,10 @@ namespace Barotrauma
                 return;                
             }
 
-            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(false));
+            if (currentTarget != null)
+            {
+                character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(false));
+            }
         }
 
         private readonly List<Hull> targetHulls = new List<Hull>(20);
