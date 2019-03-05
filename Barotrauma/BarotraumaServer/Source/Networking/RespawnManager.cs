@@ -31,7 +31,7 @@ namespace Barotrauma.Networking
 
             int currPlayerCount = server.ConnectedClients.Count(c => 
                 c.InGame && 
-                (!c.SpectateOnly || (!server.ServerSettings.AllowSpectating && server.OwnerConnection != c.Connection));
+                (!c.SpectateOnly || (!server.ServerSettings.AllowSpectating && server.OwnerConnection != c.Connection)));
 
             var existingBots = Character.CharacterList
                 .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null);
