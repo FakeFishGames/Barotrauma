@@ -1,89 +1,69 @@
 ﻿using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    // TODO: use AIMultiObjective? The list of available pumps is not fixed.
-    class AIObjectivePumpWater : AIObjective
+    class AIObjectivePumpWater : AIObjectiveLoop<Pump>
     {
         public override string DebugTag => "pump water";
-
         public override bool KeepDivingGearOn => true;
-
-        private const float findPumpsInterval = 5.0f;
-
         private string orderOption;
-        private readonly Dictionary<Pump, AIObjectiveOperateItem> objectives = new Dictionary<Pump, AIObjectiveOperateItem>();
-        private readonly List<Pump> targetPumps = new List<Pump>();
-        private readonly List<Pump> availablePumps;
-        private float findPumpsTimer;
+        private readonly IEnumerable<Pump> pumpList;
 
         public AIObjectivePumpWater(Character character, string option) : base(character, option)
         {
             orderOption = option;
-            var allPumps = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
-            availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
-        }
-
-        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
-        {
-            if (findPumpsTimer < findPumpsInterval)
-            {
-                findPumpsTimer += deltaTime;
-            }
-            else
-            {
-                FindPumps();
-            }
+            pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (character.Submarine == null) { return 0; }
-            if (objectiveManager.CurrentOrder == this && targetPumps.Count > 0)
+            if (objectiveManager.CurrentOrder == this && targets.Count > 0)
             {
                 return AIObjectiveManager.OrderPriority;
             }
             return 0.0f;
         }
 
-        public override bool IsCompleted() => false;
-        public override bool CanBeCompleted => true;
-
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater;
 
-        protected override void Act(float deltaTime)
+        //availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
+        protected override void FindTargets()
         {
-            SyncRemovedObjectives(objectives, availablePumps);
-            foreach (Pump pump in targetPumps)
+            foreach (Item item in Item.ItemList)
             {
-                if (!objectives.TryGetValue(pump, out AIObjectiveOperateItem obj))
+                if (item.HasTag("ballast")) { continue; }
+                if (item.Submarine == null) { continue; }
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                var pump = item.GetComponent<Pump>();
+                if (pump != null)
                 {
-                    obj = new AIObjectiveOperateItem(pump, character, orderOption, false);
-                    AddSubObjective(obj);
+                    if (!ignoreList.Contains(pump))
+                    {
+                        if (orderOption.ToLowerInvariant() == "stop pumping")
+                        {
+                            if (!pump.IsActive || pump.FlowPercentage == 0.0f) { continue; }
+                        }
+                        else
+                        {
+                            if (!pump.Item.InWater) { continue; }
+                            if (pump.IsActive && pump.FlowPercentage <= -90.0f) { continue; }
+                        }
+                        if (!targets.Contains(pump))
+                        {
+                            targets.Add(pump);
+                        }
+                    }
                 }
             }
         }
 
-        private void FindPumps()
-        {
-            findPumpsTimer = 0;
-            targetPumps.Clear();
-            foreach (Pump pump in availablePumps)
-            {
-                if (orderOption.ToLowerInvariant() == "stop pumping")
-                {
-                    if (!pump.IsActive || pump.FlowPercentage == 0.0f) continue;
-                }
-                else
-                {
-                    if (!pump.Item.InWater) continue;
-                    if (pump.IsActive && pump.FlowPercentage <= -90.0f) continue;
-                }
-                targetPumps.Add(pump);
-            }
-        }
+        protected override bool Filter(Pump pump) => true;
+        protected override IEnumerable<Pump> GetList() => pumpList;
+        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, orderOption, false);
+        protected override float Average(Pump target) => 0;
     }
 }
