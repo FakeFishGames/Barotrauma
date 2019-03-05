@@ -42,12 +42,14 @@ namespace Barotrauma.Networking
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
 
+        private bool autoRestartTimerRunning;
+
         public VoipServer VoipServer
         {
             get;
             private set;
         }
-
+        
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
@@ -368,7 +370,8 @@ namespace Barotrauma.Networking
                     Client owner = connectedClients.Find(c =>
                         c.InGame && !c.NeedsMidRoundSync &&
                         c.Name == character.OwnerClientName &&
-                        c.Connection.RemoteEndPoint.Address.ToString() == character.OwnerClientIP);
+                        c.IPMatches(character.OwnerClientIP));
+
                     if (owner != null && (!serverSettings.AllowSpectating || !owner.SpectateOnly))
                     {
                         SetClientCharacter(owner, character);
@@ -433,11 +436,30 @@ namespace Barotrauma.Networking
                     initiatedStartGame = false;
                 }
             }
-            else if (Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0 && !gameStarted && !initiatedStartGame)
+            else if (Screen.Selected == GameMain.NetLobbyScreen && 
+                !gameStarted && 
+                !initiatedStartGame)
             {
-                if (serverSettings.AutoRestart) serverSettings.AutoRestartTimer -= deltaTime;
+                if (serverSettings.AutoRestart)
+                {
+                    //autorestart if there are any non-spectators on the server (ignoring the server owner)
+                    bool shouldAutoRestart = connectedClients.Any(c => 
+                        c.Connection != OwnerConnection && 
+                        (!c.SpectateOnly || !serverSettings.AllowSpectating));
 
-                if (serverSettings.AutoRestart && serverSettings.AutoRestartTimer < 0.0f)
+                    if (shouldAutoRestart != autoRestartTimerRunning)
+                    {
+                        autoRestartTimerRunning = shouldAutoRestart;
+                        GameMain.NetLobbyScreen.LastUpdateID++;
+                    }
+
+                    if (autoRestartTimerRunning)
+                    {
+                        serverSettings.AutoRestartTimer -= deltaTime;
+                    }
+                }
+
+                if (serverSettings.AutoRestart && autoRestartTimerRunning && serverSettings.AutoRestartTimer < 0.0f)
                 {
                     StartGame();
                 }
@@ -1363,7 +1385,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(serverSettings.AutoRestart);
                 if (serverSettings.AutoRestart)
                 {
-                    outmsg.Write(serverSettings.AutoRestartTimer);
+                    outmsg.Write(autoRestartTimerRunning ? serverSettings.AutoRestartTimer : 0.0f);
                 }
             }
             else
@@ -1580,11 +1602,15 @@ namespace Barotrauma.Networking
                 var teamID = n == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
 
                 //find the clients in this team
-                List<Client> teamClients = teamCount == 1 ? new List<Client>(connectedClients) : connectedClients.FindAll(c => c.TeamID == teamID);
+                List<Client> teamClients = teamCount == 1 ? 
+                    new List<Client>(connectedClients) : 
+                    connectedClients.FindAll(c => c.TeamID == teamID);
                 if (serverSettings.AllowSpectating)
                 {
                     teamClients.RemoveAll(c => c.SpectateOnly);
                 }
+                //always allow the server owner to spectate even if it's disallowed in server settings
+                teamClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
 
                 if (!teamClients.Any() && n > 0) { continue; }
 
@@ -2464,7 +2490,7 @@ namespace Barotrauma.Networking
 
         private void UpdateCharacterInfo(NetIncomingMessage message, Client sender)
         {
-            sender.SpectateOnly = message.ReadBoolean() && serverSettings.AllowSpectating;
+            sender.SpectateOnly = message.ReadBoolean() && (serverSettings.AllowSpectating || sender.Connection == OwnerConnection);
             if (sender.SpectateOnly)
             {
                 return;
