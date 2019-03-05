@@ -67,17 +67,17 @@ namespace Barotrauma
             }
             foreach (Repairable repairable in Item.Repairables)
             {
-                //make sure we have all the items required to fix the target item
-                foreach (var kvp in repairable.requiredItems)
+                if (!repairable.HasRequiredItems(character, false))
                 {
-                    foreach (RelatedItem requiredItem in kvp.Value)
+                    //make sure we have all the items required to fix the target item
+                    foreach (var kvp in repairable.requiredItems)
                     {
-                        if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
+                        foreach (RelatedItem requiredItem in kvp.Value)
                         {
                             AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, true));
-                            return;
                         }
                     }
+                    return;
                 }
             }
             if (character.CanInteractWith(Item))
