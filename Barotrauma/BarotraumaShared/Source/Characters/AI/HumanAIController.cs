@@ -142,15 +142,19 @@ namespace Barotrauma
 
             if (!NeedsDivingGear(Character.CurrentHull))
             {
-                bool shouldRemoveDivingGear = Character.Oxygen < 50.0f || (objectiveManager.CurrentObjective is AIObjectiveIdle && Character.AnimController.CurrentHull.WaterPercentage < 1 && !isClimbing);
-                if (shouldRemoveDivingGear)
+                bool shouldRemoveDivingSuit = Character.CurrentHull != null && (Character.Oxygen < 50.0f || Character.CurrentHull.WaterPercentage < 1 && !isClimbing);
+                if (shouldRemoveDivingSuit)
                 {
                     var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
-                    if (divingSuit != null && Character.AnimController.CurrentHull != null)
+                    if (divingSuit != null)
                     {
                         // TODO: take the item where it was taken from?
                         divingSuit.Drop(Character);
                     }
+                }
+                bool shouldTakeMaskOff = shouldRemoveDivingSuit || (Character.CurrentHull.WaterPercentage < 20 && Character.CurrentHull.OxygenPercentage > 80);
+                if (shouldTakeMaskOff)
+                {
                     var mask = Character.Inventory.FindItemByIdentifier("divingmask");
                     if (mask != null)
                     {
@@ -323,7 +327,8 @@ namespace Barotrauma
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
-        public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < 30 || hull.WaterPercentage > 50;
+        public static bool NeedsDivingSuit(Hull hull) => NeedsDivingGear(hull) && hull.WaterPercentage > 90;
+        public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < 50 || hull.WaterPercentage > 50;
 
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
@@ -334,6 +339,17 @@ namespace Barotrauma
             return divingSuit != null && 
                 divingSuit.ConditionPercentage > 30 && 
                 divingSuit.ContainedItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage > 30);
+        }
+
+        /// <summary>
+        /// Check whether the character has a diving mask in usable condition plus some oxygen.
+        /// </summary>
+        public static bool HasDivingGear(Character character)
+        {
+            var divingGear = character.Inventory.FindItemByTag("diving");
+            return divingGear != null &&
+                divingGear.ConditionPercentage > 30 &&
+                divingGear.ContainedItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage > 30);
         }
     }
 }
