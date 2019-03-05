@@ -32,11 +32,14 @@ namespace Barotrauma
                 if (item.Submarine.TeamID != character.TeamID) { continue; }
                 if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 var battery = item.GetComponent<PowerContainer>();
-                if (!ignoreList.Contains(battery))
+                if (battery != null)
                 {
-                    if (!targets.Contains(battery))
+                    if (!ignoreList.Contains(battery))
                     {
-                        targets.Add(battery);
+                        if (!targets.Contains(battery))
+                        {
+                            targets.Add(battery);
+                        }
                     }
                 }
             }
