@@ -53,6 +53,10 @@ namespace Barotrauma
                 newTargetTimer = 0;
                 standStillTimer = 0;
             }
+            if (character.AnimController.InWater)
+            {
+                standStillTimer = 0;
+            }
             if (newTargetTimer <= 0.0f)
             {
                 currentTarget = FindRandomHull();
