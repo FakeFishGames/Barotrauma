@@ -50,17 +50,23 @@ namespace Barotrauma
                 var subObjective = subObjectives[i];
                 if (subObjective.IsCompleted())
                 {
+#if DEBUG
                     DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.");
+#endif
                     subObjectives.Remove(subObjective);
                 }
                 else if (!subObjective.CanBeCompleted)
                 {
+#if DEBUG
                     DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.");
+#endif
                     subObjectives.Remove(subObjective);
                 }
                 else if (subObjective.ShouldInterruptSubObjective(subObjective))
                 {
+#if DEBUG
                     DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is interrupted.");
+#endif
                     subObjectives.Remove(subObjective);
                 }
             }

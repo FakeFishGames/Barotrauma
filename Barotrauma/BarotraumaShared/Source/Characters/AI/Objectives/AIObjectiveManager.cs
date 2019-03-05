@@ -92,12 +92,16 @@ namespace Barotrauma
                 var objective = Objectives[i];
                 if (objective.IsCompleted())
                 {
+#if DEBUG
                     DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it is completed.");
+#endif
                     Objectives.Remove(objective);
                 }
                 else if (!objective.CanBeCompleted)
                 {
+#if DEBUG
                     DebugConsole.NewMessage($"Removing objective {objective.DebugTag}, because it cannot be completed.");
+#endif
                     Objectives.Remove(objective);
                 }
                 else
