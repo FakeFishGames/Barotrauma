@@ -5,7 +5,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    // TODO: use AIMultiObjective?
+    // TODO: use AIMultiObjective? The list of available pumps is not fixed.
     class AIObjectivePumpWater : AIObjective
     {
         public override string DebugTag => "pump water";
