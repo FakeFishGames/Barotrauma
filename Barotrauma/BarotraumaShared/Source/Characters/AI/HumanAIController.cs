@@ -336,14 +336,14 @@ namespace Barotrauma
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character) => HasItem(character, "divingsuit", "oxygensource", 30);
+        public static bool HasDivingSuit(Character character) => HasItem(character, "divingsuit", "oxygensource");
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingGear(Character character) => HasItem(character, "diving", "oxygensource", 30);
+        public static bool HasDivingGear(Character character) => HasItem(character, "diving", "oxygensource");
 
-        public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage)
+        public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage = 0)
         {
             var item = character.Inventory.FindItemByTag(tag);
             return item != null &&
