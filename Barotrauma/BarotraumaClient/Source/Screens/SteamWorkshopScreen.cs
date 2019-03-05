@@ -366,7 +366,17 @@ namespace Barotrauma
                         IgnoreLayoutGroups = true,
                         OnClicked = (btn, userdata) =>
                         {
-                            SteamManager.UpdateWorkshopItem(item, out string errorMsg);
+                            if (SteamManager.UpdateWorkshopItem(item, out string errorMsg))
+                            {
+                                new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", item.Title));
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError(errorMsg);
+                                new GUIMessageBox(
+                                    TextManager.Get("Error"), 
+                                    TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", item.Title).Replace("[errormessage]", errorMsg));
+                            }
                             btn.Enabled = false;
                             btn.Visible = false;
                             return true;
@@ -544,9 +554,10 @@ namespace Barotrauma
                     tickBox.Enabled = false;
                 }
             }
-            if (!tickBox.Enabled && updateButton != null)
+            if (updateButton != null)
             {
-                updateButton.Enabled = false;
+                //cannot update if enabling/disabling the item failed or if the item is not enabled
+                updateButton.Enabled = tickBox.Enabled && tickBox.Selected;                
             }
             if (!string.IsNullOrEmpty(errorMsg))
             {
@@ -666,7 +677,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to copy submarine file \""+sub.FilePath+"\" to the Workshop item staging folder.", e);
+                DebugConsole.ThrowError("Failed to copy submarine file \"" + sub.FilePath + "\" to the Workshop item staging folder.", e);
                 return;
             }
 

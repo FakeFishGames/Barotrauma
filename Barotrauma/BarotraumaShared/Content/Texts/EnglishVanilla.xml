@@ -153,6 +153,8 @@
   <WorkshopItemAddFiles>Add files...</WorkshopItemAddFiles>
   <WorkshopItemPublish>Publish item</WorkshopItemPublish>
   <WorkshopItemUpdate>Update item</WorkshopItemUpdate>
+  <WorkshopItemUpdated>Workshop item [itemname] was updated succesfully.</WorkshopItemUpdated>
+  <WorkshopItemUpdateFailed>Failed to update workshop item [itemname]. [errormessage]</WorkshopItemUpdateFailed>
   <WorkshopItemDelete>Delete item</WorkshopItemDelete>
   <WorkshopItemDeleteTooltip>Deletes the item from Steam Workshop.</WorkshopItemDeleteTooltip>
   <WorkshopItemDeleteVerification>Are you sure you want to delete the item "[itemname]" from the Steam Workshop?</WorkshopItemDeleteVerification>
