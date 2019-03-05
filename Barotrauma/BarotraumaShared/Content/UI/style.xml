@@ -119,6 +119,17 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButton>
 
+  <GUIButtonMenu
+    hovercolor="44,208,150,255">
+
+    <Sprite texture="Content/UI/UI_MainMenu.png" state="Hover" sourcerect="507, 36, 513, 3" slice="513, 36, 1019, 3"/>
+
+    <GUITextBlock
+      textcolor="255,255,255,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonMenu>
+
+
   <GUIButtonLarge
     color="255,255,255,255"
     hovercolor="255,255,255,255"

@@ -67,6 +67,11 @@
   <Loading>Loading...</Loading>
   <PressAnyKey>Press any key to continue</PressAnyKey>
   
+  <!-- Main menu labels -->
+  <CampaignLabel>Campaign</CampaignLabel>
+  <MultiplayerLabel>Multiplayer</MultiplayerLabel>
+  <CustomizeLabel>Customize</CustomizeLabel>
+
   <!-- Main menu buttons -->
   <TutorialButton>Training</TutorialButton>
   <NewGameButton>New Game</NewGameButton>
