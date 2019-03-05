@@ -544,7 +544,7 @@ namespace Barotrauma
                     tickBox.Enabled = false;
                 }
             }
-            if (!tickBox.Enabled && updateButton == null)
+            if (!tickBox.Enabled && updateButton != null)
             {
                 updateButton.Enabled = false;
             }
