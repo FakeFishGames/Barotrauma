@@ -76,8 +76,8 @@ namespace Barotrauma
             }
         }       
 
-        const float InsufficientOxygenThreshold = 30.0f;
-        const float LowOxygenThreshold = 50.0f;
+        public const float InsufficientOxygenThreshold = 30.0f;
+        public const float LowOxygenThreshold = 50.0f;
         protected float minVitality, maxVitality;
 
         public bool Unkillable;

@@ -142,12 +142,12 @@ namespace Barotrauma
 
             if (!NeedsDivingGear(Character.CurrentHull))
             {
-                bool oxygenLow = Character.Oxygen < 50.0f;
-                bool inWater = Character.CurrentHull == null || Character.AnimController.InWater;
+                bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
+                bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = objectiveManager.CurrentObjective.KeepDivingGearOn;
 
-                bool shouldRemoveDivingSuit = oxygenLow || (!shouldKeepTheGearOn && !inWater && Character.CurrentHull.WaterPercentage > 1 && !isClimbing);
-                if (shouldRemoveDivingSuit)
+                bool removeDivingSuit = (oxygenLow && !highPressure) || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage > 1 && !isClimbing);
+                if (removeDivingSuit)
                 {
                     var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
                     if (divingSuit != null)
@@ -156,8 +156,8 @@ namespace Barotrauma
                         divingSuit.Drop(Character);
                     }
                 }
-                bool shouldTakeMaskOff = oxygenLow || (!inWater && !shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 20 && Character.CurrentHull.OxygenPercentage > 80);
-                if (shouldTakeMaskOff)
+                bool takeMaskOff = oxygenLow || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 20 && Character.CurrentHull.OxygenPercentage > 80);
+                if (takeMaskOff)
                 {
                     var mask = Character.Inventory.FindItemByIdentifier("divingmask");
                     if (mask != null)
