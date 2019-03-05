@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -44,11 +45,15 @@ namespace Barotrauma
                 else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { ignore = true; }
                 else
                 {
-                    foreach (Repairable repairable in item.Repairables)
+                    if (item.Repairables.None()) { ignore = true; }
+                    else
                     {
-                        if (item.Condition > repairable.ShowRepairUIThreshold) { ignore = true; }
-                        else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { ignore = true; }
-                        if (ignore) { break; }
+                        foreach (Repairable repairable in item.Repairables)
+                        {
+                            if (item.Condition > repairable.ShowRepairUIThreshold) { ignore = true; }
+                            else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { ignore = true; }
+                            if (ignore) { break; }
+                        }
                     }
                 }
             }
