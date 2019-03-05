@@ -8,6 +8,9 @@ namespace Barotrauma
     class AIObjectiveExtinguishFires : AIObjective
     {
         public override string DebugTag => "extinguish fires";
+        public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+
         private Dictionary<Hull, AIObjectiveExtinguishFire> extinguishObjectives = new Dictionary<Hull, AIObjectiveExtinguishFire>();
 
         public AIObjectiveExtinguishFires(Character character) : base(character, "") { }

@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "fix leak";
 
+        public override bool KeepDivingGearOn => true;
+
         private readonly Gap leak;
 
         private AIObjectiveFindDivingGear findDivingGear;

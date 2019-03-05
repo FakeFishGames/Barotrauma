@@ -12,6 +12,7 @@ namespace Barotrauma
 
         public abstract string DebugTag { get; }
         public virtual bool ForceRun => false;
+        public virtual bool KeepDivingGearOn => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         protected float priority;
