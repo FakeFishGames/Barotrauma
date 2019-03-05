@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveChargeBatteries : AIMultiObjective<PowerContainer>
+    class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
         public override string DebugTag => "charge batteries";
         private string orderOption;
@@ -28,13 +28,12 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) { continue; }
-                foreach (Submarine sub in Submarine.Loaded)
+                if (item.Submarine == null) { continue; }
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                var battery = item.GetComponent<PowerContainer>();
+                if (!ignoreList.Contains(battery))
                 {
-                    if (sub.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take items in connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                    var battery = item.GetComponent<PowerContainer>();
-                    if (ignoreList.Contains(battery)) { continue; }
                     if (!targets.Contains(battery))
                     {
                         targets.Add(battery);
@@ -51,20 +50,9 @@ namespace Barotrauma
             }
         }
 
-        protected override void CreateObjectives()
-        {
-            foreach (var battery in targets)
-            {
-                if (!objectives.TryGetValue(battery, out AIObjective objective))
-                {
-                    objective = new AIObjectiveOperateItem(battery, character, orderOption, false);
-                    objectives.Add(battery, objective);
-                    AddSubObjective(objective);
-                }
-            }
-        }
-
+        protected override bool Filter(PowerContainer battery) => true;
         protected override float Average(PowerContainer battery) => 100 - battery.ChargePercentage;
         protected override IEnumerable<PowerContainer> GetList() => batteryList;
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, orderOption, false);
     }
 }

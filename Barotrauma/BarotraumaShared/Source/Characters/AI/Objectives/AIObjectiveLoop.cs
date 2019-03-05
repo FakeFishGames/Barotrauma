@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    abstract class AIMultiObjective<T> : AIObjective
+    abstract class AIObjectiveLoop<T> : AIObjective
     {
         protected List<T> targets = new List<T>();
         protected Dictionary<T, AIObjective> objectives = new Dictionary<T, AIObjective>();
@@ -15,7 +15,7 @@ namespace Barotrauma
         protected readonly float targetUpdateInterval = 2;
         private float targetUpdateTimer;
 
-        public AIMultiObjective(Character character, string option) : base(character, option)
+        public AIObjectiveLoop(Character character, string option) : base(character, option)
         {
             FindTargets();
             CreateObjectives();
@@ -47,11 +47,17 @@ namespace Barotrauma
             {
                 targetUpdateTimer += deltaTime;
             }
+            // Sync objectives, subobjectives and targets
             foreach (var objective in objectives)
             {
+                var target = objective.Key;
                 if (!objective.Value.CanBeCompleted)
                 {
-                    ignoreList.Add(objective.Key);
+                    ignoreList.Add(target);
+                }
+                if (!targets.Contains(target))
+                {
+                    subObjectives.Remove(objective.Value);
                 }
             }
             SyncRemovedObjectives(objectives, GetList());
@@ -80,12 +86,37 @@ namespace Barotrauma
             CreateObjectives();
         }
 
+        protected virtual void FindTargets()
+        {
+            foreach (T item in GetList())
+            {
+                if (Filter(item)) { continue; }
+                if (!targets.Contains(item))
+                {
+                    targets.Add(item);
+                }
+            }
+        }
+
+        protected virtual void CreateObjectives()
+        {
+            foreach (T target in targets)
+            {
+                if (!objectives.TryGetValue(target, out AIObjective objective))
+                {
+                    objective = ObjectiveConstructor(target);
+                    objectives.Add(target, objective);
+                    AddSubObjective(objective);
+                }
+            }
+        }
+
         /// <summary>
         /// List of all possible items of the specified type. Used for filtering the removed objectives.
         /// </summary>
         protected abstract IEnumerable<T> GetList();
-        protected abstract void FindTargets();
-        protected abstract void CreateObjectives();
         protected abstract float Average(T target);
+        protected abstract AIObjective ObjectiveConstructor(T target);
+        protected abstract bool Filter(T target);
     }
 }

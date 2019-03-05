@@ -3,7 +3,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class AIObjectiveRepairItems : AIMultiObjective<Item>
+    class AIObjectiveRepairItems : AIObjectiveLoop<Item>
     {
         public override string DebugTag => "repair items";
 
@@ -17,30 +17,6 @@ namespace Barotrauma
         // TODO: This can allow two active repair items objectives, if RequireAdequateSkills is not at the same value. We don't want that.
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
 
-        protected override void FindTargets()
-        {
-            foreach (Item item in Item.ItemList)
-            {
-                if (ignoreList.Contains(item)) { continue; }
-                if (item.IsFullCondition) { continue; }
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    if (sub.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                    foreach (Repairable repairable in item.Repairables)
-                    {
-                        if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
-                        if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { continue; }
-                        if (!targets.Contains(item))
-                        {
-                            targets.Add(item);
-                        }
-                    }
-                }
-            }
-        }
-
         protected override void CreateObjectives()
         {
             foreach (var item in targets)
@@ -49,7 +25,7 @@ namespace Barotrauma
                 {
                     if (!objectives.TryGetValue(item, out AIObjective objective))
                     {
-                        objective = new AIObjectiveRepairItem(character, item);
+                        objective = ObjectiveConstructor(item);
                         objectives.Add(item, objective);
                         AddSubObjective(objective);
                     }
@@ -58,8 +34,29 @@ namespace Barotrauma
             }
         }
 
-        protected override float Average(Item item) => 100 - item.ConditionPercentage;
+        protected override bool Filter(Item item)
+        {
+            bool ignore = ignoreList.Contains(item) || item.IsFullCondition;
+            if (!ignore)
+            {
+                if (item.Submarine == null) { ignore = true; }
+                else if (item.Submarine.TeamID != character.TeamID) { ignore = true; }
+                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { ignore = true; }
+                else
+                {
+                    foreach (Repairable repairable in item.Repairables)
+                    {
+                        if (item.Condition > repairable.ShowRepairUIThreshold) { ignore = true; }
+                        else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { ignore = true; }
+                        if (ignore) { break; }
+                    }
+                }
+            }
+            return ignore;
+        }
 
+        protected override float Average(Item item) => 100 - item.ConditionPercentage;
         protected override IEnumerable<Item> GetList() => Item.ItemList;
+        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item);
     }
 }
