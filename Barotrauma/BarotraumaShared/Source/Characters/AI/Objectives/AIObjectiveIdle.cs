@@ -1,9 +1,7 @@
-﻿using Barotrauma.Items.Components;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -72,7 +70,7 @@ namespace Barotrauma
                     errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.RoomName : currentTarget.ToString()) + ")";
 #endif
                     var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition, errorMsg);
-                    // TODO: fix, causes the character to remain still where it should move to the next room.
+                    // Path cost can sometimes be more than 1000. This causes the character to be stuck. We should ignore the target instead.
                     //if (path.Cost > 1000.0f && character.AnimController.CurrentHull != null) { return; }
                     pathSteering.SetPath(path);
                 }
