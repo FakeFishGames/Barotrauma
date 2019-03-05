@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class AIObjectiveFixLeaks : AIMultiObjective<Gap>
+    class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
     {
         public override string DebugTag => "fix leaks";
 
@@ -25,39 +25,20 @@ namespace Barotrauma
 
         protected override void FindTargets()
         {
-            foreach (Gap gap in Gap.GapList)
-            {
-                if (ignoreList.Contains(gap)) { continue; }
-                if (gap.ConnectedWall == null) { continue; }
-                // Door
-                if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
-                // Not linked to a hull -> ignore
-                if (gap.linkedTo.All(l => l == null)) { continue; }
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    if (sub.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { continue; }
-                    if (!targets.Contains(gap))
-                    {
-                        targets.Add(gap);
-                    }
-                }
-            }
+            base.FindTargets();
             targets.Sort((x, y) => GetGapFixPriority(y).CompareTo(GetGapFixPriority(x)));
         }
 
-        protected override void CreateObjectives()
+        protected override bool Filter(Gap gap)
         {
-            foreach (var gap in targets)
+            bool ignore = ignoreList.Contains(gap) || gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null);
+            if (!ignore)
             {
-                if (!objectives.TryGetValue(gap, out AIObjective objective))
-                {
-                    objective = new AIObjectiveFixLeak(gap, character);
-                    objectives.Add(gap, objective);
-                    AddSubObjective(objective);
-                }
+                if (gap.Submarine == null) { ignore = true; }
+                else if (gap.Submarine.TeamID != character.TeamID) { ignore = true; }
+                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { ignore = true; }
             }
+            return ignore;
         }
 
         private float GetGapFixPriority(Gap gap)
@@ -78,9 +59,8 @@ namespace Barotrauma
         }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
-
         protected override float Average(Gap gap) => gap.Open;
-
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
+        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character);
     }
 }
