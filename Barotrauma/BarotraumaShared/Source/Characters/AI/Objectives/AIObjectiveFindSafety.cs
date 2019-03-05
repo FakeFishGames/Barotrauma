@@ -10,6 +10,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "find safety";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
         // TODO: expose?
         const float priorityIncrease = 25;

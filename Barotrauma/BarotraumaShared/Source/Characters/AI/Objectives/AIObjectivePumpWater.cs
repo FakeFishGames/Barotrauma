@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "pump water";
 
+        public override bool KeepDivingGearOn => true;
+
         private const float findPumpsInterval = 5.0f;
 
         private string orderOption;

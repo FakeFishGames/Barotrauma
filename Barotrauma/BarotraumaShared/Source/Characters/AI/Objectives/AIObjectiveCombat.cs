@@ -10,6 +10,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "combat";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
         const float CoolDown = 10.0f;
 

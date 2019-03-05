@@ -9,6 +9,7 @@ namespace Barotrauma
     class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
     {
         public override string DebugTag => "fix leaks";
+        public override bool KeepDivingGearOn => true;
 
         public AIObjectiveFixLeaks(Character character) : base (character, "") { }
 

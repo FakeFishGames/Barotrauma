@@ -7,6 +7,8 @@ namespace Barotrauma
     {
         public override string DebugTag => "rescue all";
 
+        public override bool KeepDivingGearOn => true;
+
         //only treat characters whose vitality is below this (0.8 = 80% of max vitality)
         public const float VitalityThreshold = 0.8f;
 
