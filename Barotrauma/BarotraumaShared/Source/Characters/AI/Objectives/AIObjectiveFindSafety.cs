@@ -14,7 +14,7 @@ namespace Barotrauma
 
         // TODO: expose?
         const float priorityIncrease = 25;
-        const float priorityDecrease = 5;
+        const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
         public const float HULL_SAFETY_THRESHOLD = 50;
 
@@ -215,8 +215,10 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
+                priority = 5;
                 return;
             }
+            if (character.Oxygen < 100) { priority = 100; }
             bool ignoreFire = 
                 character.AIController.ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || 
                 character.AIController.ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
@@ -237,12 +239,6 @@ namespace Barotrauma
             {
                 priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
             }
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.CurrentHull == null) { return 5; }
-            return priority;
         }
 
         public static float GetHullSafety(Hull hull, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
