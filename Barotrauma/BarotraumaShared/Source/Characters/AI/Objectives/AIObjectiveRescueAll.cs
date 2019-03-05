@@ -42,6 +42,7 @@ namespace Barotrauma
         {
             rescueTargets = Character.CharacterList.FindAll(c => 
                 c.AIController is HumanAIController &&
+                c.TeamID == character.TeamID &&
                 c != character &&
                 !c.IsDead &&
                 c.Vitality / c.MaxVitality < VitalityThreshold);
