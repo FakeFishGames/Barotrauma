@@ -183,7 +183,9 @@ namespace Barotrauma
             {
                 if (targetItem == null)
                 {
+#if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item is was defined.");
+#endif
                     canBeCompleted = false;
                 }
                 return;
@@ -235,7 +237,9 @@ namespace Barotrauma
             //if searched through all the items and a target wasn't found, can't be completed
             if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
             {
+#if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}");
+#endif
                 canBeCompleted = false;
             }
         }
