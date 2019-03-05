@@ -173,22 +173,23 @@ namespace Barotrauma
                 hullValues.Clear();
                 foreach (var hull in Hull.hullList)
                 {
-                    foreach (Submarine sub in Submarine.Loaded)
+                    if (hull.Submarine == null) { continue; }
+                    if (hull.Submarine.TeamID != character.TeamID) { continue; }
+                    // If the character is inside, only take connected hulls into account.
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                    if (!IsSafe(hull)) { continue; }
+                    // Ignore ballasts and airlocks
+                    if (IsForbidden(hull)) { continue; }
+                    // Ignore hulls that are too low to stand inside
+                    if (character.AnimController is HumanoidAnimController animController)
                     {
-                        if (sub.TeamID != character.TeamID) { continue; }
-                        // If the character is inside, only take connected hulls into account.
-                        if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                        if (!IsSafe(hull)) { continue; }
-                        // Ignore ballasts and airlocks
-                        if (IsForbidden(hull)) { continue; }
-                        // Ignore hulls that are too low to stand inside
-                        if (character.AnimController is HumanoidAnimController animController)
+                        if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
                         {
-                            if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
-                            {
-                                continue;
-                            }
+                            continue;
                         }
+                    }
+                    if (!targetHulls.Contains(hull))
+                    {
                         targetHulls.Add(hull);
                         // Prefer larger hulls over smaller
                         hullValues.Add(hull.Volume);
