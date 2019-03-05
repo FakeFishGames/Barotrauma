@@ -327,7 +327,6 @@ namespace Barotrauma
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
-        public static bool NeedsDivingSuit(Hull hull) => NeedsDivingGear(hull) && hull.WaterPercentage > 90;
         public static bool NeedsDivingGear(Hull hull) => hull == null || hull.OxygenPercentage < 50 || hull.WaterPercentage > 50;
 
         /// <summary>
