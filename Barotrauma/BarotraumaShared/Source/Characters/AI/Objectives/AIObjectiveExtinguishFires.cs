@@ -39,17 +39,15 @@ namespace Barotrauma
             foreach (Hull hull in Hull.hullList)
             {
                 if (hull.FireSources.None()) { continue; }
-                foreach (Submarine sub in Submarine.Loaded)
+                if (hull.Submarine == null) { continue; }
+                if (hull.Submarine.TeamID != character.TeamID) { continue; }
+                // If the character is inside, only take connected hulls into account.
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                if (!extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
                 {
-                    if (sub.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                    if (!extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
-                    {
-                        objective = new AIObjectiveExtinguishFire(character, hull);
-                        extinguishObjectives.Add(hull, objective);
-                        AddSubObjective(objective);
-                    }
+                    objective = new AIObjectiveExtinguishFire(character, hull);
+                    extinguishObjectives.Add(hull, objective);
+                    AddSubObjective(objective);
                 }
             }
             if (extinguishObjectives.None())
