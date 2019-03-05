@@ -41,19 +41,20 @@ namespace Barotrauma
             {
                 bool needsDivingSuit = currentHull == null || currentHull.WaterPercentage > 90;
                 bool hasEquipment = needsDivingSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingGear(character);
-                if (divingGearObjective == null && !hasEquipment)
+                if ((divingGearObjective == null || !divingGearObjective.CanBeCompleted) && !hasEquipment)
                 {
+                    // If the previous objective cannot be completed, create a new and try again.
                     divingGearObjective = new AIObjectiveFindDivingGear(character, needsDivingSuit);
                 }
             }
             if (divingGearObjective != null)
             {
                 divingGearObjective.TryComplete(deltaTime);
-                if (divingGearObjective.IsCompleted() || !divingGearObjective.CanBeCompleted)
+                if (divingGearObjective.IsCompleted())
                 {
                     divingGearObjective = null;
                 }
-                else
+                else if (divingGearObjective.CanBeCompleted)
                 {
                     // If diving gear objective is active, wait for it to complete.
                     return;
