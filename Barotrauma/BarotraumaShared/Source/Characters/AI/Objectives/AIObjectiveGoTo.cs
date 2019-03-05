@@ -165,6 +165,7 @@ namespace Barotrauma
                             else if (!findDivingGear.CanBeCompleted)
                             {
                                 abandon = true;
+                                character.AIController.SteeringManager.Reset();
                             }
                         }
                     }
