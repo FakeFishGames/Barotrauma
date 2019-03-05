@@ -38,7 +38,7 @@ namespace Barotrauma
             var currentHull = character.AnimController.CurrentHull;           
             if (HumanAIController.NeedsDivingGear(currentHull))
             {
-                bool needsDivingSuit = HumanAIController.NeedsDivingSuit(currentHull);
+                bool needsDivingSuit = currentHull == null || currentHull.WaterPercentage > 90;
                 bool hasEquipment = needsDivingSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingGear(character);
                 if (divingGearObjective == null && !hasEquipment)
                 {
