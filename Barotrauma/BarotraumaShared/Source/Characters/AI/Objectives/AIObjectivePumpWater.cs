@@ -8,12 +8,10 @@ namespace Barotrauma
     {
         public override string DebugTag => "pump water";
         public override bool KeepDivingGearOn => true;
-        private string orderOption;
         private readonly IEnumerable<Pump> pumpList;
 
         public AIObjectivePumpWater(Character character, string option) : base(character, option)
         {
-            orderOption = option;
             pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
         }
 
@@ -27,12 +25,12 @@ namespace Barotrauma
             return 0.0f;
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater;
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
 
         //availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
         protected override void FindTargets()
         {
-            if (orderOption == null) { return; }
+            if (option == null) { return; }
             foreach (Item item in Item.ItemList)
             {
                 if (item.HasTag("ballast")) { continue; }
@@ -44,7 +42,7 @@ namespace Barotrauma
                 {
                     if (!ignoreList.Contains(pump))
                     {
-                        if (orderOption == "stoppumping")
+                        if (option == "stoppumping")
                         {
                             if (!pump.IsActive || pump.FlowPercentage == 0.0f) { continue; }
                         }
@@ -64,7 +62,7 @@ namespace Barotrauma
 
         protected override bool Filter(Pump pump) => true;
         protected override IEnumerable<Pump> GetList() => pumpList;
-        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, orderOption, false);
+        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, Option, false);
         protected override float Average(Pump target) => 0;
     }
 }

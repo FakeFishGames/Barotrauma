@@ -8,19 +8,16 @@ namespace Barotrauma
     class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
         public override string DebugTag => "charge batteries";
-        private string orderOption;
         private readonly IEnumerable<PowerContainer> batteryList;
 
         public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
         {
-            orderOption = option;
             batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
         }
 
-        // TODO: currently there can be multiple objectives with different order options. We don't want that
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return otherObjective is AIObjectiveChargeBatteries other && other.orderOption == orderOption;
+            return otherObjective is AIObjectiveChargeBatteries other && other.Option == Option;
         }
 
         protected override void FindTargets()
@@ -56,6 +53,6 @@ namespace Barotrauma
         protected override bool Filter(PowerContainer battery) => true;
         protected override float Average(PowerContainer battery) => 100 - battery.ChargePercentage;
         protected override IEnumerable<PowerContainer> GetList() => batteryList;
-        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, orderOption, false);
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, Option, false);
     }
 }

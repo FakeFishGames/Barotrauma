@@ -40,6 +40,8 @@ namespace Barotrauma
             get { return operateTarget; }
         }
 
+        public ItemComponent Component => component;
+
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
@@ -160,7 +162,7 @@ namespace Barotrauma
             AIObjectiveOperateItem operateItem = otherObjective as AIObjectiveOperateItem;
             if (operateItem == null) return false;
 
-            return (operateItem.component == component);
+            return (operateItem.component == component ||otherObjective.Option == Option);
         }
     }
 }
