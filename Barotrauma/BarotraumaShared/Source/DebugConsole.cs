@@ -971,7 +971,57 @@ namespace Barotrauma
                 Submarine.MainSub?.FlipX();
             }));
 
-            commands.Add(new Command("loadhead", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            commands.Add(new Command("gender", "Set the gender of the controlled character. Allowed parameters: Male, Female, None.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No parameters provided!");
+                    return;
+                }
+                if (Enum.TryParse(args[0], true, out Gender gender))
+                {
+                    character.Info.Gender = gender;
+                    character.ReloadHead();
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        foreach (var wearable in limb.WearingItems)
+                        {
+                            if (wearable.Gender != Gender.None && wearable.Gender != gender)
+                            {
+                                wearable.Gender = gender;
+                            }
+                        }
+                    }
+                }
+            }));
+
+            commands.Add(new Command("race", "Set race of the controlled character. Allowed parameters: White, Black, Asian, None.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No parameters provided!");
+                    return;
+                }
+                if (Enum.TryParse(args[0], true, out Race race))
+                {
+                    character.Info.Race = race;
+                    character.ReloadHead();
+                }
+            }));
+
+            commands.Add(new Command("loadhead|head", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
             {
                 var character = Character.Controlled;
                 if (character == null)
