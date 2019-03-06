@@ -168,8 +168,8 @@ namespace Barotrauma
             }
             
             var collider = character.AnimController.Collider;
-
-            if (character.IsClimbing)
+            // TODO: Make this readable. The need for excessive commenting tells that the code is too hard to read.
+            if (character.IsClimbing && (currentPath.NextNode == null || currentPath.NextNode.Ladders == null || currentPath.NextNode.Ladders == currentPath.CurrentNode.Ladders))
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
 
@@ -184,7 +184,7 @@ namespace Barotrauma
                     {
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
-                    
+
                     //we can safely skip to the next waypoint if the character is at a safe height above the floor,
                     //or if the next waypoint in the path is also on ladders
                     if ((heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f) ||
