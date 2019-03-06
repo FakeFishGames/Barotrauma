@@ -51,7 +51,7 @@ namespace Barotrauma
                 newTargetTimer = 0;
                 standStillTimer = 0;
             }
-            if (character.AnimController.InWater)
+            if (character.AnimController.InWater || character.IsClimbing)
             {
                 standStillTimer = 0;
             }
@@ -100,9 +100,8 @@ namespace Barotrauma
                     standStillTimer = Rand.Range(1.0f, 10.0f);
                 }
 
-                bool isClimbing = character.IsClimbing;
                 //steer away from edges of the hull
-                if (character.AnimController.CurrentHull != null && !isClimbing)
+                if (character.AnimController.CurrentHull != null && !character.IsClimbing)
                 {
                     float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
                     float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
@@ -134,7 +133,7 @@ namespace Barotrauma
                 }
                 
                 character.AIController.SteeringManager.SteeringWander(character.AnimController.GetCurrentSpeed(false));
-                if (!isClimbing)
+                if (!character.IsClimbing)
                 {
                     //reset vertical steering to prevent dropping down from platforms etc
                     character.AIController.SteeringManager.ResetY();
@@ -150,7 +149,7 @@ namespace Barotrauma
         }
 
         private readonly List<Hull> targetHulls = new List<Hull>(20);
-        private readonly List<float> hullValues = new List<float>(20);
+        private readonly List<float> hullWeights = new List<float>(20);
 
         private Hull FindRandomHull()
         {
@@ -175,7 +174,7 @@ namespace Barotrauma
             if (targetHull == null)
             {
                 targetHulls.Clear();
-                hullValues.Clear();
+                hullWeights.Clear();
                 foreach (var hull in Hull.hullList)
                 {
                     if (hull.Submarine == null) { continue; }
@@ -183,7 +182,6 @@ namespace Barotrauma
                     // If the character is inside, only take connected hulls into account.
                     if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
                     if (!IsSafe(hull)) { continue; }
-                    // Ignore ballasts and airlocks
                     if (IsForbidden(hull)) { continue; }
                     // Ignore hulls that are too low to stand inside
                     if (character.AnimController is HumanoidAnimController animController)
@@ -196,11 +194,10 @@ namespace Barotrauma
                     if (!targetHulls.Contains(hull))
                     {
                         targetHulls.Add(hull);
-                        // Prefer larger hulls over smaller
-                        hullValues.Add(hull.Volume);
+                        hullWeights.Add(hull.Volume);
                     }
                 }
-                return ToolBox.SelectWeightedRandom(targetHulls, hullValues, Rand.RandSync.Unsynced);
+                return ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
             }
             return targetHull;
         }

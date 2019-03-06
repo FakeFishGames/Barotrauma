@@ -43,6 +43,9 @@ namespace Barotrauma
             private set;
         }
 
+        public bool InLadders => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Ladders != null;
+        public bool InStairs => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null;
+
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors)
             : base(host)
         {

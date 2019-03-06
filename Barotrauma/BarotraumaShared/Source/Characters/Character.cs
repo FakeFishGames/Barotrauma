@@ -985,8 +985,7 @@ namespace Barotrauma
         public Vector2? OverrideMovement { get; set; }
         public bool ForceRun { get; set; }
 
-        // TODO: simply checking the animation should be sufficient, because the animation state should be in sync.
-        public bool IsClimbing => AnimController.Anim == AnimController.Animation.Climbing && SelectedConstruction != null && SelectedConstruction.GetComponent<Ladder>() != null;
+        public bool IsClimbing => AnimController.Anim == AnimController.Animation.Climbing;
 
         public Vector2 GetTargetMovement()
         {
