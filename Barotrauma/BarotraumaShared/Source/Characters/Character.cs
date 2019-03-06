@@ -823,6 +823,10 @@ namespace Barotrauma
             Info.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
             if (info.HairElement == null) { info.HairIndex = 0; }
             Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+
+#if CLIENT
+            head.LoadHuskSprite();
+#endif
         }
 
         private static string humanConfigFile;
