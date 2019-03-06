@@ -15,7 +15,8 @@ namespace Barotrauma
         Beard,
         Moustache,
         FaceAttachment,
-        JobIndicator
+        JobIndicator,
+        Husk
     }
 
     class WearableSprite
@@ -86,7 +87,7 @@ namespace Barotrauma
         {
             Type = type;
             SourceElement = subElement;
-            SpritePath = subElement.Attribute("texture").Value;
+            SpritePath = subElement.GetAttributeString("texture", string.Empty);
             Init();
             switch (type)
             {
@@ -95,6 +96,7 @@ namespace Barotrauma
                 case WearableType.Moustache:
                 case WearableType.FaceAttachment:
                 case WearableType.JobIndicator:
+                case WearableType.Husk:
                     Limb = LimbType.Head;
                     HideLimb = false;
                     HideOtherWearables = false;
