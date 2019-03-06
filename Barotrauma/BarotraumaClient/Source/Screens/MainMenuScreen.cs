@@ -41,9 +41,9 @@ namespace Barotrauma
         public MainMenuScreen(GameMain game)
         {
 
-            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
             {
-                RelativeOffset = new Vector2(0, 0.1f),
+                RelativeOffset = new Vector2(0, 0),
                 AbsoluteOffset = new Point(50, 0)
             })
             {
@@ -55,35 +55,28 @@ namespace Barotrauma
             // === CAMPAIGN
             campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform), isHorizontal: true);
 
-            new GUIImage(new RectTransform(new Vector2(0.25f, 1.0f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
+            new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
                 CanBeFocused = false
             };
 
-            campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), campaignHolder.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), campaignNavigation.RectTransform),
+            campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), campaignNavigation.RectTransform),
                 TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock");
 
             campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            campaignList = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent: campaignButtons.RectTransform))
+            campaignList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: campaignButtons.RectTransform))
             {
-                Stretch = true,
+                Stretch = false,
                 RelativeSpacing = 0.035f
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), campaignList.RectTransform), TextManager.Get("NewGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                UserData = Tab.NewGame,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 UserData = Tab.LoadGame,
                 OnClicked = (tb, userdata) =>
@@ -93,28 +86,41 @@ namespace Barotrauma
                 }
             };
 
-            // === MULTIPLAYER
-            multiplayerHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("NewGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                UserData = Tab.NewGame,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
+            };
 
-            new GUIImage(new RectTransform(new Vector2(0.25f, 1.0f), multiplayerHolder.RectTransform), "MainMenuMultiplayerIcon")
+            // === MULTIPLAYER
+            multiplayerHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) }, isHorizontal: true);
+
+            new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), multiplayerHolder.RectTransform), "MainMenuMultiplayerIcon")
             {
                 CanBeFocused = false
             };
 
-            multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), multiplayerHolder.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), multiplayerNavigation.RectTransform),
+            multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), multiplayerNavigation.RectTransform),
                 TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock");
 
             multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            multiplayerList = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent: multiplayerButtons.RectTransform))
+            multiplayerList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: multiplayerButtons.RectTransform))
             {
-                Stretch = true,
+                Stretch = false,
                 RelativeSpacing = 0.035f
             };
 
-            joinServerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), multiplayerList.RectTransform), TextManager.Get("JoinServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            joinServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), multiplayerList.RectTransform), TextManager.Get("JoinServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 UserData = Tab.JoinServer,
                 OnClicked = (tb, userdata) =>
@@ -123,7 +129,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            hostServerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), multiplayerList.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            hostServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), multiplayerList.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 UserData = Tab.HostServer,
                 OnClicked = (tb, userdata) =>
@@ -134,27 +140,30 @@ namespace Barotrauma
             };
 
             // === CUSTOMIZE
-            customizeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            customizeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) }, isHorizontal: true);
 
-            new GUIImage(new RectTransform(new Vector2(0.25f, 1.0f), customizeHolder.RectTransform), "MainMenuCustomizeIcon")
+            new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), customizeHolder.RectTransform), "MainMenuCustomizeIcon")
             {
                 CanBeFocused = false
             };
 
-            customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), customizeHolder.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), customizeNavigation.RectTransform),
+            customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), customizeNavigation.RectTransform),
                 TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock");
 
             customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            customizeList = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent: customizeButtons.RectTransform))
+            customizeList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: customizeButtons.RectTransform))
             {
-                Stretch = true,
+                Stretch = false,
                 RelativeSpacing = 0.035f
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 UserData = Tab.SubmarineEditor,
                 OnClicked = (tb, userdata) =>
@@ -164,7 +173,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 UserData = Tab.CharacterEditor,
                 OnClicked = (tb, userdata) =>
@@ -176,7 +185,7 @@ namespace Barotrauma
 
             if (Steam.SteamManager.USE_STEAM)
             {
-                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.2f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
                 {
                     Enabled = false,
                     UserData = Tab.SteamWorkshop,
@@ -185,27 +194,30 @@ namespace Barotrauma
             }
 
             // === OPTION
-            optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.15f, 0.6f), optionHolder.RectTransform), "MainMenuOptionIcon")
             {
                 CanBeFocused = false
             };
 
-            optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), parent: optionHolder.RectTransform));
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.0f), optionHolder.RectTransform), style: null);
 
-            optionList = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent: optionButtons.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) })
+            optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), parent: optionHolder.RectTransform));
+
+            optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: optionButtons.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) })
             {
-                Stretch = true,
+                Stretch = false,
                 RelativeSpacing = 0.035f
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), optionList.RectTransform), TextManager.Get("SettingsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("SettingsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
             };
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 OnClicked = QuitClicked
             };
