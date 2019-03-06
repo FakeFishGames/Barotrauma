@@ -349,9 +349,9 @@ namespace Barotrauma
             return item != null &&
                 item.ConditionPercentage > conditionPercentage &&
                 character.HasEquippedItem(item) &&
-                containedTag == null ||
+                (containedTag == null ||
                 (item.ContainedItems != null &&
-                item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage));
+                item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
         }
     }
 }
