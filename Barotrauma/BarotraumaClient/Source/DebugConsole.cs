@@ -1481,6 +1481,11 @@ namespace Barotrauma
                         wearable.Sprite.ReloadXML();
                         wearable.Sprite.ReloadTexture();
                     }
+                    if (limb.HuskSprite != null)
+                    {
+                        limb.HuskSprite.Sprite.ReloadXML();
+                        limb.HuskSprite.Sprite.ReloadTexture();
+                    }
                 }
             }, isCheat: true));
 
