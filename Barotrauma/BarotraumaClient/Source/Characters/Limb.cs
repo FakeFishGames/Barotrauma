@@ -279,6 +279,10 @@ namespace Barotrauma
             float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
             float damageMultiplier = 1;
+            foreach (DamageModifier damageModifier in appliedDamageModifiers)
+            {
+                damageMultiplier *= damageModifier.DamageMultiplier;
+            }
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
@@ -288,7 +292,6 @@ namespace Barotrauma
                     {
                         damageSoundType = damageModifier.DamageSound;
                         SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
-                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
