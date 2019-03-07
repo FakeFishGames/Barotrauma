@@ -727,6 +727,7 @@
   <AddSubButton>Add submarine</AddSubButton>
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
   <HoldToLink>Hold space and click with the mouse to link to another item.</HoldToLink>
+  <ReloadSprite>Reload Sprite</ReloadSprite>
   <AllowedLinks>Allowed links</AllowedLinks>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>
