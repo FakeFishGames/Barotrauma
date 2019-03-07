@@ -1543,6 +1543,10 @@ namespace Barotrauma
                     character.ReloadHead();
                     foreach (var limb in character.AnimController.Limbs)
                     {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprite();
+                        }
                         foreach (var wearable in limb.WearingItems)
                         {
                             if (wearable.Gender != Gender.None && wearable.Gender != gender)
