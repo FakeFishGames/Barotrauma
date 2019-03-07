@@ -1489,97 +1489,73 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("reloadxml", "Reloads the xml definition of the selected item(s)/structure(s) (SubEditor). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadxml id itemid. Example 2: reloadxml name \"Sprite name\"", args =>
+            commands.Add(new Command("reloadxml", "Reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadxml id itemid. Example 2: reloadxml name \"Sprite name\"", args =>
             {
-                if (Screen.Selected is SpriteEditorScreen)
-                {
-                    return;
-                }
-                else if (args.Length > 1)
-                {
-                    TryDoActionOnSprite(args[0], args[1], s => s.ReloadXML());
-                }
-                else if (Screen.Selected is SubEditorScreen subScreen)
-                {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadXML());
-                    }
-                }
-                else
-                {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
-                }
+                ReloadSprite(args, true, false);
             }, isCheat: true));
 
-            commands.Add(new Command("reloadtexture|reloadtextures", "In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
+            commands.Add(new Command("reloadtexture", "Reloads the texture of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
             {
-                if (Screen.Selected is SpriteEditorScreen)
-                {
-                    return;
-                }
-                else if (args.Length > 1)
-                {
-                    TryDoActionOnSprite(args[0], args[1], s => s.ReloadTexture());
-                }
-                else if (Screen.Selected is SubEditorScreen subScreen)
-                {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadTexture());
-                    }
-                }
-                else
-                {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
-                }
+                ReloadSprite(args, false, true);
             }, isCheat: true));
 
-            commands.Add(new Command("reloadsprite|reloadsprites", "Reload xml and texture of the given sprite(s). In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
+            commands.Add(new Command("reloadsprite", "Reloads the xml definition and the texture of the selected item(s)/structure(s).. Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
             {
-                if (Screen.Selected is SpriteEditorScreen)
+                ReloadSprite(args, true, true);
+            }, isCheat: true));
+        }
+
+        private static void ReloadSprite(string[] args, bool reloadXML, bool reloadTexture)
+        {
+            if (Screen.Selected is SpriteEditorScreen)
+            {
+                return;
+            }
+            else if (args.Length > 1)
+            {
+                TryDoActionOnSprite(args[0], args[1], s =>
                 {
-                    return;
+                    if (reloadXML) { s.ReloadXML(); }
+                    if (reloadTexture) { s.ReloadTexture(); }
+                });
+            }
+            else if (Screen.Selected is SubEditorScreen)
+            {
+                if (!MapEntity.SelectedAny)
+                {
+                    ThrowError("You have to select item(s)/structure(s) first!");
                 }
-                else if (args.Length > 1)
+                else if (Screen.Selected is GameScreen)
                 {
-                    TryDoActionOnSprite(args[0], args[1], s =>
+                    MapEntity.SelectedList.ForEach(e =>
                     {
-                        s.ReloadXML();
-                        s.ReloadTexture();
+                        if (e.Sprite != null)
+                        {
+                            if (reloadXML) { e.Sprite.ReloadXML(); }
+                            if (reloadTexture) { e.Sprite.ReloadTexture(); }
+                        }
                     });
                 }
-                else if (Screen.Selected is SubEditorScreen subScreen)
+            }
+            else
+            {
+                var character = Character.Controlled;
+                if (character == null)
                 {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        MapEntity.SelectedList.ForEach(e =>
-                        {
-                            if (e.Sprite != null)
-                            {
-                                e.Sprite.ReloadXML();
-                                e.Sprite.ReloadTexture();
-                            }
-                        });
-                    }
+                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                    return;
+                }
+                var item = character.FocusedItem;
+                if (item != null)
+                {
+                    if (reloadXML) { item.Sprite.ReloadXML(); }
+                    if (reloadTexture) { item.Sprite.ReloadTexture(); }
                 }
                 else
                 {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                    ThrowError("Please select an item with the mouse or provide the mode (name or id) and the value so that I can find the sprite for you!");
                 }
-            }, isCheat: true));
+            }
         }
 
         private static bool TryDoActionOnSprite(string firstArg, string secondArg, Action<Sprite> action)
