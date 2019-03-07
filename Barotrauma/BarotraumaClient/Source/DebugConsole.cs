@@ -1458,102 +1458,89 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
             }, isCheat: true));
 
-            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the xml(s) where limbs and wearable sprites (clothing) of the controlled character are defined. Also reloads textures. Provide id or name if you want to target another character.", args =>
+            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
                 {
-                    ThrowError("Not controlling any character!");
+                    ThrowError("Not controlling any character or no matching character found with the provided arguments.");
                     return;
                 }
-                foreach (var limb in character.AnimController.Limbs)
+                ReloadWearables(character);
+            }, isCheat: true));
+
+            commands.Add(new Command("reloadsprite|reloadsprites", "Reloads the sprites of the selected item(s)/structure(s) (hovering over or selecting in the subeditor) or the controlled character. Can also reload sprites by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
+            {
+                if (Screen.Selected is SpriteEditorScreen)
                 {
-                    limb.Sprite?.ReloadTexture();
-                    limb.DamagedSprite?.ReloadTexture();
-                    limb.DeformSprite?.Sprite.ReloadTexture();
-                    foreach (var wearable in limb.WearingItems)
-                    {
-                        wearable.Sprite.ReloadXML();
-                        wearable.Sprite.ReloadTexture();
-                    }
-                    foreach (var wearable in limb.OtherWearables)
-                    {
-                        wearable.Sprite.ReloadXML();
-                        wearable.Sprite.ReloadTexture();
-                    }
-                    if (limb.HuskSprite != null)
-                    {
-                        limb.HuskSprite.Sprite.ReloadXML();
-                        limb.HuskSprite.Sprite.ReloadTexture();
-                    }
+                    return;
                 }
-            }, isCheat: true));
-
-            commands.Add(new Command("reloadxml", "Reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadxml id itemid. Example 2: reloadxml name \"Sprite name\"", args =>
-            {
-                ReloadSprite(args, true, false);
-            }, isCheat: true));
-
-            commands.Add(new Command("reloadtexture", "Reloads the texture of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
-            {
-                ReloadSprite(args, false, true);
-            }, isCheat: true));
-
-            commands.Add(new Command("reloadsprite", "Reloads the xml definition and the texture of the selected item(s)/structure(s).. Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
-            {
-                ReloadSprite(args, true, true);
-            }, isCheat: true));
-        }
-
-        private static void ReloadSprite(string[] args, bool reloadXML, bool reloadTexture)
-        {
-            if (Screen.Selected is SpriteEditorScreen)
-            {
-                return;
-            }
-            else if (args.Length > 1)
-            {
-                TryDoActionOnSprite(args[0], args[1], s =>
+                else if (args.Length > 1)
                 {
-                    if (reloadXML) { s.ReloadXML(); }
-                    if (reloadTexture) { s.ReloadTexture(); }
-                });
-            }
-            else if (Screen.Selected is SubEditorScreen)
-            {
-                if (!MapEntity.SelectedAny)
-                {
-                    ThrowError("You have to select item(s)/structure(s) first!");
+                    TryDoActionOnSprite(args[0], args[1], s =>
+                    {
+                        s.ReloadXML();
+                        s.ReloadTexture();
+                    });
                 }
-                else if (Screen.Selected is GameScreen)
+                else if (Screen.Selected is SubEditorScreen)
                 {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
                     MapEntity.SelectedList.ForEach(e =>
                     {
                         if (e.Sprite != null)
                         {
-                            if (reloadXML) { e.Sprite.ReloadXML(); }
-                            if (reloadTexture) { e.Sprite.ReloadTexture(); }
+                            e.Sprite.ReloadXML();
+                            e.Sprite.ReloadTexture();
                         }
                     });
                 }
-            }
-            else
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
-                    return;
-                }
-                var item = character.FocusedItem;
-                if (item != null)
-                {
-                    if (reloadXML) { item.Sprite.ReloadXML(); }
-                    if (reloadTexture) { item.Sprite.ReloadTexture(); }
-                }
                 else
                 {
-                    ThrowError("Please select an item with the mouse or provide the mode (name or id) and the value so that I can find the sprite for you!");
+                    var character = Character.Controlled;
+                    if (character == null)
+                    {
+                        ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                        return;
+                    }
+                    var item = character.FocusedItem;
+                    if (item != null)
+                    {
+                        item.Sprite.ReloadXML();
+                        item.Sprite.ReloadTexture();
+                    }
+                    else
+                    {
+                        ReloadWearables(character);
+                    }
+                }
+            }, isCheat: true));
+        }
+
+        private static void ReloadWearables(Character character)
+        {
+            foreach (var limb in character.AnimController.Limbs)
+            {
+                limb.Sprite?.ReloadTexture();
+                limb.DamagedSprite?.ReloadTexture();
+                limb.DeformSprite?.Sprite.ReloadTexture();
+                foreach (var wearable in limb.WearingItems)
+                {
+                    wearable.Sprite.ReloadXML();
+                    wearable.Sprite.ReloadTexture();
+                }
+                foreach (var wearable in limb.OtherWearables)
+                {
+                    wearable.Sprite.ReloadXML();
+                    wearable.Sprite.ReloadTexture();
+                }
+                if (limb.HuskSprite != null)
+                {
+                    limb.HuskSprite.Sprite.ReloadXML();
+                    limb.HuskSprite.Sprite.ReloadTexture();
                 }
             }
         }
