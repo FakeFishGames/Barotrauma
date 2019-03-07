@@ -1,7 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <huskappendage>
-  <limb name="Huskappendage" id="13" height="40" width="15" mass="6" attackpriority="2" flip="True" pullpos="0,25" type="None" healthindex="0" steerforce="0" stepoffset="0,0" radius="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Husk/HuskStinger.png" sourcerect="58,0,47,149" depth="0.5" origin="0.3,0.6" />
+  <limb name="Huskappendage 1" id="13" height="10" width="15" flip="True">
+    <sprite texture="Content/Characters/Humanhusk/Husk_Injector.png" sourcerect="25,86,20,15" depth="0.5" origin="0.5,0.5" />
+  </limb>
+  <limb name="Huskappendage 2" id="14" height="10" width="15" flip="True">
+    <sprite texture="Content/Characters/Humanhusk/Husk_Injector.png" sourcerect="46,86,20,15" depth="0.5" origin="0.5,0.5" />
+  </limb>
+  <limb name="Huskappendage 3" id="15" height="10" width="15" flip="True">
+    <sprite texture="Content/Characters/Humanhusk/Husk_Injector.png" sourcerect="70,86,20,15" depth="0.5" origin="0.5,0.5" />
+  </limb>
+  <limb name="Huskappendage 4" id="16" height="10" width="15" attackpriority="2" flip="True" pullpos="0,25" type="None" healthindex="0" steerforce="0" stepoffset="0,0" radius="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Humanhusk/Husk_Injector.png" sourcerect="91,86,20,15" depth="0.5" origin="0.5,0.5" />
     <attack range="70" damagerange="50" duration="0.1" targetforce="0" structuresoundtype="StructureBlunt" force="6" applyforceonlimbs="1" torque="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="10" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" afterattack="Pursue" cooldown="5" secondarycooldown="0">
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <ReduceAffliction identifier="internaldamage" strength="5" />
@@ -12,6 +21,10 @@
     </attack>
   </limb>
   
-  <!-- body to husk appendage -->
-  <joint name="Huskappendage" limb1="1" limb2="13" limb1anchor="18.0,7.1" limb2anchor="24.10002,0.321171" upperlimit="-23" lowerlimit="-90" canbesevered="False" limitenabled="True" stiffness="0.25" />
+  <!-- Head to husk appendage -->
+  <joint name="Head to Huskappendage" limb1="0" limb2="13" limb1anchor="2.8,-5" limb2anchor="-1.5,0" upperlimit="0" lowerlimit="-10" canbesevered="False" limitenabled="True" />
+  <joint name="Huskappendage 1-2" limb1="13" limb2="14" limb1anchor="1.5,0" limb2anchor="-1.5,0" upperlimit="1" lowerlimit="-1" canbesevered="False" limitenabled="True" />
+  <joint name="Huskappendage 2-3" limb1="14" limb2="15" limb1anchor="1.5,0" limb2anchor="-1.5,0" upperlimit="1" lowerlimit="-1" canbesevered="False" limitenabled="True" />
+  <joint name="Huskappendage 3-4" limb1="15" limb2="16" limb1anchor="1.5,0" limb2anchor="-1.5,0" upperlimit="1" lowerlimit="-1" canbesevered="False" limitenabled="True" />
+
 </huskappendage>

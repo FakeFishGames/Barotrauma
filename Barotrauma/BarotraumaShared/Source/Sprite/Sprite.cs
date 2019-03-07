@@ -238,7 +238,7 @@ namespace Barotrauma
             }
             if (sourceElements.Multiple())
             {
-                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityID})! Cannot reload the xml for sprite element \"{SourceElement.ToString()}\"!", Color.Yellow);
+                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityID})!: {SourceElement.ToString()}", Color.Yellow);
             }
             else if (sourceElements.None())
             {
@@ -247,6 +247,9 @@ namespace Barotrauma
             else
             {
                 SourceElement = sourceElements.Single();
+            }
+            if (SourceElement != null)
+            {
                 Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
                 sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
                 size = SourceElement.GetAttributeVector2("size", Vector2.One);

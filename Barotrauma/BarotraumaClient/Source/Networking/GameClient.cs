@@ -92,6 +92,11 @@ namespace Barotrauma.Networking
 
         private int ownerKey;
 
+        public bool IsServerOwner
+        {
+            get { return ownerKey > 0; }
+        }
+
         public GameClient(string newName, string ip, int ownerKey=0)
         {
             //TODO: gui stuff should probably not be here?
@@ -1669,12 +1674,24 @@ namespace Barotrauma.Networking
             return permissions.HasFlag(permission);
         }
 
-        public bool HasConsoleCommandPermission(string command)
+        public bool HasConsoleCommandPermission(string commandName)
         {
-            if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) return false;
+            if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) { return false; }
 
-            command = command.ToLowerInvariant();
-            return permittedConsoleCommands.Any(c => c.ToLowerInvariant() == command);
+            commandName = commandName.ToLowerInvariant();
+            if (permittedConsoleCommands.Any(c => c.ToLowerInvariant() == commandName)) { return true; }
+
+            //check aliases
+            foreach (DebugConsole.Command command in DebugConsole.Commands)
+            {
+                if (command.names.Contains(commandName))
+                {
+                    if (command.names.Intersect(permittedConsoleCommands).Any()) { return true; }
+                    break;
+                }
+            }
+
+            return false;
         }
 
         public override void Disconnect()

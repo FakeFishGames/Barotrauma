@@ -327,46 +327,7 @@ namespace Barotrauma.Steam
             item.Subscribe();
             item.Download();
         }
-
-        public static void SaveToWorkshop(Submarine sub)
-        {
-            if (instance == null || !instance.isInitialized) return;
-
-            Workshop.Editor item;
-            ContentPackage contentPackage;
-            try
-            {
-                CreateWorkshopItemStaging(
-                    new List<ContentFile>() { new ContentFile(sub.FilePath, ContentType.None) },
-                    out item, out contentPackage);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Creating the workshop item failed.", e);
-                return;
-            }
-
-            item.Description = sub.Description;
-            item.Title = sub.Name;
-            item.Tags.Add("Submarine");
-
-            string subPreviewPath = Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
-            try
-            {
-                using (Stream s = File.Create(subPreviewPath))
-                {
-                    sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
-                    item.PreviewImage = subPreviewPath;
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving submarine preview image failed.", e);
-                item.PreviewImage = null;
-            }
-            StartPublishItem(contentPackage, item);
-        }
-
+        
         /// <summary>
         /// Creates a new folder, copies the specified files there and creates a metadata file with install instructions.
         /// </summary>
@@ -568,14 +529,15 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
+            string metaDataFilePath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            ContentPackage contentPackage = new ContentPackage(metaDataFilePath);
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
             var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
             List<string> nonContentFiles = new List<string>();
             foreach (string file in allPackageFiles)
             {
-                if (file == MetadataFileName) { continue; }
+                if (file == metaDataFilePath) { continue; }
                 string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
                 string fullPath = Path.GetFullPath(relativePath);
                 if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
@@ -612,13 +574,6 @@ namespace Barotrauma.Steam
 
             try
             {
-                //we only need to create a new content package for the item if it contains content with a type other than None or Submarine
-                //e.g. items that are just a sub file are just copied to the game folder
-                if (contentPackage.Files.Any(f => f.Type != ContentType.None && f.Type != ContentType.Submarine))
-                {
-                    File.Copy(contentPackage.Path, newContentPackagePath);
-                }
-
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
@@ -789,14 +744,13 @@ namespace Barotrauma.Steam
             string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
             if (!File.Exists(metaDataPath))
             {
-                throw new FileNotFoundException("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+                return false;
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath);
             //make sure the contentpackage file is present 
-            //(unless the package only contains submarine files, in which case we don't need a content package)
-            if (contentPackage.Files.Any(f => f.Type != ContentType.Submarine) &&
-                !File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) &&
+            if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) &&
                 !ContentPackage.List.Any(cp => cp.Name == contentPackage.Name))
             {
                 return false;
@@ -819,7 +773,8 @@ namespace Barotrauma.Steam
             string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
             if (!File.Exists(metaDataPath))
             {
-                throw new FileNotFoundException("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
+                return false;
             }
                                     
             ContentPackage steamPackage = new ContentPackage(metaDataPath);
@@ -839,15 +794,20 @@ namespace Barotrauma.Steam
             bool itemsUpdated = false;
             foreach (ulong subscribedItemId in instance.client.Workshop.GetSubscribedItemIds())
             {
+                //TODO: fix this, GetItem doesn't query item.Modified
                 var item = instance.client.Workshop.GetItem(subscribedItemId);
                 if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
                 {
                     if (!UpdateWorkshopItem(item, out string errorMsg))
                     {
                         DebugConsole.ThrowError(errorMsg);
+                        new GUIMessageBox(
+                            TextManager.Get("Error"),
+                            TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", item.Title).Replace("[errormessage]", errorMsg));
                     }
                     else
                     {
+                        new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", item.Title));
                         itemsUpdated = true;
                     }
                 }
