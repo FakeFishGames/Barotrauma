@@ -787,7 +787,7 @@ namespace Barotrauma
                 }
             }, null, true));
 
-            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
+            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
             () =>
             {
                 if (GameMain.NetworkMember == null) return null;
@@ -971,7 +971,57 @@ namespace Barotrauma
                 Submarine.MainSub?.FlipX();
             }));
 
-            commands.Add(new Command("loadhead", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            commands.Add(new Command("gender", "Set the gender of the controlled character. Allowed parameters: Male, Female, None.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No parameters provided!");
+                    return;
+                }
+                if (Enum.TryParse(args[0], true, out Gender gender))
+                {
+                    character.Info.Gender = gender;
+                    character.ReloadHead();
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        foreach (var wearable in limb.WearingItems)
+                        {
+                            if (wearable.Gender != Gender.None && wearable.Gender != gender)
+                            {
+                                wearable.Gender = gender;
+                            }
+                        }
+                    }
+                }
+            }));
+
+            commands.Add(new Command("race", "Set race of the controlled character. Allowed parameters: White, Black, Asian, None.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No parameters provided!");
+                    return;
+                }
+                if (Enum.TryParse(args[0], true, out Race race))
+                {
+                    character.Info.Race = race;
+                    character.ReloadHead();
+                }
+            }));
+
+            commands.Add(new Command("loadhead|head", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
             {
                 var character = Character.Controlled;
                 if (character == null)
@@ -1262,7 +1312,7 @@ namespace Barotrauma
             }
         }
         
-        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false)
+        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
         {
             if (args.Length == 0) return null;
 
@@ -1278,7 +1328,9 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => (!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName);
+            var matchingCharacters = Character.CharacterList.FindAll(c => 
+                c.Name.ToLowerInvariant() == characterName &&
+                (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
 
             if (!matchingCharacters.Any())
             {

@@ -257,6 +257,11 @@ namespace Barotrauma
             return null;
         }
 
+        public T GetAffliction<T>(string afflictionType, bool allowLimbAfflictions = true) where T : Affliction
+        {
+            return GetAffliction(afflictionType, allowLimbAfflictions) as T;
+        }
+
         public Affliction GetAffliction(string afflictionType, Limb limb)
         {
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
