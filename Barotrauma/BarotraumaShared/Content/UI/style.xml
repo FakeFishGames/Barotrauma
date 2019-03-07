@@ -6,9 +6,9 @@
   
   <FocusIndicator texture="Content/UI/UI_Atlas2.png" sourcerect="112,784,448,224" rows="2" columns="4"/>
   
-  <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
-  <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
-  <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
+  <Font file="Content/Fonts/Roboto/Roboto-Medium.ttf" size="14"/>
+  <SmallFont file="Content/Fonts/Roboto/Roboto-Bold.ttf" size="12"/>
+  <LargeFont file="Content/Fonts/WorkSans/WorkSans-ExtraBold.ttf" size="22"/>
 
   <InnerGlow
     color="255,255,255,204"
@@ -136,7 +136,7 @@
   <MainMenuGUIButton
     hovercolor="44,208,150,255">
 
-    <Sprite texture="Content/UI/UI_MainMenu.png" state="Hover" sourcerect="513,3,507,36" tile="false"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" state="Hover" sourcerect="513,3,507,36" tile="false" maintainaspectratio="true"/>
 
     <GUITextBlock
       textcolor="255,255,255,255"
