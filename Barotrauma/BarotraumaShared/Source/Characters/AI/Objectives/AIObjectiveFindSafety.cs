@@ -218,7 +218,7 @@ namespace Barotrauma
                 priority = 5;
                 return;
             }
-            if (character.Oxygen < 100) { priority = 100; }
+            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { priority = 100; }
             currenthullSafety = OverrideCurrentHullSafety ?? HumanAIController.GetHullSafety(character.CurrentHull);
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
