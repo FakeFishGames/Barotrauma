@@ -118,8 +118,21 @@ namespace Barotrauma
                 throw new Exception("No submarines are available.");
             }
 
-            selectedSub = subs.First(s => !s.HasTag(SubmarineTag.Shuttle));
+            selectedSub = subs.FirstOrDefault(s => !s.HasTag(SubmarineTag.Shuttle));
+            if (selectedSub == null)
+            {
+                //no subs available, use a shuttle
+                DebugConsole.ThrowError("No full-size submarines available - choosing a shuttle as the main submarine.");
+                selectedSub = subs[0];
+            }
+
             selectedShuttle = subs.First(s => s.HasTag(SubmarineTag.Shuttle));
+            if (selectedShuttle == null)
+            {
+                //no shuttles available, use a sub
+                DebugConsole.ThrowError("No shuttles available - choosing a full-size submarine as the shuttle.");
+                selectedShuttle = subs[0];
+            }
 
             DebugConsole.NewMessage("Selected sub: " + SelectedSub.Name, Color.White);
             DebugConsole.NewMessage("Selected shuttle: " + SelectedShuttle.Name, Color.White);
