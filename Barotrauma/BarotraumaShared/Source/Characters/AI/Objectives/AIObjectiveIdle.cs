@@ -46,7 +46,7 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
-            if (currentTarget == null && (IsForbidden(character.CurrentHull) || !IsSafe(character.CurrentHull)))
+            if (currentTarget == null && (IsForbidden(character.CurrentHull) || HumanAIController.UnsafeHulls.Contains(character.CurrentHull)))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;
@@ -177,11 +177,11 @@ namespace Barotrauma
                 hullWeights.Clear();
                 foreach (var hull in Hull.hullList)
                 {
+                    if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                     if (hull.Submarine == null) { continue; }
                     if (hull.Submarine.TeamID != character.TeamID) { continue; }
                     // If the character is inside, only take connected hulls into account.
                     if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                    if (!IsSafe(hull)) { continue; }
                     if (IsForbidden(hull)) { continue; }
                     // Ignore hulls that are too low to stand inside
                     if (character.AnimController is HumanoidAnimController animController)
@@ -201,8 +201,6 @@ namespace Barotrauma
             }
             return targetHull;
         }
-
-        private bool IsSafe(Hull hull) => AIObjectiveFindSafety.GetHullSafety(hull, character) > AIObjectiveFindSafety.HULL_SAFETY_THRESHOLD;
 
         private bool IsForbidden(Hull hull)
         {

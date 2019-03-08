@@ -16,7 +16,6 @@ namespace Barotrauma
         const float priorityIncrease = 25;
         const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
-        public const float HULL_SAFETY_THRESHOLD = 50;
 
         private List<Hull> unreachable = new List<Hull>();
 
@@ -65,7 +64,7 @@ namespace Barotrauma
             {
                 searchHullTimer -= deltaTime;
             }
-            else if (currenthullSafety < HULL_SAFETY_THRESHOLD)
+            else if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 var bestHull = FindBestHull();
                 if (bestHull != null)
@@ -155,13 +154,14 @@ namespace Barotrauma
             float bestValue = currenthullSafety;
             foreach (Hull hull in Hull.hullList)
             {
+                if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (unreachable.Contains(hull)) { continue; }
                 foreach (var sub in Submarine.Loaded)
                 {
                     if (sub.TeamID != character.TeamID) { continue; }
                     // If the character is inside, only take connected hulls into account.
                     if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                    float hullValue = GetHullSafety(hull, character);
+                    float hullValue = HumanAIController.GetHullSafety(hull, character);
                     if (character.Submarine == null)
                     {
                         if (hull.RoomName?.ToLowerInvariant() == "airlock")
@@ -219,13 +219,8 @@ namespace Barotrauma
                 return;
             }
             if (character.Oxygen < 100) { priority = 100; }
-            bool ignoreFire = 
-                character.AIController.ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || 
-                character.AIController.ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
-            bool ignoreWater = HumanAIController.HasDivingSuit(character);
-            bool ignoreOxygen = ignoreWater || HumanAIController.HasDivingGear(character);
-            currenthullSafety = OverrideCurrentHullSafety ?? GetHullSafety(character.CurrentHull, character, ignoreWater, ignoreOxygen, ignoreFire);
-            if (currenthullSafety > HULL_SAFETY_THRESHOLD)
+            currenthullSafety = OverrideCurrentHullSafety ?? HumanAIController.GetHullSafety(character.CurrentHull);
+            if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 priority -= priorityDecrease * deltaTime;
             }
@@ -239,27 +234,6 @@ namespace Barotrauma
             {
                 priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
             }
-        }
-
-        public static float GetHullSafety(Hull hull, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
-        {
-            if (hull == null) { return 0; }
-            if (hull.LethalPressure > 0 && character.PressureProtection <= 0) { return 0; }
-            float oxygenFactor = ignoreOxygen ? 1 : MathHelper.Lerp(0.25f, 1, hull.OxygenPercentage / 100);
-            float waterFactor =  ignoreWater ? 1 : MathHelper.Lerp(1, 0.25f, hull.WaterPercentage / 100);
-            if (!character.NeedsAir)
-            {
-                oxygenFactor = 1;
-                waterFactor = 1;
-            }
-            // Even the smallest fire reduces the safety by 50%
-            float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
-            float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
-            int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
-            // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
-            float enemyFactor = ignoreEnemies ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
-            float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
-            return MathHelper.Clamp(safety * 100, 0, 100);
         }
     }
 }
