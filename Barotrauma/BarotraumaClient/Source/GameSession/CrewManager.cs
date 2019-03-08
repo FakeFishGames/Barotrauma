@@ -1313,18 +1313,20 @@ namespace Barotrauma
             return CharacterHealth.OpenHealthWindow == null;
         }
 
-        private bool ReportButtonClicked(GUIButton button, object userData)
-        {
-            //order targeted to all characters
-            Order order = userData as Order;
-            if (order.TargetAllCharacters)
-            {
-                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
-                AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
-                SetCharacterOrder(null, order, "", Character.Controlled);
-            }
-            return true;
-        }
+        // TODO: remove? not used at all
+        //private bool ReportButtonClicked(GUIButton button, object userData)
+        //{
+        //    //order targeted to all characters
+        //    Order order = userData as Order;
+        //    if (order.TargetAllCharacters)
+        //    {
+        //        if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
+        //        AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+        //        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
+        //        SetCharacterOrder(null, order, "", Character.Controlled);
+        //    }
+        //    return true;
+        //}
 
         private void ToggleReportButton(string orderAiTag, bool enabled)
         {
