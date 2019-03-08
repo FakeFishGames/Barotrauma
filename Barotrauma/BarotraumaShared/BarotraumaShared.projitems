@@ -3025,6 +3025,9 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Humpback.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Humpback_LadderTest.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Muikku.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -3040,6 +3043,9 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Remora.sub">
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\RemoraDrone.sub">
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Remora_LadderTest.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Typhon.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
