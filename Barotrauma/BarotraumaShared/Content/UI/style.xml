@@ -5,10 +5,22 @@
   <UIGlow texture="Content/UI/InnerGlow.png"  sourcerect ="0,0,512,384" slice="128,128,384,256"/>
   
   <FocusIndicator texture="Content/UI/UI_Atlas2.png" sourcerect="112,784,448,224" rows="2" columns="4"/>
-  
+
+  <!-- LEGACY
+  <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
+  <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
+  <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
+  -->
+
   <Font file="Content/Fonts/Roboto/Roboto-Medium.ttf" size="14"/>
   <SmallFont file="Content/Fonts/Roboto/Roboto-Bold.ttf" size="12"/>
   <LargeFont file="Content/Fonts/WorkSans/WorkSans-ExtraBold.ttf" size="22"/>
+
+  <!-- Covers rest of the languages which Roboto or WorkSans doesn't
+  <Font file="Content/Fonts/NotoSans/NotoSans-Medium.ttf" size="14"/>
+  <SmallFont file="Content/Fonts/NotoSans/NotoSans-Bold.ttf" size="12"/>
+  <LargeFont file="Content/Fonts/NotoSans/NotoSans-ExtraBold.ttf" size="22"/>
+  -->
 
   <InnerGlow
     color="255,255,255,204"
@@ -136,7 +148,7 @@
   <MainMenuGUIButton
     hovercolor="44,208,150,255">
 
-    <Sprite texture="Content/UI/UI_MainMenu.png" state="Hover" sourcerect="513,3,507,36" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" state="Hover" sourcerect="513,3,507,36" tile="false"/>
 
     <GUITextBlock
       textcolor="255,255,255,255"
