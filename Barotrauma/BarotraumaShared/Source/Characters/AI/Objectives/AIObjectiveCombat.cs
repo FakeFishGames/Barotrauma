@@ -121,6 +121,7 @@ namespace Barotrauma
 
         private void Escape(float deltaTime)
         {
+            // TODO: just let the find safety run?
             if (escapeObjective == null)
             {
                 escapeObjective = new AIObjectiveFindSafety(character);

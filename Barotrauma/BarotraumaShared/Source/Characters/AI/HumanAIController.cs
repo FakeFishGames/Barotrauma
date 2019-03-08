@@ -20,6 +20,11 @@ namespace Barotrauma
         private float crouchRaycastTimer;
         const float CrouchRaycastInterval = 1.0f;
 
+        public const float HULL_SAFETY_THRESHOLD = 50;
+
+        // TODO: update the list when someone gives a report
+        public HashSet<Hull> UnsafeHulls { get; private set; } = new HashSet<Hull>();
+
         private SteeringManager outsideSteering, insideSteering;
 
         public override AIObjectiveManager ObjectiveManager
@@ -196,6 +201,18 @@ namespace Barotrauma
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
+
+            if (Character.CurrentHull != null)
+            {
+                if (GetHullSafety(Character.CurrentHull, Character) > HULL_SAFETY_THRESHOLD)
+                {
+                    UnsafeHulls.Remove(Character.CurrentHull);
+                }
+                else
+                {
+                    UnsafeHulls.Add(Character.CurrentHull);
+                }
+            }
         }
 
         protected void ReportProblems()
@@ -349,6 +366,35 @@ namespace Barotrauma
                 (containedTag == null ||
                 (item.ContainedItems != null &&
                 item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
+        }
+
+        public float GetHullSafety(Hull hull)
+        {
+            bool ignoreFire = ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
+            bool ignoreWater = HasDivingSuit(Character);
+            bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
+            return GetHullSafety(hull, Character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies: false);
+        }
+
+        public static float GetHullSafety(Hull hull, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
+        {
+            if (hull == null) { return 0; }
+            if (hull.LethalPressure > 0 && character.PressureProtection <= 0) { return 0; }
+            float oxygenFactor = ignoreOxygen ? 1 : MathHelper.Lerp(0.25f, 1, hull.OxygenPercentage / 100);
+            float waterFactor = ignoreWater ? 1 : MathHelper.Lerp(1, 0.25f, hull.WaterPercentage / 100);
+            if (!character.NeedsAir)
+            {
+                oxygenFactor = 1;
+                waterFactor = 1;
+            }
+            // Even the smallest fire reduces the safety by 50%
+            float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
+            float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
+            int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
+            // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
+            float enemyFactor = ignoreEnemies ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
+            float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
+            return MathHelper.Clamp(safety * 100, 0, 100);
         }
     }
 }
