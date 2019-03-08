@@ -85,10 +85,10 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
             }
 
-            if (Character.IsKeyDown(InputType.Aim))
-            {
-                GUI.DrawLine(spriteBatch, pos, new Vector2(Character.CursorWorldPosition.X, -Character.CursorWorldPosition.Y), Color.Yellow, width: 4);
-            }
+            //if (Character.IsKeyDown(InputType.Aim))
+            //{
+            //    GUI.DrawLine(spriteBatch, pos, new Vector2(Character.CursorWorldPosition.X, -Character.CursorWorldPosition.Y), Color.Yellow, width: 4);
+            //}
         }
     }
 }
