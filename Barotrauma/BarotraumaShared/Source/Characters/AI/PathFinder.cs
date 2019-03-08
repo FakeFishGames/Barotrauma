@@ -155,7 +155,7 @@ namespace Barotrauma
             }
         }
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, string errorMsgStr)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, string errorMsgStr = null)
         {            
             float closestDist = 0.0f;
             PathNode startNode = null;

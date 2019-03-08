@@ -68,7 +68,7 @@ namespace Barotrauma
             else if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 var bestHull = FindBestHull();
-                if (bestHull != null)
+                if (bestHull != null && bestHull != currentHull)
                 {
                     if (goToObjective != null)
                     {
@@ -107,23 +107,22 @@ namespace Barotrauma
             {
                 //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
                 // -> attempt to manually steer away from hazards
-                bool ignoreY = character.SelectedConstruction?.GetComponent<Ladder>() == null;
                 Vector2 escapeVel = Vector2.Zero;
                 foreach (FireSource fireSource in currentHull.FireSources)
                 {
                     Vector2 dir = character.Position - fireSource.Position;
                     float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
-                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, ignoreY ? 0 : Math.Sign(dir.Y) * distMultiplier);                                      
+                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);                                      
                 }
 
-               foreach (Character enemy in Character.CharacterList)
+                foreach (Character enemy in Character.CharacterList)
                 {
                     if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious && 
                         (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
                     {
                         Vector2 dir = character.Position - enemy.Position;
                         float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
-                        escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, ignoreY ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                        escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
                     }
                 }
 
@@ -155,19 +154,16 @@ namespace Barotrauma
             float bestValue = currenthullSafety;
             foreach (Hull hull in Hull.hullList)
             {
-                if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (unreachable.Contains(hull)) { continue; }
                 foreach (var sub in Submarine.Loaded)
                 {
-                    if (sub.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                    float hullValue = HumanAIController.GetHullSafety(hull, character);
+                    float hullSafety = 0;
                     if (character.Submarine == null)
                     {
+                        // Outside
                         if (hull.RoomName?.ToLowerInvariant() == "airlock")
                         {
-                            hullValue = 100;
+                            hullSafety = 100;
                         }
                         else
                         {
@@ -176,30 +172,43 @@ namespace Barotrauma
                             {
                                 if (item.CurrentHull == hull && item.HasTag("airlock"))
                                 {
-                                    hullValue = 100;
+                                    hullSafety = 100;
                                     break;
                                 }
                             }
                         }
 
                         // Huge preference for closer targets
-                        float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
-                        hullValue *= distanceFactor;
+                        float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
+                        hullSafety *= distanceFactor;
+                        // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                        if (sub.TeamID != character.TeamID && sub.TeamID != Character.TeamType.FriendlyNPC)
+                        {
+                            hullSafety /= 10;
+                        }
                     }
                     else
                     {
+                        // Inside
+                        hullSafety = HumanAIController.GetHullSafety(hull, character);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                        int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
                         // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
                         float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
                         float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
-                        hullValue *= distanceFactor;
-                        //// Slight preference over hulls that are closer
-                        //hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X)) * 0.1f;
-                        //hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)) * 0.2f;
+                        hullSafety *= distanceFactor;
+                        // Each unsafe node reduces the hull safety value.
+                        hullSafety /= 1 + unsafeNodes;
+                        // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                        if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
+                        {
+                            hullSafety /= 10;
+                        }
                     }
-                    if (hullValue > bestValue)
+                    if (hullSafety > bestValue)
                     {
                         bestHull = hull;
-                        bestValue = hullValue;
+                        bestValue = hullSafety;
                     }
                 }
             }

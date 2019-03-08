@@ -25,6 +25,7 @@ namespace Barotrauma
         public AIObjective CurrentSubObjective { get; private set; }
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
+        protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
 
         public string Option
         {

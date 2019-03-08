@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -33,8 +34,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-            if (pathSteering == null) return;
+            if (PathSteering == null) return;
 
             //don't keep dragging others when idling
             if (character.SelectedCharacter != null)
@@ -61,18 +61,13 @@ namespace Barotrauma
 
                 if (currentTarget != null)
                 {
-                    Vector2 pos = character.SimPosition;
-                    if (character != null && character.Submarine == null) { pos -= Submarine.MainSub.SimPosition; }
-
-                    string errorMsg = string.Empty;
+                    string errorMsg = null;
 #if DEBUG
                     bool isRoomNameFound = currentTarget.RoomName != null;
                     errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.RoomName : currentTarget.ToString()) + ")";
 #endif
-                    var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition, errorMsg);
-                    // Path cost can sometimes be more than 1000. This causes the character to be stuck. We should ignore the target instead.
-                    //if (path.Cost > 1000.0f && character.AnimController.CurrentHull != null) { return; }
-                    pathSteering.SetPath(path);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsg);
+                    PathSteering.SetPath(path);
                 }
 
                 newTargetTimer = currentTarget == null ? 5.0f : 15.0f;
@@ -84,14 +79,14 @@ namespace Barotrauma
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (pathSteering == null || (pathSteering.CurrentPath != null &&
-                (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable || pathSteering.CurrentPath.HasOutdoorsNodes)))
+            if (PathSteering == null || (PathSteering.CurrentPath != null &&
+                (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
             {
                 standStillTimer -= deltaTime;
                 if (standStillTimer > 0.0f)
                 {
                     walkDuration = Rand.Range(1.0f, 5.0f);
-                    pathSteering.Reset();
+                    PathSteering.Reset();
                     return;
                 }
 
@@ -110,24 +105,24 @@ namespace Barotrauma
                     {
                         if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
                         {
-                            pathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist) * character.AnimController.GetCurrentSpeed(false));
+                            PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist) * character.AnimController.GetCurrentSpeed(false));
                         }
                         else
                         {
-                            pathSteering.Reset();
+                            PathSteering.Reset();
                             return;
                         }
                     }
                     else if (leftDist < WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
-                        pathSteering.WanderAngle = 0.0f;
+                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
+                        PathSteering.WanderAngle = 0.0f;
                         return;
                     }
                     else if (rightDist < WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
-                        pathSteering.WanderAngle = MathHelper.Pi;
+                        PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
+                        PathSteering.WanderAngle = MathHelper.Pi;
                         return;
                     }
                 }
@@ -191,6 +186,13 @@ namespace Barotrauma
                             continue;
                         }
                     }
+                    // Check that there is no unsafe or forbidden hulls on the way to the target
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                    if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
+
+                    // If we want to do a steering check, we should do it here, before setting the path
+                    //if (path.Cost > 1000.0f) { continue; }
+
                     if (!targetHulls.Contains(hull))
                     {
                         targetHulls.Add(hull);

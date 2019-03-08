@@ -27,6 +27,8 @@ namespace Barotrauma
 
         private SteeringManager outsideSteering, insideSteering;
 
+        public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
+
         public override AIObjectiveManager ObjectiveManager
         {
             get { return objectiveManager; }
@@ -103,13 +105,15 @@ namespace Barotrauma
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
                 (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
-            var indoorSteering = steeringManager as IndoorsSteeringManager;
-            var currPath = indoorSteering?.CurrentPath;
-            if (currPath != null && currPath.CurrentNode != null)
+            if (steeringManager == insideSteering)
             {
-                if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
+                var currPath = PathSteering.CurrentPath;
+                if (currPath != null && currPath.CurrentNode != null)
                 {
-                    ignorePlatforms = true;
+                    if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
+                    {
+                        ignorePlatforms = true;
+                    }
                 }
             }
 
@@ -148,7 +152,7 @@ namespace Barotrauma
                 bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = objectiveManager.CurrentObjective.KeepDivingGearOn;
 
-                bool removeDivingSuit = (oxygenLow && !highPressure) || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && indoorSteering != null && !indoorSteering.InStairs);
+                bool removeDivingSuit = (oxygenLow && !highPressure) || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs);
                 if (removeDivingSuit)
                 {
                     var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
