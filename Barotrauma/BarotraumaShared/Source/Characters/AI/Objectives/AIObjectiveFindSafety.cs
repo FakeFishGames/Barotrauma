@@ -52,6 +52,7 @@ namespace Barotrauma
                 if (divingGearObjective.IsCompleted())
                 {
                     divingGearObjective = null;
+                    priority = 0;
                 }
                 else if (divingGearObjective.CanBeCompleted)
                 {
