@@ -204,14 +204,7 @@ namespace Barotrauma
 
             if (Character.CurrentHull != null)
             {
-                if (GetHullSafety(Character.CurrentHull, Character) > HULL_SAFETY_THRESHOLD)
-                {
-                    UnsafeHulls.Remove(Character.CurrentHull);
-                }
-                else
-                {
-                    UnsafeHulls.Add(Character.CurrentHull);
-                }
+                PropagateHullSafety(Character, Character.CurrentHull);
             }
         }
 
@@ -368,8 +361,38 @@ namespace Barotrauma
                 item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
         }
 
+        /// <summary>
+        /// Updates the hull safety for all ai characters in the team.
+        /// </summary>
+        public static void PropagateHullSafety(Character character, Hull hull)
+        {
+            foreach (var c in Character.CharacterList)
+            {
+                if (c.TeamID == character.TeamID)
+                {
+                    if (c.AIController is HumanAIController humanAi)
+                    {
+                        humanAi.RefreshHullSafety(hull);
+                    }
+                }
+            }
+        }
+
+        private void RefreshHullSafety(Hull hull)
+        {
+            if (GetHullSafety(hull) > HULL_SAFETY_THRESHOLD)
+            {
+                UnsafeHulls.Remove(hull);
+            }
+            else
+            {
+                UnsafeHulls.Add(hull);
+            }
+        }
+
         public float GetHullSafety(Hull hull)
         {
+            if (hull == null) { return 0; }
             bool ignoreFire = ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
             bool ignoreWater = HasDivingSuit(Character);
             bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
