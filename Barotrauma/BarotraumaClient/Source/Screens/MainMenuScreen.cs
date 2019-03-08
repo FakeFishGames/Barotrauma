@@ -204,9 +204,9 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.0f), optionHolder.RectTransform), style: null);
 
-            optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), parent: optionHolder.RectTransform));
+            optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) });
 
-            optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: optionButtons.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) })
+            optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: optionButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
