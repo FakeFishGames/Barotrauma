@@ -1005,6 +1005,8 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPermissions.SelectSub:
+                    bool isShuttle = inc.ReadBoolean();
+                    inc.ReadPadBits();
                     UInt16 subIndex = inc.ReadUInt16();
                     var subList = GameMain.NetLobbyScreen.GetSubList();
                     if (subIndex >= subList.Count)
@@ -1013,7 +1015,14 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        GameMain.NetLobbyScreen.SelectedSub = subList[subIndex];
+                        if (isShuttle)
+                        {
+                            GameMain.NetLobbyScreen.SelectedShuttle = subList[subIndex];
+                        }
+                        else
+                        {
+                            GameMain.NetLobbyScreen.SelectedSub = subList[subIndex];
+                        }
                     }
                     break;
                 case ClientPermissions.SelectMode:

@@ -428,7 +428,14 @@ namespace Barotrauma
                     return true;
                 }
             };
-            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10);
+            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10)
+            {
+                OnSelected = (component, obj) =>
+                {
+                    GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: true);
+                    return true;
+                }
+            };
 
             //gamemode ------------------------------------------------------------------
 
@@ -1227,7 +1234,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
-                        GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component));
+                        GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
                         return true;
                     }
                     return false;
