@@ -66,7 +66,7 @@ namespace Barotrauma
             campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), campaignNavigation.RectTransform),
-                TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock");
+                TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
             campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
 
@@ -78,6 +78,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.LoadGame,
                 OnClicked = (tb, userdata) =>
                 {
@@ -88,6 +89,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("NewGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.NewGame,
                 OnClicked = (tb, userdata) =>
                 {
@@ -110,7 +112,7 @@ namespace Barotrauma
             multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), multiplayerNavigation.RectTransform),
-                TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock");
+                TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
             multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
 
@@ -122,6 +124,7 @@ namespace Barotrauma
 
             joinServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), multiplayerList.RectTransform), TextManager.Get("JoinServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.JoinServer,
                 OnClicked = (tb, userdata) =>
                 {
@@ -131,6 +134,7 @@ namespace Barotrauma
             };
             hostServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), multiplayerList.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.HostServer,
                 OnClicked = (tb, userdata) =>
                 {
@@ -153,7 +157,7 @@ namespace Barotrauma
             customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), customizeNavigation.RectTransform),
-                TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock");
+                TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
             customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
 
@@ -165,6 +169,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.SubmarineEditor,
                 OnClicked = (tb, userdata) =>
                 {
@@ -175,6 +180,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.CharacterEditor,
                 OnClicked = (tb, userdata) =>
                 {
@@ -187,6 +193,7 @@ namespace Barotrauma
             {
                 steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
                 {
+                    ForceUpperCase = true,
                     Enabled = false,
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
@@ -214,11 +221,13 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("SettingsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
             };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
+                ForceUpperCase = true,
                 OnClicked = QuitClicked
             };
 
@@ -760,7 +769,7 @@ namespace Barotrauma
             }; 
             GUIComponent parent = paddedFrame;
             
-            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);

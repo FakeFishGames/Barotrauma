@@ -53,7 +53,7 @@ namespace Barotrauma
             menu = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, Anchor.Center));
 
             new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.133f), menu.RectTransform, Anchor.TopCenter),
-                TextManager.Get("JoinServer"), textAlignment: Alignment.Left, font: GUI.LargeFont);
+                TextManager.Get("JoinServer"), textAlignment: Alignment.Left, font: GUI.LargeFont) { ForceUpperCase = true };
 
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.03f) }, style: null);
 
