@@ -338,7 +338,7 @@ namespace Barotrauma
             var midInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
                 { RelativeSpacing = 0.02f, Stretch = true };
 
-            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), infoFrameContent.RectTransform, Anchor.TopRight))
+            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.9f), infoFrameContent.RectTransform, Anchor.TopRight))
                 { RelativeSpacing = 0.02f, Stretch = true };
             
             var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), rightInfoColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -633,6 +633,12 @@ namespace Barotrauma
                 TextGetter = AutoRestartText
             };
             
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), rightInfoColumn.RectTransform),
+                TextManager.Get("ReadyToStartTickBox"))
+            {
+                Visible = false
+            };
+
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
@@ -644,12 +650,6 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
-
-            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), infoFrameContent.RectTransform, Anchor.BottomRight),
-                TextManager.Get("ReadyToStartTickBox"), GUI.SmallFont)
-            {
-                Visible = false
-            };
 
             campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                 TextManager.Get("CampaignView"), style: "GUIButtonLarge")
@@ -731,7 +731,7 @@ namespace Barotrauma
             if (GameMain.Client != null)
             {
                 spectateButton.Visible = GameMain.Client.GameStarted;
-                ReadyToStartBox.Visible = !GameMain.Client.GameStarted && !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+                ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
@@ -841,7 +841,6 @@ namespace Barotrauma
 
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
-            ReadyToStartBox.Visible = !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !campaignContainer.Visible;
             ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
