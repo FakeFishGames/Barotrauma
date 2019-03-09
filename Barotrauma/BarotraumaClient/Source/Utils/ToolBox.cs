@@ -164,7 +164,7 @@ namespace Barotrauma
                 if (i < words.Length - 1) wrappedText.Append(" ");
             }
 
-            return wrappedText.ToString();
+            return wrappedText.ToString().Replace(" \n ", "\n");
         }
     }
 }
