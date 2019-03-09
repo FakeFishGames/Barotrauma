@@ -117,6 +117,12 @@ namespace Barotrauma
             set { textBlock.Text = value; }
         }
 
+        public bool ForceUpperCase
+        {
+            get { return textBlock.ForceUpperCase; }
+            set { textBlock.ForceUpperCase = value; }
+        }
+
         public override string ToolTip
         {
             get
