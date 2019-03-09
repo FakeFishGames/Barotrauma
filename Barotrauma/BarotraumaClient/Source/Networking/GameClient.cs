@@ -2168,8 +2168,11 @@ namespace Barotrauma.Networking
 
             if (EndVoteCount > 0)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                    TextManager.Get("EndRoundVotes").Replace("[y]", EndVoteCount.ToString()).Replace("[n]", (EndVoteMax - EndVoteCount).ToString()),
+                string endVoteText = TextManager.Get("EndRoundVotes")
+                    .Replace("[y]", EndVoteCount.ToString())
+                    .Replace("[n]", (EndVoteMax - EndVoteCount).ToString());
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 10.0f - GUI.SmallFont.MeasureString(endVoteText).X, 40),
+                    endVoteText,
                     Color.White,
                     font: GUI.SmallFont);
             }
