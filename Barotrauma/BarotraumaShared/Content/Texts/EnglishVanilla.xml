@@ -153,6 +153,8 @@
   <WorkshopItemAddFiles>Add files...</WorkshopItemAddFiles>
   <WorkshopItemPublish>Publish item</WorkshopItemPublish>
   <WorkshopItemUpdate>Update item</WorkshopItemUpdate>
+  <WorkshopItemUpdated>Workshop item [itemname] was updated succesfully.</WorkshopItemUpdated>
+  <WorkshopItemUpdateFailed>Failed to update workshop item [itemname]. [errormessage]</WorkshopItemUpdateFailed>
   <WorkshopItemDelete>Delete item</WorkshopItemDelete>
   <WorkshopItemDeleteTooltip>Deletes the item from Steam Workshop.</WorkshopItemDeleteTooltip>
   <WorkshopItemDeleteVerification>Are you sure you want to delete the item "[itemname]" from the Steam Workshop?</WorkshopItemDeleteVerification>
@@ -250,6 +252,7 @@
   <VoiceMode.Activity>Voice activity</VoiceMode.Activity>
   <VoiceMode.ActivityToolTip>Voice activity is sent whenever the sound coming through surpasses the noise gate threshold.</VoiceMode.ActivityToolTip>
   <NoiseGateThreshold>Noise gate threshold</NoiseGateThreshold>
+  <VoipCaptureDeviceNotFound>Could not start voice capture, suitable capture device not found.</VoipCaptureDeviceNotFound>
 
   <!-- Controls tab -->
   <SettingsTab.Controls>Controls</SettingsTab.Controls>
@@ -677,6 +680,7 @@
   <ServerMessage.ClientLeftServer>[client] has left the server.</ServerMessage.ClientLeftServer>
   <ServerMessage.HasVotedToKick>[initiator] has voted to kick [target].</ServerMessage.HasVotedToKick>
   <ServerMessage.KickedBy>Kicked by [initiator].</ServerMessage.KickedBy>
+  <ServerMessage.BannedBy>Banned by [initiator].</ServerMessage.BannedBy>
   <ServerMessage.BannedFromServer>[client] has been banned from the server.</ServerMessage.BannedFromServer>
   <ServerMessage.HasDisconnected>[client] has disconnected.</ServerMessage.HasDisconnected>
   <ServerMessage.ExcessiveDesync>You have been disconnected because of excessive desync.</ServerMessage.ExcessiveDesync>
@@ -723,6 +727,7 @@
   <AddSubButton>Add submarine</AddSubButton>
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
   <HoldToLink>Hold space and click with the mouse to link to another item.</HoldToLink>
+  <ReloadSprite>Reload Sprite</ReloadSprite>
   <AllowedLinks>Allowed links</AllowedLinks>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>

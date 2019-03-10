@@ -69,7 +69,8 @@ namespace Barotrauma
 
         public bool MatchesAffliction(Affliction affliction)
         {
-            if (AfflictionIdentifiers.Length == 0) { return true; }
+            //if no identifiers or types have been defined, the damage modifier affects all afflictions
+            if (AfflictionIdentifiers.Length == 0 && AfflictionTypes.Length == 0) { return true; }
 
             foreach (string afflictionName in AfflictionIdentifiers)
             {

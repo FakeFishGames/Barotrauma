@@ -1,4 +1,27 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.5
+---------------------------------------------------------------------------------------------------------
+
+Bugfixes:
+- Fixed alien vents crashing the game when there's a character nearby.
+- Fixed chatbox retaining the radio message prefix after being deselected.
+- Push-to-talk doesn't trigger when typin in a text box.
+- Fixed some server log messages and texts sent to clients being incorrect (= showing the tags that are
+used to fetch the texts from the language files instead of the actual texts).
+- Fixed AI orders that target a specific item (such as the order to power up the reactor) not working in
+multiplayer.
+- Fixed crashes when attempting to use voice capture or change voice capture settings when there are no 
+suitable capture devices available.
+- Fixed clients not being notified when an AI character shuts down the reactor.
+- Fixed deconstructors staying active without power in multiplayer.
+- Fixed sonar labels going outside the screen when at the left side of the display.
+
+Additions & changes:
+- Added some supplies to vanilla submarines.
+- Balanced item deterioration rates and adjusted neutral ballast settings in vanilla subs.
+- Increased the impact tolerance of crawlers to prevent them from killing themselves by bumping into walls.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.4
 ---------------------------------------------------------------------------------------------------------
 
@@ -56,6 +79,7 @@ Additions:
 - Some new random events.
 - A bunch of new afflictions and medical items.
 - Some new item sprites.
+- A couple of new cargo missions.
 - Added some new items that can be crafted from alien materials.
 - Display linked hulls as one room on the status monitor.
 - Tons of new sound effects.

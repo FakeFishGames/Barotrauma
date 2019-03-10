@@ -408,37 +408,41 @@
   </AfflictionBleeding>
 
   <Affliction
-  name="Radiation sickness"
-  identifier="radiationsickness"
-  description="Burns and sores can be seen on patient's skin. They seem to be spreading."
-  type="poison"
-  causeofdeathdescription="Died of radiation sickness."
-  selfcauseofdeathdescription="You have died of radiation sickness."
-  limbspecific="false"
-  indicatorlimb="Torso"
-  showiconthreshold="10"
-  maxstrength="100">
+    name="Radiation sickness"
+    identifier="radiationsickness"
+    description="Burns and sores can be seen on patient's skin. They seem to be spreading."
+    type="poison"
+    causeofdeathdescription="Died of radiation sickness."
+    selfcauseofdeathdescription="You have died of radiation sickness."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="10"
+    maxstrength="100">
     <!-- Cause burns depending on strength -->
     <Effect minstrength="0" maxstrength="25">
-      <StatusEffect target="Character" setvalue="true">
+      <StatusEffect target="Character">
         <Affliction identifier="burn" amount="0.025" />
       </StatusEffect>
     </Effect>
 
     <Effect minstrength="25" maxstrength="50">
-      <StatusEffect target="Character" setvalue="true">
+      <StatusEffect target="Character">
         <Affliction identifier="burn" amount="0.05" />
       </StatusEffect>
     </Effect>
 
-    <Effect minstrength="50" maxstrength="75">
-      <StatusEffect target="Character" setvalue="true">
+    <Effect minstrength="50" maxstrength="75"
+      minchromaticaberration="0.0"
+      maxchromaticaberration="1.0">
+      <StatusEffect target="Character">
         <Affliction identifier="burn" amount="0.075" />
       </StatusEffect>
     </Effect>
 
-    <Effect minstrength="75" maxstrength="100">
-      <StatusEffect target="Character" setvalue="true">
+    <Effect minstrength="75" maxstrength="100"
+      minchromaticaberration="1.0"
+      maxchromaticaberration="5.0">
+      <StatusEffect target="Character">
         <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
     </Effect>

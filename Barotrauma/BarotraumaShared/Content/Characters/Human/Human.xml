@@ -93,6 +93,9 @@
     <Wearable type="FaceAttachment" headid="1" gender="male" race="white" commonness="0.2">
       <sprite name="White Male 1 Scars1" texture="Content/Characters/Human/head_male_white1.png" sheetindex="2,2"/>
     </Wearable>
+    <Wearable type="Husk" headid="1" gender="male" race="white">
+      <sprite name="White Male 1 Husk" texture="Content/Characters/Human/head_male_white1.png" sheetindex="2,0"/>
+    </Wearable>
 
     <Wearable type="Hair" headid="2" gender="male" race="white" disallow="Beard2, Moustache2">
       <sprite name="White Male 2 Hair1" texture="Content/Characters/Human/head_male_white2.png" sheetindex="0,1"/>

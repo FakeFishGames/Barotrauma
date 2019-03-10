@@ -1,6 +1,6 @@
 <locationtypes>
   <None
-    identifier="NaturalFormation"
+    identifier="None"
     namefile="Content/Map/locationNames.txt"    
     commonnessperzone="1: 5.0, 2: 5.0, 3: 5.0, 4: 5.0, 5: 5.0, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
 
@@ -22,7 +22,7 @@
   </None>
 
   <City
-    identifier="Colony"
+    identifier="City"
     namefile="Content/Map/cityNames.txt"
     commonnessperzone="1: 5.0"
     halo="0,1,0,0.3">
@@ -39,7 +39,7 @@
   </City>
 
   <Outpost
-    identifier="HabitationOutpost"
+    identifier="Outpost"
     namefile="Content/Map/cityNames.txt"
     commonnessperzone="2: 5.0, 3: 2.5"
     halo="0,1,0,0.2">
@@ -59,7 +59,7 @@
   </Outpost>
   
   <Military
-    identifier="MilitaryOutpost"
+    identifier="Military"
     namefile="Content/Map/locationNames.txt"
     commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
     halo="0,1,0,0.4">
@@ -76,7 +76,7 @@
   </Military>
 
   <Research
-    identifier="ResearchOutpost"
+    identifier="Research"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
     commonnessperzone="2: 1.25, 3: 2.5"
@@ -94,7 +94,7 @@
   </Research>
   
   <Mine
-    identifier="MiningOutpost"
+    identifier="Mine"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
     commonnessperzone="2: 1.25, 3: 2.5"
@@ -110,7 +110,7 @@
   </Mine>
 
   <Lair
-    identifier="BreedingGrounds"
+    identifier="Lair"
     namefile="Content/Map/alienNames.txt"
     commonnessperzone="1: 0.5, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.4">
@@ -123,7 +123,7 @@
   </Lair>
 
   <Ruins
-    identifier="AlienRuins"
+    identifier="Ruins"
     namefile="Content/Map/alienNames.txt"
     commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.2">

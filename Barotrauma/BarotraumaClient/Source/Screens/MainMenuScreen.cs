@@ -238,6 +238,12 @@ namespace Barotrauma
             GameAnalyticsManager.SetCustomDimension01("");
         }
 
+        public override void Deselect()
+        {
+            base.Deselect();
+            SelectTab(null, 0);
+        }
+
         private bool SelectTab(GUIButton button, object obj)
         {
             if (obj is Tab)

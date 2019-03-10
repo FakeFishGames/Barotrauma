@@ -641,25 +641,20 @@ namespace Barotrauma
             AssignOnExecute("setclientcharacter", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
-
-                int separatorIndex = Array.IndexOf(args, ";");
-                if (separatorIndex == -1 || args.Length < 3)
+                
+                if (args.Length < 2)
                 {
-                    ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"");
+                    ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
                     return;
                 }
-
-                string[] argsLeft = args.Take(separatorIndex).ToArray();
-                string[] argsRight = args.Skip(separatorIndex + 1).ToArray();
-                string clientName = string.Join(" ", argsLeft);
-
-                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == clientName);
+                
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client \"" + clientName + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                 }
 
-                var character = FindMatchingCharacter(argsRight, false);
+                var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                 GameMain.Server.SetClientCharacter(client, character);
             });
 
@@ -1255,7 +1250,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     if (args.Length < 1) return;
-                    var character = FindMatchingCharacter(args, true);
+                    var character = FindMatchingCharacter(args, ignoreRemotePlayers: true, allowedRemotePlayer: client);
                     if (character != null)
                     {
                         GameMain.Server.SetClientCharacter(client, character);
@@ -1496,24 +1491,25 @@ namespace Barotrauma
                 "setclientcharacter",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    int separatorIndex = Array.IndexOf(args, ";");
-                    if (separatorIndex == -1 || args.Length < 3)
+                    if (args.Length < 2)
                     {
-                        GameMain.Server.SendConsoleMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"", senderClient);
+                        GameMain.Server.SendConsoleMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.", senderClient);
                         return;
                     }
 
-                    string[] argsLeft = args.Take(separatorIndex).ToArray();
-                    string[] argsRight = args.Skip(separatorIndex + 1).ToArray();
-                    string clientName = string.Join(" ", argsLeft);
-
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name == clientName);
+                    if (args.Length < 2)
+                    {
+                        ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                        return;
+                    }
+                    
+                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client \"" + clientName + "\" not found.", senderClient);
+                        GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient);
                     }
 
-                    var character = FindMatchingCharacter(argsRight, false);
+                    var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                     GameMain.Server.SetClientCharacter(client, character);
                 }
             );

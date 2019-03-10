@@ -145,6 +145,8 @@ namespace Barotrauma.Networking
                 float levelDifficulty = incMsg.ReadFloat();
                 if (levelDifficulty >= 0.0f) SelectedLevelDifficulty = levelDifficulty;
 
+                UseRespawnShuttle = incMsg.ReadBoolean();
+
                 bool changedAutoRestart = incMsg.ReadBoolean();
                 bool autoRestart = incMsg.ReadBoolean();
                 if (changedAutoRestart)

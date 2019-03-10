@@ -126,7 +126,20 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public WearableSprite HuskSprite { get; private set; }
+
+        public void LoadHuskSprite()
+        {
+            var info = character.Info;
+            if (info == null) { return; }
+            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Husk).FirstOrDefault();
+            if (element != null)
+            {
+                HuskSprite = new WearableSprite(element.Element("sprite"), WearableType.Husk);
+            }
+        }
+
         public float TextureScale => limbParams.Ragdoll.TextureScale;
 
         public Sprite DamagedSprite { get; private set; }
@@ -222,6 +235,7 @@ namespace Barotrauma
         public void RecreateSprite()
         {
             if (Sprite == null) { return; }
+            Sprite.Remove();
             var source = Sprite.SourceElement;
             Sprite = new Sprite(source, file: GetSpritePath(source));
         }
@@ -266,6 +280,10 @@ namespace Barotrauma
             float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
             float damageMultiplier = 1;
+            foreach (DamageModifier damageModifier in appliedDamageModifiers)
+            {
+                damageMultiplier *= damageModifier.DamageMultiplier;
+            }
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
@@ -275,7 +293,6 @@ namespace Barotrauma
                     {
                         damageSoundType = damageModifier.DamageSound;
                         SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
-                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
@@ -408,6 +425,11 @@ namespace Barotrauma
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (onlyDrawable == null)
             {
+                if (HuskSprite != null && (character.SpeciesName == "Humanhusk" || (character.SpeciesName == "Human" &&
+                    character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active)))
+                {
+                    DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
+                }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
                     DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
@@ -568,6 +590,9 @@ namespace Barotrauma
 
             OtherWearables?.ForEach(w => w.Sprite.Remove());
             OtherWearables = null;
+
+            HuskSprite?.Sprite.Remove();
+            HuskSprite = null;
         }
     }
 }

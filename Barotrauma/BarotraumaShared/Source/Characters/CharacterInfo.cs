@@ -462,7 +462,7 @@ namespace Barotrauma
         private List<XElement> faceAttachments;
 
         private IEnumerable<XElement> wearables;
-        private IEnumerable<XElement> Wearables
+        public IEnumerable<XElement> Wearables
         {
             get
             {
@@ -478,7 +478,18 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<XElement> FilterElementsByGenderAndRace(IEnumerable<XElement> elements)
+        public IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType)
+        {
+            return elements.Where(e =>
+            {
+                if (Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type != targetType) { return false; }
+                int headId = e.GetAttributeInt("headid", -1);
+                // if the head id is less than 1, the id is not valid and the condition is ignored.
+                return headId < 1 || headId == Head.HeadSpriteId;
+            });
+        }
+
+        public IEnumerable<XElement> FilterElementsByGenderAndRace(IEnumerable<XElement> elements)
         {
             if (elements == null) { return elements; }
             return elements.Where(w =>
@@ -667,17 +678,6 @@ namespace Barotrauma
                     var weights = GetWeights(filtered).ToList();
                     var element = ToolBox.SelectWeightedRandom(filtered, weights, Rand.RandSync.Server);
                     return element == null || element.Name == "Empty" ? null : element;
-                }
-
-                IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType)
-                {
-                    return elements.Where(e =>
-                    {
-                        if (Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type != targetType) { return false; }
-                        int headId = e.GetAttributeInt("headid", -1);
-                        // if the head id is less than 1, the id is not valid and the condition is ignored.
-                        return headId < 1 || headId == Head.HeadSpriteId;
-                    });
                 }
 
                 bool IsWearableAllowed(XElement element)

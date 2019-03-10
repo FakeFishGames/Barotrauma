@@ -1,8 +1,5 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -41,7 +38,7 @@ namespace Barotrauma
             if (voteType == VoteType.Sub && !AllowSubVoting) return default(T);
             if (voteType == VoteType.Mode && !AllowModeVoting) return default(T);
 
-            List<Pair<object, int>> voteList = GetVoteList(voteType,voters);
+            List<Pair<object, int>> voteList = GetVoteList(voteType, voters);
 
             T selected = default(T);
             int highestVotes = 0;

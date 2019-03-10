@@ -26,7 +26,7 @@
       <sprite name="Engineer Right Upper Arm" texture="engineer_torso_[GENDER].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <sprite name="Engineer Left Lower Arm" texture="engineer_torso_[GENDER].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
-      <sprite name="Engineer Right Upper Arm" texture="engineer_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite name="Engineer Right Lower Arm" texture="engineer_torso_[GENDER].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <sprite name="Engineer Waist" texture="engineer_legs_[GENDER].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite name="Engineer Right Thigh" texture="engineer_legs_[GENDER].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>

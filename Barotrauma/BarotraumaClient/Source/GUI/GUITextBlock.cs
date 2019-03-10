@@ -61,13 +61,15 @@ namespace Barotrauma
             get { return text; }
             set
             {
-                if (Text == value) return;
+                string newText = forceUpperCase ? value?.ToUpper() : value;
+
+                if (Text == newText) return;
 
                 //reset scale, it gets recalculated in SetTextPos
-                if (autoScale) textScale = 1.0f;
+                if (autoScale) textScale = 1.0f;                
 
-                text = value;
-                wrappedText = value;
+                text = newText;
+                wrappedText = newText;
                 SetTextPos();
             }
         }
@@ -116,6 +118,22 @@ namespace Barotrauma
                 if (autoScale)
                 {
                     SetTextPos();
+                }
+            }
+        }
+
+        private bool forceUpperCase;
+        public bool ForceUpperCase
+        {
+            get { return forceUpperCase; }
+            set
+            {
+                if (forceUpperCase == value) { return; }
+
+                forceUpperCase = value;
+                if (forceUpperCase)
+                {
+                    Text = text?.ToUpper();
                 }
             }
         }
