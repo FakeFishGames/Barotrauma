@@ -787,7 +787,7 @@ namespace Barotrauma
                 }
             }, null, true));
 
-            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
+            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
             () =>
             {
                 if (GameMain.NetworkMember == null) return null;
@@ -964,48 +964,6 @@ namespace Barotrauma
                 }
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
-            }));
-
-            commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
-            {
-                Submarine.MainSub?.FlipX();
-            }));
-
-            commands.Add(new Command("loadhead", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character!");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No head id provided!");
-                    return;
-                }
-                if (int.TryParse(args[0], out int id))
-                {
-                    int hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex;
-                    hairIndex = beardIndex = moustacheIndex = faceAttachmentIndex = -1;
-                    if (args.Length > 1)
-                    {
-                        int.TryParse(args[1], out hairIndex);
-                    }
-                    if (args.Length > 2)
-                    {
-                        int.TryParse(args[2], out beardIndex);
-                    }
-                    if (args.Length > 3)
-                    {
-                        int.TryParse(args[3], out moustacheIndex);
-                    }
-                    if (args.Length > 4)
-                    {
-                        int.TryParse(args[4], out faceAttachmentIndex);
-                    }
-                    character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
-                }
             }));
 
             commands.Add(new Command("money", "", args =>
@@ -1262,7 +1220,7 @@ namespace Barotrauma
             }
         }
         
-        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false)
+        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
         {
             if (args.Length == 0) return null;
 
@@ -1278,7 +1236,9 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => (!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName);
+            var matchingCharacters = Character.CharacterList.FindAll(c => 
+                c.Name.ToLowerInvariant() == characterName &&
+                (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
 
             if (!matchingCharacters.Any())
             {

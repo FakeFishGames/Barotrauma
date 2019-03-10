@@ -164,25 +164,25 @@ namespace Barotrauma
             Sprite activeSprite = prefab.sprite;
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
-            if (condition < 100.0f)
+            if (condition < Prefab.Health)
             {
                 for (int i = 0; i < Prefab.BrokenSprites.Count; i++)
                 {
-                    if (condition <= Prefab.BrokenSprites[i].MaxCondition)
-                    {
-                        activeSprite = Prefab.BrokenSprites[i].Sprite;
-                        break;
-                    }
-
                     if (Prefab.BrokenSprites[i].FadeIn)
                     {
-                        float min = i > 0 ? Prefab.BrokenSprites[i].MaxCondition : 0.0f;
-                        float max = i < Prefab.BrokenSprites.Count - 1 ? Prefab.BrokenSprites[i + 1].MaxCondition : 100.0f;
+                        float min = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
+                        float max = Prefab.BrokenSprites[i].MaxCondition;
                         fadeInBrokenSpriteAlpha = 1.0f - ((condition - min) / (max - min));
                         if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha < 1.0f)
                         {
                             fadeInBrokenSprite = Prefab.BrokenSprites[i];
                         }
+                        continue;
+                    }
+                    if (condition <= Prefab.BrokenSprites[i].MaxCondition)
+                    {
+                        activeSprite = Prefab.BrokenSprites[i].Sprite;
+                        break;
                     }
                 }
             }
@@ -484,11 +484,11 @@ namespace Barotrauma
             }
             if (!inGame && Sprite != null)
             {
-                var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), "Reload Texture");
+                var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), TextManager.Get("ReloadSprite"));
                 reloadTextureButton.OnClicked += (button, data) =>
                 {
-                    Sprite.ReloadTexture();
                     Sprite.ReloadXML();
+                    Sprite.ReloadTexture();
                     return true;
                 };
                 itemEditor.AddCustomContent(reloadTextureButton, itemEditor.ContentCount);

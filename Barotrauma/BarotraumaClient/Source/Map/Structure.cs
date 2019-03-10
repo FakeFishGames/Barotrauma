@@ -92,11 +92,11 @@ namespace Barotrauma
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
-            var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), "Reload Texture");
+            var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), TextManager.Get("ReloadSprite"));
             reloadTextureButton.OnClicked += (button, data) =>
             {
-                Sprite.ReloadTexture();
                 Sprite.ReloadXML();
+                Sprite.ReloadTexture();
                 return true;
             };
             editor.AddCustomContent(reloadTextureButton, editor.ContentCount);

@@ -431,9 +431,6 @@ namespace Barotrauma.Particles
         {
             drawPosition = Timing.Interpolate(prevPosition, position);
             drawRotation = Timing.Interpolate(prevRotation, rotation);
-
-            prevPosition = position;
-            prevRotation = rotation;
         }
         
         public void Draw(SpriteBatch spriteBatch)

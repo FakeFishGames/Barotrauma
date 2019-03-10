@@ -1458,87 +1458,18 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
             }, isCheat: true));
 
-            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the xml(s) where limbs and wearable sprites (clothing) of the controlled character are defined. Also reloads textures. Provide id or name if you want to target another character.", args =>
+            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
                 {
-                    ThrowError("Not controlling any character!");
+                    ThrowError("Not controlling any character or no matching character found with the provided arguments.");
                     return;
                 }
-                foreach (var limb in character.AnimController.Limbs)
-                {
-                    limb.Sprite?.ReloadTexture();
-                    limb.DamagedSprite?.ReloadTexture();
-                    limb.DeformSprite?.Sprite.ReloadTexture();
-                    foreach (var wearable in limb.WearingItems)
-                    {
-                        wearable.Sprite.ReloadXML();
-                        wearable.Sprite.ReloadTexture();
-                    }
-                    foreach (var wearable in limb.OtherWearables)
-                    {
-                        wearable.Sprite.ReloadXML();
-                        wearable.Sprite.ReloadTexture();
-                    }
-                }
+                ReloadWearables(character);
             }, isCheat: true));
 
-            commands.Add(new Command("reloadxml", "Reloads the xml definition of the selected item(s)/structure(s) (SubEditor). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadxml id itemid. Example 2: reloadxml name \"Sprite name\"", args =>
-            {
-                if (Screen.Selected is SpriteEditorScreen)
-                {
-                    return;
-                }
-                else if (args.Length > 1)
-                {
-                    TryDoActionOnSprite(args[0], args[1], s => s.ReloadXML());
-                }
-                else if (Screen.Selected is SubEditorScreen subScreen)
-                {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadXML());
-                    }
-                }
-                else
-                {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
-                }
-            }, isCheat: true));
-
-            commands.Add(new Command("reloadtexture|reloadtextures", "In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadtexture id itemid. Example 2: reloadtexture name \"Sprite name\"", args =>
-            {
-                if (Screen.Selected is SpriteEditorScreen)
-                {
-                    return;
-                }
-                else if (args.Length > 1)
-                {
-                    TryDoActionOnSprite(args[0], args[1], s => s.ReloadTexture());
-                }
-                else if (Screen.Selected is SubEditorScreen subScreen)
-                {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        MapEntity.SelectedList.ForEach(e => e.Sprite?.ReloadTexture());
-                    }
-                }
-                else
-                {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
-                }
-            }, isCheat: true));
-
-            commands.Add(new Command("reloadsprite|reloadsprites", "Reload xml and texture of the given sprite(s). In sub editor, reloads the xml definition of the selected item(s)/structure(s). Can also reload sprite xmls by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
+            commands.Add(new Command("reloadsprite|reloadsprites", "Reloads the sprites of the selected item(s)/structure(s) (hovering over or selecting in the subeditor) or the controlled character. Can also reload sprites by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
             {
                 if (Screen.Selected is SpriteEditorScreen)
                 {
@@ -1552,29 +1483,162 @@ namespace Barotrauma
                         s.ReloadTexture();
                     });
                 }
-                else if (Screen.Selected is SubEditorScreen subScreen)
+                else if (Screen.Selected is SubEditorScreen)
                 {
                     if (!MapEntity.SelectedAny)
                     {
                         ThrowError("You have to select item(s)/structure(s) first!");
                     }
-                    else
+                    MapEntity.SelectedList.ForEach(e =>
                     {
-                        MapEntity.SelectedList.ForEach(e =>
+                        if (e.Sprite != null)
                         {
-                            if (e.Sprite != null)
-                            {
-                                e.Sprite.ReloadXML();
-                                e.Sprite.ReloadTexture();
-                            }
-                        });
-                    }
+                            e.Sprite.ReloadXML();
+                            e.Sprite.ReloadTexture();
+                        }
+                    });
                 }
                 else
                 {
-                    ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                    var character = Character.Controlled;
+                    if (character == null)
+                    {
+                        ThrowError("Please provide the mode (name or id) and the value so that I can find the sprite for you!");
+                        return;
+                    }
+                    var item = character.FocusedItem;
+                    if (item != null)
+                    {
+                        item.Sprite.ReloadXML();
+                        item.Sprite.ReloadTexture();
+                    }
+                    else
+                    {
+                        ReloadWearables(character);
+                    }
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
+            {
+                Submarine.MainSub?.FlipX();
+            }, isCheat: true));
+
+            commands.Add(new Command("gender", "Set the gender of the controlled character. Allowed parameters: Male, Female, None.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No parameters provided!");
+                    return;
+                }
+                if (Enum.TryParse(args[0], true, out Gender gender))
+                {
+                    character.Info.Gender = gender;
+                    character.ReloadHead();
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprite();
+                        }
+                        foreach (var wearable in limb.WearingItems)
+                        {
+                            if (wearable.Gender != Gender.None && wearable.Gender != gender)
+                            {
+                                wearable.Gender = gender;
+                            }
+                        }
+                    }
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("race", "Set race of the controlled character. Allowed parameters: White, Black, Asian, None.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No parameters provided!");
+                    return;
+                }
+                if (Enum.TryParse(args[0], true, out Race race))
+                {
+                    character.Info.Race = race;
+                    character.ReloadHead();
+                }
+            }, isCheat: true));
+
+            commands.Add(new Command("loadhead|head", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No head id provided!");
+                    return;
+                }
+                if (int.TryParse(args[0], out int id))
+                {
+                    int hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex;
+                    hairIndex = beardIndex = moustacheIndex = faceAttachmentIndex = -1;
+                    if (args.Length > 1)
+                    {
+                        int.TryParse(args[1], out hairIndex);
+                    }
+                    if (args.Length > 2)
+                    {
+                        int.TryParse(args[2], out beardIndex);
+                    }
+                    if (args.Length > 3)
+                    {
+                        int.TryParse(args[3], out moustacheIndex);
+                    }
+                    if (args.Length > 4)
+                    {
+                        int.TryParse(args[4], out faceAttachmentIndex);
+                    }
+                    character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                }
+            }, isCheat: true));
+        }
+
+        private static void ReloadWearables(Character character)
+        {
+            foreach (var limb in character.AnimController.Limbs)
+            {
+                limb.Sprite?.ReloadTexture();
+                limb.DamagedSprite?.ReloadTexture();
+                limb.DeformSprite?.Sprite.ReloadTexture();
+                foreach (var wearable in limb.WearingItems)
+                {
+                    wearable.Sprite.ReloadXML();
+                    wearable.Sprite.ReloadTexture();
+                }
+                foreach (var wearable in limb.OtherWearables)
+                {
+                    wearable.Sprite.ReloadXML();
+                    wearable.Sprite.ReloadTexture();
+                }
+                if (limb.HuskSprite != null)
+                {
+                    limb.HuskSprite.Sprite.ReloadXML();
+                    limb.HuskSprite.Sprite.ReloadTexture();
+                }
+            }
         }
 
         private static bool TryDoActionOnSprite(string firstArg, string secondArg, Action<Sprite> action)

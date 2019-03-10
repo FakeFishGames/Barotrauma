@@ -15,7 +15,8 @@ namespace Barotrauma
         Beard,
         Moustache,
         FaceAttachment,
-        JobIndicator
+        JobIndicator,
+        Husk
     }
 
     class WearableSprite
@@ -78,6 +79,7 @@ namespace Barotrauma
                 if (value == _gender) { return; }
                 _gender = value;
                 IsInitialized = false;
+                SpritePath = ParseSpritePath(SourceElement.GetAttributeString("texture", string.Empty));
                 Init(_gender);
             }
         }
@@ -86,7 +88,7 @@ namespace Barotrauma
         {
             Type = type;
             SourceElement = subElement;
-            SpritePath = subElement.Attribute("texture").Value;
+            SpritePath = subElement.GetAttributeString("texture", string.Empty);
             Init();
             switch (type)
             {
@@ -95,6 +97,7 @@ namespace Barotrauma
                 case WearableType.Moustache:
                 case WearableType.FaceAttachment:
                 case WearableType.JobIndicator:
+                case WearableType.Husk:
                     Limb = LimbType.Head;
                     HideLimb = false;
                     HideOtherWearables = false;
@@ -109,14 +112,15 @@ namespace Barotrauma
         /// <summary>
         /// Note: this constructor cannot initialize automatically, because the gender is unknown at this point. We only know it when the item is equipped.
         /// </summary>
-        public WearableSprite(XElement subElement, Wearable item)
+        public WearableSprite(XElement subElement, Wearable wearable)
         {
             Type = WearableType.Item;
-            WearableComponent = item;
-            string texturePath = subElement.GetAttributeString("texture", string.Empty);
-            SpritePath = texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(item.Item.Prefab.ConfigFile)}/{texturePath}";
+            WearableComponent = wearable;
+            SpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
             SourceElement = subElement;
         }
+
+        private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.ConfigFile)}/{texturePath}";
 
         public bool IsInitialized { get; private set; }
         public void Init(Gender gender = Gender.None)

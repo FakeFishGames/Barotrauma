@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
             public LogMessage(string text, MessageType type)
             {
-                Text = "[" + DateTime.Now.ToString() + "] " + text;
+                Text = "[" + DateTime.Now.ToString() + "] " + TextManager.GetServerMessage(text);
                 Type = type;
             }
         }
