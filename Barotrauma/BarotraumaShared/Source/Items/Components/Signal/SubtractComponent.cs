@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
             }
             if (sendOutput)
             {
-                item.SendSignal(0, (receivedSignal[0] - receivedSignal[1]).ToString(), "signal_out", null);
+                item.SendSignal(0, (receivedSignal[0] - receivedSignal[1]).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
             }
         }
     }

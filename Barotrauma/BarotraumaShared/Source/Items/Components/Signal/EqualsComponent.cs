@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -11,7 +10,7 @@ namespace Barotrauma.Items.Components
         //an array to keep track of how long ago a signal was received on both inputs
         protected float[] timeSinceReceived;
 
-        protected float[] receivedSignal;
+        protected string[] receivedSignal;
 
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
@@ -44,7 +43,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
-            receivedSignal = new float[2];
+            receivedSignal = new string[2];
             IsActive = true;
         }
 
@@ -71,11 +70,11 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in1":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    receivedSignal[0] = signal;
                     timeSinceReceived[0] = 0.0f;
                     break;
                 case "signal_in2":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    receivedSignal[1] = signal;
                     timeSinceReceived[1] = 0.0f;
                     break;
             }

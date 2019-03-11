@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
