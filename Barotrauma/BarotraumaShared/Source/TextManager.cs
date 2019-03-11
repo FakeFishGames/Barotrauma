@@ -12,6 +12,8 @@ namespace Barotrauma
         //key = language
         private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
 
+        private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
+
         public static string Language;
         
         private static HashSet<string> availableLanguages = new HashSet<string>();
@@ -136,9 +138,11 @@ namespace Barotrauma
             return string.Format(text, args);     
         }
 
-        // Format: ServerMessage.Identifier1;ServerMessage.Indentifier2_[variable1]=value_[variable2]=value
+        // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
         public static string GetServerMessage(string serverMessage)
         {
+            if (serverMessage.Contains(" ")) return serverMessage; // Spaces found, do not translate
+
             if (!textPacks.ContainsKey(Language))
             {
                 DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
@@ -149,11 +153,11 @@ namespace Barotrauma
                 }
             }
 
-            string[] messages = serverMessage.Split(';');
+            string[] messages = serverMessage.Split('/');
 
             for (int i = 0; i < messages.Length; i++)
             {
-                if (!messages[i].Contains("_")) // No variables, just translate
+                if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
                 {
                     string msg = Get(messages[i], true);
 
@@ -164,12 +168,16 @@ namespace Barotrauma
                 }
                 else
                 {
-                    string[] messageWithVariables = messages[i].Split('_');
+                    string[] messageWithVariables = messages[i].Split('~');
                     string msg = Get(messageWithVariables[0], true);
 
                     if (msg != null) // If a translation was found, otherwise use the original
                     {
                         messages[i] = msg;
+                    }
+                    else
+                    {
+                        continue; // No translation found, probably caused by player input -> skip variable handling
                     }
 
                     // First index is always the message identifier -> start at 1
@@ -188,6 +196,16 @@ namespace Barotrauma
             }
 
             return translatedServerMessage;
+        }
+
+        public static bool IsServerMessageWithVariables(string message)
+        {
+            for (int i = 0; i < serverMessageCharacters.Length; i++)
+            {
+                if (!message.Contains(serverMessageCharacters[i])) return false;
+            }
+
+            return true;
         }
 
         public static List<string> GetAll(string textTag)

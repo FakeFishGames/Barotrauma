@@ -531,7 +531,7 @@ namespace Barotrauma.Networking
                                     */
                                     if (connectedClient != null)
                                     {
-                                        DisconnectClient(inc.SenderConnection, $"ServerMessage.HasDisconnected_[client]={connectedClient.Name}");
+                                        DisconnectClient(inc.SenderConnection, $"ServerMessage.HasDisconnected~[client]={connectedClient.Name}");
                                     }
                                     else
                                     {
@@ -963,7 +963,7 @@ namespace Barotrauma.Networking
                     if (kickedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
-                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? $"ServerMessage.KickedBy_[initiator]={sender.Name}" : kickReason);
+                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? $"ServerMessage.KickedBy~[initiator]={sender.Name}" : kickReason);
                     }
                     break;
                 case ClientPermissions.Ban:
@@ -978,11 +978,11 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
                         if (durationSeconds > 0)
                         {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy_[initiator]={sender.Name}" : banReason, range, TimeSpan.FromSeconds(durationSeconds));
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, TimeSpan.FromSeconds(durationSeconds));
                         }
                         else
                         {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy_[initiator]={sender.Name}" : banReason, range);
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range);
                         }
                     }
                     break;
@@ -1932,7 +1932,7 @@ namespace Barotrauma.Networking
             if (client == null || client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Kicked.ToString();
-            string logMsg = $"ServerMessage.KickedFromServer_[client]={client.Name}";
+            string logMsg = $"ServerMessage.KickedFromServer~[client]={client.Name}";
             DisconnectClient(client, logMsg, msg, reason);
         }
 
@@ -1959,7 +1959,7 @@ namespace Barotrauma.Networking
             if (client.Connection == OwnerConnection) return;
 
             string msg = DisconnectReason.Banned.ToString();
-            DisconnectClient(client, $"ServerMessage.BannedFromServer_[client]={client.Name}", msg, reason);
+            DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", msg, reason);
 
             if (client.SteamID == 0 || range)
             {
@@ -2015,12 +2015,12 @@ namespace Barotrauma.Networking
             client.HasSpawned = false;
             client.InGame = false;
 
-            if (string.IsNullOrWhiteSpace(msg)) msg = $"ServerMessage.ClientLeftServer_[client]={client.Name}";
+            if (string.IsNullOrWhiteSpace(msg)) msg = $"ServerMessage.ClientLeftServer~[client]={client.Name}";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "ServerMessage.YouLeftServer";
             if (!string.IsNullOrWhiteSpace(reason))
             {
-                msg += $"; ;ServerMessage.Reason;: ;{reason}";
-                targetmsg += $";\n;ServerMessage.Reason;: ;{reason}";
+                msg += $"/ /ServerMessage.Reason/: /{reason}";
+                targetmsg += $"/\n/ServerMessage.Reason/: /{reason}";
             }
 
             Log(msg, ServerLog.MessageType.ServerMessage);
@@ -2118,7 +2118,7 @@ namespace Barotrauma.Networking
                                     if (senderClient != null)
                                     {
                                         var chatMsg = ChatMessage.Create(
-                                            "", $"ServerMessage.PlayerNotFound_[player]={command}",
+                                            "", $"ServerMessage.PlayerNotFound~[player]={command}",
                                             ChatMessageType.Error, null);
 
                                         chatMsg.NetStateID = senderClient.ChatMsgQueue.Count > 0 ?
@@ -2130,7 +2130,7 @@ namespace Barotrauma.Networking
                                     }
                                     else
                                     {
-                                        AddChatMessage($"ServerMessage.PlayerNotFound_[player]={command}", ChatMessageType.Error);
+                                        AddChatMessage($"ServerMessage.PlayerNotFound~[player]={command}", ChatMessageType.Error);
                                     }
 
                                     return;
@@ -2350,7 +2350,7 @@ namespace Barotrauma.Networking
                 c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
-                SendChatMessage($"ServerMessage.KickedFromServer_[client]={c.Name}", ChatMessageType.Server, null);
+                SendChatMessage($"ServerMessage.KickedFromServer~[client]={c.Name}", ChatMessageType.Server, null);
                 KickClient(c, "ServerMessage.KickedByVote");
                 BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
             }
