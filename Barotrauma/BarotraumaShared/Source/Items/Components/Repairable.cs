@@ -69,7 +69,7 @@ namespace Barotrauma.Items.Components
             get { return currentFixer; }
             set
             {
-                if (currentFixer == value || item.Condition >= item.Prefab.Health) return;
+                if (currentFixer == value || item.IsFullCondition) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
             }
@@ -138,7 +138,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
+            if (Item.IsFullCondition || CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
             {
                 currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = null;
@@ -159,18 +159,18 @@ namespace Barotrauma.Items.Components
                      CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
             }
 
-            bool wasBroken = item.Condition < item.Prefab.Health;
+            bool wasBroken = !item.IsFullCondition;
             float fixDuration = MathHelper.Lerp(fixDurationLowSkill, fixDurationHighSkill, successFactor);
             if (fixDuration <= 0.0f)
             {
-                item.Condition = item.Prefab.Health;
+                item.Condition = item.MaxCondition;
             }
             else
             {
-                item.Condition += deltaTime / (fixDuration / item.Prefab.Health);
+                item.Condition += deltaTime / (fixDuration / item.MaxCondition);
             }
 
-            if (wasBroken && item.Condition >= item.Prefab.Health)
+            if (wasBroken && item.IsFullCondition)
             {
                 SteamAchievementManager.OnItemRepaired(item, currentFixer);
                 deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateFixAnimation(Character character)
         {
-            character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / 100.0f) % 0.1f));
+            character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)

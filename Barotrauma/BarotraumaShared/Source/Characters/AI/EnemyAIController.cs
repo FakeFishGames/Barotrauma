@@ -503,7 +503,7 @@ namespace Barotrauma
                         Character.AnimController.ReleaseStuckLimbs();
                         if (steeringManager is IndoorsSteeringManager)
                         {
-                            steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
+                            steeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetPos - Character.WorldPosition) * speed);
                         }
                         else
                         {
@@ -518,11 +518,12 @@ namespace Barotrauma
                     //steer through the door manually if it's open or broken
                     if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
                     {
+                        var velocity = Vector2.Normalize(door.LinkedGap.FlowTargetHull.WorldPosition - Character.WorldPosition) * speed;
                         if (door.LinkedGap.IsHorizontal)
                         {
                             if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
                             {
-                                var velocity = Vector2.UnitX * (door.LinkedGap.FlowTargetHull.WorldPosition.X - Character.WorldPosition.X) * speed;
+                                velocity.Y = 0;
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
@@ -531,7 +532,7 @@ namespace Barotrauma
                         {
                             if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
                             {
-                                var velocity = Vector2.UnitY * (door.LinkedGap.FlowTargetHull.WorldPosition.Y - Character.WorldPosition.Y) * speed;
+                                velocity.X = 0;
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
@@ -656,7 +657,7 @@ namespace Barotrauma
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {
-                            steeringManager.SteeringManual(deltaTime, steeringVector);
+                            steeringManager.SteeringManual(deltaTime, Vector2.Normalize(steeringVector) * speed);
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                         {
@@ -835,7 +836,7 @@ namespace Barotrauma
             {
                 Vector2 attackDir = Vector2.Normalize(Character.SimPosition - attackPosition);
                 if (!MathUtils.IsValid(attackDir)) attackDir = Vector2.UnitY;
-                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
+                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f) * Character.AnimController.GetCurrentSpeed(false)));
             }
 
             steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, Character.AnimController.GetCurrentSpeed(false));
@@ -867,15 +868,16 @@ namespace Barotrauma
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float limbDist = limbDiff.Length();
+            float speed = Character.AnimController.GetCurrentSpeed(true);
             if (limbDist < 2.0f)
             {
                 Character.SelectCharacter(SelectedAiTarget.Entity as Character);
-                steeringManager.SteeringManual(deltaTime, limbDiff);
+                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff) * speed);
                 Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
+                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), speed);
             }
         }
         

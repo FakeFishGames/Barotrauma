@@ -1,108 +1,68 @@
 ﻿using Barotrauma.Items.Components;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
-    class AIObjectivePumpWater : AIObjective
+    class AIObjectivePumpWater : AIObjectiveLoop<Pump>
     {
-        private const float FindPumpsInterval = 5.0f;
+        public override string DebugTag => "pump water";
+        public override bool KeepDivingGearOn => true;
+        private readonly IEnumerable<Pump> pumpList;
 
-        private string orderOption;
-        private List<Pump> pumps;
-        private float lastFindPumpsTime;
-
-        public AIObjectivePumpWater(Character character, string option)
-            : base(character, option)
+        public AIObjectivePumpWater(Character character, string option) : base(character, option)
         {
-            orderOption = option;
+            pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (Timing.TotalTime >= lastFindPumpsTime + FindPumpsInterval)
-            {
-                FindPumps();
-            }
-
-            if (objectiveManager.CurrentOrder == this && pumps.Count > 0)
+            if (character.Submarine == null) { return 0; }
+            if (objectiveManager.CurrentOrder == this && targets.Count > 0)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
             return 0.0f;
         }
 
-        public override bool IsCompleted()
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
+
+        //availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
+        protected override void FindTargets()
         {
-            return false;
-        }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectivePumpWater;
-        }
-
-        protected override void Act(float deltaTime)
-        {
-            if (Timing.TotalTime < lastFindPumpsTime + FindPumpsInterval)
-            {
-                return;
-            }
-
-            FindPumps();
-        }
-
-        private void FindPumps()
-        {
-            lastFindPumpsTime = (float)Timing.TotalTime;
-
-            pumps = new List<Pump>();
+            if (option == null) { return; }
             foreach (Item item in Item.ItemList)
             {
-                //don't attempt to use pumps outside the sub
+                if (item.HasTag("ballast")) { continue; }
                 if (item.Submarine == null) { continue; }
-
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 var pump = item.GetComponent<Pump>();
-                if (pump == null) continue;
-
-                if (item.HasTag("ballast")) continue;
-                
-                //if the pump is connected to an item with a steering component, it must be a ballast pump
-                //(This may not work correctly if the signals are passed through some fancy circuit or a wifi component,
-                //which is why sub creators are encouraged to tag the ballast pumps)
-                bool connectedToSteering = false;
-                foreach (Connection c in item.Connections)
+                if (pump != null)
                 {
-                    if (c.IsPower) continue;
-                    if (item.GetConnectedComponentsRecursive<Steering>(c).Count > 0)
+                    if (!ignoreList.Contains(pump))
                     {
-                        connectedToSteering = true;
-                        break;
+                        if (option == "stoppumping")
+                        {
+                            if (!pump.IsActive || pump.FlowPercentage == 0.0f) { continue; }
+                        }
+                        else
+                        {
+                            if (!pump.Item.InWater) { continue; }
+                            if (pump.IsActive && pump.FlowPercentage <= -90.0f) { continue; }
+                        }
+                        if (!targets.Contains(pump))
+                        {
+                            targets.Add(pump);
+                        }
                     }
                 }
-                if (connectedToSteering) continue;
-
-                if (orderOption.ToLowerInvariant() == "stop pumping")
-                {
-                    if (!pump.IsActive || pump.FlowPercentage == 0.0f) continue;
-                }
-                else
-                {
-                    if (!pump.Item.InWater) continue;
-                    if (pump.IsActive && pump.FlowPercentage <= -90.0f) continue;
-                }
-
-                pumps.Add(pump);
-            }
-
-
-            foreach (Pump pump in pumps)
-            {
-                AddSubObjective(new AIObjectiveOperateItem(pump, character, orderOption, false));
             }
         }
+
+        protected override bool Filter(Pump pump) => true;
+        protected override IEnumerable<Pump> GetList() => pumpList;
+        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, Option, false);
+        protected override float Average(Pump target) => 0;
     }
 }

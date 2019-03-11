@@ -6,6 +6,9 @@ namespace Barotrauma
 {
     class AIObjectiveFindDivingGear : AIObjective
     {
+        public override string DebugTag => "find diving gear";
+        public override bool ForceRun => true;
+
         private AIObjective subObjective;
 
         private string gearTag;
@@ -27,6 +30,8 @@ namespace Barotrauma
 
             return false;
         }
+
+        public override bool CanBeCompleted => subObjective == null || subObjective.CanBeCompleted;
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit)
             : base(character, "")

@@ -2,100 +2,125 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectiveRepairItem : AIObjective
     {
-        private Item item;
-        
-        public AIObjectiveRepairItem(Character character, Item item)
-            : base(character, "")
+        public override string DebugTag => "repair item";
+
+        public override bool KeepDivingGearOn => true;
+
+        public Item Item { get; private set; }
+
+        private AIObjectiveGoTo goToObjective;
+
+        private float previousCondition = -1;
+
+        public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
         {
-            this.item = item;
+            Item = item;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            bool insufficientSkills = true;
-            bool repairablesFound = false;
-            foreach (Repairable repairable in item.Repairables)
-            {
-                if (item.Condition > repairable.ShowRepairUIThreshold) { continue; }
-                if (repairable.DegreeOfSuccess(character) >= 0.5f) { insufficientSkills = false; }
-                repairablesFound = true;
-            }
-
-            if (!repairablesFound) { return 0.0f; }
-
-            float priority = item.Prefab.Health - item.Condition;
-            //vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = 
-                Math.Abs(character.WorldPosition.X - item.WorldPosition.X) + 
-                Math.Abs(character.WorldPosition.Y - item.WorldPosition.Y) * 2.0f;
-
-            //heavily increase the priority if the item is already selected 
-            //so characters don't keep switching between nearby damaged items
-            if (character.SelectedConstruction == item)
-            {
-                priority += 50.0f;
-            }
-            if (insufficientSkills)
-            {
-                return MathHelper.Lerp(0.0f, 50.0f, priority / 100.0f / Math.Max(dist / 100.0f, 1.0f));
-            }
-            else
-            {
-                return MathHelper.Lerp(50.0f, 100.0f, priority / 100.0f / Math.Max(dist / 100.0f, 1.0f));
-            }
+            // TODO: priority list?
+            if (Item.Repairables.None()) { return 0; }
+            // Ignore items that are being repaired by someone else.
+            if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
+            float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
+            float damagePriority = MathHelper.Lerp(1, 0, (Item.Condition + 10) / Item.MaxCondition);
+            float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+            float isSelected = character.SelectedConstruction == Item ? 50 : 0;
+            float baseLevel = Math.Max(priority + isSelected, 1);
+            return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
         }
+
+        public override bool CanBeCompleted => !abandon;
 
         public override bool IsCompleted()
         {
-            foreach (Repairable repairable in item.Repairables)
+            bool isCompleted = Item.IsFullCondition;
+            if (isCompleted)
             {
-                if (item.Condition < Math.Max(repairable.ShowRepairUIThreshold, item.Prefab.Health * 0.98f)) return false;
+                character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", Item.Name), null, 0.0f, "itemrepaired", 10.0f);
             }
-            
-            character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
-            return true;
+            return isCompleted;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.item == item;
+            return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.Item == Item;
         }
 
         protected override void Act(float deltaTime)
         {
-            foreach (Repairable repairable in item.Repairables)
+            if (goToObjective != null && !subObjectives.Contains(goToObjective))
             {
-                //make sure we have all the items required to fix the target item
-                foreach (var kvp in repairable.requiredItems)
+                if (!goToObjective.IsCompleted() && !goToObjective.CanBeCompleted)
                 {
-                    foreach (RelatedItem requiredItem in kvp.Value)
+                    abandon = true;
+                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
+                }
+                goToObjective = null;
+            }
+            foreach (Repairable repairable in Item.Repairables)
+            {
+                if (!repairable.HasRequiredItems(character, false))
+                {
+                    //make sure we have all the items required to fix the target item
+                    foreach (var kvp in repairable.requiredItems)
                     {
-                        if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
+                        foreach (RelatedItem requiredItem in kvp.Value)
                         {
                             AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, true));
-                            return;
                         }
                     }
+                    return;
                 }
             }
-
-            if (character.CanInteractWith(item))
+            if (character.CanInteractWith(Item))
             {
-                foreach (Repairable repairable in item.Repairables)
+                foreach (Repairable repairable in Item.Repairables)
                 {
-                    if (character.SelectedConstruction != item) { item.TryInteract(character, true, true); }
-                    repairable.CurrentFixer = character;
+                    if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
+                    {
+                        // Someone else is repairing the target. Abandon the objective if the other is better at this then us.
+                        abandon = repairable.DegreeOfSuccess(character) < repairable.DegreeOfSuccess(repairable.CurrentFixer);
+                    }
+                    if (!abandon)
+                    {
+                        if (character.SelectedConstruction != Item)
+                        {
+                            Item.TryInteract(character, true, true);
+                        }
+                        if (previousCondition == -1)
+                        {
+                            previousCondition = Item.Condition;
+                        }
+                        else if (Item.Condition < previousCondition)
+                        {
+                            // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
+                            abandon = true;
+                            character?.Speak(TextManager.Get("DialogRepairFailed").Replace("[itemname]", Item.Name), null, 0.0f, "repairfailed", 10.0f);
+                        }
+                    }
+                    repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;
                     break;
                 }
             }
-            else
+            else if (goToObjective == null || goToObjective.Target != Item)
             {
-                AddSubObjective(new AIObjectiveGoTo(item, character));
+                previousCondition = -1;
+                if (goToObjective != null)
+                {
+                    subObjectives.Remove(goToObjective);
+                }
+                goToObjective = new AIObjectiveGoTo(Item, character);
+                AddSubObjective(goToObjective);
             }
         }
     }

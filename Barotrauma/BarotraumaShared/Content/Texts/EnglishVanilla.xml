@@ -67,16 +67,21 @@
   <Loading>Loading...</Loading>
   <PressAnyKey>Press any key to continue</PressAnyKey>
   
+  <!-- Main menu labels -->
+  <CampaignLabel>Campaign</CampaignLabel>
+  <MultiplayerLabel>Multiplayer</MultiplayerLabel>
+  <CustomizeLabel>Customize</CustomizeLabel>
+
   <!-- Main menu buttons -->
   <TutorialButton>Training</TutorialButton>
-  <NewGameButton>New Game</NewGameButton>
   <LoadGameButton>Load Game</LoadGameButton>
+  <NewGameButton>New Game</NewGameButton>
   <JoinServerButton>Join Server</JoinServerButton>
   <HostServerButton>Host Server</HostServerButton>
   <SubEditorButton>Submarine Editor</SubEditorButton>
   <CharacterEditorButton>Character Editor</CharacterEditorButton>
-  <SettingsButton>Settings</SettingsButton>
   <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
+  <SettingsButton>Settings</SettingsButton>
   <QuitButton>Quit</QuitButton>
   
   <!-- Pause menu -->
@@ -727,7 +732,6 @@
   <AddSubButton>Add submarine</AddSubButton>
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
   <HoldToLink>Hold space and click with the mouse to link to another item.</HoldToLink>
-  <ReloadSprite>Reload Sprite</ReloadSprite>
   <AllowedLinks>Allowed links</AllowedLinks>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>
@@ -2199,6 +2203,9 @@
   <DialogAffirmative>Got it!</DialogAffirmative>
   <DialogAffirmative>Sure thing!</DialogAffirmative>
   <DialogAffirmative>Copy that.</DialogAffirmative>
+  <DialogNegative>Negative.</DialogNegative>
+  <DialogNegative>No way!</DialogNegative>
+  <DialogCannotReach>Can't reach the target.</DialogCannotReach>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
@@ -2225,6 +2232,8 @@
   <DialogItemRepaired>[itemname] repaired!</DialogItemRepaired>
   <DialogItemRepaired>[itemname] back in order!</DialogItemRepaired>
   <DialogItemRepaired>[itemname] fixed!</DialogItemRepaired>
+  <DialogCannotRepair>Can't repair [itemname]!</DialogCannotRepair>
+  <DialogRepairFailed>Failed to repair [itemname]!</DialogRepairFailed>
   <DialogGetDivingGear>Need to find a diving suit!</DialogGetDivingGear>
   <DialogGetDivingGear>I need diving gear!</DialogGetDivingGear>
   <DialogGetOxygenTank>Need to find an oxygen tank!</DialogGetOxygenTank>

@@ -9,6 +9,10 @@ namespace Barotrauma
 {
     class AIObjectiveRescue : AIObjective
     {
+        public override string DebugTag => "rescue";
+        public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+
         const float TreatmentDelay = 0.5f;
 
         private readonly Character targetCharacter;
@@ -102,7 +106,7 @@ namespace Barotrauma
                 }
 
                 return !character.AnimController.InWater && !targetCharacter.AnimController.InWater &&
-                    AIObjectiveFindSafety.GetHullSafety(character.CurrentHull, character) > 50.0f;
+                    HumanAIController.GetHullSafety(character.CurrentHull, character) > HumanAIController.HULL_SAFETY_THRESHOLD;
             }
 
             return false;

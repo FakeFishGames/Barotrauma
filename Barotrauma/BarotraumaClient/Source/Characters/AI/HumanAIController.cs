@@ -1,6 +1,5 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System.Linq;
+﻿using Microsoft.Xna.Framework;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -23,81 +22,73 @@ namespace Barotrauma
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
+            Vector2 pos = Character.WorldPosition;
+            pos.Y = -pos.Y;
+            Vector2 textOffset = new Vector2(-40, -120);
+
             if (SelectedAiTarget?.Entity != null)
             {
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                    new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
+                //GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red);
+                //GUI.DrawString(spriteBatch, pos + textOffset, $"AI TARGET: {SelectedAiTarget.Entity.ToString()}", Color.White, Color.Black);
             }
 
-            IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
-            if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
-
-            GUI.DrawLine(spriteBatch,
-                new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
-                Color.LightGreen * 0.5f, 0, 3);
-
-
-            for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
+            if (ObjectiveManager != null)
             {
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
-                    Color.LightGreen * 0.5f, 0, 3);
-
-                GUI.SmallFont.DrawString(spriteBatch,
-                    pathSteering.CurrentPath.Nodes[i].ID.ToString(),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
-                    Color.LightGreen);
-            }
-        }
-
-        //TODO: move this to the shared project, otherwise bots won't be able to report things in multiplayer
-        partial void ReportProblems()
-        {
-            if (GameMain.Client != null) return;
-
-            Order newOrder = null;
-            if (Character.CurrentHull != null)
-            {
-                if (Character.CurrentHull.FireSources.Count > 0)
+                var currentOrder = ObjectiveManager.CurrentOrder;
+                if (currentOrder != null)
                 {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                    GUI.DrawString(spriteBatch, pos + textOffset, $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority(ObjectiveManager).FormatZeroDecimal()})", Color.White, Color.Black);
                 }
-
-                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
+                var currentObjective = ObjectiveManager.CurrentObjective;
+                if (currentObjective != null)
                 {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority(ObjectiveManager).FormatZeroDecimal()})", Color.White, Color.Black);
+                    var subObjective = currentObjective.CurrentSubObjective;
+                    if (subObjective != null)
                     {
-                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority(ObjectiveManager).FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                 }
             }
 
-            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
+            if (steeringManager is IndoorsSteeringManager pathSteering)
             {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-            }
-
-            if (newOrder != null)
-            {
-                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
+                var path = pathSteering.CurrentPath;
+                if (path != null)
                 {
-                    Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
+                    if (path.CurrentNode != null)
+                    {
+                        GUI.DrawLine(spriteBatch, pos,
+                            new Vector2(path.CurrentNode.DrawPosition.X, -path.CurrentNode.DrawPosition.Y),
+                            Color.BlueViolet, 0, 3);
+
+                        GUI.DrawString(spriteBatch, pos + textOffset - new Vector2(0, 20), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                    }
+                    for (int i = 1; i < path.Nodes.Count; i++)
+                    {
+                        var previousNode = path.Nodes[i - 1];
+                        var currentNode = path.Nodes[i];
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y),
+                            new Vector2(previousNode.DrawPosition.X, -previousNode.DrawPosition.Y),
+                            Color.Blue * 0.5f, 0, 3);
+
+                        GUI.SmallFont.DrawString(spriteBatch,
+                            currentNode.ID.ToString(),
+                            new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y - 10),
+                            Color.LightGreen);
+                    }
                 }
             }
+            else
+            {
+                GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
+            }
+
+            //if (Character.IsKeyDown(InputType.Aim))
+            //{
+            //    GUI.DrawLine(spriteBatch, pos, new Vector2(Character.CursorWorldPosition.X, -Character.CursorWorldPosition.Y), Color.Yellow, width: 4);
+            //}
         }
     }
 }

@@ -8,6 +8,10 @@ namespace Barotrauma
 {
     class AIObjectiveCombat : AIObjective
     {
+        public override string DebugTag => "combat";
+        public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+
         const float CoolDown = 10.0f;
 
         //the largest amount of damage the enemy has inflicted on this character
@@ -117,6 +121,7 @@ namespace Barotrauma
 
         private void Escape(float deltaTime)
         {
+            // TODO: just let the find safety run?
             if (escapeObjective == null)
             {
                 escapeObjective = new AIObjectiveFindSafety(character);

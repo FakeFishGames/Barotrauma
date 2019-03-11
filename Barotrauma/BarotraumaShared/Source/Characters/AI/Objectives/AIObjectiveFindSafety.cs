@@ -2,105 +2,133 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
     class AIObjectiveFindSafety : AIObjective
     {
+        public override string DebugTag => "find safety";
+        public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+
+        // TODO: expose?
+        const float priorityIncrease = 25;
+        const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
-        const float MinSafety = 50.0f;
 
-        private AIObjectiveGoTo goToObjective;
-
-        private List<Hull> unreachable;
+        private List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
 
         private float searchHullTimer;
 
+        private AIObjectiveGoTo goToObjective;
         private AIObjective divingGearObjective;
 
         public float? OverrideCurrentHullSafety;
 
-        public AIObjectiveFindSafety(Character character)
-            : base(character, "")
-        {
-            unreachable = new List<Hull>();
-        }
+        public AIObjectiveFindSafety(Character character) : base(character, "") {  }
 
-        public override bool IsCompleted()
-        {
-            return false;
-        }
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
 
         protected override void Act(float deltaTime)
         {
-            var currentHull = character.AnimController.CurrentHull;
-
-            currenthullSafety = OverrideCurrentHullSafety == null ?
-                GetHullSafety(currentHull, character) : (float)OverrideCurrentHullSafety;
-            
-            if (NeedsDivingGear())
+            var currentHull = character.AnimController.CurrentHull;           
+            if (HumanAIController.NeedsDivingGear(currentHull))
             {
-                if (!FindDivingGear(deltaTime)) return;
+                bool needsDivingSuit = currentHull == null || currentHull.WaterPercentage > 90;
+                bool hasEquipment = needsDivingSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingGear(character);
+                if ((divingGearObjective == null || !divingGearObjective.CanBeCompleted) && !hasEquipment)
+                {
+                    // If the previous objective cannot be completed, create a new and try again.
+                    divingGearObjective = new AIObjectiveFindDivingGear(character, needsDivingSuit);
+                }
             }
-            
+            if (divingGearObjective != null)
+            {
+                divingGearObjective.TryComplete(deltaTime);
+                if (divingGearObjective.IsCompleted())
+                {
+                    divingGearObjective = null;
+                    priority = 0;
+                }
+                else if (divingGearObjective.CanBeCompleted)
+                {
+                    // If diving gear objective is active, wait for it to complete.
+                    return;
+                }
+            }
 
             if (searchHullTimer > 0.0f)
             {
                 searchHullTimer -= deltaTime;
             }
-            else
+            else if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 var bestHull = FindBestHull();
-                if (bestHull != null)
+                if (bestHull != null && bestHull != currentHull)
                 {
-                    goToObjective = new AIObjectiveGoTo(bestHull, character)
+                    if (goToObjective != null)
                     {
-                        AllowGoingOutside = true
-                    };
+                        if (goToObjective.Target != bestHull)
+                        {
+                            goToObjective = new AIObjectiveGoTo(bestHull, character)
+                            {
+                                AllowGoingOutside = true
+                            };
+                        }
+                    }
+                    else
+                    {
+                        goToObjective = new AIObjectiveGoTo(bestHull, character)
+                        {
+                            AllowGoingOutside = true
+                        };
+                    }
                 }
-
                 searchHullTimer = SearchHullInterval;
             }
 
             if (goToObjective != null)
             {
                 goToObjective.TryComplete(deltaTime);
-
-                if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering && 
-                    pathSteering.CurrentPath != null &&
-                    pathSteering.CurrentPath.Unreachable && !unreachable.Contains(goToObjective.Target))
+                if (!goToObjective.CanBeCompleted)
                 {
-                    unreachable.Add(goToObjective.Target as Hull);
+                    if (!unreachable.Contains(goToObjective.Target))
+                    {
+                        unreachable.Add(goToObjective.Target as Hull);
+                    }
                     goToObjective = null;
                 }
             }
-            //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
-            // -> attempt to manually steer away from hazards
             else if (currentHull != null)
             {
+                //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
+                // -> attempt to manually steer away from hazards
                 Vector2 escapeVel = Vector2.Zero;
                 foreach (FireSource fireSource in currentHull.FireSources)
                 {
-                    int dir = Math.Sign(character.Position.X - fireSource.Position.X);
-                    
+                    Vector2 dir = character.Position - fireSource.Position;
                     float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
-                    escapeVel += new Vector2(dir * distMultiplier, 0.0f);                                      
+                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);                                      
                 }
 
-               foreach (Character enemy in Character.CharacterList)
+                foreach (Character enemy in Character.CharacterList)
                 {
                     if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious && 
                         (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
                     {
+                        Vector2 dir = character.Position - enemy.Position;
                         float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
-                        escapeVel += new Vector2(Math.Sign(character.Position.X - enemy.Position.X) * distMultiplier, 0.0f);
+                        escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
                     }
                 }
 
                 if (escapeVel != Vector2.Zero)
                 {
+                    escapeVel *= character.AnimController.GetCurrentSpeed(true);
                     //only move if we haven't reached the edge of the room
                     if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
                         (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))
@@ -120,40 +148,70 @@ namespace Barotrauma
             }
         }
 
-        private bool FindDivingGear(float deltaTime)
-        {
-            if (divingGearObjective == null)
-            {
-                divingGearObjective = new AIObjectiveFindDivingGear(character, false);
-            }
-
-            if (divingGearObjective.IsCompleted()) return true;
-
-            divingGearObjective.TryComplete(deltaTime);
-            return divingGearObjective.IsCompleted();
-        }
-
         private Hull FindBestHull()
         {
-            Hull bestHull = null;
+            Hull bestHull = character.CurrentHull;
             float bestValue = currenthullSafety;
-
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull == character.AnimController.CurrentHull || unreachable.Contains(hull)) continue;
-
-                float hullValue = GetHullSafety(hull, character);
-                //slight preference over hulls that are closer
-                hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X)) * 0.1f;
-                hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)) * 0.2f;
-
-                if (bestHull == null || hullValue > bestValue)
+                if (unreachable.Contains(hull)) { continue; }
+                foreach (var sub in Submarine.Loaded)
                 {
-                    bestHull = hull;
-                    bestValue = hullValue;
+                    float hullSafety = 0;
+                    if (character.Submarine == null)
+                    {
+                        // Outside
+                        if (hull.RoomName?.ToLowerInvariant() == "airlock")
+                        {
+                            hullSafety = 100;
+                        }
+                        else
+                        {
+                            // TODO: could also target gaps that get us inside?
+                            foreach (Item item in Item.ItemList)
+                            {
+                                if (item.CurrentHull == hull && item.HasTag("airlock"))
+                                {
+                                    hullSafety = 100;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Huge preference for closer targets
+                        float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
+                        hullSafety *= distanceFactor;
+                        // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                        if (sub.TeamID != character.TeamID && sub.TeamID != Character.TeamType.FriendlyNPC)
+                        {
+                            hullSafety /= 10;
+                        }
+                    }
+                    else
+                    {
+                        // Inside
+                        hullSafety = HumanAIController.GetHullSafety(hull, character);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                        int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
+                        // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                        float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
+                        float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
+                        hullSafety *= distanceFactor;
+                        // Each unsafe node reduces the hull safety value.
+                        hullSafety /= 1 + unsafeNodes;
+                        // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                        if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
+                        {
+                            hullSafety /= 10;
+                        }
+                    }
+                    if (hullSafety > bestValue)
+                    {
+                        bestHull = hull;
+                        bestValue = hullSafety;
+                    }
                 }
             }
-
             return bestHull;
         }
 
@@ -162,113 +220,30 @@ namespace Barotrauma
             return (otherObjective is AIObjectiveFindSafety);
         }
 
-        private bool NeedsDivingGear()
+        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            var currentHull = character.AnimController.CurrentHull;
-            if (currentHull == null) return true;
-
-            //there's lots of water in the room -> get a suit
-            if (currentHull.WaterVolume / currentHull.Volume > 0.5f) return true;
-
-            if (currentHull.OxygenPercentage < 30.0f) return true;
-
-            return false;
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.Oxygen < 80.0f)
+            if (character.CurrentHull == null)
             {
-                return 150.0f - character.Oxygen;
+                currenthullSafety = 0;
+                priority = 5;
+                return;
             }
-            
-            if (character.CurrentHull == null) return 5.0f;
-            currenthullSafety = GetHullSafety(character.CurrentHull, character);
-            priority = 100.0f - currenthullSafety;
-
-            //var nearbyHulls = character.CurrentHull.GetConnectedHulls(3);
-
-            //increase priority slightly if there's a fire in the room
-            //(will increase more heavily if near the damage range of the fire)
-            if (character.CurrentHull.FireSources.Count > 0)
+            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { priority = 100; }
+            currenthullSafety = OverrideCurrentHullSafety ?? HumanAIController.GetHullSafety(character.CurrentHull);
+            if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
-                priority += 5.0f;
-            }
-
-            /*foreach (Hull hull in nearbyHulls)
-            {
-                foreach (FireSource fireSource in hull.FireSources)
-                {
-                    //heavily increase priority if almost within damage range of a fire
-                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * 1.25f))
-                    {
-                        priority += Math.Max(fireSource.Size.X, 50.0f);
-                    }
-                }
-            }*/
-            
-            if (NeedsDivingGear())
-            {
-                if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
-            }
-
-            return priority;
-        }
-
-        public static float GetHullSafety(Hull hull, Character character)
-        {
-            if (hull == null) return 0.0f;
-
-            float safety = 100.0f;
-
-            float waterPercentage = (hull.WaterVolume / hull.Volume) * 100.0f;
-            if (hull.LethalPressure > 0.0f && character.PressureProtection <= 0.0f)
-            {
-                safety -= 100.0f;
-            }
-            else if (character.OxygenAvailable <= 0.0f)
-            {
-                safety -= waterPercentage;
+                priority -= priorityDecrease * deltaTime;
             }
             else
             {
-                safety -= waterPercentage * 0.1f;
+                float dangerFactor = (100 - currenthullSafety) / 100;
+                priority += dangerFactor * priorityIncrease * deltaTime;
             }
-
-            if (hull.OxygenPercentage < 30.0f) safety -= (30.0f - hull.OxygenPercentage) * 5.0f;
-
-            if (safety <= 0.0f) return 0.0f;
-
-            bool extinguishFires = 
-                character.AIController.ObjectiveManager?.CurrentOrder is AIObjectiveExtinguishFires ||
-                character.AIController.ObjectiveManager?.CurrentOrder is AIObjectiveExtinguishFire;
-
-            float fireAmount = 0.0f;
-            var nearbyHulls = hull.GetConnectedHulls(3);
-            foreach (Hull hull2 in nearbyHulls)
+            priority = MathHelper.Clamp(priority, 0, 100);
+            if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
             {
-                foreach (FireSource fireSource in hull2.FireSources)
-                {
-                    //increase priority if near the damage range of a fire
-                    //if extinguishing fires, the character can go closer the damage range
-                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * (extinguishFires ? 1.25f : 5.0f)))
-                    {
-                        fireAmount += Math.Max(fireSource.Size.X, AIObjectiveManager.OrderPriority + 1.0f);
-                    }
-                }
+                priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
             }
-            safety -= fireAmount;
-
-            foreach (Character enemy in Character.CharacterList)
-            {
-                if (enemy.CurrentHull == hull && !enemy.IsDead && !enemy.IsUnconscious &&
-                   (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
-                {
-                    safety -= 10.0f;
-                }
-            }
-            
-            return MathHelper.Clamp(safety, 0.0f, 100.0f);
         }
     }
 }

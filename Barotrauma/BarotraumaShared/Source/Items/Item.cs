@@ -60,8 +60,6 @@ namespace Barotrauma
 
         public readonly XElement StaticBodyConfig;
         
-        private Vector2 lastSentPos;
-
         private bool needsPositionUpdate;
         private float lastSentCondition;
 
@@ -202,18 +200,11 @@ namespace Barotrauma
             }
         }
 
-        public bool NeedsPositionUpdate
+        public float PositionUpdateInterval
         {
-            get
-            {
-                if (body == null || !body.Enabled) return false;
-                return needsPositionUpdate;
-            }
-            set
-            {
-                needsPositionUpdate = value;
-            }
-        }
+            get;
+            private set;
+        } = float.PositiveInfinity;
 
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
@@ -251,6 +242,10 @@ namespace Barotrauma
         {
             get { return spriteColor; }
         }
+
+        public bool IsFullCondition => Condition >= MaxCondition;
+        public float MaxCondition => Prefab.Health;
+        public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
         //we'll just use NaN (which does nothing) and set the default value in the constructor/load
@@ -1051,9 +1046,9 @@ namespace Barotrauma
                         return;
                     }
                 }
-
-                UpdateNetPosition();
             }
+
+            UpdateNetPosition(deltaTime);
 
             inWater = IsInWater();
             bool waterProof = WaterProof;
@@ -1596,8 +1591,6 @@ namespace Barotrauma
                 parentInventory.RemoveItem(this);
                 parentInventory = null;
             }
-
-            lastSentPos = SimPosition;
         }
 
         public void Equip(Character character)
@@ -1816,7 +1809,7 @@ namespace Barotrauma
             }
         }
 
-        partial void UpdateNetPosition();
+        partial void UpdateNetPosition(float deltaTime);
         
         public static Item Load(XElement element, Submarine submarine)
         {

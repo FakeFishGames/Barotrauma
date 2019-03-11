@@ -17,6 +17,11 @@ namespace Barotrauma
 
     static class MathUtils
     {
+        public static float Percentage(float portion, float total)
+        {
+            return portion / total * 100;
+        }
+
         public static int PositiveModulo(int i, int n)
         {
             return (i % n + n) % n;

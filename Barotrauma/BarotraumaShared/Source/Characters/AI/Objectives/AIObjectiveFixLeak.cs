@@ -8,30 +8,36 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
+        public override string DebugTag => "fix leak";
+
+        public override bool KeepDivingGearOn => true;
+
         private readonly Gap leak;
 
-        private bool pathUnreachable;
+        private AIObjectiveFindDivingGear findDivingGear;
+        private AIObjectiveGoTo gotoObjective;
+        private AIObjectiveOperateItem operateObjective;
         
         public Gap Leak
         {
             get { return leak; }
         }
 
-        public AIObjectiveFixLeak(Gap leak, Character character)
-            : base (character, "")
+        public AIObjectiveFixLeak(Gap leak, Character character) : base (character, "")
         {
             this.leak = leak;
         }
 
         public override bool IsCompleted()
         {
-            return leak.Open <= 0.0f || leak.Removed || pathUnreachable;
+            return leak.Open <= 0.0f || leak.Removed;
         }
+
+        public override bool CanBeCompleted => !abandon && base.CanBeCompleted;
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (leak.Open == 0.0f) { return 0.0f; }
-            if (pathUnreachable) { return 0.0f; }
 
             float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
 
@@ -49,6 +55,20 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (!leak.IsRoomToRoom)
+            {
+                if (findDivingGear == null)
+                {
+                    findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                    AddSubObjective(findDivingGear);
+                }
+                else if (!findDivingGear.CanBeCompleted)
+                {
+                    abandon = true;
+                    return;
+                }
+            }
+
             var weldingTool = character.Inventory.FindItemByTag("weldingtool");
 
             if (weldingTool == null)
@@ -72,31 +92,48 @@ namespace Barotrauma
             var repairTool = weldingTool.GetComponent<RepairTool>();
             if (repairTool == null) { return; }
 
-            Vector2 standPosition = GetStandPosition();
-
             Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
+            var humanoidController = character.AnimController as HumanoidAnimController;
 
-            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController && 
-                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            // TODO: use the collider size/reach?
+            if (!character.AnimController.InWater && humanoidController != null && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
             {
                 ((HumanoidAnimController)character.AnimController).Crouching = true;
             }
 
-            if (Math.Abs(gapDiff.X) > 100.0f || Math.Abs(gapDiff.Y) > 150.0f)
+            float armLength = humanoidController != null ? ConvertUnits.ToDisplayUnits(humanoidController.ArmLength) : 100;
+            bool cannotReach = gapDiff.Length() > armLength + repairTool.Range;
+            if (cannotReach)
             {
-                var gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(standPosition), character);
-                if (!gotoObjective.IsCompleted())
+                if (gotoObjective != null)
                 {
-                    pathUnreachable = !gotoObjective.CanBeCompleted;
-                    if (!pathUnreachable)
+                    // Check if the objective is already removed -> completed/impossible
+                    if (!subObjectives.Contains(gotoObjective))
+                    {
+                        gotoObjective = null;
+                    }
+                }
+                else
+                {
+                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character);
+                    if (!subObjectives.Contains(gotoObjective))
                     {
                         AddSubObjective(gotoObjective);
                     }
-                    return;
                 }
             }
-
-            AddSubObjective(new AIObjectiveOperateItem(repairTool, character, "", true, leak));                       
+            if (gotoObjective == null || gotoObjective.IsCompleted())
+            {
+                if (operateObjective == null)
+                {
+                    operateObjective = new AIObjectiveOperateItem(repairTool, character, "", true, leak);
+                    AddSubObjective(operateObjective);
+                }
+                else if (!subObjectives.Contains(operateObjective))
+                {
+                    operateObjective = null;
+                }
+            }   
         }
 
         private Vector2 GetStandPosition()

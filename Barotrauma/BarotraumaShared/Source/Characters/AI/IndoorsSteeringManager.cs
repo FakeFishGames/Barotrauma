@@ -43,6 +43,12 @@ namespace Barotrauma
             private set;
         }
 
+        public bool InLadders => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Ladders != null;
+        private bool IsNextNodeLadder => currentPath.NextNode != null && currentPath.CurrentNode.Ladders != null;
+        private bool IsNextLadderSameAsCurrent => IsNextNodeLadder && currentPath.CurrentNode.Ladders == currentPath.NextNode.Ladders;
+
+        public bool InStairs => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null;
+
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors)
             : base(host)
         {
@@ -105,9 +111,7 @@ namespace Barotrauma
 
             var collider = character.AnimController.Collider;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
-            if (!character.AnimController.InWater && 
-                character.AnimController.Anim != AnimController.Animation.Climbing &&
-                diff.Y < collider.height / 2 + collider.radius)
+            if (!character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
             {
                 diff.Y = 0.0f;
             }
@@ -155,9 +159,7 @@ namespace Barotrauma
             }
 
             //only humanoids can climb ladders
-            if (currentPath.CurrentNode != null && 
-                currentPath.CurrentNode.Ladders != null &&
-                character.AnimController is HumanoidAnimController)
+            if (character.AnimController is HumanoidAnimController && InLadders && IsNextLadderSameAsCurrent)
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
                     currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
@@ -167,13 +169,15 @@ namespace Barotrauma
             }
             
             var collider = character.AnimController.Collider;
-
-            if (character.AnimController.Anim == AnimController.Animation.Climbing)
+            if (character.IsClimbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
 
-                //climbing ladders -> don't move horizontally
-                diff.X = 0.0f;
+                if (IsNextLadderSameAsCurrent)
+                {
+                    //climbing ladders -> don't move horizontally
+                    diff.X = 0.0f;
+                }
 
                 //at the same height as the waypoint
                 if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < (collider.height / 2 + collider.radius) * 1.25f)
@@ -183,27 +187,23 @@ namespace Barotrauma
                     {
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
-                    
-                    //we can safely skip to the next waypoint if the character is at a safe height above the floor,
-                    //or if the next waypoint in the path is also on ladders
-                    if ((heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f) ||
-                        (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
+
+                    bool aboveFloor = heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f;
+                    if (aboveFloor || IsNextNodeLadder)
                     {
-                        if (currentPath.NextNode != null && currentPath.NextNode.Ladders == null)
+                        if (!IsNextLadderSameAsCurrent)
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
                         currentPath.SkipToNextNode();
                     }
                 }
-                else
+                else if (IsNextLadderSameAsCurrent)
                 {
                     //if the current node is below the character and the next one is above (or vice versa)
                     //and both are on ladders, we can skip directly to the next one
-
                     //e.g. no point in going down to reach the starting point of a path when we could go directly to the one above
-                    if (currentPath.CurrentNode.Ladders != null && currentPath.CurrentNode.Ladders == currentPath.NextNode?.Ladders &&
-                        Math.Sign(currentPath.CurrentNode.WorldPosition.Y - character.WorldPosition.Y) != Math.Sign(currentPath.NextNode.WorldPosition.Y - character.WorldPosition.Y))
+                    if (Math.Sign(currentPath.CurrentNode.WorldPosition.Y - character.WorldPosition.Y) != Math.Sign(currentPath.NextNode.WorldPosition.Y - character.WorldPosition.Y))
                     {
                         currentPath.SkipToNextNode();
                     }
@@ -222,9 +222,11 @@ namespace Barotrauma
             else
             {
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
-                if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
-                    currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
-                    currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f)
+                float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
+                bool isAboveVerticalPosition = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
+                bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f;
+                
+                if (horizontalDistance < collider.radius * 2 && isAboveVerticalPosition && isNotTooHigh)
                 {
                     currentPath.SkipToNextNode();
                 }

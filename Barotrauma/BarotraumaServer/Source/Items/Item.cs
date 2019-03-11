@@ -9,8 +9,6 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        private bool prevBodyAwake;
-
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";
@@ -255,17 +253,71 @@ namespace Barotrauma
 
         }
 
-        partial void UpdateNetPosition()
+        partial void UpdateNetPosition(float deltaTime)
         {
-            if (parentInventory != null) return;
-
-            if (prevBodyAwake != body.FarseerBody.Awake || 
-                Vector2.DistanceSquared(lastSentPos, SimPosition) > NetConfig.ItemPosUpdateDistance * NetConfig.ItemPosUpdateDistance)
+            if (parentInventory != null || body == null || !body.Enabled || Removed)
             {
-                needsPositionUpdate = true;
+                PositionUpdateInterval = float.PositiveInfinity;
+                return;
+            }
+            
+            //gradually increase the interval of position updates
+            PositionUpdateInterval += deltaTime;
+
+            float maxInterval = 30.0f;
+
+            float velSqr = body.LinearVelocity.LengthSquared();
+            if (velSqr > 10.0f * 10.0f)
+            {
+                //over 10 m/s (projectile, thrown item or similar) -> send updates very frequently
+                maxInterval = 0.1f;
+            }
+            else if (velSqr > 1.0f)
+            {
+                //over 1 m/s
+                maxInterval = 0.25f;
+            }
+            else if (velSqr > 0.05f * 0.05f)
+            {
+                //over 0.05 m/s
+                maxInterval = 1.0f;
             }
 
-            prevBodyAwake = body.FarseerBody.Awake;
+            PositionUpdateInterval = Math.Min(PositionUpdateInterval, maxInterval);
+        }
+
+        public float GetPositionUpdateInterval(Client recipient)
+        {
+            if (PositionUpdateInterval == float.PositiveInfinity)
+            {
+                return float.PositiveInfinity;
+            }
+
+            if (recipient.Character == null || recipient.Character.IsDead)
+            {
+                //less frequent updates for clients who aren't controlling a character (max 2 updates/sec)
+                return Math.Max(PositionUpdateInterval, 0.5f);
+            }
+            else
+            {
+                float distSqr = Vector2.DistanceSquared(recipient.Character.WorldPosition, WorldPosition);
+                if (distSqr > 20000.0f * 20000.0f)
+                {
+                    //don't send position updates at all if >20 000 units away
+                    return float.PositiveInfinity;
+                }
+                else if (distSqr > 10000.0f * 10000.0f)
+                {
+                    //drop the update rate to 10% if too far to see the item
+                    return PositionUpdateInterval * 10;
+                }
+                else if (distSqr > 1000.0f * 1000.0f)
+                {
+                    //halve the update rate if the client is far away (but still close enough to possibly see the item)
+                    return PositionUpdateInterval * 2;
+                }
+                return PositionUpdateInterval;
+            }
         }
 
         public void ServerWritePosition(NetBuffer msg, Client c, object[] extraData = null)
@@ -277,8 +329,6 @@ namespace Barotrauma
             msg.Write((byte)tempBuffer.LengthBytes);
             msg.Write(tempBuffer);
             msg.WritePadBits();
-
-            lastSentPos = SimPosition;
         }
 
         public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable
