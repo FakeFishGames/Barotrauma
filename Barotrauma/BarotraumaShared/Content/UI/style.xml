@@ -5,10 +5,22 @@
   <UIGlow texture="Content/UI/InnerGlow.png"  sourcerect ="0,0,512,384" slice="128,128,384,256"/>
   
   <FocusIndicator texture="Content/UI/UI_Atlas2.png" sourcerect="112,784,448,224" rows="2" columns="4"/>
-  
+
+  <!-- LEGACY
   <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
+  -->
+
+  <Font file="Content/Fonts/Roboto/Roboto-Medium.ttf" size="14"/>
+  <SmallFont file="Content/Fonts/Roboto/Roboto-Bold.ttf" size="12"/>
+  <LargeFont file="Content/Fonts/WorkSans/WorkSans-ExtraBold.ttf" size="22"/>
+
+  <!-- Covers rest of the languages which Roboto or WorkSans doesn't
+  <Font file="Content/Fonts/NotoSans/NotoSans-Medium.ttf" size="14"/>
+  <SmallFont file="Content/Fonts/NotoSans/NotoSans-Bold.ttf" size="12"/>
+  <LargeFont file="Content/Fonts/NotoSans/NotoSans-ExtraBold.ttf" size="22"/>
+  -->
 
   <InnerGlow
     color="255,255,255,204"
@@ -118,6 +130,50 @@
       textcolor="153,166,179,255"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButton>
+
+  <MainMenuGUITextBlock
+    textcolor="0,0,0,255"
+    color="255,255,255,255"
+    padding="10,10,10,10">
+
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect ="0,0,513,39" tile="false"/>
+  </MainMenuGUITextBlock>
+
+  <MainMenuGUIFrame
+    color="255,255,255,255">
+
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect ="0,39,513,192" tile="false"/>
+  </MainMenuGUIFrame>
+
+  <MainMenuGUIButton
+    hovercolor="44,208,150,255">
+
+    <Sprite texture="Content/UI/UI_MainMenu.png" state="Hover" sourcerect="513,3,507,36" tile="false"/>
+
+    <GUITextBlock
+      textcolor="255,255,255,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </MainMenuGUIButton>
+
+  <MainMenuCampaignIcon
+    color="44,208,150,255">
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="279,522,204,235" tile="false" maintainaspectratio="true"/>
+  </MainMenuCampaignIcon>
+
+  <MainMenuMultiplayerIcon
+    color="44,208,150,255">
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="279,266,204,235" tile="false" maintainaspectratio="true"/>
+  </MainMenuMultiplayerIcon>
+
+  <MainMenuCustomizeIcon
+    color="44,208,150,255">
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="27,776,204,235" tile="false" maintainaspectratio="true"/>
+  </MainMenuCustomizeIcon>
+
+  <MainMenuOptionIcon
+    color="44,208,150,255">
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="27,523,204,235" tile="false" maintainaspectratio="true"/>
+  </MainMenuOptionIcon>
 
   <GUIButtonLarge
     color="255,255,255,255"
