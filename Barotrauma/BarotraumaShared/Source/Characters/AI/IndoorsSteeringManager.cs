@@ -49,8 +49,7 @@ namespace Barotrauma
 
         public bool InStairs => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null;
 
-        public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors)
-            : base(host)
+        public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors) : base(host)
         {
             pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true);
             pathFinder.GetNodePenalty = GetNodePenalty;
@@ -79,7 +78,7 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
-        protected override Vector2 DoSteeringSeek(Vector2 target, float speed)
+        protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (currentPath == null || Vector2.Distance(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
@@ -118,7 +117,7 @@ namespace Barotrauma
 
             if (diff.LengthSquared() < 0.001f) return -host.Steering;
 
-            return Vector2.Normalize(diff) * speed;          
+            return Vector2.Normalize(diff) * weight;          
         }
 
         private Vector2 DiffToCurrentNode()

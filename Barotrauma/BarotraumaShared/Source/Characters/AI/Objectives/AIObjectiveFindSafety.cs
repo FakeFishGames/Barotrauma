@@ -128,7 +128,6 @@ namespace Barotrauma
 
                 if (escapeVel != Vector2.Zero)
                 {
-                    escapeVel *= character.AnimController.GetCurrentSpeed(true);
                     //only move if we haven't reached the edge of the room
                     if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
                         (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))

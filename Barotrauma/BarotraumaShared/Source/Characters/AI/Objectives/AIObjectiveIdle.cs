@@ -105,7 +105,7 @@ namespace Barotrauma
                     {
                         if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
                         {
-                            PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist) * character.AnimController.GetCurrentSpeed(false));
+                            PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
                         }
                         else
                         {
@@ -115,19 +115,19 @@ namespace Barotrauma
                     }
                     else if (leftDist < WallAvoidDistance)
                     {
-                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
+                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist) / WallAvoidDistance);
                         PathSteering.WanderAngle = 0.0f;
                         return;
                     }
                     else if (rightDist < WallAvoidDistance)
                     {
-                        PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist) / WallAvoidDistance * character.AnimController.GetCurrentSpeed(false));
+                        PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist) / WallAvoidDistance);
                         PathSteering.WanderAngle = MathHelper.Pi;
                         return;
                     }
                 }
                 
-                character.AIController.SteeringManager.SteeringWander(character.AnimController.GetCurrentSpeed(false));
+                character.AIController.SteeringManager.SteeringWander();
                 if (!character.IsClimbing)
                 {
                     //reset vertical steering to prevent dropping down from platforms etc
@@ -139,7 +139,7 @@ namespace Barotrauma
 
             if (currentTarget != null)
             {
-                character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(false));
+                character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
             }
         }
 
