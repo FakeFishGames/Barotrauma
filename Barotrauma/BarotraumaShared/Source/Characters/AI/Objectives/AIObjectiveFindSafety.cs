@@ -155,61 +155,61 @@ namespace Barotrauma
             foreach (Hull hull in Hull.hullList)
             {
                 if (unreachable.Contains(hull)) { continue; }
-                foreach (var sub in Submarine.Loaded)
+                if (hull.Submarine == null) { continue; }
+                float hullSafety = 0;
+                if (character.Submarine == null)
                 {
-                    float hullSafety = 0;
-                    if (character.Submarine == null)
+                    // Outside
+                    if (hull.RoomName?.ToLowerInvariant() == "airlock")
                     {
-                        // Outside
-                        if (hull.RoomName?.ToLowerInvariant() == "airlock")
-                        {
-                            hullSafety = 100;
-                        }
-                        else
-                        {
-                            // TODO: could also target gaps that get us inside?
-                            foreach (Item item in Item.ItemList)
-                            {
-                                if (item.CurrentHull == hull && item.HasTag("airlock"))
-                                {
-                                    hullSafety = 100;
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Huge preference for closer targets
-                        float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
-                        hullSafety *= distanceFactor;
-                        // If the target is not inside a friendly submarine, considerably reduce the hull safety.
-                        if (sub.TeamID != character.TeamID && sub.TeamID != Character.TeamType.FriendlyNPC)
-                        {
-                            hullSafety /= 10;
-                        }
+                        hullSafety = 100;
                     }
                     else
                     {
-                        // Inside
-                        hullSafety = HumanAIController.GetHullSafety(hull, character);
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                        int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
-                        // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-                        float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
-                        float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
-                        hullSafety *= distanceFactor;
-                        // Each unsafe node reduces the hull safety value.
-                        hullSafety /= 1 + unsafeNodes;
-                        // If the target is not inside a friendly submarine, considerably reduce the hull safety.
-                        if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
+                        // TODO: could also target gaps that get us inside?
+                        foreach (Item item in Item.ItemList)
                         {
-                            hullSafety /= 10;
+                            if (item.CurrentHull == hull && item.HasTag("airlock"))
+                            {
+                                hullSafety = 100;
+                                break;
+                            }
                         }
                     }
-                    if (hullSafety > bestValue)
+
+                    // Huge preference for closer targets
+                    float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
+                    hullSafety *= distanceFactor;
+                    // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                    if (hull.Submarine.TeamID != character.TeamID && hull.Submarine.TeamID != Character.TeamType.FriendlyNPC)
                     {
-                        bestHull = hull;
-                        bestValue = hullSafety;
+                        hullSafety /= 10;
                     }
+                }
+                else
+                {
+                    // Inside
+                    // Not connected.
+                    if (!character.Submarine.GetConnectedSubs().Contains(hull.Submarine)) { continue; }
+                    hullSafety = HumanAIController.GetHullSafety(hull, character);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                    int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
+                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
+                    float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
+                    hullSafety *= distanceFactor;
+                    // Each unsafe node reduces the hull safety value.
+                    hullSafety /= 1 + unsafeNodes;
+                    // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                    if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
+                    {
+                        hullSafety /= 10;
+                    }
+                }
+                if (hullSafety > bestValue)
+                {
+                    bestHull = hull;
+                    bestValue = hullSafety;
                 }
             }
             return bestHull;
