@@ -141,11 +141,16 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return enemy.IsDead || coolDownTimer <= 0.0f;
+            return enemy == null || enemy.Removed || enemy.IsDead || coolDownTimer <= 0.0f;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (enemy == null || enemy.Removed)
+            {
+                return 0.0f;
+            }
+
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
@@ -156,8 +161,7 @@ namespace Barotrauma
 
             float enemyDanger = Math.Min(Math.Max(CalculateEnemyStrength(), MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
 
-            EnemyAIController enemyAI = enemy.AIController as EnemyAIController;
-            if (enemyAI != null)
+            if (enemy.AIController is EnemyAIController enemyAI)
             {
                 if (enemyAI.SelectedAiTarget == character.AiTarget) enemyDanger *= 2.0f;
             }

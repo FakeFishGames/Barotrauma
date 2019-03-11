@@ -235,6 +235,7 @@ namespace Barotrauma
         public void RecreateSprite()
         {
             if (Sprite == null) { return; }
+            Sprite.Remove();
             var source = Sprite.SourceElement;
             Sprite = new Sprite(source, file: GetSpritePath(source));
         }

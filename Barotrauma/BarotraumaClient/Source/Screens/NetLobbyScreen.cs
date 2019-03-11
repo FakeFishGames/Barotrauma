@@ -132,11 +132,6 @@ namespace Barotrauma
             get { return shuttleList; }
         }
 
-        public GUITickBox ShuttleTickBox
-        {
-            get { return shuttleTickBox; }
-        }
-
         public GUIListBox ModeList
         {
             get { return modeList; }
@@ -190,7 +185,7 @@ namespace Barotrauma
         public bool UsingShuttle
         {
             get { return shuttleTickBox.Selected; }
-            set { shuttleTickBox.Selected = value; if (GameMain.Client != null) shuttleTickBox.Enabled = false; }
+            set { shuttleTickBox.Selected = value; }
         }
 
         public GameModePreset SelectedMode
@@ -338,7 +333,7 @@ namespace Barotrauma
             var midInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), infoColumnContainer.RectTransform, Anchor.BottomLeft))
                 { RelativeSpacing = 0.02f, Stretch = true };
 
-            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), infoFrameContent.RectTransform, Anchor.TopRight))
+            var rightInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.9f), infoFrameContent.RectTransform, Anchor.TopRight))
                 { RelativeSpacing = 0.02f, Stretch = true };
             
             var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), rightInfoColumn.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight)
@@ -424,11 +419,18 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     shuttleList.Enabled = box.Selected;
-                    //if (GameMain.Server != null) lastUpdateID++;
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, useRespawnShuttle: box.Selected);
                     return true;
                 }
             };
-            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10);
+            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10)
+            {
+                OnSelected = (component, obj) =>
+                {
+                    GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: true);
+                    return true;
+                }
+            };
 
             //gamemode ------------------------------------------------------------------
 
@@ -622,7 +624,6 @@ namespace Barotrauma
                 OnSelected = (tickBox) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
-
                     return true;
                 }
             };
@@ -633,6 +634,12 @@ namespace Barotrauma
                 TextGetter = AutoRestartText
             };
             
+            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), rightInfoColumn.RectTransform),
+                TextManager.Get("ReadyToStartTickBox"))
+            {
+                Visible = false
+            };
+
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
@@ -644,12 +651,6 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
-
-            ReadyToStartBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.06f), infoFrameContent.RectTransform, Anchor.BottomRight),
-                TextManager.Get("ReadyToStartTickBox"), GUI.SmallFont)
-            {
-                Visible = false
-            };
 
             campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                 TextManager.Get("CampaignView"), style: "GUIButtonLarge")
@@ -731,7 +732,7 @@ namespace Barotrauma
             if (GameMain.Client != null)
             {
                 spectateButton.Visible = GameMain.Client.GameStarted;
-                ReadyToStartBox.Visible = !GameMain.Client.GameStarted && !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+                ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
@@ -841,10 +842,10 @@ namespace Barotrauma
 
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
-            ReadyToStartBox.Visible = !GameMain.Client.HasPermission(ClientPermissions.ManageRound);
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !campaignContainer.Visible;
             ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
@@ -1228,7 +1229,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
-                        GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component));
+                        GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
                         return true;
                     }
                     return false;
@@ -1930,6 +1931,11 @@ namespace Barotrauma
             if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
 
             var matchingListSub = subList.Content.GetChildByUserData(sub);
+            if (sub != null && subList.SelectedData as Submarine == sub)
+            {
+                return true;
+            }
+
             if (matchingListSub != null)
             {
                 if (subList.Parent is GUIDropDown subDropDown)
