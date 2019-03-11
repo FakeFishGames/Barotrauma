@@ -12,6 +12,10 @@ bld/
 [Dd]ebug*/
 [Rr]elease*/
 
+
+# Barotrauma content folder
+Content/
+
 # Misc vs crap 
 *.v12.suo
 *.suo
