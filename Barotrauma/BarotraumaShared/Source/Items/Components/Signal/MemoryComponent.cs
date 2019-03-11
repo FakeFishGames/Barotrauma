@@ -6,20 +6,14 @@ namespace Barotrauma.Items.Components
 {
     class MemoryComponent : ItemComponent
     {
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(1.0f, true)]
-        public float Value
+        [InGameEditable, Serialize("", true)]
+        public string Value
         {
             get;
             set;
         }
-
-        public float TempValue
-        {
-            get;
-            set;
-        }
-
-        protected bool writeable;
+        
+        protected bool writeable = true;
 
         public MemoryComponent(Item item, XElement element)
             : base(item, element)
@@ -29,7 +23,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            item.SendSignal(0, Value.ToString(), "signal_out", null);
+            item.SendSignal(0, Value, "signal_out", null);
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
@@ -37,15 +31,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    if ( writeable )
-                    {
-                        float tempValue;
-                        if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempValue))
-                        {
-                            if (!MathUtils.IsValid(tempValue)) return;
-                            Value = tempValue;
-                        }
-                    }
+                    if (writeable) { Value = signal; }
                     break;
                 case "signal_store":
                     writeable = (signal == "1");
