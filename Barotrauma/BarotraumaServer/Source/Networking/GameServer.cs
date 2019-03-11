@@ -2277,8 +2277,7 @@ namespace Barotrauma.Networking
 
             if (type.Value != ChatMessageType.MessageBox)
             {
-                string myReceivedMessage = TextManager.GetServerMessage(message);
-                
+                string myReceivedMessage = type == ChatMessageType.Server || type == ChatMessageType.Error ? TextManager.GetServerMessage(message) : message;
                 if (!string.IsNullOrWhiteSpace(myReceivedMessage) &&
                     (targetClient == null || senderClient == null))
                 {
