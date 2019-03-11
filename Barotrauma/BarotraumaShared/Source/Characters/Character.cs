@@ -1023,8 +1023,9 @@ namespace Barotrauma
                     !AnimController.IsMovingBackwards;
             }
             
-            targetMovement *= AnimController.GetCurrentSpeed(run);
-            float maxSpeed = GetCurrentMaxSpeed(run);
+            float currentSpeed = AnimController.GetCurrentSpeed(run);
+            targetMovement *= currentSpeed;
+            float maxSpeed = ApplyTemporarySpeedLimits(currentSpeed);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
 
@@ -1084,31 +1085,23 @@ namespace Barotrauma
             speedMultipliers.Clear();
         }
 
-        /// <summary>
-        /// Applies temporary limits to the speed (damage).
-        /// </summary>
-        public float GetCurrentMaxSpeed(bool run)
+        public float ApplyTemporarySpeedLimits(float speed)
         {
-            float currMaxSpeed = AnimController.GetCurrentSpeed(run);
-
-            //?
-            //currMaxSpeed *= 1.5f;
-
             var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
             if (leftFoot != null)
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
-                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+                speed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
             if (rightFoot != null)
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
-                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+                speed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
-            return currMaxSpeed;
+            return speed;
         }
 
         public void Control(float deltaTime, Camera cam)

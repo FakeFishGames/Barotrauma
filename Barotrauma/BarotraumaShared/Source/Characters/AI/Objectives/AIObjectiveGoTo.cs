@@ -72,6 +72,8 @@ namespace Barotrauma
 
         public Entity Target { get; private set; }
 
+        public Vector2 TargetPos => Target != null ? Target.SimPosition : targetPos;
+
         public bool FollowControlledCharacter;
 
         public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
@@ -150,8 +152,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float normalSpeed = character.AnimController.GetCurrentSpeed(false);
-                    character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
+                    float speed = character.AnimController.GetCurrentSpeed(true);
+                    character.AIController.SteeringManager.SteeringSeek(currTargetPos, speed);
                     if (getDivingGearIfNeeded)
                     {
                         if (targetIsOutside ||
