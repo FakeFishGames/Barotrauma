@@ -240,22 +240,23 @@ namespace Barotrauma
                     var holdable = GetComponent<Holdable>();
                     if (holdable != null && holdable.Picker?.AnimController != null)
                     {
+                        float depthStep = 0.000001f;
                         if (holdable.Picker.SelectedItems[0] == this)
                         {
                             Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.RightHand);
-                            depth = holdLimb.ActiveSprite.Depth + 0.000001f;
+                            depth = holdLimb.ActiveSprite.Depth + depthStep * 2;
                             foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
                             {
-                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) depth = Math.Min(wearableSprite.Sprite.Depth, depth);
+                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) depth = Math.Max(wearableSprite.Sprite.Depth + depthStep, depth);
                             }
                         }
                         else if (holdable.Picker.SelectedItems[1] == this)
                         {
                             Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftHand);
-                            depth = holdLimb.ActiveSprite.Depth - 0.000001f;
+                            depth = holdLimb.ActiveSprite.Depth - depthStep * 2;
                             foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
                             {
-                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) depth = Math.Max(wearableSprite.Sprite.Depth, depth);
+                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) depth = Math.Min(wearableSprite.Sprite.Depth - depthStep, depth);
                             }
                         }
                     }
