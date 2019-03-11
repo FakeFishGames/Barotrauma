@@ -2022,7 +2022,7 @@ namespace Barotrauma.Networking
                 targetmsg += $"/\n/ServerMessage.Reason/: /{reason}";
             }
 
-            Log(msg, ServerLog.MessageType.ServerMessage);
+            //Log(msg, ServerLog.MessageType.ServerMessage);
 
             if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
 
