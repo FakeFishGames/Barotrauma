@@ -180,8 +180,8 @@ namespace Barotrauma
                         {
                             //move closer to the wall
                             DeattachFromBody();
-                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, character.AnimController.GetCurrentSpeed(false) * 0.1f);
-                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos, character.AnimController.GetCurrentSpeed(true));
+                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
+                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos);
                         }
                     }
                     break;

@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
                 standPos = leak.WorldPosition + standPos * Range;
                 // TODO: check if too close to the stand pos -> move away so that the tool can hit the target and not through it?
                 Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
-                character.AIController.SteeringManager.SteeringManual(deltaTime, dir * character.AnimController.GetCurrentSpeed(false) / 2);
+                character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
             }
             else
             {
