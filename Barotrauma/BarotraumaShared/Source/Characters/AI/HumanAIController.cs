@@ -28,6 +28,7 @@ namespace Barotrauma
         private SteeringManager outsideSteering, insideSteering;
 
         public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
+        public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
 
         public override AIObjectiveManager ObjectiveManager
         {
@@ -76,7 +77,7 @@ namespace Barotrauma
                 steeringManager = outsideSteering;
             }
 
-            (Character.AnimController as HumanoidAnimController).Crouching = shouldCrouch;
+            AnimController.Crouching = shouldCrouch;
             CheckCrouching(deltaTime);
             Character.ClearInputs();
 
@@ -99,8 +100,24 @@ namespace Barotrauma
 
             objectiveManager.DoCurrentObjective(deltaTime);
 
-            bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > 30;
-            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
+            bool run = objectiveManager.GetCurrentPriority() > AIObjectiveManager.OrderPriority;
+            if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
+            {
+                if (Vector2.DistanceSquared(Character.SimPosition, goTo.Target.SimPosition) > 3 * 3)
+                {
+                    run = true;
+                }
+            }
+            if (!run)
+            {
+                run = objectiveManager.CurrentObjective.ForceRun;
+            }
+            if (run)
+            {
+                run = !AnimController.Crouching && !AnimController.IsMovingBackwards;
+            }
+            float currentSpeed = Character.AnimController.GetCurrentSpeed(run);
+            steeringManager.Update(currentSpeed);
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
                 (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
@@ -119,32 +136,31 @@ namespace Barotrauma
 
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
 
-            if (!Character.AnimController.InWater)
-            {
-                Vector2 targetMovement = new Vector2(
-                    Character.AnimController.TargetMovement.X,
-                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
-
-                float maxSpeed = Character.GetCurrentMaxSpeed(run);
-                targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
-                targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
-
-                //apply speed multiplier if 
-                //  a. it's boosting the movement speed and the character is trying to move fast (= running)
-                //  b. it's a debuff that decreases movement speed
-
-                float speedMultiplier = Character.SpeedMultiplier;
-                if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;               
-
-                Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
-
-                Character.AnimController.TargetMovement = targetMovement;
-            }
-
             if (Character.IsClimbing)
             {
                 Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
             }
+
+            Vector2 targetMovement = AnimController.TargetMovement;
+
+            if (!Character.AnimController.InWater)
+            {
+                targetMovement = new Vector2(
+                    Character.AnimController.TargetMovement.X,
+                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
+            }
+
+            float maxSpeed = Character.ApplyTemporarySpeedLimits(currentSpeed);
+            targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
+            targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
+
+            //apply speed multiplier if 
+            //  a. it's boosting the movement speed and the character is trying to move fast (= running)
+            //  b. it's a debuff that decreases movement speed
+            float speedMultiplier = Character.SpeedMultiplier;
+            if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
+            Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
+            Character.AnimController.TargetMovement = targetMovement;
 
             if (!NeedsDivingGear(Character.CurrentHull))
             {
@@ -286,7 +302,7 @@ namespace Barotrauma
                     // Don't react to damage done by friendly ai, because we know that it's accidental
                     return;
                 }
-                if (attacker.AnimController.Anim == AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
+                if (attacker.AnimController.Anim == Barotrauma.AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
                 {
                     // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
                     // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
