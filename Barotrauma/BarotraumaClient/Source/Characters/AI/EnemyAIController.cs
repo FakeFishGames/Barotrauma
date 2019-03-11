@@ -65,9 +65,10 @@ namespace Barotrauma
                 {
                     GUI.DrawLine(spriteBatch, pos,
                         ConvertUnits.ToDisplayUnits(new Vector2(latchOntoAI.WallAttachPos.Value.X, -latchOntoAI.WallAttachPos.Value.Y)), Color.Orange * 0.6f, 0, 3);
-
                 }
             }
+
+            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
