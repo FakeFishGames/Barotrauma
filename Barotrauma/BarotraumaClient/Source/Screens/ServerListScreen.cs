@@ -733,7 +733,7 @@ namespace Barotrauma
             graphics.Clear(Color.CornflowerBlue);
 
             GameMain.TitleScreen.DrawLoadingText = false;
-            GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
+            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
             

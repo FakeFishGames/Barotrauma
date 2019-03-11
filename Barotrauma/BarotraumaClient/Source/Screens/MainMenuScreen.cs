@@ -265,9 +265,9 @@ namespace Barotrauma
             var pivot = Pivot.Center;
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
             
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
             var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center), style: null);
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center), style: null);
             
             campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame)
@@ -278,13 +278,13 @@ namespace Barotrauma
 
             var hostServerScale = new Vector2(0.7f, 1.0f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
-                Vector2.Multiply(relativeSize, hostServerScale), Frame.RectTransform, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)));
+                Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)));
 
             CreateHostServerFields();
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
 
             //PLACEHOLDER
             var tutorialList = new GUIListBox(
@@ -633,8 +633,7 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            Frame.AddToGUIUpdateList(ignoreChildren: true);
-            buttonsParent.AddToGUIUpdateList();
+            Frame.AddToGUIUpdateList();
             if (selectedTab > 0 && menuTabs[(int)selectedTab] != null)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
@@ -665,7 +664,7 @@ namespace Barotrauma
 #endif
         }
 
-        public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
+        public void DrawBackground(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.Black);
 
@@ -675,6 +674,11 @@ namespace Barotrauma
             }
 
             if (backgroundSprite != null) { GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite); }
+        }
+
+        public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
+        {
+            DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
