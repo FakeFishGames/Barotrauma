@@ -132,11 +132,6 @@ namespace Barotrauma
             get { return shuttleList; }
         }
 
-        public GUITickBox ShuttleTickBox
-        {
-            get { return shuttleTickBox; }
-        }
-
         public GUIListBox ModeList
         {
             get { return modeList; }
@@ -190,7 +185,7 @@ namespace Barotrauma
         public bool UsingShuttle
         {
             get { return shuttleTickBox.Selected; }
-            set { shuttleTickBox.Selected = value; if (GameMain.Client != null) shuttleTickBox.Enabled = false; }
+            set { shuttleTickBox.Selected = value; }
         }
 
         public GameModePreset SelectedMode
@@ -424,7 +419,7 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     shuttleList.Enabled = box.Selected;
-                    //if (GameMain.Server != null) lastUpdateID++;
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, useRespawnShuttle: box.Selected);
                     return true;
                 }
             };
@@ -444,15 +439,7 @@ namespace Barotrauma
             {
                 OnSelected = VotableClicked
             };
-
-#if !DEBUG
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform),
-                "Coming up: Multiplayer campaign", textAlignment: Alignment.Center, style: "ListBoxElement")
-            {
-                ToolTip = "Multiplayer campaign mode is not available in this version of Barotrauma. Coming up in the Early Access release!"
-            };
-#endif
-
+            
             voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
             {
@@ -629,7 +616,6 @@ namespace Barotrauma
                 OnSelected = (tickBox) =>
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
-
                     return true;
                 }
             };
@@ -851,6 +837,7 @@ namespace Barotrauma
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !campaignContainer.Visible;
             ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
@@ -1936,6 +1923,11 @@ namespace Barotrauma
             if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
 
             var matchingListSub = subList.Content.GetChildByUserData(sub);
+            if (sub != null && subList.SelectedData as Submarine == sub)
+            {
+                return true;
+            }
+
             if (matchingListSub != null)
             {
                 if (subList.Parent is GUIDropDown subDropDown)

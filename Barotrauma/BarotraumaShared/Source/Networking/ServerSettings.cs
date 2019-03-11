@@ -321,6 +321,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(true, true)]
+        public bool UseRespawnShuttle
+        {
+            get;
+            private set;
+        }
+
         [Serialize(300.0f, true)]
         public float RespawnInterval
         {
@@ -341,7 +348,6 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
 
         [Serialize(60.0f, true)]
         public float AutoRestartInterval
