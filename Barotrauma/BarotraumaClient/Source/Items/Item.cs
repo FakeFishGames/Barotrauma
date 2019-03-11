@@ -597,8 +597,9 @@ namespace Barotrauma
             if (HasInGameEditableProperties ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
+                GUIComponent prevEditingHUD = editingHUD;
                 UpdateEditing(cam);
-                editingHUDCreated = editingHUD != null;
+                editingHUDCreated = editingHUD != null && editingHUD != prevEditingHUD;
             }
 
             List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);

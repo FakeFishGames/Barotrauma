@@ -126,7 +126,7 @@ namespace Barotrauma
             if (startUpSoundElement != null)
             {
                 startUpSound = GameMain.SoundManager.LoadSound(startUpSoundElement, false);
-                startUpSound.Play();
+                startUpSound?.Play();
             }
 
             yield return CoroutineStatus.Running;
@@ -144,23 +144,22 @@ namespace Barotrauma
                     switch (soundElement.Name.ToString().ToLowerInvariant())
                     {
                         case "music":
-                            musicClips.Add(new BackgroundMusic(soundElement));
+                            musicClips.AddIfNotNull(new BackgroundMusic(soundElement));
                             break;
                         case "splash":
-                            SplashSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
+                            SplashSounds.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
                             break;
                         case "flow":
-                            FlowSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
+                            FlowSounds.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
                             break;
                         case "waterambience":
-                            waterAmbiences.Add(GameMain.SoundManager.LoadSound(soundElement, false));
+                            waterAmbiences.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
                             break;
                         case "damagesound":
                             Sound damageSound = GameMain.SoundManager.LoadSound(soundElement, false);
-                            if (damageSound == null) continue;
+                            if (damageSound == null) { continue; }
                     
                             string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
-
                             damageSounds.Add(new DamageSound(
                                 damageSound, 
                                 soundElement.GetAttributeVector2("damagerange", Vector2.Zero), 
@@ -174,7 +173,6 @@ namespace Barotrauma
                             {
                                 miscSoundList.Add(new KeyValuePair<string, Sound>(soundElement.Name.ToString().ToLowerInvariant(), sound));
                             }
-
                             break;
                     }
                 }
@@ -481,7 +479,7 @@ namespace Barotrauma
 
         private static void UpdateMusic(float deltaTime)
         {
-            if (musicClips == null) return;
+            if (musicClips == null || GameMain.SoundManager.Disabled) { return; }
 
             if (OverrideMusicType != null && OverrideMusicDuration.HasValue)
             {

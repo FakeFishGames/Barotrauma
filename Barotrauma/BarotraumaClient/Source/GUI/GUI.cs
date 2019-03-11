@@ -1580,12 +1580,12 @@ namespace Barotrauma
 
         public static void PlayUISound(GUISoundType soundType)
         {
-            if (sounds == null) return;
+            if (sounds == null) { return; }
 
             int soundIndex = (int)soundType;
-            if (soundIndex < 0 || soundIndex >= sounds.Length) return;
+            if (soundIndex < 0 || soundIndex >= sounds.Length) { return; }
 
-            sounds[soundIndex].Play(null, "ui");
+            sounds[soundIndex]?.Play(null, "ui");
         }
         #endregion
     }

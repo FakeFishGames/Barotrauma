@@ -89,5 +89,10 @@ namespace Barotrauma.Extensions
             }
             return result.Concat(result.SelectManyRecursive(selector));
         }
+
+        public static void AddIfNotNull<T>(this IList<T> source, T value)
+        {
+            if (value != null) { source.Add(value); }
+        }
     }
 }

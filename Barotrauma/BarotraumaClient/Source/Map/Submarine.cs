@@ -39,7 +39,7 @@ namespace Barotrauma
         public Sprite PreviewImage;
 
         private static List<RoundSound> roundSounds = null;
-        public static RoundSound LoadRoundSound(XElement element, bool stream=false)
+        public static RoundSound LoadRoundSound(XElement element, bool stream = false)
         {
             string filename = element.GetAttributeString("file", "");
             if (string.IsNullOrEmpty(filename)) filename = element.GetAttributeString("sound", "");
@@ -66,6 +66,7 @@ namespace Barotrauma
                 try
                 {
                     existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+                    if (existingSound == null) { return null; }
                 }
                 catch (FileNotFoundException e)
                 {
