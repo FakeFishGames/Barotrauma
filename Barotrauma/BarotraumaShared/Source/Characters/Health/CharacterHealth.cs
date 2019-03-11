@@ -549,8 +549,9 @@ namespace Barotrauma
                         limbHealths[i].Afflictions.RemoveAt(j);
                     }
                 }
-                foreach (Affliction affliction in limbHealths[i].Afflictions)
+                for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
                 {
+                    var affliction = limbHealths[i].Afflictions[j];
                     Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
                     affliction.Update(this, targetLimb, deltaTime);
                     affliction.DamagePerSecondTimer += deltaTime;
