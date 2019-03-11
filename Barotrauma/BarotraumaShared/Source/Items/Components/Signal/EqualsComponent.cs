@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -11,7 +12,6 @@ namespace Barotrauma.Items.Components
         protected float[] timeSinceReceived;
 
         protected float[] receivedSignal;
-
 
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
@@ -28,6 +28,16 @@ namespace Barotrauma.Items.Components
         {
             get { return falseOutput; }
             set { falseOutput = value; }
+        }
+
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
+        public float TimeFrame
+        {
+            get { return timeFrame; }
+            set
+            {
+                timeFrame = Math.Max(0.0f, value);
+            }
         }
 
         public EqualsComponent(Item item, XElement element)
@@ -61,11 +71,11 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in1":
-                    float.TryParse(signal, out receivedSignal[0]);
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     timeSinceReceived[0] = 0.0f;
                     break;
                 case "signal_in2":
-                    float.TryParse(signal, out receivedSignal[1]);
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     timeSinceReceived[1] = 0.0f;
                     break;
             }
