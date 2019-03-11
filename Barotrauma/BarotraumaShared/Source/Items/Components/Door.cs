@@ -240,7 +240,7 @@ namespace Barotrauma.Items.Components
             if (isBroken)
             {
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.Condition > item.Prefab.Health / 2.0f)
+                if (item.ConditionPercentage > 50.0f)
                 {
                     IsBroken = false;
                 }

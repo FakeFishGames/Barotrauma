@@ -1,68 +1,68 @@
-﻿using Barotrauma.Items.Components;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class AIObjectiveRepairItems : AIObjective
+    class AIObjectiveRepairItems : AIObjectiveLoop<Item>
     {
+        public override string DebugTag => "repair items";
+        public override bool KeepDivingGearOn => true;
+
         /// <summary>
         /// Should the character only attempt to fix items they have the skills to fix, or any damaged item
         /// </summary>
         public bool RequireAdequateSkills;
 
-        public AIObjectiveRepairItems(Character character)
-            : base(character, "")
-        {
-        }
+        public AIObjectiveRepairItems(Character character) : base(character, "") { }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        // TODO: This can allow two active repair items objectives, if RequireAdequateSkills is not at the same value. We don't want that.
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
+
+        protected override void CreateObjectives()
         {
-            GetBrokenItems();
-            if (subObjectives.Count > 0 && objectiveManager.CurrentOrder == this)
+            foreach (var item in targets)
             {
-                return AIObjectiveManager.OrderPriority;
-            }
-
-            return 1.0f;
-        }
-                
-        public override bool IsCompleted()
-        {
-            return false;
-        }
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
-        }
-
-        protected override void Act(float deltaTime)
-        {
-            GetBrokenItems();
-        }
-
-        private void GetBrokenItems()
-        {
-            foreach (Item item in Item.ItemList)
-            {
-                //ignore items that are in full condition
-                if (item.Condition >= item.Prefab.Health) continue;
                 foreach (Repairable repairable in item.Repairables)
                 {
-                    //ignore ones that are already fixed
-                    if (item.Condition > repairable.ShowRepairUIThreshold) continue;
-
-                    if (RequireAdequateSkills)
+                    if (!objectives.TryGetValue(item, out AIObjective objective))
                     {
-                        if (!repairable.HasRequiredSkills(character)) { continue; }
+                        objective = ObjectiveConstructor(item);
+                        objectives.Add(item, objective);
+                        AddSubObjective(objective);
                     }
-
-                    AddSubObjective(new AIObjectiveRepairItem(character, item));
                     break;
                 }
             }
         }
+
+        protected override bool Filter(Item item)
+        {
+            bool ignore = ignoreList.Contains(item) || item.IsFullCondition;
+            if (!ignore)
+            {
+                if (item.Submarine == null) { ignore = true; }
+                else if (item.Submarine.TeamID != character.TeamID) { ignore = true; }
+                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { ignore = true; }
+                else
+                {
+                    if (item.Repairables.None()) { ignore = true; }
+                    else
+                    {
+                        foreach (Repairable repairable in item.Repairables)
+                        {
+                            if (item.Condition > repairable.ShowRepairUIThreshold) { ignore = true; }
+                            else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { ignore = true; }
+                            if (ignore) { break; }
+                        }
+                    }
+                }
+            }
+            return ignore;
+        }
+
+        protected override float Average(Item item) => 100 - item.ConditionPercentage;
+        protected override IEnumerable<Item> GetList() => Item.ItemList;
+        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item);
     }
 }

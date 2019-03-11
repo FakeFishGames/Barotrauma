@@ -8,6 +8,10 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
+        public override string DebugTag => "extinguish fire";
+        public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+
         private Hull targetHull;
 
         private AIObjectiveGetItem getExtinguisherObjective;
@@ -16,15 +20,19 @@ namespace Barotrauma
 
         private float useExtinquisherTimer;
 
-        public AIObjectiveExtinguishFire(Character character, Hull targetHull) :
-            base(character, "")
+        public AIObjectiveExtinguishFire(Character character, Hull targetHull) : base(character, "")
         {
             this.targetHull = targetHull;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            return targetHull.FireSources.Sum(fs => fs.Size.X * 0.1f);
+            if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            float severityFactor = MathHelper.Lerp(0, 1, MathHelper.Clamp(targetHull.FireSources.Sum(fs => fs.Size.X) / targetHull.Size.X, 0, 1));
+            return MathHelper.Clamp(priority * severityFactor * distanceFactor, 0, 100);
         }
 
         public override bool IsCompleted()
@@ -40,7 +48,7 @@ namespace Barotrauma
 
         public override bool CanBeCompleted
         {
-            get { return getExtinguisherObjective == null || getExtinguisherObjective.CanBeCompleted; }
+            get { return getExtinguisherObjective == null || getExtinguisherObjective.IsCompleted() || getExtinguisherObjective.CanBeCompleted; }
         }
 
         protected override void Act(float deltaTime)
@@ -68,9 +76,11 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (FireSource fs in targetHull.FireSources.ToList())
+            foreach (FireSource fs in targetHull.FireSources)
             {
-                if (fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range)) || useExtinquisherTimer > 0.0f)
+                // TODO: check if in the same room?
+                bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
+                if (!character.IsClimbing && (inRange || useExtinquisherTimer > 0.0f))
                 {
                     useExtinquisherTimer += deltaTime;
                     if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
@@ -86,20 +96,19 @@ namespace Barotrauma
                     }
                     return;
                 }
-            }
-
-            foreach (FireSource fs in targetHull.FireSources)
-            {
-                //go to the first firesource
-                if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
-                {
-                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character);
-                }
                 else
                 {
-                    gotoObjective.TryComplete(deltaTime);
+                    //go to the first firesource
+                    if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
+                    {
+                        gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character);
+                    }
+                    else
+                    {
+                        gotoObjective.TryComplete(deltaTime);
+                    }
+                    break;
                 }
-                break;
             }
         }
     }

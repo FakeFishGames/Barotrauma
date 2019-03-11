@@ -176,6 +176,7 @@ namespace Barotrauma
                     {
                         if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
                         SetCharacterOrder(null, order, null, Character.Controlled);
+                        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
                         return true;
                     },
                     UserData = order,
@@ -1141,9 +1142,7 @@ namespace Barotrauma
                 characters.Contains(Character.Controlled))
             {
                 //deselect construction unless it's the ladders the character is climbing
-                if (Character.Controlled != null &&
-                    Character.Controlled.SelectedConstruction != null &&
-                    Character.Controlled.SelectedConstruction.GetComponent<Items.Components.Ladder>() == null)
+                if (Character.Controlled != null && !Character.Controlled.IsClimbing)
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
@@ -1315,18 +1314,20 @@ namespace Barotrauma
             return CharacterHealth.OpenHealthWindow == null;
         }
 
-        private bool ReportButtonClicked(GUIButton button, object userData)
-        {
-            //order targeted to all characters
-            Order order = userData as Order;
-            if (order.TargetAllCharacters)
-            {
-                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
-                AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
-                SetCharacterOrder(null, order, "", Character.Controlled);
-            }
-            return true;
-        }
+        // TODO: remove? not used at all
+        //private bool ReportButtonClicked(GUIButton button, object userData)
+        //{
+        //    //order targeted to all characters
+        //    Order order = userData as Order;
+        //    if (order.TargetAllCharacters)
+        //    {
+        //        if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
+        //        AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+        //        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
+        //        SetCharacterOrder(null, order, "", Character.Controlled);
+        //    }
+        //    return true;
+        //}
 
         private void ToggleReportButton(string orderAiTag, bool enabled)
         {

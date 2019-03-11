@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
+        public override string DebugTag => "operate item";
+
         private ItemComponent component, controller;
 
         private Entity operateTarget;
@@ -38,14 +40,16 @@ namespace Barotrauma
             get { return operateTarget; }
         }
 
+        public ItemComponent Component => component;
+
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
-            return 1.0f;
+            return base.GetPriority(objectiveManager);
         }
 
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false)
@@ -158,7 +162,7 @@ namespace Barotrauma
             AIObjectiveOperateItem operateItem = otherObjective as AIObjectiveOperateItem;
             if (operateItem == null) return false;
 
-            return (operateItem.component == component);
+            return (operateItem.component == component ||otherObjective.Option == Option);
         }
     }
 }

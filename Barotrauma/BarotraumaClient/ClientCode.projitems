@@ -15,7 +15,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\AITarget.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\EnemyAIController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\HumanAIController.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />

@@ -5,13 +5,16 @@ namespace Barotrauma
 {
     class AIObjectiveRescueAll : AIObjective
     {
+        public override string DebugTag => "rescue all";
+
+        public override bool KeepDivingGearOn => true;
+
         //only treat characters whose vitality is below this (0.8 = 80% of max vitality)
         public const float VitalityThreshold = 0.8f;
 
         private List<Character> rescueTargets;
         
-        public AIObjectiveRescueAll(Character character)
-            : base (character, "")
+        public AIObjectiveRescueAll(Character character) : base (character, "")
         {
             rescueTargets = new List<Character>();
         }
@@ -23,10 +26,11 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (character.Submarine == null) { return 0; }
             GetRescueTargets();
             if (!rescueTargets.Any()) { return 0.0f; }
             
-            if (objectiveManager.CurrentObjective == this)
+            if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
@@ -40,6 +44,7 @@ namespace Barotrauma
         {
             rescueTargets = Character.CharacterList.FindAll(c => 
                 c.AIController is HumanAIController &&
+                c.TeamID == character.TeamID &&
                 c != character &&
                 !c.IsDead &&
                 c.Vitality / c.MaxVitality < VitalityThreshold);
@@ -53,9 +58,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsCompleted()
-        {
-            return false;
-        }        
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
     }
 }

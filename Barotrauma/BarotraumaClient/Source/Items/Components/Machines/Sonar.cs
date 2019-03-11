@@ -199,8 +199,8 @@ namespace Barotrauma.Items.Components
                     zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
                 }
             }
-
-            float distort = 1.0f - item.Condition / item.Prefab.Health;
+            
+            float distort = 1.0f - item.Condition / item.MaxCondition;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
                 sonarBlips[i].FadeTimer -= deltaTime * MathHelper.Lerp(0.5f, 2.0f, distort);
@@ -897,8 +897,8 @@ namespace Barotrauma.Items.Components
         private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength)
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
-
-            float distort = 1.0f - item.Condition / item.Prefab.Health;
+            
+            float distort = 1.0f - item.Condition / item.MaxCondition;
             
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;

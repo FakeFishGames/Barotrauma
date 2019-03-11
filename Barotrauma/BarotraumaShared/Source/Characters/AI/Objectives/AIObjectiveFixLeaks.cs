@@ -1,142 +1,45 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class AIObjectiveFixLeaks : AIObjective
+    class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
     {
-        const float UpdateGapListInterval = 5.0f;
+        public override string DebugTag => "fix leaks";
+        public override bool KeepDivingGearOn => true;
 
-        private double lastGapUpdate;
-
-        private AIObjectiveIdle idleObjective;
-
-        private AIObjectiveFindDivingGear findDivingGear;
-
-        private List<AIObjectiveFixLeak> objectiveList;
-
-        public AIObjectiveFixLeaks(Character character)
-            : base (character, "")
-        {
-        }
-
-        public override bool IsCompleted()
-        {
-            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
-            {
-                UpdateGapList();
-                lastGapUpdate = Timing.TotalTime;
-            }
-
-            return objectiveList.Count == 0;
-        }
+        public AIObjectiveFixLeaks(Character character) : base (character, "") { }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
+            if (character.Submarine == null) { return 0; }
+            if (targets.None()) { return 0; }
+            if (objectiveManager.CurrentOrder == this)
             {
-                UpdateGapList();
-                lastGapUpdate = Timing.TotalTime;
+                return AIObjectiveManager.OrderPriority;
             }
-
-            float priority = 0.0f;
-            foreach (AIObjectiveFixLeak fixObjective in objectiveList)
-            {
-                //gaps from outside to inside significantly increase the priority 
-                if (!fixObjective.Leak.IsRoomToRoom)
-                {
-                    priority = Math.Max(priority + fixObjective.Leak.Open * 100.0f, 50.0f);
-                }
-                else
-                {
-                    priority += fixObjective.Leak.Open * 10.0f;
-                }
-
-                if (priority >= 100.0f) break;
-            }
-
-            return Math.Min(priority, 100.0f);
+            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, targets.Average(t => Average(t)));
         }
 
-        protected override void Act(float deltaTime)
+        protected override void FindTargets()
         {
-            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
-            {
-                UpdateGapList();
-                lastGapUpdate = Timing.TotalTime;
-            }
-
-            if (objectiveList.Any())
-            {
-                if (!objectiveList[objectiveList.Count - 1].Leak.IsRoomToRoom)
-                {
-                    if (findDivingGear == null) findDivingGear = new AIObjectiveFindDivingGear(character, true);
-
-                    if (!findDivingGear.IsCompleted() && findDivingGear.CanBeCompleted)
-                    {
-                        findDivingGear.TryComplete(deltaTime);
-                        return;
-                    }
-                }
-
-                objectiveList[objectiveList.Count - 1].TryComplete(deltaTime);
-
-                if (!objectiveList[objectiveList.Count - 1].CanBeCompleted ||
-                    objectiveList[objectiveList.Count - 1].IsCompleted())
-                {
-                    objectiveList.RemoveAt(objectiveList.Count - 1);
-                }
-            }
-            else
-            {
-                if (idleObjective == null) idleObjective = new AIObjectiveIdle(character);
-                idleObjective.TryComplete(deltaTime);
-            }
+            base.FindTargets();
+            targets.Sort((x, y) => GetGapFixPriority(y).CompareTo(GetGapFixPriority(x)));
         }
 
-        private void UpdateGapList()
+        protected override bool Filter(Gap gap)
         {
-            if (objectiveList == null) { objectiveList = new List<AIObjectiveFixLeak>(); }
-            objectiveList.Clear(); 
-
-            foreach (Gap gap in Gap.GapList)
+            bool ignore = ignoreList.Contains(gap) || gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null);
+            if (!ignore)
             {
-                if (gap.ConnectedWall == null) { continue; }
-                if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
-                //not linked to a hull -> ignore
-                if (gap.linkedTo.All(l => l == null)) { continue; }
-                
-                if (character.TeamID == Character.TeamType.None)
-                {
-                    //TODO: make sure the gap isn't in another sub (outpost, respawn shuttle...?)
-                    if (gap.Submarine == null) continue;
-                }
-                else
-                {
-                    //prevent characters from attempting to fix leaks in the enemy sub
-                    //team 1 plays in sub 0, team 2 in sub 1
-                    Submarine mySub = Submarine.MainSub;
-                    if (character.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1)
-                    {
-                        mySub = Submarine.MainSubs[1];
-                    }
-
-                    if (gap.Submarine != mySub) continue;
-                }
-
-                float gapPriority = GetGapFixPriority(gap);
-
-                int index = 0;
-                while (index < objectiveList.Count &&
-                    GetGapFixPriority(objectiveList[index].Leak) < gapPriority)
-                {
-                    index++;
-                }
-
-                objectiveList.Insert(index, new AIObjectiveFixLeak(gap, character));
+                if (gap.Submarine == null) { ignore = true; }
+                else if (gap.Submarine.TeamID != character.TeamID) { ignore = true; }
+                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { ignore = true; }
             }
+            return ignore;
         }
 
         private float GetGapFixPriority(Gap gap)
@@ -156,9 +59,9 @@ namespace Barotrauma
 
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            return otherObjective is AIObjectiveFixLeaks;
-        }
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
+        protected override float Average(Gap gap) => gap.Open;
+        protected override IEnumerable<Gap> GetList() => Gap.GapList;
+        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character);
     }
 }

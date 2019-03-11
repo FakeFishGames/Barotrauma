@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -401,7 +400,8 @@ namespace Barotrauma
             IsOutpost = true;
             ShowSonarMarker = false;
             PhysicsBody.FarseerBody.IsStatic = true;
-            
+            TeamID = Character.TeamType.FriendlyNPC;
+
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
                 if (me.Submarine != this) { continue; }
@@ -458,11 +458,15 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns a list of all submarines that are connected to this one via docking ports.
+        /// Don't use this directly, because the list is updated only when GetConnectedSubs() is called. The method is called so frequently that we don't want to create new list here.
+        /// </summary>
+        private readonly List<Submarine> connectedSubs = new List<Submarine>(2);
+        /// <summary>
+        /// Returns a list of all submarines that are connected to this one via docking ports, including this sub.
         /// </summary>
         public List<Submarine> GetConnectedSubs()
         {
-            List<Submarine> connectedSubs = new List<Submarine> { this };
+            connectedSubs.Clear();
             GetConnectedSubsRecursive(connectedSubs);
 
             return connectedSubs;
@@ -985,6 +989,26 @@ namespace Barotrauma
             }
 
             return closest;
+        }
+
+        public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.hullList);
+        public List<Gap> GetGaps(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Gap.GapList);
+        public List<Item> GetItems(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Item.ItemList);
+
+        public List<T> GetEntities<T>(bool includingConnectedSubs, List<T> list) where T : MapEntity
+        {
+            return list.FindAll(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
+        }
+
+        public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
+        {
+            if (entity.Submarine == this) { return true; }
+            if (entity.Submarine == null) { return false; }
+            if (includingConnectedSubs)
+            {
+                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID);
+            }
+            return false;
         }
 
         /// <summary>
