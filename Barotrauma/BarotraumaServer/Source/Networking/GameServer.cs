@@ -1369,7 +1369,7 @@ namespace Barotrauma.Networking
                 }
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
-                outmsg.Write(GameMain.NetLobbyScreen.UsingShuttle);
+                outmsg.Write(serverSettings.UseRespawnShuttle);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.ToString());
 
@@ -1471,7 +1471,6 @@ namespace Barotrauma.Networking
 
             Submarine selectedSub = null;
             Submarine selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
-            bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle;
 
             if (serverSettings.Voting.AllowSubVoting)
             {
@@ -1502,7 +1501,7 @@ namespace Barotrauma.Networking
             }
 
             initiatedStartGame = true;
-            startGameCoroutine = CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, usingShuttle, selectedMode), "InitiateStartGame");
+            startGameCoroutine = CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, serverSettings.UseRespawnShuttle, selectedMode), "InitiateStartGame");
 
             return true;
         }
@@ -1767,7 +1766,7 @@ namespace Barotrauma.Networking
 
             msg.Write(selectedSub.Name);
             msg.Write(selectedSub.MD5Hash.Hash);
-            msg.Write(GameMain.NetLobbyScreen.UsingShuttle);
+            msg.Write(serverSettings.UseRespawnShuttle);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
