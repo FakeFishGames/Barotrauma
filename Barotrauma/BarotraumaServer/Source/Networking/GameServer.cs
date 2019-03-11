@@ -614,10 +614,6 @@ namespace Barotrauma.Networking
                         }
                     }
 
-                    foreach (Item item in Item.ItemList)
-                    {
-                        item.NeedsPositionUpdate = false;
-                    }
                     foreach (Character character in Character.CharacterList)
                     {
                         if (character.healthUpdateTimer <= 0.0f)
@@ -1229,7 +1225,10 @@ namespace Barotrauma.Networking
 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (!item.NeedsPositionUpdate) continue;
+                    if (item.PositionUpdateInterval == float.PositiveInfinity) { continue; }
+                    float updateInterval = item.GetPositionUpdateInterval(c);
+                    c.PositionUpdateLastSent.TryGetValue(item.ID, out float lastSent);
+                    if (lastSent > NetTime.Now - item.PositionUpdateInterval) { continue; }
                     if (!c.PendingPositionUpdates.Contains(item)) c.PendingPositionUpdates.Enqueue(item);
                 }
             }

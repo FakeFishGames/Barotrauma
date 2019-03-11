@@ -494,7 +494,6 @@ namespace Barotrauma.Networking
 
             foreach (Client c in server.ConnectedClients)
             {
-                c.PositionUpdateLastSent.Clear();
                 c.EntityEventLastSent.Clear();
                 c.LastRecvEntityEventID = 0;
                 c.LastSentEntityEventID = 0;
