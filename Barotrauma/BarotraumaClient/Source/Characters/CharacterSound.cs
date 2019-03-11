@@ -25,7 +25,7 @@ namespace Barotrauma
         }
         public Sound Sound
         {
-            get { return roundSound.Sound; }
+            get { return roundSound?.Sound; }
         }
 
         public readonly Gender Gender;

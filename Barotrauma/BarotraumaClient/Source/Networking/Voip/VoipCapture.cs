@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using OpenTK.Audio.OpenAL;
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -66,7 +67,14 @@ namespace Barotrauma.Networking
 
             if (captureDevice == IntPtr.Zero)
             {
-                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"));
+                if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
+                {
+                    new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"))
+                    {
+                        UserData = "capturedevicenotfound"
+                    };
+                }
+                GameMain.Config.VoiceSetting = GameSettings.VoiceMode.Disabled;
                 Instance?.Dispose();
                 Instance = null;
                 return;

@@ -86,9 +86,7 @@ namespace Barotrauma
                 + "when the task is completed or everyone in the crew has died."
             };
 
-#if DEBUG
             new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
-#endif
         }
     }
 }

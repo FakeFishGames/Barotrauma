@@ -119,7 +119,8 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sound":
-                        sounds.Add(new CharacterSound(subElement));
+                        var characterSound = new CharacterSound(subElement);
+                        if (characterSound.Sound != null) { sounds.Add(characterSound); }
                         break;
                     case "damageemitter":
                         damageEmitters.Add(new ParticleEmitter(subElement));
