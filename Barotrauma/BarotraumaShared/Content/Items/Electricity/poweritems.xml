@@ -52,9 +52,13 @@
           <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
-      <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="power_out" />
-      <input name="power_in" />
+      <requireditem identifier="Screwdriver" type="Equipped"/>
+      <input name="power_out"/>
+      <input name="power_in"/>
+      <input name="set_rate"/>
+      <output name="charge"/>
+      <output name="charge_%"/>
+      <output name="charge_rate"/>
     </ConnectionPanel>
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI" />
@@ -86,8 +90,12 @@
         </Explosion>
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="power_out" />
-      <input name="power_in" />
+      <input name="power_out"/>
+      <input name="power_in"/>
+      <input name="set_rate"/>
+      <output name="charge"/>
+      <output name="charge_%"/>
+      <output name="charge_rate"/>
     </ConnectionPanel>
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5,0.6" uilabel="ChargingDock" >
       <GuiFrame relativesize="0.25,0.15" anchor="Center" relativeoffset="0,0.2" style="ItemUI"/>
@@ -113,6 +121,9 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power_out" />
       <input name="power_in" />
+      <output name="charge"/>
+      <output name="charge_%"/>
+      <output name="charge_rate"/>
     </ConnectionPanel>
     <Repairable selectkey="Action" name="Electrical repairs" deteriorationspeed="0.15" mindeteriorationdelay="120" maxdeteriorationdelay="1000" MinDeteriorationCondition="0" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI" />

@@ -1,45 +1,36 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Globalization;
+﻿using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class AdderComponent : ItemComponent
+    class EqualsComponent : ItemComponent
     {
+        protected string output, falseOutput;
+
         //an array to keep track of how long ago a signal was received on both inputs
         protected float[] timeSinceReceived;
 
         protected float[] receivedSignal;
-        
+
+
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(999999.0f, true)]
-        public float ClampMax
+        [InGameEditable, Serialize("1", true)]
+        public string Output
         {
-            get;
-            set;
+            get { return output; }
+            set { output = value; }
         }
 
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(-999999.0f, true)]
-        public float ClampMin
+        [InGameEditable, Serialize("", true)]
+        public string FalseOutput
         {
-            get;
-            set;
+            get { return falseOutput; }
+            set { falseOutput = value; }
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
-        public float TimeFrame
-        {
-            get { return timeFrame; }
-            set
-            {
-                timeFrame = Math.Max(0.0f, value);
-            }
-        }
-
-        public AdderComponent(Item item, XElement element)
+        public EqualsComponent(Item item, XElement element)
             : base(item, element)
         {
             timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
@@ -49,16 +40,19 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            bool sendOutput = true;
+            bool sendOutput = false;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
+                if (timeSinceReceived[i] <= timeFrame) sendOutput = true;
                 timeSinceReceived[i] += deltaTime;
             }
+
             if (sendOutput)
             {
-                float output = receivedSignal[0] + receivedSignal[1];
-                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                string signalOut = receivedSignal[0] == receivedSignal[1] ? output : falseOutput;
+                if (string.IsNullOrEmpty(signalOut)) return;
+
+                item.SendSignal(0, signalOut, "signal_out", null);
             }
         }
 
@@ -67,11 +61,11 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in1":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    float.TryParse(signal, out receivedSignal[0]);
                     timeSinceReceived[0] = 0.0f;
                     break;
                 case "signal_in2":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    float.TryParse(signal, out receivedSignal[1]);
                     timeSinceReceived[1] = 0.0f;
                     break;
             }

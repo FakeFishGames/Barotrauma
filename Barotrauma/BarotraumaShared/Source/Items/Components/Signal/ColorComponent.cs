@@ -1,35 +1,19 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Globalization;
+﻿using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class AdderComponent : ItemComponent
+    class ColorComponent : ItemComponent
     {
         //an array to keep track of how long ago a signal was received on both inputs
         protected float[] timeSinceReceived;
 
         protected float[] receivedSignal;
-        
+
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(999999.0f, true)]
-        public float ClampMax
-        {
-            get;
-            set;
-        }
-
-        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(-999999.0f, true)]
-        public float ClampMin
-        {
-            get;
-            set;
-        }
-
-        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
+        [InGameEditable, Serialize(0.0f, true)]
         public float TimeFrame
         {
             get { return timeFrame; }
@@ -39,11 +23,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public AdderComponent(Item item, XElement element)
+        public ColorComponent(Item item, XElement element)
             : base(item, element)
         {
-            timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
-            receivedSignal = new float[2];
+            timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
+            receivedSignal = new float[4];
             IsActive = true;
         }
 
@@ -57,8 +41,12 @@ namespace Barotrauma.Items.Components
             }
             if (sendOutput)
             {
-                float output = receivedSignal[0] + receivedSignal[1];
-                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                string output = receivedSignal[0].ToString();
+                output += "," + receivedSignal[1].ToString();
+                output += "," + receivedSignal[2].ToString();
+                output += "," + receivedSignal[3].ToString();
+
+                item.SendSignal(0, output, "signal_out", null);
             }
         }
 
@@ -66,13 +54,21 @@ namespace Barotrauma.Items.Components
         {
             switch (connection.Name)
             {
-                case "signal_in1":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                case "signal_r":
+                    float.TryParse(signal, out receivedSignal[0]);
                     timeSinceReceived[0] = 0.0f;
                     break;
-                case "signal_in2":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                case "signal_g":
+                    float.TryParse(signal, out receivedSignal[1]);
                     timeSinceReceived[1] = 0.0f;
+                    break;
+                case "signal_b":
+                    float.TryParse(signal, out receivedSignal[2]);
+                    timeSinceReceived[2] = 0.0f;
+                    break;
+                case "signal_a":
+                    float.TryParse(signal, out receivedSignal[3]);
+                    timeSinceReceived[3] = 0.0f;
                     break;
             }
         }
