@@ -55,6 +55,18 @@
         <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
         <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
       </FabricableItem>
+      <FabricableItem identifier="greenwire" requiredtime="5">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+      <FabricableItem identifier="blackwire" requiredtime="5">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
+      <FabricableItem identifier="brownwire" requiredtime="5">
+        <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+        <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+      </FabricableItem>
 
       <FabricableItem identifier="fpgacircuit" requiredtime="5">
         <RequiredItem identifier="plastic" />
