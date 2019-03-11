@@ -439,15 +439,7 @@ namespace Barotrauma
             {
                 OnSelected = VotableClicked
             };
-
-#if !DEBUG
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform),
-                "Coming up: Multiplayer campaign", textAlignment: Alignment.Center, style: "ListBoxElement")
-            {
-                ToolTip = "Multiplayer campaign mode is not available in this version of Barotrauma. Coming up in the Early Access release!"
-            };
-#endif
-
+            
             voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
             {
