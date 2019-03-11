@@ -18,11 +18,7 @@ namespace Barotrauma
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10 }
 
-        private GUIComponent buttonsParent, 
-                             campaignHolder, multiplayerHolder, customizeHolder, optionHolder, 
-                             campaignNavigation, multiplayerNavigation, customizeNavigation, 
-                             campaignButtons, multiplayerButtons, customizeButtons, optionButtons, 
-                             campaignList, multiplayerList, customizeList, optionList;
+        private GUIComponent buttonsParent;
 
         private GUIFrame[] menuTabs;
 
@@ -37,10 +33,11 @@ namespace Barotrauma
 
         private Tab selectedTab;
 
+        private Sprite backgroundSprite;
+
         #region Creation
         public MainMenuScreen(GameMain game)
         {
-
             buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
             {
                 RelativeOffset = new Vector2(0, 0),
@@ -50,10 +47,9 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-
-
+            
             // === CAMPAIGN
-            campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
+            var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
@@ -63,14 +59,14 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), campaignHolder.RectTransform), style: null);
 
-            campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+            var campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), campaignNavigation.RectTransform),
                 TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
-            campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
+            var campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            campaignList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: campaignButtons.RectTransform))
+            var campaignList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: campaignButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -99,7 +95,7 @@ namespace Barotrauma
             };
 
             // === MULTIPLAYER
-            multiplayerHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, isHorizontal: true);
+            var multiplayerHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), multiplayerHolder.RectTransform), "MainMenuMultiplayerIcon")
             {
@@ -109,14 +105,14 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), multiplayerHolder.RectTransform), style: null);
 
-            multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+            var multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), multiplayerNavigation.RectTransform),
                 TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
-            multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
+            var multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            multiplayerList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: multiplayerButtons.RectTransform))
+            var multiplayerList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: multiplayerButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -144,7 +140,7 @@ namespace Barotrauma
             };
 
             // === CUSTOMIZE
-            customizeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.15f, 0.0f) }, isHorizontal: true);
+            var customizeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.15f, 0.0f) }, isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), customizeHolder.RectTransform), "MainMenuCustomizeIcon")
             {
@@ -154,14 +150,14 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), customizeHolder.RectTransform), style: null);
 
-            customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+            var customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), customizeNavigation.RectTransform),
                 TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
-            customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
+            var customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            customizeList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: customizeButtons.RectTransform))
+            var customizeList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: customizeButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -201,7 +197,7 @@ namespace Barotrauma
             }
 
             // === OPTION
-            optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.15f, 0.6f), optionHolder.RectTransform), "MainMenuOptionIcon")
             {
@@ -211,9 +207,9 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.0f), optionHolder.RectTransform), style: null);
 
-            optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) });
+            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) });
 
-            optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: optionButtons.RectTransform))
+            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: optionButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -671,10 +667,14 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            graphics.Clear(Color.CornflowerBlue);
+            graphics.Clear(Color.Black);
 
-            GameMain.TitleScreen.DrawLoadingText = false;
-            GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
+            if (backgroundSprite == null)
+            {
+                backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom()).GetPortrait(0);
+            }
+
+            if (backgroundSprite != null) { GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite); }
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 

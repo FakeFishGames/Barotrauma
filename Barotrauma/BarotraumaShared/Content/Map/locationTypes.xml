@@ -62,7 +62,8 @@
     identifier="Military"
     namefile="Content/Map/locationNames.txt"
     commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
-    halo="0,1,0,0.4">
+    halo="0,1,0,0.4"
+    useinmainmenu="true">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,512,256,256" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary.jpg"/>
@@ -126,7 +127,8 @@
     identifier="Ruins"
     namefile="Content/Map/alienNames.txt"
     commonnessperzone="3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
-    halo="1,0,0,0.2">
+    halo="1,0,0,0.2"
+    useinmainmenu="true">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="784,847,233,158" color="216,91,80,255"/>
     <Portrait texture="Content/Map/LocationPortraits/AlienRuins.jpg"/>

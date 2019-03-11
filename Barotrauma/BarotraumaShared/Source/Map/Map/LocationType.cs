@@ -30,6 +30,12 @@ namespace Barotrauma
         public readonly string Name;
 
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
+
+        public bool UseInMainMenu
+        {
+            get;
+            private set;
+        }
         
         public List<string> NameFormats
         {
@@ -57,6 +63,7 @@ namespace Barotrauma
             Identifier = element.GetAttributeString("identifier", element.Name.ToString());
             Name = TextManager.Get("LocationName." + Identifier);
             nameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
+            UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
 
             string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
             try
