@@ -152,8 +152,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float speed = character.AnimController.GetCurrentSpeed(true);
-                    character.AIController.SteeringManager.SteeringSeek(currTargetPos, speed);
+                    character.AIController.SteeringManager.SteeringSeek(currTargetPos);
                     if (getDivingGearIfNeeded)
                     {
                         if (targetIsOutside ||

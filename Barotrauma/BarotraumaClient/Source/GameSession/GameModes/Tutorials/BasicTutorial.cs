@@ -670,7 +670,7 @@ namespace Barotrauma.Tutorials
                 Vector2 steering = targetPos - enemy.WorldPosition;
                 if (steering != Vector2.Zero) steering = Vector2.Normalize(steering);
 
-                enemy.AIController.Steering = steering * enemy.AnimController.GetCurrentSpeed(true);
+                enemy.AIController.Steering = steering;
 
                 yield return CoroutineStatus.Running;
             } while (capacitors.FirstOrDefault(c => c.Charge > 0.4f) == null);
