@@ -188,8 +188,7 @@ namespace Barotrauma
                 else
                 {
                     // Inside
-                    // Not connected.
-                    if (!character.Submarine.GetConnectedSubs().Contains(hull.Submarine)) { continue; }
+                    if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
                     hullSafety = HumanAIController.GetHullSafety(hull, character);
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
                     int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
