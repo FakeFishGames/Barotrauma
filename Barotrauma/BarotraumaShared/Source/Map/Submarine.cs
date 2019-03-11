@@ -303,7 +303,7 @@ namespace Barotrauma
             this.filePath = filePath;
             try
             {
-                name = System.IO.Path.GetFileNameWithoutExtension(filePath);
+                name = displayName = Path.GetFileNameWithoutExtension(filePath);
             }
             catch (Exception e)
             {

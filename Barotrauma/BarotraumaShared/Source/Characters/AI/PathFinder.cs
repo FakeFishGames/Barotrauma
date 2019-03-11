@@ -176,7 +176,7 @@ namespace Barotrauma
                 //prefer nodes that are closer to the end position
                 dist += (Math.Abs(end.X - nodePos.X) + Math.Abs(end.Y - nodePos.Y)) / 2.0f;
                 //much higher cost to waypoints that are outside
-                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                if (node.Waypoint.CurrentHull == null && insideSubmarine) dist *= 10.0f;
                 if (dist < closestDist || startNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
@@ -213,10 +213,13 @@ namespace Barotrauma
                 Vector2 nodePos = node.Position;
 
                 float dist = Vector2.Distance(end, nodePos);
-                //much higher cost to waypoints that are outside
-                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
-                //avoid stopping at a doorway
-                if (node.Waypoint.ConnectedDoor != null) dist *= 10.0f;
+                if (insideSubmarine)
+                {
+                    //much higher cost to waypoints that are outside
+                    if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                    //avoid stopping at a doorway
+                    if (node.Waypoint.ConnectedDoor != null) dist *= 10.0f;
+                }
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
@@ -233,13 +236,13 @@ namespace Barotrauma
 
             if (endNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. "+ errorMsgStr, Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. " + errorMsgStr, Color.DarkRed);
                 return new SteeringPath();
             }
 
 
-            var path =  FindPath(startNode,endNode);
-            
+            var path = FindPath(startNode, endNode);
+
             return path;
         }
 

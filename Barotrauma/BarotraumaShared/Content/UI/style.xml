@@ -328,15 +328,14 @@
   </GUIToolTip>
 
   <GUIListBox
-    color="1.0, 1.0, 1.0, 1.0"
-    textcolor="1.0, 1.0, 1.0, 1.0"
+    color="255,255,255,255"
+    textcolor="255,255,255,255"
     outlinecolor="127,145,153,255">
     <GUIFrame
       color="255,255,255,255"
       hovercolor="255,255,255,255"
-      selectedcolor="255,255,255,255"
-    
-      textcolor="1.0, 1.0, 1.0, 1.0">
+      selectedcolor="255,255,255,255"    
+      textcolor="255,255,255,255">
       <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="466, 660, 275, 166" slice="472,666,737,820"/>
     </GUIFrame>
   </GUIListBox>
@@ -381,6 +380,13 @@
       textcolor="127,140,153,255"
       padding="10.0, 0.0, 10.0, 0.0">
     </GUITextBlock>
+    <GUIListBox
+      color="255,255,255,255"
+      hovercolor="255,255,255,255"
+      selectedcolor="255,255,255,255"
+      textcolor="255,255,255,255">
+      <Sprite texture="Content/UI/UI_Atlas2.png" size="0.0, 0.0" sourcerect ="95,210,275,155" slice="125,240,342,339"/>
+    </GUIListBox>
   </GUIDropDown>
 
   <GUITextBox

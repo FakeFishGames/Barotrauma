@@ -10,7 +10,6 @@ namespace Barotrauma
     {
         private Submarine selectedSub;
         private Submarine selectedShuttle;
-        private bool usingShuttle = true;
 
         public Submarine SelectedSub
         {
@@ -22,17 +21,8 @@ namespace Barotrauma
             get { return selectedShuttle; }
             set { selectedShuttle = value; lastUpdateID++; }
         }
-        public bool UsingShuttle
-        {
-            get { return usingShuttle; }
-            set { usingShuttle = value; lastUpdateID++; }
-        }
 
-        private GameModePreset[] gameModes;
-        public GameModePreset[] GameModes
-        {
-            get { return gameModes; }
-        }
+        public GameModePreset[] GameModes { get; }
 
         private int selectedModeIndex;
         public int SelectedModeIndex
@@ -41,18 +31,18 @@ namespace Barotrauma
             set
             {
                 lastUpdateID++;
-                selectedModeIndex = MathHelper.Clamp(value, 0, gameModes.Length - 1);
+                selectedModeIndex = MathHelper.Clamp(value, 0, GameModes.Length - 1);
             }
         }
 
         public string SelectedModeIdentifier
         {
-            get { return gameModes[SelectedModeIndex].Identifier; }
+            get { return GameModes[SelectedModeIndex].Identifier; }
             set
             {
-                for (int i = 0; i < gameModes.Length; i++)
+                for (int i = 0; i < GameModes.Length; i++)
                 {
-                    if (gameModes[i].Identifier.ToLower() == value.ToLower())
+                    if (GameModes[i].Identifier.ToLower() == value.ToLower())
                     {
                         SelectedModeIndex = i;
                         break;
@@ -63,7 +53,7 @@ namespace Barotrauma
 
         public GameModePreset SelectedMode
         {
-            get { return gameModes[SelectedModeIndex]; }
+            get { return GameModes[SelectedModeIndex]; }
         }
 
         private int missionTypeIndex;
@@ -118,13 +108,26 @@ namespace Barotrauma
                 throw new Exception("No submarines are available.");
             }
 
-            selectedSub = subs.First(s => !s.HasTag(SubmarineTag.Shuttle));
+            selectedSub = subs.FirstOrDefault(s => !s.HasTag(SubmarineTag.Shuttle));
+            if (selectedSub == null)
+            {
+                //no subs available, use a shuttle
+                DebugConsole.ThrowError("No full-size submarines available - choosing a shuttle as the main submarine.");
+                selectedSub = subs[0];
+            }
+
             selectedShuttle = subs.First(s => s.HasTag(SubmarineTag.Shuttle));
+            if (selectedShuttle == null)
+            {
+                //no shuttles available, use a sub
+                DebugConsole.ThrowError("No shuttles available - choosing a full-size submarine as the shuttle.");
+                selectedShuttle = subs[0];
+            }
 
             DebugConsole.NewMessage("Selected sub: " + SelectedSub.Name, Color.White);
             DebugConsole.NewMessage("Selected shuttle: " + SelectedShuttle.Name, Color.White);
 
-            gameModes = GameModePreset.List.ToArray();
+            GameModes = GameModePreset.List.ToArray();
         }
         
         private List<Submarine> subs;
@@ -180,7 +183,7 @@ namespace Barotrauma
             }
             if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)
             {
-                var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Identifier != "multiplayercampaign");
+                var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m.Identifier != "multiplayercampaign");
                 SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
             }
         }
