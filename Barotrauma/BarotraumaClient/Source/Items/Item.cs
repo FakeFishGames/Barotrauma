@@ -844,7 +844,7 @@ namespace Barotrauma
             msg.WritePadBits();
         }
 
-        partial void UpdateNetPosition()
+        partial void UpdateNetPosition(float deltaTime)
         {
             if (GameMain.Client == null) { return; }
 

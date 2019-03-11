@@ -216,10 +216,19 @@ namespace Barotrauma
             commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
-                SpawnItem(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Character.Controlled, out string errorMsg);
-                if (!string.IsNullOrWhiteSpace(errorMsg))
+                try
                 {
-                    ThrowError(errorMsg);
+                    SpawnItem(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Character.Controlled, out string errorMsg);
+                    if (!string.IsNullOrWhiteSpace(errorMsg))
+                    {
+                        ThrowError(errorMsg);
+                    }
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
+                    ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
             },
             () =>
