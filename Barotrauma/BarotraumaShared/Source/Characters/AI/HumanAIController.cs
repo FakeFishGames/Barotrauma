@@ -22,7 +22,6 @@ namespace Barotrauma
 
         public const float HULL_SAFETY_THRESHOLD = 50;
 
-        // TODO: update the list when someone gives a report
         public HashSet<Hull> UnsafeHulls { get; private set; } = new HashSet<Hull>();
 
         private SteeringManager outsideSteering, insideSteering;
@@ -289,41 +288,68 @@ namespace Barotrauma
                 Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
             }
         }
-        
+
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            float totalDamage = attackResult.Damage;
-            if (totalDamage <= 0.0f || attacker == null) return;
-
-            if (attacker.SpeciesName == Character.SpeciesName)
+            float damage = attackResult.Damage;
+            if (damage < 0) { return; }
+            if (attacker == null || attacker.IsDead || attacker.Removed)
             {
-                if (!attacker.IsRemotePlayer && Character.Controlled != attacker && attacker.AIController != null && attacker.AIController.Enabled)
-                {
-                    // Don't react to damage done by friendly ai, because we know that it's accidental
-                    return;
-                }
+                objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                return;
+            }
+            if (IsFriendly(attacker))
+            {
                 if (attacker.AnimController.Anim == Barotrauma.AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
                 {
                     // Don't attack characters that damage you while doing cpr, because let's assume that they are helping you.
                     // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
                     return;
                 }
+                if (!attacker.IsRemotePlayer && Character.Controlled != attacker && attacker.AIController != null && attacker.AIController.Enabled)
+                {
+                    // Don't react to damage done by friendly ai, because we know that it's accidental
+                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    return;
+                }
                 float currentVitality = Character.CharacterHealth.Vitality;
-                float dmgPercentage = totalDamage / currentVitality * 100;
+                float dmgPercentage = damage / currentVitality * 100;
                 if (dmgPercentage < currentVitality / 10)
                 {
                     // Don't react to a minor amount of (accidental) dmg done by friendly characters
+                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
                     return;
                 }
+                if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
+                {
+                    if (combatObjective.Enemy != attacker)
+                    {
+                        // Replace the old objective with the new.
+                        ObjectiveManager.Objectives.Remove(combatObjective);
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
+                    }
+                }
+                else
+                {
+                    objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                }
             }
-
-            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1, Rand.RandSync.Unsynced), () =>
+            else
             {
-                //the objective in the manager is not necessarily the same as the one we just instantiated,
-                //because the objective isn't added if there's already an identical objective in the manager
-                var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
-                combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
-            });
+                if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
+                {
+                    if (combatObjective.Enemy != attacker)
+                    {
+                        // Replace the old objective with the new.
+                        ObjectiveManager.Objectives.Remove(combatObjective);
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
+                    }
+                }
+                else
+                {
+                    objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
+                }
+            }
         }
 
         public void SetOrder(Order order, string option, Character orderGiver, bool speak = true)
@@ -416,7 +442,8 @@ namespace Barotrauma
             bool ignoreFire = ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
             bool ignoreWater = HasDivingSuit(Character);
             bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
-            return GetHullSafety(hull, Character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies: false);
+            bool ignoreEnemies = ObjectiveManager.CurrentObjective is AIObjectiveCombat || ObjectiveManager.CurrentOrder is AIObjectiveCombat;
+            return GetHullSafety(hull, Character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
         }
 
         public static float GetHullSafety(Hull hull, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
@@ -439,5 +466,8 @@ namespace Barotrauma
             float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
             return MathHelper.Clamp(safety * 100, 0, 100);
         }
+
+        // TODO: If the aliens are quaranteed to be in another team than the player, we wouldn't need to check the species.
+        public bool IsFriendly(Character other) => other.TeamID == Character.TeamID && other.SpeciesName == Character.SpeciesName;
     }
 }

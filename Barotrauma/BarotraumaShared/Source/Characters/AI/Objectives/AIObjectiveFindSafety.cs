@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -25,8 +24,6 @@ namespace Barotrauma
 
         private AIObjectiveGoTo goToObjective;
         private AIObjective divingGearObjective;
-
-        public float? OverrideCurrentHullSafety;
 
         public AIObjectiveFindSafety(Character character) : base(character, "") {  }
 
@@ -147,7 +144,7 @@ namespace Barotrauma
             }
         }
 
-        private Hull FindBestHull()
+        public Hull FindBestHull()
         {
             Hull bestHull = character.CurrentHull;
             float bestValue = currenthullSafety;
@@ -226,8 +223,8 @@ namespace Barotrauma
                 Priority = 5;
                 return;
             }
-            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { priority = 100; }
-            currenthullSafety = OverrideCurrentHullSafety ?? HumanAIController.GetHullSafety(character.CurrentHull);
+            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
+            currenthullSafety = HumanAIController.GetHullSafety(character.CurrentHull);
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 Priority -= priorityDecrease * deltaTime;

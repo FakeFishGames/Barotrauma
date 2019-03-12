@@ -1,194 +1,268 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectiveCombat : AIObjective
     {
         public override string DebugTag => "combat";
-        public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
 
         const float CoolDown = 10.0f;
 
-        //the largest amount of damage the enemy has inflicted on this character
-        //(may be higher than enemyStrength if the enemy is e.g. a human using items)
-        public float MaxEnemyDamage;
-
-        private Character enemy;
-
-        private AIObjectiveFindSafety escapeObjective;
-
+        public Character Enemy { get; private set; }
+        
+        private Item _weapon;
+        private Item Weapon
+        {
+            get { return _weapon; }
+            set
+            {
+                _weapon = value;
+                _weaponComponent = null;
+                reloadWeaponObjective = null;
+            }
+        }
+        private ItemComponent _weaponComponent;
+        private ItemComponent WeaponComponent
+        {
+            get
+            {
+                if (_weaponComponent == null)
+                {
+                    _weaponComponent =
+                        Weapon.GetComponent<RangedWeapon>() as ItemComponent ??
+                        Weapon.GetComponent<MeleeWeapon>() as ItemComponent ??
+                        Weapon.GetComponent<RepairTool>() as ItemComponent;
+                }
+                return _weaponComponent;
+            }
+        }
         private AIObjectiveContainItem reloadWeaponObjective;
+        private Hull retreatTarget;
+        private AIObjectiveGoTo retreatObjective;
 
         private float coolDownTimer;
 
         public AIObjectiveCombat(Character character, Character enemy) : base(character, "")
         {
-            this.enemy = enemy;
+            Enemy = enemy;
             coolDownTimer = CoolDown;
+            HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 0;
         }
 
         protected override void Act(float deltaTime)
         {
             coolDownTimer -= deltaTime;
-
-            var weapon = character.Inventory.FindItemByTag("weapon");
-            if (weapon == null)
+            if (Weapon != null && character.Inventory.Items.Contains(_weapon))
+            {
+                Weapon = null;
+            }
+            if (Weapon == null)
+            {
+                Weapon = GetWeapon();
+            }
+            if (Weapon == null)
             {
                 Escape(deltaTime);
             }
-            else
+            else if (Equip(deltaTime))
             {
-                if (!character.SelectedItems.Contains(weapon))
+                if (Reload(deltaTime))
                 {
-                    if (character.Inventory.TryPutItem(weapon, 3, true, false, character))
-                    {
-                        weapon.Equip(character);
-                    }
-                    else
-                    {
-                        //couldn't equip the item, escape
-                        Escape(deltaTime);
-                        return;
-                    }
+                    Attack(deltaTime);
                 }
+            }
+            if (!abandon)
+            {
+                Move(deltaTime);
+            }
+        }
 
-                //make sure the weapon is loaded
-                var weaponComponent = 
-                    weapon.GetComponent<RangedWeapon>() as ItemComponent ?? 
-                    weapon.GetComponent<MeleeWeapon>() as ItemComponent ??
-                    weapon.GetComponent<RepairTool>() as ItemComponent;
-                if (weaponComponent != null && weaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
+        private Item GetWeapon()
+        {
+            _weaponComponent = null;
+            var weapon = character.Inventory.FindItemByTag("weapon");
+            if (weapon == null)
+            {
+                foreach (var item in character.Inventory.Items)
                 {
-                    var containedItems = weapon.ContainedItems;
-                    foreach (RelatedItem requiredItem in weaponComponent.requiredItems[RelatedItem.RelationType.Contained])
+                    if (item == null) { continue; }
+                    foreach (var component in item.Components)
                     {
-                        Item containedItem = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
-                        if (containedItem == null)
+                        if (component is MeleeWeapon || component is RangedWeapon)
                         {
-                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, weapon.GetComponent<ItemContainer>());
-                            if (!newReloadWeaponObjective.IsDuplicate(reloadWeaponObjective))
+                            return item;
+                        }
+                        var effects = component.statusEffectLists;
+                        if (effects != null)
+                        {
+                            foreach (var statusEffects in effects.Values)
                             {
-                                reloadWeaponObjective = newReloadWeaponObjective;
+                                foreach (var statusEffect in statusEffects)
+                                {
+                                    if (statusEffect.Afflictions.Any())
+                                    {
+                                        return item;
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
+            return weapon;
+        }
 
-                if (reloadWeaponObjective != null)
+        private bool Equip(float deltaTime)
+        {
+            if (!character.SelectedItems.Contains(Weapon))
+            {
+                if (character.Inventory.TryPutItem(Weapon, 3, true, false, character))
                 {
-                    if (reloadWeaponObjective.IsCompleted())
-                    {
-                        reloadWeaponObjective = null;
-                    }
-                    else if (!reloadWeaponObjective.CanBeCompleted)
-                    {
-                        Escape(deltaTime);
-                    }
-                    else
-                    {
-                        reloadWeaponObjective.TryComplete(deltaTime);
-                    }
-                    return;
+                    Weapon.Equip(character);
                 }
-                
-                character.CursorPosition = enemy.Position;
-                character.SetInput(InputType.Aim, false, true);
-
-                Vector2 enemyDiff = Vector2.Normalize(enemy.Position - character.Position);
-                if (!MathUtils.IsValid(enemyDiff)) enemyDiff = Rand.Vector(1.0f);
-                float weaponAngle = ((weapon.body.Dir == 1.0f) ? weapon.body.Rotation : weapon.body.Rotation - MathHelper.Pi);
-                Vector2 weaponDir = new Vector2((float)Math.Cos(weaponAngle), (float)Math.Sin(weaponAngle));
-
-                if (Vector2.Dot(enemyDiff, weaponDir) < 0.9f) return;
-
-                List<FarseerPhysics.Dynamics.Body> ignoredBodies = new List<FarseerPhysics.Dynamics.Body>();
-                foreach (Limb limb in character.AnimController.Limbs)
+                else
                 {
-                    ignoredBodies.Add(limb.body.FarseerBody);
+                    //couldn't equip the item, escape
+                    Escape(deltaTime);
+                    return false;
                 }
+            }
+            return true;
+        }
 
-                var pickedBody = Submarine.PickBody(character.SimPosition, enemy.SimPosition, ignoredBodies);
-                if (pickedBody != null && !(pickedBody.UserData is Limb)) return;
+        private void Move(float deltaTime)
+        {
+            // Retreat to safety
+            // TODO: aggressive behaviour, chasing?
+            if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
+            {
+                retreatTarget = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull();
+            }
+            if (retreatTarget != null)
+            {
+                if (retreatObjective == null || retreatObjective.Target != retreatTarget)
+                {
+                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, false, true);
+                }
+                retreatObjective.TryComplete(deltaTime);
+            }
+        }
 
-               weapon.Use(deltaTime, character);
+        private bool Reload(float deltaTime)
+        {
+            if (WeaponComponent != null && WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
+            {
+                var containedItems = Weapon.ContainedItems;
+                foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
+                {
+                    Item containedItem = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                    if (containedItem == null)
+                    {
+                        if (reloadWeaponObjective == null)
+                        {
+                            reloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, Weapon.GetComponent<ItemContainer>());
+                        }
+                    }
+                }
+            }
+            if (reloadWeaponObjective != null)
+            {
+                if (reloadWeaponObjective.IsCompleted())
+                {
+                    reloadWeaponObjective = null;
+                }
+                else if (!reloadWeaponObjective.CanBeCompleted)
+                {
+                    Escape(deltaTime);
+                }
+                else
+                {
+                    reloadWeaponObjective.TryComplete(deltaTime);
+                }
+                return false;
+            }
+            return true;
+        }
+
+        private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
+        private void Attack(float deltaTime)
+        {
+            character.CursorPosition = Enemy.Position;
+            character.SetInput(InputType.Aim, false, true);
+            if (WeaponComponent is MeleeWeapon meleeWeapon)
+            {
+                if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)
+                {
+                    Weapon.Use(deltaTime, character);
+                }
+            }
+            else
+            {
+                if (WeaponComponent is RepairTool repairTool)
+                {
+                    if (Vector2.DistanceSquared(character.Position, Enemy.Position) > repairTool.Range * repairTool.Range) { return; }
+                }
+                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - character.Position) < MathHelper.Pi / 8)
+                {
+                    if (myBodies == null)
+                    {
+                        myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
+                    }
+                    var pickedBody = Submarine.PickBody(character.SimPosition, Enemy.SimPosition, myBodies);
+                    if (pickedBody != null)
+                    {
+                        Character target = null;
+                        if (pickedBody.UserData is Character c)
+                        {
+                            target = c;
+                        }
+                        else if (pickedBody.UserData is Limb limb)
+                        {
+                            target = limb.character;
+                        }
+                        if (target != null && target == Enemy)
+                        {
+                            Weapon.Use(deltaTime, character);
+                        }
+                    }
+                }
             }
         }
 
         private void Escape(float deltaTime)
         {
-            // TODO: just let the find safety run?
-            if (escapeObjective == null)
-            {
-                escapeObjective = new AIObjectiveFindSafety(character);
-            }
-            
-            if (enemy.AnimController.CurrentHull == character.AnimController.CurrentHull)
-            {
-                escapeObjective.OverrideCurrentHullSafety = 0.0f;
-            }
-            else
-            {
-                escapeObjective.OverrideCurrentHullSafety = null;
-            }
-
-            escapeObjective.TryComplete(deltaTime);
+            abandon = true;
+            SteeringManager.Reset();
+            HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
         }
 
-        public override bool IsCompleted()
-        {
-            return enemy == null || enemy.Removed || enemy.IsDead || coolDownTimer <= 0.0f;
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (enemy == null || enemy.Removed)
-            {
-                return 0.0f;
-            }
-
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-
-            //clamp the strength to the health of this character
-            //(it doesn't make a difference whether the enemy does 200 or 600 damage, it's one hit kill anyway)
-
-            float enemyDanger = Math.Min(Math.Max(CalculateEnemyStrength(), MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
-
-            if (enemy.AIController is EnemyAIController enemyAI)
-            {
-                if (enemyAI.SelectedAiTarget == character.AiTarget) enemyDanger *= 2.0f;
-            }
-
-            return Math.Max(enemyDanger, AIObjectiveManager.OrderPriority);
-        }
+        public override bool IsCompleted() => Enemy == null || Enemy.Removed || Enemy.IsDead || coolDownTimer <= 0.0f;
+        public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
+        public override float GetPriority(AIObjectiveManager objectiveManager) => Enemy == null || Enemy.Removed || Enemy.IsDead ? 0 : 100;
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            AIObjectiveCombat objective = otherObjective as AIObjectiveCombat;
-            if (objective == null) return false;
-
-            return objective.enemy == enemy;
+            if (!(otherObjective is AIObjectiveCombat objective)) return false;
+            return objective.Enemy == Enemy;
         }
 
-        private float CalculateEnemyStrength()
-        {
-            float enemyStrength = 0;
-            AttackContext currentContext = character.GetAttackContext();
-            foreach (Limb limb in enemy.AnimController.Limbs)
-            {
-                if (limb.attack == null) continue;
-                if (!limb.attack.IsValidContext(currentContext)) { continue; }
-                if (!limb.attack.IsValidTarget(AttackTarget.Character)) { continue; }
-                enemyStrength += limb.attack.GetTotalDamage(false);
-            }
-            return enemyStrength;
-        }
+        //private float CalculateEnemyStrength()
+        //{
+        //    float enemyStrength = 0;
+        //    AttackContext currentContext = character.GetAttackContext();
+        //    foreach (Limb limb in Enemy.AnimController.Limbs)
+        //    {
+        //        if (limb.attack == null) continue;
+        //        if (!limb.attack.IsValidContext(currentContext)) { continue; }
+        //        if (!limb.attack.IsValidTarget(AttackTarget.Character)) { continue; }
+        //        enemyStrength += limb.attack.GetTotalDamage(false);
+        //    }
+        //    return enemyStrength;
+        //}
     }
 }
