@@ -1957,8 +1957,8 @@ namespace Barotrauma.Networking
             if (client == null) return;
             if (client.Connection == OwnerConnection) return;
 
-            string msg = DisconnectReason.Banned.ToString();
-            DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", msg, reason);
+            string targetMsg = DisconnectReason.Banned.ToString();
+            DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason);
 
             if (client.SteamID == 0 || range)
             {
@@ -2789,9 +2789,9 @@ namespace Barotrauma.Networking
             }
 
             GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
-            server.Shutdown("The server has been shut down");
+            server.Shutdown(DisconnectReason.ServerShutdown.ToString());
         }
-        
+
         void InitUPnP()
         {
             server.UPnP.ForwardPort(NetPeerConfiguration.Port, "barotrauma");
