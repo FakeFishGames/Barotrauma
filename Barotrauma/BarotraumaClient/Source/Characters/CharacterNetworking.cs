@@ -123,10 +123,7 @@ namespace Barotrauma
                 for (int i = 0; i < inputCount; i++)
                 {
                     msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
-                    if (memInput[i].states.HasFlag(InputNetFlags.Aim))
-                    {
-                        msg.Write(memInput[i].intAim);
-                    }
+                    msg.Write(memInput[i].intAim);
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
                         memInput[i].states.HasFlag(InputNetFlags.Use) || 
                         memInput[i].states.HasFlag(InputNetFlags.Health) ||

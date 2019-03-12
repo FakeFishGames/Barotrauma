@@ -166,11 +166,8 @@ namespace Barotrauma
                             //character changed the direction they're facing
                             c.KickAFKTimer = 0.0f;
                         }
-
-                        if (newInput.HasFlag(InputNetFlags.Aim))
-                        {
-                            newAim = msg.ReadUInt16();
-                        }
+                        
+                        newAim = msg.ReadUInt16();                        
                         if (newInput.HasFlag(InputNetFlags.Select) ||
                             newInput.HasFlag(InputNetFlags.Use) ||
                             newInput.HasFlag(InputNetFlags.Health) ||
@@ -181,12 +178,15 @@ namespace Barotrauma
                         
                         if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
                         {
+                            if ((i > 0 && memInput[i - 1].intAim != newAim))
+                            {
+                                c.KickAFKTimer = 0.0f;
+                            }
                             NetInputMem newMem = new NetInputMem
                             {
                                 states = newInput,
                                 intAim = newAim,
                                 interact = newInteract,
-
                                 networkUpdateID = (ushort)(networkUpdateID - i)
                             };
                             memInput.Insert(i, newMem);
