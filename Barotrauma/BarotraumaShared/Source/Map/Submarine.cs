@@ -655,7 +655,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
