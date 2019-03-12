@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -136,10 +137,14 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.CurrentHull == character.CurrentHull && item.Repairables.Any(r => item.Condition < r.ShowRepairUIThreshold))
+                    if (!item.Repairables.Any(r => item.Condition < r.ShowRepairUIThreshold)) { continue; }
+                    if (!Submarine.VisibleEntities.Contains(item)) { continue; }
+
+                    Vector2 diff = item.WorldPosition - character.WorldPosition;
+                    if (Submarine.CheckVisibility(character.SimPosition, character.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
                     {
-                        brokenItems.Add(item);
-                    }
+                        brokenItems.Add(item); 
+                    }                   
                 }
             }
         }
