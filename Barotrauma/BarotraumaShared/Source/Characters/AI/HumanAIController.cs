@@ -186,7 +186,7 @@ namespace Barotrauma
                         // Try to put the mask in an Any slot, and drop it if that fails
                         if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
                         {
-                            mask.Drop();
+                            mask.Drop(Character);
                         }
                     }
                 }
@@ -197,7 +197,7 @@ namespace Barotrauma
                 if (extinguisherItem != null && Character.HasEquippedItem(extinguisherItem))
                 {
                     // TODO: take the item where it was taken from?
-                    extinguisherItem.Drop();
+                    extinguisherItem.Drop(Character);
                 }
             }
 

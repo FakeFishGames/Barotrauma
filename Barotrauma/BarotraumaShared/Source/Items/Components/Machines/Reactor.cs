@@ -437,7 +437,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (item != null && item.Condition <= 0.0f)
                     {
-                        item.Drop();
+                        item.Drop(character);
                     }
                 }
 
