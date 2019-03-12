@@ -35,7 +35,7 @@ namespace Barotrauma
             float damagePriority = MathHelper.Lerp(1, 0, (Item.Condition + 10) / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
-            float baseLevel = Math.Max(priority + isSelected, 1);
+            float baseLevel = Math.Max(Priority + isSelected, 1);
             return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 

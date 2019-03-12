@@ -52,7 +52,7 @@ namespace Barotrauma
                 if (divingGearObjective.IsCompleted())
                 {
                     divingGearObjective = null;
-                    priority = 0;
+                    Priority = 0;
                 }
                 else if (divingGearObjective.CanBeCompleted)
                 {
@@ -223,24 +223,24 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
-                priority = 5;
+                Priority = 5;
                 return;
             }
             if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { priority = 100; }
             currenthullSafety = OverrideCurrentHullSafety ?? HumanAIController.GetHullSafety(character.CurrentHull);
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
-                priority -= priorityDecrease * deltaTime;
+                Priority -= priorityDecrease * deltaTime;
             }
             else
             {
                 float dangerFactor = (100 - currenthullSafety) / 100;
-                priority += dangerFactor * priorityIncrease * deltaTime;
+                Priority += dangerFactor * priorityIncrease * deltaTime;
             }
-            priority = MathHelper.Clamp(priority, 0, 100);
+            Priority = MathHelper.Clamp(Priority, 0, 100);
             if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
             {
-                priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
+                Priority = Math.Max(Priority, AIObjectiveManager.OrderPriority + 10);
             }
         }
     }

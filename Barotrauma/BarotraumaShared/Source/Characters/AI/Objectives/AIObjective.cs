@@ -15,7 +15,7 @@ namespace Barotrauma
         public virtual bool KeepDivingGearOn => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
-        protected float priority;
+        public float Priority { get; set; }
         protected readonly Character character;
         protected string option;
         protected bool abandon;
@@ -26,6 +26,7 @@ namespace Barotrauma
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
+        protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
 
         public string Option
         {
@@ -103,20 +104,20 @@ namespace Barotrauma
             CurrentSubObjective.SortSubObjectives(objectiveManager);
         }
 
-        public virtual float GetPriority(AIObjectiveManager objectiveManager) => priority;
+        public virtual float GetPriority(AIObjectiveManager objectiveManager) => Priority;
 
         public virtual void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
             var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
             if (objectiveManager.CurrentOrder == this)
             {
-                priority = AIObjectiveManager.OrderPriority;
+                Priority = AIObjectiveManager.OrderPriority;
             }
             else if (objectiveManager.CurrentObjective == this || subObjective == this)
             {
-                priority += Devotion * deltaTime;
+                Priority += Devotion * deltaTime;
             }
-            priority = MathHelper.Clamp(priority, 0, 100);
+            Priority = MathHelper.Clamp(Priority, 0, 100);
             subObjectives.ForEach(so => so.Update(objectiveManager, deltaTime));
         }
 
