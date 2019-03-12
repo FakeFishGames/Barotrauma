@@ -355,8 +355,10 @@ namespace Barotrauma.Networking
 
                 entityEventManager.Update(connectedClients);
 
-                foreach (Character character in Character.CharacterList)
+                //go through the characters backwards to give rejoining clients control of the latest created character
+                for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
                 {
+                    Character character = Character.CharacterList[i];
                     if (character.IsDead || !character.ClientDisconnected) continue;
 
                     character.KillDisconnectedTimer += deltaTime;
