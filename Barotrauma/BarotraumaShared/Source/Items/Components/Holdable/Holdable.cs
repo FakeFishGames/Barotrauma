@@ -438,7 +438,7 @@ namespace Barotrauma.Items.Components
                     GameServer.Log(character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
                 }
 #endif
-                item.Drop();
+                item.Drop(character);
             }
             
             AttachToWall();

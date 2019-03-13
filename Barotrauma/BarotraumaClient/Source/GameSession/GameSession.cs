@@ -7,10 +7,6 @@ namespace Barotrauma
     {
         private InfoFrameTab selectedTab;
         private GUIButton infoFrame;
-        /// <summary>
-        /// Determines whether the hotkey for the info button was held down in the previous frame.
-        /// </summary>
-        private bool prevInfoKey;
 
         private GUIFrame infoFrameContent;
 
@@ -19,12 +15,7 @@ namespace Barotrauma
         {
             get { return roundSummary; }
         }
-
-        partial void InitProjSpecific()
-        {
-            prevInfoKey = false;
-        }
-
+        
         private bool ToggleInfoFrame()
         {
             if (infoFrame == null)
@@ -45,8 +36,7 @@ namespace Barotrauma
             int width = 600, height = 400;
 
             infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
-
-
+            
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
 
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style:null);
@@ -135,10 +125,17 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
-            if (prevInfoKey != (PlayerInput.KeyDown(InputType.InfoTab) && GUI.KeyboardDispatcher.Subscriber == null))
+            if (PlayerInput.KeyDown(InputType.InfoTab) && 
+                (GUI.KeyboardDispatcher.Subscriber == null || GUI.KeyboardDispatcher.Subscriber is GUIListBox))
+            {
+                if (infoFrame == null)
+                {
+                    ToggleInfoFrame();
+                }
+            }
+            else if (infoFrame != null)
             {
                 ToggleInfoFrame();
-                prevInfoKey = PlayerInput.KeyDown(InputType.InfoTab);
             }
 
             infoFrame?.UpdateManually(deltaTime);

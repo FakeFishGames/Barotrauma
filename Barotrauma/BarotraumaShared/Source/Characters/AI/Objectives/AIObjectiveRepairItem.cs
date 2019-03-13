@@ -35,7 +35,7 @@ namespace Barotrauma
             float damagePriority = MathHelper.Lerp(1, 0, (Item.Condition + 10) / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
-            float baseLevel = Math.Max(priority + isSelected, 1);
+            float baseLevel = Math.Max(Priority + isSelected, 1);
             return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
         }
 
@@ -84,6 +84,7 @@ namespace Barotrauma
             }
             if (character.CanInteractWith(Item))
             {
+                OperateRepairTool(deltaTime);
                 foreach (Repairable repairable in Item.Repairables)
                 {
                     if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
@@ -121,6 +122,34 @@ namespace Barotrauma
                 }
                 goToObjective = new AIObjectiveGoTo(Item, character);
                 AddSubObjective(goToObjective);
+            }
+        }
+
+        private void OperateRepairTool(float deltaTime)
+        {
+            // Operate repair tool, if required.
+            foreach (Repairable repairable in Item.Repairables)
+            {
+                foreach (var kvp in repairable.requiredItems)
+                {
+                    foreach (RelatedItem requiredItem in kvp.Value)
+                    {
+                        foreach (var item in character.Inventory.Items)
+                        {
+                            if (requiredItem.MatchesItem(item))
+                            {
+                                var repairTool = item.GetComponent<RepairTool>();
+                                if (repairTool != null)
+                                {
+                                    character.CursorPosition = Item.Position;
+                                    character.SetInput(InputType.Aim, false, true);
+                                    repairTool.Use(deltaTime, character);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

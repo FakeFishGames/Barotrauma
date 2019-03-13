@@ -5,7 +5,7 @@
     commonnessperzone="1: 5.0, 2: 5.0, 3: 5.0, 4: 5.0, 5: 5.0, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="514,806,253,196" color="236,200,159,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.png"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
     <ChangeTo type="Outpost" probability="0.5" requiredduration="3"
@@ -28,7 +28,7 @@
     halo="0,1,0,0.3">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="520,527,244,228" color="198,252,222,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/Colony.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/Colony.png"/>
 
     <Hireable identifier="assistant" commonness="10"/>
     <Hireable identifier="engineer" commonness="3"/>
@@ -45,7 +45,7 @@
     halo="0,1,0,0.2">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="545,275,181,220" color="198,252,222,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.png"/>
     
     <Hireable identifier="assistant" commonness="10"/>
     <Hireable identifier="engineer" commonness="3"/>
@@ -66,7 +66,7 @@
     useinmainmenu="true">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,512,256,256" color="198,252,222,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMilitary.png"/>
     
     <Hireable identifier="securityofficer" commonness="10"/>
     <Hireable identifier="captain" commonness="3"/>
@@ -84,7 +84,8 @@
     halo="0,1,0,0.2">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="803,265,190,241" color="198,252,222,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility1.png"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility2.png"/>
     
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
@@ -102,8 +103,9 @@
     halo="0,1,0,0.2">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="284,773,220,244" color="198,252,222,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining1.jpg"/>
-    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining2.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining1.png"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining2.png"/>
+    <Portrait texture="Content/Map/LocationPortraits/WorkCampMining3.png"/>
     
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
@@ -117,7 +119,7 @@
     halo="1,0,0,0.4">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/EmptyLocation.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.png"/>
     
     <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
     <ChangeTo type="None" probability="1.0"/>
@@ -131,8 +133,7 @@
     useinmainmenu="true">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="784,847,233,158" color="216,91,80,255"/>
-    <Portrait texture="Content/Map/LocationPortraits/AlienRuins.jpg"/>
-    <Portrait texture="Content/Map/LocationPortraits/AlienRuins2.jpg"/>
+    <Portrait texture="Content/Map/LocationPortraits/AlienRuins.png"/>
 
     <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
     <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>

@@ -625,8 +625,7 @@ namespace Barotrauma
                         {
                             foreach (Item item in itemInventory.Items)
                             {
-                                if (item == null) continue;
-                                item.Drop();
+                                item?.Drop(null);
                             }
                         }
                         else // If current screen is not subeditor, delete anyway to avoid lingering objects
@@ -671,8 +670,7 @@ namespace Barotrauma
                         {
                             foreach (Item item in itemInventory.Items)
                             {
-                                if (item == null) continue;
-                                item.Drop();
+                                item?.Drop(null);
                             }
                         }
                         else // If current screen is not subeditor, delete anyway to avoid lingering objects
@@ -703,8 +701,7 @@ namespace Barotrauma
                         {
                             foreach (Item item in itemInventory.Items)
                             {
-                                if (item == null) continue;
-                                item.Drop();
+                                item?.Drop(null);
                             }
                         }
                         else // If current screen is not subeditor, delete anyway to avoid lingering objects
@@ -1457,7 +1454,7 @@ namespace Barotrauma
             Item existingWire = dummyCharacter.SelectedItems.FirstOrDefault(i => i != null && i.Prefab == userData as ItemPrefab);
             if (existingWire != null)
             {
-                existingWire.Drop();
+                existingWire.Drop(null);
                 existingWire.Remove();
                 return false;
             }
@@ -1470,7 +1467,7 @@ namespace Barotrauma
             existingWire = dummyCharacter.Inventory.Items[slotIndex];
             if (existingWire != null && existingWire.Prefab != userData as ItemPrefab)
             {
-                existingWire.Drop();
+                existingWire.Drop(null);
                 existingWire.Remove();
             }
 

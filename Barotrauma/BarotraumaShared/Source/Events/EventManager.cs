@@ -120,18 +120,30 @@ namespace Barotrauma
 
         private void CreateEvents()
         {
+            //don't create new events if docked to the start oupost
+            if (Level.Loaded?.StartOutpost != null && 
+                Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost))
+            {
+                return;
+            }
+
             for (int i = selectedEventSets.Count - 1; i >= 0; i--)
             {
                 ScriptedEventSet eventSet = selectedEventSets[i];
+
+                float distFromStart = Vector2.Distance(Submarine.MainSub.WorldPosition, level.StartPosition);
+                float distFromEnd = Vector2.Distance(Submarine.MainSub.WorldPosition, level.EndPosition);
 
                 float distanceTraveled = MathHelper.Clamp(
                     (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
                     0.0f, 1.0f);
 
-                if (Level.Loaded?.StartOutpost != null && 
-                    Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost))
+                //don't create new events if within 50 meters of the start/end of the level
+                if (distanceTraveled <= 0.0f || 
+                    distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
+                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
                 {
-                    distanceTraveled = 0.0f;
+                    continue;
                 }
 
                 if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&

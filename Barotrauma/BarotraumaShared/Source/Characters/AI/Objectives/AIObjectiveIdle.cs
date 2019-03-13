@@ -11,6 +11,12 @@ namespace Barotrauma
         public override string DebugTag => "idle";
 
         const float WallAvoidDistance = 150.0f;
+        private readonly float newTargetIntervalMin = 5;
+        private readonly float newTargetIntervalMax = 15;
+        private readonly float standStillMin = 1;
+        private readonly float standStillMax = 10;
+        private readonly float walkDurationMin = 3;
+        private readonly float walkDurationMax = 10;
 
         private Hull currentTarget;
         private float newTargetTimer;
@@ -46,7 +52,10 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
-            if (currentTarget == null && (IsForbidden(character.CurrentHull) || HumanAIController.UnsafeHulls.Contains(character.CurrentHull)))
+            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
+                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
+
+            if (currentTargetIsInvalid || (currentTarget == null && IsForbidden(character.CurrentHull)))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;
@@ -70,7 +79,7 @@ namespace Barotrauma
                     PathSteering.SetPath(path);
                 }
 
-                newTargetTimer = currentTarget == null ? 5.0f : 15.0f;
+                newTargetTimer = currentTarget != null && character.AnimController.InWater ? newTargetIntervalMin : Rand.Range(newTargetIntervalMin, newTargetIntervalMax);
             }
             
             newTargetTimer -= deltaTime;
@@ -79,20 +88,20 @@ namespace Barotrauma
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (PathSteering == null || (PathSteering.CurrentPath != null &&
+            if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
                 (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
             {
                 standStillTimer -= deltaTime;
                 if (standStillTimer > 0.0f)
                 {
-                    walkDuration = Rand.Range(1.0f, 5.0f);
+                    walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
                     PathSteering.Reset();
                     return;
                 }
 
                 if (standStillTimer < -walkDuration)
                 {
-                    standStillTimer = Rand.Range(1.0f, 10.0f);
+                    standStillTimer = Rand.Range(standStillMin, standStillMax);
                 }
 
                 //steer away from edges of the hull
@@ -128,12 +137,11 @@ namespace Barotrauma
                 }
                 
                 character.AIController.SteeringManager.SteeringWander();
-                if (!character.IsClimbing)
+                if (!character.IsClimbing && !character.AnimController.InWater)
                 {
                     //reset vertical steering to prevent dropping down from platforms etc
                     character.AIController.SteeringManager.ResetY();
                 }             
-
                 return;                
             }
 
@@ -150,6 +158,7 @@ namespace Barotrauma
         {
             var idCard = character.Inventory.FindItemByIdentifier("idcard");
             Hull targetHull = null;
+            bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
             //random chance of navigating back to the room where the character spawned
             if (Rand.Int(5) == 1 && idCard != null)
             {
@@ -186,9 +195,13 @@ namespace Barotrauma
                             continue;
                         }
                     }
-                    // Check that there is no unsafe or forbidden hulls on the way to the target
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
+                    if (isCurrentHullOK)
+                    {
+                        // Check that there is no unsafe or forbidden hulls on the way to the target
+                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                        if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
+                    }
 
                     // If we want to do a steering check, we should do it here, before setting the path
                     //if (path.Cost > 1000.0f) { continue; }

@@ -598,7 +598,7 @@ namespace Barotrauma
                 
                 if (selectedSlot == null)
                 {
-                    draggingItem.Drop();
+                    draggingItem.Drop(Character.Controlled);
                     GUI.PlayUISound(GUISoundType.DropItem);
                 }
                 else if (selectedSlot.ParentInventory.Items[selectedSlot.SlotIndex] != draggingItem)
@@ -954,7 +954,7 @@ namespace Barotrauma
             {
                 if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop();
+                    if (Items[i] != null) Items[i].Drop(null);
                     System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
             }

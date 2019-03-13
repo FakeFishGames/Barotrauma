@@ -22,6 +22,14 @@
   <LargeFont file="Content/Fonts/NotoSans/NotoSans-ExtraBold.ttf" size="22"/>
   -->
 
+  <TitleText
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="255,255,255,255">    
+    <Sprite texture="Content/UI/titleText.png" sourcerect ="0,0,1684,248" tile="false" maintainaspectratio="true"/>
+  </TitleText>
+
   <InnerGlow
     color="255,255,255,204"
     hovercolor="255,255,255,204"

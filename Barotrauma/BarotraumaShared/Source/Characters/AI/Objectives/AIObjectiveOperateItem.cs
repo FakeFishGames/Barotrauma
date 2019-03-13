@@ -135,7 +135,7 @@ namespace Barotrauma
                                 if (!character.Inventory.Items[i].AllowedSlots.Contains(InvSlotType.Any) ||
                                     !character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any }))
                                 {
-                                    character.Inventory.Items[i].Drop();
+                                    character.Inventory.Items[i].Drop(character);
                                 }
                             }
                             if (character.Inventory.TryPutItem(component.Item, i, true, false, character))

@@ -153,6 +153,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="Shaders\blurshader_opengl.fx" />
+    <Content Include="Shaders\damageshader_opengl.fx" />
+    <Content Include="Shaders\deformshader_opengl.fx" />
+    <Content Include="Shaders\losshader_opengl.fx" />
+    <Content Include="Shaders\postprocess_opengl.fx" />
+    <Content Include="Shaders\watershader_opengl.fx" />
+    <None Include="Shaders\Content_opengl.mgcb" />
     <None Include="Content\Effects\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

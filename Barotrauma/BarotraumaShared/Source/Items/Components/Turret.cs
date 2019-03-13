@@ -350,7 +350,7 @@ namespace Barotrauma.Items.Components
         {
             reload = reloadTime;
 
-            projectile.Drop();
+            projectile.Drop(null);
             projectile.body.Dir = 1.0f;
 
             projectile.body.ResetDynamics();

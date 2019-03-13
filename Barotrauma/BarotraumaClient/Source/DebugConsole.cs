@@ -436,13 +436,15 @@ namespace Barotrauma
 
             AssignOnExecute("ambientlight", (string[] args) =>
             {
-                if (Level.Loaded == null)
-                {
-                    ThrowError("Could not set ambient light color (no level loaded).");
-                    return;
-                }
                 Color color = XMLExtensions.ParseColor(string.Join("", args));
-                Level.Loaded.GenerationParams.AmbientLightColor = color;
+                if (Level.Loaded != null)
+                {
+                    Level.Loaded.GenerationParams.AmbientLightColor = color;
+                }
+                else
+                {
+                    GameMain.LightManager.AmbientLight = color;
+                }
                 NewMessage("Set ambient light color to " + color + ".", Color.White);
             });
             AssignRelayToServer("ambientlight", false);

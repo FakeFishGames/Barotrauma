@@ -140,7 +140,7 @@ namespace Barotrauma.Networking
                         if (GameMain.Config.RequireSteamAuthentication)
                         {
                             Log("Disconnected unauthenticated client (Steam ID: " + steamID + "). Steam authentication failed, (" + status + ").", ServerLog.MessageType.ServerMessage);
-                            unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString() + "; (" + status.ToString() + ")");
+                            unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString() + "/ (" + status.ToString() + ")");
                         }
                         else
                         {
@@ -500,7 +500,7 @@ namespace Barotrauma.Networking
                 
         private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, DisconnectReason reason, string message)
         {
-            inc.SenderConnection.Disconnect(reason.ToString() + "; " + message);
+            inc.SenderConnection.Disconnect(reason.ToString() + "/ " + message);
             if (unauthClient.SteamID > 0) { Steam.SteamManager.StopAuthSession(unauthClient.SteamID); }
             if (unauthClient != null)
             {

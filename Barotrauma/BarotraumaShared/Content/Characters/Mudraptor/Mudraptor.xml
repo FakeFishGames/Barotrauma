@@ -27,6 +27,10 @@
 
   <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death1.ogg" state="Die" range="1000"/>
   <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death2.ogg" state="Die" range="1000"/>
+
+  <Inventory slots="Any, Any" accessiblewhenalive="false">
+    <Item identifier="hydroxyapatite"/>
+  </Inventory>
   
   <ai
     combatstrength="250"
@@ -37,12 +41,7 @@
     aggressiongreed="20"
     aggressionhurt="100">
 
-    <Inventory slots="Any, Any" accessiblewhenalive="false">
-      <Item identifier="hydroxyapatite"/>
-    </Inventory>
-    
-    <latchonto
-      attachtowalls="true"/>
+    <latchonto attachtowalls="true" attachtosub="false"/>
 
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="300"/>
