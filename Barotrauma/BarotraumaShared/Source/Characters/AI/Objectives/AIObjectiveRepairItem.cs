@@ -84,6 +84,7 @@ namespace Barotrauma
             }
             if (character.CanInteractWith(Item))
             {
+                OperateRepairTool(deltaTime);
                 foreach (Repairable repairable in Item.Repairables)
                 {
                     if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
@@ -121,6 +122,34 @@ namespace Barotrauma
                 }
                 goToObjective = new AIObjectiveGoTo(Item, character);
                 AddSubObjective(goToObjective);
+            }
+        }
+
+        private void OperateRepairTool(float deltaTime)
+        {
+            // Operate repair tool, if required.
+            foreach (Repairable repairable in Item.Repairables)
+            {
+                foreach (var kvp in repairable.requiredItems)
+                {
+                    foreach (RelatedItem requiredItem in kvp.Value)
+                    {
+                        foreach (var item in character.Inventory.Items)
+                        {
+                            if (requiredItem.MatchesItem(item))
+                            {
+                                var repairTool = item.GetComponent<RepairTool>();
+                                if (repairTool != null)
+                                {
+                                    character.CursorPosition = Item.Position;
+                                    character.SetInput(InputType.Aim, false, true);
+                                    repairTool.Use(deltaTime, character);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
