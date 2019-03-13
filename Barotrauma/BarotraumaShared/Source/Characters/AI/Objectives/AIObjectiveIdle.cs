@@ -131,12 +131,11 @@ namespace Barotrauma
                 }
                 
                 character.AIController.SteeringManager.SteeringWander();
-                if (!character.IsClimbing)
+                if (!character.IsClimbing && !character.AnimController.InWater)
                 {
                     //reset vertical steering to prevent dropping down from platforms etc
                     character.AIController.SteeringManager.ResetY();
                 }             
-
                 return;                
             }
 
