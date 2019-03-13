@@ -682,7 +682,12 @@ namespace Barotrauma
                 backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom()).GetPortrait(0);
             }
 
-            if (backgroundSprite != null) { GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite); }
+            if (backgroundSprite != null)
+            {
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, 
+                    blurAmount: 0.0f, 
+                    aberrationStrength: 0.0f);
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
