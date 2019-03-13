@@ -294,9 +294,10 @@ namespace Barotrauma.Items.Components
             character.CursorPosition = leak.Position;
             character.SetInput(InputType.Aim, false, true);
 
-            if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
+            // Press the trigger only when the tool is approximately facing the target.
+            // If the character is climbing, ignore the check, because we cannot aim while climbing.
+            if (character.IsClimbing || VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
             {
-                // Press the trigger only when the tool is approximately facing the target.
                 Use(deltaTime, character);
             }
 

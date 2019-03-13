@@ -214,6 +214,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\DeformAnimations\SpriteDeformation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
