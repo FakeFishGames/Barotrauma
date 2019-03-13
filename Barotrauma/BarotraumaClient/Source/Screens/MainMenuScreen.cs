@@ -38,9 +38,18 @@ namespace Barotrauma
         #region Creation
         public MainMenuScreen(GameMain game)
         {
+            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.05f, 0.05f), AbsoluteOffset = new Point(-5, -5) },
+                style: "TitleText")
+            {
+                Color = Color.Black * 0.5f,
+                CanBeFocused = false
+            };
+            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f, 0.05f) },
+                style: "TitleText");
+
             buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
             {
-                RelativeOffset = new Vector2(0, 0),
                 AbsoluteOffset = new Point(50, 0)
             })
             {
@@ -66,7 +75,7 @@ namespace Barotrauma
 
             var campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            var campaignList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: campaignButtons.RectTransform))
+            var campaignList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.2f), parent: campaignButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -112,7 +121,7 @@ namespace Barotrauma
 
             var multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            var multiplayerList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: multiplayerButtons.RectTransform))
+            var multiplayerList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.2f), parent: multiplayerButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -157,7 +166,7 @@ namespace Barotrauma
 
             var customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
 
-            var customizeList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: customizeButtons.RectTransform))
+            var customizeList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.2f), parent: customizeButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
