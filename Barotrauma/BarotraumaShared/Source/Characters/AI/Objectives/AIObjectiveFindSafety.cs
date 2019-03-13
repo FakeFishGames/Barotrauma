@@ -15,11 +15,12 @@ namespace Barotrauma
         const float priorityIncrease = 25;
         const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
+        const float clearUnreachableInterval = 30;
 
         private List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
-
+        private float unreachableClearTimer;
         private float searchHullTimer;
 
         private AIObjectiveGoTo goToObjective;
@@ -56,6 +57,16 @@ namespace Barotrauma
                     // If diving gear objective is active, wait for it to complete.
                     return;
                 }
+            }
+
+            if (unreachableClearTimer > 0)
+            {
+                unreachableClearTimer -= deltaTime;
+            }
+            else
+            {
+                unreachableClearTimer = clearUnreachableInterval;
+                unreachable.Clear();
             }
 
             if (searchHullTimer > 0.0f)
