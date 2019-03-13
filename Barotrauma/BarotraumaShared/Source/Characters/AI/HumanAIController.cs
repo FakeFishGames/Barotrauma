@@ -135,10 +135,11 @@ namespace Barotrauma
 
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
 
-            if (Character.IsClimbing)
-            {
-                Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
-            }
+            // Suspect that this causes issues when trying to exit from the ladders -> could try to check if the next node is ladder?
+            //if (Character.IsClimbing)
+            //{
+            //    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+            //}
 
             Vector2 targetMovement = AnimController.TargetMovement;
 
