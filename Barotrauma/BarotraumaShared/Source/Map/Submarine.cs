@@ -467,6 +467,7 @@ namespace Barotrauma
         public List<Submarine> GetConnectedSubs()
         {
             connectedSubs.Clear();
+            connectedSubs.Add(this);
             GetConnectedSubsRecursive(connectedSubs);
 
             return connectedSubs;
