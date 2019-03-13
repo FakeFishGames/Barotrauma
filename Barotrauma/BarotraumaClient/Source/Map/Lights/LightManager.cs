@@ -47,6 +47,7 @@ namespace Barotrauma.Lights
         private BasicEffect lightEffect;
 
         public Effect LosEffect { get; private set; }
+        public Effect HighlightEffect { get; private set; }
         
         private List<LightSource> lights;
 
@@ -80,8 +81,10 @@ namespace Barotrauma.Lights
 
 #if WINDOWS
             LosEffect = content.Load<Effect>("Effects/losshader");
+            HighlightEffect = content.Load<Effect>("Effects/highlight");
 #else
             LosEffect = content.Load<Effect>("Effects/losshader_opengl");
+            //TODO: highlight effect
 #endif
 
             if (lightEffect == null)
@@ -261,6 +264,17 @@ namespace Barotrauma.Lights
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
             
+            foreach (LightSource light in activeLights)
+            {
+                if (light.IsBackground) continue;
+                light.DrawSprite(spriteBatch, cam);
+            }
+            spriteBatch.End();
+
+            HighlightEffect.Parameters["tint"].SetValue(Color.LightBlue.ToVector4());
+            HighlightEffect.Parameters["rasterColor"].SetValue(Color.LightBlue.ToVector4() * 0.1f * (float)(Math.Sin(Timing.TotalTime * 5.0f)+1.0f));
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap, effect: HighlightEffect, transformMatrix: spriteBatchTransform);
+            
             if (Character.Controlled != null)
             {
                 if (Character.Controlled.FocusedItem != null)
@@ -278,18 +292,15 @@ namespace Barotrauma.Lights
                     {
                         if (item.IsHighlighted)
                         {
+                            HighlightEffect.Parameters["outlineSize"].SetValue(1.0f / Math.Max(item.Rect.Width, item.Rect.Height) / item.Scale);
+                            HighlightEffect.Parameters["rasterScale"].SetValue(80.0f * item.Scale);
                             item.Draw(spriteBatch, false, true);
                         }
                     }
                 }
             }
-
-            foreach (LightSource light in activeLights)
-            {
-                if (light.IsBackground) continue;
-                light.DrawSprite(spriteBatch, cam);
-            }
             spriteBatch.End();
+
 
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------

@@ -13,39 +13,91 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Effects/blurshader.fx
+#begin blurshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/blurshader.fx
+/build:blurshader.fx
 
-#begin Effects/damageshader.fx
+#begin blurshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/damageshader.fx
+/build:blurshader_opengl.fx
 
-#begin Effects/deformshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/deformshader.fx
+#begin Content.mgcb
+/importer:
+/processor:
+/build:Content.mgcb
 
-#begin Effects/losshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/losshader.fx
+#begin Content_opengl.mgcb
+/importer:
+/processor:
+/build:Content_opengl.mgcb
 
-#begin Effects/postprocess.fx
+#begin damageshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/postprocess.fx
+/build:damageshader.fx
 
-#begin Effects/watershader.fx
+#begin damageshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/watershader.fx
+/build:damageshader_opengl.fx
+
+#begin deformshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:deformshader.fx
+
+#begin deformshader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:deformshader_opengl.fx
+
+#begin highlight.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:highlight.fx
+
+#begin losshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:losshader.fx
+
+#begin losshader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:losshader_opengl.fx
+
+#begin postprocess.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:postprocess.fx
+
+#begin postprocess_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:postprocess_opengl.fx
+
+#begin watershader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:watershader.fx
+
+#begin watershader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:watershader_opengl.fx
 
