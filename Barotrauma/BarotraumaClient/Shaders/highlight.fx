@@ -19,7 +19,7 @@ float4 outline(float4 position : SV_Position, float4 color : COLOR0, float2 texC
 
     float4 rasterSample = (texCoord.y * rasterScale) % 1.0f < 0.5f ? rasterColor : float4(0.0f,0.0f,0.0f,0.0f);
     	
-    float4 outColor = tint * (outlineSample < 3.0f ? 1.0f : 0.0f);
+    float4 outColor = tint * max(1.0f - (outlineSample / 2.0f), 0.0f);
     outColor += rasterSample;
     outColor *= sample.a;
     return outColor;
