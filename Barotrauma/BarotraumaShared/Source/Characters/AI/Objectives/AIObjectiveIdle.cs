@@ -11,6 +11,12 @@ namespace Barotrauma
         public override string DebugTag => "idle";
 
         const float WallAvoidDistance = 150.0f;
+        private readonly float newTargetIntervalMin = 5;
+        private readonly float newTargetIntervalMax = 15;
+        private readonly float standStillMin = 1;
+        private readonly float standStillMax = 10;
+        private readonly float walkDurationMin = 3;
+        private readonly float walkDurationMax = 10;
 
         private Hull currentTarget;
         private float newTargetTimer;
@@ -73,7 +79,7 @@ namespace Barotrauma
                     PathSteering.SetPath(path);
                 }
 
-                newTargetTimer = currentTarget == null ? 5.0f : 15.0f;
+                newTargetTimer = currentTarget != null && character.AnimController.InWater ? newTargetIntervalMin : Rand.Range(newTargetIntervalMin, newTargetIntervalMax);
             }
             
             newTargetTimer -= deltaTime;
@@ -82,20 +88,20 @@ namespace Barotrauma
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (PathSteering == null || (PathSteering.CurrentPath != null &&
+            if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
                 (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
             {
                 standStillTimer -= deltaTime;
                 if (standStillTimer > 0.0f)
                 {
-                    walkDuration = Rand.Range(1.0f, 5.0f);
+                    walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
                     PathSteering.Reset();
                     return;
                 }
 
                 if (standStillTimer < -walkDuration)
                 {
-                    standStillTimer = Rand.Range(1.0f, 10.0f);
+                    standStillTimer = Rand.Range(standStillMin, standStillMax);
                 }
 
                 //steer away from edges of the hull
