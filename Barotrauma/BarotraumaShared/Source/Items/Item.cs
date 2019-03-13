@@ -1631,12 +1631,13 @@ namespace Barotrauma
             SerializableProperty property = extraData[1] as SerializableProperty;
             if (property != null)
             {
+                var propertyOwner = allProperties.Find(p => p.Second == property);
                 if (allProperties.Count > 1)
                 {
                     msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.FindIndex(p => p.Second == property));
                 }
 
-                object value = property.GetValue(this);
+                object value = property.GetValue(propertyOwner.First);
                 if (value is string)
                 {
                     msg.Write((string)value);
