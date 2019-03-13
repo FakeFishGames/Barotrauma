@@ -152,6 +152,7 @@ namespace Barotrauma
         {
             var idCard = character.Inventory.FindItemByIdentifier("idcard");
             Hull targetHull = null;
+            bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
             //random chance of navigating back to the room where the character spawned
             if (Rand.Int(5) == 1 && idCard != null)
             {
@@ -188,9 +189,13 @@ namespace Barotrauma
                             continue;
                         }
                     }
-                    // Check that there is no unsafe or forbidden hulls on the way to the target
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
+                    if (isCurrentHullOK)
+                    {
+                        // Check that there is no unsafe or forbidden hulls on the way to the target
+                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                        if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
+                    }
 
                     // If we want to do a steering check, we should do it here, before setting the path
                     //if (path.Cost > 1000.0f) { continue; }
