@@ -161,10 +161,29 @@ namespace Barotrauma
             float bestValue = currenthullSafety;
             foreach (Hull hull in Hull.hullList)
             {
-                if (unreachable.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
                 float hullSafety = 0;
-                if (character.Submarine == null)
+                if (character.Submarine != null && SteeringManager == PathSteering)
+                {
+                    // Inside or outside near the sub
+                    if (unreachable.Contains(hull)) { continue; }
+                    if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
+                    hullSafety = HumanAIController.GetHullSafety(hull, character);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                    int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
+                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
+                    float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
+                    hullSafety *= distanceFactor;
+                    // Each unsafe node reduces the hull safety value.
+                    hullSafety /= 1 + unsafeNodes;
+                    // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                    if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
+                    {
+                        hullSafety /= 10;
+                    }
+                }
+                else
                 {
                     // Outside
                     if (hull.RoomName?.ToLowerInvariant() == "airlock")
@@ -185,29 +204,11 @@ namespace Barotrauma
                     }
 
                     // Huge preference for closer targets
-                    float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
+                    float distance = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
+                    float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
                     hullSafety *= distanceFactor;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.
                     if (hull.Submarine.TeamID != character.TeamID && hull.Submarine.TeamID != Character.TeamType.FriendlyNPC)
-                    {
-                        hullSafety /= 10;
-                    }
-                }
-                else
-                {
-                    // Inside
-                    if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
-                    hullSafety = HumanAIController.GetHullSafety(hull, character);
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
-                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
-                    float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
-                    hullSafety *= distanceFactor;
-                    // Each unsafe node reduces the hull safety value.
-                    hullSafety /= 1 + unsafeNodes;
-                    // If the target is not inside a friendly submarine, considerably reduce the hull safety.
-                    if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
                     {
                         hullSafety /= 10;
                     }
