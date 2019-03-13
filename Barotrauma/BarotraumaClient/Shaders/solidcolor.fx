@@ -6,20 +6,20 @@ float4 color;
 
 float4 solidColor(float4 position : SV_Position, float4 clr : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
-    float4 sample = tex2D(TextureSampler, texCoord);    
-    return color * sample.a;
+    float a = tex2D(TextureSampler, texCoord).a;    
+    return color * a;
 }
 
 float4 solidColorBlur(float4 position : SV_Position, float4 clr : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
-    float4 sample;
-    sample = tex2D(TextureSampler, float2(texCoord.x + blurDistance, texCoord.y + blurDistance));
-    sample += tex2D(TextureSampler, float2(texCoord.x - blurDistance, texCoord.y - blurDistance));
-    sample += tex2D(TextureSampler, float2(texCoord.x + blurDistance, texCoord.y - blurDistance));
-    sample += tex2D(TextureSampler, float2(texCoord.x - blurDistance, texCoord.y + blurDistance));
+    float sample;
+    sample = tex2D(TextureSampler, float2(texCoord.x + blurDistance, texCoord.y + blurDistance)).a;
+    sample += tex2D(TextureSampler, float2(texCoord.x - blurDistance, texCoord.y - blurDistance)).a;
+    sample += tex2D(TextureSampler, float2(texCoord.x + blurDistance, texCoord.y - blurDistance)).a;
+    sample += tex2D(TextureSampler, float2(texCoord.x - blurDistance, texCoord.y + blurDistance)).a;
     sample = sample * 0.25f;
 	
-    return color * sample.a;
+    return color * sample;
 }
 
 technique SolidColor

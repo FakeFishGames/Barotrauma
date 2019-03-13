@@ -174,7 +174,6 @@
     <Content Include="Shaders\deformshader.fx" />
     <Content Include="Shaders\solidcolor.fx" />
     <Content Include="Shaders\losshader.fx" />
-    <Content Include="Shaders\highlight.fx" />
     <Content Include="Shaders\postprocess.fx" />
     <Content Include="Shaders\watershader.fx" />
     <Content Include="steam_api64.dll">
@@ -246,9 +245,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Effects\deformshader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\highlight.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Effects\losshader.xnb">

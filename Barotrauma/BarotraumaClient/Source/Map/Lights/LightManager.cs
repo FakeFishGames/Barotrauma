@@ -458,7 +458,7 @@ namespace Barotrauma.Lights
             graphics.SetRenderTarget(SpecularMap);
             
             //clear the lightmap
-            graphics.Clear(Color.Black);
+            graphics.Clear(Color.Gray);
             graphics.BlendState = BlendState.AlphaBlend;
 
             spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
@@ -469,18 +469,22 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
 
-            //TODO: specular maps for level walls
             Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            //obstruct specular maps behind the sub and characters by drawing them on the map in solid gray
+            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
+            SolidColorEffect.Parameters["color"].SetValue(Color.Gray.ToVector4());
+            SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect);
             if (backgroundObstructor != null)
             {
                 spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
-                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
+                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
             }
-            GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0,
-                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)),
-                    Color.White * 0.4f, isFilled: true);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.Enabled) { c.Draw(spriteBatch, cam); }
+            }
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
