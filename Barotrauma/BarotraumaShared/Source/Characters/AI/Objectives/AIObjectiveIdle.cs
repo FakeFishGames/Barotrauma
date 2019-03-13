@@ -49,7 +49,7 @@ namespace Barotrauma
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (currentTargetIsInvalid || IsForbidden(character.CurrentHull))
+            if (currentTargetIsInvalid || (currentTarget == null && IsForbidden(character.CurrentHull)))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;
