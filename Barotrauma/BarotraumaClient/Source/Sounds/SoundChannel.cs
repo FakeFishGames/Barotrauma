@@ -176,7 +176,7 @@ namespace Barotrauma.Sounds
             get { return gain; }
             set
             {
-                gain = Math.Max(Math.Min(value,1.0f),0.0f);
+                gain = Math.Max(Math.Min(value, 1.0f), 0.0f);
 
                 if (ALSourceIndex < 0) return;
 
@@ -432,7 +432,13 @@ namespace Barotrauma.Sounds
                 this.Category = category;
             }            
         }
-        
+
+        public bool FadingOutAndDisposing;
+        public void FadeOutAndDispose()
+        {
+            FadingOutAndDisposing = true;
+        }
+
         public void Dispose()
         {
             lock (mutex)

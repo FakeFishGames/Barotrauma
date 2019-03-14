@@ -141,6 +141,7 @@ namespace Barotrauma.Items.Components
 
         partial void UseProjSpecific(float deltaTime);
 
+        private List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
@@ -159,7 +160,7 @@ namespace Barotrauma.Items.Components
             
             if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
             {
-                List<FireSource> fireSourcesInRange = new List<FireSource>();
+                fireSourcesInRange.Clear();
                 //step along the ray in 10% intervals, collecting all fire sources in the range
                 for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
@@ -252,11 +253,11 @@ namespace Barotrauma.Items.Components
             }
         }
     
-
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
 
+        private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             Gap leak = objective.OperateTarget as Gap;
@@ -291,7 +292,8 @@ namespace Barotrauma.Items.Components
                 character.AIController.SteeringManager.Reset();
             }
 
-            character.CursorPosition = leak.Position;
+            sinTime += deltaTime;
+            character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             character.SetInput(InputType.Aim, false, true);
 
             // Press the trigger only when the tool is approximately facing the target.
@@ -300,9 +302,13 @@ namespace Barotrauma.Items.Components
             {
                 Use(deltaTime, character);
             }
+            else
+            {
+                sinTime -= deltaTime * 2;
+            }
 
-            // TODO: fix until the wall is fixed?
-            bool leakFixed = leak.Open <= 0.0f || leak.Removed;
+            bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
+                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
 
             if (leakFixed && leak.FlowTargetHull != null)
             {

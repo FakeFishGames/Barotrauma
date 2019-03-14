@@ -461,7 +461,8 @@ namespace Barotrauma.Sounds
                     {
                         for (int j = 0; j < playingChannels[i].Length; j++)
                         {
-                            if (playingChannels[i][j] != null && playingChannels[i][j].IsStream)
+                            if (playingChannels[i][j] == null) { continue; }
+                            if (playingChannels[i][j].IsStream)
                             {
                                 if (playingChannels[i][j].IsPlaying)
                                 {
@@ -473,10 +474,18 @@ namespace Barotrauma.Sounds
                                     playingChannels[i][j].Dispose();
                                 }
                             }
+                            else if (playingChannels[i][j].FadingOutAndDisposing)
+                            {
+                                playingChannels[i][j].Gain -= 0.1f;
+                                if (playingChannels[i][j].Gain <= 0.0f)
+                                {
+                                    playingChannels[i][j].Dispose();
+                                }
+                            }
                         }
                     }
                 }
-                Thread.Sleep(50); //TODO: use a separate thread for network audio?
+                Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
         }
         

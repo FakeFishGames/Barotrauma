@@ -1059,6 +1059,8 @@ namespace Barotrauma
             }
         }
 
+        private float prevFootPos;
+
         void UpdateClimbing()
         {
             if (character.SelectedConstruction == null || character.SelectedConstruction.GetComponent<Ladder>() == null)
@@ -1137,15 +1139,34 @@ namespace Barotrauma
                 handPos.X - Dir * 0.05f,
                 bottomPos + ColliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y);
             
-            MoveLimb(leftFoot,
-                new Vector2(footPos.X,
-                (slide ? footPos.Y : MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight) + ladderSimPos.Y),
-                15.5f, true);
+            if (slide)
+            {
+                MoveLimb(leftFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
+            }
+            else
+            {
+                float leftFootPos = MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight;
+                float prevLeftFootPos = MathUtils.Round(prevFootPos + stepHeight, stepHeight * 2.0f) - stepHeight;
+                MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true);
 
-            MoveLimb(rightFoot,
-                new Vector2(footPos.X,
-                (slide ? footPos.Y : MathUtils.Round(footPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
-                15.5f, true);
+                float rightFootPos = MathUtils.Round(footPos.Y, stepHeight * 2.0f);
+                float prevRightFootPos = MathUtils.Round(prevFootPos, stepHeight * 2.0f);
+                MoveLimb(rightFoot, new Vector2(footPos.X, rightFootPos + ladderSimPos.Y), 15.5f, true);
+#if CLIENT
+                if (Math.Abs(leftFootPos - prevLeftFootPos) > stepHeight && leftFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
+                {
+                    SoundPlayer.PlaySound("footstep_armor_heavy", volume: 0.5f, range: 500.0f, position: leftFoot.WorldPosition);
+                    leftFoot.LastImpactSoundTime = (float)Timing.TotalTime;
+                }
+                if (Math.Abs(rightFootPos - prevRightFootPos) > stepHeight && rightFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
+                {
+                    SoundPlayer.PlaySound("footstep_armor_heavy", volume: 0.5f, range: 500.0f, position: rightFoot.WorldPosition);
+                    rightFoot.LastImpactSoundTime = (float)Timing.TotalTime;
+                }
+#endif
+                prevFootPos = footPos.Y;
+            }            
 
             //apply torque to the legs to make the knees bend
             Limb leftLeg = GetLimb(LimbType.LeftLeg);

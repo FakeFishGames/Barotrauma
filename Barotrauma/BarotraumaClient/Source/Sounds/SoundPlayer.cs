@@ -215,19 +215,19 @@ namespace Barotrauma
                 for (int i = 0; i < waterAmbienceChannels.Length; i++)
                 {
                     if (waterAmbienceChannels[i] == null) continue;
-                    waterAmbienceChannels[i].Dispose();
+                    waterAmbienceChannels[i].FadeOutAndDispose();
                     waterAmbienceChannels[i] = null;
                 }
                 for (int i = 0; i < FlowSounds.Count; i++)
                 {
                     if (flowSoundChannels[i] == null) continue;
-                    flowSoundChannels[i].Dispose();
+                    flowSoundChannels[i].FadeOutAndDispose();
                     flowSoundChannels[i] = null;
                 }
                 for (int i = 0; i < fireSoundChannels.Length; i++)
                 {
                     if (fireSoundChannels[i] == null) continue;
-                    fireSoundChannels[i].Dispose();
+                    fireSoundChannels[i].FadeOutAndDispose();
                     fireSoundChannels[i] = null;
                 }
                 fireVolumeLeft[0] = 0.0f; fireVolumeLeft[1] = 0.0f;
@@ -414,7 +414,7 @@ namespace Barotrauma
                 {
                     if (fireSoundChannels[i] != null)
                     {
-                        fireSoundChannels[i].Dispose();
+                        fireSoundChannels[i].FadeOutAndDispose();
                         fireSoundChannels[i] = null;
                     }
                 }

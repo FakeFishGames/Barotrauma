@@ -123,8 +123,8 @@
       <sprite texture="DivingSuit_Legs.png" limb="LeftThigh" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="RightLeg" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="LeftLeg" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite texture="DivingSuit_Legs.png" limb="RightFoot" sound="footstep_armor" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite texture="DivingSuit_Legs.png" limb="LeftFoot" sound="footstep_armor" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite texture="DivingSuit_Legs.png" limb="RightFoot" sound="footstep_armor_heavy" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite texture="DivingSuit_Legs.png" limb="LeftFoot" sound="footstep_armor_heavy" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true">
         <Sound file="Content/Items/Diving/DivingSuitLoop1.ogg" range="500" />      
       </StatusEffect>
