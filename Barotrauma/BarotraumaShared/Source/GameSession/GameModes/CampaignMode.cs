@@ -12,7 +12,7 @@ namespace Barotrauma
 
         public bool CheatsEnabled;
 
-        const int InitialMoney = 4500;
+        const int InitialMoney = 4700;
 
         protected bool watchmenSpawned;
         protected Character startWatchman, endWatchman;
