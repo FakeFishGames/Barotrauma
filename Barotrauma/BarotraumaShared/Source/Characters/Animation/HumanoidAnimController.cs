@@ -1802,14 +1802,24 @@ namespace Barotrauma
             float c = Vector2.Distance(pos, shoulderPos);
             c = MathHelper.Clamp(c, Math.Abs(upperArmLength - forearmLength), forearmLength + upperArmLength - 0.01f);
 
-            float ang2 = MathUtils.VectorToAngle(pos - shoulderPos) + MathHelper.PiOver2;
+            float armAngle = MathUtils.VectorToAngle(pos - shoulderPos) + MathHelper.PiOver2;
 
-            float armAngle = MathUtils.SolveTriangleSSS(forearmLength, upperArmLength, c);
-            float handAngle = MathUtils.SolveTriangleSSS(upperArmLength, forearmLength, c);
+            float upperArmAngle = MathUtils.SolveTriangleSSS(forearmLength, upperArmLength, c) * Dir;
+            float lowerArmAngle = MathUtils.SolveTriangleSSS(upperArmLength, forearmLength, c) * Dir;
+            
+            //make sure the arm angle "has the same number of revolutions" as the arm
+            while (arm.Rotation - armAngle > MathHelper.Pi)
+            {
+                armAngle += MathHelper.TwoPi;
+            }
+            while (arm.Rotation - armAngle < -MathHelper.Pi)
+            {
+                armAngle -= MathHelper.TwoPi;
+            }
 
-            arm?.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force * arm.Mass);
-            forearm?.body.SmoothRotate((ang2 + handAngle * Dir), 20.0f * force * forearm.Mass);
-            hand?.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force * hand.Mass);
+            arm?.body.SmoothRotate((armAngle - upperArmAngle), 20.0f * force * arm.Mass, wrapAngle: false);
+            forearm?.body.SmoothRotate((armAngle + lowerArmAngle), 20.0f * force * forearm.Mass, wrapAngle: false);
+            hand?.body.SmoothRotate((armAngle + lowerArmAngle), 100.0f * force * hand.Mass, wrapAngle: false);
         }
 
         private void FootIK(Limb foot, Vector2 pos, float legTorque, float footTorque, float footAngle)
