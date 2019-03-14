@@ -301,8 +301,8 @@ namespace Barotrauma.Items.Components
                 Use(deltaTime, character);
             }
 
-            // TODO: fix until the wall is fixed?
-            bool leakFixed = leak.Open <= 0.0f || leak.Removed;
+            bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
+                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
 
             if (leakFixed && leak.FlowTargetHull != null)
             {
