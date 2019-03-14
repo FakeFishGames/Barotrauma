@@ -242,7 +242,7 @@ namespace Barotrauma
                         GUI.Style.FocusIndicator.Draw(spriteBatch,
                             (int)((focusedItemOverlayTimer - 1.0f) * GUI.Style.FocusIndicator.FrameCount * 3.0f),
                             circlePos,
-                            Color.Orange * 0.3f,
+                            Color.LightBlue * 0.3f,
                             origin: GUI.Style.FocusIndicator.FrameSize.ToVector2() / 2,
                             rotate: (float)Timing.TotalTime,
                             scale: scale);
@@ -274,9 +274,7 @@ namespace Barotrauma
                             GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
                             textPos.Y += 20;
                         }
-                    }
-
-                    
+                    }                    
                 }
 
                 foreach (HUDProgressBar progressBar in character.HUDProgressBars.Values)

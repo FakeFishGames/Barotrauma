@@ -426,7 +426,7 @@ namespace Barotrauma.Lights
 
             //draw characters in black with a bit of blur, leaving the white edges visible
             float phase = (float)(Math.Sin(Timing.TotalTime * 3.0f) + 1.0f) / 2.0f; //phase oscillates between 0 and 1
-            SolidColorEffect.Parameters["color"].SetValue(Color.Black.ToVector4() * MathHelper.Lerp(0.7f, 0.9f, phase));
+            SolidColorEffect.Parameters["color"].SetValue(Color.Black.ToVector4() * MathHelper.Lerp(0.5f, 0.9f, phase));
             SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColorBlur"];
             SolidColorEffect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
