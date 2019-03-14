@@ -72,11 +72,7 @@ namespace Barotrauma
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }
             float avg = targets.Average(t => Average(t));
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority - MathHelper.Max(0, AIObjectiveManager.OrderPriority - avg);
-            }
-            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, avg / 100);
+            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority + 20, avg / 100);
         }
 
         protected void UpdateTargets()
