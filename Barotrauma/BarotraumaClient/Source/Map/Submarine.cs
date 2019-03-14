@@ -405,6 +405,11 @@ namespace Barotrauma
                 errorMsgs.Add(TextManager.Get("NoBallastTagsWarning"));
             }
 
+            if (Gap.GapList.Any(g => g.linkedTo.Count == 0))
+            {
+                errorMsgs.Add(TextManager.Get("NonLinkedGapsWarning"));
+            }
+
             if (errorMsgs.Any())
             {
                 new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);
