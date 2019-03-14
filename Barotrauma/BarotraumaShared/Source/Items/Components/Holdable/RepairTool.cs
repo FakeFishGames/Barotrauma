@@ -281,15 +281,22 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 standPos = leak.IsHorizontal ? new Vector2(Math.Sign(-fromItemToLeak.X), 0.0f) : new Vector2(0.0f, Math.Sign(-fromItemToLeak.Y) * 0.5f);
                 standPos = leak.WorldPosition + standPos * Range;
-                // TODO: check if too close to the stand pos -> move away so that the tool can hit the target and not through it?
                 Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
                 character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
             }
             else
             {
-                // TODO: sometimes stuck here, if too close to the target
-                //close enough -> stop moving
-                character.AIController.SteeringManager.Reset();
+                if (dist < Range / 2)
+                {
+                    // Too close -> steer away
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition) / 2);
+                }
+                else if (!character.IsClimbing)
+                {
+                    // Close enough -> stop if not in ladders.
+                    // In ladders, we most likely want to move back and forth, because we cannot aim -> if the leak is on the side, it should get fixed.
+                    character.AIController.SteeringManager.Reset();
+                }
             }
 
             sinTime += deltaTime;
