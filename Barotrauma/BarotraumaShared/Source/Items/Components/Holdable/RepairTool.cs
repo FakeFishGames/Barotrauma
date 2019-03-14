@@ -257,6 +257,7 @@ namespace Barotrauma.Items.Components
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
 
+        private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             Gap leak = objective.OperateTarget as Gap;
@@ -291,7 +292,8 @@ namespace Barotrauma.Items.Components
                 character.AIController.SteeringManager.Reset();
             }
 
-            character.CursorPosition = leak.Position;
+            sinTime += deltaTime;
+            character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             character.SetInput(InputType.Aim, false, true);
 
             // Press the trigger only when the tool is approximately facing the target.
@@ -299,6 +301,10 @@ namespace Barotrauma.Items.Components
             if (character.IsClimbing || VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
             {
                 Use(deltaTime, character);
+            }
+            else
+            {
+                sinTime -= deltaTime * 2;
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
