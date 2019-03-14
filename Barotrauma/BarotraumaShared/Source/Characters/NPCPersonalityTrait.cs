@@ -19,6 +19,10 @@ namespace Barotrauma
         public readonly List<string> AllowedDialogTags;
 
         private float commonness;
+        public float Commonness
+        {
+            get { return commonness; }
+        }
 
         public NPCPersonalityTrait(XElement element)
         {

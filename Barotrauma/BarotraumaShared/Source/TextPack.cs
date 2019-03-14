@@ -33,7 +33,11 @@ namespace Barotrauma
                     texts.Add(infoName, infoList);
                 }
 
-                infoList.Add(subElement.ElementInnerText());
+                string text = subElement.ElementInnerText();
+                text = text.Replace("&amp;", "&");
+                text = text.Replace("&lt;", "<");
+                text = text.Replace("&gt;", ">");
+                infoList.Add(text);
             }
         }
 

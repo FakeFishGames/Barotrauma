@@ -1,15 +1,15 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Barotrauma.Tutorials;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using Barotrauma.Extensions;
 using System.Diagnostics;
-using Lidgren.Network;
+using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace Barotrauma
@@ -34,10 +34,13 @@ namespace Barotrauma
         private Tab selectedTab;
 
         private Sprite backgroundSprite;
+        private Sprite backgroundVignette;
 
         #region Creation
         public MainMenuScreen(GameMain game)
         {
+            backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
+
             new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
             { RelativeOffset = new Vector2(0.05f, 0.05f), AbsoluteOffset = new Point(-5, -5) },
                 style: "TitleText")
@@ -688,6 +691,11 @@ namespace Barotrauma
                     blurAmount: 0.0f, 
                     aberrationStrength: 0.0f);
             }
+
+            spriteBatch.Begin(blendState: BlendState.AlphaBlend);
+            backgroundVignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, 
+                new Vector2(GameMain.GraphicsWidth / backgroundVignette.size.X, GameMain.GraphicsHeight / backgroundVignette.size.Y));
+            spriteBatch.End();
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
