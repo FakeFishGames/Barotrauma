@@ -92,15 +92,41 @@ namespace Barotrauma
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
-            var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), TextManager.Get("ReloadSprite"));
-            reloadTextureButton.OnClicked += (button, data) =>
-            {
-                Sprite.ReloadXML();
-                Sprite.ReloadTexture();
-                return true;
-            };
-            editor.AddCustomContent(reloadTextureButton, editor.ContentCount);
 
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"))
+            {
+                ToolTip = TextManager.Get("MirrorEntityXToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    FlipX(relativeToSub: false);
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
+            {
+                ToolTip = TextManager.Get("MirrorEntityYToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    FlipY(relativeToSub: false);
+                    return true;
+                }
+            };
+            var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"))
+            {
+                OnClicked = (button, data) =>
+                {
+                    Sprite.ReloadXML();
+                    Sprite.ReloadTexture();
+                    return true;
+                }
+            };
+            editor.AddCustomContent(buttonContainer, editor.ContentCount);
+            
             PositionEditingHUD();
 
             return editingHUD;

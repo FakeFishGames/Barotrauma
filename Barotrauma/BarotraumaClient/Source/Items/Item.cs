@@ -410,8 +410,7 @@ namespace Barotrauma
                         return true;
                     }
                 }
-            }
-            
+            }            
         }
 
         public override void UpdateEditing(Camera cam)
@@ -483,17 +482,44 @@ namespace Barotrauma
                 linkText.TextColor = Color.Yellow;
                 itemsText.TextColor = Color.Yellow;
             }
-            if (!inGame && Sprite != null)
+
+            if (!inGame)
             {
-                var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), TextManager.Get("ReloadSprite"));
-                reloadTextureButton.OnClicked += (button, data) =>
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
                 {
-                    Sprite.ReloadXML();
-                    Sprite.ReloadTexture();
-                    return true;
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
                 };
-                itemEditor.AddCustomContent(reloadTextureButton, itemEditor.ContentCount);
-            }            
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"))
+                {
+                    ToolTip = TextManager.Get("MirrorEntityXToolTip"),
+                    OnClicked = (button, data) =>
+                    {
+                        FlipX(relativeToSub: false);
+                        return true;
+                    }
+                };
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
+                {
+                    ToolTip = TextManager.Get("MirrorEntityYToolTip"),
+                    OnClicked = (button, data) =>
+                    {
+                        FlipY(relativeToSub: false);
+                        return true;
+                    }
+                };
+                if (Sprite != null)
+                {
+                    var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"));
+                    reloadTextureButton.OnClicked += (button, data) =>
+                    {
+                        Sprite.ReloadXML();
+                        Sprite.ReloadTexture();
+                        return true;
+                    };
+                }
+                itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
+            }
 
             foreach (ItemComponent ic in components)
             {
