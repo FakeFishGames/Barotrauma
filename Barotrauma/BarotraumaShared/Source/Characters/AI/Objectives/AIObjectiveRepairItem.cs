@@ -160,10 +160,19 @@ namespace Barotrauma
 
         private void OperateRepairTool(float deltaTime)
         {
-            // TODO: angle check
             character.CursorPosition = Item.Position;
             character.SetInput(InputType.Aim, false, true);
-            repairTool.Use(deltaTime, character);
+            Vector2 fromToolToTarget = Item.Position - repairTool.Item.Position;
+            if (fromToolToTarget.LengthSquared() < MathUtils.Pow(repairTool.Range / 2, 2))
+            {
+                // Too close -> steer away
+                character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - Item.SimPosition) / 2);
+            }
+            if (character.IsClimbing || 
+                VectorExtensions.Angle(VectorExtensions.Forward(repairTool.Item.body.TransformedRotation), fromToolToTarget) < MathHelper.PiOver4)
+            {
+                repairTool.Use(deltaTime, character);
+            }
         }
     }
 }
