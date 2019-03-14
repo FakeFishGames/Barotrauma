@@ -296,7 +296,10 @@ namespace Barotrauma
             if (damage < 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
-                objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                if (objectiveManager.CurrentOrder == null)
+                {
+                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                }
                 return;
             }
             if (IsFriendly(attacker))
@@ -310,7 +313,10 @@ namespace Barotrauma
                 if (!attacker.IsRemotePlayer && Character.Controlled != attacker && attacker.AIController != null && attacker.AIController.Enabled)
                 {
                     // Don't react to damage done by friendly ai, because we know that it's accidental
-                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    if (objectiveManager.CurrentOrder == null)
+                    {
+                        objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    }
                     return;
                 }
                 float currentVitality = Character.CharacterHealth.Vitality;
@@ -318,8 +324,10 @@ namespace Barotrauma
                 if (dmgPercentage < currentVitality / 10)
                 {
                     // Don't react to a minor amount of (accidental) dmg done by friendly characters
-                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
-                    return;
+                    if (objectiveManager.CurrentOrder == null)
+                    {
+                        objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    }
                 }
                 if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
                 {
