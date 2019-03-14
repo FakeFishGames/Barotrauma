@@ -103,6 +103,7 @@
     <Content Include="OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\solidcolor_opengl.fx" />
     <Content Include="SharpFont.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -159,6 +160,9 @@
     <Content Include="Shaders\losshader_opengl.fx" />
     <Content Include="Shaders\postprocess_opengl.fx" />
     <Content Include="Shaders\watershader_opengl.fx" />
+    <None Include="Content\Effects\solidcolor_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Shaders\Content_opengl.mgcb" />
     <None Include="Content\Effects\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

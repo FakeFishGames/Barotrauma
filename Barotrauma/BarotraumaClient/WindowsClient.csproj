@@ -172,6 +172,7 @@
     <Content Include="Shaders\blurshader.fx" />
     <Content Include="Shaders\damageshader.fx" />
     <Content Include="Shaders\deformshader.fx" />
+    <Content Include="Shaders\solidcolor.fx" />
     <Content Include="Shaders\losshader.fx" />
     <Content Include="Shaders\postprocess.fx" />
     <Content Include="Shaders\watershader.fx" />
@@ -250,6 +251,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Effects\postprocess.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Effects\solidcolor.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Effects\watershader.xnb">

@@ -13,39 +13,45 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Effects/blurshader.fx
+#begin blurshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/blurshader.fx
+/build:blurshader.fx
 
-#begin Effects/damageshader.fx
+#begin damageshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/damageshader.fx
+/build:damageshader.fx
 
-#begin Effects/deformshader.fx
+#begin deformshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/deformshader.fx
+/build:deformshader.fx
 
-#begin Effects/losshader.fx
+#begin losshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/losshader.fx
+/build:losshader.fx
 
-#begin Effects/postprocess.fx
+#begin postprocess.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/postprocess.fx
+/build:postprocess.fx
 
-#begin Effects/watershader.fx
+#begin watershader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/watershader.fx
+/build:watershader.fx
+
+#begin solidcolor.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:solidcolor.fx
 
