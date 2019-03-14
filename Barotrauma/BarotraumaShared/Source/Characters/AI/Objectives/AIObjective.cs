@@ -139,6 +139,7 @@ namespace Barotrauma
         }
 
         protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
+        public virtual void OnSelected() { }
 
         protected abstract void Act(float deltaTime);
         

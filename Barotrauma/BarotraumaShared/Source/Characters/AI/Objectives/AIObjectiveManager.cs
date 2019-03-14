@@ -67,6 +67,7 @@ namespace Barotrauma
 
         private AIObjective GetCurrentObjective()
         {
+            var previousObjective = CurrentObjective;
             var firstObjective = Objectives.FirstOrDefault();
             if (CurrentOrder != null && firstObjective != null && CurrentOrder.GetPriority(this) > firstObjective.GetPriority(this))
             {
@@ -75,6 +76,10 @@ namespace Barotrauma
             else
             {
                 CurrentObjective = firstObjective;
+            }
+            if (previousObjective != CurrentObjective)
+            {
+                CurrentObjective?.OnSelected();
             }
             return CurrentObjective;
         }

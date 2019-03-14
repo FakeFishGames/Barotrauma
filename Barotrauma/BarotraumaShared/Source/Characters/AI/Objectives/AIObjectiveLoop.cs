@@ -30,9 +30,7 @@ namespace Barotrauma
             base.Update(objectiveManager, deltaTime);
             if (ignoreListTimer > ignoreListClearInterval)
             {
-                ignoreList.Clear();
-                ignoreListTimer = 0;
-                UpdateTargets();
+                Reset();
             }
             else
             {
@@ -65,6 +63,18 @@ namespace Barotrauma
             {
                 CreateObjectives();
             }
+        }
+
+        private void Reset()
+        {
+            ignoreList.Clear();
+            ignoreListTimer = 0;
+            UpdateTargets();
+        }
+
+        public override void OnSelected()
+        {
+            Reset();
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
