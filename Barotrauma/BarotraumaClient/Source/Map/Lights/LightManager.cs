@@ -93,7 +93,7 @@ namespace Barotrauma.Lights
             SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
 #else
             LosEffect = content.Load<Effect>("Effects/losshader_opengl");
-            //TODO: highlight effect
+            SolidColorEffect = content.Load<Effect>("Effects/solidcolor_opengl");
 #endif
 
             if (lightEffect == null)
