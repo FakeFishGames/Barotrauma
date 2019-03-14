@@ -1,4 +1,5 @@
 ﻿#if DEBUG
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -14,10 +15,16 @@ namespace Barotrauma
 
         private const string conversationsPath = "Content/NPCConversations";
         private const string infoTextPath = "Content/Texts";
-        private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>";
+        private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
         public static void Convert(string language)
         {
+            if (TextManager.Language != "English")
+            {
+                DebugConsole.ThrowError("Use the english localization when converting .csv to allow copying values");
+                return;
+            }
+
             List<string> conversationFiles = new List<string>();
             List<string> infoTextFiles = new List<string>();
 
@@ -36,6 +43,11 @@ namespace Barotrauma
             for (int i = 0; i < conversationFiles.Count; i++)
             {
                 List<string> xmlContent = ConvertConversationsToXML(File.ReadAllLines(conversationFiles[i], Encoding.UTF8), language);
+                if (xmlContent == null)
+                {
+                    DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[i]);
+                    continue;
+                }
                 string xmlFileFullPath = $"{conversationsPath}/NPCConversations_{language}_NEW.xml";
                 File.WriteAllLines(xmlFileFullPath, xmlContent);
                 DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
@@ -44,6 +56,11 @@ namespace Barotrauma
             for (int i = 0; i < infoTextFiles.Count; i++)
             {
                 List<string> xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[i], Encoding.UTF8), language);
+                if (xmlContent == null)
+                {
+                    DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[i]);
+                    continue;
+                }
                 string xmlFileFullPath = $"{infoTextPath}/{language}Vanilla_NEW.xml";
                 File.WriteAllLines(xmlFileFullPath, xmlContent);
                 DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
@@ -61,9 +78,8 @@ namespace Barotrauma
             xmlContent.Add(xmlHeader);
 
             xmlContent.Add($"<infotexts language=\"{language}\">");
-            xmlContent.Add(string.Empty);
 
-            for (int i = 0; i < csvContent.Length; i++)
+            for (int i = 1; i < csvContent.Length; i++) // Start at one to ignore header
             {
                 csvContent[i] = csvContent[i].Trim(separator);
 
@@ -105,7 +121,35 @@ namespace Barotrauma
             xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\">");
             xmlContent.Add(string.Empty);
 
+            xmlContent.Add("<!-- Personality traits -->");
+
+            int traitStart = -1;
             for (int i = 0; i < csvContent.Length; i++)
+            {
+                if (csvContent[i].StartsWith("Personality"))
+                {
+                    traitStart = i + 1;
+                    break;
+                }
+            }
+
+            if (traitStart == -1)
+            {
+                DebugConsole.ThrowError("Invalid formatting of NPCConversations, no traits found!");
+                return null;
+            }
+
+            for (int i = 0; i < NPCPersonalityTrait.List.Count; i++) // Traits
+            {
+                string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
+                xmlContent.Add(
+                    $"<PersonalityTrait " +
+                    $"{GetVariable("name", split[1])}" +
+                    $"{GetVariable("alloweddialogtags", string.Join(",", NPCPersonalityTrait.List[i].AllowedDialogTags))}" +
+                    $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString())}/>");
+            }
+
+            for (int i = traitStart + NPCPersonalityTrait.List.Count; i < csvContent.Length; i++) // Conversations
             {
                 string[] split = SplitCSV(csvContent[i]);
 

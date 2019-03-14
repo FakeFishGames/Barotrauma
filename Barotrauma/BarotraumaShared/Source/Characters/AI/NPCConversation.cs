@@ -31,6 +31,7 @@ namespace Barotrauma
             List<Tuple<string, string, string>> contentPackageFiles = new List<Tuple<string, string, string>>();
             foreach (string filePath in filePaths)
             {
+                if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) continue;
                 string language = doc.Root.GetAttributeString("Language", "English");
@@ -41,6 +42,7 @@ namespace Barotrauma
             List<Tuple<string, string, string>> translationFiles = new List<Tuple<string, string, string>>();
             foreach (string filePath in Directory.GetFiles(Path.Combine("Content", "NPCConversations")))
             {
+                if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) continue;
                 string language = doc.Root.GetAttributeString("Language", "English");

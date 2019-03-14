@@ -1,4 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- ! -->
+<!-- With the localization starting soon™, all additions to this document must be done at the bottom under the new additions -->
+<!-- If a text needs to be updated, add a note of it at the end -->
+<!-- ! -->
+
 <Conversations identifier="vanillaconversations" Language="English">
   <PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1"/>
   <PersonalityTrait name="Laid-back" alloweddialogtags="laid-back,none" commonness="1"/>
@@ -608,5 +614,8 @@
   <Conversation line="You want to leave your sub behind? Please get it closer to the outpost." flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman" speaker="0"/>
 
   <!-- /Watchmen -->
+  
+  <!-- New Additions -->
+  
 
 </Conversations>
