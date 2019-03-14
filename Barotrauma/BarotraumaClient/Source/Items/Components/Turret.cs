@@ -156,7 +156,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (moveSound != null)
                     {
-                        moveSoundChannel.Dispose();
+                        moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, moveSound.Volume, moveSound.Range, item.WorldPosition);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = true;
                     }
@@ -168,13 +168,13 @@ namespace Barotrauma.Items.Components
                 {
                     if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
-                        moveSoundChannel.Dispose();
+                        moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, endMoveSound.Volume, endMoveSound.Range, item.WorldPosition);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = false;
                     }
                     else if (!moveSoundChannel.IsPlaying)
                     {
-                        moveSoundChannel.Dispose();
+                        moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = null;
 
                     }
