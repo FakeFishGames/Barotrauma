@@ -540,6 +540,7 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.Select();
                 }
                 connected = true;
+                chatBox.InputBox.Enabled = true;
                 if (GameMain.NetLobbyScreen?.TextBox != null)
                 {
                     GameMain.NetLobbyScreen.TextBox.Enabled = true;

@@ -34,7 +34,7 @@ namespace Barotrauma.Sounds
 
         private static BiQuad[] muffleFilters = new BiQuad[]
         {
-            new LowpassFilter(VoipConfig.FREQUENCY, 400)
+            new LowpassFilter(VoipConfig.FREQUENCY, 800)
         };
         private static BiQuad[] radioFilters = new BiQuad[]
         {

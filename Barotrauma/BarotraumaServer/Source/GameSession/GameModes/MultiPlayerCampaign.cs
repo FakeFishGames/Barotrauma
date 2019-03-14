@@ -3,11 +3,14 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
+
         public static void StartNewCampaign(string savePath, string subName, string seed)
         {
             if (string.IsNullOrWhiteSpace(savePath)) return;
@@ -201,6 +204,33 @@ namespace Barotrauma
             {
                 CargoManager.PurchaseItem(pi.ItemPrefab, pi.Quantity);
             }
+        }
+
+        public override void Save(XElement element)
+        {
+            XElement modeElement = new XElement("MultiPlayerCampaign",
+                new XAttribute("money", Money),
+                new XAttribute("cheatsenabled", CheatsEnabled));
+            Map.Save(modeElement);
+            element.Add(modeElement);
+
+            //save character data to a separate file
+            string characterDataPath = GetCharacterDataSavePath();
+            XDocument characterDataDoc = new XDocument(new XElement("CharacterData"));
+            foreach (CharacterCampaignData cd in characterData)
+            {
+                characterDataDoc.Root.Add(cd.Save());
+            }
+            try
+            {
+                characterDataDoc.Save(characterDataPath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving multiplayer campaign characters to \"" + characterDataPath + "\" failed!", e);
+            }
+
+            lastSaveID++;
         }
     }
 }

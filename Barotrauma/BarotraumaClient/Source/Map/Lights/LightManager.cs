@@ -43,11 +43,19 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
+        public RenderTarget2D HighlightMap
+        {
+            get;
+            private set;
+        }
+
+        private readonly Texture2D highlightRaster;
 
         private BasicEffect lightEffect;
 
         public Effect LosEffect { get; private set; }
-        
+        public Effect SolidColorEffect { get; private set; }
+
         private List<LightSource> lights;
 
         public bool LosEnabled = true;
@@ -72,6 +80,8 @@ namespace Barotrauma.Lights
 
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
 
+            highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png");
+
             CreateRenderTargets(graphics);
             GameMain.Instance.OnResolutionChanged += () =>
             {
@@ -80,8 +90,10 @@ namespace Barotrauma.Lights
 
 #if WINDOWS
             LosEffect = content.Load<Effect>("Effects/losshader");
+            SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
 #else
             LosEffect = content.Load<Effect>("Effects/losshader_opengl");
+            SolidColorEffect = content.Load<Effect>("Effects/solidcolor_opengl");
 #endif
 
             if (lightEffect == null)
@@ -112,6 +124,12 @@ namespace Barotrauma.Lights
 
             SpecularMap?.Dispose();
             SpecularMap = new RenderTarget2D(graphics,
+                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
+                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
+                       RenderTargetUsage.DiscardContents);
+
+            HighlightMap?.Dispose();
+            HighlightMap = new RenderTarget2D(graphics,
                        (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
@@ -175,7 +193,7 @@ namespace Barotrauma.Lights
         public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             if (!LightingEnabled) return;
-
+            
             if (Math.Abs(currLightMapScale - GameMain.Config.LightMapScale) > 0.01f)
             {
                 //lightmap scale has changed -> recreate render targets
@@ -185,6 +203,8 @@ namespace Barotrauma.Lights
             Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
             Matrix transform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
+            bool highlightsVisible = UpdateHighlights(graphics, spriteBatch, spriteBatchTransform, cam);
 
             if (GameMain.Config.SpecularityEnabled)
             {
@@ -209,7 +229,6 @@ namespace Barotrauma.Lights
             //clear the lightmap
             graphics.Clear(Color.Black);
             graphics.BlendState = BlendState.Additive;
-
 
             //draw background lights
             //---------------------------------------------------------------------------------------------------
@@ -259,37 +278,20 @@ namespace Barotrauma.Lights
             //draw the focused item and character to highlight them,
             //and light sprites (done before drawing the actual light volumes so we can make characters obstruct the highlights and sprites)
             //---------------------------------------------------------------------------------------------------
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
-            
-            if (Character.Controlled != null)
-            {
-                if (Character.Controlled.FocusedItem != null)
-                {
-                    Character.Controlled.FocusedItem.IsHighlighted = true;
-                }
-                if (Character.Controlled.FocusedCharacter != null)
-                {
-                    Character.Controlled.FocusedCharacter.Draw(spriteBatch, cam);
-                }
-
-                if (!GUI.DisableItemHighlights)
-                {
-                    foreach (Item item in Item.ItemList)
-                    {
-                        if (item.IsHighlighted)
-                        {
-                            item.Draw(spriteBatch, false, true);
-                        }
-                    }
-                }
-            }
-
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);            
             foreach (LightSource light in activeLights)
             {
                 if (light.IsBackground) continue;
                 light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
+
+            if (highlightsVisible)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+                spriteBatch.Draw(HighlightMap, Vector2.Zero, Color.White);
+                spriteBatch.End();
+            }
 
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
@@ -376,13 +378,87 @@ namespace Barotrauma.Lights
             graphics.BlendState = BlendState.AlphaBlend;
         }
 
+        private readonly List<Entity> highlightedEntities = new List<Entity>();
+
+        private bool UpdateHighlights(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam)
+        {
+            if (GUI.DisableItemHighlights) { return false; }
+
+            highlightedEntities.Clear();
+            if (Character.Controlled != null)
+            {
+                if (Character.Controlled.FocusedItem != null)
+                {
+                    highlightedEntities.Add(Character.Controlled.FocusedItem);
+                }
+                if (Character.Controlled.FocusedCharacter != null)
+                {
+                    highlightedEntities.Add(Character.Controlled.FocusedCharacter);
+                }
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.IsHighlighted && !highlightedEntities.Contains(item))
+                    {
+                        highlightedEntities.Add(item);
+                    }
+                }
+            }
+            if (highlightedEntities.Count == 0) { return false; }
+
+            //draw characters in solid white first
+            graphics.SetRenderTarget(HighlightMap);
+            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
+            SolidColorEffect.Parameters["color"].SetValue(Color.LightBlue.ToVector4());
+            SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
+            foreach (Entity highlighted in highlightedEntities)
+            {
+                if (highlighted is Item item)
+                {
+                    item.Draw(spriteBatch, false, true);
+                }
+                else if (highlighted is Character character)
+                {
+                    character.Draw(spriteBatch, cam);
+                }
+            }
+            spriteBatch.End();
+
+            //draw characters in black with a bit of blur, leaving the white edges visible
+            float phase = (float)(Math.Sin(Timing.TotalTime * 3.0f) + 1.0f) / 2.0f; //phase oscillates between 0 and 1
+            SolidColorEffect.Parameters["color"].SetValue(Color.Black.ToVector4() * MathHelper.Lerp(0.5f, 0.9f, phase));
+            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColorBlur"];
+            SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
+            foreach (Entity highlighted in highlightedEntities)
+            {
+                if (highlighted is Item item)
+                {
+                    SolidColorEffect.Parameters["blurDistance"].SetValue(0.02f);
+                    item.Draw(spriteBatch, false, true);
+                }
+                else if (highlighted is Character character)
+                {
+                    SolidColorEffect.Parameters["blurDistance"].SetValue(0.05f);
+                    character.Draw(spriteBatch, cam);
+                }
+            }
+            spriteBatch.End();
+
+            //raster pattern on top of everything
+            spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap);
+            spriteBatch.Draw(highlightRaster, new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), Color.White * 0.5f);
+            spriteBatch.End();
+
+            return true;
+        }
 
         public void UpdateSpecularMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             graphics.SetRenderTarget(SpecularMap);
             
             //clear the lightmap
-            graphics.Clear(Color.Black);
+            graphics.Clear(Color.Gray);
             graphics.BlendState = BlendState.AlphaBlend;
 
             spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
@@ -393,18 +469,22 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
 
-            //TODO: specular maps for level walls
             Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            //obstruct specular maps behind the sub and characters by drawing them on the map in solid gray
+            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
+            SolidColorEffect.Parameters["color"].SetValue(Color.Gray.ToVector4());
+            SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect);
             if (backgroundObstructor != null)
             {
                 spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
-                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
+                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
             }
-            GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0,
-                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)),
-                    Color.White * 0.4f, isFilled: true);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.Enabled) { c.Draw(spriteBatch, cam); }
+            }
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);

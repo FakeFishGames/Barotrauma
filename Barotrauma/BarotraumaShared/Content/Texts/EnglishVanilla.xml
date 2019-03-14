@@ -2667,4 +2667,8 @@
   
   <!-- New Additions -->
   <ReloadSprite>Reload Sprite</ReloadSprite>
+  <MirrorEntityX>Mirror X</MirrorEntityX>
+  <MirrorEntityXToolTip>Mirror the entity horizontally. You can also use the shortcut Ctrl + N.</MirrorEntityXToolTip>
+  <MirrorEntityY>Mirror Y</MirrorEntityY>
+  <MirrorEntityYToolTip>Mirror the entity horizontally. You can also use the shortcut Ctrl + M.</MirrorEntityYToolTip>
 </infotexts>

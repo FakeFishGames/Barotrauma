@@ -51,8 +51,14 @@ namespace Barotrauma
                     {
                         foreach (Repairable repairable in item.Repairables)
                         {
-                            if (item.Condition > repairable.ShowRepairUIThreshold) { ignore = true; }
-                            else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character)) { ignore = true; }
+                            if (!objectives.ContainsKey(item) && item.Condition > repairable.ShowRepairUIThreshold)
+                            {
+                                ignore = true;
+                            }
+                            else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character))
+                            {
+                                ignore = true;
+                            }
                             if (ignore) { break; }
                         }
                     }

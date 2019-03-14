@@ -363,7 +363,7 @@ namespace Barotrauma
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
 
-                if (configPath == HumanConfigFile)
+                if (configPath == HumanConfigFile && character.TeamID != TeamType.FriendlyNPC)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);

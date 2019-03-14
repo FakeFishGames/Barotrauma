@@ -549,7 +549,6 @@ namespace Barotrauma
 
             if ((PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl)))
             {
-                //TODO: a UI button for flipping entities
                 if (PlayerInput.KeyHit(Keys.N))
                 {
                     float minX = selectedList[0].WorldRect.X, maxX = selectedList[0].WorldRect.Right;

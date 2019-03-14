@@ -82,7 +82,7 @@ namespace Barotrauma.Sounds
         {
             if (!muffleFilters.TryGetValue(sampleRate, out BiQuad filter))
             {
-                filter = new LowpassFilter(sampleRate, 400);
+                filter = new LowpassFilter(sampleRate, 800);
                 muffleFilters.Add(sampleRate, filter);
             }
             filter.Process(buffer);
