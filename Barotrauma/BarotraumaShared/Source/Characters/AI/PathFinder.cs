@@ -293,7 +293,7 @@ namespace Barotrauma
                 node.G = 0.0f;
                 node.H = 0.0f;
             }
-              
+
             start.state = 1;
             while (true)
             {
@@ -302,7 +302,6 @@ namespace Barotrauma
                 foreach (PathNode node in nodes)
                 {
                     if (node.state != 1) continue;
-                    System.Diagnostics.Debug.WriteLine("state: "+node.state+", F: "+node.F);
                     if (node.F < dist)
                     {
                         dist = node.F;
