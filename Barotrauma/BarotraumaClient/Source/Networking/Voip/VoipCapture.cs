@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using OpenTK.Audio.OpenAL;
 using System;
 using System.Linq;
@@ -25,6 +26,13 @@ namespace Barotrauma.Networking
         {
             get;
             private set;
+        }
+
+        private float gain = 1.0f;
+        public float Gain
+        {
+            get { return gain; }
+            set { gain = MathHelper.Clamp(value, 0.0f, 10.0f); }
         }
 
         public DateTime LastEnqueueAudio;
@@ -160,8 +168,9 @@ namespace Barotrauma.Networking
                 double maxAmplitude = 0.0f;
                 for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
                 {
-                    double sampleVal = (double)uncompressedBuffer[i] / (double)short.MaxValue;
-                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
+                    uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * gain), -short.MaxValue, short.MaxValue);
+                    double sampleVal = uncompressedBuffer[i] / (double)short.MaxValue;
+                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));                    
                 }
                 double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
 
