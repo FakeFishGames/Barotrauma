@@ -436,7 +436,7 @@ namespace Barotrauma
 
             AssignOnExecute("ambientlight", (string[] args) =>
             {
-                Color color = XMLExtensions.ParseColor(string.Join("", args));
+                Color color = XMLExtensions.ParseColor(string.Join(",", args));
                 if (Level.Loaded != null)
                 {
                     Level.Loaded.GenerationParams.AmbientLightColor = color;
