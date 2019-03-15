@@ -5,7 +5,7 @@
       <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
     </Segment>
     <Segment name="ReactorCommand" contenttype="video" istriggered="false">
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" fileNYI="1_CommandReactor/command_reactor_video.mp4">
         <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="9" empty="0"/>
         <Sheet path="1_CommandReactor/Sheets2.png" columns="5" rows="6" empty="4"/>
       </Video>
