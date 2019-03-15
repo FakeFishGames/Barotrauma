@@ -328,7 +328,8 @@ namespace Barotrauma
                 pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
-
+        
+        private float ragdollingLockTimer;
         public bool IsRagdolled;
         public bool IsForceRagdolled;
         public bool dontFollowCursor;
@@ -1875,8 +1876,6 @@ namespace Barotrauma
             }
             speechImpedimentSet = false;
             
-
-
             if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;            
@@ -1933,9 +1932,23 @@ namespace Barotrauma
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
             if (IsForceRagdolled)
+            {
                 IsRagdolled = IsForceRagdolled;
-            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
-                IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
+            }
+            //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
+            {
+                if (ragdollingLockTimer > 0.0f)
+                {
+                    ragdollingLockTimer -= deltaTime;
+                }
+                else
+                {
+                    bool wasRagdolled = IsRagdolled;
+                    IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
+                    if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.25f; }
+                }
+           }
             
             UpdateSightRange();
             UpdateSoundRange();
