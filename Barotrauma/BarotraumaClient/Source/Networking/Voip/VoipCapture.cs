@@ -77,6 +77,7 @@ namespace Barotrauma.Networking
             {
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
+                    GameMain.Config?.ResetSettingsFrame();
                     new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"))
                     {
                         UserData = "capturedevicenotfound"
