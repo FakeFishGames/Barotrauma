@@ -32,6 +32,8 @@ Barotrauma's source code is split up into three projects: `ClientCode`, `Server`
 
 The client project includes the code only required by the client executable: graphics-related code, audio, particle effects and such. The server project includes logic that's only needed by the dedicated server executable. The shared project contains most of the gameplay, physics and networking logic and everything else that's needed by both the client executable and the dedicated server.
 
+The `BarotraumaShared\Content` folder, which contains Barotrauma's art, item XMLs, sounds, and other assets, is not included in the GitHub repository. If you have a legal copy of the game, you can copy the `Content` folder from the game's files to `BarotraumaShared\Content`.
+
 ### Building the game
 Before building, you should choose the build configuration. The available configurations are `DebugWindows`, `DebugMac`, `DebugLinux`, `ReleaseWindows`, `ReleaseMac` and `ReleaseLinux`. Additionally, unless you want to work on the dedicated server, you may want to make sure `WindowsClient`, `MacClient` or `LinuxClient` are selected as the startup project.
 
