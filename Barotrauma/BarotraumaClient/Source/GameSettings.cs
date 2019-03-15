@@ -509,13 +509,13 @@ namespace Barotrauma
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
                             VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
-                        }
-                        if (VoipCapture.Instance == null)
-                        {
-                            VoiceSetting = vMode = VoiceMode.Disabled;
-                            voiceInputContainer.Visible = false;
-                            voiceActivityGroup.Visible = false;
-                            return;
+                            if (VoipCapture.Instance == null)
+                            {
+                                VoiceSetting = vMode = VoiceMode.Disabled;
+                                voiceInputContainer.Visible = false;
+                                voiceActivityGroup.Visible = false;
+                                return;
+                            }
                         }
                     }
                     else
