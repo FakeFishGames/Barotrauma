@@ -290,7 +290,7 @@ namespace Barotrauma
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             float damage = attackResult.Damage;
-            if (damage < 0) { return; }
+            if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
                 if (objectiveManager.CurrentOrder == null)
