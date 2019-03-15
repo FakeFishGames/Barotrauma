@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private bool isCompleted;
 
-        public bool IgnoreAlreadyContainedItems;
+        public string[] ignoredContainerIdentifiers;
 
         public Func<Item, float> GetItemPriority;
 
@@ -95,7 +95,7 @@ namespace Barotrauma
                 getItemObjective = new AIObjectiveGetItem(character, itemIdentifiers)
                 {
                     GetItemPriority = GetItemPriority,
-                    IgnoreContainedItems = IgnoreAlreadyContainedItems
+                    ignoredContainerIdentifiers = ignoredContainerIdentifiers
                 };
                 AddSubObjective(getItemObjective);
                 return;
