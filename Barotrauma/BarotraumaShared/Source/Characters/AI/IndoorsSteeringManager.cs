@@ -44,8 +44,8 @@ namespace Barotrauma
         }
 
         public bool InLadders => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Ladders != null;
-        private bool IsNextNodeLadder => currentPath.NextNode != null && currentPath.CurrentNode.Ladders != null;
-        private bool IsNextLadderSameAsCurrent => IsNextNodeLadder && currentPath.CurrentNode.Ladders == currentPath.NextNode.Ladders;
+        public bool IsNextNodeLadder => currentPath.NextNode != null && currentPath.CurrentNode.Ladders != null;
+        public bool IsNextLadderSameAsCurrent => IsNextNodeLadder && currentPath.CurrentNode.Ladders == currentPath.NextNode.Ladders;
 
         public bool InStairs => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null;
 

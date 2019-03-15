@@ -131,23 +131,20 @@ namespace Barotrauma
                         ignorePlatforms = true;
                     }
                 }
+
+                if (Character.IsClimbing && PathSteering.InLadders && PathSteering.IsNextLadderSameAsCurrent)
+                {
+                    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+                }
             }
 
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
-
-            // Suspect that this causes issues when trying to exit from the ladders -> could try to check if the next node is ladder?
-            //if (Character.IsClimbing)
-            //{
-            //    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
-            //}
 
             Vector2 targetMovement = AnimController.TargetMovement;
 
             if (!Character.AnimController.InWater)
             {
-                targetMovement = new Vector2(
-                    Character.AnimController.TargetMovement.X,
-                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
+                targetMovement = new Vector2(Character.AnimController.TargetMovement.X, MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
             }
 
             float maxSpeed = Character.ApplyTemporarySpeedLimits(currentSpeed);
