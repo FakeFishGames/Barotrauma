@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -98,7 +99,7 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
-                SteeringManager.Reset();
+                SteeringManager.SteeringWander();
                 return;
             }
 
@@ -195,7 +196,7 @@ namespace Barotrauma
                 else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
 
                 if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
-                if (!itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
 
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
