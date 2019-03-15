@@ -86,7 +86,10 @@ namespace Barotrauma
         public bool onGround;
         private bool ignorePlatforms;
 
-        protected float ColliderHeightFromFloor => ConvertUnits.ToSimUnits(RagdollParams.ColliderHeightFromFloor) * RagdollParams.JointScale;
+        /// <summary>
+        /// In sim units. Joint scale applied.
+        /// </summary>
+        public float ColliderHeightFromFloor => ConvertUnits.ToSimUnits(RagdollParams.ColliderHeightFromFloor) * RagdollParams.JointScale;
 
         public Structure Stairs;
                 

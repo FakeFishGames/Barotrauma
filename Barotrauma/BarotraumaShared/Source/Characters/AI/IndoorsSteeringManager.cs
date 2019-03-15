@@ -213,7 +213,7 @@ namespace Barotrauma
             }
             else if (character.AnimController.InWater)
             {
-                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < collider.radius * collider.radius)
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 3, 2))
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -221,11 +221,14 @@ namespace Barotrauma
             else
             {
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+                Vector2 colliderSize = collider.GetSize();
+                // Cannot use the head position, because not all characters have head or it can be below the total height of the character
+                float characterHeight = colliderSize.Y + character.AnimController.ColliderHeightFromFloor;
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
-                bool isAboveVerticalPosition = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
-                bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f;
+                bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
+                bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
                 
-                if (horizontalDistance < collider.radius * 2 && isAboveVerticalPosition && isNotTooHigh)
+                if (horizontalDistance < collider.radius * 3 && isAboveFeet && isNotTooHigh)
                 {
                     currentPath.SkipToNextNode();
                 }
