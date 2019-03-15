@@ -319,6 +319,7 @@ namespace Barotrauma.Items.Components
 
             if (leakFixed && leak.FlowTargetHull != null)
             {
+                sinTime = 0;
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
                 {
                     character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leaksfixed", 10.0f);
