@@ -297,12 +297,12 @@ namespace Barotrauma
             start.state = 1;
             while (true)
             {
-
                 PathNode currNode = null;
-                float dist = 10000.0f;
+                float dist = float.MaxValue;
                 foreach (PathNode node in nodes)
                 {
                     if (node.state != 1) continue;
+                    System.Diagnostics.Debug.WriteLine("state: "+node.state+", F: "+node.F);
                     if (node.F < dist)
                     {
                         dist = node.F;
