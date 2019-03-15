@@ -117,6 +117,17 @@ namespace Barotrauma
             return weapon;
         }
 
+        private void Unequip()
+        {
+            if (character.SelectedItems.Contains(Weapon))
+            {
+                if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
+                {
+                    Weapon.Drop(character);
+                }
+            }
+        }
+
         private bool Equip(float deltaTime)
         {
             if (!character.SelectedItems.Contains(Weapon))
@@ -241,7 +252,19 @@ namespace Barotrauma
             HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
         }
 
-        public override bool IsCompleted() => Enemy == null || Enemy.Removed || Enemy.IsDead || coolDownTimer <= 0.0f;
+        public override bool IsCompleted()
+        {
+            bool completed = Enemy == null || Enemy.Removed || Enemy.IsDead || coolDownTimer <= 0;
+            if (completed)
+            {
+                if (Weapon != null)
+                {
+                    Unequip();
+                }
+            }
+            return completed;
+        }
+
         public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
         public override float GetPriority(AIObjectiveManager objectiveManager) => Enemy == null || Enemy.Removed || Enemy.IsDead ? 0 : 100;
 
