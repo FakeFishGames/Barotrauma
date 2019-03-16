@@ -9,7 +9,7 @@
   <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2"/>
 
   <health
-    vitality="225"
+    vitality="250"
     doesbleed="true"/>
 
   <sound file="Content/Characters/Hammerhead/HAMMERHEAD_idle1.ogg" state="None" range="5000" />
@@ -33,16 +33,16 @@
   </Inventory>
 
   <ai
-    combatstrength="400"
+    combatstrength="500"
     sight="1.0"
     hearing="0.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="300"/>
     <targetpriority tag="light" state="Attack" priority="200"/>
     <targetpriority tag="human" state="Attack" priority="90"/>
-    <targetpriority tag="stronger" state="Escape" priority="30"/>
+    <targetpriority tag="stronger" state="Escape" priority="5"/>
     <targetpriority tag="room" state="Attack" priority="60"/>
     <targetpriority tag="nasonov" state="Attack" priority="50"/>
-    <targetpriority tag="weaker" state="Attack" priority="40"/>
+    <targetpriority tag="weaker" state="Attack" priority="25"/>
   </ai>
 </Character>
