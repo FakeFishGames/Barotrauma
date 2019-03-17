@@ -132,6 +132,11 @@ namespace Barotrauma
 
                 foreach (Character enemy in Character.CharacterList)
                 {
+                    //don't run from friendly NPCs
+                    if (enemy.TeamID == Character.TeamType.FriendlyNPC) { continue; }
+                    //friendly NPCs don't run away from anything but characters controlled by EnemyAIController (= monsters)
+                    if (character.TeamID == Character.TeamType.FriendlyNPC && !(enemy.AIController is EnemyAIController)) { continue; }
+
                     if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious && 
                         (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
                     {
