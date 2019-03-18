@@ -142,7 +142,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int missionType = 0, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0)
+        public void ClientAdminWrite(NetFlags dataToSend, int missionType = 0, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -201,6 +201,8 @@ namespace Barotrauma.Networking
                 outMsg.Write((byte)(botSpawnMode + 1));
 
                 outMsg.Write(levelDifficulty ?? -1000.0f);
+
+                outMsg.Write(useRespawnShuttle ?? UseRespawnShuttle);
 
                 outMsg.Write(autoRestart != null);
                 outMsg.Write(autoRestart ?? false);

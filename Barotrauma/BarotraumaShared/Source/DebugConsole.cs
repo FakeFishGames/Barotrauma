@@ -149,7 +149,7 @@ namespace Barotrauma
                     commands.SelectMany(c => c.names).ToArray(),
                     new string[0]
                 };
-            }, isCheat: true));
+            }));
 
 
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
@@ -382,9 +382,8 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                ShowQuestionPrompt("Reason for kicking \"" + client.Name + "\"?", (reason) =>
-                {
-                    GameMain.NetworkMember.KickPlayer(client.Name, reason);
+                        GameMain.NetworkMember.BanPlayer(client.Name, reason, false, banDuration);
+                    });
                 });
             }));
             

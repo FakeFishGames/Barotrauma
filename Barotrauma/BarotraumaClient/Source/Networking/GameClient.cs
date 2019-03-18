@@ -1918,10 +1918,13 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Tell the server to select a submarine (permission required)
         /// </summary>
-        public void RequestSelectSub(int subIndex)
+        public void RequestSelectSub(int subIndex, bool isShuttle)
         {
             if (!HasPermission(ClientPermissions.SelectSub)) return;
-            if (subIndex < 0 || subIndex >= GameMain.NetLobbyScreen.SubList.Content.CountChildren)
+
+            var subList = isShuttle ? GameMain.NetLobbyScreen.ShuttleList.ListBox : GameMain.NetLobbyScreen.SubList;
+
+            if (subIndex < 0 || subIndex >= subList.Content.CountChildren)
             {
                 DebugConsole.ThrowError("Submarine index out of bounds (" + subIndex + ")\n" + Environment.StackTrace);
                 return;
@@ -1930,6 +1933,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((UInt16)ClientPermissions.SelectSub);
+            msg.Write(isShuttle); msg.WritePadBits();
             msg.Write((UInt16)subIndex);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -2203,8 +2207,11 @@ namespace Barotrauma.Networking
 
             if (EndVoteCount > 0)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                    TextManager.Get("EndRoundVotes").Replace("[y]", EndVoteCount.ToString()).Replace("[n]", (EndVoteMax - EndVoteCount).ToString()),
+                string endVoteText = TextManager.Get("EndRoundVotes")
+                    .Replace("[y]", EndVoteCount.ToString())
+                    .Replace("[n]", (EndVoteMax - EndVoteCount).ToString());
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 10.0f - GUI.SmallFont.MeasureString(endVoteText).X, 40),
+                    endVoteText,
                     Color.White,
                     font: GUI.SmallFont);
             }

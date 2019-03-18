@@ -69,6 +69,8 @@ namespace Barotrauma
 
         public int ParticleLimit { get; set; }
 
+        public int ParticleLimit { get; set; }
+
         public float LightMapScale { get; set; }
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
@@ -396,6 +398,8 @@ namespace Barotrauma
 #else
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 #endif
+
+            AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", 0.5f);
 
@@ -1089,6 +1093,84 @@ namespace Barotrauma
             }
             doc.Root.Add(tutorialElement);
             
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
+
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
+
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
+
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
+
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,

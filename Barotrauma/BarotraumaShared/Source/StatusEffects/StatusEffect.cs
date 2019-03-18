@@ -693,7 +693,10 @@ namespace Barotrauma
                     if (target is Character character)
                     {
                         character.LastDamageSource = entity;
-                        character.AddDamage(entity.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
+                        foreach (Limb limb in character.AnimController.Limbs)
+                        {
+                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                        }
                     }
                     else if (target is Limb limb)
                     {
@@ -704,9 +707,9 @@ namespace Barotrauma
                 foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
                 {
                     float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
-                    if (target is Character)
+                    if (target is Character character)
                     {
-                        ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAmount);
+                        character.CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAmount);
                     }
                     else if (target is Limb limb)
                     {

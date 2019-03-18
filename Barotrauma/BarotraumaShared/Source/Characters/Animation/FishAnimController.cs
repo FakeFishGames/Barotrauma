@@ -123,7 +123,7 @@ namespace Barotrauma
             set { FishSwimFastParams = value as FishSwimFastParams; }
         }
 
-        private float flipTimer;
+        private float flipTimer, flipCooldown;
 
         public FishAnimController(Character character, string seed, FishRagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
@@ -250,11 +250,12 @@ namespace Barotrauma
             if (!CurrentFishAnimation.Flip || IsStuck) return;
             if (character.AIController != null && !character.AIController.CanFlip) return;
 
-            flipTimer += deltaTime;
+            flipCooldown -= deltaTime;
 
             if (TargetDir != Direction.None && TargetDir != dir) 
             {
-                if (flipTimer > 1.0f || character.IsRemotePlayer)
+                flipTimer += deltaTime;
+                if ((flipTimer > 0.5f && flipCooldown <= 0.0f) || character.IsRemotePlayer)
                 {
                     Flip();
                     if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
@@ -262,7 +263,12 @@ namespace Barotrauma
                         Mirror();
                     }
                     flipTimer = 0.0f;
+                    flipCooldown = 1.0f;
                 }
+            }
+            else
+            {
+                flipTimer = 0.0f;
             }
         }
 

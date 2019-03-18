@@ -992,14 +992,14 @@ namespace Barotrauma
             if (IsHorizontal)
             {
                 diffFromCenter = (rect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
-                if (BodyWidth > 0.0f) rect.Width = (int)(BodyWidth * (rect.Width / (float)this.rect.Width));
+                if (BodyWidth > 0.0f) rect.Width = Math.Max((int)Math.Round(BodyWidth * (rect.Width / (float)this.rect.Width)), 1);
                 if (BodyHeight > 0.0f) rect.Height = (int)BodyHeight;
             }
             else
             {
                 diffFromCenter = ((rect.Y - rect.Height / 2) - (this.rect.Y - this.rect.Height / 2)) / (float)this.rect.Height * BodyHeight;
                 if (BodyWidth > 0.0f) rect.Width = (int)BodyWidth;
-                if (BodyHeight > 0.0f) rect.Height = (int)(BodyHeight * (rect.Height / (float)this.rect.Height));
+                if (BodyHeight > 0.0f) rect.Height = Math.Max((int)Math.Round(BodyHeight * (rect.Height / (float)this.rect.Height)), 1);
             }
             if (FlippedX) diffFromCenter = -diffFromCenter;
             
