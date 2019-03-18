@@ -311,6 +311,7 @@ namespace Barotrauma
         public override void UpdateAnim(float deltaTime)
         {
             if (Frozen) return;
+            if (MainLimb == null) { return; }
 
             levitatingCollider = true;
             ColliderIndex = Crouching ? 1 : 0;
@@ -335,8 +336,7 @@ namespace Barotrauma
             else
             {
                 deathAnimTimer = 0.0f;
-            }
-            
+            } 
 
             if (!character.AllowInput)
             {
@@ -1833,6 +1833,8 @@ namespace Barotrauma
                     TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false);
                 }
             }
+
+            if (!character.Enabled) { return; }
 
             Vector2 handSimPos = ConvertUnits.ToSimUnits(handWorldPos);
             if (character.Submarine != null)

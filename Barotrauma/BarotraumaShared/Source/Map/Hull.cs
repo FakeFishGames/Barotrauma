@@ -906,10 +906,14 @@ namespace Barotrauma
                 }
             }
 
-            while (FireSources.Count > fireSourceCount)
+            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
             {
-                FireSources[FireSources.Count - 1].Remove();
-            }            
+                FireSources[i].Remove();
+                if (i < FireSources.Count)
+                {
+                    FireSources.RemoveAt(i);
+                }
+            }
         }
 
         public static Hull Load(XElement element, Submarine submarine)

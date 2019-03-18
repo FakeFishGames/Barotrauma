@@ -290,25 +290,32 @@ namespace Barotrauma.Networking
 
                 if (ip == null || (!ip.CanBeBought && !ip.Tags.Contains("smallitem"))) continue;
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) },
+                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                {
+                    Stretch = true,
+                    UserData = cargoFrame,
+                    RelativeSpacing = 0.05f
+                };
+
+
+                if (ip.InventoryIcon != null || ip.sprite != null)
+                {
+                    GUIImage img = new GUIImage(new RectTransform(new Point(itemFrame.Rect.Height), itemFrame.RectTransform),
+                        ip.InventoryIcon ?? ip.sprite, scaleToFit: true)
+                    {
+                        CanBeFocused = false
+                    };
+                    img.Color = img.Sprite == ip.InventoryIcon ? ip.InventoryIconColor : ip.SpriteColor;
+                }
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), itemFrame.RectTransform),
                     ip.Name, font: GUI.SmallFont)
                 {
-                    Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f),
-                    UserData = cargoFrame,
                     CanBeFocused = false
                 };
 
-                if (ip.sprite != null)
-                {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(textBlock.Rect.Height), textBlock.RectTransform), ip.sprite, scaleToFit: true)
-                    {
-                        Color = ip.SpriteColor
-                    };
-                }
-
                 extraCargo.TryGetValue(ip, out int cargoVal);
-                var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), itemFrame.RectTransform),
+                    GUINumberInput.NumberType.Int, textAlignment: Alignment.CenterLeft)
                 {
                     MinValueInt = 0,
                     MaxValueInt = 100,

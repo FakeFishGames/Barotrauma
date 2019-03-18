@@ -311,6 +311,11 @@ namespace Barotrauma
         public override void CreateSnapshot()
         {
             Serialize();
+            if (doc == null)
+            {
+                DebugConsole.ThrowError("[RagdollParams] The source XML Document is null!");
+                return;
+            }
             var copy = new RagdollParams
             {
                 IsLoaded = true,
@@ -328,13 +333,29 @@ namespace Barotrauma
 
         private void RevertTo(RagdollParams source)
         {
+            if (source.MainElement == null)
+            {
+                DebugConsole.ThrowError("[RagdollParams] The source XML Element of the given RagdollParams is null!");
+                return;
+            }
             Deserialize(source.MainElement, recursive: false);
             var sourceSubParams = source.GetAllSubParams().ToList();
             var subParams = GetAllSubParams().ToList();
+            // TODO: cannot currently undo joint/limb deletion.
+            if (sourceSubParams.Count != subParams.Count)
+            {
+                DebugConsole.ThrowError("[RagdollParams] The count of the sub params differs! Failed to revert to the previous snapshot! Please reset the ragdoll to undo the changes.");
+                return;
+            }
             for (int i = 0; i < subParams.Count; i++)
             {
-                subParams[i].Deserialize(sourceSubParams[i].Element, recursive: false);
                 var subSubParams = subParams[i].SubParams;
+                if (subSubParams.Count != sourceSubParams[i].SubParams.Count)
+                {
+                    DebugConsole.ThrowError("[RagdollParams] The count of the sub sub params differs! Failed to revert to the previous snapshot! Please reset the ragdoll to undo the changes.");
+                    return;
+                }
+                subParams[i].Deserialize(sourceSubParams[i].Element, recursive: false);
                 for (int j = 0; j < subSubParams.Count; j++)
                 {
                     subSubParams[j].Deserialize(sourceSubParams[i].SubParams[j].Element, recursive: false);

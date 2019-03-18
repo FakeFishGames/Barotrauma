@@ -18,6 +18,7 @@ namespace Barotrauma
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
+        public string Tag { get; private set; }
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
         
@@ -34,7 +35,7 @@ namespace Barotrauma
         }
         
         // TODO: allow to use a relative size.
-        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft)
+        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft, string tag = "")
             : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "")
         {
             int headerHeight = 30;
@@ -43,6 +44,7 @@ namespace Barotrauma
             GUI.Style.Apply(InnerFrame, "", this);
 
             Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            Tag = tag;
 
             if (height == 0)
             {

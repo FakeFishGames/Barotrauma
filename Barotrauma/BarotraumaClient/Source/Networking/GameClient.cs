@@ -1061,6 +1061,8 @@ namespace Barotrauma.Networking
 
                         if (lobbyUpdated)
                         {
+                            var prevDispatcher = GUI.KeyboardDispatcher.Subscriber;
+
                             UInt16 updateID     = inc.ReadUInt16();
                             string serverName   = inc.ReadString();
                             string serverText   = inc.ReadString();
@@ -1162,9 +1164,19 @@ namespace Barotrauma.Networking
                                         ConnectedClients.RemoveAt(i);
                                     }
                                 }
+                                //remove clients that aren't present anymore
+                                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
+                                {
+                                    if (!currentClients.Contains(ConnectedClients[i]))
+                                    {
+                                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                                        ConnectedClients.RemoveAt(i);
+                                    }
+                                }
                                 
                                 Voting.AllowSubVoting = allowSubVoting;
                                 Voting.AllowModeVoting = allowModeVoting;
+                                GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
                         }
 

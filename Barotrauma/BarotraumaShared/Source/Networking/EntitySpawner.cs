@@ -176,6 +176,12 @@ namespace Barotrauma
             }
         }
 
+        public void Reset()
+        {
+            removeQueue.Clear();
+            spawnQueue.Clear();
+        }
+
         public void ServerWrite(Lidgren.Network.NetBuffer message, Client client, object[] extraData = null)
         {
             if (GameMain.Server == null) return;

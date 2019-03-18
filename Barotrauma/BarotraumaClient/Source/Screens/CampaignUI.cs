@@ -253,6 +253,14 @@ namespace Barotrauma
 
         private void UpdateLocationView(Location location)
         {
+            if (location == null)
+            {
+                string errorMsg = "Failed to update CampaignUI location view (location was null)\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("CampaignUI.UpdateLocationView:LocationNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
             if (characterPreviewFrame != null)
             {
                 characterPreviewFrame.Parent.RemoveChild(characterPreviewFrame);

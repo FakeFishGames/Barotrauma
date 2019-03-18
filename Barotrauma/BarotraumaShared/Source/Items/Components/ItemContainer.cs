@@ -146,6 +146,8 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
+            if (item.Container != null) { return false; }
+
             if (AutoInteractWithContained)
             {
                 foreach (Item contained in Inventory.Items)
@@ -262,35 +264,7 @@ namespace Barotrauma.Items.Components
 
             if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
             {
-                string itemNames = string.Empty;
-
-                foreach (Item item in Inventory.Items)
-                {
-                    if (item == null) continue;
-                    itemNames += item.Name + "\n";
-                }
-
-                if (itemNames.Length > 0)
-                {
-                    var msgBox = new GUIMessageBox(Item.Name, TextManager.Get("DeletingContainerWithItems") + itemNames, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                    msgBox.Buttons[0].OnClicked = (btn, userdata) =>
-                    {
-                        Inventory.DeleteAllItems();
-                        msgBox.Close();
-                        return true;
-                    };
-
-                    msgBox.Buttons[1].OnClicked = (btn, userdata) =>
-                    {
-                        foreach (Item item in Inventory.Items)
-                        {
-                            if (item == null) continue;
-                            item.Drop();
-                        }
-                        msgBox.Close();
-                        return true;
-                    };
-                }
+                GameMain.SubEditorScreen.HandleContainerContentsDeletion(Item, Inventory);
                 return;
             }
 #endif

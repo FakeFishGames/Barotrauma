@@ -225,6 +225,14 @@ namespace Barotrauma
                     flowSoundChannels[i].Dispose();
                     flowSoundChannels[i] = null;
                 }
+                for (int i = 0; i < fireSoundChannels.Length; i++)
+                {
+                    if (fireSoundChannels[i] == null) continue;
+                    fireSoundChannels[i].Dispose();
+                    fireSoundChannels[i] = null;
+                }
+                fireVolumeLeft[0] = 0.0f; fireVolumeLeft[1] = 0.0f;
+                fireVolumeRight[0] = 0.0f; fireVolumeRight[1] = 0.0f;
                 return;
             }
 

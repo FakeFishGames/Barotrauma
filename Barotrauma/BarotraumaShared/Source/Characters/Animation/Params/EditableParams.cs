@@ -45,6 +45,11 @@ namespace Barotrauma
         protected virtual bool Serialize(XElement element = null)
         {
             element = element ?? MainElement;
+            if (element == null)
+            {
+                DebugConsole.ThrowError("[EditableParams] The XML element is null!");
+                return false;
+            }
             SerializableProperty.SerializeProperties(this, element, true);
             return true;
         }

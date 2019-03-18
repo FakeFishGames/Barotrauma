@@ -464,6 +464,11 @@ namespace Barotrauma
                 if (item.HasTag(targetIdentifiers)) return true;
                 if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
             }
+            else if (entity is ItemComponent itemComponent)
+            {
+                if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
+                if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
+            }
             else if (entity is Structure structure)
             {
                 if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
