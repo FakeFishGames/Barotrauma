@@ -279,7 +279,6 @@ namespace Barotrauma
             //check if another sprite is using the same texture
             if (!string.IsNullOrEmpty(FilePath)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
-                string normalizedFilePath = Path.GetFullPath(file);
                 foreach (Sprite s in list)
                 {
                     if (s.FullPath == FullPath) return;

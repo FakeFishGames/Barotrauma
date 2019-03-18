@@ -156,7 +156,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (moveSound != null)
                     {
-                        moveSoundChannel.Dispose();
+                        moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, moveSound.Volume, moveSound.Range, item.WorldPosition);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = true;
                     }
@@ -168,13 +168,13 @@ namespace Barotrauma.Items.Components
                 {
                     if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
-                        moveSoundChannel.Dispose();
+                        moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, endMoveSound.Volume, endMoveSound.Range, item.WorldPosition);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = false;
                     }
                     else if (!moveSoundChannel.IsPlaying)
                     {
-                        moveSoundChannel.Dispose();
+                        moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = null;
 
                     }
@@ -288,7 +288,10 @@ namespace Barotrauma.Items.Components
                 availableAmmo.AddRange(itemContainer.Inventory.Items);                
             }            
                         
-            float chargeRate = powerConsumption <= 0.0f ? 1.0f : batteryCharge / batteryCapacity;
+            float chargeRate = 
+                powerConsumption <= 0.0f ? 
+                1.0f : 
+                batteryCapacity > 0.0f ? batteryCharge / batteryCapacity : 0.0f;
             bool charged = batteryCharge * 3600.0f > powerConsumption;
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
             if (ShowChargeIndicator && PowerConsumption > 0.0f)

@@ -177,12 +177,21 @@ namespace Barotrauma.Items.Components
                 Vector2 nodePos = refSub == null ? 
                     newConnection.Item.Position : 
                     newConnection.Item.Position - refSub.HiddenSubPosition;
-
-
+                
                 if (nodes.Count > 0 && nodes[0] == nodePos) break;
                 if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) break;
 
-                if (i == 0)
+                //make sure we place the node at the correct end of the wire (the end that's closest to the new node pos)
+                int newNodeIndex = 0;
+                if (nodes.Count > 1)
+                {
+                    if (Vector2.DistanceSquared(nodes[nodes.Count-1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
+                    {
+                        newNodeIndex = nodes.Count;
+                    }
+                }
+
+                if (newNodeIndex == 0)
                 {
                     nodes.Insert(0, nodePos);                    
                 }

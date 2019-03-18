@@ -131,23 +131,20 @@ namespace Barotrauma
                         ignorePlatforms = true;
                     }
                 }
+
+                if (Character.IsClimbing && PathSteering.InLadders && PathSteering.IsNextLadderSameAsCurrent)
+                {
+                    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+                }
             }
 
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
-
-            // Suspect that this causes issues when trying to exit from the ladders -> could try to check if the next node is ladder?
-            //if (Character.IsClimbing)
-            //{
-            //    Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
-            //}
 
             Vector2 targetMovement = AnimController.TargetMovement;
 
             if (!Character.AnimController.InWater)
             {
-                targetMovement = new Vector2(
-                    Character.AnimController.TargetMovement.X,
-                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
+                targetMovement = new Vector2(Character.AnimController.TargetMovement.X, MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
             }
 
             float maxSpeed = Character.ApplyTemporarySpeedLimits(currentSpeed);
@@ -227,10 +224,6 @@ namespace Barotrauma
                 PropagateHullSafety(Character, Character.CurrentHull);
             }
         }
-        
-        private void ReportProblems()
-        {
-            if (GameMain.Client != null) return;
 
         protected void ReportProblems()
         {
@@ -252,7 +245,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
+                        (c.AIController is EnemyAIController || (c.TeamID != Character.TeamID && Character.TeamID != Character.TeamType.FriendlyNPC && c.TeamID != Character.TeamType.FriendlyNPC)))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -297,10 +290,13 @@ namespace Barotrauma
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             float damage = attackResult.Damage;
-            if (damage < 0) { return; }
+            if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
-                objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                if (objectiveManager.CurrentOrder == null)
+                {
+                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                }
                 return;
             }
             if (IsFriendly(attacker))
@@ -314,7 +310,10 @@ namespace Barotrauma
                 if (!attacker.IsRemotePlayer && Character.Controlled != attacker && attacker.AIController != null && attacker.AIController.Enabled)
                 {
                     // Don't react to damage done by friendly ai, because we know that it's accidental
-                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    if (objectiveManager.CurrentOrder == null)
+                    {
+                        objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    }
                     return;
                 }
                 float currentVitality = Character.CharacterHealth.Vitality;
@@ -322,8 +321,10 @@ namespace Barotrauma
                 if (dmgPercentage < currentVitality / 10)
                 {
                     // Don't react to a minor amount of (accidental) dmg done by friendly characters
-                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
-                    return;
+                    if (objectiveManager.CurrentOrder == null)
+                    {
+                        objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+                    }
                 }
                 if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
                 {
@@ -465,7 +466,9 @@ namespace Barotrauma
             // Even the smallest fire reduces the safety by 50%
             float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
             float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
-            int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
+                int enemyCount = Character.CharacterList.Count(e => 
+                e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && 
+                (e.AIController is EnemyAIController || (e.TeamID != character.TeamID && character.TeamID != Character.TeamType.FriendlyNPC && e.TeamID != Character.TeamType.FriendlyNPC)));
             // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
             float enemyFactor = ignoreEnemies ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;

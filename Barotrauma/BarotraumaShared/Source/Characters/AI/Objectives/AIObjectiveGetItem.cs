@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -14,18 +15,14 @@ namespace Barotrauma
 
         //can be either tags or identifiers
         private string[] itemIdentifiers;
-
         private Item targetItem, moveToTarget;
-
         private int currSearchIndex;
-
-        public bool IgnoreContainedItems;
-
+        public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
-
         private float currItemPriority;
-
         private bool equip;
+
+        private HashSet<Item> ignoredItems = new HashSet<Item>();
 
         private bool canBeCompleted = true;
         public override bool CanBeCompleted => canBeCompleted;
@@ -36,25 +33,19 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
             return 1.0f;
         }
 
-        public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false)
-            : base(character, "")
+        public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false) : base(character, "")
         {
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false)
-            : this(character, new string[] { itemIdentifier }, equip)
-        {
-        }
+        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false) : this(character, new string[] { itemIdentifier }, equip) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false)
-            : base(character, "")
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false) : base(character, "")
         {
             currSearchIndex = -1;
             this.equip = equip;
@@ -108,12 +99,12 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
-                // TODO: cannot be completed?
-                character?.AIController?.SteeringManager?.Reset();
+                SteeringManager.SteeringWander();
                 return;
             }
 
-            if (Vector2.Distance(character.Position, moveToTarget.Position) < targetItem.InteractDistance * 2.0f)
+            if (moveToTarget.CurrentHull == character.CurrentHull && 
+                Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance * 2, 2))
             {
                 int targetSlot = -1;
                 if (equip)
@@ -169,9 +160,13 @@ namespace Barotrauma
                 }
 
                 goToObjective.TryComplete(deltaTime);
-                if (!goToObjective.CanBeCompleted) targetItem = null;
+                if (!goToObjective.CanBeCompleted)
+                {
+                    targetItem = null;
+                    moveToTarget = null;
+                    ignoredItems.Add(targetItem);
+                }
             }
-
         }
 
         /// <summary>
@@ -196,22 +191,30 @@ namespace Barotrauma
                 currSearchIndex++;
 
                 var item = Item.ItemList[currSearchIndex];
+                if (ignoredItems.Contains(item)) { continue; }
+                if (item.Submarine == null) { continue; }
+                else if (item.Submarine.TeamID != character.TeamID) { continue; }
+                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
 
-                if (item.CurrentHull == null || item.Condition <= 0.0f) continue;
-                if (IgnoreContainedItems && item.Container != null) continue;
-                if (!itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) continue;
+                if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
+                if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+
+                if (ignoredContainerIdentifiers != null && item.Container != null)
+                {
+                    if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
+                }
 
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)
                 {
-                    if (item.ParentInventory.Owner is Character owner && !owner.IsDead) continue;
+                    if (item.ParentInventory.Owner is Character owner && !owner.IsDead) { continue; }
                 }
 
                 //if the item is inside an item, which is inside a character's inventory, don't steal it
                 Item rootContainer = item.GetRootContainer();
                 if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
                 {
-                    if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) continue;
+                    if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) { continue; }
                 }
 
                 float itemPriority = 0.0f;
@@ -219,13 +222,13 @@ namespace Barotrauma
                 {
                     //ignore if the item has zero priority
                     itemPriority = GetItemPriority(item);
-                    if (itemPriority <= 0.0f) continue;
+                    if (itemPriority <= 0.0f) { continue; }
                 }
 
                 itemPriority = itemPriority - Vector2.Distance((rootContainer ?? item).Position, character.Position) * 0.01f;
 
                 //ignore if the item has a lower priority than the currently selected one
-                if (moveToTarget != null && itemPriority < currItemPriority) continue;
+                if (moveToTarget != null && itemPriority < currItemPriority) { continue; }
 
                 currItemPriority = itemPriority;
 

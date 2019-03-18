@@ -134,7 +134,7 @@ namespace Barotrauma
 
         public HashSet<string> Tags
         {
-            get { return prefab; }
+            get { return prefab.Tags; }
         }
         
         protected Color spriteColor;

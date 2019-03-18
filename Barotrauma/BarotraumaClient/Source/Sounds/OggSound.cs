@@ -26,7 +26,7 @@ namespace Barotrauma.Sounds
 
             if (!stream)
             {
-                int bufferSize = (int)reader.TotalSamples*reader.Channels;
+                int bufferSize = (int)reader.TotalSamples * reader.Channels;
 
                 float[] floatBuffer = new float[bufferSize];
                 short[] shortBuffer = new short[bufferSize];
@@ -82,7 +82,7 @@ namespace Barotrauma.Sounds
         {
             if (!muffleFilters.TryGetValue(sampleRate, out BiQuad filter))
             {
-                filter = new LowpassFilter(sampleRate, 400);
+                filter = new LowpassFilter(sampleRate, 800);
                 muffleFilters.Add(sampleRate, filter);
             }
             filter.Process(buffer);

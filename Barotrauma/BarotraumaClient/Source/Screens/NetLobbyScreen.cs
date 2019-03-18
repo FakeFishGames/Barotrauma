@@ -431,7 +431,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-            shuttleList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), elementCount: 10);
 
             //gamemode ------------------------------------------------------------------
 
@@ -1050,10 +1049,9 @@ namespace Barotrauma
             }          
         }
         
-        public void SetPlayYourself(bool playYourself)
+        public bool TogglePlayYourself(GUITickBox tickBox)
         {
-            this.playYourself.Selected = playYourself;
-            if (playYourself)
+            if (tickBox.Selected)
             {
                 UpdatePlayerFrame(campaignCharacterInfo, allowEditing: campaignCharacterInfo == null);
             }
@@ -1068,6 +1066,7 @@ namespace Barotrauma
                     TextManager.Get("PlayingAsSpectator"),
                     textAlignment: Alignment.Center);
             }
+            return false;
         }
 
         public void SetPlayYourself(bool playYourself)
@@ -1097,7 +1096,6 @@ namespace Barotrauma
             {
                 return;
             }
-        }
 
             //show the player config menu if spectating is not allowed
             if (!playYourself.Selected && !allowSpectating)

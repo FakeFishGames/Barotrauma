@@ -641,7 +641,7 @@ namespace Barotrauma.Items.Components
                         if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
                     }
                     //make sure the left hull is linked to the gap first (gap logic assumes that the first hull is the one to the left)
-                    if (doorGap.linkedTo[0].Rect.X > doorGap.linkedTo[1].Rect.X)
+                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].Rect.X > doorGap.linkedTo[1].Rect.X)
                     {
                         var temp = doorGap.linkedTo[0];
                         doorGap.linkedTo[0] = doorGap.linkedTo[1];
@@ -659,7 +659,7 @@ namespace Barotrauma.Items.Components
                         if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
                     }
                     //make sure the upper hull is linked to the gap first (gap logic assumes that the first hull is above the second one)
-                    if (doorGap.linkedTo[0].Rect.Y < doorGap.linkedTo[1].Rect.Y)
+                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].Rect.Y < doorGap.linkedTo[1].Rect.Y)
                     {
                         var temp = doorGap.linkedTo[0];
                         doorGap.linkedTo[0] = doorGap.linkedTo[1];

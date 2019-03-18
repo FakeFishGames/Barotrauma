@@ -717,11 +717,6 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            bool isNotClient = true;
-#if CLIENT
-            isNotClient = GameMain.Client == null;
-#endif
 
             if (FireSize > 0.0f && entity != null)
             {

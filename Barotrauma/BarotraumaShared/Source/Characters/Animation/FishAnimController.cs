@@ -683,12 +683,6 @@ namespace Barotrauma
 
                 limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
             }
-            while (referenceLimb.Rotation - angle < -MathHelper.TwoPi)
-            {
-                angle -= MathHelper.TwoPi;
-            }
-
-            limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
         }
 
         private void SmoothRotateWithoutWrapping(Limb limb, float angle, Limb referenceLimb, float torque)

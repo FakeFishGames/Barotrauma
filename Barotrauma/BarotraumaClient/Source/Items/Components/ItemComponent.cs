@@ -25,15 +25,6 @@ namespace Barotrauma.Items.Components
         public readonly ActionType Type;
 
         public string VolumeProperty;
-        public float VolumeMultiplier
-        {
-            get { return RoundSound.Volume; }
-        }
-        
-        public float Range
-        {
-            get { return RoundSound.Range; }
-        }
 
         public float VolumeMultiplier
         {
@@ -198,20 +189,20 @@ namespace Barotrauma.Items.Components
                 {
                     if (loopingSoundChannel != null)
                     {
-                        loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                        loopingSoundChannel.FadeOutAndDispose(); loopingSoundChannel = null;
                     }
                     return;
                 }
 
                 if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
-                    loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                    loopingSoundChannel.FadeOutAndDispose(); loopingSoundChannel = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
-                        GetSoundVolume(loopingSound),
+                        0.01f,
                         SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
@@ -226,7 +217,9 @@ namespace Barotrauma.Items.Components
                         lastMuffleCheckTime = (float)Timing.TotalTime;
                     }
                     loopingSoundChannel.Muffled = shouldMuffleLooping;
-                    loopingSoundChannel.Gain = GetSoundVolume(loopingSound);
+                    float targetGain = GetSoundVolume(loopingSound);
+                    float gainDiff = targetGain - loopingSoundChannel.Gain;
+                    loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
                     loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
                 }
                 return;
@@ -279,13 +272,13 @@ namespace Barotrauma.Items.Components
                 loopingSound = itemSound;
                 if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
-                    loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                    loopingSoundChannel.FadeOutAndDispose(); loopingSoundChannel = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
-                        GetSoundVolume(loopingSound),
+                        0.01f,
                         muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
@@ -309,7 +302,7 @@ namespace Barotrauma.Items.Components
 
             if (loopingSoundChannel != null)
             {
-                loopingSoundChannel.Dispose();
+                loopingSoundChannel.FadeOutAndDispose();
                 loopingSoundChannel = null;
                 loopingSound = null;
             }

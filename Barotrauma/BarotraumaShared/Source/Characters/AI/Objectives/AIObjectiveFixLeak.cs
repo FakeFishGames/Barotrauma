@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return leak.Open <= 0.0f || leak.Removed || pathUnreachable;
+            return leak.Open <= 0.0f || leak.Removed;
         }
 
         public override bool CanBeCompleted => !abandon && base.CanBeCompleted;
@@ -94,16 +94,15 @@ namespace Barotrauma
             if (repairTool == null) { return; }
 
             Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
-            var humanoidController = character.AnimController as HumanoidAnimController;
 
             // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && humanoidController != null && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
             {
-                ((HumanoidAnimController)character.AnimController).Crouching = true;
+                HumanAIController.AnimController.Crouching = true;
             }
 
-            float armLength = humanoidController != null ? ConvertUnits.ToDisplayUnits(humanoidController.ArmLength) : 100;
-            bool cannotReach = gapDiff.Length() > armLength + repairTool.Range;
+            float reach = HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range);
+            bool cannotReach = ConvertUnits.ToSimUnits(gapDiff.Length()) > reach;
             if (cannotReach)
             {
                 if (gotoObjective != null)
@@ -116,7 +115,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character);
+                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character)
+                    {
+                        CloseEnough = reach * 0.75f
+                    };
                     if (!subObjectives.Contains(gotoObjective))
                     {
                         AddSubObjective(gotoObjective);

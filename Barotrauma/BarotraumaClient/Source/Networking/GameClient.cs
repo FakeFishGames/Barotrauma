@@ -84,7 +84,7 @@ namespace Barotrauma.Networking
         {
             get { return fileReceiver; }
         }
-        
+
         public bool MidRoundSyncing
         {
             get { return entityEventManager.MidRoundSyncing; }
@@ -321,18 +321,17 @@ namespace Barotrauma.Networking
 
             // Loop until we are approved
             //TODO: show the name of the server instead of IP when connecting through the server list (more streamer-friendly)
-            string connectingText = TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP);
+            string connectingText = TextManager.Get("Connecting");
             while (!CanStart && !connectCancelled)
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox(TextManager.Get("Connecting"), connectingText, new string[] { TextManager.Get("Cancel") });
-
+                    reconnectBox = new GUIMessageBox(connectingText, TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += CancelConnect;
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                reconnectBox.Text.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
 
                 if (DateTime.Now > reqAuthTime)
                 {
@@ -540,6 +539,7 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.Select();
                 }
                 connected = true;
+                chatBox.InputBox.Enabled = true;
                 if (GameMain.NetLobbyScreen?.TextBox != null)
                 {
                     GameMain.NetLobbyScreen.TextBox.Enabled = true;
@@ -832,6 +832,8 @@ namespace Barotrauma.Networking
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
             if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
 
+            DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
             if (disconnectReason == DisconnectReason.ServerFull)
             {
                 //already waiting for a slot to free up, do nothing
@@ -861,22 +863,19 @@ namespace Barotrauma.Networking
                 waitInServerQueueBox = null;
                 CoroutineManager.StopCoroutines("WaitInServerQueue");
             }
-            else
-            {
-                string msg = "";
-                if (disconnectReason == DisconnectReason.Unknown)
-                {
-                    msg = disconnectMsg;
-                }
-                else
-                {
-                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
             {
+                DebugConsole.NewMessage("Attempting to reconnect...");
+
+                string msg = TextManager.GetServerMessage(disconnectMsg);
+                msg = string.IsNullOrWhiteSpace(msg) ? 
+                    TextManager.Get("ConnectionLostReconnecting") : 
+                    msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
+
                 reconnectBox = new GUIMessageBox(
                     TextManager.Get("ConnectionLost"),
-                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
+                    msg, new string[0]);
                 connected = false;
                 ConnectToServer(serverIP);
             }
@@ -885,10 +884,12 @@ namespace Barotrauma.Networking
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)
                 {
+                    DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
                     msg = disconnectMsg;
                 }
                 else
                 {
+                    DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
                     for (int i = 1; i < splitMsg.Length; i++)
@@ -923,25 +924,6 @@ namespace Barotrauma.Networking
                 }
                 yield return new WaitForSeconds(0.5f);
             }
-        }
-
-            waitInServerQueueBox?.Close();
-            waitInServerQueueBox = null;
-
-            yield return CoroutineStatus.Success;
-        }
-
-
-        private void ReadAchievement(NetIncomingMessage inc)
-        {
-            string achievementIdentifier = inc.ReadString();
-            SteamAchievementManager.UnlockAchievement(achievementIdentifier);
-        }
-
-        private void ReadPermissions(NetIncomingMessage inc)
-        {
-            List<string> permittedConsoleCommands = new List<string>();
-            byte clientID = inc.ReadByte();
 
             waitInServerQueueBox?.Close();
             waitInServerQueueBox = null;
@@ -1192,7 +1174,7 @@ namespace Barotrauma.Networking
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
-            
+
             ReadPermissions(inc);
 
             if (gameStarted)
@@ -1324,12 +1306,6 @@ namespace Barotrauma.Networking
                             byte botCount               = inc.ReadByte();
                             BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
 
-                            byte botCount               = inc.ReadByte();
-                            BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
-
-                            byte botCount               = inc.ReadByte();
-                            BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
-                            
                             bool autoRestartEnabled     = inc.ReadBoolean();
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
 
@@ -1496,7 +1472,7 @@ namespace Barotrauma.Networking
                 prevBytePos = inc.PositionInBytes;
             }
         }
-        
+
         private void SendLobbyUpdate()
         {
             NetOutgoingMessage outmsg = client.CreateMessage();

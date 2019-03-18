@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -229,7 +230,10 @@ namespace Barotrauma
                 campaign.lastUpdateID = updateID;
             }
         }
+
+        public override void Save(XElement element)
+        {
+            //do nothing, the clients get the save files from the server
+        }
     }
-
-
 }

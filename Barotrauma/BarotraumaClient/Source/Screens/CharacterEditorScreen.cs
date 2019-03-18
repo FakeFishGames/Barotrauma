@@ -117,7 +117,6 @@ namespace Barotrauma
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
             instance = this;
         }
-        #endregion
 
         public override void Deselect()
         {
@@ -196,6 +195,7 @@ namespace Barotrauma
             {
                 ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
             }
+        }
 
         public override void Update(double deltaTime)
         {
@@ -351,91 +351,6 @@ namespace Barotrauma
                         {
                             CopyLimb(selectedLimb);
                         }
-                        idToCodeName.TryGetValue(id, out string notes);
-                        LimbXElements.Add(id.ToString(), new XElement("limb",
-                            new XAttribute("id", id),
-                            new XAttribute("name", limbName),
-                            new XAttribute("type", limbType.ToString()),
-                            colliderAttributes,
-                            new XElement("sprite",
-                                new XAttribute("texture", TexturePath),
-                                new XAttribute("sourcerect", $"{rectInputs[0].IntValue}, {rectInputs[1].IntValue}, {width}, {height}")),
-                            new XAttribute("notes", null ?? string.Empty)
-                        ));
-                    }
-                }
-                UpdateJointCreation();
-                if (PlayerInput.KeyHit(Keys.Left))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.X--;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.Right))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.X++;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.Down))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.Y++;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.Up))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.Y--;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                UpdateJointCreation();
-                if (PlayerInput.KeyHit(Keys.Left))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.X--;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.Right))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.X++;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.Down))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.Y++;
-                        UpdateSourceRect(limb, newRect);
-                    }
-                }
-                if (PlayerInput.KeyHit(Keys.Up))
-                {
-                    foreach (var limb in selectedLimbs)
-                    {
-                        var newRect = limb.ActiveSprite.SourceRect;
-                        newRect.Y--;
-                        UpdateSourceRect(limb, newRect);
                     }
                 }
                 UpdateJointCreation();

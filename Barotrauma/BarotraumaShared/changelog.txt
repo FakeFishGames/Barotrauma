@@ -1,4 +1,84 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.6
+---------------------------------------------------------------------------------------------------------
+
+Additions:
+- A major overhaul on the crew AI. They should now be much better at executing their tasks, keeping
+themselves alive and less likely to get stuck.
+- Re-enabled multiplayer campaign.
+- New alien ruin art.
+- New main menu (still a work in progress).
+- New fonts.
+- New subs and a new shuttle.
+- New husk sprites.
+- Improved item/character highlight effect.
+- New signal items (divide, multiply, subtract, memory, equals, greater than, color, xor).
+- Option to adjust microphone volume in multiplayer.
+- Added a console commands for changing the gender and race of the character.
+- More intuitive BrokenSprite condition logic: a BrokenSprite with a MaxCondition of 50 will start 
+fading in at 50 (and be fully visible when the condition drops to 0 or down to the MaxCondition of 
+the next BrokenSprite).
+- Added Mirror X/Y buttons to editing HUDs and tooltips that tell about the keyboard shortcuts.
+
+Multiplayer fixes:
+- Improved item position syncing logic. Less warping or items being impossible to pick up due to
+being in a different position server-side.
+- Fixed clients not sending a network update to the server when dragging an item out of an inventory
+slot, causing situations such as suffocation after dropping a diving suit due to the server not
+knowing that you'd dropped it.
+- The client hosting a server and spectators don't trigger autorestart.
+- The owner of a server is allowed to spectate even if spectating is disallowed in server settings.
+- Fixed "play yourself" always toggling to true when a round ends.
+- Fixed missing item names in the extra cargo menu.
+- Fixed traitor rounds failing to start if the server is not hosted by a client.
+- Fixed console command aliases not being taken into account in GameClient.HasConsoleCommandPermission 
+(meaning that the client needed a permission for each name variant of a command, making it impossible 
+to for example use "fixwalls" instead of "fixhulls").
+- Made the "control" console command usable to clients. 
+- Show the "ready to start" tickbox in the server lobby even if the client has the permission to start 
+the round.
+- Fixed server lobby screen not showing the names of the submarines the client doesn't have.
+- Fixed inability to select the respawn shuttle as a client host.
+- Fixed VoipCapture creating new "could not start voice capture" popups constantly if there's no 
+suitable capture device.
+- Fixed crashing when starting a round if a submarine name contains underscores.
+- Fixed clients console errors when attempting to modify the properties of an ItemComponent in-game
+(for example, the color of a light component).
+- Added some more information to the console messages and error popups when a client gets disconnected.
+- Fixed enablecheats command crashing the server if it's used when there are no clients present.
+
+Misc bugfixes:
+- Audio fixes (less snap, crackle and pop).
+- Fixed particle "jitter" when the submarine was moving fast.
+- Fixed damage modifiers affecting all afflictions if they use affliction types instead of affliction 
+identifiers. 
+- Fixed end round vote text going outside the screen if there's a 2-digit amount of votes.
+- Fixed StatusEffects only applying afflictions to one limb even if the target is "Character" instead of "Limb".
+- Disable audio instead of crashing if no audio device is found.
+- Fixed item interfaces getting repositioned every frame when the editing HUD is open.
+- Fixed held items clipping with the sleeves of the character (e.g. when holding a revolver while an 
+uniform is equipped).
+- Fixed being able to levitate by spamming the ragdoll button.
+- Fixed dead characters draining oxygen tanks inside diving suits/masks.
+- Fixed reactor gauges getting messed up if the optimal fission rate is more than 100% (which may happen
+if the power consumption is larger than what the reactor can generate).
+- Fixed mud raptors not having an inventory (nor lootable items).
+- Fixed inability to interact with any items when aim assist is set to 0%. 
+- Fixed info panel flickering out and Tab getting "inverted" (= info panel shown when tab is not being held) 
+when selecting crew members in the panel.
+- Fixed characters arms occasionally getting stuck above their shoulders.
+- Fixed wire nodes occasionally being created at the wrong end of a wire (e.g. when moving a wire between 
+connections in a connection panel, the wire stretched from the device at the other end of the wire to 
+the device that's being rewired).
+
+Misc:
+- Changed the way arguments are given to the "setclientcharacter" command (no semicolon to separate the 
+names, quotation marks have to be used for multi-word names just like with any other command).
+- Show the amount of credits in the crew tab of the campaign menu.
+- Don't spawn new monsters if docked to the start outpost or within 50 meters of the start/end of the level.
+- The diving knife now causes also internal damage besides bleeding.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.5
 ---------------------------------------------------------------------------------------------------------
 

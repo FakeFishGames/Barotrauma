@@ -203,7 +203,7 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("Pathfinding error, couldn't find a start node. "+ errorMsgStr, Color.DarkRed);
 
-                return new SteeringPath();
+                return new SteeringPath(true);
             }
             
             closestDist = 0.0f;
@@ -225,8 +225,12 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
                     {
+                        // TODO: for some reason fails to find the path when the sub is flooding. Disabling this check helps fixes it, but we can't disable it
                         var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
-                        if (body != null && body.UserData is Structure) continue;
+                        if (body != null && body.UserData is Structure)
+                        {
+                            continue;
+                        }
                     }
 
                     closestDist = dist;
@@ -237,9 +241,8 @@ namespace Barotrauma
             if (endNode == null)
             {
                 DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. " + errorMsgStr, Color.DarkRed);
-                return new SteeringPath();
+                return new SteeringPath(true);
             }
-
 
             var path = FindPath(startNode, endNode);
 
@@ -266,7 +269,7 @@ namespace Barotrauma
             if (startNode == null || endNode == null)
             {
                 DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints.", Color.DarkRed);
-                return new SteeringPath();
+                return new SteeringPath(true);
             }
 
             return FindPath(startNode, endNode);
@@ -290,13 +293,12 @@ namespace Barotrauma
                 node.G = 0.0f;
                 node.H = 0.0f;
             }
-              
+
             start.state = 1;
             while (true)
             {
-
                 PathNode currNode = null;
-                float dist = 10000.0f;
+                float dist = float.MaxValue;
                 foreach (PathNode node in nodes)
                 {
                     if (node.state != 1) continue;
@@ -364,7 +366,7 @@ namespace Barotrauma
 
             if (end.state == 0 || end.Parent == null)
             {
-                //path not found
+                //DebugConsole.NewMessage("Pathfinding error: path not found", Color.DarkRed);
                 return new SteeringPath(true);
             }
 

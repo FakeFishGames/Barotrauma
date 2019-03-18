@@ -54,7 +54,7 @@ namespace Barotrauma
                 case 6:
                     return PlayerInput.MouseWheelDownClicked();
             }
-            
+
             return false;
         }
 
@@ -113,14 +113,7 @@ namespace Barotrauma
     {
         private bool hit, hitQueue;
         private bool held, heldQueue;
-        
-#if CLIENT
-        private InputType inputType;
 
-        public Key(InputType inputType)
-        {
-            this.inputType = inputType;
-        }
 
         private InputType inputType;
 
@@ -138,17 +131,6 @@ namespace Barotrauma
         {
             get { return binding; }
         }
-#endif
-
-        public void SetState()
-        {
-            hit = binding.IsHit();
-            if (hit) hitQueue = true;
-
-            held = binding.IsDown();
-            if (held) heldQueue = true;
-        }
-#endif
 
         public void SetState()
         {

@@ -160,7 +160,6 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
-            if (AITarget != null) AITarget.Enabled = voltage > minVoltage || powerConsumption <= 0.0f;
 
 #if CLIENT
             light.ParentSub = item.Submarine;

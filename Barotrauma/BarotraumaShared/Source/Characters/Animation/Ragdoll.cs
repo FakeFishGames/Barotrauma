@@ -86,7 +86,10 @@ namespace Barotrauma
         public bool onGround;
         private bool ignorePlatforms;
 
-        protected float ColliderHeightFromFloor => ConvertUnits.ToSimUnits(RagdollParams.ColliderHeightFromFloor) * RagdollParams.JointScale;
+        /// <summary>
+        /// In sim units. Joint scale applied.
+        /// </summary>
+        public float ColliderHeightFromFloor => ConvertUnits.ToSimUnits(RagdollParams.ColliderHeightFromFloor) * RagdollParams.JointScale;
 
         public Structure Stairs;
                 
@@ -1324,6 +1327,19 @@ namespace Barotrauma
             }
             if (errorMsg != null)
             {
+                if (character.IsRemotePlayer)
+                {
+                    errorMsg += " Ragdoll controlled remotely.";
+                }
+                if (SimplePhysicsEnabled)
+                {
+                    errorMsg += " Simple physics enabled.";
+                }
+                if (GameMain.NetworkMember != null)
+                {
+                    errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
+                }
+
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
@@ -1343,7 +1359,6 @@ namespace Barotrauma
                 SetInitialLimbPositions();
                 return;
             }
-            UpdateProjSpecific(deltaTime);
         }
 
         partial void UpdateProjSpecific(float deltaTime);

@@ -186,11 +186,11 @@ namespace Barotrauma
 
             bool completed = false;
 
-            float allowedDistance = 0.5f;
+            float allowedDistance = CloseEnough;
 
             if (Target is Item item)
             {
-                allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.InteractDistance), allowedDistance);
+                allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.InteractDistance), CloseEnough);
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
             }
             else if (Target is Character targetCharacter)

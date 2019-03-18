@@ -15,8 +15,8 @@ namespace Barotrauma.Sounds
 
         public bool Disabled
         {
-            Default = 0,
-            Voice = 1
+            get;
+            private set;
         }
         
         private IntPtr alcDevice;
@@ -109,12 +109,6 @@ namespace Barotrauma.Sounds
         {
             get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
-        public int UniqueLoadedSoundCount
-        {
-            get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
-        }
-
-        private Dictionary<string, Pair<float, bool>> categoryModifiers;
 
         private Dictionary<string, Pair<float, bool>> categoryModifiers;
 
@@ -322,7 +316,6 @@ namespace Barotrauma.Sounds
             }
             return count;
         }
-#endif
 
         public SoundChannel GetChannelFromSound(Sound sound)
         {
@@ -420,15 +413,6 @@ namespace Barotrauma.Sounds
             {
                 categoryModifiers[category].Second = muffle;
             }
-            else
-            {
-                categoryModifiers[category].Second = muffle;
-            }
-            else
-            {
-                categoryModifiers[category].Second = muffle;
-            }
-        }
 
             for (int i = 0; i < playingChannels.Length; i++)
             {
@@ -477,7 +461,8 @@ namespace Barotrauma.Sounds
                     {
                         for (int j = 0; j < playingChannels[i].Length; j++)
                         {
-                            if (playingChannels[i][j] != null && playingChannels[i][j].IsStream)
+                            if (playingChannels[i][j] == null) { continue; }
+                            if (playingChannels[i][j].IsStream)
                             {
                                 if (playingChannels[i][j].IsPlaying)
                                 {
@@ -489,10 +474,18 @@ namespace Barotrauma.Sounds
                                     playingChannels[i][j].Dispose();
                                 }
                             }
+                            else if (playingChannels[i][j].FadingOutAndDisposing)
+                            {
+                                playingChannels[i][j].Gain -= 0.1f;
+                                if (playingChannels[i][j].Gain <= 0.0f)
+                                {
+                                    playingChannels[i][j].Dispose();
+                                }
+                            }
                         }
                     }
                 }
-                Thread.Sleep(50); //TODO: use a separate thread for network audio?
+                Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
         }
         

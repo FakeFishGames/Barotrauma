@@ -359,7 +359,7 @@ namespace Barotrauma
             if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
-                steeringManager.SteeringManual(deltaTime, Vector2.UnitY * speed);
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
                 return;
             }
 
@@ -652,7 +652,7 @@ namespace Barotrauma
                         {
                             //wander around randomly and decrease the priority faster if no path is found
                             if (selectedTargetMemory != null) selectedTargetMemory.Priority -= deltaTime * 10.0f;
-                            steeringManager.SteeringWander(speed);
+                            steeringManager.SteeringWander();
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {

@@ -211,7 +211,7 @@ namespace Barotrauma
                 }
                 else if (SoundChannels[i] != null && SoundChannels[i].IsPlaying)
                 {
-                    SoundChannels[i].Dispose();
+                    SoundChannels[i].FadeOutAndDispose();
                     SoundChannels[i] = null;
                 }
             }

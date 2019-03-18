@@ -269,9 +269,6 @@ namespace Barotrauma
                 }
             }
 
-            //remove orphans
-            Locations.RemoveAll(c => !connectedLocations.Contains(c));
-            
             for (int i = connections.Count - 1; i >= 0; i--)
             {
                 i = Math.Min(i, connections.Count - 1);
@@ -428,7 +425,6 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            CurrentLocation.SelectedMissionIndex = missionIndex;
 
             SelectedLocation = location;
             SelectedConnection = connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));

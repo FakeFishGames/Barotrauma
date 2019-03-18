@@ -522,7 +522,12 @@ namespace Barotrauma
                 string errorMsg =
                     "Attempted to apply invalid " + valueName +
                     " to a physics body (userdata: " + userData +
-                    "), value: " + value + "\n" + Environment.StackTrace;
+                    "), value: " + value;
+                if (GameMain.NetworkMember != null)
+                {
+                    errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
+                }
+                errorMsg += "\n" + Environment.StackTrace;
 
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
@@ -544,7 +549,12 @@ namespace Barotrauma
                 string errorMsg =
                     "Attempted to apply invalid " + valueName +
                     " to a physics body (userdata: " + userData +
-                    "), value: " + value + "\n" + Environment.StackTrace;
+                    "), value: " + value;
+                if (GameMain.NetworkMember != null)
+                {
+                    errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
+                }
+                errorMsg += "\n" + Environment.StackTrace;
 
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(

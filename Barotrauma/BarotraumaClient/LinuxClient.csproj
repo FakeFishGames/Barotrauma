@@ -31,6 +31,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <ApplicationIcon>..\BarotraumaShared\IconBmp.bmp</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
@@ -103,6 +104,7 @@
     <Content Include="OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\solidcolor_opengl.fx" />
     <Content Include="SharpFont.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -152,13 +154,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />	
+    <None Include="app.config" />
     <Content Include="Shaders\blurshader_opengl.fx" />
     <Content Include="Shaders\damageshader_opengl.fx" />
     <Content Include="Shaders\deformshader_opengl.fx" />
     <Content Include="Shaders\losshader_opengl.fx" />
     <Content Include="Shaders\postprocess_opengl.fx" />
     <Content Include="Shaders\watershader_opengl.fx" />
+    <None Include="Content\Effects\solidcolor_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Shaders\Content_opengl.mgcb" />
     <None Include="Content\Effects\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -187,6 +192,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp">
+      <LogicalName>Icon.bmp</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="ClientCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />

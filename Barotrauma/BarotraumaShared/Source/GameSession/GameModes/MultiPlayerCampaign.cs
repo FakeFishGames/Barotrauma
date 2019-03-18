@@ -45,8 +45,6 @@ namespace Barotrauma
 
         private static byte currentCampaignID;
 
-        private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
-
         public byte CampaignID
         {
             get; private set;
@@ -217,7 +215,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
+#if SERVER
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();
             var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
@@ -226,33 +224,8 @@ namespace Barotrauma
             {
                 characterData.Add(new CharacterCampaignData(subElement));
             }
+#endif
         }
 
-        public override void Save(XElement element)
-        {
-            XElement modeElement = new XElement("MultiPlayerCampaign",
-                new XAttribute("money", Money),
-                new XAttribute("cheatsenabled", CheatsEnabled));
-            Map.Save(modeElement);
-            element.Add(modeElement);
-
-            //save character data to a separate file
-            string characterDataPath = GetCharacterDataSavePath();
-            XDocument characterDataDoc = new XDocument(new XElement("CharacterData"));
-            foreach (CharacterCampaignData cd in characterData)
-            {
-                characterDataDoc.Root.Add(cd.Save());
-            }
-            try
-            {
-                characterDataDoc.Save(characterDataPath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving multiplayer campaign characters to \"" + characterDataPath + "\" failed!", e);
-            }
-
-            lastSaveID++;
-        }
     }
 }

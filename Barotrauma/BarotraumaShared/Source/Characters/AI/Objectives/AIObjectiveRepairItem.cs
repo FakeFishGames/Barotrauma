@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -84,7 +85,14 @@ namespace Barotrauma
             }
             if (character.CanInteractWith(Item))
             {
-                OperateRepairTool(deltaTime);
+                if (repairTool == null)
+                {
+                    FindRepairTool();
+                }
+                if (repairTool != null)
+                {
+                    OperateRepairTool(deltaTime);
+                }
                 foreach (Repairable repairable in Item.Repairables)
                 {
                     if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
@@ -121,13 +129,17 @@ namespace Barotrauma
                     subObjectives.Remove(goToObjective);
                 }
                 goToObjective = new AIObjectiveGoTo(Item, character);
+                if (repairTool != null)
+                {
+                    goToObjective.CloseEnough = (HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range)) * 0.75f;
+                }
                 AddSubObjective(goToObjective);
             }
         }
 
-        private void OperateRepairTool(float deltaTime)
+        private RepairTool repairTool;
+        private void FindRepairTool()
         {
-            // Operate repair tool, if required.
             foreach (Repairable repairable in Item.Repairables)
             {
                 foreach (var kvp in repairable.requiredItems)
@@ -138,18 +150,28 @@ namespace Barotrauma
                         {
                             if (requiredItem.MatchesItem(item))
                             {
-                                var repairTool = item.GetComponent<RepairTool>();
-                                if (repairTool != null)
-                                {
-                                    character.CursorPosition = Item.Position;
-                                    character.SetInput(InputType.Aim, false, true);
-                                    repairTool.Use(deltaTime, character);
-                                    return;
-                                }
+                                repairTool = item.GetComponent<RepairTool>();
                             }
                         }
                     }
                 }
+            }
+        }
+
+        private void OperateRepairTool(float deltaTime)
+        {
+            character.CursorPosition = Item.Position;
+            character.SetInput(InputType.Aim, false, true);
+            Vector2 fromToolToTarget = Item.Position - repairTool.Item.Position;
+            if (fromToolToTarget.LengthSquared() < MathUtils.Pow(repairTool.Range / 2, 2))
+            {
+                // Too close -> steer away
+                character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - Item.SimPosition) / 2);
+            }
+            if (character.IsClimbing || 
+                VectorExtensions.Angle(VectorExtensions.Forward(repairTool.Item.body.TransformedRotation), fromToolToTarget) < MathHelper.PiOver4)
+            {
+                repairTool.Use(deltaTime, character);
             }
         }
     }

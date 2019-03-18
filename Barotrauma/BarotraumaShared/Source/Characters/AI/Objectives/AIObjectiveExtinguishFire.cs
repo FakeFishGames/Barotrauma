@@ -78,16 +78,18 @@ namespace Barotrauma
 
             foreach (FireSource fs in targetHull.FireSources)
             {
-                // TODO: check if in the same room?
                 bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
-                if (!character.IsClimbing && (inRange || useExtinquisherTimer > 0.0f))
+                if (targetHull == character.CurrentHull && (inRange || useExtinquisherTimer > 0.0f))
                 {
                     useExtinquisherTimer += deltaTime;
                     if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
 
                     character.CursorPosition = fs.Position;
                     character.SetInput(InputType.Aim, false, true);
-                    character.AIController.SteeringManager.Reset();
+                    if (!character.IsClimbing)
+                    {
+                        character.AIController.SteeringManager.Reset();
+                    }
                     extinguisher.Use(deltaTime, character);
 
                     if (!targetHull.FireSources.Contains(fs))

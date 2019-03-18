@@ -89,7 +89,9 @@ namespace Barotrauma
                 }
                 CommonnessPerZone[zoneIndex] = zoneCommonness;
             }
-            catch (Exception e)
+
+            hireableJobs = new List<Tuple<JobPrefab, float>>();
+            foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

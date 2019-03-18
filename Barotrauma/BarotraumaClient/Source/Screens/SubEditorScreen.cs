@@ -1913,8 +1913,6 @@ namespace Barotrauma
                 CreateUI();
             }
 
-            if (tutorial != null) tutorial.Update((float)deltaTime);
-            
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
             
