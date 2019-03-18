@@ -51,6 +51,11 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody Body { get; private set; }
 
+        private float RepairThreshold
+        {
+            get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
+        }
+
         private float stuck;
         [Serialize(0.0f, false)]
         public float Stuck
@@ -207,7 +212,7 @@ namespace Barotrauma.Items.Components
 
         public override bool HasRequiredItems(Character character, bool addMessage)
         {
-            if (item.Condition <= 0.0f) return true; //For repairing
+            if (item.Condition <= RepairThreshold) return true; //For repairing
 
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
             return requiredItems.Any() ? base.HasRequiredItems(character, addMessage) : canBePicked;
@@ -215,12 +220,12 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            return item.Condition <= 0.0f ? true : base.Pick(picker);
+            return item.Condition <= RepairThreshold ? true : base.Pick(picker);
         }
 
         public override bool OnPicked(Character picker)
         {
-            if (item.Condition <= 0.0f) return true; //repairs
+            if (item.Condition <= RepairThreshold) return true; //repairs
 
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
 #if CLIENT
@@ -232,7 +237,7 @@ namespace Barotrauma.Items.Components
         public override bool Select(Character character)
         {
             //can only be selected if the item is broken
-            return item.Condition <= 0.0f;
+            return item.Condition <= RepairThreshold;
         }
 
         public override void Update(float deltaTime, Camera cam)
