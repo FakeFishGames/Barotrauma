@@ -83,10 +83,6 @@ namespace Barotrauma
             {
                 child.CanBeFocused = false;
             }
-            foreach (GUIComponent child in infoTextBox.Content.Children)
-            {
-                child.CanBeFocused = false;
-            }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), 
                 TextManager.Get("RoundSummaryCrewStatus"), font: GUI.LargeFont);

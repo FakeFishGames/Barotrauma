@@ -116,11 +116,6 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Server.Character != null)
-            {
-                c.Inventory?.DeleteAllItems();
-            }
-
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
             {

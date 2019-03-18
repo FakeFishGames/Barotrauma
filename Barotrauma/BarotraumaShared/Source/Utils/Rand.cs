@@ -39,12 +39,6 @@ namespace Barotrauma
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
-        public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)
-        {
-            Assert(sync);
-            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
-        }
-
         public static int Range(int minimum, int maximum, RandSync sync = RandSync.Unsynced)
         {
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(maximum - minimum) + minimum;

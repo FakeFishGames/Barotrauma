@@ -82,33 +82,6 @@ namespace Barotrauma
 #endif
         }
 
-        public void SetBotCount(int botCount)
-        {
-            if (GameMain.Server != null)
-            {
-                if (botCount < 0) botCount = GameMain.Server.MaxBotCount;
-                if (botCount > GameMain.Server.MaxBotCount) botCount = 0;
-
-                GameMain.Server.BotCount = botCount;
-                lastUpdateID++;
-            }
-#if CLIENT
-            (botCountText as GUITextBlock).Text = botCount.ToString();
-#endif
-        }
-
-        public void SetBotSpawnMode(BotSpawnMode botSpawnMode)
-        {
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.BotSpawnMode = botSpawnMode;
-                lastUpdateID++;
-            }
-#if CLIENT
-            (botSpawnModeText as GUITextBlock).Text = botSpawnMode.ToString();
-#endif
-        }
-
         public void SetTraitorsEnabled(YesNoMaybe enabled)
         {
 #if SERVER

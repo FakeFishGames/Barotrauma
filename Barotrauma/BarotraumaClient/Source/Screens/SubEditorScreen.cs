@@ -64,10 +64,6 @@ namespace Barotrauma
 
         private readonly string containerDeleteTag = "containerdelete";
 
-        private DateTime editorSelectedTime;
-
-        private readonly string containerDeleteTag = "containerdelete";
-
         public override Camera Cam
         {
             get { return cam; }

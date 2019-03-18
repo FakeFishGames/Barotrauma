@@ -105,6 +105,8 @@ namespace Barotrauma.Items.Components
                     progressTimer = 0.0f;
                 }
             }
+
+            voltage -= deltaTime * 10.0f;
         }
 
         private void PutItemsToLinkedContainer()
@@ -159,8 +161,6 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(user.LogName + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
-
-            if (!IsActive) { progressState = 0.0f; }
 
             if (!IsActive) { progressState = 0.0f; }
 

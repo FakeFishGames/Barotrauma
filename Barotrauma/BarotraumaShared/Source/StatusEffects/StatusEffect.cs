@@ -486,38 +486,8 @@ namespace Barotrauma
 
         protected bool IsValidTarget(ISerializableEntity entity)
         {
-            if (entity is Item item)
-            {
-                if (item.HasTag(targetIdentifiers)) return true;
-                if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
-            }
-            else if (entity is ItemComponent itemComponent)
-            {
-                if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
-                if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
-            }
-            else if (entity is Structure structure)
-            {
-                if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
-            }
-            else if (entity is Character character)
-            {
-                if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
-            }
+            if (targetIdentifiers == null) { return true; }
 
-            return targetIdentifiers.Any(id => id == entity.Name);
-        }
-
-        public void SetUser(Character user)
-        {
-            foreach (Affliction affliction in Afflictions)
-            {
-                affliction.Source = user;
-            }
-        }
-
-        protected bool IsValidTarget(ISerializableEntity entity)
-        {
             if (entity is Item item)
             {
                 if (item.HasTag(targetIdentifiers)) return true;
@@ -744,6 +714,11 @@ namespace Barotrauma
                     }
                 }
             }
+            
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
 
             if (FireSize > 0.0f && entity != null)
             {
@@ -757,62 +732,6 @@ namespace Barotrauma
 #endif
 
             if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
-            {
-                foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
-                {
-                    switch (itemSpawnInfo.SpawnPosition)
-                    {
-                        case ItemSpawnInfo.SpawnPositionType.This:
-                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, entity.WorldPosition);
-                            break;
-                        case ItemSpawnInfo.SpawnPositionType.ThisInventory:
-                            { 
-                                if (entity is Character character)
-                                {
-                                    if (character.Inventory != null && character.Inventory.Items.Any(it => it == null))
-                                    {
-                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
-                                    }
-                                }
-                                else if (entity is Item item)
-                                {
-                                    var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
-                                    if (inventory != null && inventory.Items.Any(it => it == null))
-                                    {
-                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
-                                    }
-                                }
-                            }
-                            break;
-                        case ItemSpawnInfo.SpawnPositionType.ContainedInventory:
-                            {
-                                Inventory thisInventory = null;
-                                if (entity is Character character)
-                                {
-                                    thisInventory = character.Inventory;
-                                }
-                                else if (entity is Item item)
-                                {
-                                    thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
-                                }
-                                if (thisInventory != null)
-                                {
-                                    foreach (Item item in thisInventory.Items)
-                                    {
-                                        if (item == null) continue;
-                                        Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
-                                        if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
-                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
-                                        break;
-                                    }
-                                }                                
-                            }
-                            break;
-                    }
-                }
-            }
-
-            if (GameMain.Client == null && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
             {
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
@@ -969,30 +888,6 @@ namespace Barotrauma
                         else if (target is Limb limb)
                         {
                             limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
-                        }
-                    }
-
-                    foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
-                    {
-                        if (target is Character)
-                        {
-                            ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAffliction.Second * deltaTime);
-                        }
-                        else if (target is Limb limb)
-                        {
-                            limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
-                        }
-                    }
-
-                    foreach (Affliction affliction in element.Parent.Afflictions)
-                    {
-                        if (target is Character)
-                        {
-                            ((Character)target).CharacterHealth.ApplyAffliction(null, affliction.CreateMultiplied(deltaTime));
-                        }
-                        else if (target is Limb limb)
-                        {
-                            limb.character.CharacterHealth.ApplyAffliction(limb, affliction.CreateMultiplied(deltaTime));
                         }
                     }
 

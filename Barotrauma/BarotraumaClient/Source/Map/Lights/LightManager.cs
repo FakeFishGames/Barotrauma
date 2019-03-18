@@ -26,8 +26,6 @@ namespace Barotrauma.Lights
 
         private float currLightMapScale;
 
-        private float currLightMapScale;
-
         public Color AmbientLight;
 
         public RenderTarget2D LightMap

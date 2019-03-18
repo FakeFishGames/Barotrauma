@@ -143,6 +143,9 @@ namespace Barotrauma
 
             infoFrame?.UpdateManually(deltaTime);
         }
+
+            infoFrame?.UpdateManually(deltaTime);
+        }
         
         public void Draw(SpriteBatch spriteBatch)
         {

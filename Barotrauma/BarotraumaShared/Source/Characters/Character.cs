@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
 using Barotrauma.Extensions;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -529,37 +530,6 @@ namespace Barotrauma
             set { canInventoryBeAccessed = value; }
         }
 
-        private bool canBeDragged = true;
-        public bool CanBeDragged
-        {
-            get
-            {
-                if (!canBeDragged) { return false; }
-                if (Removed || !AnimController.Draggable) { return false; }
-                return IsDead || Stun > 0.0f || LockHands || IsUnconscious;
-            }
-            set { canBeDragged = value; }
-        }
-
-        //can other characters access the inventory of this character
-        private bool canInventoryBeAccessed = true;
-        public bool CanInventoryBeAccessed
-        {
-            get
-            {
-                if (!canInventoryBeAccessed || Removed || Inventory == null) { return false; }
-                if (!Inventory.AccessibleWhenAlive)
-                {
-                    return IsDead;
-                }
-                else
-                {
-                    return (IsDead || Stun > 0.0f || LockHands || IsUnconscious);
-                }
-            }
-            set { canInventoryBeAccessed = value; }
-        }
-
         public override Vector2 SimPosition
         {
             get
@@ -1017,10 +987,6 @@ namespace Barotrauma
         public Vector2? OverrideMovement { get; set; }
         public bool ForceRun { get; set; }
 
-        // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
-        public Vector2? OverrideMovement { get; set; }
-        public bool ForceRun { get; set; }
-
         public Vector2 GetTargetMovement()
         {
             Vector2 targetMovement = Vector2.Zero;
@@ -1069,7 +1035,24 @@ namespace Barotrauma
 
             ResetSpeedMultiplier(); // Reset, items will set the value before the next update
 
-            return targetMovement;
+            //?
+            //currMaxSpeed *= 1.5f;
+
+            var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
+            if (leftFoot != null)
+            {
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
+                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+            }
+
+            var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
+            if (rightFoot != null)
+            {
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+            }
+
+            return currMaxSpeed;
         }
 
         /// <summary>
@@ -2202,16 +2185,17 @@ namespace Barotrauma
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
-                string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
+                StringBuilder sb = new StringBuilder();
+                sb.Append(LogName + " attacked by " + attackingCharacter.LogName + ".");
                 if (attackResult.Afflictions != null)
                 {
                     foreach (Affliction affliction in attackResult.Afflictions)
                     {
                         if (affliction.Strength == 0.0f) continue;
-                        logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                        sb.Append($" {affliction.Prefab.Name}: {affliction.Strength}");
                     }
                 }
-                GameServer.Log(logMsg, ServerLog.MessageType.Attack);            
+                GameServer.Log(sb.ToString(), ServerLog.MessageType.Attack);            
             }
 #endif
 

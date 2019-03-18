@@ -155,18 +155,29 @@ namespace Barotrauma
             {
                 if (!messages[i].Contains("_")) // No variables, just translate
                 {
-                    messages[i] = Get(messages[i]);
-                    continue;
+                    string msg = Get(messages[i], true);
+
+                    if (msg != null) // If a translation was found, otherwise use the original
+                    {
+                        messages[i] = msg;
+                    }
                 }
-
-                string[] messageWithVariables = messages[i].Split('_');
-                messages[i] = Get(messageWithVariables[0]);
-
-                // First index is always the message identifier -> start at 1
-                for (int j = 1; j < messageWithVariables.Length; j++)
+                else
                 {
-                    string[] variableAndValue = messageWithVariables[j].Split('=');
-                    messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
+                    string[] messageWithVariables = messages[i].Split('_');
+                    string msg = Get(messageWithVariables[0], true);
+
+                    if (msg != null) // If a translation was found, otherwise use the original
+                    {
+                        messages[i] = msg;
+                    }
+
+                    // First index is always the message identifier -> start at 1
+                    for (int j = 1; j < messageWithVariables.Length; j++)
+                    {
+                        string[] variableAndValue = messageWithVariables[j].Split('=');
+                        messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
+                    }
                 }
             }
 

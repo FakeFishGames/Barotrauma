@@ -89,11 +89,6 @@ namespace Barotrauma
         public readonly AttributeCollection Attributes;
         public readonly Type PropertyType;
 
-        public object ParentObject
-        {
-            get { return obj; }
-        }
-
         public SerializableProperty(PropertyDescriptor property, object obj)
         {
             Name = property.Name;
@@ -187,9 +182,6 @@ namespace Barotrauma
                     case "point":
                         propertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint(value));
                         break;
-                    case "point":
-                        propertyInfo.SetValue(obj, XMLExtensions.ParsePoint(value));
-                        break;
                     case "vector2":
                         propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2(value));
                         break;
@@ -261,9 +253,6 @@ namespace Barotrauma
                                 return true;
                             case "point":
                                 propertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint((string)value));
-                                return true;
-                            case "point":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "vector2":
                                 propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2((string)value));

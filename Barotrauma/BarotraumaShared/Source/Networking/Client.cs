@@ -72,8 +72,6 @@ namespace Barotrauma.Networking
 
         public HashSet<string> GivenAchievements = new HashSet<string>();
 
-        public HashSet<string> GivenAchievements = new HashSet<string>();
-
         public ClientPermissions Permissions = ClientPermissions.None;
         public List<DebugConsole.Command> PermittedConsoleCommands
         {

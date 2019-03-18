@@ -598,6 +598,62 @@ namespace Barotrauma
                     FireSources.RemoveAt(i);
                 }
             }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
+        {
+            float newWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+            float newOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
+
+            bool hasFireSources = message.ReadBoolean();
+            int fireSourceCount = 0;
+            List<Vector3> newFireSources = new List<Vector3>();
+            if (hasFireSources)
+            {
+                fireSourceCount = message.ReadRangedInteger(0, 16);
+                for (int i = 0; i < fireSourceCount; i++)
+                {
+                    newFireSources.Add(new Vector3(
+                        MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
+                        MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
+                        message.ReadRangedSingle(0.0f, 1.0f, 8)));
+                }
+            }
+
+            if (serverUpdateDelay > 0.0f) { return; }
+
+            WaterVolume = newWaterVolume;
+            OxygenPercentage = newOxygenPercentage;
+            
+            for (int i = 0; i < fireSourceCount; i++)
+            {
+                Vector2 pos = new Vector2(
+                    rect.X + rect.Width * newFireSources[i].X,
+                    rect.Y - rect.Height + (rect.Height * newFireSources[i].Y));
+                float size = newFireSources[i].Z * rect.Width;
+
+                var newFire = i < FireSources.Count ?
+                    FireSources[i] :
+                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                newFire.Position = pos;
+                newFire.Size = new Vector2(size, newFire.Size.Y);
+
+                //ignore if the fire wasn't added to this room (invalid position)?
+                if (!FireSources.Contains(newFire))
+                {
+                    newFire.Remove();
+                    continue;
+                }
+            }
+
+            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
+            {
+                FireSources[i].Remove();
+                if (i < FireSources.Count)
+                {
+                    FireSources.RemoveAt(i);
+                }
+            }
         }        
     }
 }

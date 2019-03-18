@@ -78,9 +78,6 @@ namespace Barotrauma
         private GUIButton faceSelectionLeft;
         private GUIButton faceSelectionRight;
 
-        private GUIButton faceSelectionLeft;
-        private GUIButton faceSelectionRight;
-
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -119,12 +116,6 @@ namespace Barotrauma
             private set;
         }
         
-        public GUIButton ShowLogButton
-        {
-            get;
-            private set;
-        }
-
         public GUIButton ShowLogButton
         {
             get;

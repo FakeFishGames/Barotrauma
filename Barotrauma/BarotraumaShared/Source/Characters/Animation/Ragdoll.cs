@@ -1297,6 +1297,7 @@ namespace Barotrauma
             CheckValidity(Collider);
             foreach (Limb limb in limbs)
             {
+                if (limb.body == null || !limb.body.Enabled) { continue; }
                 CheckValidity(limb.body);
             }
         }
@@ -1323,7 +1324,11 @@ namespace Barotrauma
             }
             if (errorMsg != null)
             {
+#if DEBUG
                 DebugConsole.ThrowError(errorMsg);
+#else
+                DebugConsole.NewMessage(errorMsg, Color.Red);
+#endif
                 GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 
                 if (!MathUtils.IsValid(Collider.SimPosition) || Math.Abs(Collider.SimPosition.X) > 1e10f || Math.Abs(Collider.SimPosition.Y) > 1e10f)

@@ -54,7 +54,7 @@ namespace Barotrauma
         
         private LocationType(XElement element)
         {
-            Identifier = element.Name.ToString();
+            Identifier = element.GetAttributeString("identifier", element.Name.ToString());
             Name = TextManager.Get("LocationName." + Identifier);
             nameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
 
@@ -65,7 +65,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to read name file for location type \""+Identifier+"\"!", e);
+                DebugConsole.ThrowError("Failed to read name file for location type \"" + Identifier + "\"!", e);
                 names = new List<string>() { "Name file not found" };
             }
 
@@ -82,9 +82,7 @@ namespace Barotrauma
                 }
                 CommonnessPerZone[zoneIndex] = zoneCommonness;
             }
-
-            string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
-            try
+            catch (Exception e)
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

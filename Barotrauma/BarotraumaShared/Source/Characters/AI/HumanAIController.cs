@@ -188,45 +188,6 @@ namespace Barotrauma
                     newOrder = new Order(orderPrefab, Character.CurrentHull, null);
                 }
 
-                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
-                {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
-                    {
-                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                    }
-                }
-            }
-
-            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
-            {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-            }
-
-            if (newOrder != null)
-            {
-                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
-                {
-                    Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
-
-                    if (GameMain.Server != null)
-                    {
-                        OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
-                        GameMain.Server.SendOrderChatMessage(msg);
-                    }
-                }
-            }
-        }
-
         partial void ReportProblems();
 
         private void UpdateSpeaking()
@@ -282,22 +243,6 @@ namespace Barotrauma
         public override void SelectTarget(AITarget target)
         {
             SelectedAiTarget = target;
-        }
-
-        private void CheckCrouching(float deltaTime)
-        {
-            crouchRaycastTimer -= deltaTime;
-            if (crouchRaycastTimer > 0.0f) return;
-
-            crouchRaycastTimer = CrouchRaycastInterval;
-
-            //start the raycast in front of the character in the direction it's heading to
-            Vector2 startPos = Character.SimPosition;
-            startPos.X += MathHelper.Clamp(Character.AnimController.TargetMovement.X, -1.0f, 1.0f);
-
-            //do a raycast upwards to find any walls
-            float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
-            shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
         private void CheckCrouching(float deltaTime)

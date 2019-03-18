@@ -24,9 +24,6 @@ namespace Barotrauma.Items.Components
         private bool createdNewGap;
         private bool autoOrientGap;
 
-        private bool createdNewGap;
-        private bool autoOrientGap;
-
         private bool isStuck;
         private float resetPredictionTimer;
 

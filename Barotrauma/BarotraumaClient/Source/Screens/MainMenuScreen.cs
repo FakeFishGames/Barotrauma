@@ -410,18 +410,6 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateTutorialList()
-        {
-            var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
-            foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
-            {
-                if (((Tutorial)tutorialText.UserData).Completed)
-                {
-                    tutorialText.TextColor = Color.LightGreen;
-                }
-            }
-        }
-
         private bool ApplySettings(GUIButton button, object userData)
         {
             GameMain.Config.SaveNewPlayerConfig();

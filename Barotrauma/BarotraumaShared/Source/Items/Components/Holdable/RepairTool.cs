@@ -256,10 +256,6 @@ namespace Barotrauma.Items.Components
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
 
-        partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
-        partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
-
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             Gap leak = objective.OperateTarget as Gap;

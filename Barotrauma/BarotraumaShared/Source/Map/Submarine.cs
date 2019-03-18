@@ -518,6 +518,10 @@ namespace Barotrauma
                 {
                     maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                }
 
                 if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }             
             }

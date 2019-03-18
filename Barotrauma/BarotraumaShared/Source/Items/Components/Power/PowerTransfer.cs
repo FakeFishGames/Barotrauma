@@ -178,9 +178,6 @@ namespace Barotrauma.Items.Components
                 //items in a bad condition are more sensitive to overvoltage
                 float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / item.Prefab.Health);
 
-                //items in a bad condition are more sensitive to overvoltage
-                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / 100.0f);
-
                 //if the item can't be fixed, don't allow it to break
                 if (!item.Repairables.Any() || !CanBeOverloaded) continue;
 

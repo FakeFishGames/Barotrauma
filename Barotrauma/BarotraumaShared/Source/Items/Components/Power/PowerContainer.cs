@@ -32,11 +32,6 @@ namespace Barotrauma.Items.Components
         //a list of powered devices connected directly to this item
         private readonly List<Pair<Powered, Connection>> directlyConnected = new List<Pair<Powered, Connection>>(10);
 
-        //charge indicator description
-        protected Vector2 indicatorPosition, indicatorSize;
-
-        protected bool isHorizontal;
-
         public float CurrPowerOutput
         {
             get;

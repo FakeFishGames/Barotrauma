@@ -64,6 +64,31 @@ namespace Barotrauma
               
         public float SpriteRotation;
 
+        private GUITextBlock itemInUseWarning;
+        private GUITextBlock ItemInUseWarning
+        {
+            get
+            {
+                if (itemInUseWarning == null)
+                {
+                    itemInUseWarning = new GUITextBlock(new RectTransform(new Point(10), GUI.Canvas), "", 
+                        textColor: Color.Orange, color: Color.Black, 
+                        textAlignment:Alignment.Center, style: "OuterGlow");
+                }
+                return itemInUseWarning;
+            }
+        }
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return parentInventory == null && (body == null || body.Enabled) && ShowItems;
+            }
+        }
+              
+        public float SpriteRotation;
+
         public Color GetSpriteColor()
         {
             Color color = spriteColor;

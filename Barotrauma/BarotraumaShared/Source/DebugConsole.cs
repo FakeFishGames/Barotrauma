@@ -980,68 +980,6 @@ namespace Barotrauma
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
 
-            commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
-            {
-                if (args.Count() < 2 || (GameMain.Client == null && GameMain.Server == null)) return;
-                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float minimumLatency))
-                {
-                    ThrowError(args[0] + " is not a valid latency value.");
-                    return;
-                }
-                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float randomLatency))
-                {
-                    ThrowError(args[1] + " is not a valid latency value.");
-                    return;
-                }
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Client.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
-                }
-                else if (GameMain.Server != null)
-                {
-                    GameMain.Server.NetPeerConfiguration.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Server.NetPeerConfiguration.SimulatedRandomLatency = randomLatency;
-                }
-                NewMessage("Set simulated minimum latency to " + minimumLatency + " and random latency to " + randomLatency + ".", Color.White);
-            }));
-            commands.Add(new Command("simulatedloss", "simulatedloss [lossratio]: applies simulated packet loss to network messages. For example, a value of 0.1 would mean 10% of the packets are dropped. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
-            {
-                if (args.Count() < 1 || (GameMain.Client == null && GameMain.Server == null)) return;
-                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float loss))
-                {
-                    ThrowError(args[0] + " is not a valid loss ratio.");
-                    return;
-                }
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.NetPeerConfiguration.SimulatedLoss = loss;
-                }
-                else if (GameMain.Server != null)
-                {
-                    GameMain.Server.NetPeerConfiguration.SimulatedLoss = loss;
-                }
-                NewMessage("Set simulated packet loss to " + (int)(loss * 100) + "%.", Color.White);
-            }));
-            commands.Add(new Command("simulatedduplicateschance", "simulatedduplicateschance [duplicateratio]: simulates packet duplication in network messages. For example, a value of 0.1 would mean there's a 10% chance a packet gets sent twice. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
-            {
-                if (args.Count() < 1 || (GameMain.Client == null && GameMain.Server == null)) return;
-                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float duplicates))
-                {
-                    ThrowError(args[0] + " is not a valid duplicate ratio.");
-                    return;
-                }
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
-                }
-                else if (GameMain.Server != null)
-                {
-                    GameMain.Server.NetPeerConfiguration.SimulatedDuplicatesChance = duplicates;
-                }
-                NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
-            }));
-
             commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
             {
                 Submarine.MainSub?.FlipX();
