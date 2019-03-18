@@ -485,11 +485,11 @@ namespace Barotrauma
             }
             if (!inGame && Sprite != null)
             {
-                var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), "Reload Texture");
+                var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), TextManager.Get("ReloadSprite"));
                 reloadTextureButton.OnClicked += (button, data) =>
                 {
-                    Sprite.ReloadTexture();
                     Sprite.ReloadXML();
+                    Sprite.ReloadTexture();
                     return true;
                 };
                 itemEditor.AddCustomContent(reloadTextureButton, itemEditor.ContentCount);

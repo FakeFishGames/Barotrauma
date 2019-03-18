@@ -67,6 +67,8 @@ namespace Barotrauma
 
         public int ParticleLimit { get; set; }
 
+        public int ParticleLimit { get; set; }
+
         public float LightMapScale { get; set; }
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
@@ -512,34 +514,6 @@ namespace Barotrauma
                 }                
             }
             
-            TextManager.LoadTextPacks(SelectedContentPackages);
-
-            //display error messages after all content packages have been loaded
-            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
-            foreach (string missingPackagePath in missingPackagePaths)
-            {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                foreach (ContentFile file in contentPackage.Files)
-                {
-                    if (!System.IO.File.Exists(file.Path))
-                    {
-                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
-                        continue;
-                    }
-                    ToolBox.IsProperFilenameCase(file.Path);
-                }
-            }
-
             TextManager.LoadTextPacks(SelectedContentPackages);
 
             //display error messages after all content packages have been loaded
@@ -1115,6 +1089,32 @@ namespace Barotrauma
             }
             doc.Root.Add(tutorialElement);
             
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
+
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
+
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,

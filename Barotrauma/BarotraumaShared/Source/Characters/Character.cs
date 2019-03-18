@@ -795,15 +795,12 @@ namespace Barotrauma
         }
         partial void InitProjSpecific(XDocument doc);
 
-        public void ReloadHead(int? headId = null, int? hairIndex = null, int? beardIndex = null, int? moustacheIndex = null, int? faceAttachmentIndex = null)
+        public void ReloadHead(int? headId = null, int hairIndex = -1, int beardIndex = -1, int moustacheIndex = -1, int faceAttachmentIndex = -1)
         {
             if (Info == null) { return; }
             var head = AnimController.GetLimb(LimbType.Head);
             if (head == null) { return; }
-            if (headId.HasValue)
-            {
-                Info.RecreateHead(headId.Value, Info.Race, Info.Gender, hairIndex ?? -1, beardIndex ?? -1, moustacheIndex ?? -1, faceAttachmentIndex ?? -1);
-            }
+            Info.RecreateHead(headId ?? Info.HeadSpriteId, Info.Race, Info.Gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 #if CLIENT
             head.RecreateSprite();
 #endif
@@ -828,6 +825,10 @@ namespace Barotrauma
             Info.MoustacheElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Moustache)));
             if (info.HairElement == null) { info.HairIndex = 0; }
             Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
+
+#if CLIENT
+            head.LoadHuskSprite();
+#endif
         }
 
         private static string humanConfigFile;
