@@ -526,6 +526,10 @@ namespace Barotrauma
                 {
                     maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                }
 
                 if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }             
             }
@@ -548,6 +552,11 @@ namespace Barotrauma
             {
                 //walls found at both sides, use their midpoint
                 spawnPos.X = (minX + maxX) / 2;
+            }
+            
+            if (minX < 0.0f && maxX > Level.Loaded.Size.X)
+            {
+                //no walls found at either side, just use the initial spawnpos and hope for the best
             }
             
             if (minX < 0.0f && maxX > Level.Loaded.Size.X)

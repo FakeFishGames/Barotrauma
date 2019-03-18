@@ -847,6 +847,16 @@ namespace Barotrauma.Networking
                 waitInServerQueueBox = null;
                 CoroutineManager.StopCoroutines("WaitInServerQueue");
             }
+            else
+            {
+                string msg = "";
+                if (disconnectReason == DisconnectReason.Unknown)
+                {
+                    msg = disconnectMsg;
+                }
+                else
+                {
+                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
             {
@@ -1678,12 +1688,24 @@ namespace Barotrauma.Networking
             return permissions.HasFlag(permission);
         }
 
-        public bool HasConsoleCommandPermission(string command)
+        public bool HasConsoleCommandPermission(string commandName)
         {
-            if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) return false;
+            if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) { return false; }
 
-            command = command.ToLowerInvariant();
-            return permittedConsoleCommands.Any(c => c.ToLowerInvariant() == command);
+            commandName = commandName.ToLowerInvariant();
+            if (permittedConsoleCommands.Any(c => c.ToLowerInvariant() == commandName)) { return true; }
+
+            //check aliases
+            foreach (DebugConsole.Command command in DebugConsole.Commands)
+            {
+                if (command.names.Contains(commandName))
+                {
+                    if (command.names.Intersect(permittedConsoleCommands).Any()) { return true; }
+                    break;
+                }
+            }
+
+            return false;
         }
 
         public override void Disconnect()

@@ -801,7 +801,7 @@ namespace Barotrauma
                 }
             }, null, true));
 
-            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] ; [character name]: Gives the client control of the specified character.", null,
+            commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
             () =>
             {
                 if (GameMain.NetworkMember == null) return null;
@@ -1276,7 +1276,7 @@ namespace Barotrauma
             }
         }
         
-        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false)
+        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
         {
             if (args.Length == 0) return null;
 
@@ -1292,7 +1292,9 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => (!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName);
+            var matchingCharacters = Character.CharacterList.FindAll(c => 
+                c.Name.ToLowerInvariant() == characterName &&
+                (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
 
             if (!matchingCharacters.Any())
             {

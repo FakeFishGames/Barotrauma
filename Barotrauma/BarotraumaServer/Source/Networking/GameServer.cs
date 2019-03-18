@@ -1701,7 +1701,7 @@ namespace Barotrauma.Networking
                 }
                 
                 int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
-                int traitorCount = Rand.Int(max + 1);
+                int traitorCount = Rand.Range(1, max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
 
                 if (TraitorManager.TraitorList.Count > 0)
@@ -2054,6 +2054,14 @@ namespace Barotrauma.Networking
 
         public void SendDirectChatMessage(ChatMessage msg, Client recipient)
         {
+            if (recipient == null)
+            {
+                string errorMsg = "Attempted to send a chat message to a null client.\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.SendDirectChatMessage:ClientNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
             msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
                 (ushort)(recipient.ChatMsgQueue.Last().NetStateID + 1) :
                 (ushort)(recipient.LastRecvChatMsgID + 1);

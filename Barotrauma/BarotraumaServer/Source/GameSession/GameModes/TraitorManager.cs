@@ -27,14 +27,14 @@ namespace Barotrauma
             var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
             var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
 
-            Client client = server.ConnectedClients.Find(c => c.Character == Character);
-            GameMain.Server.SendDirectChatMessage(greetingChatMsg, client);
-            GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, client);
-            GameMain.Server.SendDirectChatMessage(greetingMsgBox, client);
-            GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, client);
+            Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
+            GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);
+            GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, traitorClient);
+            GameMain.Server.SendDirectChatMessage(greetingMsgBox, traitorClient);
+            GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, traitorClient);
 
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);
-            if (client != ownerClient)
+            if (traitorClient != ownerClient && ownerClient != null && ownerClient.Character == null)
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
