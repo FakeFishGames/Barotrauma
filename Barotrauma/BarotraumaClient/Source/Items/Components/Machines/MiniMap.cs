@@ -78,8 +78,8 @@ namespace Barotrauma.Items.Components
             {
                 CreateHUD();
             }
-
-            float distort = 1.0f - item.Condition / item.Prefab.Health;
+            
+            float distort = 1.0f - item.Condition / item.MaxCondition;
             foreach (HullData hullData in hullDatas.Values)
             {
                 hullData.DistortionTimer -= deltaTime;

@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
+        public override string DebugTag => "contain item";
+
         public int MinContainedAmount = 1;
 
         //can either be a tag or an identifier

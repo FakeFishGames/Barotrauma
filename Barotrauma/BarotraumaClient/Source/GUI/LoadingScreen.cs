@@ -178,7 +178,7 @@ namespace Barotrauma
 
                 if (GUI.LargeFont != null)
                 {
-                    GUI.LargeFont.DrawString(spriteBatch, loadText,
+                    GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
                         new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
                         Color.White);
                 }

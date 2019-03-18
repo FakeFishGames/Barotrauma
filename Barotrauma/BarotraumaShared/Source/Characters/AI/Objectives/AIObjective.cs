@@ -1,20 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     abstract class AIObjective
     {
-        protected readonly List<AIObjective> subObjectives;
+        public virtual float Devotion => AIObjectiveManager.baseDevotion;
+
+        public abstract string DebugTag { get; }
+        public virtual bool ForceRun => false;
+        public virtual bool KeepDivingGearOn => false;
+
+        protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         protected float priority;
         protected readonly Character character;
         protected string option;
+        protected bool abandon;
 
-        public virtual bool CanBeCompleted
-        {
-            get { return true; }
-        }
+        public virtual bool CanBeCompleted => !abandon && subObjectives.All(so => so.CanBeCompleted);
+        public IEnumerable<AIObjective> SubObjectives => subObjectives;
+        public AIObjective CurrentSubObjective { get; private set; }
+
+        protected HumanAIController HumanAIController => character.AIController as HumanAIController;
+        protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
 
         public string Option
         {
@@ -23,7 +34,6 @@ namespace Barotrauma
 
         public AIObjective(Character character, string option)
         {
-            subObjectives = new List<AIObjective>();
             this.character = character;
             this.option = option;
 
@@ -38,7 +48,36 @@ namespace Barotrauma
         /// </summary>
         public void TryComplete(float deltaTime)
         {
-            subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted || ShouldInterruptSubObjective(s));
+            for (int i = 0; i < subObjectives.Count; i++)
+            {
+                var subObjective = subObjectives[i];
+                if (subObjective.IsCompleted())
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.");
+#endif
+                    subObjectives.Remove(subObjective);
+                }
+                else if (!subObjective.CanBeCompleted)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it cannot be completed.");
+#endif
+                    subObjectives.Remove(subObjective);
+                }
+                else if (subObjective.ShouldInterruptSubObjective(subObjective))
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is interrupted.");
+#endif
+                    subObjectives.Remove(subObjective);
+                }
+            }
+
+            if (!subObjectives.Contains(CurrentSubObjective))
+            {
+                CurrentSubObjective = null;
+            }
 
             foreach (AIObjective objective in subObjectives)
             {
@@ -56,32 +95,53 @@ namespace Barotrauma
             subObjectives.Add(objective);
         }
 
-        public AIObjective GetCurrentSubObjective()
-        {
-            AIObjective currentSubObjective = this;
-            while (currentSubObjective.subObjectives.Count > 0)
-            {
-                currentSubObjective = subObjectives[0];
-            }
-            return currentSubObjective;
-        }
-
         public void SortSubObjectives(AIObjectiveManager objectiveManager)
         {
-            if (!subObjectives.Any()) return;
+            if (subObjectives.None()) { return; }
             subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
-            subObjectives[0].SortSubObjectives(objectiveManager);
+            CurrentSubObjective = SubObjectives.First();
+            CurrentSubObjective.SortSubObjectives(objectiveManager);
         }
 
-        protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective)
+        public virtual float GetPriority(AIObjectiveManager objectiveManager) => priority;
+
+        public virtual void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            return false;
+            var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
+            if (objectiveManager.CurrentOrder == this)
+            {
+                priority = AIObjectiveManager.OrderPriority;
+            }
+            else if (objectiveManager.CurrentObjective == this || subObjective == this)
+            {
+                priority += Devotion * deltaTime;
+            }
+            priority = MathHelper.Clamp(priority, 0, 100);
+            subObjectives.ForEach(so => so.Update(objectiveManager, deltaTime));
         }
+
+        /// <summary>
+        /// Checks if the subobjectives in the given collection are removed from the subobjectives. And if so, removes it also from the dictionary.
+        /// </summary>
+        protected void SyncRemovedObjectives<T1, T2>(Dictionary<T1, T2> dictionary, IEnumerable<T1> collection) where T2 : AIObjective
+        {
+            foreach (T1 key in collection)
+            {
+                if (dictionary.TryGetValue(key, out T2 objective))
+                {
+                    if (!subObjectives.Contains(objective))
+                    {
+                        dictionary.Remove(key);
+                    }
+                }
+            }
+        }
+
+        protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
 
         protected abstract void Act(float deltaTime);
         
         public abstract bool IsCompleted();
-        public abstract float GetPriority(AIObjectiveManager objectiveManager);
         public abstract bool IsDuplicate(AIObjective otherObjective);
     }
 }

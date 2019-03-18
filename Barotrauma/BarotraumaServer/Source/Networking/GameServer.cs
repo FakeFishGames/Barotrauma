@@ -614,10 +614,6 @@ namespace Barotrauma.Networking
                         }
                     }
 
-                    foreach (Item item in Item.ItemList)
-                    {
-                        item.NeedsPositionUpdate = false;
-                    }
                     foreach (Character character in Character.CharacterList)
                     {
                         if (character.healthUpdateTimer <= 0.0f)
@@ -1229,7 +1225,10 @@ namespace Barotrauma.Networking
 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (!item.NeedsPositionUpdate) continue;
+                    if (item.PositionUpdateInterval == float.PositiveInfinity) { continue; }
+                    float updateInterval = item.GetPositionUpdateInterval(c);
+                    c.PositionUpdateLastSent.TryGetValue(item.ID, out float lastSent);
+                    if (lastSent > NetTime.Now - item.PositionUpdateInterval) { continue; }
                     if (!c.PendingPositionUpdates.Contains(item)) c.PendingPositionUpdates.Enqueue(item);
                 }
             }
@@ -2023,8 +2022,6 @@ namespace Barotrauma.Networking
                 targetmsg += $"/\n/ServerMessage.Reason/: /{reason}";
             }
 
-            Log(msg, ServerLog.MessageType.ServerMessage);
-
             if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
 
             client.Connection.Disconnect(targetmsg);
@@ -2278,8 +2275,7 @@ namespace Barotrauma.Networking
 
             if (type.Value != ChatMessageType.MessageBox)
             {
-                string myReceivedMessage = TextManager.GetServerMessage(message);
-                
+                string myReceivedMessage = type == ChatMessageType.Server || type == ChatMessageType.Error ? TextManager.GetServerMessage(message) : message;
                 if (!string.IsNullOrWhiteSpace(myReceivedMessage) &&
                     (targetClient == null || senderClient == null))
                 {

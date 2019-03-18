@@ -269,6 +269,7 @@ namespace Barotrauma.Sounds
                 //we couldn't get a free source to assign to this channel!
                 return -1;
             }
+        }
 
 #if DEBUG
         public void DebugSource(int ind)
@@ -408,6 +409,10 @@ namespace Barotrauma.Sounds
             if (!categoryModifiers.ContainsKey(category))
             {
                 categoryModifiers.Add(category, new Pair<float, bool>(1.0f, muffle));
+            }
+            else
+            {
+                categoryModifiers[category].Second = muffle;
             }
             else
             {

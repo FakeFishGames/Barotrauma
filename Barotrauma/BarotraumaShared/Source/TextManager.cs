@@ -141,8 +141,6 @@ namespace Barotrauma
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
         public static string GetServerMessage(string serverMessage)
         {
-            if (serverMessage.Contains(" ")) return serverMessage; // Spaces found, do not translate
-
             if (!textPacks.ContainsKey(Language))
             {
                 DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
@@ -159,6 +157,8 @@ namespace Barotrauma
             {
                 if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
                 {
+                    if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
+
                     string msg = Get(messages[i], true);
 
                     if (msg != null) // If a translation was found, otherwise use the original

@@ -85,6 +85,28 @@ namespace Barotrauma
                 return true;
             };
 
+            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
+            {
+                //Spacing = (int)(3 * GUI.Scale),
+                ScrollBarEnabled = false,
+                ScrollBarVisible = false,
+                CanBeFocused = false
+            };
+
+            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = -1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = 1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -141,6 +163,16 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
+        }
+
+
+        #endregion
+
+        #region Character list management
+
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
@@ -243,6 +275,7 @@ namespace Barotrauma
                     {
                         if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
                         SetCharacterOrder(null, order, null, Character.Controlled);
+                        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
                         return true;
                     },
                     UserData = order,
@@ -333,8 +366,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
-            if (characterInfos.Contains(revivedCharacter.Info)) AddCharacter(revivedCharacter);
-        }
 
             characterInfos.Add(characterInfo);
         }
@@ -1216,9 +1247,7 @@ namespace Barotrauma
                 characters.Contains(Character.Controlled))
             {
                 //deselect construction unless it's the ladders the character is climbing
-                if (Character.Controlled != null &&
-                    Character.Controlled.SelectedConstruction != null &&
-                    Character.Controlled.SelectedConstruction.GetComponent<Items.Components.Ladder>() == null)
+                if (Character.Controlled != null && !Character.Controlled.IsClimbing)
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
@@ -1329,31 +1358,6 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
 
-                ToggleReportButton("reportintruders", hasIntruders);
-
-                foreach (GUIComponent reportButton in reportButtonFrame.Children)
-                {
-                    var highlight = reportButton.GetChildByUserData("highlighted");
-                    if (highlight.Visible)
-                    {
-                        highlight.RectTransform.LocalScale = new Vector2(1.25f + (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.25f);
-                    }
-                }
-            }
-            else
-            {
-                reportButtonFrame.Visible = false;
-            }
-        }
-
-        /// <summary>
-        /// Should report buttons be visible on the screen atm?
-        /// </summary>
-        private bool ReportButtonsVisible()
-        {
-            return CharacterHealth.OpenHealthWindow == null;
-        }
-
         private bool ReportButtonClicked(GUIButton button, object userData)
         {
             //order targeted to all characters
@@ -1425,18 +1429,20 @@ namespace Barotrauma
             return CharacterHealth.OpenHealthWindow == null;
         }
 
-        private bool ReportButtonClicked(GUIButton button, object userData)
-        {
-            //order targeted to all characters
-            Order order = userData as Order;
-            if (order.TargetAllCharacters)
-            {
-                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
-                AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
-                SetCharacterOrder(null, order, "", Character.Controlled);
-            }
-            return true;
-        }
+        // TODO: remove? not used at all
+        //private bool ReportButtonClicked(GUIButton button, object userData)
+        //{
+        //    //order targeted to all characters
+        //    Order order = userData as Order;
+        //    if (order.TargetAllCharacters)
+        //    {
+        //        if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
+        //        AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+        //        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
+        //        SetCharacterOrder(null, order, "", Character.Controlled);
+        //    }
+        //    return true;
+        //}
 
         private void ToggleReportButton(string orderAiTag, bool enabled)
         {

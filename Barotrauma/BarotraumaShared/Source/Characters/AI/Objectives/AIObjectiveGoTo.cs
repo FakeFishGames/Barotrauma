@@ -1,5 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 
@@ -7,9 +6,14 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
+        public override string DebugTag => "go to";
+
+        private AIObjectiveFindDivingGear findDivingGear;
+
         private Vector2 targetPos;
 
         private bool repeat;
+        private bool cannotReach;
 
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
@@ -40,23 +44,35 @@ namespace Barotrauma
         {
             get
             {
-                if (FollowControlledCharacter && Character.Controlled == null) { return false; }
-
-                if (Target != null && Target.Removed) { return false; }
-
-                if (repeat || waitUntilPathUnreachable > 0.0f) { return true; }
-                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-
-                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
-                if (pathSteering?.CurrentPath == null) { return true; }
-
-                if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { return false; }
-
-                return !pathSteering.CurrentPath.Unreachable;
+                bool canComplete = !cannotReach && !abandon;
+                if (FollowControlledCharacter && Character.Controlled == null) { canComplete = false; }
+                else if (Target != null && Target.Removed) { canComplete = false; }
+                else if (repeat || waitUntilPathUnreachable > 0.0f) { canComplete = true; }
+                else if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering)
+                {
+                    //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: add a timer?
+                    if (pathSteering.CurrentPath == null) { canComplete = true; }
+                    else if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { canComplete = false; }
+                    if (canComplete)
+                    {
+                        canComplete = !pathSteering.CurrentPath.Unreachable;
+                    }
+                }
+                if (!canComplete)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target.");
+#endif
+                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                    character.AIController.SteeringManager.Reset();
+                }
+                return canComplete;
             }
         }
 
         public Entity Target { get; private set; }
+
+        public Vector2 TargetPos => Target != null ? Target.SimPosition : targetPos;
 
         public bool FollowControlledCharacter;
 
@@ -97,7 +113,7 @@ namespace Barotrauma
             
             waitUntilPathUnreachable -= deltaTime;
 
-            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
+            if (!character.IsClimbing)
             {
                 character.SelectedConstruction = null;
             }
@@ -128,48 +144,32 @@ namespace Barotrauma
             }
             else
             {
-                if (!AllowGoingOutside)
+                var indoorSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                bool targetIsOutside = (Target != null && Target.Submarine == null) || (indoorSteering != null && indoorSteering.CurrentPath != null && indoorSteering.CurrentPath.HasOutdoorsNodes);
+                if (targetIsOutside && !AllowGoingOutside)
                 {
-                    //if path is up-to-date and contains outdoors nodes, this path is unreachable
-                    var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                    if (pathSteering?.CurrentPath != null && 
-                        Vector2.Distance(pathSteering.CurrentTarget, currTargetPos) < 1.0f && 
-                        pathSteering.CurrentPath.HasOutdoorsNodes)
-                    {
-                        waitUntilPathUnreachable = 0.0f;
-                        character.AIController.SteeringManager.Reset();
-                        return;
-                    }
+                    cannotReach = true;
                 }
-
-                float normalSpeed = character.AnimController.GetCurrentSpeed(false);
-                character.AIController.SteeringManager.SteeringSeek(currTargetPos, normalSpeed);
-                if (getDivingGearIfNeeded && Target?.Submarine == null && AllowGoingOutside)
+                else
                 {
-                    if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
+                    character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+                    if (getDivingGearIfNeeded)
                     {
-                        indoorsSteering.SteeringWander(normalSpeed);
-                    }
-                    else if (AllowGoingOutside && 
-                        getDivingGearIfNeeded && 
-                        indoorsSteering.CurrentPath != null && 
-                        indoorsSteering.CurrentPath.HasOutdoorsNodes)
-                    {
-                        AddSubObjective(new AIObjectiveFindDivingGear(character, true));
-                    }
-                }
-                else if (character.AIController.SteeringManager is IndoorsSteeringManager indoorsSteering)
-                {
-                    if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
-                    {
-                        indoorsSteering.SteeringWander(normalSpeed);
-                    }
-                    else if (AllowGoingOutside && 
-                        getDivingGearIfNeeded && 
-                        indoorsSteering.CurrentPath != null && 
-                        indoorsSteering.CurrentPath.HasOutdoorsNodes)
-                    {
-                        AddSubObjective(new AIObjectiveFindDivingGear(character, true));
+                        if (targetIsOutside ||
+                            Target is Hull h && HumanAIController.NeedsDivingGear(h) ||
+                            Target is Item i && HumanAIController.NeedsDivingGear(i.CurrentHull) ||
+                            Target is Character c && HumanAIController.NeedsDivingGear(c.CurrentHull))
+                        {
+                            if (findDivingGear == null)
+                            {
+                                findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                                AddSubObjective(findDivingGear);
+                            }
+                            else if (!findDivingGear.CanBeCompleted)
+                            {
+                                abandon = true;
+                            }
+                        }
                     }
                 }
             }

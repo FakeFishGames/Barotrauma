@@ -1,66 +1,58 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveChargeBatteries : AIObjective
+    class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
-        private List<PowerContainer> availableBatteries;
+        public override string DebugTag => "charge batteries";
+        private readonly IEnumerable<PowerContainer> batteryList;
 
-        private string orderOption;
-        
-        public AIObjectiveChargeBatteries(Character character, string option)
-            : base(character, option)
+        public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
         {
-            orderOption = option;
-            
-            availableBatteries = new List<PowerContainer>();
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.Submarine == null) continue;
-                if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) continue;
-
-                var powerContainer = item.GetComponent<PowerContainer>();
-                availableBatteries.Add(powerContainer);
-            }
-
-            if (availableBatteries.Count == 0)
-            {
-                character?.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
-            }
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-
-            return 1.0f;
-        }
-
-        public override bool IsCompleted()
-        {
-            return false;
+            batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return otherObjective is AIObjectiveChargeBatteries other && other.orderOption == orderOption;
+            return otherObjective is AIObjectiveChargeBatteries other && other.Option == Option;
         }
 
-        protected override void Act(float deltaTime)
+        protected override void FindTargets()
         {
-            if (availableBatteries.Count == 0)
+            foreach (Item item in Item.ItemList)
             {
-                AddSubObjective(new AIObjectiveIdle(character));
-                return;
+                if (item.Prefab.Identifier != "battery" && !item.HasTag("battery")) { continue; }
+                if (item.Submarine == null) { continue; }
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                var battery = item.GetComponent<PowerContainer>();
+                if (battery != null)
+                {
+                    if (!ignoreList.Contains(battery))
+                    {
+                        if (!targets.Contains(battery))
+                        {
+                            targets.Add(battery);
+                        }
+                    }
+                }
             }
-            foreach (PowerContainer battery in availableBatteries)
+            if (targets.None())
             {
-                AddSubObjective(new AIObjectiveOperateItem(battery, character, orderOption, false));
+                character.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
+            }
+            else
+            {
+                targets.Sort((x, y) => x.ChargePercentage.CompareTo(y.ChargePercentage));
             }
         }
+
+        protected override bool Filter(PowerContainer battery) => true;
+        protected override float Average(PowerContainer battery) => 100 - battery.ChargePercentage;
+        protected override IEnumerable<PowerContainer> GetList() => batteryList;
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, Option, false);
     }
 }

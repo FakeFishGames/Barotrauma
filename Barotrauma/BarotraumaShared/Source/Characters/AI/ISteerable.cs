@@ -4,7 +4,6 @@ namespace Barotrauma
 {
     interface ISteerable
     {
-
         Vector2 Steering
         {
             get;
@@ -25,8 +24,5 @@ namespace Barotrauma
         { 
             get;
         }
-        
-
-
     }
 }

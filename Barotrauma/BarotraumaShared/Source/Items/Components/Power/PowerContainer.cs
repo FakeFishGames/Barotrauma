@@ -90,6 +90,8 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public float ChargePercentage => MathUtils.Percentage(Charge, Capacity);
         
         [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
             "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
@@ -208,12 +210,6 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, Charge.ToString(), "charge", null);
             item.SendSignal(0, ((Charge / capacity) * 100).ToString(), "charge_%", null);
             item.SendSignal(0, ((RechargeSpeed / maxRechargeSpeed) * 100).ToString(), "charge_rate", null);
-
-            foreach (Pair<Powered, Connection> connected in directlyConnected)
-            {
-                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, 
-                    power: gridLoad <= 0.0f ? 1.0f : CurrPowerOutput / gridLoad);
-            }
 
             foreach (Pair<Powered, Connection> connected in directlyConnected)
             {

@@ -356,7 +356,6 @@ namespace Barotrauma
 
         private void UpdateIdle(float deltaTime)
         {
-            float speed = Character.AnimController.GetCurrentSpeed(false);
             if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
             {
                 //steer straight up if very deep
@@ -370,17 +369,17 @@ namespace Barotrauma
             {
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(SelectedAiTarget.WorldPosition) : SelectedAiTarget.SimPosition;
 
-                steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, speed);
-                steeringManager.SteeringSeek(targetSimPos, speed);
+                steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
+                steeringManager.SteeringSeek(targetSimPos);
             }
             else
             {
                 //wander around randomly
                 if (Character.Submarine == null)
                 {
-                    steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f, speed);
+                    steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f);
                 }
-                steeringManager.SteeringWander(speed / 2);
+                steeringManager.SteeringWander(0.5f);
             }          
         }
 
@@ -398,12 +397,11 @@ namespace Barotrauma
 
             Vector2 escapeDir = Vector2.Normalize(SimPosition - SelectedAiTarget.SimPosition);
             if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
-            float speed = Character.AnimController.GetCurrentSpeed(useMaxSpeed: true);
-            SteeringManager.SteeringManual(deltaTime, escapeDir * speed);
-            SteeringManager.SteeringWander(speed);
+            SteeringManager.SteeringManual(deltaTime, escapeDir);
+            SteeringManager.SteeringWander();
             if (Character.CurrentHull == null)
             {
-                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, speed);
+                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
             }
         }
 
@@ -418,8 +416,6 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
-
-            float speed = Character.AnimController.GetCurrentSpeed(true);
 
             selectedTargetMemory.Priority -= deltaTime * 0.1f;
 
@@ -447,9 +443,12 @@ namespace Barotrauma
             if (wallTarget != null)
             {
                 attackSimPosition = ConvertUnits.ToSimUnits(wallTarget.Position);
-                if (Character.Submarine == null && SelectedAiTarget.Entity?.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(SelectedAiTarget.Entity.Submarine.Position);
+                if (Character.Submarine == null && SelectedAiTarget.Entity?.Submarine != null)
+                {
+                    attackSimPosition += ConvertUnits.ToSimUnits(SelectedAiTarget.Entity.Submarine.Position);
+                }
             }
-            else if (SelectedAiTarget.Entity is Character)
+            else if (SelectedAiTarget.Entity is Character c)
             {
                 //target the closest limb if the target is a character
                 float closestDist = Vector2.DistanceSquared(SelectedAiTarget.SimPosition, SimPosition) * 10.0f;
@@ -503,11 +502,11 @@ namespace Barotrauma
                         Character.AnimController.ReleaseStuckLimbs();
                         if (steeringManager is IndoorsSteeringManager)
                         {
-                            steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
+                            steeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetPos - Character.WorldPosition));
                         }
                         else
                         {
-                            steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos), speed);
+                            steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos));
                         }
                         return;
                     }
@@ -518,11 +517,12 @@ namespace Barotrauma
                     //steer through the door manually if it's open or broken
                     if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
                     {
+                        var velocity = Vector2.Normalize(door.LinkedGap.FlowTargetHull.WorldPosition - Character.WorldPosition);
                         if (door.LinkedGap.IsHorizontal)
                         {
                             if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
                             {
-                                var velocity = Vector2.UnitX * (door.LinkedGap.FlowTargetHull.WorldPosition.X - Character.WorldPosition.X) * speed;
+                                velocity.Y = 0;
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
@@ -531,7 +531,7 @@ namespace Barotrauma
                         {
                             if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
                             {
-                                var velocity = Vector2.UnitY * (door.LinkedGap.FlowTargetHull.WorldPosition.Y - Character.WorldPosition.Y) * speed;
+                                velocity.X = 0;
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
@@ -638,10 +638,10 @@ namespace Barotrauma
                 Vector2 targetingVector = Vector2.Normalize(steeringVector) * attackingLimb.attack.Range;
                 // Offset the position a bit so that we don't overshoot the movement.
                 Vector2 steerPos = attackSimPosition + targetingVector;
-                steeringManager.SteeringSeek(steerPos, speed);
+                steeringManager.SteeringSeek(steerPos, 10);
                 if (Character.CurrentHull == null)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, speed);
+                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f);
                 }
 
                 if (steeringManager is IndoorsSteeringManager indoorsSteering)
@@ -656,7 +656,7 @@ namespace Barotrauma
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {
-                            steeringManager.SteeringManual(deltaTime, steeringVector);
+                            steeringManager.SteeringManual(deltaTime, Vector2.Normalize(steeringVector));
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                         {
@@ -800,7 +800,7 @@ namespace Barotrauma
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
-            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * aggressionhurt; ;
+            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * aggressionhurt;
         }
 
         // 10 dmg, 100 health -> 0.1
@@ -838,7 +838,7 @@ namespace Barotrauma
                 steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
             }
 
-            steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, Character.AnimController.GetCurrentSpeed(false));
+            steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f);
         }
 
         #endregion
@@ -870,12 +870,12 @@ namespace Barotrauma
             if (limbDist < 2.0f)
             {
                 Character.SelectCharacter(SelectedAiTarget.Entity as Character);
-                steeringManager.SteeringManual(deltaTime, limbDiff);
+                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff));
                 Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), Character.AnimController.GetCurrentSpeed(useMaxSpeed: true));
+                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition));
             }
         }
         

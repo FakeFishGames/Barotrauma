@@ -441,28 +441,18 @@ namespace Barotrauma
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
             if (armorSector == Vector2.Zero) { return false; }
-
-            // Can't get this to work properly.
-            //float rot = body.Rotation;
-            //if (Dir == -1) { rot -= MathHelper.Pi; }
-            //Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
-            //float mid = (armorLimits.X + armorLimits.Y) / 2;
-            //float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
-            //return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2);
-
-            // Alternative implementation
-            float offset = GetArmorSectorRotationOffset(armorSector, body.Rotation);
-            Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
-            float hitAngle = VectorExtensions.Angle(forward, simPosition - SimPosition);
-            float sectorSize = MathHelper.ToDegrees(GetArmorSectorSize(armorSector));
+            float rotation = body.TransformedRotation;
+            float offset = (MathHelper.PiOver2 - GetArmorSectorRotationOffset(armorSector)) * Dir;
+            float hitAngle = VectorExtensions.Angle(VectorExtensions.Forward(rotation + offset), SimPosition - simPosition);
+            float sectorSize = GetArmorSectorSize(armorSector);
             return hitAngle < sectorSize / 2;
         }
 
-        protected float GetArmorSectorRotationOffset(Vector2 armorSector, float bodyRotation)
+        protected float GetArmorSectorRotationOffset(Vector2 armorSector)
         {
             float midAngle = MathUtils.GetMidAngle(armorSector.X, armorSector.Y);
             float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
-            return bodyRotation + (midAngle + spritesheetOrientation) * Dir;
+            return midAngle + spritesheetOrientation;
         }
 
         protected float GetArmorSectorSize(Vector2 armorSector)

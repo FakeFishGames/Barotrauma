@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectiveGetItem : AIObjective
     {
+        public override string DebugTag => "get item";
+
         public Func<Item, float> GetItemPriority;
 
         //can be either tags or identifiers
@@ -17,8 +19,6 @@ namespace Barotrauma
 
         private int currSearchIndex;
 
-        private bool canBeCompleted;
-
         public bool IgnoreContainedItems;
 
         private AIObjectiveGoTo goToObjective;
@@ -27,10 +27,8 @@ namespace Barotrauma
 
         private bool equip;
 
-        public override bool CanBeCompleted
-        {
-            get { return canBeCompleted; }
-        }
+        private bool canBeCompleted = true;
+        public override bool CanBeCompleted => canBeCompleted;
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
@@ -45,7 +43,6 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false)
             : base(character, "")
         {
-            canBeCompleted = true;
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
@@ -59,7 +56,6 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false)
             : base(character, "")
         {
-            canBeCompleted = true;
             currSearchIndex = -1;
             this.equip = equip;
             this.itemIdentifiers = itemIdentifiers;
@@ -112,6 +108,7 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
+                // TODO: cannot be completed?
                 character?.AIController?.SteeringManager?.Reset();
                 return;
             }
@@ -184,11 +181,15 @@ namespace Barotrauma
         {
             if (itemIdentifiers == null)
             {
-                if (targetItem == null) canBeCompleted = false;
+                if (targetItem == null)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item is was defined.");
+#endif
+                    canBeCompleted = false;
+                }
                 return;
             }
-
-            float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
 
             for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 1; i++)
             {
@@ -234,7 +235,13 @@ namespace Barotrauma
             }
 
             //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null) canBeCompleted = false;
+            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
+            {
+#if DEBUG
+                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}");
+#endif
+                canBeCompleted = false;
+            }
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
