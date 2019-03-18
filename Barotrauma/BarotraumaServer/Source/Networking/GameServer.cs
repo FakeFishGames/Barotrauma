@@ -2360,6 +2360,8 @@ namespace Barotrauma.Networking
 
         public void SendVoteStatus(List<Client> recipients)
         {
+            if (!recipients.Any()) { return; }
+
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
             msg.Write((byte)ServerNetObject.VOTE);
@@ -2412,7 +2414,10 @@ namespace Barotrauma.Networking
                     recipients.Add(otherClient.Connection);
                 }
             }
-            server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0);            
+            if (recipients.Any())
+            {
+                server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0); 
+            }           
 
             serverSettings.SaveClientPermissions();
         }
@@ -2446,13 +2451,15 @@ namespace Barotrauma.Networking
 
         public void UpdateCheatsEnabled()
         {
+            if (!connectedClients.Any()) { return; }
+
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.CHEATS_ENABLED);
             msg.Write(DebugConsole.CheatsEnabled);
             msg.WritePadBits();
 
             CompressOutgoingMessage(msg);
-            
+
             server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);            
         }
 
