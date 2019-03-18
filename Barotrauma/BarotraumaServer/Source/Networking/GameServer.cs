@@ -1897,14 +1897,7 @@ namespace Barotrauma.Networking
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
-            if (message.Sender != null)
-            {
-                Log($"{message.Sender}: {message.Text}", ServerLog.MessageType.Chat);
-            }
-            else
-            {
-                Log($"{message.Text}", ServerLog.MessageType.Chat);
-            }
+            Log(message.TextWithSender, ServerLog.MessageType.Chat);            
 
             base.AddChatMessage(message);
         }
