@@ -217,12 +217,6 @@ namespace Barotrauma
             set
             {
                 microphoneVolume = MathHelper.Clamp(value, 0.1f, 5.0f);
-#if CLIENT
-                if (Networking.VoipCapture.Instance != null)
-                {
-                    Networking.VoipCapture.Instance.Gain = microphoneVolume;
-                }
-#endif
             }
         }
         public string Language
