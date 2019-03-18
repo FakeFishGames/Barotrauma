@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,8 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
+        public ContextualTutorial ContextualTutorial;
+
         private GUIButton endRoundButton;
                 
         private bool crewDead;
@@ -20,17 +23,16 @@ namespace Barotrauma
         private Submarine leavingSub;
         private bool atEndPosition;
 
-        protected CrewManager CrewManager
-        {
-            get { return GameMain.GameSession?.CrewManager; }
-        }
-
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
-        {            
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
-            endRoundButton.Font = GUI.SmallFont;
-            endRoundButton.OnClicked = TryEndRound;
+        {
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), GUICanvas.Instance),
+                TextManager.Get("EndRound"), textAlignment: Alignment.Center)
+            {
+                Font = GUI.SmallFont,
+                OnClicked = (btn, userdata) => { TryEndRound(GetLeavingSub()); return true; }
+            };
 
             foreach (JobPrefab jobPrefab in JobPrefab.List)
             {
@@ -39,10 +41,18 @@ namespace Barotrauma
                     CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
                 }
             }
+
+            ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
+
+            if (ContextualTutorial.Selected && !ContextualTutorial.Initialized) // Selected when starting a new game -> initialize
+            {
+                ContextualTutorial.Initialize();
+            }
         }
 
         public override void Start()
         {
+            base.Start();
             CargoManager.CreateItems();
 
             if (!savedOnStart)
@@ -51,54 +61,78 @@ namespace Barotrauma
                 savedOnStart = true;
             }
 
+            crewDead = false;
             endTimer = 5.0f;
-
             isRunning = true;
+            CrewManager.InitSinglePlayerRound();
 
-            CrewManager.StartRound();
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Start();
+            }
         }
 
-        public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
+        public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
         {
-            if (Money < characterInfo.Salary) return false;
+            if (Money < characterInfo.Salary) { return false; }
 
-            hireManager.availableCharacters.Remove(characterInfo);
+            location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);
             Money -= characterInfo.Salary;
 
             return true;
         }
-        
+
+        public void FireCharacter(CharacterInfo characterInfo)
+        {
+            CrewManager.RemoveCharacterInfo(characterInfo);
+        }
+
         private Submarine GetLeavingSub()
         {
-            if (Character.Controlled != null && Character.Controlled.Submarine != null)
+            if (Character.Controlled?.Submarine == null)
             {
-                if (Character.Controlled.Submarine.AtEndPosition || Character.Controlled.Submarine.AtStartPosition)
-                {
-                    return Character.Controlled.Submarine;
-                }
                 return null;
             }
 
-            Submarine closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
-            if (closestSub != null && (closestSub.AtEndPosition || closestSub.AtStartPosition))
-            {
-                return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
-            }
+            //allow leaving if inside an outpost, and the submarine is either docked to it or close enough
+            return GetLeavingSubAtOutpost(Level.Loaded.StartOutpost) ?? GetLeavingSubAtOutpost(Level.Loaded.EndOutpost);
 
-            return null;
+            Submarine GetLeavingSubAtOutpost(Submarine outpost)
+            {
+                //controlled character has to be inside the outpost
+                if (Character.Controlled.Submarine != outpost) { return null; }
+                
+                //if there's a sub docked to the outpost, we can leave the level
+                if (outpost.DockedTo.Count > 0)
+                {
+                    var dockedSub = outpost.DockedTo.FirstOrDefault();
+                    return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
+                }
+
+                //nothing docked, check if there's a sub close enough to the outpost
+                Submarine closestSub = Submarine.FindClosest(outpost.WorldPosition, ignoreOutposts: true);
+                if (closestSub == null) { return null; }
+                
+                if (outpost == Level.Loaded.StartOutpost)
+                {
+                    if (!closestSub.AtStartPosition) { return null; }
+                }
+                else if (outpost == Level.Loaded.EndOutpost)
+                {
+                    if (!closestSub.AtEndPosition) { return null; }
+                }
+                return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;                
+            }            
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!isRunning|| GUI.DisableHUD) return;
-
-            CrewManager.Draw(spriteBatch);
-
+            
             if (Submarine.MainSub == null) return;
 
             Submarine leavingSub = GetLeavingSub();
-
             if (leavingSub == null)
             {
                 endRoundButton.Visible = false;
@@ -106,13 +140,11 @@ namespace Barotrauma
             else if (leavingSub.AtEndPosition)
             {
                 endRoundButton.Text = ToolBox.LimitString(TextManager.Get("EnterLocation").Replace("[locationname]", Map.SelectedLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
-                endRoundButton.UserData = leavingSub;
                 endRoundButton.Visible = true;
             }
             else if (leavingSub.AtStartPosition)
             {
                 endRoundButton.Text = ToolBox.LimitString(TextManager.Get("EnterLocation").Replace("[locationname]", Map.CurrentLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
-                endRoundButton.UserData = leavingSub;
                 endRoundButton.Visible = true;
             }
             else
@@ -120,7 +152,7 @@ namespace Barotrauma
                 endRoundButton.Visible = false;
             }
 
-            endRoundButton.Draw(spriteBatch);
+            endRoundButton.DrawManually(spriteBatch);
         }
 
         public override void AddToGUIUpdateList()
@@ -130,17 +162,28 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
         {
-            if (!isRunning || GUI.DisableHUD) return;
+            if (!isRunning) { return; }
 
             base.Update(deltaTime);
 
-            CrewManager.Update(deltaTime);
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Update(deltaTime);
+            }
 
-            endRoundButton.Update(deltaTime);
+            if (!GUI.DisableHUD)
+            {
+                endRoundButton.UpdateManually(deltaTime);
+            }
 
             if (!crewDead)
             {
@@ -149,9 +192,33 @@ namespace Barotrauma
             else
             {
                 endTimer -= deltaTime;
-
-                if (endTimer <= 0.0f) EndRound(null, null);
+                if (endTimer <= 0.0f) { EndRound(leavingSub: null); }
             }  
+        }
+
+
+        protected override void WatchmanInteract(Character watchman, Character interactor)
+        {
+            Submarine leavingSub = GetLeavingSub();
+            if (leavingSub == null)
+            {
+                CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);
+                return;
+            }
+
+            CreateDialog(new List<Character> { watchman }, "WatchmanInteract", 1.0f);
+
+            var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
+                .Replace("[locationname]", leavingSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                if (!isRunning) { return true; }
+                TryEndRound(GetLeavingSub());
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+            msgBox.Buttons[1].OnClicked += msgBox.Close;
         }
 
         public override void End(string endMessage = "")
@@ -159,6 +226,7 @@ namespace Barotrauma
             isRunning = false;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+            crewDead = false;
 
             if (success)
             {
@@ -193,10 +261,23 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+                else
+                {
+                    Map.SelectLocation(-1);
+                }
+                Map.ProgressWorld();
 
+                //save and remove all items that are in someone's inventory
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.Info == null || c.Inventory == null) { continue; }
+                    var inventoryElement = new XElement("inventory");
+                    c.SaveInventory(c.Inventory, inventoryElement);
+                    c.Info.InventoryData = inventoryElement;
+                    c.Inventory?.DeleteAllItems();
+                }
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
-
 
             if (!success)
             {
@@ -204,21 +285,30 @@ namespace Barotrauma
 
                 if (summaryScreen != null)
                 {
-                    summaryScreen = summaryScreen.children[0];
-                    summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
+                    summaryScreen = summaryScreen.Children.First();
+                    var buttonArea = summaryScreen.Children.First().FindChild("buttonarea");
+                    buttonArea.ClearChildren();
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("LoadGameButton"), Alignment.BottomRight, "", summaryScreen);
-                    okButton.OnClicked += (GUIButton button, object obj) => 
+
+                    summaryScreen.RemoveChild(summaryScreen.Children.FirstOrDefault(c => c is GUIButton));
+
+                    var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("LoadGameButton"))
                     {
-                        GameMain.GameSession.LoadPrevious();
-                        GameMain.LobbyScreen.Select();
-                        GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
-                        return true;
+                        OnClicked = (GUIButton button, object obj) =>
+                        {
+                            GameMain.GameSession.LoadPrevious();
+                            GameMain.LobbyScreen.Select();
+                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            return true;
+                        }
                     };
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", summaryScreen);
+                    var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) => { if (ContextualTutorial.Initialized) ContextualTutorial.Stop(); return true; };
                 }
             }
 
@@ -233,14 +323,12 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-        private bool TryEndRound(GUIButton button, object obj)
+        private bool TryEndRound(Submarine leavingSub)
         {
-            leavingSub = obj as Submarine;
-            if (leavingSub != null)
-            {
-                subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-            }
+            if (leavingSub == null) { return false; }
 
+            this.leavingSub = leavingSub;
+            subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
             atEndPosition = leavingSub.AtEndPosition;
 
             if (subsToLeaveBehind.Any())
@@ -248,7 +336,7 @@ namespace Barotrauma
                 string msg = TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind");
 
                 var msgBox = new GUIMessageBox(TextManager.Get("Warning"), msg, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                msgBox.Buttons[0].OnClicked += EndRound;
+                msgBox.Buttons[0].OnClicked += (btn, userdata) => { EndRound(leavingSub); return true; } ;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
                 msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsToLeaveBehind.Contains(s));
 
@@ -256,30 +344,28 @@ namespace Barotrauma
             }
             else
             {
-                EndRound(button, obj);
+                EndRound(leavingSub);
             }
 
             return true;
         }
 
-        private bool EndRound(GUIButton button, object obj)
+        private bool EndRound(Submarine leavingSub)
         {
             isRunning = false;
-
-            List<Submarine> leavingSubs = obj as List<Submarine>;
-            if (leavingSubs == null) leavingSubs = new List<Submarine>() { GetLeavingSub() };
-
-            var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
+            
+            //var cinematic = new RoundEndCinematic(leavingSub, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
 
-            CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
-
+            //CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
+            End("");
+            
             return true;
         }
 
-        private IEnumerable<object> EndCinematic(TransitionCinematic cinematic)
+        /*private IEnumerable<object> EndCinematic(RoundEndCinematic cinematic)
         {
             while (cinematic.Running)
             {
@@ -291,26 +377,40 @@ namespace Barotrauma
             if (Submarine.MainSub != null) End("");
 
             yield return CoroutineStatus.Success;
-        }
+        }*/
 
         public static SinglePlayerCampaign Load(XElement element)
         {
-            SinglePlayerCampaign campaign = new SinglePlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null);
+            SinglePlayerCampaign campaign = new SinglePlayerCampaign(GameModePreset.List.Find(gm => gm.Identifier == "singleplayercampaign"), null);
 
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crew":
-                        GameMain.GameSession.CrewManager = new CrewManager(subElement);
+                        GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
                         break;
                     case "map":
                         campaign.map = Map.LoadNew(subElement);
+                        break;
+                    case "contextualtutorial":
+                        campaign.ContextualTutorial.Initialize(); // Initialize when saved element found
+                        campaign.ContextualTutorial.LoadPartiallyComplete(subElement);
                         break;
                 }
             }
 
             campaign.Money = element.GetAttributeInt("money", 0);
+            campaign.CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            if (campaign.CheatsEnabled)
+            {
+                DebugConsole.CheatsEnabled = true;
+                if (GameMain.Config.UseSteam && !SteamAchievementManager.CheatsEnabled)
+                {
+                    SteamAchievementManager.CheatsEnabled = true;
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the campaign. You will not receive Steam Achievements until you restart the game.");
+                }
+            }
 
             //backwards compatibility with older save files
             if (campaign.map == null)
@@ -327,12 +427,16 @@ namespace Barotrauma
 
         public override void Save(XElement element)
         {
-            XElement modeElement = new XElement("SinglePlayerCampaign");
-            
-            modeElement.Add(new XAttribute("money", Money));
-            
+            XElement modeElement = new XElement("SinglePlayerCampaign",
+                new XAttribute("money", Money),
+                new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.SavePartiallyComplete(modeElement);
+            }
 
             element.Add(modeElement);
         }

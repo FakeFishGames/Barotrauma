@@ -43,7 +43,16 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
-        public Character User;
+        private Character user;
+        public Character User
+        {
+            get { return user; }
+            set
+            {
+                user = value;
+                attack?.SetUser(user);                
+            }
+        }
 
         private float persistentStickJointTimer;
 
@@ -53,7 +62,20 @@ namespace Barotrauma.Items.Components
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
-        
+
+        [Serialize(0.0f, false)]
+        public float LaunchRotation
+        {
+            get { return MathHelper.ToDegrees(LaunchRotationRadians); }
+            set { LaunchRotationRadians = MathHelper.ToRadians(value); }
+        }
+
+        public float LaunchRotationRadians
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         //backwards compatibility, can stick to anything
         public bool DoesStick
@@ -105,7 +127,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
-                attack = new Attack(subElement);
+                attack = new Attack(subElement, item.Name + ", Projectile");
             }
         }
 
@@ -168,16 +190,18 @@ namespace Barotrauma.Items.Components
 
             if (stickTarget != null)
             {
+#if DEBUG
                 try
                 {
+#endif
                     item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+#if DEBUG
                 }
                 catch (Exception e)
                 {
-#if DEBUG
                     DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
-#endif
                 }
+#endif
 
                 stickTarget = null;
             }
@@ -188,6 +212,7 @@ namespace Barotrauma.Items.Components
         private void DoHitscan(Vector2 dir)
         {
             float rotation = item.body.Rotation;
+            Vector2 simPositon = item.SimPosition;
             item.Drop();
 
             item.body.Enabled = true;
@@ -196,8 +221,8 @@ namespace Barotrauma.Items.Components
             item.body.LinearVelocity = dir;
             IsActive = true;
 
-            Vector2 rayStart = item.SimPosition;
-            Vector2 rayEnd = item.SimPosition + dir * 1000.0f;
+            Vector2 rayStart = simPositon;
+            Vector2 rayEnd = simPositon + dir * 1000.0f;
 
             List<HitscanResult> hits = new List<HitscanResult>();
 
@@ -294,29 +319,24 @@ namespace Barotrauma.Items.Components
             {
                 if (stickTarget != null)
                 {
-                    try
+                    if (GameMain.World.BodyList.Contains(stickTarget))
                     {
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
-                    catch
-                    {
-                        //the body that the projectile was stuck to has been removed
-                    }
-
+                    
                     stickTarget = null;
                 }
 
-                try
+                if (stickJoint != null)
                 {
-                    GameMain.World.RemoveJoint(stickJoint);
-                }
-                catch
-                {
-                    //the body that the projectile was stuck to has been removed
-                }
+                    if (GameMain.World.JointList.Contains(stickJoint))
+                    {
+                        GameMain.World.RemoveJoint(stickJoint);
+                    }
 
-                stickJoint = null; 
-             
+                    stickJoint = null;
+                }
+                
                 if (!item.body.FarseerBody.IsBullet) IsActive = false; 
             }           
         }
@@ -350,22 +370,28 @@ namespace Barotrauma.Items.Components
                     item.body.Submarine = submarine;
                     return !Hitscan;
                 }
-
-                Structure structure;
-                if (target.Body.UserData is Limb limb)
+                else if (target.Body.UserData is Limb limb)
                 {
+                    //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
+                    if (limb.IsSevered)
+                    {
+                        target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
+                        return true;
+                    }
+
+                    limb.character.LastDamageSource = item;
                     attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
-                    if (limb.character != null)
-                        character = limb.character;
+                    if (limb.character != null) character = limb.character;
                 }
-                else if ((structure = (target.Body.UserData as Structure)) != null)
+                else if (target.Body.UserData is Structure structure)
                 {
                     attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f);
                 }
             }
 
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character);
+            if (character != null) character.LastDamageSource = item;
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, character, target.Body.UserData as Limb, user: user);
+            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, target.Body.UserData as Limb, user: user);
             
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
@@ -425,11 +451,12 @@ namespace Barotrauma.Items.Components
         {
             if (stickJoint != null) return;
 
-            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true);
-            stickJoint.MotorEnabled = true;
-            stickJoint.MaxMotorForce = 30.0f;
-
-            stickJoint.LimitEnabled = true;
+            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true)
+            {
+                MotorEnabled = true,
+                MaxMotorForce = 30.0f,
+                LimitEnabled = true
+            };
             if (item.Sprite != null)
             {
                 stickJoint.LowerLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * -0.3f);

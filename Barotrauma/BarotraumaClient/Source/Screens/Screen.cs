@@ -7,8 +7,28 @@ namespace Barotrauma
 {
     partial class Screen
     {
+        private GUIFrame frame;
+        public GUIFrame Frame
+        {
+            get
+            {
+                if (frame == null)
+                {
+                    frame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                }
+                return frame;
+            }
+        }
+
+        /// <summary>
+        /// By default, creates a new frame for the screen and adds all elements to the gui update list.
+        /// </summary>
         public virtual void AddToGUIUpdateList()
         {
+            Frame.AddToGUIUpdateList();
         }
 
         public virtual void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -43,26 +63,6 @@ namespace Barotrauma
             GUI.ScreenOverlayColor = to;
 
             yield return CoroutineStatus.Success;
-        }
-
-        protected void DrawSubmarineIndicator(SpriteBatch spriteBatch, Submarine submarine, Color color)
-        {
-            Vector2 subDiff = submarine.WorldPosition - Cam.WorldViewCenter;
-
-            if (Math.Abs(subDiff.X) > Cam.WorldView.Width || Math.Abs(subDiff.Y) > Cam.WorldView.Height)
-            {
-                Vector2 normalizedSubDiff = Vector2.Normalize(subDiff);
-
-                Vector2 iconPos =
-                    Cam.WorldToScreen(Cam.WorldViewCenter) +
-                    new Vector2(normalizedSubDiff.X * GameMain.GraphicsWidth * 0.4f, -normalizedSubDiff.Y * GameMain.GraphicsHeight * 0.4f);
-
-                GUI.SubmarineIcon.Draw(spriteBatch, iconPos, color);
-
-                Vector2 arrowOffset = normalizedSubDiff * GUI.SubmarineIcon.size.X * 0.7f;
-                arrowOffset.Y = -arrowOffset.Y;
-                GUI.Arrow.Draw(spriteBatch, iconPos + arrowOffset, color, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
-            }
-        }
+        }        
     }
 }

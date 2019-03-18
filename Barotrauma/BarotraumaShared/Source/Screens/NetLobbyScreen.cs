@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma
@@ -22,6 +23,19 @@ namespace Barotrauma
         }
         
         private string levelSeed = "";
+
+        public void SetLevelDifficulty(float difficulty)
+        {
+            difficulty = MathHelper.Clamp(difficulty, 0.0f, 100.0f);
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.SelectedLevelDifficulty = difficulty;
+                lastUpdateID++;
+            }
+#if CLIENT
+            levelDifficultyScrollBar.BarScroll = difficulty / 100.0f;
+#endif
+        }
         
         public void ToggleTraitorsEnabled(int dir)
         {
@@ -34,6 +48,33 @@ namespace Barotrauma
             if (index > 2) index = 0;
 
             SetTraitorsEnabled((YesNoMaybe)index);
+        }
+
+        public void SetBotCount(int botCount)
+        {
+            if (GameMain.Server != null)
+            {
+                if (botCount < 0) botCount = GameMain.Server.MaxBotCount;
+                if (botCount > GameMain.Server.MaxBotCount) botCount = 0;
+
+                GameMain.Server.BotCount = botCount;
+                lastUpdateID++;
+            }
+#if CLIENT
+            (botCountText as GUITextBlock).Text = botCount.ToString();
+#endif
+        }
+
+        public void SetBotSpawnMode(BotSpawnMode botSpawnMode)
+        {
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.BotSpawnMode = botSpawnMode;
+                lastUpdateID++;
+            }
+#if CLIENT
+            (botSpawnModeText as GUITextBlock).Text = botSpawnMode.ToString();
+#endif
         }
 
         public void SetTraitorsEnabled(YesNoMaybe enabled)

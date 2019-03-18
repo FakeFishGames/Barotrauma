@@ -8,9 +8,7 @@ namespace Barotrauma
     class AIObjectiveFixLeak : AIObjective
     {
         private readonly Gap leak;
-
-        private AIObjectiveGoTo gotoObjective;
-
+        
         public Gap Leak
         {
             get { return leak; }
@@ -47,11 +45,11 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            var weldingTool = character.Inventory.FindItem("Welding Tool");
+            var weldingTool = character.Inventory.FindItemByTag("weldingtool");
 
             if (weldingTool == null)
             {
-                AddSubObjective(new AIObjectiveGetItem(character, "Welding Tool", true));
+                AddSubObjective(new AIObjectiveGetItem(character, "weldingtool", true));
                 return;
             }
             else
@@ -59,11 +57,10 @@ namespace Barotrauma
                 var containedItems = weldingTool.ContainedItems;
                 if (containedItems == null) return;
                 
-                var fuelTank = Array.Find(containedItems, i => i.Prefab.NameMatches("Welding Fuel Tank") && i.Condition > 0.0f);
-
+                var fuelTank = Array.Find(containedItems, i => i.HasTag("weldingfueltank") && i.Condition > 0.0f);
                 if (fuelTank == null)
                 {
-                    AddSubObjective(new AIObjectiveContainItem(character, "Welding Fuel Tank", weldingTool.GetComponent<ItemContainer>()));
+                    AddSubObjective(new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>()));
                     return;
                 }
             }
@@ -73,7 +70,15 @@ namespace Barotrauma
 
             Vector2 standPosition = GetStandPosition();
 
-            if (Vector2.DistanceSquared(character.WorldPosition, leak.WorldPosition) > 100.0f * 100.0f)
+            Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
+
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController && 
+                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            {
+                ((HumanoidAnimController)character.AnimController).Crouching = true;
+            }
+
+            if (Math.Abs(gapDiff.X) > 100.0f || Math.Abs(gapDiff.Y) > 150.0f)
             {
                 var gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(standPosition), character);
                 if (!gotoObjective.IsCompleted())

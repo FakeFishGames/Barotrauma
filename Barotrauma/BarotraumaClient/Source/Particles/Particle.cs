@@ -30,12 +30,14 @@ namespace Barotrauma.Particles
         private Vector2 sizeChange;
 
         private Color color;
-        private float alpha;
+        private bool changeColor;
 
         private int spriteIndex;
 
         private float totalLifeTime;
         private float lifeTime;
+
+        private float startDelay;
 
         private Vector2 velocityChange;
         private Vector2 velocityChangeWater;
@@ -47,11 +49,14 @@ namespace Barotrauma.Particles
 
         private List<Gap> hullGaps;
 
+        private bool hasSubEmitters;
         private List<ParticleEmitter> subEmitters = new List<ParticleEmitter>();
 
         private float animState;
         private int animFrame;
-        
+
+        private float collisionUpdateTimer;
+                
         public ParticlePrefab.DrawTargetType DrawTarget
         {
             get { return prefab.DrawTarget; }        
@@ -61,34 +66,27 @@ namespace Barotrauma.Particles
         {
             get { return prefab.BlendState; }
         }
+
+        public float StartDelay
+        {
+            get { return startDelay; }
+            set { startDelay = MathHelper.Clamp(value, Prefab.StartDelayMin, prefab.StartDelayMax); }
+        }
         
         public Vector2 Size
         {
             get { return size; }
             set { size = value; }
         }
-
-        public Vector2 VelocityChange
-        {
-            get { return velocityChange; }
-            set { velocityChange = value; }
-        }
-
-        public Vector2 VelocityChangeWater
-        {
-            get { return velocityChangeWater; }
-            set { velocityChangeWater = value; }
-        }
-
-        public Vector2 Velocity
-        {
-            get { return velocity; }
-            set { velocity = value; }
-        }
-
+        
         public Hull CurrentHull
         {
             get { return currentHull; }
+        }
+
+        public ParticlePrefab Prefab
+        {
+            get { return prefab; }
         }
         
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
@@ -111,7 +109,7 @@ namespace Barotrauma.Particles
             
             velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
 
-            if (currentHull != null && currentHull.Submarine != null)
+            if (currentHull?.Submarine != null)
             {
                 velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
             }
@@ -123,13 +121,14 @@ namespace Barotrauma.Particles
 
             totalLifeTime = prefab.LifeTime;
             lifeTime = prefab.LifeTime;
+            startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);
             
             size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
-            color = new Color(prefab.StartColor, 1.0f);
-            alpha = prefab.StartAlpha;
+            color = prefab.StartColor;
+            changeColor = prefab.StartColor != prefab.EndColor;
             
             velocityChange = prefab.VelocityChangeDisplay;
             velocityChangeWater = prefab.VelocityChangeWaterDisplay;
@@ -137,12 +136,14 @@ namespace Barotrauma.Particles
             OnChangeHull = null;
 
             subEmitters.Clear();
+            hasSubEmitters = false;
             foreach (ParticleEmitterPrefab emitterPrefab in prefab.SubEmitters)
             {
                 subEmitters.Add(new ParticleEmitter(emitterPrefab));
+                hasSubEmitters = true;
             }
 
-            if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
+            if (prefab.UseCollision)
             {
                 hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
             }
@@ -154,9 +155,15 @@ namespace Barotrauma.Particles
                 prevRotation = rotation;
             }
         }
-
+        
         public bool Update(float deltaTime)
         {
+            if (startDelay > 0.0f)
+            {
+                startDelay -= deltaTime;
+                return true;
+            }
+
             prevPosition = position;
             prevRotation = rotation;
 
@@ -204,13 +211,11 @@ namespace Barotrauma.Particles
             size.X += sizeChange.X * deltaTime;
             size.Y += sizeChange.Y * deltaTime;  
 
-            alpha += prefab.ColorChange.W * deltaTime;
-
-            color = new Color(
-                color.R / 255.0f + prefab.ColorChange.X * deltaTime,
-                color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
-                color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
-
+            if (changeColor)
+            {
+                color = Color.Lerp(prefab.EndColor, prefab.StartColor, lifeTime / prefab.LifeTime);
+            }
+            
             if (prefab.Sprites[spriteIndex] is SpriteSheet)
             {
                 animState += deltaTime;
@@ -219,15 +224,31 @@ namespace Barotrauma.Particles
             }
             
             lifeTime -= deltaTime;
-            if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
+            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
-            foreach (ParticleEmitter emitter in subEmitters)
+            if (hasSubEmitters)
             {
-                emitter.Emit(deltaTime, position, currentHull);
+                foreach (ParticleEmitter emitter in subEmitters)
+                {
+                    emitter.Emit(deltaTime, position, currentHull);
+                }
             }
 
-            if (!prefab.DeleteOnCollision && !prefab.CollidesWithWalls) return true;
+            if (!prefab.UseCollision) return true;
+
+            collisionUpdateTimer -= deltaTime;
+            if (collisionUpdateTimer <= 0.0f)
+            {
+                //more frequent collision updates if the particle is moving fast
+                collisionUpdateTimer = 0.5f - Math.Min((Math.Abs(velocity.X) + Math.Abs(velocity.Y)) * 0.001f, 0.4f);
+                return CollisionUpdate();
+            }
             
+            return true;
+        }
+
+        private bool CollisionUpdate()
+        {
             if (currentHull == null)
             {
                 Hull collidedHull = Hull.FindHull(position);
@@ -239,23 +260,24 @@ namespace Barotrauma.Particles
             }
             else
             {
+                Rectangle hullRect = currentHull.WorldRect;
                 Vector2 collisionNormal = Vector2.Zero;
-                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < currentHull.WorldRect.Y - currentHull.WorldRect.Height)
+                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
-                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > currentHull.WorldRect.Y)
+                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
-                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < currentHull.WorldRect.X)
+                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
-                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > currentHull.WorldRect.Right)
+                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(-1.0f, 0.0f);
@@ -292,7 +314,7 @@ namespace Barotrauma.Particles
                     }
                     else
                     {
-                        Hull newHull = Hull.FindHull(position,currentHull);
+                        Hull newHull = Hull.FindHull(position, currentHull);
                         if (newHull != currentHull)
                         {
                             currentHull = newHull;
@@ -335,7 +357,7 @@ namespace Barotrauma.Particles
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
-            Vector2 subVel = ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity);
+            Vector2 subVel = prevHull?.Submarine != null ? ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity) : Vector2.Zero;
             velocity -= subVel;
 
             if (Math.Abs(collisionNormal.X) > Math.Abs(collisionNormal.Y))
@@ -373,28 +395,33 @@ namespace Barotrauma.Particles
         private void OnWallCollisionOutside(Hull collisionHull)
         {
             Rectangle hullRect = collisionHull.WorldRect;
-            
-            if (position.Y < hullRect.Y - hullRect.Height)
+
+            Vector2 center = new Vector2(hullRect.X + hullRect.Width /2, hullRect.Y - hullRect.Height / 2);
+
+            if (position.Y < center.Y)
             {
                 position.Y = hullRect.Y - hullRect.Height - prefab.CollisionRadius;
-                velocity.Y = -velocity.Y;
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = -velocity.Y * prefab.Restitution;
             }
-            else if (position.Y > hullRect.Y)
+            else if (position.Y > center.Y)
             {
                 position.Y = hullRect.Y + prefab.CollisionRadius;
-                velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
-                velocity.Y = -velocity.Y;
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = -velocity.Y * prefab.Restitution;
             }
 
-            if (position.X < hullRect.X)
+            if (position.X < center.X)
             {
                 position.X = hullRect.X - prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                velocity.X = -velocity.X * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
-            else if (position.X > hullRect.X + hullRect.Width)
+            else if (position.X > center.X)
             {
                 position.X = hullRect.X + hullRect.Width + prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                velocity.X = -velocity.X * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
 
             velocity *= prefab.Restitution;
@@ -423,7 +450,7 @@ namespace Barotrauma.Particles
                 ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
                     spriteBatch, animFrame,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * alpha,
+                    color * (color.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }
@@ -431,7 +458,7 @@ namespace Barotrauma.Particles
             {
                 prefab.Sprites[spriteIndex].Draw(spriteBatch,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * alpha,
+                    color * (color.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }

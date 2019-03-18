@@ -9,6 +9,11 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+[Dd]ebug*/
+[Rr]elease*/
+
+# Barotrauma content folder
+Content/
 
 *.v12.suo
 *.suo
@@ -17,3 +22,6 @@ bld/
 *.vsp
 *.psess
 .vs/
+
+# Mac
+*.DS_Store

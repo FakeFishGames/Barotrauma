@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,21 +18,13 @@ namespace Barotrauma
 
         private AIObjectiveFindSafety escapeObjective;
 
-        float coolDownTimer;
+        private AIObjectiveContainItem reloadWeaponObjective;
 
-        private readonly float enemyStrength;
+        private float coolDownTimer;
 
-        public AIObjectiveCombat(Character character, Character enemy)
-            : base(character, "")
+        public AIObjectiveCombat(Character character, Character enemy) : base(character, "")
         {
             this.enemy = enemy;
-
-            foreach (Limb limb in enemy.AnimController.Limbs)
-            {
-                if (limb.attack == null) continue;
-                enemyStrength += limb.attack.GetDamage(1.0f);
-            }
-
             coolDownTimer = CoolDown;
         }
 
@@ -39,26 +32,66 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
 
-            var weapon = character.Inventory.FindItem("weapon");
-
+            var weapon = character.Inventory.FindItemByTag("weapon");
             if (weapon == null)
             {
                 Escape(deltaTime);
             }
             else
             {
-                //TODO: make sure the weapon is ready to use (projectiles/batteries loaded)
                 if (!character.SelectedItems.Contains(weapon))
                 {
-                    if (character.Inventory.TryPutItem(weapon, 3, false, false, character))
+                    if (character.Inventory.TryPutItem(weapon, 3, true, false, character))
                     {
                         weapon.Equip(character);
                     }
                     else
                     {
+                        //couldn't equip the item, escape
+                        Escape(deltaTime);
                         return;
                     }
                 }
+
+                //make sure the weapon is loaded
+                var weaponComponent = 
+                    weapon.GetComponent<RangedWeapon>() as ItemComponent ?? 
+                    weapon.GetComponent<MeleeWeapon>() as ItemComponent ??
+                    weapon.GetComponent<RepairTool>() as ItemComponent;
+                if (weaponComponent != null && weaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
+                {
+                    Item[] containedItems = weapon.ContainedItems;
+                    foreach (RelatedItem requiredItem in weaponComponent.requiredItems[RelatedItem.RelationType.Contained])
+                    {
+                        Item containedItem = Array.Find(containedItems, it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                        if (containedItem == null)
+                        {
+                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, weapon.GetComponent<ItemContainer>());
+                            if (!newReloadWeaponObjective.IsDuplicate(reloadWeaponObjective))
+                            {
+                                reloadWeaponObjective = newReloadWeaponObjective;
+                            }
+                        }
+                    }
+                }
+
+                if (reloadWeaponObjective != null)
+                {
+                    if (reloadWeaponObjective.IsCompleted())
+                    {
+                        reloadWeaponObjective = null;
+                    }
+                    else if (!reloadWeaponObjective.CanBeCompleted)
+                    {
+                        Escape(deltaTime);
+                    }
+                    else
+                    {
+                        reloadWeaponObjective.TryComplete(deltaTime);
+                    }
+                    return;
+                }
+                
                 character.CursorPosition = enemy.Position;
                 character.SetInput(InputType.Aim, false, true);
 
@@ -116,7 +149,7 @@ namespace Barotrauma
             //clamp the strength to the health of this character
             //(it doesn't make a difference whether the enemy does 200 or 600 damage, it's one hit kill anyway)
 
-            float enemyDanger = Math.Min(Math.Max(enemyStrength, MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
+            float enemyDanger = Math.Min(Math.Max(CalculateEnemyStrength(), MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
 
             EnemyAIController enemyAI = enemy.AIController as EnemyAIController;
             if (enemyAI != null)
@@ -133,6 +166,20 @@ namespace Barotrauma
             if (objective == null) return false;
 
             return objective.enemy == enemy;
+        }
+
+        private float CalculateEnemyStrength()
+        {
+            float enemyStrength = 0;
+            AttackContext currentContext = character.GetAttackContext();
+            foreach (Limb limb in enemy.AnimController.Limbs)
+            {
+                if (limb.attack == null) continue;
+                if (!limb.attack.IsValidContext(currentContext)) { continue; }
+                if (!limb.attack.IsValidTarget(AttackTarget.Character)) { continue; }
+                enemyStrength += limb.attack.GetTotalDamage(false);
+            }
+            return enemyStrength;
         }
     }
 }

@@ -53,13 +53,11 @@ namespace Barotrauma.Items.Components
 
             if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower) item.Condition = 0.0f;
         }
-        
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
-        {
-            if (connection.IsPower) return;
 
-            if (item.Condition <= 0.0f) return;
-                        
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        {
+            if (connection.IsPower || item.Condition <= 0.0f) return;
+
             if (connection.Name.Contains("_in"))
             {
                 if (!IsOn) return;
@@ -68,10 +66,8 @@ namespace Barotrauma.Items.Components
 
                 int connectionNumber = -1;
                 int.TryParse(connection.Name.Substring(connection.Name.Length - 1, 1), out connectionNumber);
-
                 if (connectionNumber > 0) outConnection += connectionNumber;
-
-                item.SendSignal(stepsTaken, signal, outConnection, sender, power);
+                item.SendSignal(stepsTaken, signal, outConnection, sender, power, source, signalStrength);
             }
             else if (connection.Name == "toggle")
             {

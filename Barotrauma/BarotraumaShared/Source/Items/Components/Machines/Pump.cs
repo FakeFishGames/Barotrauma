@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
 
         private float? targetLevel;
         
-        public Hull hull1;
+        private bool hasPower;
 
         [Serialize(0.0f, true)]
         public float FlowPercentage
@@ -34,7 +34,7 @@ namespace Barotrauma.Items.Components
             set { maxFlow = value; } 
         }
 
-        float currFlow;
+        private float currFlow;
         public float CurrFlow
         {
             get 
@@ -43,85 +43,59 @@ namespace Barotrauma.Items.Components
                 return Math.Abs(currFlow); 
             }
         }
-
-        public override bool IsActive
-        {
-            get
-            {
-                return base.IsActive;
-            }
-            set
-            {
-                base.IsActive = value;
-
-#if CLIENT
-                if (isActiveTickBox != null) isActiveTickBox.Selected = value;
-#endif
-            }
-        }
-
+        
         public Pump(Item item, XElement element)
             : base(item, element)
         {
-            GetHull();
-
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
-
-        public override void Move(Vector2 amount)
-        {
-            base.Move(amount);
-
-            GetHull();
-        }
-
-        public override void OnMapLoaded()
-        {
-            GetHull();
-        }
-
+        partial void InitProjSpecific(XElement element);
+        
         public override void Update(float deltaTime, Camera cam)
         {
             currFlow = 0.0f;
+            hasPower = false;
 
             if (targetLevel != null)
             {
                 float hullPercentage = 0.0f;
-                if (hull1 != null) hullPercentage = (hull1.WaterVolume / hull1.Volume) * 100.0f;
+                if (item.CurrentHull != null) hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f;
                 FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
+            //pumps consume more power when in a bad condition
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
 
             if (voltage < minVoltage) return;
 
+            UpdateProjSpecific(deltaTime);
+
+            hasPower = true;
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            //check the hull if the item is movable
-            if (item.body != null) GetHull();
-            if (hull1 == null) return;            
+            if (item.CurrentHull == null) { return; }      
 
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+            //less effective when in a bad condition
+            currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / 100.0f);
 
-            hull1.WaterVolume += currFlow;
-            if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;
+            item.CurrentHull.WaterVolume += currFlow;
+            if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
             
             voltage = 0.0f;
         }
 
-        private void GetHull()
-        {
-            hull1 = Hull.FindHull(item.WorldPosition, item.CurrentHull);
-        }
+        partial void UpdateProjSpecific(float deltaTime);
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
-            
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+
             if (connection.Name == "toggle")
             {
                 IsActive = !IsActive;
@@ -132,22 +106,41 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "set_speed")
             {
-                float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                 }
             }
             else if (connection.Name == "set_targetlevel")
             {
-                float tempTarget;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempTarget))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    targetLevel = MathHelper.Clamp((tempTarget+100.0f)/2.0f, 0.0f, 100.0f);
+                    targetLevel = MathHelper.Clamp((tempTarget + 100.0f) / 2.0f, 0.0f, 100.0f);
                 }
             }
 
             if (!IsActive) currPowerConsumption = 0.0f;
+        }
+
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            if (GameMain.Client != null) return false;
+
+            if (objective.Option.ToLowerInvariant() == "stoppumping")
+            {
+                if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
+                FlowPercentage = 0.0f;
+            }
+            else
+            {
+                if (!IsActive || FlowPercentage > -100.0f)
+                {
+                    item.CreateServerEvent(this);
+                }
+                IsActive = true;
+                FlowPercentage = -100.0f;
+            }
+            return true;
         }
 
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)

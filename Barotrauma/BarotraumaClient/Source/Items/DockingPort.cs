@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             {
                 drawPos.Y -= rect.Height / 2;
 
-                if (dockingDir == 1)
+                if (DockingDir == 1)
                 {
                     spriteBatch.Draw(overlaySprite.Texture,
                         drawPos,
@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
             {
                 drawPos.X -= rect.Width / 2;
 
-                if (dockingDir == 1)
+                if (DockingDir == 1)
                 {
                     spriteBatch.Draw(overlaySprite.Texture,
                         drawPos - Vector2.UnitY * (rect.Height / 2 * dockingState),
@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
                     body.FixtureList[0].GetAABB(out AABB aabb, 0);
 
                     Vector2 bodyDrawPos = ConvertUnits.ToDisplayUnits(new Vector2(aabb.LowerBound.X, aabb.UpperBound.Y));
-                    if ((i == 1 || i == 3) && dockingTarget?.item?.Submarine != null) bodyDrawPos += dockingTarget.item.Submarine.Position;
+                    if ((i == 1 || i == 3) && DockingTarget?.item?.Submarine != null) bodyDrawPos += DockingTarget.item.Submarine.Position;
                     if ((i == 0 || i == 2) && item.Submarine != null) bodyDrawPos += item.Submarine.Position;
                     bodyDrawPos.Y = -bodyDrawPos.Y;
 

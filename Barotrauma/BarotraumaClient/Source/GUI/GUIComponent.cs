@@ -1,95 +1,133 @@
-using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma
 {
     public abstract class GUIComponent
     {
-        const float FlashDuration = 1.5f;
+        #region Hierarchy
+        public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
         
-        public static GUIComponent MouseOn
+        public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
+        
+        public T GetChild<T>() where T : GUIComponent
         {
-            get;
-            private set;
-        }
-        public static void ForceMouseOn(GUIComponent c)
-        {
-            MouseOn = c;
+            return Children.FirstOrDefault(c => c is T) as T;
         }
 
-        protected static List<GUIComponent> ComponentsToUpdate = new List<GUIComponent>();
-
-        public virtual void AddToGUIUpdateList()
+        public T GetAnyChild<T>() where T : GUIComponent
         {
-            if (!Visible) return;
-            if (ComponentsToUpdate.Contains(this)) return;
-            ComponentsToUpdate.Add(this);
-            
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-            foreach (GUIComponent c in fixedChildren)
+            return GetAllChildren().FirstOrDefault(c => c is T) as T;
+        }
+
+        public GUIComponent GetChild(int index)
+        {
+            if (index < 0 || index >= CountChildren) return null;
+            return RectTransform.GetChild(index).GUIComponent;
+        }
+
+        public int GetChildIndex(GUIComponent child)
+        {
+            if (child == null) return -1;
+            return RectTransform.GetChildIndex(child.RectTransform);
+        }
+
+        public GUIComponent GetChildByUserData(object obj)
+        {
+            foreach (GUIComponent child in Children)
             {
-                c.AddToGUIUpdateList();
+                if (child.UserData == obj || (child.userData != null && child.userData.Equals(obj))) return child;
             }
+            return null;
         }
 
-        public static void ClearUpdateList()
+        /// <summary>
+        /// Returns all child elements in the hierarchy.
+        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the GUIComponent property directly.
+        /// </summary>
+        public IEnumerable<GUIComponent> GetAllChildren()
         {
-            if (keyboardDispatcher != null &&
-                KeyboardDispatcher.Subscriber is GUIComponent && 
-                !ComponentsToUpdate.Contains((GUIComponent)KeyboardDispatcher.Subscriber))
-            {
-                KeyboardDispatcher.Subscriber = null;
-            }
-
-            ComponentsToUpdate.Clear();
+            return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
-        public static GUIComponent UpdateMouseOn()
+        public bool IsParentOf(GUIComponent component, bool recursive = true)
         {
-            MouseOn = null;
-            for (int i = ComponentsToUpdate.Count - 1; i >= 0; i--)
+            if (component == null) { return false; }
+            return RectTransform.IsParentOf(component.RectTransform, recursive);
+        }
+
+        public virtual void RemoveChild(GUIComponent child)
+        {
+            if (child == null) return;
+            child.RectTransform.Parent = null;
+        }
+
+        // TODO: refactor?
+        public GUIComponent FindChild(object userData, bool recursive = false)
+        {
+            var matchingChild = Children.FirstOrDefault(c => c.userData == userData);
+            if (recursive && matchingChild == null)
             {
-                GUIComponent c = ComponentsToUpdate[i];
-                if (c.MouseRect.Contains(PlayerInput.MousePosition))
+                foreach (GUIComponent child in Children)
                 {
-                    MouseOn = c;
-                    break;
+                    matchingChild = child.FindChild(userData, recursive);
+                    if (matchingChild != null) return matchingChild;
                 }
             }
-            return MouseOn;
+
+            return matchingChild;
         }
 
-        protected static KeyboardDispatcher keyboardDispatcher;
+        public IEnumerable<GUIComponent> FindChildren(object userData)
+        {
+            return Children.Where(c => c.userData == userData);
+        }
 
+        public virtual void ClearChildren()
+        {
+            RectTransform.ClearChildren();
+        }
+
+        public void SetAsLastChild()
+        {
+            RectTransform.SetAsLastChild();
+        }
+        #endregion
+
+        public bool AutoUpdate { get; set; } = true;
+        public bool AutoDraw { get; set; } = true;
+        public int UpdateOrder { get; set; }
+
+        public Action<GUIComponent> OnAddedToGUIUpdateList;
+        /// <summary>
+        /// Launched at the beginning of the Draw method. Note: if the method is overridden, the event might not be called!
+        
         public enum ComponentState { None, Hover, Pressed, Selected };
 
         protected Alignment alignment;
 
         protected GUIComponentStyle style;
-        
+
         protected object userData;
-
-        protected Rectangle rect;
-
+        
         public bool CanBeFocused;
-
-        protected Vector4 padding;
-
+        
         protected Color color;
         protected Color hoverColor;
         protected Color selectedColor;
-
-        protected GUIComponent parent;
-        public List<GUIComponent> children;
+        protected Color pressedColor;
 
         protected ComponentState state;
 
         protected Color flashColor;
+        protected float flashDuration = 1.5f;
         protected float flashTimer;
+
+        public bool IgnoreLayoutGroups;
 
         public virtual ScalableFont Font
         {
@@ -114,26 +152,26 @@ namespace Barotrauma
             set;
         }
 
+        protected bool enabled;
+        public virtual bool Enabled
+        {
+            get { return enabled; }
+            set { enabled = value; }
+        }
+
         public bool TileSprites;
 
         private static GUITextBlock toolTipBlock;
 
-        //protected float alpha;
-                
-        public GUIComponent Parent
-        {
-            get { return parent; }
-        }
-
         public Vector2 Center
         {
-            get { return new Vector2(rect.Center.X, rect.Center.Y); }
+            get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
         }
 
         protected Rectangle ClampRect(Rectangle r)
         {
-            if (parent == null || !ClampMouseRectToParent) return r;
-            Rectangle parentRect = parent.ClampRect(parent.rect);
+            if (Parent == null || !ClampMouseRectToParent) return r;
+            Rectangle parentRect = Parent.ClampRect(Parent.Rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
             if (parentRect.X > r.X)
             {
@@ -163,45 +201,22 @@ namespace Barotrauma
 
         public virtual Rectangle Rect
         {
-            get { return rect; }
-            set 
-            {
-                int prevX = rect.X, prevY = rect.Y;
-                int prevWidth = rect.Width, prevHeight = rect.Height;
-
-                rect = value;
-
-                if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
-
-                //TODO: fix this (or replace with something better in the new GUI system)
-                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                foreach (GUIComponent child in children)
-                {
-                    child.Rect = new Rectangle(
-                        child.rect.X + (rect.X - prevX), 
-                        child.rect.Y + (rect.Y - prevY),
-                        Math.Max(child.rect.Width + (rect.Width - prevWidth),0),
-                        Math.Max(child.rect.Height + (rect.Height - prevHeight),0));
-                }    
-                
-                if (parent != null && parent is GUIListBox)
-                {
-                    ((GUIListBox)parent).UpdateScrollBarSize();
-                }            
-            }
+            get { return RectTransform.Rect; }
         }
 
-        public bool ClampMouseRectToParent = true;
+        public bool ClampMouseRectToParent { get; set; } = false;
         public virtual Rectangle MouseRect
         {
             get
             {
                 if (!CanBeFocused) return Rectangle.Empty;
-                return ClampMouseRectToParent ? ClampRect(rect) : rect;
+                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
             }
         }
 
         public Dictionary<ComponentState, List<UISprite>> sprites;
+
+        public SpriteEffects SpriteEffects;
 
         public virtual Color OutlineColor { get; set; }
 
@@ -216,16 +231,10 @@ namespace Barotrauma
             get { return userData; }
             set { userData = value; }
         }
-
-        public virtual Vector4 Padding
-        {
-            get { return padding; }
-            set { padding = value; }
-        }
-
+        
         public int CountChildren
         {
-            get { return children.Count; }
+            get { return RectTransform.CountChildren; }
         }
 
         public virtual Color Color
@@ -246,9 +255,33 @@ namespace Barotrauma
             set { selectedColor = value; }
         }
 
-        public static KeyboardDispatcher KeyboardDispatcher
+        public virtual Color PressedColor
         {
-            get { return keyboardDispatcher; }
+            get { return pressedColor; }
+            set { pressedColor = value; }
+        }
+
+        private RectTransform rectTransform;
+        public RectTransform RectTransform
+        {
+            get { return rectTransform; }
+            private set
+            {
+                rectTransform = value;
+                // This is the only place where the element should be assigned!
+                if (rectTransform != null)
+                {
+                    rectTransform.GUIComponent = this;
+                }
+            }
+        }
+
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        protected GUIComponent(string style, RectTransform rectT) : this(style)
+        {
+            RectTransform = rectT;
         }
 
         protected GUIComponent(string style)
@@ -260,8 +293,6 @@ namespace Barotrauma
             OutlineColor = Color.Transparent;
 
             Font = GUI.Font;
-            
-            children = new List<GUIComponent>();
 
             CanBeFocused = true;
 
@@ -269,50 +300,198 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
-        public static void Init(GameWindow window)
+        #region Updating
+        public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            keyboardDispatcher = new KeyboardDispatcher(window);
+            if (!Visible) return;
+
+            UpdateOrder = order;
+            GUI.AddToUpdateList(this);
+            if (!ignoreChildren)
+            {
+                RectTransform.AddChildrenToGUIUpdateList(ignoreChildren, order);
+            }
+            OnAddedToGUIUpdateList?.Invoke(this);
         }
 
-        public T GetChild<T>() where T : GUIComponent
+        public void RemoveFromGUIUpdateList(bool alsoChildren = true)
         {
-            foreach (GUIComponent child in children)
+            GUI.RemoveFromUpdateList(this, alsoChildren);
+        }
+
+        /// <summary>
+        /// Only GUI should call this method. Auto updating follows the order of GUI update list. This order can be tweaked by changing the UpdateOrder property.
+        /// </summary>
+        public void UpdateAuto(float deltaTime)
+        {
+            if (AutoUpdate)
             {
-                if (child is T) return (T)(object)child;
+                Update(deltaTime);
+            }
+        }
+
+        /// <summary>
+        /// By default, all the gui elements are updated automatically in the same order they appear on the update list. 
+        /// </summary>
+        public void UpdateManually(float deltaTime, bool alsoChildren = false, bool recursive = true)
+        {
+            if (!Visible) return;
+
+            AutoUpdate = false;
+            Update(deltaTime);
+            if (alsoChildren)
+            {
+                UpdateChildren(deltaTime, recursive);
+            }
+        }
+
+        protected virtual void Update(float deltaTime)
+        {
+            if (!Visible) return;
+            if (flashTimer > 0.0f)
+            {
+                flashTimer -= deltaTime;
+            }
+        }
+
+        /// <summary>
+        /// Updates all the children manually.
+        /// </summary>
+        public void UpdateChildren(float deltaTime, bool recursive)
+        {
+            RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
+        }
+        #endregion
+
+        #region Drawing
+        /// <summary>
+        /// Only GUI should call this method. Auto drawing follows the order of GUI update list. This order can be tweaked by changing the UpdateOrder property.
+        /// </summary>
+        public void DrawAuto(SpriteBatch spriteBatch)
+        {
+            if (AutoDraw)
+            {
+                Draw(spriteBatch);
+            }
+        }
+
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list.
+        /// </summary>
+        public virtual void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
+        {
+            if (!Visible) return;
+
+            AutoDraw = false;
+            Draw(spriteBatch);
+            if (alsoChildren)
+            {
+                DrawChildren(spriteBatch, recursive);
+            }
+        }
+
+        /// <summary>
+        /// Draws all the children manually.
+        /// </summary>
+        public virtual void DrawChildren(SpriteBatch spriteBatch, bool recursive)
+        {
+            RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
+        }
+
+        protected virtual Color GetCurrentColor(ComponentState state)
+        {
+            switch (state)
+            {
+                case ComponentState.Hover:
+                    return HoverColor;
+                case ComponentState.Pressed:
+                    return PressedColor;
+                case ComponentState.Selected:
+                    return SelectedColor;
+                default:
+                    return Color;
+            }
+        }
+
+        protected virtual void Draw(SpriteBatch spriteBatch)
+        {
+            if (!Visible) return;
+            var rect = Rect;
+            
+            Color currColor = GetCurrentColor(state);
+            if (currColor.A > 0.0f && (sprites == null || !sprites.Any())) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
+
+            if (sprites != null && sprites[state] != null && currColor.A > 0.0f)
+            {
+                foreach (UISprite uiSprite in sprites[state])
+                {
+                    uiSprite.Draw(spriteBatch, rect, currColor * (currColor.A / 255.0f), SpriteEffects);
+                }
             }
 
-            return default(T);
-        }
-        
-        public GUIComponent GetChild(object obj)
-        {
-            foreach (GUIComponent child in children)
+            if (flashTimer > 0.0f)
             {
-                if (child.UserData == obj) return child;
+                //the number of flashes depends on the duration, 1 flash per 1 full second
+                int flashCycleCount = (int)Math.Max(flashDuration, 1);
+                float flashCycleDuration = flashDuration / flashCycleCount;
+
+                //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
+                //i.e. quickly bumps up from almost full brightness to full and then fades out
+                GUI.UIGlow.Draw(spriteBatch,
+                    rect,
+                    flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
             }
-            return null;
         }
 
-        public bool IsParentOf(GUIComponent component)
+        /// <summary>
+        /// Creates and draws a tooltip.
+        /// </summary>
+        public void DrawToolTip(SpriteBatch spriteBatch)
         {
-            for(int i = children.Count - 1; i >= 0; i--)
+            if (!Visible) return;
+
+            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect);
+        }
+
+        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement)
+        {
+            int width = 400;
+            if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                if (children[i] == component) return true;
-                if (children[i].IsParentOf(component)) return true;
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, 18), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock.RectTransform.NonScaledSize = new Point(
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20),
+                    toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
+                toolTipBlock.userData = toolTip;
             }
 
-            return false;
+            toolTipBlock.RectTransform.AbsoluteOffset = new Point(targetElement.Center.X, targetElement.Bottom);
+            if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width, 0);
+            }
+            if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(
+                    (targetElement.Width / 2) * Math.Sign(targetElement.Center.X - toolTipBlock.Center.X), 
+                    toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
+            }
+            toolTipBlock.SetTextPos();
+
+            toolTipBlock.DrawManually(spriteBatch);
         }
+        #endregion
 
         protected virtual void SetAlpha(float a)
         {
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f)
         {
-            flashTimer = FlashDuration;
-            flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
+            flashTimer = flashDuration;
+            this.flashDuration = flashDuration;
+            flashColor = (color == null) ? Color.Red : (Color)color;
         }
 
         public void FadeOut(float duration, bool removeAfter)
@@ -336,204 +515,12 @@ namespace Barotrauma
 
             SetAlpha(to);
 
-            if (removeAfter && parent != null)
+            if (removeAfter && Parent != null)
             {
-                parent.RemoveChild(this);
+                Parent.RemoveChild(this);
             }
 
             yield return CoroutineStatus.Success;
-        }
-
-        public virtual void Draw(SpriteBatch spriteBatch) 
-        {
-            if (!Visible) return;
-
-            Color currColor = color;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-
-            if (flashTimer > 0.0f)
-            {
-                GUI.DrawRectangle(spriteBatch,
-                    new Rectangle(rect.X - 5, rect.Y - 5, rect.Width + 10, rect.Height + 10),
-                    flashColor * (flashTimer / FlashDuration), true);
-            }
-
-            if (currColor.A > 0.0f && (sprites == null || !sprites.Any())) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
-
-            if (sprites != null && sprites[state] != null && currColor.A > 0.0f)
-            {
-                foreach (UISprite uiSprite in sprites[state])
-                {
-                    if (uiSprite.Slice)
-                    {
-                        Vector2 pos = new Vector2(rect.X, rect.Y);
-
-                        int centerWidth = Math.Max(rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width, 0);
-                        int centerHeight = Math.Max(rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height, 0);
-
-                        Vector2 scale = new Vector2(
-                            MathHelper.Clamp((float)rect.Width / (uiSprite.Slices[0].Width + uiSprite.Slices[2].Width),0, 1),
-                            MathHelper.Clamp((float)rect.Height / (uiSprite.Slices[0].Height + uiSprite.Slices[6].Height), 0, 1));
-
-                        for (int x = 0; x < 3; x++)
-                        {
-                            float width = (x == 1 ? centerWidth : uiSprite.Slices[x].Width) * scale.X;
-                            for (int y = 0; y < 3; y++)
-                            {
-                                float height = (y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height) * scale.Y;
-
-                                spriteBatch.Draw(uiSprite.Sprite.Texture,
-                                    new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
-                                    uiSprite.Slices[x + y * 3],
-                                    currColor * (currColor.A / 255.0f));
-                                
-                                pos.Y += height;
-                            }
-                            pos.X += width;
-                            pos.Y = rect.Y;
-                        }
-                    }
-                    else if (uiSprite.Tile)
-                    {
-                        Vector2 startPos = new Vector2(rect.X, rect.Y);
-                        Vector2 size = new Vector2(Math.Min(uiSprite.Sprite.SourceRect.Width, rect.Width), Math.Min(uiSprite.Sprite.SourceRect.Height, rect.Height));
-
-                        if (uiSprite.Sprite.size.X == 0.0f) size.X = rect.Width;
-                        if (uiSprite.Sprite.size.Y == 0.0f) size.Y = rect.Height;
-
-                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, color: currColor * (currColor.A / 255.0f));
-                    }
-                    else
-                    {
-                        if (uiSprite.MaintainAspectRatio)
-                        {
-                            float scale = (float)(rect.Width) / uiSprite.Sprite.SourceRect.Width;
-
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
-                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)), 
-                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
-                        }
-                        else
-                        {
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f));
-                        }
-                    }
-                }
-            }
-        }
-
-        public  void DrawToolTip(SpriteBatch spriteBatch)
-        {
-            if (!Visible) return;
-
-            int width = 400;
-            if (toolTipBlock == null || (string)toolTipBlock.userData != ToolTip)
-            {
-                toolTipBlock = new GUITextBlock(new Rectangle(0, 0, width, 18), ToolTip, "GUIToolTip", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
-                toolTipBlock.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20);
-                toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18 + 7;
-                toolTipBlock.userData = ToolTip;
-
-            }
-
-            toolTipBlock.rect = new Rectangle(MouseOn.Rect.Center.X, MouseOn.rect.Bottom, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
-            if (toolTipBlock.rect.Right > GameMain.GraphicsWidth - 10)
-            {
-                toolTipBlock.rect.Location -= new Point(toolTipBlock.rect.Right - (GameMain.GraphicsWidth - 10), 0);
-            }
-
-            toolTipBlock.Draw(spriteBatch);
-        }
-
-        public virtual void Update(float deltaTime)
-        {
-            if (!Visible) return;
-
-            if (flashTimer>0.0f) flashTimer -= deltaTime;
-
-            /*if (CanBeFocused)
-            {
-                if (rect.Contains(PlayerInput.MousePosition))
-                {
-                    MouseOn = this;
-                }
-                else
-                {
-                    if (MouseOn == this) MouseOn = null;
-                }
-
-            }*/
-            
-            //use a fixed list since children can change their order in the main children list
-            //TODO: maybe find a more efficient way of handling changes in list order
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-            foreach (GUIComponent c in fixedChildren)
-            {
-                if (!c.Visible) continue;
-                c.Update(deltaTime);
-            }
-        }
-
-        public virtual void SetDimensions(Point size, bool expandChildren = false)
-        {
-            Point expandAmount = size - rect.Size;
-
-            rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
-
-            if (expandChildren)
-            {
-                //TODO: fix this (or replace with something better in the new GUI system)
-                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                foreach (GUIComponent child in children)
-                {
-                    child.Rect = new Rectangle(
-                        child.rect.X,
-                        child.rect.Y,
-                        child.rect.Width + expandAmount.X,
-                        child.rect.Height + expandAmount.Y);
-                }
-            }
-        }
-
-        protected virtual void UpdateDimensions(GUIComponent parent = null)
-        {
-            Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
-
-            Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
-
-            if (rect.Width == 0) rect.Width = parentRect.Width - rect.X
-                - (int)padding.X - (int)padding.Z;
-
-            if (rect.Height == 0) rect.Height = parentRect.Height - rect.Y
-                - (int)padding.Y - (int)padding.W;
-
-            if (alignment.HasFlag(Alignment.CenterX))
-            {
-                rect.X += parentRect.X + (int)parentRect.Width / 2 - (int)rect.Width / 2;
-            }
-            else if (alignment.HasFlag(Alignment.Right))
-            {
-                rect.X += parentRect.X + (int)parentRect.Width - (int)padding.Z - (int)rect.Width;
-            }
-            else
-            {
-                rect.X += parentRect.X + (int)padding.X;
-            }
-
-            if (alignment.HasFlag(Alignment.CenterY))
-            {
-                rect.Y += parentRect.Y + (int)parentRect.Height / 2 - (int)rect.Height / 2;
-            }
-            else if (alignment.HasFlag(Alignment.Bottom))
-            {
-                rect.Y += parentRect.Y + (int)parentRect.Height - (int)padding.W - (int)rect.Height;
-            }
-            else
-            {
-                rect.Y += parentRect.Y + (int)padding.Y;
-            }            
         }
 
         public virtual void ApplyStyle(GUIComponentStyle style)
@@ -543,77 +530,13 @@ namespace Barotrauma
             color = style.Color;
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
+            pressedColor = style.PressedColor;
             
-            padding = style.Padding;
             sprites = style.Sprites;
 
             OutlineColor = style.OutlineColor;
 
             this.style = style;
-        }
-
-        public virtual void DrawChildren(SpriteBatch spriteBatch)
-        {
-            for (int i = 0; i < children.Count; i++ )
-            {
-                children[i].Draw(spriteBatch);
-            }
-        }
-
-        public virtual void AddChild(GUIComponent child)
-        {
-            if (child == null) return;
-            if (child.IsParentOf(this))
-            {
-                DebugConsole.ThrowError("Tried to add the parent of a GUIComponent as a child.\n" + Environment.StackTrace);
-                return;
-            }
-            if (child == this)
-            {
-                DebugConsole.ThrowError("Tried to add a GUIComponent as its own child\n" + Environment.StackTrace);
-                return;
-            }
-            if (children.Contains(child))
-            {
-                DebugConsole.ThrowError("Tried to add a the same child twice to a GUIComponent" + Environment.StackTrace);
-                return;
-            }
-
-            child.parent = this;
-            child.UpdateDimensions(this);
-
-            children.Add(child);
-        }
-
-        public virtual void RemoveChild(GUIComponent child)
-        {
-            if (child == null) return;
-            if (children.Contains(child)) children.Remove(child);            
-        }
-
-        public GUIComponent FindChild(object userData, bool recursive = false)
-        {
-            var matchingChild = children.FirstOrDefault(c => c.userData == userData);
-            if (recursive && matchingChild == null)
-            {
-                foreach (GUIComponent child in children)
-                {
-                    matchingChild = child.FindChild(userData, recursive);
-                    if (matchingChild != null) return matchingChild;
-                }
-            }
-
-            return matchingChild;
-        }
-
-        public List<GUIComponent> FindChildren(object userData)
-        {
-            return children.FindAll(c => c.userData == userData);
-        }
-
-        public virtual void ClearChildren()
-        {
-            children.Clear();
         }
     }
 }

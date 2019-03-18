@@ -1,17 +1,21 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class Pickable : ItemComponent
+    class Pickable : ItemComponent, IServerSerializable
     {
         protected Character picker;
 
         protected List<InvSlotType> allowedSlots;
 
         private float pickTimer;
+
+        private Character activePicker;
 
         public List<InvSlotType> AllowedSlots
         {
@@ -36,13 +40,14 @@ namespace Barotrauma.Items.Components
                 InvSlotType allowedSlot = InvSlotType.None;
                 foreach (string slot in slots)                
                 {
-                    if (slot.ToLowerInvariant() == "bothhands")
+                    switch (slot.ToLowerInvariant())
                     {
-                        allowedSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
-                    }
-                    else
-                    {
-                        allowedSlot = allowedSlot | (InvSlotType)Enum.Parse(typeof(InvSlotType), slot.Trim());
+                        case "bothhands":
+                            allowedSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
+                            break;
+                        default:
+                            allowedSlot = allowedSlot | (InvSlotType)Enum.Parse(typeof(InvSlotType), slot.Trim());
+                            break;
                     }
                 }
                 allowedSlots.Add(allowedSlot);
@@ -59,8 +64,9 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
-                if (picker.PickingItem == null)
+                if (picker.PickingItem == null && PickingTime <= float.MaxValue)
                 {
+                    item.CreateServerEvent(this);
                     CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
                 }
                 return false;
@@ -90,7 +96,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
                 if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItem);
-                PlaySound(ActionType.OnPicked, item.WorldPosition);
+                PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
 #endif
 
                 return true;
@@ -105,6 +111,7 @@ namespace Barotrauma.Items.Components
 
         private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
         {
+            activePicker = picker;
             picker.PickingItem = item;
 
             var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
@@ -127,7 +134,7 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 #endif
 
-                picker.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f));
+                picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                 
                 pickTimer += CoroutineManager.DeltaTime;
 
@@ -143,28 +150,31 @@ namespace Barotrauma.Items.Components
 
         private void StopPicking(Character picker)
         {
-            picker.AnimController.Anim = AnimController.Animation.None;
-            picker.PickingItem = null;
+            if (picker != null)
+            {
+                picker.AnimController.Anim = AnimController.Animation.None;
+                picker.PickingItem = null;
+            }
+            activePicker = null;
             pickTimer = 0.0f;
         }
 
         protected void DropConnectedWires(Character character)
         {
             Vector2 pos = character == null ? item.SimPosition : character.SimPosition;
-
-            var connectionPanel = item.GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return;
             
-            foreach (Connection c in connectionPanel.Connections)
+            foreach (ConnectionPanel connectionPanel in item.GetComponents<ConnectionPanel>())
             {
-                foreach (Wire w in c.Wires)
+                foreach (Connection c in connectionPanel.Connections)
                 {
-                    if (w == null) continue;
-
-                    w.Item.Drop(character);
-                    w.Item.SetTransform(pos, 0.0f);
+                    foreach (Wire w in c.Wires)
+                    {
+                        if (w == null) continue;
+                        w.Item.Drop(character);
+                        w.Item.SetTransform(pos, 0.0f);
+                    }
                 }
-            }            
+            }                       
         }
         
         public override void Drop(Character dropper)
@@ -204,5 +214,22 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(activePicker == null ? (ushort)0 : activePicker.ID);
+        }
+
+        public virtual void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            ushort pickerID = msg.ReadUInt16();
+            if (pickerID == 0)
+            {
+                StopPicking(activePicker);
+            }
+            else
+            {
+                Pick(Entity.FindEntityByID(pickerID) as Character);
+            }
+        }
     }
 }

@@ -5,17 +5,12 @@ namespace Barotrauma
 {
     class SkillPrefab
     {
-        private string name;
-
         private string description;
 
         private Vector2 levelRange;
 
-        public string Name
-        {
-            get { return name; }
-        }
-
+        public readonly string Identifier;
+        
         public string Description
         {
             get { return description; }
@@ -28,7 +23,7 @@ namespace Barotrauma
 
         public SkillPrefab(XElement element) 
         {
-            name = element.GetAttributeString("name", "");
+            Identifier = element.GetAttributeString("identifier", "");
             
             var levelString = element.GetAttributeString("level", "");
             if (levelString.Contains(","))
@@ -41,7 +36,5 @@ namespace Barotrauma
                 levelRange = new Vector2(skillLevel, skillLevel);
             }
         }
-
-
     }
 }

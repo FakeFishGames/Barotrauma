@@ -9,7 +9,8 @@ namespace Barotrauma.Networking
 
         private GUITextBox nameBox;
         private GUITextBox ipBox;
-
+        private GUIButton addNewButton;
+        
         public GUIComponent CreateWhiteListFrame(GUIComponent parent)
         {
             if (whitelistFrame != null)
@@ -18,59 +19,95 @@ namespace Barotrauma.Networking
                 whitelistFrame = null;
             }
 
-            parent.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-
-            var enabledTick = new GUITickBox(new Rectangle(0, 0, 20, 20), "Enabled", Alignment.TopLeft, parent);
-            enabledTick.Selected = Enabled;
-            enabledTick.OnSelected = (GUITickBox box) =>
+            whitelistFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), parent.RectTransform, Anchor.Center))
             {
-                Enabled = !Enabled;
-
-                if (Enabled)
-                {
-                    foreach (Client c in GameMain.Server.ConnectedClients)
-                    {
-                        if (!IsWhiteListed(c.Name, c.Connection.RemoteEndPoint.Address.ToString()))
-                        {
-                            whitelistedPlayers.Add(new WhiteListedPlayer(c.Name, c.Connection.RemoteEndPoint.Address.ToString()));
-                            if (whitelistFrame != null) CreateWhiteListFrame(whitelistFrame.Parent);
-                        }
-                    }
-                }
-
-                Save();
-                return true;
+                Stretch = true,
+                RelativeSpacing = 0.02f
             };
 
-            new GUITextBlock(new Rectangle(0, -35, 90, 20), "Name:", "", Alignment.BottomLeft, Alignment.CenterLeft, parent, false, GUI.Font);
-            nameBox = new GUITextBox(new Rectangle(100, -35, 170, 20), Alignment.BottomLeft, "", parent);
-            nameBox.Font = GUI.Font;
+            var enabledTick = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), whitelistFrame.RectTransform), TextManager.Get("WhiteListEnabled"))
+            {
+                Selected = Enabled,
+                UpdateOrder = 1,
+                OnSelected = (GUITickBox box) =>
+                {
+                    Enabled = !Enabled;
 
-            new GUITextBlock(new Rectangle(0, 0, 90, 20), "IP Address:", "", Alignment.BottomLeft, Alignment.CenterLeft, parent, false, GUI.Font);
-            ipBox = new GUITextBox(new Rectangle(100, 0, 170, 20), Alignment.BottomLeft, "", parent);
-            ipBox.Font = GUI.Font;
+                    nameBox.Text = "";
+                    nameBox.Enabled = Enabled;
+                    ipBox.Text = "";
+                    ipBox.Enabled = Enabled;
+                    addNewButton.Enabled = false;
 
-            var addnewButton = new GUIButton(new Rectangle(0, 35, 150, 20), "Add to whitelist", Alignment.BottomLeft, "", parent);
-            addnewButton.OnClicked = AddToWhiteList;
+                    if (Enabled)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            if (!IsWhiteListed(c.Name, c.Connection.RemoteEndPoint.Address.ToString()))
+                            {
+                                whitelistedPlayers.Add(new WhiteListedPlayer(c.Name, c.Connection.RemoteEndPoint.Address.ToString()));
+                                if (whitelistFrame != null) CreateWhiteListFrame(whitelistFrame.Parent);
+                            }
+                        }
+                    }
 
-            whitelistFrame = new GUIListBox(new Rectangle(0, 30, 0, parent.Rect.Height - 110), "", parent);
+                    Save();
+                    return true;
+                }
+            };
 
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), whitelistFrame.RectTransform));
             foreach (WhiteListedPlayer wlp in whitelistedPlayers)
             {
                 string blockText = wlp.Name;
                 if (!string.IsNullOrWhiteSpace(wlp.IP)) blockText += " (" + wlp.IP + ")";
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    blockText,
-                    "",
-                    Alignment.Left, Alignment.Left, whitelistFrame);
-                textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
-                textBlock.UserData = wlp;
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), listBox.Content.RectTransform),
+                    blockText)
+                {
+                    UserData = wlp
+                };
 
-                var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, "", textBlock);
-                removeButton.UserData = wlp;
-                removeButton.OnClicked = RemoveFromWhiteList;
+                var removeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("WhiteListRemove"))
+                {
+                    UserData = wlp,
+                    OnClicked = RemoveFromWhiteList
+                };
             }
+
+            var nameArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), whitelistFrame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), nameArea.RectTransform), TextManager.Get("WhiteListName"));
+            nameBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), nameArea.RectTransform), "");
+            nameBox.OnTextChanged += (textBox, text) =>
+            {
+                addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
+                return true;
+            };
+
+            var ipArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), whitelistFrame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), ipArea.RectTransform), TextManager.Get("WhiteListIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), ipArea.RectTransform), "");
+            ipBox.OnTextChanged += (textBox, text) =>
+            {
+                addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
+                return true;
+            };
+
+            addNewButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), whitelistFrame.RectTransform), TextManager.Get("WhiteListAdd"))
+            {
+                OnClicked = AddToWhiteList
+            };
+
+            nameBox.Enabled = Enabled;
+            ipBox.Enabled = Enabled;
+            addNewButton.Enabled = false;
 
             return parent;
         }
@@ -84,7 +121,6 @@ namespace Barotrauma.Networking
 
             if (whitelistFrame != null)
             {
-                whitelistFrame.Parent.ClearChildren();
                 CreateWhiteListFrame(whitelistFrame.Parent);
             }
 

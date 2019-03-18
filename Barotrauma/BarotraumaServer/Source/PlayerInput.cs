@@ -86,6 +86,16 @@ namespace Barotrauma
             return false;
         }
 
+        public static bool MidButtonClicked()
+        {
+            return false;
+        }
+
+        public static bool MidButtonHeld()
+        {
+            return false;
+        }
+
         public static bool DoubleClicked()
         {
             return false;

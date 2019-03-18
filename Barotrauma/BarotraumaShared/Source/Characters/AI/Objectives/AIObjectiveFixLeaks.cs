@@ -105,9 +105,20 @@ namespace Barotrauma
             {
                 if (gap.ConnectedWall == null) continue;
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) continue;
+                
+                if (character.TeamID == 0)
+                {
+                    if (gap.Submarine == null) continue;
+                }
+                else
+                {
+                    //prevent characters from attempting to fix leaks in the enemy sub
+                    //team 1 plays in sub 0, team 2 in sub 1
+                    Submarine mySub = character.TeamID < 1 || character.TeamID > Submarine.MainSubs.Length ?
+                        Submarine.MainSub : Submarine.MainSubs[character.TeamID - 1];
 
-                //TODO: prevent the AI characters from fixing leaks in the enemy sub in sub-vs-sub missions if/when multiplayer bots are implemented
-                if (gap.Submarine == null) continue;
+                    if (gap.Submarine != mySub) continue;
+                }
 
                 float gapPriority = GetGapFixPriority(gap);
 

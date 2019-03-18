@@ -53,8 +53,10 @@ namespace Barotrauma
             Aim = 0x200,
             Attack = 0x400,
             Ragdoll = 0x800,
+            Health = 0x1000,
+            Grab = 0x2000,
 
-            MaxVal = 0xFFF
+            MaxVal = 0x3FFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -108,13 +110,14 @@ namespace Barotrauma
             LastNetworkUpdateID = 0;
             LastProcessedID = 0;
         }
-
+        
         private void UpdateNetInput()
         {
-            if (this != Character.Controlled)
+            if (this != Controlled)
             {
                 if (GameMain.Client != null)
                 {
+#if CLIENT
                     //freeze AI characters if more than 1 seconds have passed since last update from the server
                     if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
                     {
@@ -127,6 +130,7 @@ namespace Barotrauma
                             return;
                         }
                     }
+#endif
                 }
                 else if (GameMain.Server != null && (!(this is AICharacter) || IsRemotePlayer))
                 {
@@ -153,12 +157,13 @@ namespace Barotrauma
                         dequeuedInput = memInput[memInput.Count - 1].states;
 
                         double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
-                        cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
-                            + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+                        cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
 
                         //reset focus when attempting to use/select something
                         if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
-                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select))
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select) ||
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Health) ||
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Grab))
                         {
                             focusedItem = null;
                             focusedCharacter = null;
@@ -205,7 +210,7 @@ namespace Barotrauma
                     AnimController.Collider.Rotation,
                     LastNetworkUpdateID, 
                     AnimController.TargetDir, 
-                    SelectedCharacter == null ? (Entity)selectedConstruction : (Entity)SelectedCharacter,
+                    SelectedCharacter == null ? (Entity)SelectedConstruction : (Entity)SelectedCharacter,
                     AnimController.Anim);
 
                 memLocalState.Add(posInfo);
@@ -218,6 +223,8 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
                 if (IsKeyDown(InputType.Crouch))    newInput |= InputNetFlags.Crouch;
                 if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                if (IsKeyHit(InputType.Health))     newInput |= InputNetFlags.Health;
+                if (IsKeyHit(InputType.Grab))       newInput |= InputNetFlags.Grab;
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                 if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
@@ -225,14 +232,16 @@ namespace Barotrauma
 
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                 relativeCursorPos.Normalize();
                 UInt16 intAngle = (UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI));
 
-                NetInputMem newMem = new NetInputMem();
-                newMem.states = newInput;
-                newMem.intAim = intAngle;
-                if (focusedItem != null)
+                NetInputMem newMem = new NetInputMem
+                {
+                    states = newInput,
+                    intAim = intAngle
+                };
+                if (focusedItem != null && (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
                 {
                     newMem.interact = focusedItem.ID;
                 }
@@ -292,13 +301,26 @@ namespace Barotrauma
                         UInt16 newAim = 0;
                         UInt16 newInteract = 0;
 
+                        if (newInput != InputNetFlags.None && newInput != InputNetFlags.FacingLeft)
+                        {
+                            c.KickAFKTimer = 0.0f;
+                        }
+                        else if (AnimController.Dir < 0.0f != newInput.HasFlag(InputNetFlags.FacingLeft))
+                        {
+                            //character changed the direction they're facing
+                            c.KickAFKTimer = 0.0f;
+                        }
+
                         if (newInput.HasFlag(InputNetFlags.Aim))
                         {
                             newAim = msg.ReadUInt16();
                         }
-                        if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Use))
+                        if (newInput.HasFlag(InputNetFlags.Select) ||
+                            newInput.HasFlag(InputNetFlags.Use) ||
+                            newInput.HasFlag(InputNetFlags.Health) ||
+                            newInput.HasFlag(InputNetFlags.Grab))
                         {
-                            newInteract = msg.ReadUInt16();                 
+                            newInteract = msg.ReadUInt16();
                         }
 
                         //if (AllowInput)
@@ -334,7 +356,7 @@ namespace Barotrauma
                     switch (eventType)
                     {
                         case 0:
-                            inventory.ServerRead(type, msg, c);
+                            Inventory.ServerRead(type, msg, c);
                             break;
                         case 1:
                             bool doingCPR = msg.ReadBoolean();
@@ -359,19 +381,9 @@ namespace Barotrauma
 
                             if (IsUnconscious)
                             {
-                                Kill(lastAttackCauseOfDeath);
+                                var causeOfDeath = CharacterHealth.GetCauseOfDeath();
+                                Kill(causeOfDeath.First, causeOfDeath.Second);
                             }
-                            break;
-                        case 3:
-                            LimbType grabLimb = (LimbType)msg.ReadByte();
-                            if (c.Character != this)
-                            {
-#if DEBUG
-                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
-#endif
-                                return;
-                            }
-                            AnimController.GrabLimb = grabLimb;
                             break;
                     }
                     break;
@@ -388,17 +400,33 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 2, 0);
-                        inventory.ClientWrite(msg, extraData);
+                        msg.WriteRangedInteger(0, 3, 0);
+                        Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(0, 2, 1);
+                        msg.WriteRangedInteger(0, 3, 1);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 2, 2);
+                        msg.WriteRangedInteger(0, 3, 2);
                         WriteStatus(msg);
+                        break;
+                    case NetEntityEvent.Type.UpdateSkills:
+                        msg.WriteRangedInteger(0, 3, 3);
+                        if (Info?.Job == null)
+                        {
+                            msg.Write((byte)0);
+                        }
+                        else
+                        {
+                            msg.Write((byte)Info.Job.Skills.Count);
+                            foreach (Skill skill in Info.Job.Skills)
+                            {
+                                msg.Write(skill.Identifier);
+                                msg.Write(skill.Level);
+                            }
+                        }
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
@@ -454,16 +482,17 @@ namespace Barotrauma
                     if (AnimController is HumanoidAnimController)
                     {
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
-                        tempBuffer.Write((byte)AnimController.GrabLimb);
                     }
 
-                    bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
+                    AttackContext currentContext = GetAttackContext();
+                    // TODO: do we need to filter the attack target here?
+                    bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null && l.attack.IsValidContext(currentContext));
                     tempBuffer.Write(hasAttackLimb);
                     if (hasAttackLimb) tempBuffer.Write(attack);
 
                     if (aiming)
                     {
-                        Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
+                        Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
                     tempBuffer.Write(IsRagdolled);
@@ -471,10 +500,10 @@ namespace Barotrauma
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                if (SelectedCharacter != null || selectedConstruction != null)
+                if (SelectedCharacter != null || SelectedConstruction != null)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : selectedConstruction.ID);
+                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : SelectedConstruction.ID);
                     if (SelectedCharacter != null)
                     {
                         tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
@@ -505,11 +534,15 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Client attempted to write character status to a networked message");
                 return;
             }
-
-            msg.Write(isDead);
-            if (isDead)
+            
+            msg.Write(IsDead);
+            if (IsDead)
             {
-                msg.Write((byte)causeOfDeath);
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
+                {
+                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
+                }
 
                 if (AnimController?.LimbJoints == null)
                 {
@@ -535,29 +568,8 @@ namespace Barotrauma
             }
             else
             {
-                msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
-
-                msg.Write(oxygen < 100.0f);
-                if (oxygen < 100.0f)
-                {
-                    msg.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
-                }
-
-                msg.Write(bleeding > 0.0f);
-                if (bleeding > 0.0f)
-                {
-                    msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
-                }
-
-                msg.Write(Stun > 0.0f);
-                if (Stun > 0.0f)
-                {
-                    msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
-                }
-
+                CharacterHealth.ServerWrite(msg);                
                 msg.Write(IsRagdolled);
-
-                msg.Write(HuskInfectionState > 0.0f);
             }
         }
 
@@ -568,6 +580,7 @@ namespace Barotrauma
             msg.Write(Info == null);
             msg.Write(ID);
             msg.Write(ConfigPath);
+            msg.Write(seed);
 
             msg.Write(WorldPosition.X);
             msg.Write(WorldPosition.Y);
@@ -576,7 +589,7 @@ namespace Barotrauma
 
             //character with no characterinfo (e.g. some monster)
             if (Info == null) return;
-
+            
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
             {
@@ -593,27 +606,9 @@ namespace Barotrauma
                 msg.Write(false);
             }
 
-            msg.Write(Info.Name);
             msg.Write(TeamID);
-
             msg.Write(this is AICharacter);
-            msg.Write(Info.Gender == Gender.Female);
-            msg.Write((byte)Info.HeadSpriteId);
-            if (info.Job != null)
-            {
-                msg.Write(Info.Job.Name);
-                msg.Write((byte)info.Job.Skills.Count);
-                foreach (Skill skill in info.Job.Skills)
-                {
-                    msg.Write(skill.Name);
-                    msg.WriteRangedInteger(0, 100, MathHelper.Clamp(skill.Level, 0, 100));
-                }
-            }
-            else
-            {
-                msg.Write("");
-            }
-        }
-        
+            info.ServerWrite(msg);
+        }        
     }
 }

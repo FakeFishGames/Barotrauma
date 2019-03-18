@@ -9,9 +9,7 @@ namespace Barotrauma.Items.Components
     class OxygenGenerator : Powered
     {
         private float powerDownTimer;
-
-        private bool running;
-
+        
         private float generatedAmount;
 
         private List<Vent> ventList;
@@ -43,24 +41,29 @@ namespace Barotrauma.Items.Components
 
             CurrFlow = 0.0f;
             currPowerConsumption = powerConsumption;
+            //consume more power when in a bad condition
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
+
+            if (powerConsumption <= 0.0f)
+            {
+                voltage = 1.0f;
+            }
 
             if (item.CurrentHull == null) return;
 
             if (voltage < minVoltage)
             {
                 powerDownTimer += deltaTime;
-                running = false;
                 return;
             }
             else
             {
                 powerDownTimer = 0.0f;
             }
-
-            running = true;
-
+            
             CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 100.0f;
-            //item.CurrentHull.Oxygen += CurrFlow * deltaTime;
+            //less effective when in bad condition
+            CurrFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / 100.0f);
 
             UpdateVents(CurrFlow);
             

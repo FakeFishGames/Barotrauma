@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [InGameEditable, Serialize(1.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true)]
         public float Frequency
         {
             get { return frequency; }
@@ -71,14 +71,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {
                 case "set_frequency":
                 case "frequency_in":
                     float newFrequency;
-                    if (float.TryParse(signal, out newFrequency))
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
                     {
                         Frequency = newFrequency;
                     }

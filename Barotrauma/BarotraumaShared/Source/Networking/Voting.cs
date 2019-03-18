@@ -26,7 +26,7 @@ namespace Barotrauma
                 var existingVotable = voteList.Find(v => v.First == vote || v.First.Equals(vote));
                 if (existingVotable == null)
                 {
-                    voteList.Add(Pair<object, int>.Create(vote, 1));
+                    voteList.Add(new Pair<object, int>(vote, 1));
                 }
                 else
                 {
@@ -101,8 +101,8 @@ namespace Barotrauma
                     break;
 
                 case VoteType.Mode:
-                    string modeName = inc.ReadString();
-                    GameModePreset mode = GameModePreset.list.Find(gm => gm.Name == modeName);
+                    string modeIdentifier = inc.ReadString();
+                    GameModePreset mode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
                     if (!mode.Votable) break;
 
                     sender.SetVote(voteType, mode);
@@ -128,6 +128,18 @@ namespace Barotrauma
                         Client.UpdateKickVotes(GameMain.Server.ConnectedClients);
 
                         GameMain.Server.SendChatMessage(sender.Name + " has voted to kick " + kicked.Name, ChatMessageType.Server, null);
+                    }
+
+                    break;
+                case VoteType.StartRound:
+                    bool ready = inc.ReadBoolean();
+                    if (ready != sender.GetVote<bool>(VoteType.StartRound))
+                    {
+                        sender.SetVote(VoteType.StartRound, ready);
+                        GameServer.Log(sender.Name + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
+#if CLIENT
+                        UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
                     }
 
                     break;
@@ -161,7 +173,7 @@ namespace Barotrauma
                 foreach (Pair<object, int> vote in voteList)
                 {
                     msg.Write((byte)vote.Second);
-                    msg.Write(((GameModePreset)vote.First).Name);
+                    msg.Write(((GameModePreset)vote.First).Identifier);
                 }
             }
             msg.Write(AllowEndVoting);
@@ -172,6 +184,13 @@ namespace Barotrauma
             }
 
             msg.Write(AllowVoteKick);
+
+            var readyClients =  GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<bool>(VoteType.StartRound));
+            msg.Write((byte)readyClients.Count);
+            foreach (Client c in readyClients)
+            {
+                msg.Write(c.ID);
+            }
 
             msg.WritePadBits();
         }

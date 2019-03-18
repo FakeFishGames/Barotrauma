@@ -33,9 +33,9 @@ namespace Barotrauma
             {
                 ClearFolder(tempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
             }
-            catch
+            catch (Exception e)
             {
-
+                DebugConsole.ThrowError("Failed to clear folder", e);
             }
 
             try
@@ -48,7 +48,7 @@ namespace Barotrauma
                         Submarine.MainSub.FilePath = subPath;
                         Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
                     }
-                    else
+                    else if (Submarine.MainSub.FilePath != subPath)
                     {
                         File.Copy(Submarine.MainSub.FilePath, subPath);
                         Submarine.MainSub.FilePath = subPath;
@@ -107,8 +107,9 @@ namespace Barotrauma
             {
                 DecompressToDirectory(filePath, tempPath, null);
             }
-            catch
+            catch (Exception e)
             {
+                DebugConsole.ThrowError("Error decompressing " + filePath, e);
                 return null;
             }
 
@@ -124,7 +125,24 @@ namespace Barotrauma
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + " failed.", e);
+                DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + "\" failed.", e);
+            }
+
+            //deleting a multiplayer save file -> also delete character data
+            if (Path.GetFullPath(Path.GetDirectoryName(filePath)).Equals(Path.GetFullPath(MultiplayerSaveFolder)))
+            {
+                string characterDataSavePath = MultiPlayerCampaign.GetCharacterDataSavePath(filePath);
+                if (File.Exists(characterDataSavePath))
+                {
+                    try
+                    {
+                        File.Delete(characterDataSavePath);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("ERROR: deleting character data file \"" + characterDataSavePath + "\" failed.", e);
+                    }
+                }
             }
         }
 
@@ -274,6 +292,11 @@ namespace Barotrauma
                 return false;
 
             int iNameLen = BitConverter.ToInt32(bytes, 0);
+            if (iNameLen > 255)
+            {
+                throw new Exception("Failed to decompress \""+sDir+"\" (file name length > 255). The file may be corrupted.");
+            }
+
             bytes = new byte[sizeof(char)];
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < iNameLen; i++)
@@ -311,25 +334,64 @@ namespace Barotrauma
             using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
                 while (DecompressFile(sDir, zipStream, progress)) ;
         }
-        
-        private static void ClearFolder(string FolderName, string[] ignoredFiles = null)
+
+        public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    CopyFolder(subdir.FullName, temppath, copySubDirs);
+                }
+            }
+        }
+
+        public static void ClearFolder(string FolderName, string[] ignoredFiles = null)
         {
             DirectoryInfo dir = new DirectoryInfo(FolderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {
-                bool ignore = false;
-                foreach (string ignoredFile in ignoredFiles)
+                if (ignoredFiles != null)
                 {
-                    if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                    bool ignore = false;
+                    foreach (string ignoredFile in ignoredFiles)
                     {
-                        ignore = true;
-                        break;
+                        if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                        {
+                            ignore = true;
+                            break;
+                        }
                     }
+                    if (ignore) continue;
                 }
-
-                if (ignore) continue;
-
                 fi.IsReadOnly = false;
                 fi.Delete();
             }

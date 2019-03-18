@@ -30,10 +30,10 @@ namespace Barotrauma
                 var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
                 
                 Client client = server.ConnectedClients.Find(c => c.Character == Character);
-                GameMain.Server.SendChatMessage(greetingChatMsg, client);
-                GameMain.Server.SendChatMessage(moreAgentsChatMsg, client);
-                GameMain.Server.SendChatMessage(greetingMsgBox, client);
-                GameMain.Server.SendChatMessage(moreAgentsMsgBox, client);
+                GameMain.Server.SendDirectChatMessage(greetingChatMsg, client);
+                GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, client);
+                GameMain.Server.SendDirectChatMessage(greetingMsgBox, client);
+                GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, client);
             }
 
 #if CLIENT

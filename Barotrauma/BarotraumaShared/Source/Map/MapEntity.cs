@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -14,12 +15,16 @@ namespace Barotrauma
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
 
-        private MapEntityPrefab prefab;
+        public readonly MapEntityPrefab prefab;
 
         protected List<ushort> linkedToID;
 
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;
+
+        private bool flippedX, flippedY;
+        public bool FlippedX { get { return flippedX; } }
+        public bool FlippedY { get { return flippedY; } }
         
         public bool ShouldBeSaved = true;
         
@@ -34,12 +39,9 @@ namespace Barotrauma
             get { return isHighlighted; }
             set { isHighlighted = value; }
         }
-
-        private static bool resizing;
-        private int resizeDirX, resizeDirY;
-        
+                
         public virtual Rectangle Rect
-        { 
+        {
             get { return rect; }
             set { rect = value; }
         }
@@ -58,7 +60,7 @@ namespace Barotrauma
         {
             get
             {
-                return Sprite != null && Sprite.Depth > 0.5f;
+                return Sprite != null && SpriteDepth > 0.5f;
             }
         }
 
@@ -83,6 +85,8 @@ namespace Barotrauma
             get { return false; }
         }
 
+        public List<string> AllowedLinks => prefab == null ? new List<string>() : prefab.AllowedLinks;
+
         public bool ResizeHorizontal
         {
             get { return prefab != null && prefab.ResizeHorizontal; }
@@ -90,11 +94,6 @@ namespace Barotrauma
         public bool ResizeVertical
         {
             get { return prefab != null && prefab.ResizeVertical; }
-        }
-
-        public virtual bool SelectableInEditor
-        {
-            get { return true; }
         }
 
         public override Vector2 Position
@@ -139,7 +138,17 @@ namespace Barotrauma
                 if (aiTarget == null) return 0.0f;
                 return aiTarget.SightRange;
             }
-            set { aiTarget.SightRange = value; }
+            set
+            {
+                if (aiTarget == null) return;
+                aiTarget.SightRange = value;
+            }
+        }
+
+        public RuinGeneration.Ruin ParentRuin
+        {
+            get;
+            set;
         }
 
         public virtual string Name
@@ -147,9 +156,13 @@ namespace Barotrauma
             get { return ""; }
         }
 
+        // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
+        private Memento<Rectangle> rectMemento;
+
         public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
         {
             this.prefab = prefab;
+            Scale = prefab != null ? prefab.Scale : 1;
         }
 
         public virtual void Move(Vector2 amount) 
@@ -336,36 +349,107 @@ namespace Barotrauma
             {
                 item.Update(deltaTime, cam);
             }
-            
+
+            UpdateAllProjSpecific(deltaTime);
+
             Spawner?.Update();
         }
 
+        static partial void UpdateAllProjSpecific(float deltaTime);
+
         public virtual void Update(float deltaTime, Camera cam) { }
 
-        public virtual void FlipX()
+        /// <summary>
+        /// Flip the entity horizontally
+        /// </summary>
+        /// <param name="relativeToSub">Should the entity be flipped across the y-axis of the sub it's inside</param>
+        public virtual void FlipX(bool relativeToSub)
         {
-            if (Submarine == null)
-            {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \""+Name+"\", submarine==null");
-                return;
-            }
+            flippedX = !flippedX;
+            if (!relativeToSub || Submarine == null) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.Y = 0.0f;
-
             Move(-relative * 2.0f);
         }
-        
+
+        /// <summary>
+        /// Flip the entity vertically
+        /// </summary>
+        /// <param name="relativeToSub">Should the entity be flipped across the x-axis of the sub it's inside</param>
+        public virtual void FlipY(bool relativeToSub)
+        {
+            flippedY = !flippedY;
+            if (!relativeToSub || Submarine == null) return;
+
+            Vector2 relative = WorldPosition - Submarine.WorldPosition;
+            relative.X = 0.0f;
+            Move(-relative * 2.0f);
+        }
+
+        public static List<MapEntity> LoadAll(Submarine submarine, XElement parentElement, string filePath)
+        {
+            List<MapEntity> entities = new List<MapEntity>();
+            foreach (XElement element in parentElement.Elements())
+            {
+                string typeName = element.Name.ToString();
+
+                Type t;
+                try
+                {
+                    t = Type.GetType("Barotrauma." + typeName, true, true);
+                    if (t == null)
+                    {
+                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".");
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
+                    continue;
+                }
+
+                try
+                {
+                    MethodInfo loadMethod = t.GetMethod("Load");
+                    if (loadMethod == null)
+                    {
+                        DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
+                    }
+                    else if (!loadMethod.ReturnType.IsSubclassOf(typeof(MapEntity)))
+                    {
+                        DebugConsole.ThrowError("Error loading entity of the type \"" + t.ToString() + "\" - load method does not return a valid map entity.");
+                    }
+                    else
+                    {
+                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine });
+                        if (newEntity != null) entities.Add((MapEntity)newEntity);
+                    }
+                }
+                catch (TargetInvocationException e)
+                {
+                    DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e);
+                }
+            }
+            return entities;
+        }
+
         /// <summary>
         /// Update the linkedTo-lists of the entities based on the linkedToID-lists
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void MapLoaded(Submarine sub)
+        private bool mapLoadedCalled;
+        public static void MapLoaded(List<MapEntity> entities, bool updateHulls)
         {
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity e in entities)
             {
-                if (e.Submarine != sub) continue;
+                if (e.mapLoadedCalled) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -378,24 +462,25 @@ namespace Barotrauma
             }
 
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
-            for (int i = 0; i < mapEntityList.Count; i++)
+            for (int i = 0; i < entities.Count; i++)
             {
-                if (mapEntityList[i].Submarine != sub) continue;
-
-                if (mapEntityList[i] is LinkedSubmarine)
+                if (entities[i].mapLoadedCalled) continue;
+                if (entities[i] is LinkedSubmarine)
                 {
-                    linkedSubs.Add((LinkedSubmarine)mapEntityList[i]);
+                    linkedSubs.Add((LinkedSubmarine)entities[i]);
                     continue;
                 }
 
-                mapEntityList[i].OnMapLoaded();
+                entities[i].OnMapLoaded();
             }
-            
-            if (sub != null)
+
+            if (updateHulls)
             {
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
+
+            entities.ForEach(e => e.mapLoadedCalled = true);
 
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {
@@ -416,6 +501,39 @@ namespace Barotrauma
             if (linkedTo == null) return;
             if (linkedTo.Contains(e)) linkedTo.Remove(e);
         }
-        
+
+        #region Serialized properties
+        // We could use NaN or nullables, but in this case the first is not preferable, because it needs to be checked every time the value is used.
+        // Nullable on the other requires boxing that we don't want to do too often, since it generates garbage.
+        public bool SpriteDepthOverrideIsSet { get; private set; }
+        public float SpriteOverrideDepth => SpriteDepth;
+        private float _spriteOverrideDepth = float.NaN;
+        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
+        public float SpriteDepth
+        {
+            get
+            {
+                if (SpriteDepthOverrideIsSet) { return _spriteOverrideDepth; }
+                return Sprite != null ? Sprite.Depth : 0;
+            }
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    SpriteDepthOverrideIsSet = true;
+                }
+            }
+        }
+
+        // The value should always be copied from the prefab. Editing is enabled only for testing the scale in the sub editor (changes are not saved).
+
+#if DEBUG
+        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
+#else
+        [Serialize(1f, false)]
+#endif
+        public float Scale { get; set; } = 1;
+        #endregion
     }
 }

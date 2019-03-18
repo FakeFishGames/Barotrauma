@@ -8,13 +8,7 @@ namespace Barotrauma.RuinGeneration
     class Corridor : RuinShape
     {
         private bool isHorizontal;
-
-        // TODO: fix implicit hiding
-        public Rectangle Rect
-        {
-            get { return rect; }
-        }
-
+        
         public bool IsHorizontal
         {
             get { return isHorizontal; }
@@ -55,40 +49,28 @@ namespace Barotrauma.RuinGeneration
                 var leaves2 = room.Adjacent.GetLeaves();
 
                 var suitableLeaves = GetSuitableLeafRooms(leaves1, leaves2, width, isHorizontal);
-                room1 = suitableLeaves[0].Rect;
-                room2 = suitableLeaves[1].Rect;
-
-                ConnectedRooms[0] = suitableLeaves[0];
-                ConnectedRooms[1] = suitableLeaves[1];
-            }
-
-            if (isHorizontal)
-            {
-                int left = Math.Min(room1.Right, room2.Right);
-                int right = Math.Max(room1.X, room2.X);
-
-                int top = Math.Max(room1.Y, room2.Y);
-                int bottom = Math.Min(room1.Bottom, room2.Bottom);
-
-                int yPos = Rand.Range(top, bottom - width, Rand.RandSync.Server);
-
-                rect = new Rectangle(left, yPos, right - left, width);
-            }
-            else if (room1.Y > room2.Bottom || room2.Y > room1.Bottom)
-            {
-                int left = Math.Max(room1.X, room2.X);
-                int right = Math.Min(room1.Right, room2.Right);
-
-                int top = Math.Min(room1.Bottom, room2.Bottom);
-                int bottom = Math.Max(room1.Y, room2.Y);
-
-                int xPos = Rand.Range(left, right - width, Rand.RandSync.Server);
-
-                rect = new Rectangle(xPos, top, width, bottom - top);
+                if (suitableLeaves == null || suitableLeaves.Length < 2)
+                {
+                    // No suitable leaves found due to intersections
+                    //DebugConsole.ThrowError("Error while generating ruins. Could not find a suitable position for a corridor. The width of the corridors may be too large compared to the sizes of the rooms.");
+                    return;
+                }
+                else
+                {
+                    room1 = suitableLeaves[0].Rect;
+                    room2 = suitableLeaves[1].Rect;
+                    ConnectedRooms[0] = suitableLeaves[0];
+                    ConnectedRooms[1] = suitableLeaves[1];
+                }
             }
             else
             {
-                DebugConsole.ThrowError("wat");
+                rect = CalculateRectangle(room1, room2, width, isHorizontal);
+                if (rect.Width <= 0 || rect.Height <= 0)
+                {
+                    DebugConsole.ThrowError("Error while generating ruins. Attempted to create a corridor with a width or height of <= 0");
+                    return;
+                }
             }
 
             room.Corridor = this;
@@ -122,31 +104,27 @@ namespace Barotrauma.RuinGeneration
 
         public override void CreateWalls()
         {
-
-
             Walls = new List<Line>();
-
             if (IsHorizontal)
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y), RuinStructureType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.Right, Rect.Y)));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Bottom), new Vector2(Rect.Right, Rect.Bottom)));
             }
             else
             {
-                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom), RuinStructureType.CorridorWall));
-                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom), RuinStructureType.CorridorWall));
+                Walls.Add(new Line(new Vector2(Rect.X, Rect.Y), new Vector2(Rect.X, Rect.Bottom)));
+                Walls.Add(new Line(new Vector2(Rect.Right, Rect.Y), new Vector2(Rect.Right, Rect.Bottom)));
             }
         }
 
         /// <summary>
-        /// find two rooms which have two face-two-face walls that we can place a corridor in between
+        /// Find two rooms which have two face-two-face walls that we can place a corridor in between
         /// </summary>
         /// <returns></returns>
         private BTRoom[] GetSuitableLeafRooms(List<BTRoom> leaves1, List<BTRoom> leaves2, int width, bool isHorizontal)
         {
             int iOffset = Rand.Int(leaves1.Count, Rand.RandSync.Server);
             int jOffset = Rand.Int(leaves2.Count, Rand.RandSync.Server);
-
 
             for (int iCount = 0; iCount < leaves1.Count; iCount++)
             {
@@ -158,21 +136,17 @@ namespace Barotrauma.RuinGeneration
 
                     if (isHorizontal)
                     {
-                        //if (Math.Min(leaves1[i].Rect.Bottom, leaves2[i].Rect.Bottom) - Math.Max(leaves1[i].Rect.Y, leaves2[j].Rect.Y) < width) continue;
-                        
-
-                        if (leaves1[i].Rect.Y > leaves2[j].Rect.Bottom-width) continue;
-                        if (leaves1[i].Rect.Bottom < leaves2[j].Rect.Y+width) continue;
+                        if (leaves1[i].Rect.Y > leaves2[j].Rect.Bottom - width) continue;
+                        if (leaves1[i].Rect.Bottom < leaves2[j].Rect.Y + width) continue;
                     }
                     else
                     {
-                        //if (Math.Min(leaves1[i].Rect.Right, leaves2[i].Rect.Right) - Math.Max(leaves1[i].Rect.X, leaves2[j].Rect.X) < width) continue;
-                        
-
-                        if (leaves1[i].Rect.X > leaves2[j].Rect.Right-width) continue;
-                        if (leaves1[i].Rect.Right < leaves2[j].Rect.X+width) continue;
+                        if (leaves1[i].Rect.X > leaves2[j].Rect.Right - width) continue;
+                        if (leaves1[i].Rect.Right < leaves2[j].Rect.X + width) continue;
                     }
 
+                    // Check if the given corridor rect would intersect over a third room
+                    if (CheckForIntersection(leaves1[i], leaves2[j], leaves1, leaves2, width, isHorizontal)) continue;
 
                     return new BTRoom[] { leaves1[i], leaves2[j] };
                 }
@@ -181,7 +155,60 @@ namespace Barotrauma.RuinGeneration
             return null;
         }
 
+        private bool CheckForIntersection(BTRoom potential1, BTRoom potential2, List<BTRoom> leaves1, List<BTRoom> leaves2, int width, bool isHorizontal)
+        {
+            Rectangle potential1Rect = potential1.Rect;
+            Rectangle potential2Rect = potential2.Rect;
+            Rectangle potentialCorridorRectangle = CalculateRectangle(potential1.Rect, potential2.Rect, width, isHorizontal);
 
+            if (potentialCorridorRectangle.Width <= 0 || potentialCorridorRectangle.Height <= 0) return true; // Invalid rectangle
+
+            for (int i = 0; i < leaves1.Count; i++)
+            {
+                if (leaves1[i] == potential1) continue;
+                if (potentialCorridorRectangle.Intersects(leaves1[i].Rect)) return true;
+            }
+
+            for (int i = 0; i < leaves2.Count; i++)
+            {
+                if (leaves2[i] == potential2) continue;
+                if (potentialCorridorRectangle.Intersects(leaves2[i].Rect)) return true;
+            }
+
+            rect = potentialCorridorRectangle; // Save the rectangle that passes the test
+            return false;
+        }
+
+        private Rectangle CalculateRectangle(Rectangle rect1, Rectangle rect2, int width, bool isHorizontal)
+        {
+            if (isHorizontal)
+            {
+                int left = Math.Min(rect1.Right, rect2.Right);
+                int right = Math.Max(rect1.X, rect2.X);
+
+                int top = Math.Max(rect1.Y, rect2.Y);
+                //int bottom = Math.Min(room1.Bottom, room2.Bottom);
+                int yPos = top;//Rand.Range(top, bottom - width, Rand.RandSync.Server);
+
+                return new Rectangle(left, yPos, right - left, width);
+            }
+            else if (rect1.Y > rect2.Bottom || rect2.Y > rect1.Bottom)
+            {
+                int left = Math.Max(rect1.X, rect2.X);
+                int right = Math.Min(rect1.Right, rect2.Right);
+
+                int top = Math.Min(rect1.Bottom, rect2.Bottom);
+                int bottom = Math.Max(rect1.Y, rect2.Y);
+
+                int xPos = Rand.Range(left, right - width, Rand.RandSync.Server);
+
+                return new Rectangle(xPos, top, width, bottom - top);
+            }
+            else
+            {
+                DebugConsole.ThrowError("wat");
+                return new Rectangle();
+            }
+        }
     }
-
 }

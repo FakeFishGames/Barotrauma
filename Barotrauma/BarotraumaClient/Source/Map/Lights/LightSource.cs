@@ -8,31 +8,121 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Lights
 {
-    class LightSource
+    class LightSourceParams : ISerializableEntity
     {
-        private static Texture2D lightTexture;
+        public string Name => "LightSource";
 
-        private List<ConvexHullList> hullsInRange;
+        public bool Persistent;
 
-        private Color color;
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        } = new Dictionary<string, SerializableProperty>();
+
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable]
+        public Color Color
+        {
+            get;
+            set;
+        }
+
         private float range;
+        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
+        public float Range
+        {
+            get { return range; }
+            set
+            {
+
+                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+            }
+        }
         
-        public Sprite overrideLightTexture;
-        public Texture2D texture;
-        
+        public Sprite OverrideLightTexture
+        {
+            get;
+            private set;
+        }
         //Additional sprite drawn on top of the lightsource. Ignores shadows.
         //Can be used to make lamp sprites glow for example.
-        public Sprite LightSprite;
+        public Sprite LightSprite
+        {
+            get;
+            private set;
+        }
+
+        public XElement DeformableLightSpriteElement
+        {
+            get;
+            private set;
+        }
 
         //Override the alpha value of the light sprite (if not set, the alpha of the light color is used)
         //Can be used to make lamp sprites glow at full brightness even if the light itself is dim.
         public float? OverrideLightSpriteAlpha;
 
+        public LightSourceParams(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sprite":
+                        {
+                            LightSprite = new Sprite(subElement);
+                            float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
+                            if (spriteAlpha >= 0.0f)
+                            {
+                                OverrideLightSpriteAlpha = spriteAlpha;
+                            }
+                        }
+                        break;
+                    case "deformablesprite":
+                        {
+                            DeformableLightSpriteElement = subElement;
+                            float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
+                            if (spriteAlpha >= 0.0f)
+                            {
+                                OverrideLightSpriteAlpha = spriteAlpha;
+                            }
+                        }
+                        break;
+                    case "lighttexture":
+                        OverrideLightTexture = new Sprite(subElement);
+                        break;
+                }
+            }
+        }
+
+        public LightSourceParams(float range, Color color)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this);
+            Range = range;
+            Color = color;
+        }
+    }
+
+    class LightSource
+    {
+        private static Texture2D lightTexture;
+
+        private List<ConvexHullList> hullsInRange;
+                
+        public Texture2D texture;
+        
         public SpriteEffects LightSpriteEffect;
 
         public Submarine ParentSub;
 
-        public bool CastShadows;
+        private bool castShadows;
+        public bool CastShadows
+        {
+            get { return castShadows && !IsBackground; }
+            set { castShadows = value; }
+        }
 
         //what was the range of the light when lightvolumes were last calculated
         private float prevCalculatedRange;
@@ -69,13 +159,17 @@ namespace Barotrauma.Lights
         private int vertexCount;
         private int indexCount;
 
+        private readonly LightSourceParams lightSourceParams;
+
+        public LightSourceParams LightSourceParams => lightSourceParams;
+
         private Vector2 position;
         public Vector2 Position
         {
             get { return position; }
             set
             {
-                if (position == value) return;
+                if (Math.Abs(position.X - value.X) < 0.1f && Math.Abs(position.Y - value.Y) < 0.1f) return;
                 position = value;
 
                 if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 5.0f * 5.0f) return;
@@ -92,13 +186,19 @@ namespace Barotrauma.Lights
             get { return rotation; }
             set
             {
-                if (rotation == value) return;
+                if (Math.Abs(rotation - value) < 0.01f) return;
                 rotation = value;
 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
             }
         }
+
+        public Vector2 SpriteScale
+        {
+            get;
+            set;
+        } = Vector2.One;
 
         public Vector2 WorldPosition
         {
@@ -111,32 +211,57 @@ namespace Barotrauma.Lights
             {
                 if (lightTexture == null)
                 {
-                    lightTexture = TextureLoader.FromFile("Content/Lights/light.png");
+                    lightTexture = TextureLoader.FromFile("Content/Lights/pointlight_bright.png");
                 }
 
                 return lightTexture;
             }
         }
 
-        public Color Color
+        public Sprite OverrideLightTexture
         {
-            get { return color; }
-            set { color = value; }
+            get { return lightSourceParams.OverrideLightTexture; }
         }
 
+        public Sprite LightSprite
+        {
+            get { return lightSourceParams.LightSprite; }
+        }
+        
+        public Color Color
+        {
+            get { return lightSourceParams.Color; }
+            set { lightSourceParams.Color = value; }
+        }
+        
         public float Range
         {
-            get { return range; }
+            get { return lightSourceParams.Range; }
             set
             {
 
-                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (Math.Abs(prevCalculatedRange - range) < 10.0f) return;
+                lightSourceParams.Range = value;
+                if (Math.Abs(prevCalculatedRange - lightSourceParams.Range) < 10.0f) return;
                 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
-                prevCalculatedRange = range;
+                prevCalculatedRange = lightSourceParams.Range;
             }
+        }
+
+        /// <summary>
+        /// Background lights are drawn behind submarines and they don't cast shadows.
+        /// </summary>        
+        public bool IsBackground
+        {
+            get;
+            set;
+        }
+
+        public DeformableSprite DeformableLightSprite
+        {
+            get;
+            private set;
         }
 
         public bool Enabled = true;
@@ -144,48 +269,35 @@ namespace Barotrauma.Lights
         public LightSource (XElement element)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
-            range = element.GetAttributeFloat("range", 100.0f);
-            color = new Color(element.GetAttributeVector4("color", Vector4.One));
-
+            lightSourceParams = new LightSourceParams(element);
             CastShadows = element.GetAttributeBool("castshadows", true);
 
-            
-            foreach (XElement subElement in element.Elements())
+            if (lightSourceParams.DeformableLightSpriteElement != null)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "sprite":
-                        LightSprite = new Sprite(subElement);
+                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement);
+            }
+        }
 
-                        float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
-                        if (spriteAlpha >= 0.0f)
-                        {
-                            OverrideLightSpriteAlpha = spriteAlpha;
-                        }
-                        break;
-                    case "lighttexture":
-                        overrideLightTexture = new Sprite(subElement);
-                        break;
-                }
+        public LightSource(LightSourceParams lightSourceParams)
+            : this(Vector2.Zero, 100.0f, Color.White, null)
+        {
+            this.lightSourceParams = lightSourceParams;
+            lightSourceParams.Persistent = true;
+            if (lightSourceParams.DeformableLightSpriteElement != null)
+            {
+                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement);
             }
         }
 
         public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
         {
             hullsInRange = new List<ConvexHullList>();
-
             this.ParentSub = submarine;
-
             this.position = position;
-            this.range = range;
-            this.color = color;
-
-            CastShadows = true;
-            
+            lightSourceParams = new LightSourceParams(range, color);
+            CastShadows = true;            
             texture = LightTexture;
-
             diffToSub = new Dictionary<Submarine, Vector2>();
-
             if (addLight) GameMain.LightManager.AddLight(this);
         }
         
@@ -197,7 +309,7 @@ namespace Barotrauma.Lights
             var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
             if (fullChList == null) return;
 
-            chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
+            chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, Range, ch.BoundingBox));
 
             NeedsHullCheck = true;
         }
@@ -249,7 +361,7 @@ namespace Barotrauma.Lights
                         subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
 
                         //only draw if the light overlaps with the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders))
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos, Range, subBorders))
                         {
                             if (chList.List.Count > 0) NeedsRecalculation = true;
                             chList.List.Clear();
@@ -283,7 +395,7 @@ namespace Barotrauma.Lights
                         subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
 
                         //don't draw any shadows if the light doesn't overlap with the borders of the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders))
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos, Range, subBorders))
                         {
                             if (chList.List.Count > 0) NeedsRecalculation = true;
                             chList.List.Clear();
@@ -316,19 +428,17 @@ namespace Barotrauma.Lights
             {
                 return null;
             }
-            if (range < 1.0f || color.A < 0.01f) return null;
+            if (Range < 1.0f || Color.A < 0.01f) return null;
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
 
-            var hulls = new List<ConvexHull>();// ConvexHull.GetHullsInRange(position, range, ParentSub);
+            var hulls = new List<ConvexHull>();
             foreach (ConvexHullList chList in hullsInRange)
             {
-                //hulls.AddRange(chList.List);
                 foreach (ConvexHull hull in chList.List)
                 {
                     if (!chList.IsHidden.Contains(hull)) hulls.Add(hull);
-                    //hulls.Add(hull);
                 }
                 foreach (ConvexHull hull in chList.List)
                 {
@@ -336,16 +446,14 @@ namespace Barotrauma.Lights
                 }
             }
 
-            float bounds = range * 2;
+            float bounds = Range * 2;
             //find convexhull segments that are close enough and facing towards the light source
             List<Segment> visibleSegments = new List<Segment>();
             List<SegmentPoint> points = new List<SegmentPoint>();
             foreach (ConvexHull hull in hulls)
             {
                 hull.RefreshWorldPositions();
-
-                var visibleHullSegments = hull.GetVisibleSegments(drawPos);
-                visibleSegments.AddRange(visibleHullSegments);
+                hull.GetVisibleSegments(drawPos, visibleSegments);                
             }
 
             //Generate new points at the intersections between segments
@@ -355,9 +463,15 @@ namespace Barotrauma.Lights
                 Vector2 p1a = visibleSegments[i].Start.WorldPos;
                 Vector2 p1b = visibleSegments[i].End.WorldPos;
 
-                for (int j = 0; j < visibleSegments.Count; j++)
+                for (int j = i + 1; j < visibleSegments.Count; j++)
                 {
-                    if (j == i) continue;
+                    //ignore intersections between parallel axis-aligned segments
+                    if (visibleSegments[i].IsAxisAligned && visibleSegments[j].IsAxisAligned &&
+                        visibleSegments[i].IsHorizontal == visibleSegments[j].IsHorizontal)
+                    {
+                        continue;
+                    }
+
                     Vector2 p2a = visibleSegments[j].Start.WorldPos;
                     Vector2 p2b = visibleSegments[j].End.WorldPos;
 
@@ -369,15 +483,30 @@ namespace Barotrauma.Lights
                         continue;
                     }
 
-                    Vector2? intersection = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b);
-
-                    if (intersection != null)
+                    bool intersects;
+                    Vector2 intersection = Vector2.Zero;
+                    if (visibleSegments[i].IsAxisAligned)
                     {
-                        Vector2 intersectionVal = intersection.Value;
+                        intersects = MathUtils.GetAxisAlignedLineIntersection(p2a, p2b, p1a, p1b, visibleSegments[i].IsHorizontal, out intersection);
+                    }
+                    else if (visibleSegments[j].IsAxisAligned)
+                    {
+                        intersects = MathUtils.GetAxisAlignedLineIntersection(p1a, p1b, p2a, p2b, visibleSegments[j].IsHorizontal, out intersection);
+                    }
+                    else
+                    {
+                        intersects = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b, out intersection);
+                    }
 
+                    if (intersects)
+                    {
                         SegmentPoint start = visibleSegments[i].Start;
                         SegmentPoint end = visibleSegments[i].End;
-                        SegmentPoint mid = new SegmentPoint(intersectionVal, null);
+                        SegmentPoint mid = new SegmentPoint(intersection, null);
+                        if (visibleSegments[i].ConvexHull?.ParentEntity?.Submarine != null)
+                        {
+                            mid.Pos -= visibleSegments[i].ConvexHull.ParentEntity.Submarine.DrawPosition;
+                        }
 
                         if (Vector2.DistanceSquared(start.WorldPos, mid.WorldPos) < 25.0f ||
                             Vector2.DistanceSquared(end.WorldPos, mid.WorldPos) < 25.0f)
@@ -385,10 +514,17 @@ namespace Barotrauma.Lights
                             continue;
                         }
 
-                        Segment seg1 = new Segment(start, mid, visibleSegments[i].ConvexHull); seg1.IsHorizontal = visibleSegments[i].IsHorizontal;
-                        Segment seg2 = new Segment(mid, end, visibleSegments[i].ConvexHull); seg2.IsHorizontal = visibleSegments[i].IsHorizontal;
+                        Segment seg1 = new Segment(start, mid, visibleSegments[i].ConvexHull)
+                        {
+                            IsHorizontal = visibleSegments[i].IsHorizontal,
+                        };
+
+                        Segment seg2 = new Segment(mid, end, visibleSegments[i].ConvexHull)
+                        {
+                            IsHorizontal = visibleSegments[i].IsHorizontal
+                        };
                         visibleSegments[i] = seg1;
-                        visibleSegments.Insert(i+1,seg2);
+                        visibleSegments.Insert(i + 1, seg2);
                         i--;
                         break;
                     }
@@ -430,14 +566,14 @@ namespace Barotrauma.Lights
             }
             catch (Exception e)
             {
-                StringBuilder sb = new StringBuilder("Constructing light volumes failed! Light pos: "+drawPos+", Hull verts:\n");
+                StringBuilder sb = new StringBuilder("Constructing light volumes failed! Light pos: " + drawPos + ", Hull verts:\n");
                 foreach (SegmentPoint sp in points)
                 {
                     sb.AppendLine(sp.Pos.ToString());
                 }
                 DebugConsole.ThrowError(sb.ToString(), e);
             }
-            
+
             List<Vector2> output = new List<Vector2>();
             //List<Pair<int, Vector2>> preOutput = new List<Pair<int, Vector2>>();
 
@@ -514,21 +650,47 @@ namespace Barotrauma.Lights
             return output;
         }
 
-        private Pair<int,Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        private Pair<int, Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
-            float closestDist = 0.0f;
+            float closestDist = float.PositiveInfinity;
             Vector2? closestIntersection = null;
             int segment = -1;
 
-            for (int i=0;i<segments.Count;i++)
+            float minX = Math.Min(rayStart.X, rayEnd.X);
+            float maxX = Math.Max(rayStart.X, rayEnd.X);
+            float minY = Math.Min(rayStart.Y, rayEnd.Y);
+            float maxY = Math.Max(rayStart.Y, rayEnd.Y);
+
+            for (int i = 0; i < segments.Count; i++)
             {
                 Segment s = segments[i];
-                Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal);
 
-                if (intersection != null)
+                //segment's end position always has a higher or equal y coordinate than the start position
+                //so we can do this comparison and skip segments that are at the wrong side of the ray
+                if (s.End.WorldPos.Y < s.Start.WorldPos.Y)
                 {
-                    float dist = Vector2.DistanceSquared((Vector2)intersection, rayStart);
-                    if (closestIntersection == null || dist < closestDist)
+                    System.Diagnostics.Debug.Assert(s.End.WorldPos.Y >= s.Start.WorldPos.Y,
+                    "LightSource raycast failed. Segment's end positions should never be below the start position. Parent entity: " + (s.ConvexHull?.ParentEntity == null ? "null" : s.ConvexHull.ParentEntity.ToString()));
+                }
+                if (s.Start.WorldPos.Y > maxY || s.End.WorldPos.Y < minY) { continue; }
+                //same for the x-axis
+                if (s.Start.WorldPos.X > s.End.WorldPos.X)
+                {
+                    if (s.Start.WorldPos.X < minX) continue;
+                    if (s.End.WorldPos.X > maxX) continue;
+                }
+                else
+                {
+                    if (s.End.WorldPos.X < minX) continue;
+                    if (s.Start.WorldPos.X > maxX) continue;
+                }
+                
+                if (s.IsAxisAligned ?
+                  MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal, out Vector2 intersection) :
+                  MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, out intersection))
+                {
+                    float dist = Vector2.DistanceSquared(intersection, rayStart);
+                    if (dist < closestDist)
                     {
                         closestDist = dist;
                         closestIntersection = intersection;
@@ -536,10 +698,8 @@ namespace Barotrauma.Lights
                     }
                 }
             }
-
-            Pair<int,Vector2> retVal = new Pair<int,Vector2>();
-            retVal.Second = closestIntersection == null ? rayEnd : (Vector2)closestIntersection;
-            retVal.First = segment;
+            
+            Pair<int, Vector2> retVal = new Pair<int, Vector2>(segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
             return retVal;
         }
 
@@ -555,15 +715,27 @@ namespace Barotrauma.Lights
             
             Vector2 uvOffset = Vector2.Zero;
             Vector2 overrideTextureDims = Vector2.One;
-            if (overrideLightTexture != null)
+            if (OverrideLightTexture != null)
             {
-                overrideTextureDims = new Vector2(overrideLightTexture.SourceRect.Width, overrideLightTexture.SourceRect.Height);
-                uvOffset = (overrideLightTexture.Origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
+                overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
+                uvOffset = (OverrideLightTexture.Origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
             }
 
             // Add a vertex for the center of the mesh
             vertices.Add(new VertexPositionColorTexture(new Vector3(position.X, position.Y, 0),
-                Color.White,new Vector2(0.5f, 0.5f) + uvOffset));
+                Color.White, new Vector2(0.5f, 0.5f) + uvOffset));
+
+            //hacky fix to exc excessively large light volumes (they used to be up to 4x the range of the light if there was nothing to block the rays).
+            //might want to tweak the raycast logic in a way that this isn't necessary
+            float boundRadius = Range * 1.1f / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
+            Rectangle boundArea = new Rectangle((int)(drawPos.X - boundRadius), (int)(drawPos.Y + boundRadius), (int)(boundRadius * 2), (int)(boundRadius * 2));
+            for (int i = 0; i < rayCastHits.Count; i++)
+            {
+                if (MathUtils.GetLineRectangleIntersection(drawPos, rayCastHits[i], boundArea, out Vector2 intersection))
+                {
+                    rayCastHits[i] = intersection;
+                }
+            }
 
             // Add all the other encounter points as vertices
             // storing their world position as UV coordinates
@@ -578,19 +750,6 @@ namespace Barotrauma.Lights
                 Vector2 nextVertex = rayCastHits[i < rayCastHits.Count - 1 ? i + 1 : 0];
                 
                 Vector2 rawDiff = vertex - drawPos;
-                Vector2 diff = rawDiff;
-                diff /= range * 2.0f;
-                if (overrideLightTexture != null)
-                {
-                    //calculate texture coordinates based on the light's rotation
-                    Vector2 originDiff = diff;
-
-                    diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
-                    diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
-                    diff *= (overrideTextureDims / overrideLightTexture.size) * 2.0f;
-
-                    diff += uvOffset;
-                }
                 
                 //calculate normal of first segment
                 Vector2 nDiff1 = vertex - nextVertex;
@@ -613,6 +772,19 @@ namespace Barotrauma.Lights
                 Vector2 nDiff = nDiff1 + nDiff2;
                 nDiff /= Math.Max(Math.Abs(nDiff.X), Math.Abs(nDiff.Y));
                 nDiff *= 50.0f;
+
+                Vector2 diff = rawDiff;
+                diff /= Range * 2.0f;
+                if (OverrideLightTexture != null)
+                {
+                    //calculate texture coordinates based on the light's rotation
+                    Vector2 originDiff = diff;
+
+                    diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
+                    diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
+                    diff *= (overrideTextureDims / OverrideLightTexture.size);// / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
+                    diff += uvOffset;
+                }
 
                 //finally, create the vertices
                 VertexPositionColorTexture fullVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
@@ -678,49 +850,89 @@ namespace Barotrauma.Lights
             
             lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices.ToArray());
             lightVolumeIndexBuffer.SetData<short>(indices.ToArray());
-        }     
+        }
 
-        public void Draw(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
+        /// <summary>
+        /// Draws the optional "light sprite", just a simple sprite with no shadows
+        /// </summary>
+        /// <param name="spriteBatch"></param>
+        public void DrawSprite(SpriteBatch spriteBatch, Camera cam)
         {
-            if (CastShadows)
+            if (DeformableLightSprite != null)
             {
-                CheckHullsInRange();
+                Vector2 origin = DeformableLightSprite.Origin;
+                Vector2 drawPos = position;
+                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+
+                DeformableLightSprite.Draw(
+                    cam, new Vector3(drawPos, 0.0f),
+                    origin, -Rotation, SpriteScale,
+                    new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
+                    LightSpriteEffect == SpriteEffects.FlipHorizontally);
             }
 
-            Vector3 offset = ParentSub == null ? Vector3.Zero :
-            new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
-
-            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
-
-            Vector2 drawPos = position;
-            if (ParentSub != null) drawPos += ParentSub.DrawPosition;
-
-            drawPos.Y = -drawPos.Y;
-            
             if (LightSprite != null)
             {
                 Vector2 origin = LightSprite.Origin;
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally) origin.X = LightSprite.SourceRect.Width - origin.X;
                 if (LightSpriteEffect == SpriteEffects.FlipVertically) origin.Y = LightSprite.SourceRect.Height - origin.Y;
-                
+
+                Vector2 drawPos = position;
+                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                drawPos.Y = -drawPos.Y;
+
                 LightSprite.Draw(
                     spriteBatch, drawPos, 
-                    new Color(Color, OverrideLightSpriteAlpha ?? Color.A / 255.0f),
-                    origin, -Rotation, 1, LightSpriteEffect);
+                    new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
+                    origin, -Rotation, SpriteScale, LightSpriteEffect);
             }
+
+            if (GameMain.DebugDraw)
+            {
+                //visualize light recalculations
+                float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
+                if (timeSinceRecalculation < 0.1f)
+                {
+                    Vector2 drawPos = position;
+                    if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                    drawPos.Y = -drawPos.Y;
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
+                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
+                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);
+                }
+            }
+            
+        }
+
+        public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
+        {
+            if (CastShadows)
+            {
+                CheckHullsInRange();
+            }          
 
             //if the light doesn't cast shadows, we can simply render the texture without having to calculate the light volume
             if (!CastShadows)
             {
                 Texture2D currentTexture = texture ?? LightTexture;
-                if (overrideLightTexture != null) currentTexture = overrideLightTexture.Texture;                
+                if (OverrideLightTexture != null) { currentTexture = OverrideLightTexture.Texture; }           
 
-                Vector2 center = new Vector2(currentTexture.Width / 2, currentTexture.Height / 2);
-                float scale = range / (currentTexture.Width / 2.0f);
+                Vector2 center = OverrideLightTexture == null ? 
+                    new Vector2(currentTexture.Width / 2, currentTexture.Height / 2) : 
+                    OverrideLightTexture.Origin;
+                float scale = Range / (currentTexture.Width / 2.0f);
 
-                spriteBatch.Draw(currentTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
+                Vector2 drawPos = position;
+                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                drawPos.Y = -drawPos.Y;  
+
+                spriteBatch.Draw(currentTexture, drawPos, null, Color, -rotation, center, scale, SpriteEffects.None, 1);
                 return;
             }
+
+            Vector3 offset = ParentSub == null ?
+                Vector3.Zero : new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
+            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
 
             if (NeedsRecalculation)
             {
@@ -733,10 +945,10 @@ namespace Barotrauma.Lights
             
             if (vertexCount == 0) return;
 
-            lightEffect.DiffuseColor = (new Vector3(color.R, color.G, color.B) * (color.A / 255.0f)) / 255.0f;
-            if (overrideLightTexture != null)
+            lightEffect.DiffuseColor = (new Vector3(Color.R, Color.G, Color.B) * (Color.A / 255.0f)) / 255.0f;
+            if (OverrideLightTexture != null)
             {
-                lightEffect.Texture = overrideLightTexture.Texture;
+                lightEffect.Texture = OverrideLightTexture.Texture;
             }
             else
             {
@@ -777,19 +989,20 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
-            if (LightSprite != null) LightSprite.Remove();
-
-            if (lightVolumeBuffer != null)
+            if (!lightSourceParams.Persistent)
             {
-                lightVolumeBuffer.Dispose();
-                lightVolumeBuffer = null;
+                LightSprite?.Remove();
+                OverrideLightTexture?.Remove();
             }
 
-            if (lightVolumeIndexBuffer != null)
-            {
-                lightVolumeIndexBuffer.Dispose();
-                lightVolumeIndexBuffer = null;
-            }
+            DeformableLightSprite?.Remove();
+            DeformableLightSprite = null;
+
+            lightVolumeBuffer?.Dispose();
+            lightVolumeBuffer = null;
+
+            lightVolumeIndexBuffer?.Dispose();
+            lightVolumeIndexBuffer = null;
 
             GameMain.LightManager.RemoveLight(this);
         }

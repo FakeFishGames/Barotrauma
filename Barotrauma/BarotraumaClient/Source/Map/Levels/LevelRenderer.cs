@@ -1,3 +1,4 @@
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,41 +11,21 @@ namespace Barotrauma
     {
         private static BasicEffect wallEdgeEffect, wallCenterEffect;
 
-        private static Sprite background, backgroundTop;
-        private static Sprite dustParticles;
-        private static Texture2D shaftTexture;
+        private Vector2 dustOffset;
+        private Vector2 defaultDustVelocity;
+        private Vector2 dustVelocity;
 
-        Vector2 dustOffset;
+        private RasterizerState cullNone;
 
         private Level level;
 
         private VertexBuffer wallVertices, bodyVertices;
 
-        public static Sprite Background
-        {
-            get
-            {
-                if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
-                return background;
-            }
-        }
-
-        public static Sprite BackgroundTop
-        {
-            get
-            {
-                if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
-                return backgroundTop;
-            }
-        }
-
         public LevelRenderer(Level level)
         {
-            if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/iceWall.png");
+            defaultDustVelocity = Vector2.UnitY * 10.0f;
 
-            if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
-            if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
-            if (dustParticles == null) dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
+            cullNone = new RasterizerState() { CullMode = CullMode.None };
 
             if (wallEdgeEffect == null)
             {
@@ -53,7 +34,7 @@ namespace Barotrauma
                     DiffuseColor = new Vector3(0.8f, 0.8f, 0.8f),
                     VertexColorEnabled = true,
                     TextureEnabled = true,
-                    Texture = shaftTexture
+                    Texture = level.GenerationParams.WallEdgeSprite.Texture
                 };
                 wallEdgeEffect.CurrentTechnique = wallEdgeEffect.Techniques["BasicEffect_Texture"];
             }
@@ -64,18 +45,56 @@ namespace Barotrauma
                 {
                     VertexColorEnabled = true,
                     TextureEnabled = true,
-                    Texture = backgroundTop.Texture
+                    Texture = level.GenerationParams.WallSprite.Texture
                 };
                 wallCenterEffect.CurrentTechnique = wallCenterEffect.Techniques["BasicEffect_Texture"];
             }
                 
             this.level = level;
         }
-        
-        public void Update(float deltaTime)
+
+        public void ReloadTextures()
         {
-            dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
-            while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
+            level.GenerationParams.WallEdgeSprite.ReloadTexture();
+            wallEdgeEffect.Texture = level.GenerationParams.WallEdgeSprite.Texture;
+            level.GenerationParams.WallSprite.ReloadTexture();
+            wallCenterEffect.Texture = level.GenerationParams.WallSprite.Texture;
+        }
+        
+        public void Update(float deltaTime, Camera cam)
+        {
+            //calculate the sum of the forces of nearby level triggers
+            //and use it to move the dust texture and water distortion effect
+            Vector2 currentDustVel = defaultDustVelocity;
+            foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
+            {
+                //use the largest water flow velocity of all the triggers
+                Vector2 objectMaxFlow = Vector2.Zero;
+                foreach (LevelTrigger trigger in levelObject.Triggers)
+                {
+                    Vector2 vel = trigger.GetWaterFlowVelocity(cam.WorldViewCenter);
+                    if (vel.LengthSquared() > objectMaxFlow.LengthSquared())
+                    {
+                        objectMaxFlow = vel;
+                    }
+                }
+                currentDustVel += objectMaxFlow;
+            }
+            
+            dustVelocity = Vector2.Lerp(dustVelocity, currentDustVel, deltaTime);
+            
+            WaterRenderer.Instance?.ScrollWater(dustVelocity, deltaTime);
+
+            if (level.GenerationParams.WaterParticles != null)
+            {
+                Vector2 waterTextureSize = level.GenerationParams.WaterParticles.size * level.GenerationParams.WaterParticleScale;
+                dustOffset += new Vector2(dustVelocity.X, -dustVelocity.Y) * level.GenerationParams.WaterParticleScale * deltaTime;
+                while (dustOffset.X <= -waterTextureSize.X) dustOffset.X += waterTextureSize.X;
+                while (dustOffset.X >= waterTextureSize.X) dustOffset.X -= waterTextureSize.X;
+                while (dustOffset.Y <= -waterTextureSize.Y) dustOffset.Y += waterTextureSize.Y;
+                while (dustOffset.Y >= waterTextureSize.Y) dustOffset.Y -= waterTextureSize.Y;
+            }
+
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
@@ -113,7 +132,7 @@ namespace Barotrauma
         }
 
         public void DrawBackground(SpriteBatch spriteBatch, Camera cam, 
-            BackgroundSpriteManager backgroundSpriteManager = null, 
+            LevelObjectManager backgroundSpriteManager = null, 
             BackgroundCreatureManager backgroundCreatureManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
@@ -123,21 +142,24 @@ namespace Barotrauma
             backgroundPos.Y = -backgroundPos.Y;
             backgroundPos *= 0.05f;
 
+
             if (backgroundPos.Y < 1024)
             {
-                if (backgroundPos.Y < 0)
+                if (backgroundPos.Y < 0 && level.GenerationParams.BackgroundTopSprite != null)
                 {
+                    var backgroundTop = level.GenerationParams.BackgroundTopSprite;
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
                     backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
-                        color: level.BackgroundColor);
+                        color: level.BackgroundTextureColor);
                 }
-                if (backgroundPos.Y > -1024)
+                if (backgroundPos.Y > -1024 && level.GenerationParams.BackgroundSprite != null)
                 {
+                    var background = level.GenerationParams.BackgroundSprite;
                     background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
                     background.DrawTiled(spriteBatch,
                         (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
                         new Vector2(GameMain.GraphicsWidth, (int)Math.Ceiling(1024 - backgroundPos.Y)),
-                        color: level.BackgroundColor);
+                        color: level.BackgroundTextureColor);
                 }
             }
 
@@ -145,129 +167,151 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
-                SamplerState.LinearWrap, DepthStencilState.Default, null, null,
-                cam.Transform);
-            
+                SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
+                cam.Transform);            
 
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
-            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
+            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch, cam);
 
-            Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
-            Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
-            Vector2 offset = -origin + dustOffset;
-            while (offset.X <= -srcRect.Width) offset.X += srcRect.Width;
-            while (offset.X > 0.0f) offset.X -= srcRect.Width;
-            while (offset.Y <= -srcRect.Height) offset.Y += srcRect.Height;
-            while (offset.Y > 0.0f) offset.Y -= srcRect.Height;
-            for (int i = 0; i < 4; i++)
+            if (level.GenerationParams.WaterParticles != null)
             {
-                float scale = 1.0f - i * 0.2f;
-                float recipScale = 1.0f / scale;
+                float textureScale = level.GenerationParams.WaterParticleScale;
 
-                //alpha goes from 1.0 to 0.0 when scale is in the range of 0.5-0.25
-                float alpha = (cam.Zoom * scale) < 0.5f ? (cam.Zoom * scale - 0.25f) * 40.0f : 1.0f;
-                if (alpha <= 0.0f) continue;
+                Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
+                Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
+                Vector2 offset = -origin + dustOffset;
+                while (offset.X <= -srcRect.Width * textureScale) offset.X += srcRect.Width * textureScale;
+                while (offset.X > 0.0f) offset.X -= srcRect.Width * textureScale;
+                while (offset.Y <= -srcRect.Height * textureScale) offset.Y += srcRect.Height * textureScale;
+                while (offset.Y > 0.0f) offset.Y -= srcRect.Height * textureScale;
+                for (int i = 0; i < 4; i++)
+                {
+                    float scale = (1.0f - i * 0.2f);
 
-                Vector2 offsetS = offset * scale + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f - new Vector2(256.0f * i);
-                while (offsetS.X <= -srcRect.Width * scale) offsetS.X += srcRect.Width * scale;
-                while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * scale;
-                while (offsetS.Y <= -srcRect.Height * scale) offsetS.Y += srcRect.Height * scale;
-                while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
+                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.1 - 0.05
+                    float alpha = (cam.Zoom * scale) < 0.1f ? (cam.Zoom * scale - 0.05f) * 20.0f : 1.0f;
+                    if (alpha <= 0.0f) continue;
 
-                dustParticles.DrawTiled(spriteBatch, origin + offsetS, new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
-                    rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(scale));
+                    Vector2 offsetS = offset * scale
+                        + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f
+                        - new Vector2(256.0f * i);
+
+                    float texScale = scale * textureScale;
+
+                    while (offsetS.X <= -srcRect.Width * texScale) offsetS.X += srcRect.Width * texScale;
+                    while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * texScale;
+                    while (offsetS.Y <= -srcRect.Height * texScale) offsetS.Y += srcRect.Height * texScale;
+                    while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * texScale;
+
+                    level.GenerationParams.WaterParticles.DrawTiled(
+                        spriteBatch, origin + offsetS, 
+                        new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
+                        rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(texScale));                    
+                }
             }
+
 
             spriteBatch.End();
 
-            RenderWalls(GameMain.Instance.GraphicsDevice, cam);
+            RenderWalls(GameMain.Instance.GraphicsDevice, cam, specular: false);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.LinearClamp, DepthStencilState.Default, null, null,
+                cam.Transform);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
+            spriteBatch.End();
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GameMain.DebugDraw)
+            if (GameMain.DebugDraw && cam.Zoom > 0.05f)
             {
-                var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
+                var cells = level.GetCells(cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y-10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
+                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
-                    GUI.DrawLine(spriteBatch, 
-                        new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
-                        new Vector2(cell.Center.X, -cell.Center.Y), 
-                        Color.Blue*0.5f);
-                
-                    foreach (GraphEdge edge in cell.edges)
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(cell.Edges[0].Point1.X + cell.Translation.X, -(cell.Edges[0].Point1.Y + cell.Translation.Y)),
+                        new Vector2(cell.Center.X, -(cell.Center.Y)),
+                        Color.Blue * 0.5f);
+
+                    foreach (GraphEdge edge in cell.Edges)
                     {
-                        GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Cyan*0.5f : Color.White);
+                        GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
+                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.Body == null ? Color.Cyan * 0.5f : Color.White);
                     }
 
-                    foreach (Vector2 point in cell.bodyVertices)
+                    foreach (Vector2 point in cell.BodyVertices)
                     {
-                        GUI.DrawRectangle(spriteBatch, new Vector2(point.X, -point.Y), new Vector2(10.0f, 10.0f), Color.White, true);
+                        GUI.DrawRectangle(spriteBatch, new Vector2(point.X + cell.Translation.X, -(point.Y + cell.Translation.Y)), new Vector2(10.0f, 10.0f), Color.White, true);
                     }
                 }
 
-                foreach (List<Vector2> nodeList in level.SmallTunnels)
+                foreach (List<Point> nodeList in level.SmallTunnels)
                 {
-                    for (int i = 1; i<nodeList.Count; i++)
+                    for (int i = 1; i < nodeList.Count; i++)
                     {
-                        GUI.DrawLine(spriteBatch, 
-                            new Vector2(nodeList[i-1].X, -nodeList[i - 1].Y),
-                            new Vector2(nodeList[i].X, -nodeList[i].Y), 
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
+                            new Vector2(nodeList[i].X, -nodeList[i].Y),
                             Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
-
                     }
+                }
+
+                foreach (var ruin in level.Ruins)
+                {
+                    ruin.DebugDraw(spriteBatch);
                 }
             }
 
             Vector2 pos = new Vector2(0.0f, -level.Size.Y);
 
-            if (GameMain.GameScreen.Cam.WorldView.Y >= -pos.Y - 1024)
+            if (cam.WorldView.Y >= -pos.Y - 1024)
             {
-                pos.X = GameMain.GameScreen.Cam.WorldView.X -1024;
-                int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                pos.X = cam.WorldView.X -1024;
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
                 GUI.DrawRectangle(spriteBatch,new Rectangle(
                     (int)(MathUtils.Round(pos.X, 1024)), 
-                    -GameMain.GameScreen.Cam.WorldView.Y, 
+                    -cam.WorldView.Y, 
                     width, 
-                    (int)(GameMain.GameScreen.Cam.WorldView.Y + pos.Y) - 30),
+                    (int)(cam.WorldView.Y + pos.Y) - 30),
                     Color.Black, true);
 
-                spriteBatch.Draw(shaftTexture,
+                spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y-1000, width, 1024),
                     new Rectangle(0, 0, width, -1024),
-                    level.BackgroundColor, 0.0f,
+                    level.BackgroundTextureColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.None, 0.0f);
             }
 
-            if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
+            if (cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024)
             {
-                pos = new Vector2(GameMain.GameScreen.Cam.WorldView.X - 1024, -level.BottomPos);
+                pos = new Vector2(cam.WorldView.X - 1024, -level.BottomPos);
 
-                int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle(
                     (int)(MathUtils.Round(pos.X, 1024)), 
                     (int)-(level.BottomPos - 30), 
                     width, 
-                    (int)(level.BottomPos - (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height))), 
+                    (int)(level.BottomPos - (cam.WorldView.Y - cam.WorldView.Height))), 
                     Color.Black, true);
 
-                spriteBatch.Draw(shaftTexture,
+                spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-level.BottomPos, width, 1024),
                     new Rectangle(0, 0, width, -1024),
-                    level.BackgroundColor, 0.0f,
+                    level.BackgroundTextureColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.FlipVertically, 0.0f);
             }
         }
 
 
-        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
+        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam, bool specular)
         {
             if (wallVertices == null) return;
 
@@ -276,9 +320,11 @@ namespace Barotrauma
 
             if (!renderLevel && !renderSeaFloor) return;
 
-            wallEdgeEffect.World = cam.ShaderTransform
+            Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
-            wallCenterEffect.World = wallEdgeEffect.World;
+                        
+            wallEdgeEffect.World = transformMatrix;
+            wallCenterEffect.World = transformMatrix;
             
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
             wallCenterEffect.CurrentTechnique.Passes[0].Apply();
@@ -288,15 +334,19 @@ namespace Barotrauma
                 graphicsDevice.SetVertexBuffer(bodyVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
             }
-            if (renderSeaFloor)
+
+            foreach (LevelWall wall in level.ExtraWalls)
             {
-                foreach (LevelWall wall in level.ExtraWalls)
-                {
-                    graphicsDevice.SetVertexBuffer(wall.BodyVertices);
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
-                }
+                if (!renderSeaFloor && wall == level.SeaFloor) continue;
+                wallCenterEffect.World = wall.GetTransform() * transformMatrix;
+                wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(wall.BodyVertices);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
             }
 
+            var defaultRasterizerState = graphicsDevice.RasterizerState;
+            graphicsDevice.RasterizerState = cullNone;
+            wallEdgeEffect.World = transformMatrix;
             wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
 
             if (renderLevel)
@@ -305,28 +355,27 @@ namespace Barotrauma
                 graphicsDevice.SetVertexBuffer(wallVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
             }
-            if (renderSeaFloor)
+            foreach (LevelWall wall in level.ExtraWalls)
             {
-                foreach (LevelWall wall in level.ExtraWalls)
-                {
-                    graphicsDevice.SetVertexBuffer(wall.WallVertices);
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
-                }
-            }          
+                if (!renderSeaFloor && wall == level.SeaFloor) continue;
+                wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
+                wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(wall.WallVertices);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
+            }
+            graphicsDevice.RasterizerState = defaultRasterizerState;
         }
 
         public void Dispose()
         {
             Dispose(true);
-
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (wallVertices!=null) wallVertices.Dispose();
+            if (wallVertices != null) wallVertices.Dispose();
             if (bodyVertices != null) bodyVertices.Dispose();
         }
-
     }
 }

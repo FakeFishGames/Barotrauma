@@ -116,9 +116,9 @@ namespace Barotrauma.Networking
             }
 
 #if CLIENT
-            while (listBox != null && listBox.children.Count > LinesPerFile)
+            while (listBox != null && listBox.Content.CountChildren > LinesPerFile)
             {
-                listBox.RemoveChild(listBox.children[0]);
+                listBox.RemoveChild(listBox.Content.Children.First());
             }
 #endif
         }

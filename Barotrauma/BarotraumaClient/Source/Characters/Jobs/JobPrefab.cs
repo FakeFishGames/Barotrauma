@@ -4,47 +4,37 @@ namespace Barotrauma
 {
     partial class JobPrefab
     {
-        public GUIFrame CreateInfoFrame()
+        public GUIButton CreateInfoFrame()
         {
             int width = 500, height = 400;
 
-            GUIFrame backFrame = new GUIFrame(Rectangle.Empty, Color.Black * 0.5f);
-            backFrame.Padding = Vector4.Zero;
+            GUIButton backFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), backFrame.RectTransform, Anchor.Center));
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", backFrame);
-            frame.Padding = new Vector4(30.0f, 30.0f, 30.0f, 30.0f);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Name, font: GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), Name, "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            var descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) },
+                Description, font: GUI.SmallFont, wrap: true);
 
-            var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
-
-            new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), TextManager.Get("Skills") + ": ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
-
-            int y = 40 + descriptionBlock.Rect.Height + 50;
+            var skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform)
+                { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) });
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
+                TextManager.Get("Skills") + ": ", font: GUI.LargeFont);
             foreach (SkillPrefab skill in Skills)
             {
-                string skillDescription = Skill.GetLevelName((int)skill.LevelRange.X);
-                string skillDescription2 = Skill.GetLevelName((int)skill.LevelRange.Y);
-
-                if (skillDescription2 != skillDescription)
-                {
-                    skillDescription += "/" + skillDescription2;
-                }
-                new GUITextBlock(new Rectangle(0, y, 100, 20),
-                    "   - " + skill.Name + ": " + skillDescription, "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
-
-                y += 20;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
+                    "   - " + TextManager.Get("SkillName." + skill.Identifier) + ": " + (int)skill.LevelRange.X + " - " + (int)skill.LevelRange.Y, font: GUI.SmallFont);
             }
 
-            new GUITextBlock(new Rectangle(250, 40 + descriptionBlock.Rect.Height + 20, 0, 20), TextManager.Get("Items") + ": ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
-
-            y = 40 + descriptionBlock.Rect.Height + 50;
+            var itemContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform, Anchor.TopRight)
+                { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) });
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
+                TextManager.Get("Items") + ": ", font: GUI.LargeFont);
             foreach (string itemName in ItemNames)
             {
-                new GUITextBlock(new Rectangle(250, y, 100, 20),
-                "   - " + itemName, "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
-
-                y += 20;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
+                    "   - " + itemName, font: GUI.SmallFont);
             }
 
             return backFrame;

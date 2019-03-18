@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -10,13 +12,20 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
+        public static string ParseContentPathFromUri(this XObject element)
+        {
+            string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            return string.Join("/", filtered);
+        }
+
         public static XDocument TryLoadXml(string filePath)
         {
             XDocument doc;
             try
             {
                 ToolBox.IsProperFilenameCase(filePath);
-                doc = XDocument.Load(filePath);
+                doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
             }
             catch (Exception e)
             {
@@ -75,7 +84,7 @@ namespace Barotrauma
             return String.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
-        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true)
+        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true, bool convertToLowerInvariant = false)
         {
             if (element?.Attribute(name) == null) return defaultValue;
 
@@ -83,6 +92,14 @@ namespace Barotrauma
             if (string.IsNullOrEmpty(stringValue)) return defaultValue;
 
             string[] splitValue = stringValue.Split(',');
+
+            if (convertToLowerInvariant)
+            {
+                for (int i = 0; i < splitValue.Length; i++)
+                {
+                    splitValue[i] = splitValue[i].ToLowerInvariant();
+                }
+            }
             if (trim)
             {
                 for (int i = 0; i < splitValue.Length; i++)
@@ -254,6 +271,12 @@ namespace Barotrauma
             return false;
         }
 
+        public static Point GetAttributePoint(this XElement element, string name, Point defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+            return ParsePoint(element.Attribute(name).Value);
+        }
+
         public static Vector2 GetAttributeVector2(this XElement element, string name, Vector2 defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;
@@ -294,6 +317,11 @@ namespace Barotrauma
             return str.ToString();
         }
 
+        public static string PointToString(Point point)
+        {
+            return point.X.ToString() + "," + point.Y.ToString();
+        }
+
         public static string Vector2ToString(Vector2 vector)
         {
             return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);
@@ -316,15 +344,29 @@ namespace Barotrauma
 
         public static string ColorToString(Color color)
         {
-            return (color.R / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
-                    (color.G / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
-                    (color.B / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
-                    (color.A / 255.0f).ToString("G", CultureInfo.InvariantCulture);
+            return color.R + "," + color.G + "," + color.B + "," + color.A;
         }
 
         public static string RectToString(Rectangle rect)
         {
             return rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height;
+        }
+        
+        public static Point ParsePoint(string stringPoint, bool errorMessages = true)
+        {
+            string[] components = stringPoint.Split(',');
+            Point point = Point.Zero;
+
+            if (components.Length != 2)
+            {
+                if (!errorMessages) return point;
+                DebugConsole.ThrowError("Failed to parse the string \"" + stringPoint + "\" to Vector2");
+                return point;
+            }
+
+            int.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out point.X);
+            int.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out point.Y);
+            return point;
         }
 
         public static Vector2 ParseVector2(string stringVector2, bool errorMessages = true)
@@ -404,6 +446,16 @@ namespace Barotrauma
             for (int i = 0; i < 4 && i < strComponents.Length; i++)
             {
                 float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
+            }
+
+            if (components.Any(c => c > 1.0f))
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    components[i] = components[i] / 255.0f;
+                }
+                //alpha defaults to 255 if not given
+                if (strComponents.Length < 4) components[3] = 255;
             }
 
             return new Color(components[0], components[1], components[2], components[3]);

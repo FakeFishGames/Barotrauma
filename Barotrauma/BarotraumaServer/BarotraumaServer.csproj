@@ -34,41 +34,62 @@
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseLinux|x86' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseLinux|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\bin\ReleaseLinux</OutputPath>
+    <OutputPath>..\bin\ReleaseLinux\</OutputPath>
     <DefineConstants>TRACE;SERVER</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugLinux|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\bin\DebugLinux</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWindows|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\bin\ReleaseWindows</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugWindows|x86' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugLinux|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\bin\DebugWindows</OutputPath>
+    <OutputPath>..\bin\DebugLinux\</OutputPath>
     <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMac|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\ReleaseMac\</OutputPath>
+    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMac|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\DebugMac\</OutputPath>
+    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\ReleaseWindows\</OutputPath>
+    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\DebugWindows\</OutputPath>
+    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, processorArchitecture=MSIL">
@@ -119,6 +140,10 @@
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
+      <Project>{3af0347c-5a9b-4421-868c-8ee3dbfaebc6}</Project>
+      <Name>Facepunch.Steamworks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics.csproj">
       <Project>{a4610e4c-dd34-428b-babb-779ca0b5993a}</Project>
       <Name>Farseer Physics</Name>

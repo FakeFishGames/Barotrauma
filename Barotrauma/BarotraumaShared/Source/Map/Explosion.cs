@@ -4,19 +4,22 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class Explosion
     {
+        private static List<Triplet<Explosion, Vector2, float>> prevExplosions = new List<Triplet<Explosion, Vector2, float>>();
+
         private Attack attack;
         
         private float force;
         
         public float CameraShake;
 
-        private bool sparks, shockwave, flames, smoke, flash;
+        private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
 
         private float empStrength;
 
@@ -25,24 +28,27 @@ namespace Barotrauma
 
         public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
         {
-            attack = new Attack(damage, structureDamage, 0.0f, range);
+            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, range);
             attack.SeverLimbsProbability = 1.0f;
             this.force = force;
             this.empStrength = empStrength;
             sparks = true;
             shockwave = true;
+            smoke = true;
             flames = true;
+            underwaterBubble = true;
         }
 
-        public Explosion(XElement element)
+        public Explosion(XElement element, string parentDebugName)
         {
-            attack = new Attack(element);
+            attack = new Attack(element, parentDebugName + ", Explosion");
 
             force = element.GetAttributeFloat("force", 0.0f);
 
             sparks      = element.GetAttributeBool("sparks", true);
             shockwave   = element.GetAttributeBool("shockwave", true);
             flames      = element.GetAttributeBool("flames", true);
+            underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
             smoke       = element.GetAttributeBool("smoke", true);
             flash       = element.GetAttributeBool("flash", true);
 
@@ -53,9 +59,20 @@ namespace Barotrauma
 
             CameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
         }
-        
-        public void Explode(Vector2 worldPosition)
+
+        public List<Triplet<Explosion, Vector2, float>> GetRecentExplosions(float maxSecondsAgo)
         {
+            return prevExplosions.FindAll(e => e.Third >= Timing.TotalTime - maxSecondsAgo);
+        }
+        
+        public void Explode(Vector2 worldPosition, Entity damageSource)
+        {
+            prevExplosions.Add(new Triplet<Explosion, Vector2, float>(this, worldPosition, (float)Timing.TotalTime));
+            if (prevExplosions.Count > 100)
+            {
+                prevExplosions.RemoveAt(0);
+            }
+
             Hull hull = Hull.FindHull(worldPosition);
 
             ExplodeProjSpecific(worldPosition, hull);
@@ -85,7 +102,7 @@ namespace Barotrauma
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
                     if (powered == null || !powered.VulnerableToEMP) continue;
-                    if (item.FixRequirements.Count > 0)
+                    if (item.Repairables.Any())
                     {
                         item.Condition -= 100 * empStrength * distFactor;
                     }
@@ -99,9 +116,9 @@ namespace Barotrauma
                 }
             }
 
-            if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
+            if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
-            ApplyExplosionForces(worldPosition, attack, force);
+            DamageCharacters(worldPosition, attack, force, damageSource);
 
             if (flames && GameMain.Client == null)
             {
@@ -142,7 +159,7 @@ namespace Barotrauma
                 MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
         }
 
-        public static void ApplyExplosionForces(Vector2 worldPosition, Attack attack, float force)
+        public static void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource)
         {
             if (attack.Range <= 0.0f) return;
 
@@ -150,6 +167,9 @@ namespace Barotrauma
             {
                 Vector2 explosionPos = worldPosition;
                 if (c.Submarine != null) explosionPos -= c.Submarine.Position;
+
+                Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
+                bool underWater = hull == null || explosionPos.Y < hull.Surface;
 
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);
 
@@ -171,13 +191,33 @@ namespace Barotrauma
                     if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
                     
                     distFactors.Add(limb, distFactor);
-
-                    c.AddDamage(limb.WorldPosition, DamageType.None,
-                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
-                        attack.GetBleedingDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
-                        attack.Stun * distFactor, 
-                        false);
-
+                    
+                    List<Affliction> modifiedAfflictions = new List<Affliction>();
+                    foreach (Affliction affliction in attack.Afflictions)
+                    {
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
+                    }
+                    c.LastDamageSource = damageSource;
+                    Character attacker = null;
+                    if (damageSource is Item item)
+                    {
+                        attacker = item.GetComponent<Projectile>()?.User;
+                        if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
+                    }
+                    c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
+                    
+                    if (attack.StatusEffects != null && attack.StatusEffects.Any())
+                    {
+                        attack.SetUser(attacker);
+                        var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
+                        foreach (StatusEffect statusEffect in attack.StatusEffects)
+                        {
+                            statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
+                            statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
+                            statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);
+                        }
+                    }
+                    
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
@@ -211,7 +251,7 @@ namespace Barotrauma
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure,float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
         {
             List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;

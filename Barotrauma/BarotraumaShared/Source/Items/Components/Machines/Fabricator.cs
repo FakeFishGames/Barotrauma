@@ -10,91 +10,113 @@ namespace Barotrauma.Items.Components
 {
     class FabricableItem
     {
-        public readonly ItemPrefab TargetItem;
+        public class RequiredItem
+        {
+            public readonly ItemPrefab ItemPrefab;
+            public int Amount;
+            public readonly float MinCondition;
+            public readonly bool UseCondition;
 
-        //TODO: refactor this (maybe make it a struct)
-        public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
+            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
+            {
+                ItemPrefab = itemPrefab;
+                Amount = amount;
+                MinCondition = minCondition;
+                UseCondition = useCondition;
+            }
+        }
+
+        public readonly ItemPrefab TargetItem;
+        
+        public readonly string DisplayName;
+        
+        public readonly List<RequiredItem> RequiredItems;
 
         public readonly float RequiredTime;
 
         public readonly float OutCondition; //Percentage-based from 0 to 1
 
         public readonly List<Skill> RequiredSkills;
-
+        
         public FabricableItem(XElement element)
         {
-            string name = element.GetAttributeString("name", "");
-
-            TargetItem = MapEntityPrefab.Find(name) as ItemPrefab;
-            
-            if (TargetItem == null)
+            if (element.Attribute("name") != null)
             {
-                return;
+                string name = element.Attribute("name").Value;
+                DebugConsole.ThrowError("Error in fabricable item config (" + name + ") - use item identifiers instead of names");
+                TargetItem = MapEntityPrefab.Find(name) as ItemPrefab;
+                if (TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + name + "\" not found.");
+                    return;
+                }
             }
+            else
+            {
+                string identifier = element.GetAttributeString("identifier", "");
+                TargetItem = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+                if (TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + identifier + "\" not found.");
+                    return;
+                }
+            }
+
+            string displayName = element.GetAttributeString("displayname", "");
+            DisplayName = string.IsNullOrEmpty(displayName) ? TargetItem.Name : TextManager.Get(displayName);
 
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
-            RequiredItems = new List<Tuple<ItemPrefab, int, float, bool>>();
-            //Backwards compatibility for string lists
-            string[] requiredItemNames = element.GetAttributeString("requireditems", "").Split(',');
-            foreach (string requiredItemName in requiredItemNames)
-            {
-                if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
-
-                ItemPrefab requiredItem = MapEntityPrefab.Find(requiredItemName.Trim()) as ItemPrefab;
-                if (requiredItem == null)
-                {
-                    DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
-                    continue;
-                }
-
-                var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
-                if (existing == null)
-                {
-                    RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, 1, 1.0f, false));
-                }
-                else
-                {
-                    RequiredItems.Remove(existing);
-                    RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, existing.Item2 + 1, 1.0f, false));
-                }
-            }
+            RequiredItems = new List<RequiredItem>();
 
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requiredskill":
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! Use skill identifiers instead of names.");
+                            continue;
+                        }
+
                         RequiredSkills.Add(new Skill(
-                            subElement.GetAttributeString("name", ""), 
+                            subElement.GetAttributeString("identifier", ""), 
                             subElement.GetAttributeInt("level", 0)));
                         break;
-                    case "item": //New system allowing for setting minimal item condition
-                        string requiredItemName = subElement.GetAttributeString("name", "");
+                    case "item":
+                    case "requireditem":
+                        string requiredItemIdentifier = subElement.GetAttributeString("identifier", "");
+                        if (string.IsNullOrWhiteSpace(requiredItemIdentifier))
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! One of the required items has no identifier.");
+                            continue;
+                        }
+
                         float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int count = subElement.GetAttributeInt("count", 1);
 
-                        if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
 
-                        ItemPrefab requiredItem = MapEntityPrefab.Find(requiredItemName.Trim()) as ItemPrefab;
+                        ItemPrefab requiredItem = MapEntityPrefab.Find(null, requiredItemIdentifier.Trim()) as ItemPrefab;
                         if (requiredItem == null)
                         {
-                            DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! Required item \"" + requiredItemIdentifier + "\" not found.");
                             continue;
                         }
 
-                        var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
+                        var existing = RequiredItems.Find(r => r.ItemPrefab == requiredItem);
                         if (existing == null)
                         {
-                            RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, count, minCondition, useCondition));
+                            RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
                         }
                         else
                         {
+
                             RequiredItems.Remove(existing);
-                            RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, existing.Item2 + count, minCondition, useCondition));
+                            RequiredItems.Add(new RequiredItem(requiredItem, existing.Amount + count, minCondition, useCondition));
                         }
 
                         break;
@@ -106,15 +128,20 @@ namespace Barotrauma.Items.Components
 
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
+        public const float SkillIncreaseMultiplier = 0.5f;
+
         private List<FabricableItem> fabricableItems;
 
         private FabricableItem fabricatedItem;
         private float timeUntilReady;
-
-        //used for checking if contained items have changed 
-        //(in which case we need to recheck which items can be fabricated)
-        private Item[] prevContainedItems;
+        private float requiredTime;
         
+        private Character user;
+
+        private ItemContainer inputContainer, outputContainer;
+
+        private float progressState;
+
         public Fabricator(Item item, XElement element) 
             : base(item, element)
         {
@@ -138,89 +165,88 @@ namespace Barotrauma.Items.Components
             InitProjSpecific();
         }
 
+        public override void OnItemLoaded()
+        {
+            var containers = item.GetComponents<ItemContainer>().ToList();
+            if (containers.Count < 2)
+            {
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\": Fabricators must have two ItemContainer components!");
+                return;
+            }
+
+            inputContainer = containers[0];
+            outputContainer = containers[1];
+
+            foreach (FabricableItem fabricableItem in fabricableItems)
+            {
+                int ingredientCount = fabricableItem.RequiredItems.Sum(it => it.Amount);
+                if (ingredientCount > inputContainer.Capacity)
+                {
+                    DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + fabricableItem.TargetItem.Name + "\"!");
+                }
+            }
+
+            OnItemLoadedProjSpecific();
+        }
+
+        partial void OnItemLoadedProjSpecific();
+
+
         partial void InitProjSpecific();
 
         public override bool Select(Character character)
         {
-            CheckFabricableItems(character);
-#if CLIENT
-            if (itemList.Selected != null)
-            {
-                SelectItem(itemList.Selected, itemList.Selected.UserData);                
-            }
-#endif
-
-
+            SelectProjSpecific(character);
             return base.Select(character);
         }
+
+        partial void SelectProjSpecific(Character character);
 
         public override bool Pick(Character picker)
         {
             return (picker != null);
         }
-
-        /// <summary>
-        /// check which of the items can be fabricated by the character
-        /// and update the text colors of the item list accordingly
-        /// </summary>
-        private void CheckFabricableItems(Character character)
-        {
-#if CLIENT
-            foreach (GUIComponent child in itemList.children)
-            {
-                var itemPrefab = child.UserData as FabricableItem;
-                if (itemPrefab == null) continue;
-
-                bool canBeFabricated = CanBeFabricated(itemPrefab, character);
-
-
-                child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
-                child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.SpriteColor * (canBeFabricated ? 1.0f : 0.5f);
-
-            }
-#endif
-
-            var itemContainer = item.GetComponent<ItemContainer>();
-            prevContainedItems = new Item[itemContainer.Inventory.Items.Length];
-            itemContainer.Inventory.Items.CopyTo(prevContainedItems, 0);
-        }
-
-        private void StartFabricating(FabricableItem selectedItem, Character user = null)
+        
+        private void StartFabricating(FabricableItem selectedItem, Character user)
         {
             if (selectedItem == null) return;
 
             if (user != null)
             {
-                GameServer.Log(user.LogName + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
 #if CLIENT
             itemList.Enabled = false;
-
-            activateButton.Text = "Cancel";
+            activateButton.Text = TextManager.Get("FabricatorCancel");
 #endif
+
+            MoveIngredientsToInputContainer(selectedItem);
 
             fabricatedItem = selectedItem;
             IsActive = true;
-
-            timeUntilReady = fabricatedItem.RequiredTime;
-
-            var containers = item.GetComponents<ItemContainer>();
-            containers[0].Inventory.Locked = true;
-            containers[1].Inventory.Locked = true;
+            this.user = user;
+            
+            requiredTime = GetRequiredTime(fabricatedItem, user);
+            timeUntilReady = requiredTime;
+            
+            inputContainer.Inventory.Locked = true;
+            outputContainer.Inventory.Locked = true;
 
             currPowerConsumption = powerConsumption;
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
         }
 
         private void CancelFabricating(Character user = null)
         {
             if (fabricatedItem != null && user != null)
             {
-                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
             IsActive = false;
             fabricatedItem = null;
+            this.user = null;
 
             currPowerConsumption = 0.0f;
 
@@ -228,98 +254,176 @@ namespace Barotrauma.Items.Components
             itemList.Enabled = true;
             if (activateButton != null)
             {
-                activateButton.Text = "Create";
+                activateButton.Text = TextManager.Get("FabricatorCreate");
             }
-            if (progressBar != null) progressBar.BarSize = 0.0f;
 #endif
+            progressState = 0.0f;
 
             timeUntilReady = 0.0f;
 
-            var containers = item.GetComponents<ItemContainer>();
-            containers[0].Inventory.Locked = false;
-            containers[1].Inventory.Locked = false;
+            inputContainer.Inventory.Locked = false;
+            outputContainer.Inventory.Locked = false;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (fabricatedItem == null)
+            if (fabricatedItem == null || !CanBeFabricated(fabricatedItem))
             {
                 CancelFabricating();
                 return;
             }
 
-#if CLIENT
-            if (progressBar != null)
-            {
-                progressBar.BarSize = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
-            }
-#endif
+            progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage) { return; }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption == 0) voltage = 1.0f;
+            if (powerConsumption <= 0) { voltage = 1.0f; }
 
-            timeUntilReady -= deltaTime*voltage;
-
+            timeUntilReady -= deltaTime * voltage;
             voltage -= deltaTime * 10.0f;
 
-            if (timeUntilReady > 0.0f) return;
+            if (timeUntilReady > 0.0f) { return; }
 
-            var containers = item.GetComponents<ItemContainer>();
-            if (containers.Count < 2)
+            var availableIngredients = GetAvailableIngredients();
+            foreach (FabricableItem.RequiredItem ingredient in fabricatedItem.RequiredItems)
             {
-                DebugConsole.ThrowError("Error while fabricating a new item: fabricators must have two ItemContainer components");
-                return;
-            }
-
-            foreach (Tuple<ItemPrefab, int, float, bool> ip in fabricatedItem.RequiredItems)
-            {
-                for (int i = 0; i < ip.Item2; i++)
+                for (int i = 0; i < ingredient.Amount; i++)
                 {
-                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1 && it.Condition >= ip.Item1.Health * ip.Item3);
+                    var requiredItem = inputContainer.Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ingredient.ItemPrefab && it.Condition >= ingredient.ItemPrefab.Health * ingredient.MinCondition);
                     if (requiredItem == null) continue;
                     
                     //Item4 = use condition bool
-                    if (ip.Item4 && requiredItem.Condition - ip.Item1.Health * ip.Item3 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                    if (ingredient.UseCondition && requiredItem.Condition - ingredient.ItemPrefab.Health * ingredient.MinCondition > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
                     {
-                        requiredItem.Condition -= ip.Item1.Health * ip.Item3;
+                        requiredItem.Condition -= ingredient.ItemPrefab.Health * ingredient.MinCondition;
                         continue;
                     }
                     Entity.Spawner.AddToRemoveQueue(requiredItem);
-                    containers[0].Inventory.RemoveItem(requiredItem);
+                    inputContainer.Inventory.RemoveItem(requiredItem);
                 }
             }
 
-            if (containers[1].Inventory.Items.All(i => i != null))
+            if (outputContainer.Inventory.Items.All(i => i != null))
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
             else
             {
-                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+            }
+
+            if (GameMain.Client == null && user != null)
+            {
+                foreach (Skill skill in fabricatedItem.RequiredSkills)
+                {
+                    user.Info.IncreaseSkillLevel(skill.Identifier, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
+                }
             }
 
             CancelFabricating(null);
         }
 
-        private bool CanBeFabricated(FabricableItem fabricableItem, Character user)
+        private bool CanBeFabricated(FabricableItem fabricableItem)
         {
-            if (fabricableItem == null) return false;
+            if (fabricableItem == null) { return false; }
+            List<Item> availableIngredients = GetAvailableIngredients();
+            return CanBeFabricated(fabricableItem, availableIngredients);
+        }
 
-            if (user != null && 
-                fabricableItem.RequiredSkills.Any(skill => user.GetSkillLevel(skill.Name) < skill.Level))
+        private bool CanBeFabricated(FabricableItem fabricableItem, IEnumerable<Item> availableIngredients)
+        {
+            if (fabricableItem == null) { return false; }            
+            foreach (FabricableItem.RequiredItem requiredItem in fabricableItem.RequiredItems)
             {
-                return false;
+                if (availableIngredients.Count(it => IsItemValidIngredient(it, requiredItem)) < requiredItem.Amount)
+                {
+                    return false;
+                }
             }
-            ItemContainer container = item.GetComponent<ItemContainer>();
-            foreach (Tuple<ItemPrefab, int, float, bool> ip in fabricableItem.RequiredItems)
-            {
-                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1 && it.Condition >= ip.Item1.Health * ip.Item3).Length < ip.Item2) return false;
-            }
-
             return true;
+        }
+
+        private float GetRequiredTime(FabricableItem fabricableItem, Character user)
+        {
+            float degreeOfSuccess = DegreeOfSuccess(user, fabricableItem.RequiredSkills);
+
+            float t = degreeOfSuccess < 0.5f ? degreeOfSuccess * degreeOfSuccess : degreeOfSuccess * 2;
+
+            //fabricating takes 100 times longer if degree of success is close to 0
+            //characters with a higher skill than required can fabricate up to 100% faster
+            return fabricableItem.RequiredTime / MathHelper.Clamp(t, 0.01f, 2.0f);
+        }
+
+        /// <summary>
+        /// Get a list of all items available in the input container and linked containers
+        /// </summary>
+        /// <returns></returns>
+        private List<Item> GetAvailableIngredients()
+        {
+            List<Item> availableIngredients = new List<Item>();
+            availableIngredients.AddRange(inputContainer.Inventory.Items.Where(it => it != null));
+            foreach (MapEntity linkedTo in item.linkedTo)
+            {
+                if (linkedTo is Item linkedItem)
+                {
+                    var itemContainer = linkedItem.GetComponent<ItemContainer>();
+                    if (itemContainer == null) { continue; }
+
+                    var deconstructor = linkedItem.GetComponent<Deconstructor>();
+                    if (deconstructor != null)
+                    {
+                        itemContainer = deconstructor.OutputContainer;
+                    }
+
+                    availableIngredients.AddRange(itemContainer.Inventory.Items.Where(it => it != null));
+                }
+            }
+            return availableIngredients;
+        }
+
+        /// <summary>
+        /// Move the items required for fabrication into the input container.
+        /// The method assumes that all the required ingredients are available either in the input container or linked containers.
+        /// </summary>
+        private void MoveIngredientsToInputContainer(FabricableItem targetItem)
+        {
+            //required ingredients that are already present in the input container
+            List<Item> usedItems = new List<Item>();
+
+            var availableIngredients = GetAvailableIngredients();
+            foreach (var requiredItem in targetItem.RequiredItems)
+            {
+                for (int i = 0; i < requiredItem.Amount; i++)
+                {
+                    var matchingItem = availableIngredients.Find(it => !usedItems.Contains(it) && IsItemValidIngredient(it, requiredItem));
+                    if (matchingItem == null) { continue; }
+                    
+                    if (matchingItem.ParentInventory == inputContainer.Inventory)
+                    {
+                        //already in input container, all good
+                        usedItems.Add(matchingItem);
+                    }
+                    else //in another inventory, we need to move the item
+                    {
+                        if (inputContainer.Inventory.Items.All(it => it != null))
+                        {
+                            var unneededItem = inputContainer.Inventory.Items.FirstOrDefault(it => !usedItems.Contains(it));
+                            unneededItem?.Drop();
+                        }
+                        inputContainer.Inventory.TryPutItem(matchingItem, user: null, createNetworkEvent: true);
+                    }                    
+                }
+            }
+        }
+
+        private bool IsItemValidIngredient(Item item, FabricableItem.RequiredItem requiredItem)
+        {
+            return 
+                item != null && 
+                item.prefab == requiredItem.ItemPrefab && 
+                item.Condition / item.Prefab.Health >= requiredItem.MinCondition;
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
@@ -351,6 +455,8 @@ namespace Barotrauma.Items.Components
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
+            UInt16 userID = fabricatedItem == null || user == null ? (UInt16)0 : user.ID;
+            msg.Write(userID);
         }
 
     }

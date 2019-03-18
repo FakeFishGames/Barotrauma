@@ -2,52 +2,130 @@
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
-        //amplitude and wave length of the "sine wave" swimming animation
-        //if amplitude = 0, sine wave animation isn't used
-        private float waveAmplitude;
-        private float waveLength;
+        public override RagdollParams RagdollParams
+        {
+            get { return FishRagdollParams; }
+            protected set { FishRagdollParams = value as FishRagdollParams; }
+        }
 
-        private float steerTorque;
+        private FishRagdollParams _ragdollParams;
+        public FishRagdollParams FishRagdollParams
+        {
+            get
+            {
+                if (_ragdollParams == null)
+                {
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
+                }
+                return _ragdollParams;
+            }
+            protected set
+            {
+                _ragdollParams = value;
+            }
+        }
 
-        private bool rotateTowardsMovement;
+        private FishWalkParams _fishWalkParams;
+        public FishWalkParams FishWalkParams
+        {
+            get
+            {
+                if (_fishWalkParams == null)
+                {
+                    _fishWalkParams = FishWalkParams.GetDefaultAnimParams(character);
+                }
+                return _fishWalkParams;
+            }
+            set { _fishWalkParams = value; }
+        }
 
-        private bool mirror, flip;
+        private FishRunParams _fishRunParams;
+        public FishRunParams FishRunParams
+        {
+            get
+            {
+                if (_fishRunParams == null)
+                {
+                    _fishRunParams = FishRunParams.GetDefaultAnimParams(character);
+                }
+                return _fishRunParams;
+            }
+            set { _fishRunParams = value; }
+        }
+
+        private FishSwimSlowParams _fishSwimSlowParams;
+        public FishSwimSlowParams FishSwimSlowParams
+        {
+            get
+            {
+                if (_fishSwimSlowParams == null)
+                {
+                    _fishSwimSlowParams = FishSwimSlowParams.GetDefaultAnimParams(character);
+                }
+                return _fishSwimSlowParams;
+            }
+            set { _fishSwimSlowParams = value; }
+        }
+
+        private FishSwimFastParams _fishSwimFastParams;
+        public FishSwimFastParams FishSwimFastParams
+        {
+            get
+            {
+                if (_fishSwimFastParams == null)
+                {
+                    _fishSwimFastParams = FishSwimFastParams.GetDefaultAnimParams(character);
+                }
+                return _fishSwimFastParams;
+            }
+            set { _fishSwimFastParams = value; }
+        }
+
+        public IFishAnimation CurrentFishAnimation => CurrentAnimationParams as IFishAnimation;
+        public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
+        public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
+
+        public float? TailAngle => GetValidOrNull(CurrentAnimationParams, CurrentFishAnimation?.TailAngleInRadians);
+        public float FootTorque => CurrentFishAnimation.FootTorque;
+        public float HeadTorque => CurrentFishAnimation.HeadTorque;
+        public float TorsoTorque => CurrentFishAnimation.TorsoTorque;
+        public float TailTorque => CurrentFishAnimation.TailTorque;
+        public float HeadMoveForce => CurrentGroundedParams.HeadMoveForce;
+        public float TorsoMoveForce => CurrentGroundedParams.TorsoMoveForce;
+        public float FootMoveForce => CurrentGroundedParams.FootMoveForce;
+
+        public override GroundedMovementParams WalkParams
+        {
+            get { return FishWalkParams; }
+            set { FishWalkParams = value as FishWalkParams; }
+        }
+
+        public override GroundedMovementParams RunParams
+        {
+            get { return FishRunParams; }
+            set { FishRunParams = value as FishRunParams; }
+        }
+
+        public override SwimParams SwimSlowParams
+        {
+            get { return FishSwimSlowParams; }
+            set { FishSwimSlowParams = value as FishSwimSlowParams; }
+        }
+
+        public override SwimParams SwimFastParams
+        {
+            get { return FishSwimFastParams; }
+            set { FishSwimFastParams = value as FishSwimFastParams; }
+        }
 
         private float flipTimer;
 
-        private float? footRotation;
-
-        private float deathAnimTimer, deathAnimDuration = 5.0f;
-
-        public FishAnimController(Character character, XElement element)
-            : base(character, element)
-        {
-            waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
-            waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
-
-            steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
-            
-            flip            = element.GetAttributeBool("flip", true);
-            mirror          = element.GetAttributeBool("mirror", false);
-            
-            float footRot = element.GetAttributeFloat("footrotation", float.NaN);
-            if (float.IsNaN(footRot))
-            {
-                footRotation = null;
-            }
-            else
-            {
-                footRotation = MathHelper.ToRadians(footRot);
-            }
-
-            rotateTowardsMovement = element.GetAttributeBool("rotatetowardsmovement", true);
-        }
+        public FishAnimController(Character character, string seed, FishRagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
         public override void UpdateAnim(float deltaTime)
         {
@@ -55,37 +133,24 @@ namespace Barotrauma
 
             if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
             {
+                Collider.Enabled = false;
                 Collider.FarseerBody.FixedRotation = false;
-
-                if (character.IsRemotePlayer)
-                {
-                    if (!SimplePhysicsEnabled)
-                    {
-                        MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                        MainLimb.PullJointEnabled = true;
-                    }
-                }
-                else
-                {
-                    Vector2 diff = (MainLimb.SimPosition - Collider.SimPosition);
-                    if (diff.LengthSquared() > 10.0f * 10.0f)
-                    {
-                        Collider.SetTransform(MainLimb.SimPosition, MainLimb.Rotation);
-                    }
-                    else
-                    {
-                        Collider.LinearVelocity = diff * 60.0f;
-                        Collider.SmoothRotate(MainLimb.Rotation);
-                    }
-                }
+                //set linear velocity even though the collider is disabled, 
+                //because the character won't be able to switch back from ragdoll mode until the velocity of the collider is low enough
+                Collider.LinearVelocity = MainLimb.LinearVelocity;
+                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
 
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
-                    UpdateDying(deltaTime);
+                    UpdateDying(deltaTime);                    
                 }
                 
                 return;
+            }
+            else
+            {
+                deathAnimTimer = 0.0f;
             }
 
             //re-enable collider
@@ -109,18 +174,18 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
-
-            if (inWater)
+            if (inWater && !forceStanding)
             {
                 Collider.FarseerBody.FixedRotation = false;
                 UpdateSineAnim(deltaTime);
             }
-            else if (currentHull != null && CanEnterSubmarine)
+            else if (CanEnterSubmarine && (currentHull != null || forceStanding) && CurrentGroundedParams != null)
             {
-                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
+                //rotate collider back upright
+                float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                 {
-                    //rotate collider back upright
-                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 60.0f;
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
@@ -134,26 +199,37 @@ namespace Barotrauma
             //don't flip or drag when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
-            if (!character.IsRemotePlayer)
+            if (!character.IsRemotePlayer && (character.AIController == null || character.AIController.CanFlip))
             {
-                if (mirror || !inWater)
+                if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {
-                    if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
+                    if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.2f)
                     {
                         TargetDir = Direction.Right;
                     }
-                    else if (targetMovement.X < -0.1f && targetMovement.X < -Math.Abs(targetMovement.Y) * 0.5f)
+                    else if (targetMovement.X < -0.1f && targetMovement.X < -Math.Abs(targetMovement.Y) * 0.2f)
                     {
                         TargetDir = Direction.Left;
                     }
                 }
                 else
                 {
-                    Limb head = GetLimb(LimbType.Head);
-                    if (head == null) head = GetLimb(LimbType.Torso);
+                    float refAngle = 0.0f;
+                    Limb refLimb = GetLimb(LimbType.Head);
+                    if (refLimb == null)
+                    {
+                        refAngle = CurrentAnimationParams.TorsoAngleInRadians;
+                        refLimb = GetLimb(LimbType.Torso);
+                    }
+                    else
+                    {
+                        refAngle = CurrentAnimationParams.HeadAngleInRadians;
+                    }
 
-                    float rotation = MathUtils.WrapAngleTwoPi(head.Rotation);
-                    rotation = MathHelper.ToDegrees(rotation);
+                    float rotation = refLimb.Rotation;
+                    if (!float.IsNaN(refAngle)) { rotation -= refAngle * Dir; }
+
+                    rotation = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotation));
 
                     if (rotation < 0.0f) rotation += 360;
 
@@ -168,9 +244,10 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter, deltaTime);
 
-            if (!flip) return;
+            if (!CurrentFishAnimation.Flip || IsStuck) return;
+            if (character.AIController != null && !character.AIController.CanFlip) return;
 
             flipTimer += deltaTime;
 
@@ -179,7 +256,10 @@ namespace Barotrauma
                 if (flipTimer > 1.0f || character.IsRemotePlayer)
                 {
                     Flip();
-                    if (mirror || !inWater) Mirror();
+                    if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
+                    {
+                        Mirror();
+                    }
                     flipTimer = 0.0f;
                 }
             }
@@ -187,7 +267,7 @@ namespace Barotrauma
 
         private float eatTimer = 0.0f;
 
-        public override void DragCharacter(Character target)
+        public override void DragCharacter(Character target, float deltaTime)
         {
             if (target == null) return;
             
@@ -202,20 +282,9 @@ namespace Barotrauma
 
             Character targetCharacter = target;
             float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
+            eatTimer += deltaTime * eatSpeed;
 
-            eatTimer += (float)Timing.Step * eatSpeed;
-
-            Vector2 mouthPos = mouthLimb.SimPosition;
-            if (mouthLimb.MouthPos.HasValue)
-            {
-                float cos = (float)Math.Cos(mouthLimb.Rotation);
-                float sin = (float)Math.Sin(mouthLimb.Rotation);
-
-                mouthPos += new Vector2(
-                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
-            }
-
+            Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
@@ -232,19 +301,21 @@ namespace Barotrauma
                 float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
                 mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
 
-                if (eatTimer % 1.0f < 0.5f && (eatTimer - (float)Timing.Step * eatSpeed) % 1.0f > 0.5f)
+                character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
+
+                if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
                     //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 20.0f, 0.0f, false);
 
                     //keep severing joints until there is only one limb left
-                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints,
+                        l => !l.IsSevered && l.CanBeSevered && l.LimbA != null && !l.LimbA.IsSevered && l.LimbB != null && !l.LimbB.IsSevered);
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten
                         Entity.Spawner.AddToRemoveQueue(targetCharacter);
                         character.SelectedCharacter = null;
-                        character.Health += 10.0f;
                     }
                     else //sever a random joint
                     {
@@ -260,42 +331,124 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = TargetMovement * swimSpeed;
+            if (CurrentSwimParams == null) { return; }
+            movement = TargetMovement;
 
-            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, 0.5f);
+            if (movement.LengthSquared() > 0.00001f)
+            {
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, 0.5f);
+            }
 
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
 
             MainLimb.PullJointEnabled = true;
-            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+            //MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
-            if (movement.LengthSquared() < 0.00001f) return;
-
+            if (movement.LengthSquared() < 0.00001f)
+            {
+                WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
+                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, 0.5f);
+                return;
+            }
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
-            
-            if (rotateTowardsMovement)
+
+            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
             {
-                Collider.SmoothRotate(movementAngle, 25.0f);
-                MainLimb.body.SmoothRotate(movementAngle, steerTorque);
+                movementAngle += MathHelper.TwoPi;
+            }
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) < -MathHelper.Pi)
+            {
+                movementAngle -= MathHelper.TwoPi;
+            }            
+
+            if (CurrentSwimParams.RotateTowardsMovement)
+            {
+                Collider.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque);
+                if (TorsoAngle.HasValue)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    if (torso != null)
+                    {
+                        SmoothRotateWithoutWrapping(torso, movementAngle + TorsoAngle.Value * Dir, MainLimb, TorsoTorque);
+                    }
+                }
+                if (HeadAngle.HasValue)
+                {
+                    Limb head = GetLimb(LimbType.Head);
+                    if (head != null)
+                    {
+                        SmoothRotateWithoutWrapping(head, movementAngle + HeadAngle.Value * Dir, MainLimb, HeadTorque);
+                    }
+                }
+                if (TailAngle.HasValue)
+                {
+                    Limb tail = GetLimb(LimbType.Tail);
+                    //tail?.body.SmoothRotate(movementAngle + TailAngle.Value * Dir, TailTorque);
+                    if (tail != null)
+                    {
+                        SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, MainLimb, TailTorque);
+                    }
+                }
             }
             else
             {
-                Collider.SmoothRotate(HeadAngle * Dir, 25.0f);
-                MainLimb.body.SmoothRotate(HeadAngle * Dir, steerTorque);
+                movementAngle = Dir > 0 ? -MathHelper.PiOver2 : MathHelper.PiOver2;
+                if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
+                {
+                    Collider.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+                }
+                else if (MainLimb.type == LimbType.Torso && TorsoAngle.HasValue)
+                {
+                    Collider.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+                }
+                if (TorsoAngle.HasValue)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, TorsoTorque);
+                }
+                if (HeadAngle.HasValue)
+                {
+                    Limb head = GetLimb(LimbType.Head);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, HeadTorque);
+                }
+                if (TailAngle.HasValue)
+                {
+                    Limb tail = GetLimb(LimbType.Tail);
+                    tail?.body.SmoothRotate(TailAngle.Value * Dir, TailTorque);
+                }
             }
 
-            Limb tail = GetLimb(LimbType.Tail);
-            if (tail != null && waveAmplitude > 0.0f)
+            var waveLength = Math.Abs(CurrentSwimParams.WaveLength * RagdollParams.JointScale);
+            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
+            if (waveLength > 0 && waveAmplitude > 0)
             {
-                walkPos -= movement.Length();
-
-                float waveRotation = (float)Math.Sin(walkPos / waveLength);
-
-                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * waveAmplitude);
+                WalkPos -= movement.Length() / Math.Abs(waveLength);
+                WalkPos = MathUtils.WrapAngleTwoPi(WalkPos);
             }
 
+            foreach (var limb in Limbs)
+            {
+                switch (limb.type)
+                {
+                    case LimbType.LeftFoot:
+                    case LimbType.RightFoot:
+                        if (CurrentSwimParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        {
+                            SmoothRotateWithoutWrapping(limb, movementAngle + CurrentSwimParams.FootAnglesInRadians[limb.limbParams.ID] * Dir, MainLimb, FootTorque);
+                        }
+                        break;
+                    case LimbType.Tail:
+                        if (waveLength > 0 && waveAmplitude > 0)
+                        {
+                            float waveRotation = (float)Math.Sin(WalkPos);
+                            limb.body.ApplyTorque(waveRotation * limb.Mass * CurrentSwimParams.TailTorque * waveAmplitude);
+                        }
+                        break;
+                }
+            }
 
             for (int i = 0; i < Limbs.Length; i++)
             {
@@ -304,13 +457,24 @@ namespace Barotrauma
                 Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
-                            
+
+            if (CurrentSwimParams.UseSineMovement)
+            {
+                MainLimb.PullJointWorldAnchorB = Vector2.SmoothStep(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, (float)Math.Abs(Math.Sin(WalkPos)));
+            }
+            else
+            {
+                //MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, 0.5f);
+            }
+
             floorY = Limbs[0].SimPosition.Y;            
         }
             
         void UpdateWalkAnim(float deltaTime)
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
+            if (CurrentGroundedParams == null) { return; }
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
 
             Collider.LinearVelocity = new Vector2(
                 movement.X,
@@ -319,30 +483,83 @@ namespace Barotrauma
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
 
-            float mainLimbHeight, mainLimbAngle;
-            if (MainLimb.type == LimbType.Torso)
+            float mainLimbHeight = ColliderHeightFromFloor;
+
+            Vector2 colliderBottom = GetColliderBottom();
+
+            float movementAngle = 0.0f;
+            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
             {
-                mainLimbHeight = TorsoPosition;
-                mainLimbAngle = torsoAngle;
+                movementAngle += MathHelper.TwoPi;
             }
-            else
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) < -MathHelper.Pi)
             {
-                mainLimbHeight = HeadPosition;
-                mainLimbAngle = headAngle;
+                movementAngle -= MathHelper.TwoPi;
             }
 
-            MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);            
+            Limb torso = GetLimb(LimbType.Torso);
+            if (torso != null)
+            {
+                if (TorsoAngle.HasValue)
+                {
+                    SmoothRotateWithoutWrapping(torso, movementAngle + TorsoAngle.Value * Dir, MainLimb, TorsoTorque);
+                }
+                if (TorsoPosition.HasValue)
+                {
+                    Vector2 pos = colliderBottom + Vector2.UnitY * TorsoPosition.Value;
 
-            MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
-            
-            MainLimb.PullJointEnabled = true;
-            MainLimb.PullJointWorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
+                    if (torso != MainLimb)
+                        pos.X = torso.SimPosition.X;
+                    else
+                        mainLimbHeight = TorsoPosition.Value;
 
-            walkPos -= MainLimb.LinearVelocity.X * 0.05f;
+                    torso.MoveToPos(pos, TorsoMoveForce);
+                    torso.PullJointEnabled = true;
+                    torso.PullJointWorldAnchorB = pos;
+                }
+            }
 
-            Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(walkPos) * stepSize.X * 3.0f,
-                (float)Math.Sin(walkPos) * stepSize.Y * 2.0f);
+            Limb head = GetLimb(LimbType.Head);
+            if (head != null)
+            {
+                if (HeadAngle.HasValue)
+                {
+                    SmoothRotateWithoutWrapping(head, movementAngle + HeadAngle.Value * Dir, MainLimb, HeadTorque);
+                }
+                if (HeadPosition.HasValue)
+                {
+                    Vector2 pos = colliderBottom + Vector2.UnitY * HeadPosition.Value;
+
+                    if (head != MainLimb)
+                        pos.X = head.SimPosition.X;
+                    else
+                        mainLimbHeight = HeadPosition.Value;
+
+                    head.MoveToPos(pos, HeadMoveForce);
+                    head.PullJointEnabled = true;
+                    head.PullJointWorldAnchorB = pos;
+                }
+            }
+
+            if (TailAngle.HasValue)
+            {
+                var tail = GetLimb(LimbType.Tail);
+                if (tail != null)
+                {
+                    SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, MainLimb, TailTorque);
+                }
+            }
+
+            WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / RagdollParams.JointScale / 100.0f);
+
+            Vector2 transformedStepSize = Vector2.Zero;
+            if (Math.Abs(TargetMovement.X) > 0.01f)
+            {
+                transformedStepSize = new Vector2(
+                    (float)Math.Cos(WalkPos) * StepSize.Value.X * 3.0f,
+                    (float)Math.Sin(WalkPos) * StepSize.Value.Y * 2.0f);
+            }
 
             foreach (Limb limb in Limbs)
             {
@@ -350,56 +567,78 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        Vector2 footPos = new Vector2(limb.SimPosition.X, MainLimb.SimPosition.Y - mainLimbHeight);
+                        Vector2 footPos = new Vector2(limb.SimPosition.X, colliderBottom.Y);
 
-                        if (limb.RefJointIndex>-1)
+                        if (limb.RefJointIndex > -1)
                         {
-                            RevoluteJoint refJoint = LimbJoints[limb.RefJointIndex];
-                            footPos.X = refJoint.WorldAnchorA.X;
+                            if (LimbJoints.Length <= limb.RefJointIndex)
+                            {
+                                DebugConsole.ThrowError($"Reference joint index {limb.RefJointIndex} is out of array. This is probably due to a missing joint. If you just deleted a joint, don't do that without first removing the reference joint indices from the limbs. If this is not the case, please ensure that you have defined the index to the right joint.");
+                            }
+                            else
+                            {
+                                footPos.X = LimbJoints[limb.RefJointIndex].WorldAnchorA.X;
+                            }
                         }
                         footPos.X += limb.StepOffset.X * Dir;
                         footPos.Y += limb.StepOffset.Y;
 
                         if (limb.type == LimbType.LeftFoot)
                         {
-                            limb.MoveToPos(footPos +new Vector2(
+                            limb.DebugRefPos = footPos + Vector2.UnitX * movement.X * 0.1f;
+                            limb.DebugTargetPos = footPos + new Vector2(
                                 transformedStepSize.X + movement.X * 0.1f,
-                                (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f),
-                            8.0f);
+                                (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f);
+                            limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
-                            limb.MoveToPos(footPos + new Vector2(
+                            limb.DebugRefPos = footPos + Vector2.UnitX * movement.X * 0.1f;
+                            limb.DebugTargetPos = footPos + new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
-                                (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
-                            8.0f);
+                                (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f);
+                            limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
 
-                        if (footRotation != null) limb.body.SmoothRotate((float)footRotation * Dir, 50.0f);
-
+                        if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
+                        {
+                            SmoothRotateWithoutWrapping(limb,
+                                movementAngle + CurrentGroundedParams.FootAnglesInRadians[limb.limbParams.ID] * Dir,
+                                MainLimb, FootTorque);
+                        }
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
-                        if (legTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * legTorque * Dir);
+                        if (Math.Abs(CurrentGroundedParams.LegTorque) > 0.001f) limb.body.ApplyTorque(limb.Mass * CurrentGroundedParams.LegTorque * Dir);
                         break;
                 }
             }
         }
-        
+
         void UpdateDying(float deltaTime)
         {
+            if (deathAnimDuration <= 0.0f) return;
+
+            float animStrength = (1.0f - deathAnimTimer / deathAnimDuration);
+
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(walkPos)) * 10.0f);
-            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (float)Math.Sin(walkPos)) * 10.0f);
+            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(WalkPos)) * 30.0f * animStrength);
+            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * Math.Sin(WalkPos)) * 30.0f * animStrength);
 
-            walkPos += deltaTime * 5.0f;
+            WalkPos += deltaTime * 10.0f * animStrength;
 
             Vector2 centerOfMass = GetCenterOfMass();
 
             foreach (Limb limb in Limbs)
             {
+#if CLIENT
+                if (limb.LightSource != null)
+                {
+                    limb.LightSource.Color = Color.Lerp(limb.InitialLightSourceColor, Color.TransparentBlack, deathAnimTimer / deathAnimDuration);
+                }
+#endif
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered || !limb.body.Enabled) continue;
                 if (limb.Mass <= 0.0f)
                 {
@@ -420,20 +659,33 @@ namespace Barotrauma
                     return;
                 }
 
-                limb.body.ApplyForce(diff * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
+                limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
             }
+        }
+
+        private void SmoothRotateWithoutWrapping(Limb limb, float angle, Limb referenceLimb, float torque)
+        {
+            //make sure the angle "has the same number of revolutions" as the reference limb
+            //(e.g. we don't want to rotate the legs to 0 if the torso is at 360, because that'd blow up the hip joints) 
+            while (referenceLimb.Rotation - angle > MathHelper.TwoPi)
+            {
+                angle += MathHelper.TwoPi;
+            }
+            while (referenceLimb.Rotation - angle < -MathHelper.TwoPi)
+            {
+                angle -= MathHelper.TwoPi;
+            }
+
+            limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
         }
 
         public override void Flip()
         {
             base.Flip();
-
             foreach (Limb l in Limbs)
             {
                 if (!l.DoesFlip) continue;
-                
-                l.body.SetTransform(l.SimPosition,
-                    -l.body.Rotation);                
+                l.body.SetTransform(l.SimPosition, -l.body.Rotation);                
             }
         }
 

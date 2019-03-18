@@ -24,102 +24,76 @@ namespace Barotrauma
             get { return barSize; }
             set
             {
-                float oldBarSize = barSize;
                 barSize = MathHelper.Clamp(value, 0.0f, 1.0f);
-                if (barSize != oldBarSize) UpdateRect();
+                //UpdateRect();
             }
         }
-
-        public GUIProgressBar(Rectangle rect, Color color, float barSize, GUIComponent parent = null)
-            : this(rect, color, barSize, (Alignment.Left | Alignment.Top), parent)
+        
+        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "") : base(style, rectT)
         {
-        }
-
-        public GUIProgressBar(Rectangle rect, Color color, float barSize, Alignment alignment, GUIComponent parent = null)
-            : this(rect, color, null, barSize, alignment, parent)
-        {
-
-        }
-
-        public GUIProgressBar(Rectangle rect, Color color, string style, float barSize, Alignment alignment, GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-            this.color = color;
-            isHorizontal = (rect.Width > rect.Height);
-
-            this.alignment = alignment;
-            
-            if (parent != null)
-                parent.AddChild(this);
-
-            frame = new GUIFrame(new Rectangle(0, 0, 0, 0), null, this);
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            isHorizontal = (Rect.Width > Rect.Height);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(frame, "", this);
-
-            slider = new GUIFrame(new Rectangle(0, 0, 0, 0), null);
+            slider = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(slider, "Slider", this);
-
             this.barSize = barSize;
-            UpdateRect();
         }
 
-        /*public override void ApplyStyle(GUIComponentStyle style)
-        {
-            if (frame == null) return;
-
-            frame.Color = style.Color;
-            frame.HoverColor = style.HoverColor;
-            frame.SelectedColor = style.SelectedColor;
-
-            Padding = style.Padding;
-
-            frame.OutlineColor = style.OutlineColor;
-
-            this.style = style;
-        }*/
-
-        private void UpdateRect()
-        {
-            slider.Rect = new Rectangle(
-                (int)(frame.Rect.X + padding.X),
-                (int)(frame.Rect.Y + padding.Y),
-                isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
-                isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
-        }
-
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
-            if (ProgressGetter != null) BarSize = ProgressGetter();
+            if (ProgressGetter != null) BarSize = ProgressGetter();   
 
-            DrawChildren(spriteBatch);
-
-            Color currColor = color;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-
-            if (slider.sprites != null && slider.sprites[state].Count > 0)
+            Rectangle sliderRect = new Rectangle(
+                    frame.Rect.X,
+                    (int)(frame.Rect.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
+                    isHorizontal ? (int)((frame.Rect.Width) * barSize) : frame.Rect.Width,
+                    isHorizontal ? (int)(frame.Rect.Height) : (int)(frame.Rect.Height * barSize));
+            
+            frame.Visible = true;
+            slider.Visible = true;
+            if (AutoDraw)
             {
-                foreach (UISprite uiSprite in slider.sprites[state])
-                {
-                    if (uiSprite.Tile)
-                    {
-                        uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), color: currColor);
-                    }
-                    else
-                    {
-                        spriteBatch.Draw(uiSprite.Sprite.Texture,
-                            slider.Rect, new Rectangle(
-                                uiSprite.Sprite.SourceRect.X, 
-                                uiSprite.Sprite.SourceRect.Y, 
-                                (int)(uiSprite.Sprite.SourceRect.Width * (isHorizontal ? barSize : 1.0f)),
-                                (int)(uiSprite.Sprite.SourceRect.Height * (isHorizontal ? 1.0f : barSize))), 
-                            currColor);
-                    }
-                }
+                frame.DrawAuto(spriteBatch);
+            }
+            else
+            {
+                frame.DrawManually(spriteBatch);
+            }
+
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            if (BarSize <= 1.0f)
+            {
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, sliderRect);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            }
+
+            Color currColor = GetCurrentColor(state);
+
+            slider.Color = currColor;
+            if (AutoDraw)
+            {
+                slider.DrawAuto(spriteBatch);
+            }
+            else
+            {
+                slider.DrawManually(spriteBatch);
+            }
+            //hide the slider, we've already drawn it manually
+            frame.Visible = false;
+            slider.Visible = false;
+            if (BarSize <= 1.0f)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
             }
         }
-
     }
 }

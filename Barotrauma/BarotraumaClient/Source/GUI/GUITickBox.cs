@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -11,6 +12,10 @@ namespace Barotrauma
         public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
 
+        public static int size = 20;
+
+        private List<GUITickBox> radioButtonGroup;
+
         private bool selected;
 
         public bool Selected
@@ -19,42 +24,33 @@ namespace Barotrauma
             set 
             { 
                 if (value == selected) return;
+                if (radioButtonGroup != null && !value) return;
+
                 selected = value;
                 state = (selected) ? ComponentState.Selected : ComponentState.None;
-
                 box.State = state;
+                if (radioButtonGroup != null)
+                {
+                    foreach (GUITickBox tickBox in radioButtonGroup)
+                    {
+                        if (tickBox == this) continue;
+                        tickBox.selected = false;
+                        tickBox.state = tickBox.box.State = ComponentState.None;
+                    }
+                }
+
+                OnSelected?.Invoke(this);
+                if (radioButtonGroup != null)
+                {
+                    foreach (GUITickBox tickBox in radioButtonGroup)
+                    {
+                        if (tickBox == this) continue;
+                        tickBox.OnSelected?.Invoke(tickBox);
+                    }
+                }
             }
         }
-
-        private bool enabled;
-
-        public bool Enabled
-        {
-            get
-            {
-                return enabled;
-            }
-            set
-            {
-                enabled = value;
-            }
-        }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return rect;
-            }
-            set
-            {
-                base.Rect = value;
-
-                if (box != null) box.Rect = new Rectangle(value.X,value.Y,box.Rect.Width,box.Rect.Height);
-                if (text != null) text.Rect = new Rectangle(box.Rect.Right, box.Rect.Y + 2, 20, box.Rect.Height);
-            }
-        }
-
+        
         public Color TextColor
         {
             get { return text.TextColor; }
@@ -63,7 +59,11 @@ namespace Barotrauma
 
         public override Rectangle MouseRect
         {
-            get { return ClampMouseRectToParent ? ClampRect(box.Rect) : box.Rect; }
+            get
+            {
+                if (!CanBeFocused) return Rectangle.Empty;
+                return ClampMouseRectToParent ? ClampRect(box.Rect) : box.Rect;
+            }
         }
 
         public override ScalableFont Font
@@ -80,37 +80,70 @@ namespace Barotrauma
             }
         }
 
-        public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
-            : this(rect, label, alignment, GUI.Font, parent)
+        public GUIFrame Box
         {
+            get { return box; }
         }
 
-        public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, GUIComponent parent)
-            : base(null)
+        public override string ToolTip
         {
-            if (parent != null)
-                parent.AddChild(this);
+            get { return base.ToolTip; }
+            set
+            {
+                base.ToolTip = value;
+                box.ToolTip = value;
+                text.ToolTip = value;
+            }
+        }
 
-            box = new GUIFrame(rect, Color.DarkGray, "", this);
-            box.HoverColor = Color.Gray;
-            box.SelectedColor = Color.DarkGray;
-            box.CanBeFocused = false;
+        public string Text
+        {
+            get { return text.Text; }
+            set { text.Text = value; }
+        }
 
-            GUI.Style.Apply(box, "GUITickBox");
-            
-            text = new GUITextBlock(new Rectangle(rect.Right, rect.Y, 20, rect.Height), label, "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, this, false, font);
+        public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
+        {
+            box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft)
+            {
+                IsFixedSize = false
+            }, string.Empty, Color.DarkGray)
+            {
+                HoverColor = Color.Gray,
+                SelectedColor = Color.DarkGray,
+                CanBeFocused = false
+            };
+            GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
+            text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft);
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
-            
-            this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
-
             Enabled = true;
+
+            ResizeBox();
+
+            rectT.ScaleChanged += ResizeBox;
+            rectT.SizeChanged += ResizeBox;
+        }
+
+        public static void CreateRadioButtonGroup(IEnumerable<GUITickBox> tickBoxes)
+        {
+            var group = new List<GUITickBox>(tickBoxes);
+            foreach (GUITickBox tickBox in tickBoxes)
+            {
+                tickBox.radioButtonGroup = group;
+            }
+        }
+
+        private void ResizeBox()
+        {
+            box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
+            text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         
-        public override void Update(float deltaTime)
+        protected override void Update(float deltaTime)
         {
             if (!Visible) return;
 
-            if (MouseOn == this && Enabled)
+            if (GUI.MouseOn == this && Enabled)
             {
                 box.State = ComponentState.Hover;
 
@@ -121,8 +154,14 @@ namespace Barotrauma
 
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    Selected = !Selected;
-                    if (OnSelected != null) OnSelected(this);
+                    if (radioButtonGroup == null)
+                    {
+                        Selected = !Selected;
+                    }
+                    else if (!selected)
+                    {
+                        Selected = true;
+                    }
                 }
             }
             else
@@ -134,13 +173,6 @@ namespace Barotrauma
             {
                 box.State = ComponentState.Selected;
             }
-        }
-
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            if (!Visible) return;
-
-            DrawChildren(spriteBatch);            
         }
     }
 }

@@ -11,10 +11,11 @@ namespace Barotrauma.Networking
             ComponentState, 
             InventoryState,
             Status,
-            Repair,
+            Treatment,
             ApplyStatusEffect,
             ChangeProperty,
-            Control
+            Control,
+            UpdateSkills
         }
 
         public readonly Entity Entity;

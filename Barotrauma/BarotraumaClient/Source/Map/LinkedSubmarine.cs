@@ -40,12 +40,16 @@ namespace Barotrauma
             drawRect.Y = -rect.Y;
             GUI.DrawRectangle(spriteBatch, drawRect, Color.Red, true);
 
+            if (!Item.ShowLinks) return;
+
             foreach (MapEntity e in linkedTo)
             {
+                bool isLinkAllowed = e is Item item && item.HasTag("dock");
+
                 GUI.DrawLine(spriteBatch,
                     new Vector2(WorldPosition.X, -WorldPosition.Y),
                      new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
-                    Color.Red * 0.3f);
+                    isLinkAllowed ? Color.LightGreen * 0.5f : Color.Red * 0.5f, width: 3);
             }
         }
 
@@ -56,7 +60,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD();
             }
 
-            editingHUD.Update((float)Timing.Step);
+            editingHUD.UpdateManually((float)Timing.Step);
 
             if (!PlayerInput.LeftButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
 
@@ -77,44 +81,43 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD == null) return;
-
-            editingHUD.Draw(spriteBatch);
-        }
-
-
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
+            int width = 450, height = 120;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 100), "");
-            editingHUD.Padding = new Vector4(10, 10, 0, 0);
-            editingHUD.UserData = this;
+            editingHUD = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("LinkedSub"), "",
-                Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), editingHUD.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
-            var pathBox = new GUITextBox(new Rectangle(10, 30, 300, 20), "", editingHUD);
-            pathBox.Font = GUI.SmallFont;
-            pathBox.Text = filePath;
-
-            var reloadButton = new GUIButton(new Rectangle(320, 30, 80, 20), TextManager.Get("ReloadLinkedSub"), "", editingHUD);
-            reloadButton.OnClicked = Reload;
-            reloadButton.UserData = pathBox;
-            reloadButton.ToolTip = TextManager.Get("ReloadLinkedSubTooltip");
-
-            y += 20;
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
+                TextManager.Get("LinkedSub"), font: GUI.LargeFont);
 
             if (!inGame)
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("LinkLinkedSub"),
-                    "", Alignment.TopRight, Alignment.TopRight, editingHUD, false, GUI.SmallFont);
-                y += 25;
-
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
+                    TextManager.Get("LinkLinkedSub"), textColor: Color.Yellow, font: GUI.SmallFont);
             }
+
+            var pathContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true);
+
+            var pathBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), pathContainer.RectTransform), filePath, font: GUI.SmallFont);
+            var reloadButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), pathContainer.RectTransform), TextManager.Get("ReloadLinkedSub"))
+            {
+                OnClicked = Reload,
+                UserData = pathBox,
+                ToolTip = TextManager.Get("ReloadLinkedSubTooltip")
+            };
+
+            PositionEditingHUD();
+
             return editingHUD;
         }
 

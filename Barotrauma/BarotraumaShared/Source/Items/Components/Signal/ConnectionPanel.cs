@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +11,6 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static Wire HighlightedWire;
-
         public List<Connection> Connections;
 
         private Character user;
@@ -21,6 +20,13 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
+        }
+
+        //connection panels can't be deactivated
+        public override bool IsActive
+        {
+            get { return true; }
+            set { /*do nothing*/ }
         }
 
         public ConnectionPanel(Item item, XElement element)
@@ -33,16 +39,19 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        Connections.Add(new Connection(subElement, item));
+                        Connections.Add(new Connection(subElement, this));
                         break;
                     case "output":
-                        Connections.Add(new Connection(subElement, item));
+                        Connections.Add(new Connection(subElement, this));
                         break;
                 }
             }
 
             IsActive = true;
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void OnMapLoaded()
         {
@@ -52,9 +61,57 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.body != null)
+            {
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable == null || !holdable.Attachable)
+                {
+                    DebugConsole.ThrowError("Item \"" + item.Name + "\" has a ConnectionPanel component," +
+                        " but cannot be wired because it has an active physics body that cannot be attached to a wall." +
+                        " Remove the physics body or add a Holdable component with the Attachable attribute set to true.");
+                }
+            }
+        }
+
+        public void MoveConnectedWires(Vector2 amount)
+        {
+            Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
+            foreach (Connection c in Connections)
+            {
+                foreach (Wire wire in c.Wires)
+                {
+                    if (wire == null) continue;
+#if CLIENT
+                    if (wire.Item.IsSelected) continue;
+#endif
+                    var wireNodes = wire.GetNodes();
+                    if (wireNodes.Count == 0) continue;
+
+                    if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
+                    {
+                        wire.MoveNode(0, amount);
+                    }
+                    else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
+                    {
+                        wire.MoveNode(wireNodes.Count - 1, amount);
+                    }
+                }
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (user != null && user.SelectedConstruction != item) user = null;
+            if (user == null || user.SelectedConstruction != item)
+            {
+                user = null;
+                return;
+            }
+
+            if (!user.Enabled || !HasRequiredItems(user, addMessage: false)) { return; }
+
+            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override bool Select(Character picker)
@@ -70,10 +127,10 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             return true;
         }
-
+        
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character!=user) return false;
+            if (character == null || character != user) return false;
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)
@@ -82,7 +139,7 @@ namespace Barotrauma.Items.Components
             }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-            if (Rand.Range(0.0f, 50.0f) < degreeOfSuccess) return false;
+            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) return false;
 
             character.SetStun(5.0f);
 
@@ -94,7 +151,7 @@ namespace Barotrauma.Items.Components
         public override void Load(XElement element)
         {
             base.Load(element);
-                        
+
             List<Connection> loadedConnections = new List<Connection>();
 
             foreach (XElement subElement in element.Elements())
@@ -102,15 +159,15 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        loadedConnections.Add(new Connection(subElement, item));
+                        loadedConnections.Add(new Connection(subElement, this));
                         break;
                     case "output":
-                        loadedConnections.Add(new Connection(subElement, item));
+                        loadedConnections.Add(new Connection(subElement, this));
                         break;
                 }
             }
-            
-            for (int i = 0; i<loadedConnections.Count && i<Connections.Count; i++)
+
+            for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
                 loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
             }
@@ -157,9 +214,9 @@ namespace Barotrauma.Items.Components
         {
             foreach (Connection connection in Connections)
             {
-                for (int i = 0; i < Connection.MaxLinked; i++)
+                foreach (Wire wire in connection.Wires)
                 {
-                    msg.Write(connection.Wires[i]?.Item == null ? (ushort)0 : connection.Wires[i].Item.ID);
+                    msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
         }
@@ -171,8 +228,7 @@ namespace Barotrauma.Items.Components
             //read wire IDs for each connection
             for (int i = 0; i < Connections.Count; i++)
             {
-                wires[i] = new List<Wire>();
-                
+                wires[i] = new List<Wire>();                
                 for (int j = 0; j < Connection.MaxLinked; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
@@ -212,9 +268,10 @@ namespace Barotrauma.Items.Components
             //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
-                for (int j = 0; j < Connection.MaxLinked; j++)
+                int j = -1;
+                foreach (Wire existingWire in Connections[i].Wires)
                 {
-                    Wire existingWire = Connections[i].Wires[j];
+                    j++;
                     if (existingWire == null) continue;
                     
                     //existing wire not in the list of new wires -> disconnect it
@@ -263,9 +320,8 @@ namespace Barotrauma.Items.Components
                             }
                         }
                         
-                        Connections[i].Wires[j] = null;
-                    }
-                    
+                        Connections[i].SetWire(j, null);
+                    }                    
                 }
             }
 
@@ -302,6 +358,6 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             ClientWrite(msg, extraData);
-        } 
+        }        
     }
 }

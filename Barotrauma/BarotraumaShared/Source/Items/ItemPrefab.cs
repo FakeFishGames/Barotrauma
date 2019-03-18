@@ -4,22 +4,30 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     struct DeconstructItem
     {
-        public readonly string ItemPrefabName;
+        public readonly string ItemIdentifier;
+        //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
         public readonly float MinCondition;
+        //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
         public readonly float MaxCondition;
+        //Condition of item on creation
         public readonly float OutCondition;
+        //should the condition of the deconstructed item be copied to the output items
+        public readonly bool CopyCondition;
 
-        public DeconstructItem(string itemPrefabName, float minCondition, float maxCondition, float outCondition)
+        public DeconstructItem(XElement element)
         {
-            ItemPrefabName = itemPrefabName;
-            MinCondition = minCondition;
-            MaxCondition = maxCondition;
-            OutCondition = outCondition;
+            ItemIdentifier = element.GetAttributeString("identifier", "notfound");
+            MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
+            MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
+            OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            CopyCondition = element.GetAttributeBool("copycondition", false);
         }
     }
 
@@ -28,13 +36,17 @@ namespace Barotrauma
         private readonly string configFile;
         
         //default size
-        protected Vector2 size;
-                
+        protected Vector2 size;                
+
+        private float impactTolerance;
+
+        private bool canSpriteFlipX, canSpriteFlipY;
+        
+        private Dictionary<string, PriceInfo> prices;
+
         //an area next to the construction
         //the construction can be Activated() by a Character inside the area
         public List<Rectangle> Triggers;
-
-        private float impactTolerance;
 
         public string ConfigFile
         {
@@ -46,8 +58,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        private bool canSpriteFlipX;
 
         public List<DeconstructItem> DeconstructItems
         {
@@ -136,8 +146,15 @@ namespace Barotrauma
             set { impactTolerance = Math.Max(value, 0.0f); }
         }
 
+        [Serialize(0.0f, false)]
+        public float SonarSize
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
-        public bool CanUseOnSelf
+        public bool UseInHealthInterface
         {
             get;
             private set;
@@ -150,8 +167,8 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("", false)]
-        public string CargoContainerName
+        [Serialize("", false)]        
+        public string CargoContainerIdentifier
         {
             get;
             private set;
@@ -164,14 +181,42 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool UseContainedInventoryIconColor
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// How likely it is for the item to spawn in a level of a given type.
+        /// Key = name of the LevelGenerationParameters (empty string = default value)
+        /// Value = commonness
+        /// </summary>
+        public Dictionary<string, float> LevelCommonness
+        {
+            get;
+            private set;
+        } = new Dictionary<string, float>();
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
         }
 
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
+        }
+
         public Vector2 Size
         {
             get { return size; }
+        }
+
+        public bool CanBeBought
+        {
+            get { return prices != null && prices.Count > 0; }
         }
 
         public override void UpdatePlacing(Camera cam)
@@ -188,15 +233,14 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.MainSub);
-                    //constructor.Invoke(lobject);
-                    item.Submarine = Submarine.MainSub;
+                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)(sprite.size.X * Scale), (int)(sprite.size.Y * Scale)), this, Submarine.MainSub)
+                    {
+                        Submarine = Submarine.MainSub
+                    };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
 
                     placePosition = Vector2.Zero;
-
-                    // selected = null;
                     return;
                 }
             }
@@ -236,7 +280,7 @@ namespace Barotrauma
 
         }
 
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             if (GameSettings.VerboseLogging)
             {
@@ -251,20 +295,18 @@ namespace Barotrauma
                 }
 
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) return;
-
-                if (doc.Root.Name.ToString().ToLowerInvariant() == "item")
-                {
-                    new ItemPrefab(doc.Root, filePath);
-                }
-                else
+                if (doc?.Root == null) { return; }
+                
+                if (doc.Root.Name.ToString().ToLowerInvariant() == "items")
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != "item") continue;
-
                         new ItemPrefab(element, filePath);
                     }
+                }
+                else
+                {
+                    new ItemPrefab(doc.Root, filePath);
                 }
             }
         }
@@ -274,19 +316,16 @@ namespace Barotrauma
             configFile = filePath;
             ConfigElement = element;
 
-            name = element.GetAttributeString("name", "");
+            identifier = element.GetAttributeString("identifier", "");
+
+            name = TextManager.Get("EntityName." + identifier, true) ?? element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
 
             DebugConsole.Log("    " + name);
 
-            string aliases = element.GetAttributeString("aliases", "");
-            if (!string.IsNullOrWhiteSpace(aliases))
-            {
-                Aliases = aliases.Split(',');
-            }
+            Aliases = element.GetAttributeStringArray("aliases", new string[0], convertToLowerInvariant: true);
 
-            MapEntityCategory category;
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Misc;
             }
@@ -295,11 +334,22 @@ namespace Barotrauma
             Triggers            = new List<Rectangle>();
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
+            
+            Tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true).ToHashSet();
+            if (Tags.None())
+            {
+                Tags = element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true).ToHashSet();
+            }
 
-            Tags = new List<string>();
-            Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            if (element.Attribute("cargocontainername") != null)
+            {
+                DebugConsole.ThrowError("Error in item prefab \"" + name + "\" - cargo container should be configured using the item's identifier, not the name.");
+            }
 
             SerializableProperty.DeserializeProperties(this, element);
+
+            string translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
+            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
             {
@@ -313,6 +363,7 @@ namespace Barotrauma
                         }
 
                         canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         if (subElement.Attribute("sourcerect") == null)
@@ -320,8 +371,27 @@ namespace Barotrauma
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for item \"" + Name + "\"!");
                         }
                         size = sprite.size;
+
+                        if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(Name))
+                        {
+                            sprite.Name = Name;
+                        }
+                        sprite.EntityID = identifier;
+                        break;
+                    case "price":
+                        string locationType = subElement.GetAttributeString("locationtype", "");
+                        if (prices == null) prices = new Dictionary<string, PriceInfo>();
+                        prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
                         break;
 #if CLIENT
+                    case "inventoryicon":
+                        string iconFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            iconFolder = Path.GetDirectoryName(filePath);
+                        }
+                        InventoryIcon = new Sprite(subElement, iconFolder);
+                        break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
@@ -341,41 +411,129 @@ namespace Barotrauma
                         }
                         BrokenSprites.Insert(spriteIndex, brokenSprite);
                         break;
+                    case "decorativesprite":
+                        string decorativeSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            decorativeSpriteFolder = Path.GetDirectoryName(filePath);
+                        }
+
+                        int groupID = 0;
+                        DecorativeSprite decorativeSprite = null;
+                        if (subElement.Attribute("texture") == null)
+                        {
+                            groupID = subElement.GetAttributeInt("randomgroupid", 0);
+                        }
+                        else
+                        {
+                            decorativeSprite = new DecorativeSprite(subElement, decorativeSpriteFolder);
+                            DecorativeSprites.Add(decorativeSprite);
+                            groupID = decorativeSprite.RandomGroupID;
+                        }
+                        if (!DecorativeSpriteGroups.ContainsKey(groupID))
+                        {
+                            DecorativeSpriteGroups.Add(groupID, new List<DecorativeSprite>());
+                        }
+                        DecorativeSpriteGroups[groupID].Add(decorativeSprite);
+
+                        break;
+                    case "containedsprite":
+                        string containedSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            containedSpriteFolder = Path.GetDirectoryName(filePath);
+                        }
+                        var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder);
+                        if (containedSprite.Sprite != null)
+                        {
+                            ContainedSprites.Add(containedSprite);
+                        }
+                        break;
 #endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
-                            string deconstructItemName = deconstructItem.GetAttributeString("name", "not found");
-                            //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
-                            float minCondition = deconstructItem.GetAttributeFloat("mincondition", -0.1f);
-                            //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
-                            float maxCondition = deconstructItem.GetAttributeFloat("maxcondition", 1.0f);
-                            //Condition of item on creation
-                            float outCondition = deconstructItem.GetAttributeFloat("outcondition", 1.0f);
+                            if (deconstructItem.Attribute("name") != null)
+                            {
+                                DebugConsole.ThrowError("Error in item config \"" + Name + "\" - use item identifiers instead of names to configure the deconstruct items.");
+                                continue;
+                            }
 
-                            DeconstructItems.Add(new DeconstructItem(deconstructItemName, minCondition, maxCondition, outCondition));
-
+                            DeconstructItems.Add(new DeconstructItem(deconstructItem));
                         }
 
                         break;
                     case "trigger":
-                        Rectangle trigger = new Rectangle(0, 0, 10,10);
-
-                        trigger.X = subElement.GetAttributeInt("x", 0);
-                        trigger.Y = subElement.GetAttributeInt("y", 0);
-
-                        trigger.Width = subElement.GetAttributeInt("width", 0);
-                        trigger.Height = subElement.GetAttributeInt("height", 0);
+                        Rectangle trigger = new Rectangle(0, 0, 10, 10)
+                        {
+                            X = subElement.GetAttributeInt("x", 0),
+                            Y = subElement.GetAttributeInt("y", 0),
+                            Width = subElement.GetAttributeInt("width", 0),
+                            Height = subElement.GetAttributeInt("height", 0)
+                        };
 
                         Triggers.Add(trigger);
 
                         break;
+                    case "levelresource":
+                        foreach (XElement levelCommonnessElement in subElement.Elements())
+                        {
+                            string levelName = levelCommonnessElement.GetAttributeString("levelname", "").ToLowerInvariant();
+                            if (!LevelCommonness.ContainsKey(levelName))
+                            {
+                                LevelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                            }
+                        }
+                        break;
+                    case "suitabletreatment":
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
+                        }
+
+                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+
+                        var matchingAffliction = AfflictionPrefab.List.Find(a => a.Identifier == treatmentIdentifier);
+                        if (matchingAffliction != null)
+                        {
+                            matchingAffliction.TreatmentSuitability.Add(identifier, subElement.GetAttributeFloat("suitability", 0.0f));
+                        }
+                        break;
+                }
+            }
+            
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
                 }
             }
 
+            AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
+
             List.Add(this);
+        }
+
+        public PriceInfo GetPrice(Location location)
+        {
+            if (prices == null || !prices.ContainsKey(location.Type.Name.ToLowerInvariant())) return null;
+            return prices[location.Type.Name.ToLowerInvariant()];
+        }
+
+
+        public IEnumerable<PriceInfo> GetPrices()
+        {
+            return prices?.Values;
         }
     }
 }

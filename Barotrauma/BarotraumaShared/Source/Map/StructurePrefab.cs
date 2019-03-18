@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        private bool canSpriteFlipX;
+        private bool canSpriteFlipX, canSpriteFlipY;
 
         private float health;
         
@@ -23,8 +23,47 @@ namespace Barotrauma
             private set;
         }
 
+        //rotation of the physics body in degrees
+        [Serialize(0.0f, false)]
+        public float BodyRotation
+        {
+            get;
+            private set;
+        }
+        
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyWidth
+        {
+            get;
+            private set;
+        }
+
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyHeight
+        {
+            get;
+            private set;
+        }
+
+        //in display units
+        [Serialize("0.0,0.0", false)]
+        public Vector2 BodyOffset
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool Platform
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool AllowAttachItems
         {
             get;
             private set;
@@ -56,11 +95,31 @@ namespace Barotrauma
             get { return canSpriteFlipX; }
         }
 
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
+        }
+
         [Serialize("0,0", true)]
         public Vector2 Size
         {
             get { return size; }
             private set { size = value; }
+        }
+
+        public Vector2 ScaledSize => size * Scale;
+
+        protected Vector2 textureScale = Vector2.One;
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                textureScale = new Vector2(
+                    MathHelper.Clamp(value.X, 0.01f, 10),
+                    MathHelper.Clamp(value.Y, 0.01f, 10));
+            }
         }
 
         public Sprite BackgroundSprite
@@ -69,7 +128,7 @@ namespace Barotrauma
             private set;
         }
         
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {            
             foreach (string filePath in filePaths)
             {
@@ -87,11 +146,23 @@ namespace Barotrauma
         
         public static StructurePrefab Load(XElement element)
         {
-            StructurePrefab sp = new StructurePrefab();
-            sp.name = element.Name.ToString();
-            
-            sp.Tags = new List<string>();
-            sp.Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            StructurePrefab sp = new StructurePrefab
+            {
+                name = element.GetAttributeString("name", "")
+            };
+            if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
+            sp.identifier = element.GetAttributeString("identifier", "");
+
+            string translatedName = TextManager.Get("EntityName." + sp.identifier, true);
+            if (!string.IsNullOrEmpty(translatedName)) sp.name = translatedName;
+
+            sp.Tags = new HashSet<string>();
+            string joinedTags = element.GetAttributeString("tags", "");
+            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            foreach (string tag in joinedTags.Split(','))
+            {
+                sp.Tags.Add(tag.Trim().ToLowerInvariant());
+            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -110,7 +181,13 @@ namespace Barotrauma
                             sp.sprite.effects = SpriteEffects.FlipVertically;
                         
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
-
+                        sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
+                        
+                        if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(sp.Name))
+                        {
+                            sp.sprite.Name = sp.Name;
+                        }
+                        sp.sprite.EntityID = sp.identifier;
                         break;
                     case "backgroundsprite":
                         sp.BackgroundSprite = new Sprite(subElement);
@@ -124,8 +201,7 @@ namespace Barotrauma
                 }
             }
 
-            MapEntityCategory category;
-            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Structure;
             }
@@ -136,15 +212,40 @@ namespace Barotrauma
             {
                 sp.Aliases = aliases.Split(',');
             }
-            
+
             SerializableProperty.DeserializeProperties(sp, element);
+            string translatedDescription = TextManager.Get("EntityDescription." + sp.identifier, true);
+            if (!string.IsNullOrEmpty(translatedDescription)) sp.Description = translatedDescription;
 
             //backwards compatibility
             if (element.Attribute("size") == null)
             {
                 sp.size = Vector2.Zero;
-                sp.size.X = element.GetAttributeFloat("width", 0.0f);
-                sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                if (element.Attribute("width") == null && element.Attribute("height") == null)
+                {
+                    sp.size.X = sp.sprite.SourceRect.Width;
+                    sp.size.Y = sp.sprite.SourceRect.Height;
+                }
+                else
+                {
+                    sp.size.X = element.GetAttributeFloat("width", 0.0f);
+                    sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                }
+            }
+
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(sp.identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
             }
 
             return sp;
@@ -153,6 +254,7 @@ namespace Barotrauma
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+            Vector2 size = ScaledSize;
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
             
             if (placePosition == Vector2.Zero)

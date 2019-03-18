@@ -27,6 +27,11 @@ namespace Barotrauma.Items.Components
 
         private HashSet<Entity> hitTargets = new HashSet<Entity>();
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         [Serialize(0.0f, false)]
         public float Range
         {
@@ -56,7 +61,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
-                attack = new Attack(subElement);
+                attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
         }
 
@@ -78,7 +83,7 @@ namespace Barotrauma.Items.Components
 
             SetUser(character);
 
-            if (hitPos < MathHelper.Pi * 0.69f) return false;
+            if (hitPos < MathHelper.PiOver4) return false;
 
             reloadTimer = reload;
 
@@ -129,6 +134,7 @@ namespace Barotrauma.Items.Components
             if (!picker.HasSelectedItem(item)) IsActive = false;
 
             reloadTimer -= deltaTime;
+            if (reloadTimer < 0) { reloadTimer = 0; }
 
             if (!picker.IsKeyDown(InputType.Aim) && !hitting) hitPos = 0.0f;
 
@@ -138,31 +144,33 @@ namespace Barotrauma.Items.Components
 
             AnimController ac = picker.AnimController;
 
+            //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
-                if (picker.IsKeyDown(InputType.Aim))
+                if (picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0)
                 {
-                    hitPos = Math.Min(hitPos + deltaTime * 5.0f, MathHelper.Pi * 0.7f);
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
+                    hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, hitPos, holdAngle + hitPos);
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, false, holdAngle);
+                    hitPos = 0;
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, false, holdAngle);
                 }
             }
             else
             {
-                hitPos -= deltaTime * 15.0f;
-                ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
+                hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
+                ac.HoldItem(deltaTime, item, handlePos, new Vector2(2, 0), Vector2.Zero, false, hitPos, holdAngle + hitPos); // aimPos not used -> zero (new Vector2(-0.3f, 0.2f)), holdPos new Vector2(0.6f, -0.1f)
                 if (hitPos < -MathHelper.PiOver4 * 1.2f)
                 {
                     RestoreCollision();
                     hitting = false;
                     hitTargets.Clear();
+                    hitPos = 0;
                 }
             }
         }
-
 
         private void SetUser(Character character)
         {
@@ -173,14 +181,12 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb limb in user.AnimController.Limbs)
                 {
-                    try
+                    if (limb.body.FarseerBody != null)
                     {
-                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
-                    }
-
-                    catch
-                    {
-                        continue;
+                        if (GameMain.World.BodyList.Contains(limb.body.FarseerBody))
+                        {
+                            item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
+                        }
                     }
                 }
             }
@@ -199,11 +205,6 @@ namespace Barotrauma.Items.Components
 
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
-
-            //foreach (Limb l in picker.AnimController.Limbs)
-            //{
-            //    item.body.FarseerBody.RestoreCollisionWith(l.body.FarseerBody);
-            //}
         }
 
 
@@ -219,6 +220,8 @@ namespace Barotrauma.Items.Components
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;
+
+            attack?.SetUser(user);
 
             if (f2.Body.UserData is Limb)
             {
@@ -273,10 +276,12 @@ namespace Barotrauma.Items.Components
             {
                 if (targetLimb != null)
                 {
+                    targetLimb.character.LastDamageSource = item;
                     attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                 }
                 else if (targetCharacter != null)
                 {
+                    targetCharacter.LastDamageSource = item;
                     attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
                 }
                 else if (targetStructure != null)
@@ -293,7 +298,14 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID });
+
+                GameMain.Server.CreateEntityEvent(item, new object[] 
+                {
+                    Networking.NetEntityEvent.Type.ApplyStatusEffect,                    
+                    ActionType.OnUse,
+                    null, //itemcomponent
+                    targetCharacter.ID, targetLimb
+                });
 
                 string logStr = picker?.LogName + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)
@@ -303,9 +315,11 @@ namespace Barotrauma.Items.Components
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
-            
+
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter);
+            {
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: user);
+            }
 
             if (DeleteOnUse)
             {

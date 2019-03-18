@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Barotrauma.Items.Components;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -12,7 +14,12 @@ namespace Barotrauma
         private Character character;
 
         private AIObjective currentOrder;
-        
+
+        /// <summary>
+        /// When set above zero, the character will stand still doing nothing until the timer runs out (assuming they don't a high priority order active)
+        /// </summary>
+        public float WaitTimer;
+
         public AIObjective CurrentOrder
         {
             get { return currentOrder; }
@@ -38,6 +45,23 @@ namespace Barotrauma
             objectives.Add(objective);
         }
 
+        public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
+        public void AddObjective(AIObjective objective, float delay, Action callback = null)
+        {
+            if (DelayedObjectives.TryGetValue(objective, out CoroutineHandle coroutine))
+            {
+                CoroutineManager.StopCoroutines(coroutine);
+                DelayedObjectives.Remove(objective);
+            }
+            coroutine = CoroutineManager.InvokeAfter(() =>
+            {
+                DelayedObjectives.Remove(objective);
+                AddObjective(objective);
+                callback?.Invoke();
+            }, delay);
+            DelayedObjectives.Add(objective, coroutine);
+        }
+
         public T GetObjective<T>() where T : AIObjective
         {
             foreach (AIObjective objective in objectives)
@@ -47,15 +71,21 @@ namespace Barotrauma
             return null;
         }
 
-        public float GetCurrentPriority(Character character)
+        private AIObjective GetCurrentObjective()
         {
             if (CurrentOrder != null &&
                 (objectives.Count == 0 || currentOrder.GetPriority(this) > objectives[0].GetPriority(this)))
             {
-                return CurrentOrder.GetPriority(this);
+                return CurrentOrder;
             }
 
-            return objectives.Count == 0 ? 0.0f : objectives[0].GetPriority(this);
+            return objectives.Count == 0 ? null : objectives[0];
+        }
+
+        public float GetCurrentPriority()
+        {
+            var currentObjective = GetCurrentObjective();
+            return currentObjective == null ? 0.0f : currentObjective.GetPriority(this);
         }
 
         public void UpdateObjectives()
@@ -67,46 +97,77 @@ namespace Barotrauma
 
             //sort objectives according to priority
             objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
+            GetCurrentObjective()?.SortSubObjectives(this);
         }
 
+        
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentOrder != null && (!objectives.Any() || objectives[0].GetPriority(this) < currentOrder.GetPriority(this)))
+            CurrentObjective = GetCurrentObjective();
+
+            if (CurrentObjective == null || (CurrentObjective.GetPriority(this) < OrderPriority && WaitTimer > 0.0f))
             {
-                CurrentObjective = currentOrder;
-                currentOrder.TryComplete(deltaTime);
+                WaitTimer -= deltaTime;
+                character.AIController.SteeringManager.Reset();
                 return;
             }
 
-            if (!objectives.Any()) return;
-            objectives[0].TryComplete(deltaTime);
-
-            CurrentObjective = objectives[0];
+            CurrentObjective?.TryComplete(deltaTime);
+        }
+        
+        public void SetOrder(AIObjective objective)
+        {
+            currentOrder = objective;
         }
 
-        public void SetOrder(Order order, string option)
+        public void SetOrder(Order order, string option, Character orderGiver)
         {
+            currentOrder = null;
             if (order == null) return;
 
-            currentOrder = null;
-
-            switch (order.Name.ToLowerInvariant())
+            switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
+                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true)
+                    {
+                        CloseEnough = 1.5f,
+                        AllowGoingOutside = true,
+                        IgnoreIfTargetDead = true
+                    };
                     break;
                 case "wait":
-                    currentOrder = new AIObjectiveGoTo(character, character, true);
+                    currentOrder = new AIObjectiveGoTo(character, character, true)
+                    {
+                        AllowGoingOutside = true
+                    };
                     break;
                 case "fixleaks":
-                case "fix leaks":
                     currentOrder = new AIObjectiveFixLeaks(character);
                     break;
+                case "chargebatteries":
+                    currentOrder = new AIObjectiveChargeBatteries(character, option);
+                    break;
+                case "rescue":
+                    currentOrder = new AIObjectiveRescueAll(character);
+                    break;
+                case "repairsystems":
+                    currentOrder = new AIObjectiveRepairItems(character) { RequireAdequateSkills = option != "all" };
+                    break;
+                case "pumpwater":
+                    currentOrder = new AIObjectivePumpWater(character, option);
+                    break;
+                case "extinguishfires":
+                    currentOrder = new AIObjectiveExtinguishFires(character);
+                    break;
+                case "steer":
+                    var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
+                    if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
+                    if (order.TargetItemComponent == null) return;
+                    currentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
+                    break;
                 default:
-                    if (order.TargetItem == null) return;
-
-                    currentOrder = new AIObjectiveOperateItem(order.TargetItem, character, option, false, null, order.UseController);
-
+                    if (order.TargetItemComponent == null) return;
+                    currentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
                     break;
             }
         }

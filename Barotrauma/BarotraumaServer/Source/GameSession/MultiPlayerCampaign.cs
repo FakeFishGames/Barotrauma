@@ -16,7 +16,8 @@ namespace Barotrauma
                         if (string.IsNullOrWhiteSpace(saveName)) return;
 
                         string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
-                        GameMain.GameSession = new GameSession(new Submarine(GameMain.NetLobbyScreen.SelectedSub.FilePath, ""), savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                        GameMain.GameSession = new GameSession(new Submarine(GameMain.NetLobbyScreen.SelectedSub.FilePath, ""), savePath, 
+                            GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
                         var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                         campaign.GenerateMap(GameMain.NetLobbyScreen.LevelSeed);
                         campaign.SetDelegates();

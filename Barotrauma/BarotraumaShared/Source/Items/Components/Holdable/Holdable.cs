@@ -11,29 +11,47 @@ namespace Barotrauma.Items.Components
     {
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
-        
+        private Vector2[] scaledHandlePos;
+
         private InputType prevPickKey;
         private string prevMsg;
-        private List<RelatedItem> prevRequiredItems;
+        private Dictionary<RelatedItem.RelationType, List<RelatedItem>> prevRequiredItems;
 
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
 
         protected Vector2 aimPos;
 
-        //protected bool aimable;
+        private float swingState;
 
         private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
+        public PhysicsBody Pusher
+        {
+            get;
+            private set;
+        }
 
         //the angle in which the Character holds the item
         protected float holdAngle;
+
+        public PhysicsBody Body
+        {
+            get { return item.body ?? body; }
+        }
 
         [Serialize(false, true)]
         public bool Attached
         {
             get { return attached && item.ParentInventory == null; }
             set { attached = value; }
+        }
+
+        [Serialize(true, true)]
+        public bool Aimable
+        {
+            get;
+            set;
         }
 
         [Serialize(false, false)]
@@ -50,6 +68,13 @@ namespace Barotrauma.Items.Components
             set { attachable = value; }
         }
 
+        [Serialize(true, false)]
+        public bool Reattachable
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false)]
         public bool AttachedByDefault
         {
@@ -57,7 +82,7 @@ namespace Barotrauma.Items.Components
             set { attachedByDefault = value; }
         }
 
-        [Serialize("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false),Editable]
         public Vector2 HoldPos
         {
             get { return ConvertUnits.ToDisplayUnits(holdPos); }
@@ -71,25 +96,62 @@ namespace Barotrauma.Items.Components
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false), Editable]
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }
             set { holdAngle = MathHelper.ToRadians(value); }
         }
 
+        private Vector2 swingAmount;
+        [Serialize("0.0,0.0", false), Editable]
+        public Vector2 SwingAmount
+        {
+            get { return ConvertUnits.ToDisplayUnits(swingAmount); }
+            set { swingAmount = ConvertUnits.ToSimUnits(value); }
+        }
+        
+        [Serialize(0.0f, false), Editable]
+        public float SwingSpeed { get; set; }
+
+        [Serialize(false, false), Editable]
+        public bool SwingWhenHolding { get; set; }
+        [Serialize(false, false), Editable]
+        public bool SwingWhenAiming { get; set; }
+        [Serialize(false, false), Editable]
+        public bool SwingWhenUsing { get; set; }
+        
         public Holdable(Item item, XElement element)
             : base(item, element)
         {
             body = item.body;
 
-            handlePos = new Vector2[2];
+            Pusher = null;
+            if (element.GetAttributeBool("blocksplayers", false))
+            {
+                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
+                {
+                    BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic,
+                    CollidesWith = Physics.CollisionCharacter,
+                    CollisionCategories = Physics.CollisionItemBlocking,
+                    Enabled = false
+                };
+                Pusher.FarseerBody.FixedRotation = false;
+                Pusher.FarseerBody.GravityScale = 0.0f;
+            }
 
+            handlePos = new Vector2[2];
+            scaledHandlePos = new Vector2[2];
+            Vector2 previousValue = Vector2.Zero;
             for (int i = 1; i < 3; i++)
             {
-                handlePos[i - 1] = element.GetAttributeVector2("handle" + i, Vector2.Zero);
-
-                handlePos[i - 1] = ConvertUnits.ToSimUnits(handlePos[i - 1]);
+                int index = i - 1;
+                string attributeName = "handle" + i;
+                var attribute = element.Attribute(attributeName);
+                // If no value is defind for handle2, use the value of handle1.
+                var value = attribute != null ? ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(attribute.Value)) : previousValue;
+                handlePos[index] = value;
+                previousValue = value;
             }
 
             canBePicked = true;
@@ -98,7 +160,7 @@ namespace Barotrauma.Items.Components
             {
                 prevMsg = Msg;
                 prevPickKey = PickKey;
-                prevRequiredItems = new List<RelatedItem>(requiredItems);
+                prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
                                 
                 if (item.Submarine != null)
                 {
@@ -131,7 +193,7 @@ namespace Barotrauma.Items.Components
             {
                 prevMsg = Msg;
                 prevPickKey = PickKey;
-                prevRequiredItems = new List<RelatedItem>(requiredItems);
+                prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             }
         }
 
@@ -156,7 +218,8 @@ namespace Barotrauma.Items.Components
                     item.body = body;
                 }
             }
-
+            
+            if (Pusher != null) Pusher.Enabled = false;
             if (item.body != null) item.body.Enabled = true;
             IsActive = false;
 
@@ -177,18 +240,17 @@ namespace Barotrauma.Items.Components
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
                     arm = picker.AnimController.GetLimb(LimbType.LeftArm);
-
                 }
                 else
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
                     arm = picker.AnimController.GetLimb(LimbType.RightArm);
                 }
-                
+
                 float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
                 float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
                 //hand simPosition is actually in the wrist so need to move the item out from it slightly
-                item.SetTransform(heldHand.SimPosition + new Vector2(xDif,yDif), 0.0f);
+                item.SetTransform(heldHand.SimPosition + new Vector2(xDif, yDif), 0.0f);
             }
 
             picker.DeselectItem(item);
@@ -242,12 +304,28 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
+        public bool CanBeAttached()
+        {
+            if (!attachable || !Reattachable) return false;
+
+            //can be attached anywhere in sub editor
+            if (Screen.Selected == GameMain.SubEditorScreen) return true;
+
+            //can be attached anywhere inside hulls
+            if (item.CurrentHull != null) return true;
+
+            return Structure.GetAttachTarget(item.WorldPosition) != null;
+        }
+        
         public bool CanBeDeattached()
         {
             if (!attachable || !attached) return true;
 
-            //don't allow deattaching if outside hulls and not in sub editor
-            return item.CurrentHull != null || Screen.Selected == GameMain.SubEditorScreen;
+            //allow deattaching everywhere in sub editor
+            if (Screen.Selected == GameMain.SubEditorScreen) return true;
+
+            //don't allow deattaching if part of a sub and outside hulls
+            return item.Submarine == null || item.CurrentHull != null;
         }
 
         public override bool Pick(Character picker)
@@ -281,7 +359,7 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                     if (picker != null)
                     {
-                        Networking.GameServer.Log(picker.LogName + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(picker.LogName + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
                     }
                 }
                 return true;
@@ -290,9 +368,24 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private void AttachToWall()
+        public void AttachToWall()
         {
             if (!attachable) return;
+
+            //outside hulls/subs -> we need to check if the item is being attached on a structure outside the sub
+            if (item.CurrentHull == null && item.Submarine == null)
+            {
+                Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
+                if (attachTarget != null)
+                {
+                    if (attachTarget.Submarine != null)
+                    {
+                        //set to submarine-relative position
+                        item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition - attachTarget.Submarine.Position), 0.0f, false);
+                    }
+                    item.Submarine = attachTarget.Submarine;
+                }
+            }
 
             var containedItems = item.ContainedItems;
             if (containedItems != null)
@@ -309,12 +402,12 @@ namespace Barotrauma.Items.Components
             
             Msg = prevMsg;
             PickKey = prevPickKey;
-            requiredItems = new List<RelatedItem>(prevRequiredItems);
+            requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(prevRequiredItems);
 
             attached = true;
         }
 
-        private void DeattachFromWall()
+        public void DeattachFromWall()
         {
             if (!attachable) return;
 
@@ -328,15 +421,15 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!attachable || item.body == null) return true;
+            if (!attachable || item.body == null) return (character == null || character.IsKeyDown(InputType.Aim));
             if (character != null)
             {
                 if (!character.IsKeyDown(InputType.Aim)) return false;
-                if (character.CurrentHull == null) return false;
+                if (!CanBeAttached()) return false;
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(character.LogName + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
                 }
                 item.Drop();
             }
@@ -356,34 +449,49 @@ namespace Barotrauma.Items.Components
             if (item.body == null || !item.body.Enabled) return;
             if (picker == null || !picker.HasEquippedItem(item))
             {
+                if (Pusher != null) Pusher.Enabled = false;
                 IsActive = false;
                 return;
             }
 
+            Vector2 swing = Vector2.Zero;
+            if (swingAmount != Vector2.Zero)
+            {
+                swingState += deltaTime;
+                swingState %= 1.0f;
+                if (SwingWhenHolding ||
+                    (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
+                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Use)))
+                {
+                    swing = swingAmount * new Vector2(
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
+                }
+            }
+            
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
             if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
             item.Submarine = picker.Submarine;
-
+            
             if (picker.HasSelectedItem(item))
             {
-                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
+                scaledHandlePos[0] = handlePos[0] * item.Scale;
+                scaledHandlePos[1] = handlePos[1] * item.Scale;
+                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
             }
             else
             {
                 Limb equipLimb = null;
-                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Face) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Headset) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
                 {
                     equipLimb = picker.AnimController.GetLimb(LimbType.Head);
                 }
-                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Torso))
+                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.InnerClothes) || 
+                    picker.Inventory.IsInLimbSlot(item, InvSlotType.OuterClothes))
                 {
                     equipLimb = picker.AnimController.GetLimb(LimbType.Torso);
-                }
-                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Legs))
-                {
-                    equipLimb = picker.AnimController.GetLimb(LimbType.Waist);
                 }
 
                 if (equipLimb != null)
@@ -391,7 +499,7 @@ namespace Barotrauma.Items.Components
                     float itemAngle = (equipLimb.Rotation + holdAngle * picker.AnimController.Dir);
 
                     Matrix itemTransfrom = Matrix.CreateRotationZ(equipLimb.Rotation);
-                    Vector2 transformedHandlePos = Vector2.Transform(handlePos[0], itemTransfrom);
+                    Vector2 transformedHandlePos = Vector2.Transform(handlePos[0] * item.Scale, itemTransfrom);
 
                     item.body.ResetDynamics();
                     item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);
@@ -434,20 +542,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            if (!attachable || body == null)
-            {
-                DebugConsole.ThrowError("Sent an attachment event for an item that's not attachable.");
-            }
+            base.ServerWrite(msg, c, extraData);
+            if (!attachable || body == null) return;
 
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);
             msg.Write(body.SimPosition.Y);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            base.ClientRead(type, msg, sendingTime);
             bool shouldBeAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
@@ -459,9 +566,12 @@ namespace Barotrauma.Items.Components
 
             if (shouldBeAttached)
             {
-                Drop(false, null);
-                item.SetTransform(simPosition, 0.0f);
-                AttachToWall();
+                if (!attached)
+                {
+                    Drop(false, null);
+                    item.SetTransform(simPosition, 0.0f);
+                    AttachToWall();
+                }
             }
             else
             {

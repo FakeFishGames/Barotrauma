@@ -118,7 +118,7 @@ namespace Barotrauma.Networking
 
         public FileSender(NetworkMember networkMember)
         {
-            peer = networkMember.netPeer;
+            peer = networkMember.NetPeer;
             chunkLen = peer.Configuration.MaximumTransmissionUnit - 100;
 
             activeTransfers = new List<FileTransferOut>();
@@ -205,6 +205,7 @@ namespace Barotrauma.Networking
                     message.Write((ushort)chunkLen);
                     message.Write((ulong)transfer.Data.Length);
                     message.Write(transfer.FileName);
+                    GameMain.Server.CompressOutgoingMessage(message);
                     transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
                     transfer.Status = FileTransferStatus.Sending;
@@ -227,6 +228,7 @@ namespace Barotrauma.Networking
 
                 message.Write(sendBytes);
 
+                GameMain.Server.CompressOutgoingMessage(message);
                 transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
                 transfer.SentOffset += sendByteCount;
 

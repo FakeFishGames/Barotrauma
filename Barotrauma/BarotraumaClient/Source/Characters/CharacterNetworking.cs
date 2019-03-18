@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -18,18 +19,14 @@ namespace Barotrauma
                 {
                     case NetEntityEvent.Type.InventoryState:
                         msg.WriteRangedInteger(0, 3, 0);
-                        inventory.ClientWrite(msg, extraData);
+                        Inventory.ClientWrite(msg, extraData);
                         break;
-                    case NetEntityEvent.Type.Repair:
+                    case NetEntityEvent.Type.Treatment:
                         msg.WriteRangedInteger(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedInteger(0, 3, 2);
-                        break;
-                    case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(0, 3, 3);
-                        msg.Write((byte)AnimController.GrabLimb);
                         break;
                 }
             }
@@ -52,7 +49,10 @@ namespace Barotrauma
                     {
                         msg.Write(memInput[i].intAim);
                     }
-                    if (memInput[i].states.HasFlag(InputNetFlags.Select) || memInput[i].states.HasFlag(InputNetFlags.Use))
+                    if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
+                        memInput[i].states.HasFlag(InputNetFlags.Use) || 
+                        memInput[i].states.HasFlag(InputNetFlags.Health) ||
+                        memInput[i].states.HasFlag(InputNetFlags.Grab))
                     {
                         msg.Write(memInput[i].interact);
                     }
@@ -95,7 +95,6 @@ namespace Barotrauma
                             bool crouching = msg.ReadBoolean();
                             keys[(int)InputType.Crouch].Held = crouching;
                             keys[(int)InputType.Crouch].SetState(false, crouching);
-                            AnimController.GrabLimb = (LimbType)msg.ReadByte();
                         }
 
                         bool hasAttackLimb = msg.ReadBoolean();
@@ -109,9 +108,7 @@ namespace Barotrauma
                         if (aimInput)
                         {
                             double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
-                            cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
-                                + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
-
+                            cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
                             TransformCursorPos();
                         }
                         bool ragdollInput = msg.ReadBoolean();
@@ -170,11 +167,11 @@ namespace Barotrauma
                     break;
                 case ServerNetObject.ENTITY_EVENT:
 
-                    int eventType = msg.ReadRangedInteger(0, 2);
+                    int eventType = msg.ReadRangedInteger(0, 3);
                     switch (eventType)
                     {
                         case 0:
-                            if (inventory == null)
+                            if (Inventory == null)
                             {
                                 string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ")";
                                 DebugConsole.ThrowError(errorMsg);
@@ -182,7 +179,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                inventory?.ClientRead(type, msg, sendingTime);
+                                Inventory.ClientRead(type, msg, sendingTime);
                             }
                             break;
                         case 1:
@@ -195,7 +192,7 @@ namespace Barotrauma
                                     LastNetworkUpdateID = controlled.LastNetworkUpdateID;
                                 }
 
-                                controlled = this;
+                                Controlled = this;
                                 IsRemotePlayer = false;
                                 GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
@@ -203,14 +200,22 @@ namespace Barotrauma
                             }
                             else if (controlled == this)
                             {
-                                controlled = null;
+                                Controlled = null;
                                 IsRemotePlayer = ownerID > 0;
                             }
                             break;
                         case 2:
                             ReadStatus(msg);
                             break;
-
+                        case 3:
+                            int skillCount = msg.ReadByte();
+                            for (int i = 0; i < skillCount; i++)
+                            {
+                                string skillIdentifier = msg.ReadString();
+                                float skillLevel = msg.ReadSingle();
+                                info?.SetSkillLevel(skillIdentifier, skillLevel, WorldPosition + Vector2.UnitY * 150.0f);
+                            }
+                            break;
                     }
                     msg.ReadPadBits();
                     break;
@@ -222,9 +227,10 @@ namespace Barotrauma
 
             if (GameMain.Server != null) return null;
 
-            bool noInfo = inc.ReadBoolean();
-            ushort id = inc.ReadUInt16();
-            string configPath = inc.ReadString();
+            bool noInfo         = inc.ReadBoolean();
+            ushort id           = inc.ReadUInt16();
+            string configPath   = inc.ReadString();
+            string seed         = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
@@ -237,63 +243,31 @@ namespace Barotrauma
             {
                 if (!spawn) return null;
 
-                character = Character.Create(configPath, position, null, true);
+                character = Character.Create(configPath, position, seed, null, true);
                 character.ID = id;
             }
             else
             {
-                bool hasOwner = inc.ReadBoolean();
-                int ownerId = hasOwner ? inc.ReadByte() : -1;
-
-
-                string newName = inc.ReadString();
-                byte teamID = inc.ReadByte();
-
-                bool hasAi = inc.ReadBoolean();
-                bool isFemale = inc.ReadBoolean();
-                int headSpriteID = inc.ReadByte();
-                string jobName = inc.ReadString();
-
-                JobPrefab jobPrefab = null;
-                Dictionary<string, int> skillLevels = new Dictionary<string, int>();
-                if (!string.IsNullOrEmpty(jobName))
-                {
-                    jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
-                    int skillCount = inc.ReadByte();
-                    for (int i = 0; i < skillCount; i++)
-                    {
-                        string skillName = inc.ReadString();
-                        int skillLevel = inc.ReadRangedInteger(0, 100);
-
-                        skillLevels.Add(skillName, skillLevel);
-                    }
-                }
-
+                bool hasOwner       = inc.ReadBoolean();
+                int ownerId         = hasOwner ? inc.ReadByte() : -1;                
+                byte teamID         = inc.ReadByte();
+                bool hasAi          = inc.ReadBoolean();
+                
                 if (!spawn) return null;
 
+                CharacterInfo info = CharacterInfo.ClientRead(configPath, inc);
 
-                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
-                ch.HeadSpriteId = headSpriteID;
-
-                System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
-                if (ch.Job != null)
-                {
-                    foreach (KeyValuePair<string, int> skill in skillLevels)
-                    {
-                        Skill matchingSkill = ch.Job.Skills.Find(s => s.Name == skill.Key);
-                        if (matchingSkill == null)
-                        {
-                            DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
-                            continue;
-                        }
-                        matchingSkill.Level = skill.Value;
-                    }
-                }
-
-                character = Create(configPath, position, ch, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
 
+                if (configPath == HumanConfigFile)
+                {
+                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
+                    GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
+                    GameMain.GameSession.CrewManager.AddCharacter(character);
+                }
+                
                 if (GameMain.Client.ID == ownerId)
                 {
                     GameMain.Client.HasSpawned = true;
@@ -305,19 +279,6 @@ namespace Barotrauma
                     character.memInput.Clear();
                     character.memState.Clear();
                     character.memLocalState.Clear();
-                }
-                else
-                {
-                    var ownerClient = GameMain.Client.ConnectedClients.Find(c => c.ID == ownerId);
-                    if (ownerClient != null)
-                    {
-                        ownerClient.Character = character;
-                    }
-                }
-
-                if (configPath == Character.HumanConfigFile)
-                {
-                    GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
             }
 
@@ -331,17 +292,24 @@ namespace Barotrauma
             bool isDead = msg.ReadBoolean();
             if (isDead)
             {
-                causeOfDeath = (CauseOfDeath)msg.ReadByte();
+                CauseOfDeathType causeOfDeathType = (CauseOfDeathType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1);
+                AfflictionPrefab causeOfDeathAffliction = null;
+                if (causeOfDeathType == CauseOfDeathType.Affliction)
+                {
+                    int afflictionIndex = msg.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
+                    causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                }
+
                 byte severedLimbCount = msg.ReadByte();
                 if (!IsDead)
                 {
-                    if (causeOfDeath == CauseOfDeath.Pressure)
+                    if (causeOfDeathType == CauseOfDeathType.Pressure)
                     {
                         Implode(true);
                     }
                     else
                     {
-                        Kill(causeOfDeath, true);
+                        Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
                     }
                 }
 
@@ -353,56 +321,13 @@ namespace Barotrauma
             }
             else
             {
-                if (this.isDead) Revive();
-
-                health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
-
-                bool lowOxygen = msg.ReadBoolean();
-                if (lowOxygen)
-                {
-                    Oxygen = msg.ReadRangedSingle(-100.0f, 100.0f, 8);
-                }
-                else
-                {
-                    Oxygen = 100.0f;
-                }
-
-                bool isBleeding = msg.ReadBoolean();
-                if (isBleeding)
-                {
-                    bleeding = msg.ReadRangedSingle(0.0f, 5.0f, 8);
-                }
-                else
-                {
-                    bleeding = 0.0f;
-                }
-
-                bool stunned = msg.ReadBoolean();
-                if (stunned)
-                {
-                    float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
-                    SetStun(newStunTimer, true, true);
-                }
-                else
-                {
-                    SetStun(0.0f, true, true);
-                }
-
+                if (IsDead) Revive();
+                
+                CharacterHealth.ClientRead(msg);
+                
                 bool ragdolled = msg.ReadBoolean();
                 IsRagdolled = ragdolled;
-
-                bool huskInfected = msg.ReadBoolean();
-                if (huskInfected)
-                {
-                    HuskInfectionState = Math.Max(HuskInfectionState, 0.01f);
-                }
-                else
-                {
-                    HuskInfectionState = 0.0f;
-                }
-
             }
         }
-
     }
 }

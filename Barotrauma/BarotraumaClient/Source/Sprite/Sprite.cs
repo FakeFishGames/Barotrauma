@@ -2,12 +2,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Barotrauma
 {
     public partial class Sprite
     {
         protected Texture2D texture;
+
+        private bool preMultipliedAlpha;
 
         public Texture2D Texture
         {
@@ -33,9 +36,10 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        partial void LoadTexture(ref Vector4 sourceVector,ref bool shouldReturn)
+        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
         {
-            texture = LoadTexture(this.file);
+            preMultipliedAlpha = preMultiplyAlpha;
+            texture = LoadTexture(this.file, preMultiplyAlpha);
 
             if (texture == null)
             {
@@ -47,23 +51,39 @@ namespace Barotrauma
             if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
         }
 
+        public void ReloadTexture()
+        {
+            var sprites = LoadedSprites.Where(s => s.Texture == texture).ToList();
+            texture.Dispose();
+            texture = null;
+
+            texture = TextureLoader.FromFile(file, preMultipliedAlpha);
+            foreach (Sprite sprite in sprites)
+            {
+                sprite.texture = texture;
+            }
+        }
+
         partial void CalculateSourceRect()
         {
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
         }
 
 
-        public static Texture2D LoadTexture(string file)
+        public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
+            if (string.IsNullOrWhiteSpace(file)) { return new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1); }
+            file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (s.file == file) return s.texture;
+                if (string.IsNullOrEmpty(s.FilePath)) continue;
+                if (Path.GetFullPath(s.file) == file) return s.texture;
             }
 
             if (File.Exists(file))
             {
                 ToolBox.IsProperFilenameCase(file);
-                return TextureLoader.FromFile(file);
+                return TextureLoader.FromFile(file, preMultiplyAlpha);
             }
             else
             {
@@ -118,15 +138,18 @@ namespace Barotrauma
             Vector2 scale = textureScale ?? Vector2.One;
             Color drawColor = color ?? Color.White;
 
+            bool flipHorizontal = (effects & SpriteEffects.FlipHorizontally) != 0;
+            bool flipVertical = (effects & SpriteEffects.FlipVertically) != 0;
+
             //wrap the drawOffset inside the sourceRect
             drawOffset.X = (drawOffset.X / scale.X) % sourceRect.Width;
             drawOffset.Y = (drawOffset.Y / scale.Y) % sourceRect.Height;
-            if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+            if (flipHorizontal)
             {
                 float diff =  targetSize.X % (sourceRect.Width * scale.X);
                 drawOffset.X += (sourceRect.Width * scale.X - diff) / scale.X;
             }
-            if (effects.HasFlag(SpriteEffects.FlipVertically))
+            if (flipVertical)
             {
                 float diff = targetSize.Y % (sourceRect.Height * scale.Y);
                 drawOffset.Y += (sourceRect.Height * scale.Y - diff) / scale.Y;
@@ -141,6 +164,7 @@ namespace Barotrauma
             Vector2 currDrawPosition = position - drawOffset;
             //which part of the texture we are currently drawing
             Rectangle texPerspective = sourceRect;
+
             
             for (int x = 0; x < xTiles; x++)
             {
@@ -154,7 +178,7 @@ namespace Barotrauma
                     float diff = (position.X - currDrawPosition.X);
                     currDrawPosition.X += diff;
                     texPerspective.Width -= (int)diff;
-                    if (!effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    if (!flipHorizontal)
                     {
                         texPerspective.X += (int)diff;
                     }
@@ -162,7 +186,7 @@ namespace Barotrauma
                 //drawing an offset flipped sprite, need to draw an extra slice to the left side
                 if (currDrawPosition.X > position.X && x == 0)
                 {
-                    if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    if (flipHorizontal)
                     {
                         int sliceWidth = (int)((currDrawPosition.X - position.X) * scale.X);
 
@@ -172,7 +196,7 @@ namespace Barotrauma
                         sliceRect.X = SourceRect.X;
                         sliceRect.Width = (int)(sliceWidth / scale.X);
                         
-                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (flipVertical)
                         {
                             slicePos.Y += size.Y;
                         }
@@ -186,7 +210,7 @@ namespace Barotrauma
                 {
                     int diff = (int)(((currDrawPosition.X + texPerspective.Width * scale.X) - (position.X + targetSize.X)) / scale.X);
                     texPerspective.Width -= diff;
-                    if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    if (flipHorizontal)
                     {
                         texPerspective.X += diff;
                     }
@@ -205,7 +229,7 @@ namespace Barotrauma
                         float diff = (position.Y - currDrawPosition.Y);
                         currDrawPosition.Y += diff;
                         texPerspective.Height -= (int)diff;
-                        if (!effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (!flipVertical)
                         {
                             texPerspective.Y += (int)diff;
                         }
@@ -214,7 +238,7 @@ namespace Barotrauma
                     //drawing an offset flipped sprite, need to draw an extra slice to the top
                     if (currDrawPosition.Y > position.Y && y == 0)
                     {
-                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (flipVertical)
                         {
                             int sliceHeight = (int)((currDrawPosition.Y - position.Y) * scale.Y);
 
@@ -235,7 +259,7 @@ namespace Barotrauma
                     {
                         int diff = (int)(((currDrawPosition.Y + texPerspective.Height * scale.Y) - (position.Y + targetSize.Y)) / scale.Y);
                         texPerspective.Height -= diff;
-                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (flipVertical)
                         {
                             texPerspective.Y += diff;
                         }
@@ -256,9 +280,11 @@ namespace Barotrauma
             //check if another sprite is using the same texture
             if (!string.IsNullOrEmpty(file)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
+                string normalizedFilePath = Path.GetFullPath(file);
                 foreach (Sprite s in list)
                 {
-                    if (s.file == file) return;
+                    if (string.IsNullOrEmpty(s.file)) continue;
+                    if (Path.GetFullPath(s.file) == normalizedFilePath) return;
                 }
             }
             

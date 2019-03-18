@@ -12,7 +12,9 @@ namespace Barotrauma
 
         private Rectangle sourceRect;
 
-        bool crop;
+        private bool crop;
+
+        private bool scaleToFit;
         
         public bool Crop
         {
@@ -43,55 +45,88 @@ namespace Barotrauma
             set { sourceRect = value; }
         }
 
-        public GUIImage(Rectangle rect, string spritePath, Alignment alignment, GUIComponent parent = null)
-            : this(rect, new Sprite(spritePath, Vector2.Zero), alignment, parent)
+        public Sprite Sprite
+        {
+            get { return sprite; }
+            set
+            {
+                if (sprite == value) return;
+                sprite = value;
+                sourceRect = sprite.SourceRect;
+                if (scaleToFit) RecalculateScale();                
+            }
+        }
+
+        public GUIImage(RectTransform rectT, string style)
+            : this(rectT, null, null, false, style)
         {
         }
 
-        public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : this(rect, sprite==null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, parent)
+        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) 
+            : this(rectT, sprite, sourceRect, scaleToFit, null)
         {
         }
 
-        public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : base(null)
+        private GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect, bool scaleToFit, string style) : base(style, rectT)
         {
-            this.rect = rect;
-
-            this.alignment = alignment;
-
-            color = Color.White;
-
-            //alpha = 1.0f;
-
-            Scale = 1.0f;
-
-            this.sprite = sprite;
-
-            if (rect.Width == 0) this.rect.Width = (int)sprite.size.X;
-            if (rect.Height == 0) this.rect.Height = (int)Math.Min(sprite.size.Y, sprite.size.Y * (this.rect.Width / sprite.size.X));
-
-            this.sourceRect = sourceRect;
-
-            if (parent != null) parent.AddChild(this);
-            this.parent = parent;
+            this.scaleToFit = scaleToFit;
+            Sprite = sprite;
+            if (sourceRect.HasValue)
+            {
+                this.sourceRect = sourceRect.Value;
+            }
+            else
+            {
+                this.sourceRect = sprite == null ? Rectangle.Empty : sprite.SourceRect;
+            }
+            if (style == null)
+            {
+                color = Color.White;
+                hoverColor = Color.White;
+                selectedColor = Color.White;
+            }
+            if (!scaleToFit)
+            {
+                Scale = 1.0f;
+            }
+            else
+            {
+                rectT.SizeChanged += RecalculateScale;
+            }
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-
-            Color currColor = color;
-            if (state == ComponentState.Hover) currColor = hoverColor;
-            if (state == ComponentState.Selected) currColor = selectedColor;
-
-            if (sprite != null && sprite.Texture != null)
+            Color currColor = GetCurrentColor(state);
+            if (style != null)
             {
-                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
+                foreach (UISprite uiSprite in style.Sprites[state])
+                {
+                    if (Math.Abs(Rotation) > float.Epsilon)
+                    {
+                        float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
+                        spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
+                            Scale * scale, SpriteEffects.None, 0.0f);
+                    }
+                    else
+                    {
+                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
+                    }
+                }
+            }
+            else if (sprite?.Texture != null)
+            {
+                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects.None, 0.0f);
-            }          
-            
-            DrawChildren(spriteBatch);
+            }
+        }
+
+        private void RecalculateScale()
+        {
+            Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
+                1.0f :
+                Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,27 +15,44 @@ namespace Barotrauma
         protected int capacity;
 
         public Item[] Items;
-
-        private bool isSubInventory;
-
+        protected bool[] hideEmptySlot;
+        
         public bool Locked;
 
         private ushort[] receivedItemIDs;
         protected float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
 
-        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
+        public int Capacity
+        {
+            get { return capacity; }
+        }
+
+        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
         {
             this.capacity = capacity;
 
             this.Owner = owner;
 
-
             Items = new Item[capacity];
+            hideEmptySlot = new bool[capacity];
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
-            CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+
+            if (slotSpriteSmall == null)
+            {
+                //TODO: define these in xml
+                slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
+                slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
+                slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
+                slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
+
+                EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), new Vector2(0.5f, 0.5f), 0);
+                EquipIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), new Vector2(0.5f, 0.5f), 0);
+                DropIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(870, 55, 73, 66), new Vector2(0.5f, 0.75f), 0);
+                DropIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(946, 54, 73, 66), new Vector2(0.5f, 0.75f), 0);
+            }
 #endif
         }
 
@@ -97,8 +115,28 @@ namespace Barotrauma
 
         public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
+            if (i < 0 || i >= Items.Length)
+            {
+                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return false;
+            }
+
             if (Owner == null) return false;
-            if (CanBePut(item, i))
+            //there's already an item in the slot
+            if (Items[i] != null && allowCombine)
+            {
+                if (Items[i].Combine(item))
+                {
+                    System.Diagnostics.Debug.Assert(Items[i] != null);
+                    return true;
+                }
+            }
+            if (Items[i] != null && item.ParentInventory != null && allowSwapping)
+            {
+                return TrySwapping(i, item, user, createNetworkEvent);
+            }
+            else if (CanBePut(item, i))
             {
                 PutItem(item, i, user, true, createNetworkEvent);
                 return true;
@@ -114,6 +152,13 @@ namespace Barotrauma
 
         protected virtual void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
+            if (i < 0 || i >= Items.Length)
+            {
+                string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
             if (Owner == null) return;
 
             Inventory prevInventory = item.ParentInventory;
@@ -144,6 +189,118 @@ namespace Barotrauma
             }
         }
 
+        protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent)
+        {
+            if (item?.ParentInventory == null || Items[index] == null) return false;
+
+            //swap to InvSlotType.Any if possible
+            Inventory otherInventory = item.ParentInventory;
+            bool otherIsEquipped = false;
+            int otherIndex = -1;
+            for (int i = 0; i < otherInventory.Items.Length; i++)
+            {
+                if (otherInventory.Items[i] != item) continue;
+                if (otherInventory is CharacterInventory characterInventory)
+                {
+                    if (characterInventory.SlotTypes[i] == InvSlotType.Any)
+                    {
+                        otherIndex = i;
+                        break;
+                    }
+                    else
+                    {
+                        otherIsEquipped = true;
+                    }
+                }
+            }
+
+            if (otherIndex == -1) otherIndex = Array.IndexOf(otherInventory.Items, item);
+            Item existingItem = Items[index];
+
+            for (int j = 0; j < otherInventory.capacity; j++)
+            {
+                if (otherInventory.Items[j] == item) otherInventory.Items[j] = null;
+            }
+            for (int j = 0; j < capacity; j++)
+            {
+                if (Items[j] == existingItem) Items[j] = null;
+            }
+
+            bool swapSuccessful = false;
+            if (otherIsEquipped)
+            {
+                swapSuccessful =
+                    TryPutItem(item, index, false, false, user, createNetworkEvent) && 
+                    otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent);
+            }
+            else
+            {
+                swapSuccessful = 
+                    otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent) &&
+                    TryPutItem(item, index, false, false, user, createNetworkEvent);
+            }
+
+            //if the item in the slot can be moved to the slot of the moved item
+            if (swapSuccessful)
+            {
+                System.Diagnostics.Debug.Assert(Items[index] == item, "Something when wrong when swapping items, item is not present in the inventory.");
+                System.Diagnostics.Debug.Assert(otherInventory.Items[otherIndex] == existingItem, "Something when wrong when swapping items, item is not present in the other inventory.");
+#if CLIENT
+                if (slots != null)
+                {
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item) slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
+                    }
+                    for (int j = 0; j < otherInventory.capacity; j++)
+                    {
+                        if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
+                    }
+                }
+#endif
+                return true;
+            }
+            else
+            {
+                for (int j = 0; j < capacity; j++)
+                {
+                    if (Items[j] == item) Items[j] = null;
+                }
+                for (int j = 0; j < otherInventory.capacity; j++)
+                {
+                    if (otherInventory.Items[j] == existingItem) otherInventory.Items[j] = null;
+                }
+
+                if (otherIsEquipped)
+                {
+                    TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+                    otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                }
+                else
+                {
+                    otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                    TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+                }
+
+                //swapping the items failed -> move them back to where they were
+                //otherInventory.TryPutItem(item, otherIndex, false, false, user, createNetworkEvent);
+                //TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+#if CLIENT                
+                if (slots != null)
+                {
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == existingItem)
+                        {
+                            slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        }
+                    }
+                }
+#endif
+                return false;
+            }
+        }
+
         protected virtual void CreateNetworkEvent()
         {
             if (GameMain.Server != null)
@@ -159,13 +316,19 @@ namespace Barotrauma
 #endif
         }
 
-        public Item FindItem(string itemName)
+        public Item FindItemByTag(string tag)
         {
-            if (itemName == null) return null;
-            return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
+            if (tag == null) return null;
+            return Items.FirstOrDefault(i => i != null && i.HasTag(tag));
         }
 
-        public Item FindItem(string[] itemNames)
+        public Item FindItemByIdentifier(string identifier)
+        {
+            if (identifier == null) return null;
+            return Items.FirstOrDefault(i => i != null && i.Prefab.Identifier == identifier);
+        }
+
+        /*public Item FindItem(string[] itemNames)
         {
             if (itemNames == null) return null;
 
@@ -175,7 +338,7 @@ namespace Barotrauma
                 if (item != null) return item;
             }
             return null;
-        }
+        }*/
 
         public virtual void RemoveItem(Item item)
         {
@@ -190,13 +353,29 @@ namespace Barotrauma
                 item.ParentInventory = null;                
             }
         }
+
+        /// <summary>
+        /// Deletes all items inside the inventory (and also recursively all items inside the items)
+        /// </summary>
+        public void DeleteAllItems()
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (Items[i] == null) continue;
+                foreach (ItemContainer itemContainer in Items[i].GetComponents<ItemContainer>())
+                {
+                    itemContainer.Inventory.DeleteAllItems();
+                }
+                Items[i].Remove();
+            }
+        }
             
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             ServerWrite(msg, null);
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -205,10 +384,24 @@ namespace Barotrauma
             {
                 newItemIDs[i] = msg.ReadUInt16();
             }
+
             
             if (c == null || c.Character == null) return;
-            
-            if (!c.Character.CanAccessInventory(this))
+
+            bool accessible = c.Character.CanAccessInventory(this);
+            if (this is CharacterInventory && accessible)
+            {
+                if (Owner == null || !(Owner is Character))
+                {
+                    accessible = false;
+                }
+                else if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead)
+                {
+                    accessible = false;
+                }
+            }
+
+            if (!accessible)
             {
                 //create a network event to correct the client's inventory state
                 //otherwise they may have an item in their inventory they shouldn't have been able to pick up,
@@ -255,6 +448,13 @@ namespace Barotrauma
                         if (!item.CanClientAccess(c)) continue;
                     }
                     TryPutItem(item, i, true, true, c.Character, false);
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        if (Items[j] == item && newItemIDs[j] != item.ID)
+                        {
+                            Items[j] = null;
+                        }
+                    }
                 }
             }
 

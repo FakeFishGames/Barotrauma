@@ -41,7 +41,7 @@ namespace FarseerPhysics.Dynamics
         /// </summary>
         public CollisionFilterDelegate ContactFilter;
 
-        public List<Contact> ContactList = new List<Contact>(128);
+        public List<Contact> ContactList = new List<Contact>(256);
 
 #if USE_ACTIVE_CONTACT_SET
         /// <summary>

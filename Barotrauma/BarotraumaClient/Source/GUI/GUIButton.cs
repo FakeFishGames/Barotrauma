@@ -6,7 +6,9 @@ namespace Barotrauma
     public class GUIButton : GUIComponent
     {
         protected GUITextBlock textBlock;
+        public GUITextBlock TextBlock { get { return textBlock; } }
         protected GUIFrame frame;
+        public GUIFrame Frame { get { return frame; } }
 
         public delegate bool OnClickedHandler(GUIButton button, object obj);
         public OnClickedHandler OnClicked;
@@ -14,11 +16,12 @@ namespace Barotrauma
         public delegate bool OnPressedHandler();
         public OnPressedHandler OnPressed;
 
+        public delegate bool OnButtonDownHandler();
+        public OnButtonDownHandler OnButtonDown;
+
         public bool CanBeSelected = true;
-
-        private bool enabled;
-
-        public bool Enabled 
+        
+        public override bool Enabled 
         { 
             get
             {
@@ -28,7 +31,6 @@ namespace Barotrauma
             set
             {
                 if (value == enabled) return;
-
                 enabled = value;
                 frame.Color = enabled ? color : Color.Gray * 0.7f;
             }
@@ -64,6 +66,19 @@ namespace Barotrauma
             {
                 base.SelectedColor = value;
                 frame.SelectedColor = value;
+            }
+        }
+
+        public override Color PressedColor
+        {
+            get
+            {
+                return base.PressedColor;
+            }
+            set
+            {
+                base.PressedColor = value;
+                frame.PressedColor = value;
             }
         }
 
@@ -114,62 +129,22 @@ namespace Barotrauma
                 base.ToolTip = value;
             }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return rect;
-            }
-            set
-            {
-                base.Rect = value;
-
-                frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
-                textBlock.Rect = value;
-            }
-        }
-
+        
         public bool Selected { get; set; }
-
-        public GUIButton(Rectangle rect, string text, string style, GUIComponent parent = null)
-            : this(rect, text, null, Alignment.Left, style, parent)
+        
+        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
-        }
-
-        public GUIButton(Rectangle rect, string text, Alignment alignment, string style, GUIComponent parent = null)
-            : this(rect, text, null, alignment, style, parent)
-        {
-        }
-
-        public GUIButton(Rectangle rect, string text, Color? color, string style, GUIComponent parent = null)
-            : this(rect, text, color, (Alignment.Left | Alignment.Top), style, parent)
-        {
-        }
-
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
-            : this(rect, text, color, alignment, Alignment.Center, style, parent)
-        {
-
-        }
-
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, string style = "", GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-            if (color != null) this.color = (Color)color;
-            this.alignment = alignment;
-
-            if (parent != null) parent.AddChild(this);
-
-            frame = new GUIFrame(Rectangle.Empty, style, this);
-            GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
-
-            textBlock = new GUITextBlock(Rectangle.Empty, text,
-                Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,
-                textAlignment, null, this);
-            GUI.Style.Apply(textBlock, style, this);
-
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
+            if (style != null) GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, style: null)
+            {
+                TextColor = this.style == null ? Color.Black : this.style.textColor
+            };
+            GUI.Style.Apply(textBlock, "", this);
             Enabled = true;
         }
 
@@ -178,28 +153,36 @@ namespace Barotrauma
             base.ApplyStyle(style);
 
             if (frame != null) frame.ApplyStyle(style);
-            if (textBlock != null) textBlock.ApplyStyle(style);
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
-            
-            DrawChildren(spriteBatch);
+            //do nothing
         }
-        
-        public override void Update(float deltaTime)
+
+        protected override void Update(float deltaTime)
         {
             if (!Visible) return;
             base.Update(deltaTime);
-            if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
+            if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && GUI.IsMouseOn(this))
             {
                 state = ComponentState.Hover;
+                if (PlayerInput.LeftButtonDown())
+                {
+                    OnButtonDown?.Invoke();
+                }
                 if (PlayerInput.LeftButtonHeld())
                 {
                     if (OnPressed != null)
                     {
-                        if (OnPressed()) state = ComponentState.Pressed;
+                        if (OnPressed())
+                        {
+                            state = ComponentState.Pressed;
+                        }
+                    }
+                    else
+                    {
+                        state = ComponentState.Pressed;
                     }
                 }
                 else if (PlayerInput.LeftButtonClicked())
@@ -207,7 +190,10 @@ namespace Barotrauma
                     GUI.PlayUISound(GUISoundType.Click);
                     if (OnClicked != null)
                     {
-                        if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;
+                        if (OnClicked(this, UserData) && CanBeSelected)
+                        {
+                            state = ComponentState.Selected;
+                        }
                     }
                     else
                     {
@@ -220,7 +206,12 @@ namespace Barotrauma
             {
                 state = Selected ? ComponentState.Selected : ComponentState.None;
             }
-            frame.State = state;
+
+            foreach (GUIComponent child in Children)
+            {
+                child.State = state;
+            }
+            //frame.State = state;
         }
     }
 }

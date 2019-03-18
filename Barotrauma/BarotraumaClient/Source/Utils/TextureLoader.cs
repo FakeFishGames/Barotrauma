@@ -46,7 +46,10 @@ namespace Barotrauma
                 using (Stream fileStream = File.OpenRead(path))
                 {
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                    PreMultiplyAlpha(texture);
+                    if (preMultiplyAlpha)
+                    {
+                        PreMultiplyAlpha(texture);
+                    }
                     return texture;
                 }
 

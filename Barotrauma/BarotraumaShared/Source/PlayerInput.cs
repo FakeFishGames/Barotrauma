@@ -12,64 +12,55 @@ namespace Barotrauma
         Attack,
         Run, Crouch,
         Chat, RadioChat, CrewOrders,
-        Ragdoll
+        Ragdoll, Health, Grab,
+        SelectNextCharacter,
+        SelectPreviousCharacter
     }
 
     public class KeyOrMouse
     {
-        Keys keyBinding;
-        int? mouseButton;
-
-        public Keys Key
-        {
-            get { return keyBinding; }
-        }
-        public int? MouseButton
-        {
-            get { return mouseButton; }
-        }
+        public Keys Key { get; private set; }
+        public int? MouseButton { get; private set; }
 
         public KeyOrMouse(Keys keyBinding)
         {
-            this.keyBinding = keyBinding;
+            this.Key = keyBinding;
         }
 
         public KeyOrMouse(int mouseButton)
         {
-            this.mouseButton = mouseButton;
+            this.MouseButton = mouseButton;
         }
 
         public bool IsDown()
-        { 
-            if (mouseButton==null)
+        {
+            switch (MouseButton)
             {
-                return PlayerInput.KeyDown(keyBinding);
+                case null:
+                    return PlayerInput.KeyDown(Key);
+                case 0:
+                    return PlayerInput.LeftButtonHeld();
+                case 1:
+                    return PlayerInput.RightButtonHeld();
+                case 2:
+                    return PlayerInput.MidButtonHeld();
             }
-            else if (mouseButton == 0)
-            {
-                return PlayerInput.LeftButtonHeld();
-            }
-            else if (mouseButton == 1)
-            {
-                return PlayerInput.RightButtonHeld();
-            }
-
+            
             return false;
         }
 
         public bool IsHit()
         {
-            if (mouseButton == null)
+            switch (MouseButton)
             {
-                return PlayerInput.KeyHit(keyBinding);
-            }
-            else if (mouseButton == 0)
-            {
-                return PlayerInput.LeftButtonClicked();
-            }
-            else if (mouseButton == 1)
-            {
-                return PlayerInput.RightButtonClicked();
+                case null:
+                    return PlayerInput.KeyHit(Key);
+                case 0:
+                    return PlayerInput.LeftButtonClicked();
+                case 1:
+                    return PlayerInput.RightButtonClicked();
+                case 2:
+                    return PlayerInput.MidButtonClicked();
             }
 
             return false;
@@ -77,17 +68,16 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            if (mouseButton==null)
+            switch (MouseButton)
             {
-                return keyBinding.ToString();
-            }
-            else if (mouseButton==0)
-            {
-                return "Mouse1";
-            }
-            else if (mouseButton==1)
-            {
-                return "Mouse2";
+                case null:
+                    return Key.ToString();
+                case 0:
+                    return "Mouse1";
+                case 1:
+                    return "Mouse2";
+                case 2:
+                    return "Mouse3";
             }
 
             return "None";
@@ -98,18 +88,31 @@ namespace Barotrauma
     {
         private bool hit, hitQueue;
         private bool held, heldQueue;
-
-
-        KeyOrMouse binding;
-
-        //public bool CanBeHeld
-        //{
-        //    get { return canBeHeld; }
-        //}
         
+#if CLIENT
+        private InputType inputType;
+
+        public Key(InputType inputType)
+        {
+            this.inputType = inputType;
+        }
+
+        private KeyOrMouse binding
+        {
+            get { return GameMain.Config.KeyBind(inputType); }
+        }        
+#else
+        private KeyOrMouse binding;
+
         public Key(KeyOrMouse binding)
         {
             this.binding = binding;
+        }
+#endif
+
+        public KeyOrMouse State
+        {
+            get { return binding; }
         }
 
         public bool Hit
@@ -135,12 +138,7 @@ namespace Barotrauma
                 held = value;
             }
         }
-
-        public KeyOrMouse State
-        {
-            get { return binding; }
-        }
-
+        
         public void SetState()
         {
             hit = binding.IsHit();
@@ -180,7 +178,6 @@ namespace Barotrauma
             get { return hitQueue; }
         }
 
-
         public void Reset()
         {
             hit = false;
@@ -192,7 +189,6 @@ namespace Barotrauma
             hit = false;
             //stateQueue = false;
         }
-
 
         public void ResetHeld()
         {

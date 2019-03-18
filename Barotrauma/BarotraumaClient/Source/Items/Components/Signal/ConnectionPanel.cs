@@ -1,15 +1,44 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public override void UpdateHUD(Character character)
+        public static Wire HighlightedWire;
+
+        partial void InitProjSpecific(XElement element)
+        {
+            if (GuiFrame == null) return;
+            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
+            {
+                UserData = this
+            };
+        }
+        
+        public override void Move(Vector2 amount)
+        {
+            if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;
+            MoveConnectedWires(amount);
+        }
+        
+        public override bool ShouldDrawHUD(Character character)
+        {
+            return character == Character.Controlled && character == user;
+        }
+        
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame?.AddToGUIUpdateList();
+        }
+
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (character != Character.Controlled || character != user) return;
             
@@ -21,12 +50,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        private void DrawConnections(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (character != Character.Controlled || character != user) return;
+            if (user != Character.Controlled || user == null) return;
 
             HighlightedWire = null;
-            Connection.DrawConnections(spriteBatch, this, character);
+            Connection.DrawConnections(spriteBatch, this, user);
+
+            foreach (UISprite sprite in GUI.Style.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
+            {
+                sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
+            }
         }
 
 
@@ -47,7 +81,7 @@ namespace Barotrauma.Items.Components
 
         private void ApplyRemoteState(NetBuffer msg)
         {
-            List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
+            List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();
 
             foreach (Connection connection in Connections)
@@ -69,7 +103,7 @@ namespace Barotrauma.Items.Components
 
                     newWires.Add(wireComponent);
 
-                    connection.Wires[i] = wireComponent;
+                    connection.SetWire(i, wireComponent);
                     wireComponent.Connect(connection, false);
                 }
             }

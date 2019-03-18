@@ -1,46 +1,74 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
-    public class FrameCounter
+    public class PerformanceCounter
+    {
+        public long TotalFrames { get; private set; }
+        public double TotalSeconds { get; private set; }
+        public double AverageFramesPerSecond { get; private set; }
+        public double CurrentFramesPerSecond { get; private set; }
+        
+        public const int MaximumSamples = 10;
+
+        private Queue<double> sampleBuffer = new Queue<double>();
+
+        private Dictionary<string, Queue<long>> elapsedTicks = new Dictionary<string, Queue<long>>();
+        private Dictionary<string, long> avgTicksPerFrame = new Dictionary<string, long>();
+
+#if CLIENT
+        internal Graph UpdateTimeGraph = new Graph(500), UpdateIterationsGraph = new Graph(500), DrawTimeGraph = new Graph(500);
+#endif
+
+        public IEnumerable<string> GetSavedIdentifiers
         {
-            public long TotalFrames { get; private set; }
-            public double TotalSeconds { get; private set; }
-            public double AverageFramesPerSecond { get; private set; }
-            public double CurrentFramesPerSecond { get; private set; }
+            get { return avgTicksPerFrame.Keys; }
+        }
 
-            public const int MaximumSamples = 10;
+        public void AddElapsedTicks(string identifier, long ticks)
+        {
+            if (!elapsedTicks.ContainsKey(identifier)) elapsedTicks.Add(identifier, new Queue<long>());
+            elapsedTicks[identifier].Enqueue(ticks);
 
-            private Queue<double> sampleBuffer = new Queue<double>();
-
-            public bool Update(double deltaTime)
+            if (elapsedTicks[identifier].Count > MaximumSamples)
             {
-                //float deltaTime = stopwatch.ElapsedMilliseconds / 1000.0f;
-
-                if (deltaTime == 0.0f) { return false; }
-                //stopwatch.Restart();
-
-                CurrentFramesPerSecond = (1.0 / deltaTime);
-
-                sampleBuffer.Enqueue(CurrentFramesPerSecond);
-
-                if (sampleBuffer.Count > MaximumSamples)
-                {
-                    sampleBuffer.Dequeue();
-                    AverageFramesPerSecond = sampleBuffer.Average(i => i);
-                }
-                else
-                {
-                    AverageFramesPerSecond = CurrentFramesPerSecond;
-                }
-
-                if (AverageFramesPerSecond < 0 || AverageFramesPerSecond > 500) { }
-                  
-                TotalFrames++;
-                TotalSeconds += deltaTime;
-                return true;
+                elapsedTicks[identifier].Dequeue();
+                avgTicksPerFrame[identifier] = (long)elapsedTicks[identifier].Average(i => i);
             }
         }
-    
+
+        public float GetAverageElapsedMillisecs(string identifier)
+        {
+            if (!avgTicksPerFrame.ContainsKey(identifier)) return 0.0f;
+            return avgTicksPerFrame[identifier] / TimeSpan.TicksPerMillisecond;
+        }
+
+        public bool Update(double deltaTime)
+        {
+            if (deltaTime == 0.0f) { return false; }
+
+            CurrentFramesPerSecond = (1.0 / deltaTime);
+
+            sampleBuffer.Enqueue(CurrentFramesPerSecond);
+
+            if (sampleBuffer.Count > MaximumSamples)
+            {
+                sampleBuffer.Dequeue();
+                AverageFramesPerSecond = sampleBuffer.Average(i => i);
+            }
+            else
+            {
+                AverageFramesPerSecond = CurrentFramesPerSecond;
+            }
+
+            if (AverageFramesPerSecond < 0 || AverageFramesPerSecond > 500) { }
+                  
+            TotalFrames++;
+            TotalSeconds += deltaTime;
+            return true;
+        }
+
+    }    
 }

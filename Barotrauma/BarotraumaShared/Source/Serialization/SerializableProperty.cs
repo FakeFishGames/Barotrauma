@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,11 +15,15 @@ namespace Barotrauma
     public class Editable : Attribute
     {
         public int MaxLength;
+        public int DecimalCount = 1;
 
         public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
+        public float ValueStep;
 
         public string ToolTip;
+
+        public string DisplayName;
 
         public Editable(int maxLength = 20)
         {
@@ -31,10 +36,11 @@ namespace Barotrauma
             MaxValueInt = maxValue;
         }
 
-        public Editable(float minValue, float maxValue)
+        public Editable(float minValue, float maxValue, int decimals = 1)
         {
             MinValueFloat = minValue;
             MaxValueFloat = maxValue;
+            DecimalCount = decimals;
         }
     }
 
@@ -65,6 +71,7 @@ namespace Barotrauma
             { typeof(int), "int" },
             { typeof(float), "float" },
             { typeof(string), "string" },
+            { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
             { typeof(Vector3), "vector3" },
             { typeof(Vector4), "vector4" },
@@ -94,6 +101,11 @@ namespace Barotrauma
             }
         }
 
+        public object ParentObject
+        {
+            get { return obj; }
+        }
+
         public SerializableProperty(PropertyDescriptor property, object obj)
         {
             this.propertyDescriptor = property;
@@ -115,8 +127,7 @@ namespace Barotrauma
         {
             if (value == null) return false;
 
-            string typeName;
-            if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out typeName))
+            if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
             {
                 if (propertyDescriptor.PropertyType.IsEnum)
                 {
@@ -151,15 +162,19 @@ namespace Barotrauma
 
             try
             {
+
                 switch (typeName)
                 {
                     case "bool":
-                        propertyInfo.SetValue(obj, value.ToLowerInvariant() == "true", null);
+                        bool boolValue = value == "true" || value == "True";
+                        if (TrySetValueWithoutReflection(boolValue)) { return true; }
+                        propertyInfo.SetValue(obj, boolValue, null);
                         break;
                     case "int":
                         int intVal;
                         if (int.TryParse(value, out intVal))
                         {
+                            if (TrySetValueWithoutReflection(intVal)) { return true; }
                             propertyInfo.SetValue(obj, intVal, null);
                         }
                         break;
@@ -167,11 +182,15 @@ namespace Barotrauma
                         float floatVal;
                         if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
                         {
+                            if (TrySetValueWithoutReflection(floatVal)) { return true; }
                             propertyInfo.SetValue(obj, floatVal, null);
                         }
                         break;
                     case "string":
                         propertyInfo.SetValue(obj, value, null);
+                        break;
+                    case "point":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParsePoint(value));
                         break;
                     case "vector2":
                         propertyInfo.SetValue(obj, XMLExtensions.ParseVector2(value));
@@ -207,8 +226,7 @@ namespace Barotrauma
 
             try
             {
-                string typeName;
-                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out typeName))
+                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
                 {
                     if (propertyDescriptor.PropertyType.IsEnum)
                     {
@@ -242,6 +260,9 @@ namespace Barotrauma
                         {
                             case "string":
                                 propertyInfo.SetValue(obj, value, null);
+                                return true;
+                            case "point":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "vector2":
                                 propertyInfo.SetValue(obj, XMLExtensions.ParseVector2((string)value));
@@ -282,8 +303,9 @@ namespace Barotrauma
 
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
                 return false;
             }
         }
@@ -292,10 +314,17 @@ namespace Barotrauma
         {
             try
             {
+                if (TrySetValueWithoutReflection(value)) { return true; }
                 propertyInfo.SetValue(obj, value, null);
             }
-            catch
+            catch (TargetInvocationException e)
             {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.TrySetValue", e.InnerException);
+                return false;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
                 return false;
             }
 
@@ -306,10 +335,17 @@ namespace Barotrauma
         {
             try
             {
+                if (TrySetValueWithoutReflection(value)) { return true; }
                 propertyInfo.SetValue(obj, value, null);
             }
-            catch
+            catch (TargetInvocationException e)
             {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.TrySetValue", e.InnerException);
+                return false;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
                 return false;
             }
             return true;
@@ -321,8 +357,14 @@ namespace Barotrauma
             {
                 propertyInfo.SetValue(obj, value, null);
             }
-            catch
+            catch (TargetInvocationException e)
             {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.TrySetValue", e.InnerException);
+                return false;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
                 return false;
             }
             return true;
@@ -330,16 +372,125 @@ namespace Barotrauma
 
         public object GetValue()
         {
-            if (obj == null || propertyDescriptor == null) return false;
+            if (obj == null || propertyDescriptor == null) { return false; }
 
+            var value = TryGetValueWithoutReflection();
+            if (value != null) { return value; }
+            
             try
             {
                 return propertyInfo.GetValue(obj, null);
             }
-            catch
+            catch (TargetInvocationException e)
             {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.GetValue", e.InnerException);
                 return false;
             }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try getting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private object TryGetValueWithoutReflection()
+        {
+            switch (Name)
+            {
+                case "Condition":
+                    if (obj is Item item) { return item.Condition; }                    
+                    break;
+                case "Voltage":
+                    if (obj is Powered powered) { return powered.Voltage; }
+                    break;
+                case "Charge":
+                    if (obj is PowerContainer powerContainer) { return powerContainer.Charge; }
+                    break;
+                case "AvailableFuel":
+                    { if (obj is Reactor reactor) { return reactor.AvailableFuel; } }
+                    break;
+                case "FissionRate":
+                    { if (obj is Reactor reactor) { return reactor.FissionRate; } }
+                    break;
+                case "OxygenFlow":
+                    if (obj is Vent vent) { return vent.OxygenFlow; }
+                    break;
+                case "CurrFlow":
+                    if (obj is Pump pump) { return pump.CurrFlow; }
+                    if (obj is OxygenGenerator oxygenGenerator) { return oxygenGenerator.CurrFlow; }
+                    break;
+                case "CurrentVolume":
+                    if (obj is Engine engine) { return engine.CurrentVolume; }
+                    break;
+                case "MotionDetected":
+                    if (obj is MotionSensor motionSensor) { return motionSensor.MotionDetected; }
+                    break;
+                case "Oxygen":
+                    { if (obj is Character character) { return character.Oxygen; } }
+                    break;
+                case "Health":
+                    {  if (obj is Character character) { return character.Health; } }
+                    break;
+                case "OxygenAvailable":
+                    { if (obj is Character character) { return character.OxygenAvailable; } }
+                    break;
+                case "PressureProtection":
+                    { if (obj is Character character) { return character.PressureProtection; } }
+                    break;
+                case "IsDead":
+                    { if (obj is Character character) { return character.IsDead; } }
+                    break;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Try setting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TrySetValueWithoutReflection(object value)
+        {
+            switch (Name)
+            {
+                case "Condition":
+                    if (obj is Item item && value is float) { item.Condition = (float)value; return true; }
+                    break;
+                case "Voltage":
+                    if (obj is Powered powered && value is float) { powered.Voltage = (float)value; return true; }
+                    break;
+                case "Charge":
+                    if (obj is PowerContainer powerContainer && value is float) { powerContainer.Charge = (float)value; return true; }
+                    break;
+                case "AvailableFuel":
+                    if (obj is Reactor reactor && value is float) { reactor.AvailableFuel = (float)value; return true; }
+                    break;
+                case "Oxygen":
+                    { if (obj is Character character && value is float) { character.Oxygen = (float)value; return true; } }
+                    break;
+                case "HideFace":
+                    { if (obj is Character character && value is bool) { character.HideFace = (bool)value; return true; } }
+                    break;
+                case "OxygenAvailable":
+                    { if (obj is Character character && value is float) { character.OxygenAvailable = (float)value; return true; } }
+                    break;
+                case "ObstructVision":
+                    { if (obj is Character character && value is bool) { character.ObstructVision = (bool)value; return true; } }
+                    break;
+                case "PressureProtection":
+                    { if (obj is Character character && value is float) { character.PressureProtection = (float)value; return true; } }
+                    break;
+                case "LowPassMultiplier":
+                    { if (obj is Character character && value is float) { character.LowPassMultiplier = (float)value; return true; } }
+                    break;
+                case "SpeedMultiplier":
+                    { if (obj is Character character && value is float) { character.SpeedMultiplier = (float)value; return true; } }
+                    break;
+            }
+
+            return false;
         }
 
         public static List<SerializableProperty> GetProperties<T>(ISerializableEntity obj)
@@ -368,7 +519,7 @@ namespace Barotrauma
             return dictionary;
         }
         
-        public static Dictionary<string, SerializableProperty> DeserializeProperties(object obj, XElement element)
+        public static Dictionary<string, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 
@@ -431,8 +582,7 @@ namespace Barotrauma
                 }
 
                 string stringValue;
-                string typeName;
-                if (!supportedTypes.TryGetValue(value.GetType(), out typeName))
+                if (!supportedTypes.TryGetValue(value.GetType(), out string typeName))
                 {
                     if (property.PropertyType.IsEnum)
                     {
@@ -451,6 +601,9 @@ namespace Barotrauma
                         case "float":
                             //make sure the decimal point isn't converted to a comma or anything else
                             stringValue = ((float)value).ToString("G", CultureInfo.InvariantCulture);
+                            break;
+                        case "point":
+                            stringValue = XMLExtensions.PointToString((Point)value);
                             break;
                         case "vector2":
                             stringValue = XMLExtensions.Vector2ToString((Vector2)value);
@@ -472,7 +625,8 @@ namespace Barotrauma
                             break;
                     }
                 }
-                
+
+                element.Attribute(property.Name)?.Remove();
                 element.SetAttributeValue(property.Name.ToLowerInvariant(), stringValue);
             }
         }

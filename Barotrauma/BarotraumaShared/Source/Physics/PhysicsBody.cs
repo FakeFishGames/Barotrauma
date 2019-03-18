@@ -69,7 +69,7 @@ namespace Barotrauma
     {
         public enum Shape
         {
-            Circle, Rectangle, Capsule
+            Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
         private static List<PhysicsBody> list = new List<PhysicsBody>();
@@ -99,10 +99,10 @@ namespace Barotrauma
         public float height, width, radius;
         
         private float density;
-        
+
         //the direction the item is facing (for example, a gun has to be 
         //flipped horizontally if the Character holding it turns around)
-        float dir;
+        float dir = 1.0f;
 
         Vector2 offsetFromTargetPos;
         float offsetLerp;
@@ -239,7 +239,7 @@ namespace Barotrauma
             get { return body.AngularVelocity; }
             set
             {
-                if (!IsValidValue(value, "angular velocity")) return;
+                if (!IsValidValue(value, "angular velocity", -1000f, 1000f)) return;
                 body.AngularVelocity = value;
             }
         }
@@ -272,6 +272,7 @@ namespace Barotrauma
 
         public BodyType BodyType
         {
+            get { return body.BodyType; }
             set { body.BodyType = value; }
         }
 
@@ -285,19 +286,14 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
-        public PhysicsBody(XElement element, float scale = 1.0f)
-            : this(element, Vector2.Zero, scale)
-        {
-        }
+        public PhysicsBody(XElement element, float scale = 1.0f) : this(element, Vector2.Zero, scale) { }
+        public PhysicsBody(ColliderParams cParams) : this(cParams, Vector2.Zero) { }
+        public PhysicsBody(LimbParams lParams) : this(lParams, Vector2.Zero) { }
 
         public PhysicsBody(float width, float height, float radius, float density)
         {
             CreateBody(width, height, radius, density);
-            
-            dir = 1.0f;
-            
             LastSentPosition = body.Position;
-
             list.Add(this);
         }
 
@@ -305,73 +301,194 @@ namespace Barotrauma
         {
             body = farseerBody;
             if (body.UserData == null) body.UserData = this;
-
             LastSentPosition = body.Position;
-
             list.Add(this);
         }
 
+        public PhysicsBody(ColliderParams colliderParams, Vector2 position)
+        {
+            float radius = ConvertUnits.ToSimUnits(colliderParams.Radius) * colliderParams.Ragdoll.LimbScale;
+            float height = ConvertUnits.ToSimUnits(colliderParams.Height) * colliderParams.Ragdoll.LimbScale;
+            float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
+            density = 10;
+            CreateBody(width, height, radius, density);
+            body.BodyType = BodyType.Dynamic;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.CollisionCategories = Physics.CollisionCharacter;
+            body.AngularDamping = 5.0f;
+            body.FixedRotation = true;
+            body.Friction = 0.05f;
+            body.Restitution = 0.05f;
+            SetTransformIgnoreContacts(position, 0.0f);
+            LastSentPosition = position;
+            list.Add(this);
+        }
+
+        public PhysicsBody(LimbParams limbParams, Vector2 position)
+        {
+            float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Ragdoll.LimbScale;
+            float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Ragdoll.LimbScale;
+            float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Ragdoll.LimbScale;
+            density = limbParams.Density;
+            CreateBody(width, height, radius, density);
+            body.BodyType = BodyType.Dynamic;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.CollisionCategories = Physics.CollisionItem;
+            body.Friction = limbParams.Friction;
+            body.Restitution = limbParams.Restitution;
+            body.UserData = this;
+            SetTransformIgnoreContacts(position, 0.0f);
+            LastSentPosition = position;
+            list.Add(this);
+        }
+        
         public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-
             density = element.GetAttributeFloat("density", 10.0f);
-
             CreateBody(width, height, radius, density);
-
-            dir = 1.0f;
-            
+            //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
+            body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionItem;
             body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-
             body.Friction = element.GetAttributeFloat("friction", 0.3f);
-            body.Restitution = element.GetAttributeFloat("restitution", 0.05f);
-            
-            body.BodyType = BodyType.Dynamic;
-
+            body.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             body.UserData = this;
-
-            SetTransform(position, 0.0f);
-
-            LastSentPosition = position;
-            
+            SetTransformIgnoreContacts(position, 0.0f);
+            LastSentPosition = position;      
             list.Add(this);
         }
 
         private void CreateBody(float width, float height, float radius, float density)
         {
-            if (width != 0.0f && height != 0.0f)
+            if (IsValidShape(radius, height, width))
             {
-                body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
-                bodyShape = Shape.Rectangle;
-            }
-            else if (radius != 0.0f && width != 0.0f)
-            {
-                body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
-                bodyShape = Shape.Capsule;
-            }
-            else if (radius != 0.0f && height != 0.0f)
-            {
-                body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
-                bodyShape = Shape.Capsule;
-            }
-            else if (radius != 0.0f)
-            {
-                body = BodyFactory.CreateCircle(GameMain.World, radius, density);
-                bodyShape = Shape.Circle;
+                bodyShape = DefineBodyShape(radius, width, height);
+                switch (bodyShape)
+                {
+                    case Shape.Capsule:
+                        body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
+                        break;
+                    case Shape.HorizontalCapsule:
+                        body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
+                        break;
+                    case Shape.Circle:
+                        body = BodyFactory.CreateCircle(GameMain.World, radius, density);
+                        break;
+                    case Shape.Rectangle:
+                        body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
+                        break;
+                    default:
+                        throw new NotImplementedException(bodyShape.ToString());
+                }
             }
             else
             {
                 DebugConsole.ThrowError("Invalid physics body dimensions (width: " + width + ", height: " + height + ", radius: " + radius + ")");
             }
-
             this.width = width;
             this.height = height;
             this.radius = radius;
         }
 
+        /// <summary>
+        /// Returns the farthest point towards the forward of the body.
+        /// For capsules and circles, the front is at the top.
+        /// For horizontal capsules, the front is at the right-most point.
+        /// For rectangles, the front is either at the top or at the right, depending on which one of the two is greater: width or height.
+        /// The rotation is in radians.
+        /// </summary>
+        public Vector2 GetLocalFront(float spritesheetRotation = 0)
+        {
+            Vector2 pos;
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    pos = new Vector2(0.0f, height / 2 + radius);
+                    break;
+                case Shape.HorizontalCapsule:
+                    pos = new Vector2(width / 2 + radius, 0.0f);
+                    break;
+                case Shape.Circle:
+                    pos = new Vector2(0.0f, radius);
+                    break;
+                case Shape.Rectangle:
+                    pos = new Vector2(0.0f, Math.Max(height, width) / 2.0f);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(spritesheetRotation));
+        }
+
+        public float GetMaxExtent()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return height / 2 + radius;
+                case Shape.HorizontalCapsule:
+                    return width / 2 + radius;
+                case Shape.Circle:
+                    return radius;
+                case Shape.Rectangle:
+                    return new Vector2(width * 0.5f, height * 0.5f).Length();
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public Vector2 GetSize()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return new Vector2(radius * 2, height + radius * 2);
+                case Shape.HorizontalCapsule:
+                    return new Vector2(width + radius * 2, radius * 2);
+                case Shape.Circle:
+                    return new Vector2(radius * 2);
+                case Shape.Rectangle:
+                    return new Vector2(width, height);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public void SetSize(Vector2 size)
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    radius = Math.Max(size.X / 2, 0);
+                    height = Math.Max(size.Y - size.X, 0);
+                    width = 0;
+                    break;
+                case Shape.HorizontalCapsule:
+                    radius = Math.Max(size.Y / 2, 0);
+                    width = Math.Max(size.X - size.Y, 0);
+                    height = 0;
+                    break;
+                case Shape.Circle:
+                    radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
+                    width = 0;
+                    height = 0;
+                    break;
+                case Shape.Rectangle:
+                    width = Math.Max(size.X, 0);
+                    height = Math.Max(size.Y, 0);
+                    radius = 0;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+#if CLIENT
+            bodyShapeTexture = null;
+#endif
+        }
+        
         public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
         {
             if (!MathUtils.IsValid(value) ||
@@ -453,6 +570,19 @@ namespace Barotrauma
         {
             if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
             body.ApplyForce(force);
+        }
+
+        /// <summary>
+        /// Apply an impulse to the body without increasing it's velocity above a specific limit.
+        /// </summary>
+        public void ApplyForce(Vector2 force, float maxVelocity)
+        {
+            float currSpeed = body.LinearVelocity.Length();
+            Vector2 velocityAddition = force / Mass * (float)Timing.Step;
+            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
+
+            body.ApplyForce((newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step);
         }
 
         public void ApplyForce(Vector2 force, Vector2 point)
@@ -631,14 +761,19 @@ namespace Barotrauma
                 positionBuffer.RemoveAt(0);
             }
         }
-        
+
         /// <summary>
-        /// rotate the body towards the target rotation in the "shortest direction"
+        /// Rotate the body towards the target rotation in the "shortest direction", taking into account the current angular velocity to prevent overshooting.
         /// </summary>
-        public void SmoothRotate(float targetRotation, float force = 10.0f)
+        /// <param name="targetRotation">Desired rotation in radians</param>
+        /// <param name="force">How fast the body should be rotated. Does not represent any real unit, you may want to experiment with different values to get the desired effect.</param>
+        /// <param name="wrapAngle">Should the angles be wrapped. Set to false if it makes a difference whether the angle of the body is 0.0f or 360.0f.</param>
+        public void SmoothRotate(float targetRotation, float force = 10.0f, bool wrapAngle = true)
         {
             float nextAngle = body.Rotation + body.AngularVelocity * (float)Timing.Step;
-            float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
+            float angle = wrapAngle ? 
+                MathUtils.GetShortestAngle(nextAngle, targetRotation) : 
+                MathHelper.Clamp(targetRotation - nextAngle, -MathHelper.Pi, MathHelper.Pi);
             float torque = angle * 60.0f * (force / 100.0f);
 
             if (body.IsKinematic)
@@ -667,6 +802,33 @@ namespace Barotrauma
                 list[i].Remove();
             }
             System.Diagnostics.Debug.Assert(list.Count == 0);
+        }
+
+        public static bool IsValidShape(float radius, float height, float width) => radius > 0 || (height > 0 && width > 0);
+
+        public static Shape DefineBodyShape(float radius, float width, float height)
+        {
+            Shape bodyShape;
+            if (width <= 0 && height <= 0 && radius > 0)
+            {
+                bodyShape = Shape.Circle;
+            }
+            else if (radius > 0)
+            {
+                if (width > height)
+                {
+                    bodyShape = Shape.HorizontalCapsule;
+                }
+                else
+                {
+                    bodyShape = Shape.Capsule;
+                }
+            }
+            else
+            {
+                bodyShape = Shape.Rectangle;
+            }
+            return bodyShape;
         }
 
         partial void DisposeProjSpecific();

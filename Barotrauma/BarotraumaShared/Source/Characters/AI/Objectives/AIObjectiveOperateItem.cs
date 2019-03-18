@@ -17,10 +17,18 @@ namespace Barotrauma
 
         private bool requireEquip;
 
+        private bool useController;
+
+        private AIObjectiveGoTo gotoObjective;
+
         public override bool CanBeCompleted
         {
             get
             {
+                if (gotoObjective != null && !gotoObjective.CanBeCompleted) return false;
+
+                if (useController && controller == null) return false;
+
                 return canBeCompleted;
             }
         }
@@ -43,23 +51,30 @@ namespace Barotrauma
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false)
             : base (character, option)
         {
-            this.component = item;
+            this.component = item ?? throw new System.ArgumentNullException("item", "Attempted to create an AIObjectiveOperateItem with a null target.");
             this.requireEquip = requireEquip;
             this.operateTarget = operateTarget;
+            this.useController = useController;
 
             if (useController)
             {
-                var controllers = item.Item.GetConnectedComponents<Controller>();
+                var controllers = component.Item.GetConnectedComponents<Controller>();
                 if (controllers.Any()) controller = controllers[0];
             }
-
 
             canBeCompleted = true;
         }
 
         protected override void Act(float deltaTime)
         {
-            ItemComponent target = controller == null ? component : controller;
+            ItemComponent target = useController ? controller : component;
+
+            if (useController && controller == null)
+            {
+                character.Speak(TextManager.Get("DialogCantFindController").Replace("[item]", component.Item.Name), null, 2.0f, "cantfindcontroller", 30.0f);
+                return;
+            }
+            
 
             if (target.CanBeSelected)
             { 
@@ -75,11 +90,17 @@ namespace Barotrauma
                     return;
                 }
 
-                AddSubObjective(new AIObjectiveGoTo(target.Item, character));
+                AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character));
             }
             else
             {
-                if (!character.Inventory.Items.Contains(component.Item))
+                if (component.Item.GetComponent<Pickable>() == null)
+                {
+                    //controller/target can't be selected and the item cannot be picked -> objective can't be completed
+                    canBeCompleted = false;
+                    return;
+                }
+                else if (!character.Inventory.Items.Contains(component.Item))
                 {
                     AddSubObjective(new AIObjectiveGetItem(character, component.Item, true));
                 }
@@ -95,10 +116,10 @@ namespace Barotrauma
                             return;
                         }
 
-                        for (int i = 0; i < CharacterInventory.limbSlots.Length; i++)
+                        for (int i = 0; i < character.Inventory.Capacity; i++)
                         {
-                            if (CharacterInventory.limbSlots[i] == InvSlotType.Any ||
-                                !holdable.AllowedSlots.Any(s => s.HasFlag(CharacterInventory.limbSlots[i])))
+                            if (character.Inventory.SlotTypes[i] == InvSlotType.Any ||
+                                !holdable.AllowedSlots.Any(s => s.HasFlag(character.Inventory.SlotTypes[i])))
                             {
                                 continue;
                             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Xml.Linq;
+using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -10,17 +11,26 @@ namespace Barotrauma
             Idle, Attack, Die
         }
 
-        public readonly Sound Sound;
+        private readonly RoundSound roundSound;
 
         public readonly SoundType Type;
 
-        public readonly float Range;
+        public float Volume
+        {
+            get { return roundSound.Volume; }
+        }
+        public float Range
+        {
+            get { return roundSound.Range; }
+        }
+        public Sound Sound
+        {
+            get { return roundSound.Sound; }
+        }
 
         public CharacterSound(XElement element)
         {
-            Sound = Sound.Load(element.Attribute("file").Value);
-            Range = element.GetAttributeFloat("range", 1000.0f);
-
+            roundSound = Submarine.LoadRoundSound(element);
             Enum.TryParse<SoundType>(element.GetAttributeString("state", "Idle"), true, out Type);
         }
     }

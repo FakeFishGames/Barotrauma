@@ -8,18 +8,16 @@ namespace Barotrauma
     {
         public virtual void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 placeSize = Submarine.GridSize;
-
             if (placePosition == Vector2.Zero)
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X - GameMain.GraphicsWidth, -position.Y), new Vector2(position.X + GameMain.GraphicsWidth, -position.Y), Color.White, 0, (int)(2.0f / cam.Zoom));
-
                 GUI.DrawLine(spriteBatch, new Vector2(position.X, -(position.Y - GameMain.GraphicsHeight)), new Vector2(position.X, -(position.Y + GameMain.GraphicsHeight)), Color.White, 0, (int)(2.0f / cam.Zoom));
             }
             else
             {
+                Vector2 placeSize = Submarine.GridSize;
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;
@@ -39,6 +37,15 @@ namespace Barotrauma
             }
         }
 
+        public virtual void DrawPlacing(SpriteBatch spriteBatch, Rectangle drawRect, float scale = 1.0f)
+        {
+            if (Submarine.MainSub != null)
+            {
+                drawRect.Location -= Submarine.MainSub.Position.ToPoint();
+            }
+            drawRect.Y = -drawRect.Y;
+            GUI.DrawRectangle(spriteBatch, drawRect, Color.DarkBlue);
+        }
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {
             GUI.Font.DrawString(spriteBatch, name, pos, color);

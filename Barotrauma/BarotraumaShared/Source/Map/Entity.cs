@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class Entity
     {
+        public const ushort NullEntityID = 0;
+
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
         public static List<Entity> GetEntityList()
         {
@@ -39,18 +41,22 @@ namespace Barotrauma
             {                                
                 return id;             
             }
-            set 
+            set
             {
-                Entity thisEntity;
-                if (dictionary.TryGetValue(id, out thisEntity) && thisEntity == this)
+                if (value == NullEntityID)
+                {
+                    DebugConsole.ThrowError("Cannot set the ID of an entity to " + NullEntityID +
+                        "! The value is reserved for entity events referring to a non-existent (e.g. removed) entity.\n" + Environment.StackTrace);
+                    return;
+                }
+
+                if (dictionary.TryGetValue(id, out Entity thisEntity) && thisEntity == this)
                 {
                     dictionary.Remove(id);
                 }
                 //if there's already an entity with the same ID, give it the old ID of this one
-                Entity existingEntity;
-                if (dictionary.TryGetValue(value, out existingEntity))
+                if (dictionary.TryGetValue(value, out Entity existingEntity))
                 {
-                    System.Diagnostics.Debug.WriteLine(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     DebugConsole.Log(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     dictionary.Remove(value);
                     dictionary.Add(id, existingEntity);
@@ -100,16 +106,29 @@ namespace Barotrauma
         {
             this.Submarine = submarine;
 
-            //give  an unique ID
+            //give a unique ID
+            id = FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
+
+            dictionary.Add(id, this);
+        }
+
+        public static ushort FindFreeID(ushort idOffset = 0)
+        {
+            //ushort.MaxValue - 1 because 0 is a reserved value
+            if (dictionary.Count >= ushort.MaxValue - 1)
+            {
+                throw new Exception("Maximum amount of entities (" + (ushort.MaxValue - 1) + ") reached!");
+            }
+
+            idOffset = Math.Max(idOffset, (ushort)1);
             bool IDfound;
-            id = submarine == null ? (ushort)1 : submarine.IdOffset;
+            ushort id = idOffset;
             do
             {
                 id += 1;
                 IDfound = dictionary.ContainsKey(id);
             } while (IDfound);
-
-            dictionary.Add(id, this);
+            return id;
         }
         
         /// <summary>
@@ -205,6 +224,7 @@ namespace Barotrauma
             }
 
             dictionary.Clear();
+            Hull.EntityGrids.Clear();
         }
 
         /// <summary>

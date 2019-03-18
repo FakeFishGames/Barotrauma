@@ -15,10 +15,22 @@ namespace Barotrauma
 
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
+        public static bool ShowWalls = true, ShowStructures = true;        
+
         private List<ConvexHull> convexHulls;
 
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return HasBody ? ShowWalls : ShowStructures;;
+            }
+        }
+
+        // Only for testing in the debug build. Not saved.
         protected Vector2 textureScale = Vector2.One;
-        [Editable, Serialize("1.0, 1.0", true)]
+        
+        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
         public Vector2 TextureScale
         {
             get { return textureScale; }
@@ -29,61 +41,42 @@ namespace Barotrauma
                     MathHelper.Clamp(value.Y, 0.01f, 10));
             }
         }
+
+        // Only for testing in the debug build. Not saved.
+#if DEBUG
+        [Editable, Serialize(true, false)]
+#endif
+        public bool DrawTiled { get; protected set; } = true;
         
         protected Vector2 textureOffset = Vector2.Zero;
-        [Editable, Serialize("0.0, 0.0", true)]
+        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
         public Vector2 TextureOffset
         {
             get { return textureOffset; }
             set { textureOffset = value; }
         }
-
-        private void GenerateConvexHull()
+        
+        partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
         {
-            // If not null and not empty , remove the hulls from the system
-            if (convexHulls != null && convexHulls.Any())
-                convexHulls.ForEach(x => x.Remove());
+            if (!CastShadow) { return; }
 
-            // list all of hulls for this structure
-            convexHulls = new List<ConvexHull>();
-
-            var mergedSections = new List<WallSection>();
-            foreach (var section in sections)
+            if (convexHulls == null)
             {
-                if (mergedSections.Count > 5)
-                {
-                    mergedSections.Add(section);
-                    GenerateMergedHull(mergedSections);
-                    continue;
-                }
-
-                // if there is a gap and we have sections to merge, do it.
-                if (section.gap != null)
-                {
-                    GenerateMergedHull(mergedSections);
-                }
-                else
-                {
-                    mergedSections.Add(section);
-                }
+                convexHulls = new List<ConvexHull>();
             }
 
-            // take care of any leftover pieces
-            if (mergedSections.Count > 0)
+            Vector2 halfSize = size / 2;
+            Vector2[] verts = new Vector2[]
             {
-                GenerateMergedHull(mergedSections);
-            }
-        }
+                position + new Vector2(-halfSize.X, halfSize.Y),
+                position + new Vector2(halfSize.X, halfSize.Y),
+                position + new Vector2(halfSize.X, -halfSize.Y),
+                position + new Vector2(-halfSize.X, -halfSize.Y),
+            };
 
-        private void GenerateMergedHull(List<WallSection> mergedSections)
-        {
-            if (!mergedSections.Any()) return;
-            Rectangle mergedRect = GenerateMergedRect(mergedSections);
-
-            var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
-            mergedSections.ForEach(x => x.hull = h);
+            var h = new ConvexHull(verts, Color.Black, this);
+            h.Rotate(position, rotation);
             convexHulls.Add(h);
-            mergedSections.Clear();
         }
 
         public override void UpdateEditing(Camera cam)
@@ -91,35 +84,36 @@ namespace Barotrauma
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
-            }
-
-            editingHUD.Update((float)Timing.Step);
+            }            
         }
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int height = 150;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
+            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
+            var reloadTextureButton = new GUIButton(new RectTransform(new Point(editingHUD.Rect.Width / 2, 20)), "Reload Texture");
+            reloadTextureButton.OnClicked += (button, data) =>
+            {
+                Sprite.ReloadTexture();
+                Sprite.ReloadXML();
+                return true;
+            };
+            editor.AddCustomContent(reloadTextureButton, editor.ContentCount);
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD.UserData = this;
-            
-            new SerializableEntityEditor(this, inGame, editingHUD, true);
-            
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+            PositionEditingHUD();
 
             return editingHUD;
         }
-
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
-        }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
+            if (editing)
+            {
+                if (!HasBody && !ShowStructures) return;
+                if (HasBody && !ShowWalls) return;
+            }
 
             Draw(spriteBatch, editing, back, null);
         }
@@ -128,69 +122,140 @@ namespace Barotrauma
         {
             Draw(spriteBatch, false, false, damageEffect);
         }
-        
+
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
             if (prefab.sprite == null) return;
+            if (editing)
+            {
+                if (!HasBody && !ShowStructures) return;
+                if (HasBody && !ShowWalls) return;
+            }
 
-            Color color = (isHighlighted) ? Color.Orange : spriteColor;
+            Color color = isHighlighted ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
-                color = Color.Red;
+                //color = Color.Lerp(color, Color.Gold, 0.5f);
+                color = spriteColor;
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), color);
+                Vector2 rectSize = rect.Size.ToVector2();
+                if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
+                if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
+
+                Vector2 bodyPos = WorldPosition + BodyOffset;
+
+                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White, 
+                    thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
-            float depth = prefab.sprite.Depth;
+            float depth = SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
             depth -= (ID % 255) * 0.000001f;
 
             Vector2 textureOffset = this.textureOffset;
-            if (flippedX) textureOffset.X = -textureOffset.X;
-            if (flippedY) textureOffset.Y = -textureOffset.Y;
-            
+            if (FlippedX) textureOffset.X = -textureOffset.X;
+            if (FlippedY) textureOffset.Y = -textureOffset.Y;
+
             if (back && damageEffect == null)
             {
                 if (prefab.BackgroundSprite != null)
                 {
-                    SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
-                    prefab.BackgroundSprite.effects ^= SpriteEffects;
+                    bool drawDropShadow = Submarine != null && HasBody;
+                    Vector2 dropShadowOffset = Vector2.Zero;
+                    if (drawDropShadow)
+                    {
+                        dropShadowOffset = Submarine.WorldPosition - WorldPosition;
+                        if (dropShadowOffset != Vector2.Zero)
+                        {
+                            if (IsHorizontal)
+                            {
+                                dropShadowOffset = new Vector2(0.0f, Math.Sign(dropShadowOffset.Y) * 10.0f);
+                            }
+                            else
+                            {
+                                dropShadowOffset = new Vector2(Math.Sign(dropShadowOffset.X) * 10.0f, 0.0f);
+                            }
+                            dropShadowOffset.Y = -dropShadowOffset.Y;
+                        }
+                    }
 
-                    Point backGroundOffset = new Point(
-                        MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
-                        MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
+                    if (DrawTiled)
+                    {
+                        SpriteEffects oldEffects = prefab.BackgroundSprite.effects;
+                        prefab.BackgroundSprite.effects ^= SpriteEffects;
 
-                    prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
-                        new Vector2(rect.Width, rect.Height),
-                        color: color,
-                        textureScale: TextureScale,
-                        startOffset: backGroundOffset);
+                        Point backGroundOffset = new Point(
+                            MathUtils.PositiveModulo((int)-textureOffset.X, prefab.BackgroundSprite.SourceRect.Width),
+                            MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.BackgroundSprite.SourceRect.Height));
 
-                    prefab.BackgroundSprite.effects = oldEffects;
+                        prefab.BackgroundSprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            new Vector2(rect.Width, rect.Height),
+                            color: color,
+                            textureScale: TextureScale * Scale,
+                            startOffset: backGroundOffset);
+
+                        if (drawDropShadow)
+                        {
+                            prefab.BackgroundSprite.DrawTiled(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                new Vector2(rect.Width, rect.Height),
+                                color: Color.Black * 0.5f,
+                                textureScale: TextureScale * Scale,
+                                startOffset: backGroundOffset,
+                                depth: (depth + prefab.BackgroundSprite.Depth) / 2.0f);
+                        }
+
+                        prefab.BackgroundSprite.effects = oldEffects;
+                    }
+                    else
+                    {
+                        prefab.BackgroundSprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
+
+                        if (drawDropShadow)
+                        {
+                            prefab.BackgroundSprite.Draw(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                Color.Black * 0.5f,
+                                Vector2.Zero,
+                                scale: Scale,
+                                rotate: 0,
+                                spriteEffect: SpriteEffects,
+                                depth: (depth + prefab.BackgroundSprite.Depth) / 2.0f);
+                        }
+                    }
                 }
             }
 
-            if (back == prefab.sprite.Depth > 0.5f || editing)
+            if (back == depth > 0.5f || editing)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;
 
-                for (int i = 0; i < sections.Length; i++)
+                for (int i = 0; i < Sections.Length; i++)
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = sections[i].damage > 0 ? 
-                            MathHelper.Lerp(0.2f, 0.65f, sections[i].damage / prefab.Health) : 0.0f;
+                        float newCutoff = Sections[i].damage > 0 ?
+                            MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / prefab.Health) : 0.0f;
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
                             damageEffect.Parameters["inColor"].SetValue(color.ToVector4());
-                            
+
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
                             Submarine.DamageEffectCutoff = newCutoff;
@@ -198,27 +263,58 @@ namespace Barotrauma
                         }
                     }
 
-                    Point sectionOffset = new Point(
-                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
-                    
-                    if (flippedX && isHorizontal) sectionOffset.X = sections[i].rect.Right - rect.Right;
-                    if (flippedY && !isHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (sections[i].rect.Y - sections[i].rect.Height);
+                    if (DrawTiled)
+                    {
+                        Point sectionOffset = new Point(
+                            Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
+                            Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
 
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+                        if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
+                        if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
 
-                    prefab.sprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        color: spriteColor,
-                        startOffset: sectionOffset, 
-                        depth: depth,
-                        textureScale: TextureScale);
+                        sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
+                        sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+
+                        prefab.sprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
+                            new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
+                            color: color,
+                            startOffset: sectionOffset,
+                            depth: depth,
+                            textureScale: TextureScale * Scale);
+                    }
+                    else
+                    {
+                        prefab.sprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
+                    }
                 }
-
                 prefab.sprite.effects = oldEffects;
+            }
+
+            if (GameMain.DebugDraw)
+            {
+                if (Bodies != null)
+                {
+                    for (int i = 0; i < Bodies.Count; i++)
+                    {
+                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
+                        if (Submarine != null) pos += Submarine.Position;
+                        pos.Y = -pos.Y;
+                        GUI.DrawRectangle(spriteBatch,
+                            pos,
+                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].X),
+                            FarseerPhysics.ConvertUnits.ToDisplayUnits(bodyDebugDimensions[i].Y),
+                            -Bodies[i].Rotation, Color.White);
+                    }
+                }
             }
         }
     }

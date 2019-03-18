@@ -2,27 +2,27 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Connection
     {
-        private static Texture2D panelTexture;
+        //private static Texture2D panelTexture;
         private static Sprite connector;
         private static Sprite wireVertical;
+        private static Sprite connectionSprite;
+        private static Sprite connectionSpriteHighlight;
+        private static List<Sprite> screwSprites;
+
+        private static Wire draggingConnected;
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
-
-            int width = 400, height = 200;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = GameMain.GraphicsHeight - height;
-
-            Rectangle panelRect = new Rectangle(x, y, width, height);
-
-            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 512 - height, width, height), Color.White);
-
-            //GUI.DrawRectangle(spriteBatch, panelRect, Color.Black, true);
+            Rectangle panelRect = panel.GuiFrame.Rect;
+            int x = panelRect.X, y = panelRect.Y;
+            int width = panelRect.Width, height = panelRect.Height;
 
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
@@ -49,14 +49,15 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 rightPos = new Vector2(x + width - 130, y + 50);
-            Vector2 leftPos = new Vector2(x + 130, y + 50);
+            Vector2 rightPos = new Vector2(x + width - 130, y + 80);
+            Vector2 leftPos = new Vector2(x + 130, y + 80);
 
             Vector2 rightWirePos = new Vector2(x + width - 5, y + 30);
-
             Vector2 leftWirePos = new Vector2(x + 5, y + 30);
 
             int wireInterval = (height - 20) / Math.Max(totalWireCount, 1);
+            int connectorIntervalLeft = (height - 100) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
+            int connectorIntervalRight = (height - 100) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
 
             foreach (Connection c in panel.Connections)
             {
@@ -67,7 +68,7 @@ namespace Barotrauma.Items.Components
                     int linkIndex = c.FindWireIndex(draggingConnected.Item);
                     if (linkIndex > -1)
                     {
-                        Inventory.draggingItem = c.Wires[linkIndex].Item;
+                        Inventory.draggingItem = c.wires[linkIndex].Item;
                     }
                 }
 
@@ -80,7 +81,7 @@ namespace Barotrauma.Items.Components
                         mouseInRect, equippedWire,
                         wireInterval);
 
-                    rightPos.Y += 30;
+                    rightPos.Y += connectorIntervalLeft;
                     rightWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
                 }
                 else
@@ -91,7 +92,7 @@ namespace Barotrauma.Items.Components
                         mouseInRect, equippedWire,
                         wireInterval);
 
-                    leftPos.Y += 30;
+                    leftPos.Y += connectorIntervalRight;
                     leftWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
                     //leftWireX -= wireInterval;
                 }
@@ -99,7 +100,7 @@ namespace Barotrauma.Items.Components
 
             if (draggingConnected != null)
             {
-                DrawWire(spriteBatch, draggingConnected, draggingConnected.Item, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height), mouseInRect, null, panel);
+                DrawWire(spriteBatch, draggingConnected, draggingConnected.Item, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), mouseInRect, null, panel, "");
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
@@ -124,48 +125,45 @@ namespace Barotrauma.Items.Components
                 {
                     DrawWire(spriteBatch, equippedWire, equippedWire.Item,
                         new Vector2(x + width / 2, y + height - 100),
-                        new Vector2(x + width / 2, y + height), mouseInRect, null, panel);
+                        new Vector2(x + width / 2, y + height), mouseInRect, null, panel, "");
 
                     if (draggingConnected == equippedWire) Inventory.draggingItem = equippedWire.Item;
                 }
             }
-
-            //stop dragging a wire item if cursor is outside the panel
-            if (mouseInRect) Inventory.draggingItem = null;
-
-
-            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 0, width, height), Color.White);
-
+            
+            //stop dragging a wire item if the cursor is within any connection panel
+            //(so we don't drop the item when dropping the wire on a connection)
+            if (mouseInRect || GUI.MouseOn?.UserData is ConnectionPanel) Inventory.draggingItem = null;            
         }
 
         private void Draw(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)
         {
             //spriteBatch.DrawString(GUI.SmallFont, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
             GUI.DrawString(spriteBatch, labelPos, Name, IsPower ? Color.Red : Color.White, Color.Black, 0, GUI.SmallFont);
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)position.X - 10, (int)position.Y - 10, 20, 20), Color.White);
-            spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(64, 256, 32, 32), Color.White);
+            
+            connectionSprite.Draw(spriteBatch, position);
 
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null || Wires[i].Hidden || draggingConnected == Wires[i]) continue;
+                if (wires[i] == null || wires[i].Hidden || draggingConnected == wires[i]) continue;
 
-                Connection recipient = Wires[i].OtherConnection(this);
-
-                DrawWire(spriteBatch, Wires[i], (recipient == null) ? Wires[i].Item : recipient.item, position, wirePosition, mouseIn, equippedWire, panel);
+                Connection recipient = wires[i].OtherConnection(this);
+                
+                string label = recipient == null ? "" :
+                    wires[i].Locked ? recipient.item.Name + "\n" + TextManager.Get("ConnectionLocked") : recipient.item.Name;
+                DrawWire(spriteBatch, wires[i], (recipient == null) ? wires[i].Item : recipient.item, position, wirePosition, mouseIn, equippedWire, panel, label);
 
                 wirePosition.Y += wireInterval;
             }
 
             if (draggingConnected != null && Vector2.Distance(position, PlayerInput.MousePosition) < 13.0f)
             {
-                spriteBatch.Draw(panelTexture, position - new Vector2(21.5f, 21.5f), new Rectangle(106, 250, 43, 43), Color.White);
+                connectionSpriteHighlight.Draw(spriteBatch, position);
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
                     //find an empty cell for the new connection
-                    int index = FindWireIndex(null);
-
+                    int index = FindEmptyIndex();
                     if (index > -1 && !Wires.Contains(draggingConnected))
                     {
                         bool alreadyConnected = draggingConnected.IsConnectedTo(panel.Item);
@@ -186,22 +184,20 @@ namespace Barotrauma.Items.Components
                                     Item.Name + " (" + Name + ") to " + otherConnection.item.Name + " (" + otherConnection.Name + ")", ServerLog.MessageType.ItemInteraction);
                             }
 
-                            AddLink(index, draggingConnected);
+                            SetWire(index, draggingConnected);
                         }
                     }
                 }
             }
-
-            int screwIndex = (position.Y % 60 < 30) ? 0 : 1;
-
+            
             if (Wires.Any(w => w != null && w != draggingConnected))
             {
-                spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(screwIndex * 32, 256, 32, 32), Color.White);
+                int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
+                screwSprites[screwIndex].Draw(spriteBatch, position);
             }
-
         }
-
-        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Item item, Vector2 end, Vector2 start, bool mouseIn, Wire equippedWire, ConnectionPanel panel)
+        
+        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Item item, Vector2 end, Vector2 start, bool mouseIn, Wire equippedWire, ConnectionPanel panel, string label)
         {
             if (draggingConnected == wire)
             {
@@ -228,13 +224,14 @@ namespace Barotrauma.Items.Components
                 Vector2.Distance(end, PlayerInput.MousePosition) < 20.0f ||
                 new Rectangle((start.X < end.X) ? textX - 100 : textX, (int)start.Y - 5, 100, 14).Contains(PlayerInput.MousePosition));
 
-            string label = wire.Locked || panel.Locked ? item.Name + "\n" + TextManager.Get("ConnectionLocked") : item.Name;
-
-            GUI.DrawString(spriteBatch,
-                new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
-                label,
-                (mouseOn ? Color.Gold : Color.White) * (wire.Locked ? 0.6f : 1.0f), Color.Black * 0.8f,
-                3, GUI.SmallFont);
+            if (!string.IsNullOrEmpty(label))
+            {
+                GUI.DrawString(spriteBatch,
+                    new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
+                    label,
+                    (mouseOn ? Color.Gold : Color.White) * (wire.Locked ? 0.6f : 1.0f), Color.Black * 0.8f,
+                    3, GUI.SmallFont);
+            }
 
             var wireEnd = end + Vector2.Normalize(start - end) * 30.0f;
 

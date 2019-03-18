@@ -1,4 +1,5 @@
-﻿using Barotrauma.Particles;
+﻿using Barotrauma.Sounds;
+using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
@@ -6,17 +7,24 @@ namespace Barotrauma
 {
     partial class Attack
     {
-        private Sound sound;
+        public string StructureSoundType
+        {
+            get; private set;
+        }
+
+        private RoundSound sound;
 
         private ParticleEmitter particleEmitter;
 
         partial void InitProjSpecific(XElement element)
         {
-            string soundPath = element.GetAttributeString("sound", "");
-            if (!string.IsNullOrWhiteSpace(soundPath))
+            if (element.Attribute("sound") != null)
             {
-                sound = Sound.Load(soundPath);
+                DebugConsole.ThrowError("Error in attack ("+element+") - sounds should be defined as child elements, not as attributes.");
+                return;
             }
+            
+            StructureSoundType = element.GetAttributeString("structuresoundtype", "StructureBlunt");
 
             foreach (XElement subElement in element.Elements())
             {
@@ -24,6 +32,9 @@ namespace Barotrauma
                 {
                     case "particleemitter":
                         particleEmitter = new ParticleEmitter(subElement);
+                        break;
+                    case "sound":
+                        sound = Submarine.LoadRoundSound(subElement);
                         break;
                 }
 
@@ -39,7 +50,7 @@ namespace Barotrauma
 
             if (sound != null)
             {
-                sound.Play(1.0f, 500.0f, worldPosition);
+                SoundPlayer.PlaySound(sound.Sound, sound.Volume, sound.Range, worldPosition);
             }
         }
     }

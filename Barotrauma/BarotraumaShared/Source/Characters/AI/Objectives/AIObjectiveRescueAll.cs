@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    /*class AIObjectiveRescueAll : AIObjective
+    class AIObjectiveRescueAll : AIObjective
     {
         private List<Character> rescueTargets;
         
@@ -18,13 +18,19 @@ namespace Barotrauma
             return true;
         }
 
-        public override float GetPriority(Character character)
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             GetRescueTargets();
+            if (!rescueTargets.Any()) { return 0.0f; }
+            
+            if (objectiveManager.CurrentObjective == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
 
             //if there are targets to rescue, the priority is slightly less 
             //than the priority of explicit orders given to the character
-            return rescueTargets.Any() ? AIObjectiveManager.OrderPriority - 5.0f : 0.0f;
+            return AIObjectiveManager.OrderPriority - 5.0f;
         }
 
         private void GetRescueTargets()
@@ -32,9 +38,7 @@ namespace Barotrauma
             rescueTargets = Character.CharacterList.FindAll(c => 
                 c.AIController is HumanAIController &&
                 c != character &&
-                (c.IsDead || c.IsUnconscious) &&
-                c.AnimController.CurrentHull != null &&
-                AIObjectiveFindSafety.GetHullSafety(c.AnimController.CurrentHull, c) < 50.0f);
+                c.IsUnconscious);
         }
 
         protected override void Act(float deltaTime)
@@ -44,5 +48,11 @@ namespace Barotrauma
                 AddSubObjective(new AIObjectiveRescue(character, target));
             }
         }
-    }*/
+
+        public override bool IsCompleted()
+        {
+            return false;
+        }
+        
+    }
 }

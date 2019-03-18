@@ -38,7 +38,7 @@ namespace Barotrauma
         /// </summary>
         public void TryComplete(float deltaTime)
         {
-            subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted);
+            subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted || ShouldInterruptSubObjective(s));
 
             foreach (AIObjective objective in subObjectives)
             {
@@ -64,6 +64,18 @@ namespace Barotrauma
                 currentSubObjective = subObjectives[0];
             }
             return currentSubObjective;
+        }
+
+        public void SortSubObjectives(AIObjectiveManager objectiveManager)
+        {
+            if (!subObjectives.Any()) return;
+            subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
+            subObjectives[0].SortSubObjectives(objectiveManager);
+        }
+
+        protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective)
+        {
+            return false;
         }
 
         protected abstract void Act(float deltaTime);

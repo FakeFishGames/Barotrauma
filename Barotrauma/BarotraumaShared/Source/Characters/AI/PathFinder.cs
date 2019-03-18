@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -154,24 +155,29 @@ namespace Barotrauma
             }
         }
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end)
-        {
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            
+        public SteeringPath FindPath(Vector2 start, Vector2 end, string errorMsgStr)
+        {            
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
             {
                 Vector2 nodePos = node.Position;
-                
-                float dist = System.Math.Abs(start.X - nodePos.X) +
-                    System.Math.Abs(start.Y - nodePos.Y) * 10.0f; //higher cost for vertical movement
+
+                float xDiff = System.Math.Abs(start.X - nodePos.X);
+                float yDiff = System.Math.Abs(start.Y - nodePos.Y);
+
+                if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
+                {
+                    yDiff += 10.0f;
+                }
+
+                float dist = xDiff + (insideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
 
                 //prefer nodes that are closer to the end position
-                dist += Vector2.Distance(end, nodePos) / 10.0f;
-
-                if (dist<closestDist || startNode==null)
+                dist += (Math.Abs(end.X - nodePos.X) + Math.Abs(end.Y - nodePos.Y)) / 2.0f;
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                if (dist < closestDist || startNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
@@ -182,9 +188,9 @@ namespace Barotrauma
 
                         if (body != null)
                         {
+                            if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
-
                         }
                     }
 
@@ -195,7 +201,7 @@ namespace Barotrauma
 
             if (startNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find a start node", Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find a start node. "+ errorMsgStr, Color.DarkRed);
 
                 return new SteeringPath();
             }
@@ -207,6 +213,10 @@ namespace Barotrauma
                 Vector2 nodePos = node.Position;
 
                 float dist = Vector2.Distance(end, nodePos);
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                //avoid stopping at a doorway
+                if (node.Waypoint.ConnectedDoor != null) dist *= 10.0f;
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
@@ -223,16 +233,13 @@ namespace Barotrauma
 
             if (endNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node", Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. "+ errorMsgStr, Color.DarkRed);
                 return new SteeringPath();
             }
 
 
             var path =  FindPath(startNode,endNode);
-
-            sw.Stop();
-            System.Diagnostics.Debug.WriteLine("findpath: " + sw.ElapsedMilliseconds+" ms");
-
+            
             return path;
         }
 
@@ -253,10 +260,9 @@ namespace Barotrauma
                 }
             }
 
-
             if (startNode == null || endNode == null)
             {
-                DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints", Color.DarkRed);
+                DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints.", Color.DarkRed);
                 return new SteeringPath();
             }
 

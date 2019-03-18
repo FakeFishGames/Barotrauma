@@ -44,7 +44,8 @@ namespace Barotrauma
             base.Deselect();
 
 #if CLIENT
-            Sounds.SoundManager.LowPassHFGain = 1.0f;
+            GameMain.SoundManager.SetCategoryMuffle("default", false);
+            GUI.ClearMessages();
 #endif
         }
 
@@ -57,7 +58,7 @@ namespace Barotrauma
 
 #if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-                !DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null)
+                !DebugConsole.IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
             {
                 var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
                 if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
@@ -78,31 +79,66 @@ namespace Barotrauma
                 e.IsHighlighted = false;
             }
 
-#if CLIENT
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
+#if CLIENT     
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
+            GameMain.ParticleManager.Update((float)deltaTime); 
             
-            GameMain.ParticleManager.Update((float)deltaTime);
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("ParticleUpdate", sw.ElapsedTicks);
+            sw.Restart();  
             
             GameMain.LightManager.Update((float)deltaTime);
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("LightUpdate", sw.ElapsedTicks);
+            sw.Restart();  
 #endif
 
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime, cam);
 
 #if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("LevelUpdate", sw.ElapsedTicks);
+
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
-                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);                
+                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
             }
+            sw.Restart();              
 #endif
 
             Character.UpdateAll((float)deltaTime, cam);
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("CharacterUpdate", sw.ElapsedTicks);
+            sw.Restart(); 
+#endif
+
             StatusEffect.UpdateAll((float)deltaTime);
 
 #if CLIENT
-            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("StatusEffectUpdate", sw.ElapsedTicks);
+            sw.Restart(); 
+
+            if (Character.Controlled != null && 
+                Lights.LightManager.ViewTarget != null)
             {
-                cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
+                Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
+                if (Lights.LightManager.ViewTarget == Character.Controlled && CharacterHealth.OpenHealthWindow != null)
+                {
+                    Vector2 screenTargetPos = CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ?
+                        new Vector2(GameMain.GraphicsWidth * 0.75f, GameMain.GraphicsHeight * 0.5f) :
+                        new Vector2(GameMain.GraphicsWidth * 0.25f, GameMain.GraphicsHeight * 0.5f);
+                    Vector2 screenOffset = screenTargetPos - new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2);
+                    screenOffset.Y = -screenOffset.Y;
+                    targetPos -= screenOffset / cam.Zoom;
+                }
+                cam.TargetPos = targetPos;
             }
 #endif
 
@@ -117,19 +153,41 @@ namespace Barotrauma
             {
                 pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
             }
-
+            
             MapEntity.UpdateAll((float)deltaTime, cam);
-
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("MapEntityUpdate", sw.ElapsedTicks);
+            sw.Restart(); 
+#endif
             Character.UpdateAnimAll((float)deltaTime);
 
             Ragdoll.UpdateAll((float)deltaTime, cam);
+
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("AnimUpdate", sw.ElapsedTicks);
+            sw.Restart(); 
+#endif
 
             foreach (Submarine sub in Submarine.Loaded)
             {
                 sub.Update((float)deltaTime);
             }
-                
+
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("SubmarineUpdate", sw.ElapsedTicks);
+            sw.Restart(); 
+#endif
+
             GameMain.World.Step((float)deltaTime);
+
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Physics", sw.ElapsedTicks);
+#endif
+
 #if CLIENT
             if (!PlayerInput.LeftButtonHeld())
             {

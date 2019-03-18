@@ -10,7 +10,8 @@ namespace Barotrauma
     {
         public Func<Item, float> GetItemPriority;
 
-        private string[] itemNames;
+        //can be either tags or identifiers
+        private string[] itemIdentifiers;
 
         private Item targetItem, moveToTarget;
 
@@ -45,29 +46,65 @@ namespace Barotrauma
             : base(character, "")
         {
             canBeCompleted = true;
-
+            currSearchIndex = -1;
             this.equip = equip;
-
-            currSearchIndex = 0;
-
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemName, bool equip = false)
-            : this(character, new string[] { itemName }, equip)
+        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false)
+            : this(character, new string[] { itemIdentifier }, equip)
         {
         }
 
-        public AIObjectiveGetItem(Character character, string[] itemNames, bool equip = false)
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false)
             : base(character, "")
         {
             canBeCompleted = true;
-
+            currSearchIndex = -1;
             this.equip = equip;
+            this.itemIdentifiers = itemIdentifiers;
+            for (int i = 0; i < itemIdentifiers.Length; i++)
+            {
+                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
+            }
 
-            currSearchIndex = 0;
+            CheckInventory();
+        }
 
-            this.itemNames = itemNames;
+        private void CheckInventory()
+        {
+            if (itemIdentifiers == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            {
+                if (character.Inventory.Items[i] == null || character.Inventory.Items[i].Condition <= 0.0f) continue;
+                if (itemIdentifiers.Any(id => character.Inventory.Items[i].Prefab.Identifier == id || character.Inventory.Items[i].HasTag(id)))
+                {
+                    targetItem = character.Inventory.Items[i];
+                    moveToTarget = targetItem;
+                    currItemPriority = 100.0f;
+                    break;
+                }
+                //check items inside items (tool inside a toolbox etc)
+                var containedItems = character.Inventory.Items[i].ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item containedItem in containedItems)
+                    {
+                        if (containedItem == null || containedItem.Condition <= 0.0f) continue;
+                        if (itemIdentifiers.Any(id => containedItem.Prefab.Identifier == id || containedItem.HasTag(id)))
+                        {
+                            targetItem = containedItem;
+                            moveToTarget = character.Inventory.Items[i];
+                            currItemPriority = 100.0f;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         protected override void Act(float deltaTime)
@@ -99,7 +136,7 @@ namespace Barotrauma
                         for (int i = 0; i < character.Inventory.Items.Length; i++)
                         {
                             //slot not needed by the item, continue
-                            if (!slots.HasFlag(CharacterInventory.limbSlots[i])) continue;
+                            if (!slots.HasFlag(character.Inventory.SlotTypes[i])) continue;
 
                             targetSlot = i;
 
@@ -117,7 +154,7 @@ namespace Barotrauma
 
                 targetItem.TryInteract(character, false, true);
 
-                if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
+                if (targetSlot > -1 && !character.HasEquippedItem(targetItem))
                 {
                     character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
                 }
@@ -127,14 +164,15 @@ namespace Barotrauma
                 if (goToObjective == null || moveToTarget != goToObjective.Target)
                 {
                     //check if we're already looking for a diving gear
-                    bool gettingDivingGear = (targetItem != null && targetItem.Prefab.NameMatches("Diving Gear") || targetItem.HasTag("diving")) ||
-                                            (itemNames != null && (itemNames.Contains("diving") || itemNames.Contains("Diving Gear")));
+                    bool gettingDivingGear = (targetItem != null && targetItem.Prefab.Identifier == "divingsuit" || targetItem.HasTag("diving")) ||
+                                            (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
 
                     //don't attempt to get diving gear to reach the destination if the item we're trying to get is diving gear
                     goToObjective = new AIObjectiveGoTo(moveToTarget, character, false, !gettingDivingGear);
                 }
 
                 goToObjective.TryComplete(deltaTime);
+                if (!goToObjective.CanBeCompleted) targetItem = null;
             }
 
         }
@@ -144,7 +182,7 @@ namespace Barotrauma
         /// </summary>
         private void FindTargetItem()
         {
-            if (itemNames == null)
+            if (itemIdentifiers == null)
             {
                 if (targetItem == null) canBeCompleted = false;
                 return;
@@ -152,7 +190,7 @@ namespace Barotrauma
 
             float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
 
-            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 2; i++)
+            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 1; i++)
             {
                 currSearchIndex++;
 
@@ -160,21 +198,19 @@ namespace Barotrauma
 
                 if (item.CurrentHull == null || item.Condition <= 0.0f) continue;
                 if (IgnoreContainedItems && item.Container != null) continue;
-                if (!itemNames.Any(name => item.Prefab.NameMatches(name) || item.HasTag(name))) continue;
+                if (!itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) continue;
 
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)
                 {
-                    Character owner = item.ParentInventory.Owner as Character;
-                    if (owner != null && !owner.IsDead) continue;
+                    if (item.ParentInventory.Owner is Character owner && !owner.IsDead) continue;
                 }
 
                 //if the item is inside an item, which is inside a character's inventory, don't steal it
                 Item rootContainer = item.GetRootContainer();
                 if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
                 {
-                    Character owner = rootContainer.ParentInventory.Owner as Character;
-                    if (owner != null && !owner.IsDead) continue;
+                    if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) continue;
                 }
 
                 float itemPriority = 0.0f;
@@ -194,10 +230,11 @@ namespace Barotrauma
 
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
+
             }
 
             //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count && targetItem == null) canBeCompleted = false;
+            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null) canBeCompleted = false;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
@@ -205,16 +242,16 @@ namespace Barotrauma
             AIObjectiveGetItem getItem = otherObjective as AIObjectiveGetItem;
             if (getItem == null) return false;
             if (getItem.equip != equip) return false;
-            if (getItem.itemNames != null && itemNames != null)
+            if (getItem.itemIdentifiers != null && itemIdentifiers != null)
             {
-                if (getItem.itemNames.Length != itemNames.Length) return false;
-                for (int i = 0; i < getItem.itemNames.Length; i++)
+                if (getItem.itemIdentifiers.Length != itemIdentifiers.Length) return false;
+                for (int i = 0; i < getItem.itemIdentifiers.Length; i++)
                 {
-                    if (getItem.itemNames[i] != itemNames[i]) return false;
+                    if (getItem.itemIdentifiers[i] != itemIdentifiers[i]) return false;
                 }
                 return true;
             }
-            else if (getItem.itemNames == null && itemNames == null)
+            else if (getItem.itemIdentifiers == null && itemIdentifiers == null)
             {
                 return getItem.targetItem == targetItem;
             }
@@ -224,11 +261,11 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            if (itemNames != null)
+            if (itemIdentifiers != null)
             {
-                foreach (string itemName in itemNames)
+                foreach (string itemName in itemIdentifiers)
                 {
-                    var matchingItem = character.Inventory.FindItem(itemName);
+                    var matchingItem = character.Inventory.FindItemByTag(itemName) ?? character.Inventory.FindItemByIdentifier(itemName);
                     if (matchingItem != null && (!equip || character.HasEquippedItem(matchingItem))) return true;
                 }
                 return false;

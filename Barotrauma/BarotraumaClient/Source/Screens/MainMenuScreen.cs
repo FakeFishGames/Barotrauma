@@ -1,23 +1,30 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5 }
 
-        private GUIFrame buttonsTab;
+        private GUIComponent buttonsParent;
 
         private GUIFrame[] menuTabs;
 
         private CampaignSetupUI campaignSetupUI;
 
-        private GUITextBox serverNameBox, portBox, passwordBox, maxPlayersBox;
+        private GUITextBox serverNameBox, portBox, queryPortBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
+
+        private GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
 
         private GameMain game;
 
@@ -25,104 +32,206 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.1f),
+                AbsoluteOffset = new Point(50, 0)
+            })
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            //debug button for quickly starting a new round
+#if DEBUG
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, -40) },
+                "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (tb, userdata) =>
+                {
+                    Submarine selectedSub = null;
+                    string subName = GameMain.Config.QuickStartSubmarineName;
+                    if (!string.IsNullOrEmpty(subName))
+                    {
+                        DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
+                        selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => 
+                            s.Name.ToLower() == subName.ToLower());
+
+                        if (selectedSub == null)
+                        {
+                            DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
+                        }
+                    }
+                    if (selectedSub == null)
+                    {
+                        DebugConsole.NewMessage("Loading a random sub.", Color.White);
+                        var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
+                        selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
+                    }
+                    var gamesession = new GameSession(
+                        selectedSub,
+                        "Data/Saves/test.xml",
+                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
+                        missionPrefab: null);
+                    //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
+                    gamesession.StartRound(ToolBox.RandomSeed(8));
+                    GameMain.GameScreen.Select();
+
+                    string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                        if (spawnPoint == null)
+                        {
+                            DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
+                            GameMain.MainMenuScreen.Select();
+                            return true;
+                        }
+                        var characterInfo = new CharacterInfo(
+                            Character.HumanConfigFile, 
+                            jobPrefab: JobPrefab.List.Find(j => j.Identifier == jobIdentifiers[i]));
+                        if (characterInfo.Job == null)
+                        {
+                            DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
+                        }
+
+                        var newCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
+                        newCharacter.GiveJobItems(spawnPoint);
+                        gamesession.CrewManager.AddCharacter(newCharacter);
+                        Character.Controlled = newCharacter;
+                    }
+                    return true;
+                }
+            };
+#endif
+
+            var minButtonSize = new Point(120, 20);
+            var maxButtonSize = new Point(240, 40);
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.Tutorials,
+                OnClicked = SelectTab,
+                Enabled = false
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("NewGameButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.NewGame,
+                OnClicked = SelectTab
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("LoadGameButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.LoadGame,
+                OnClicked = SelectTab
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            joinServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("JoinServerButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = JoinServerClicked
+            };
+            hostServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("HostServerButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.HostServer,
+                OnClicked = SelectTab
+            };
+
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SubEditorButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("CharacterEditorButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    Submarine.MainSub = null;
+                    GameMain.CharacterEditorScreen.Select();
+                    return true;
+                }
+            };
+
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
+                {
+                    OnClicked = SteamWorkshopClicked
+                };
+            }
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SettingsButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.Settings,
+                OnClicked = SelectTab
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("QuitButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = QuitClicked
+            };
+
+            
+           /* var buttons = GUI.CreateButtons(9, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
+                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 20 : 0);
+            buttons.ForEach(b => b.Color *= 0.8f);
+            SetupButtons(buttons);
+            buttons.ForEach(b => b.TextBlock.SetTextPos());*/
+
+            var relativeSize = new Vector2(0.5f, 0.5f);
+            var minSize = new Point(600, 400);
+            var maxSize = new Point(900, 600);
+            var anchor = Anchor.Center;
+            var pivot = Pivot.Center;
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
+            
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center), style: null);
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center), style: null);
+            
+            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame)
+            {
+                LoadGame = LoadGame,
+                StartNewGame = StartGame
+            };
 
-            buttonsTab = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Transparent, Alignment.Left | Alignment.CenterY);
-            buttonsTab.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            var hostServerScale = new Vector2(0.7f, 1.0f);
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
+                Vector2.Multiply(relativeSize, hostServerScale), Frame.RectTransform, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)));
 
-            int y = (int)(GameMain.GraphicsHeight * 0.3f);
-
-            Rectangle panelRect = new Rectangle(
-                290, y,
-                500, 360);
-
-            GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), TextManager.Get("TutorialButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = TutorialButtonClicked;
-
-            button = new GUIButton(new Rectangle(50, y + 60, 200, 30), TextManager.Get("NewGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.NewGame;
-            button.OnClicked = SelectTab;
-
-            button = new GUIButton(new Rectangle(50, y + 100, 200, 30), TextManager.Get("LoadGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.LoadGame;
-            button.OnClicked = SelectTab;
-
-            button = new GUIButton(new Rectangle(50, y + 160, 200, 30), TextManager.Get("JoinServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            //button.UserData = (int)Tabs.JoinServer;
-            button.OnClicked = JoinServerClicked;
-
-            button = new GUIButton(new Rectangle(50, y + 200, 200, 30), TextManager.Get("HostServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.HostServer;
-            button.OnClicked = SelectTab;
-
-            button = new GUIButton(new Rectangle(50, y + 260, 200, 30), TextManager.Get("SubEditorButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = (GUIButton btn, object userdata) => { GameMain.SubEditorScreen.Select(); return true; };
-
-            button = new GUIButton(new Rectangle(50, y + 320, 200, 30), TextManager.Get("SettingsButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.Settings;
-            button.OnClicked = SelectTab;
-
-            button = new GUIButton(new Rectangle(0, 0, 150, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = QuitClicked;
-
-            panelRect.Y += 10;
+            CreateHostServerFields();
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(panelRect, "");
-            menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
 
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, "");
+            //PLACEHOLDER
+            var tutorialList = new GUIListBox(
+                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[(int)Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) }, 
+                false, null, "");
+            foreach (Tutorial tutorial in Tutorial.Tutorials)
+            {
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
+                {
+                    UserData = tutorial
+                };
+            }
+            tutorialList.OnSelected += (component, obj) =>
+            {
+                TutorialMode.StartTutorial(obj as Tutorial);
+                return true;
+            };
 
-            campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
-            campaignSetupUI.LoadGame = LoadGame;
-            campaignSetupUI.StartNewGame = StartGame;
-
-            //----------------------------------------------------------------------
-
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(panelRect, "");
-
-            new GUITextBlock(new Rectangle(0, 0, 100, 30), TextManager.Get("ServerName"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
-
-            new GUITextBlock(new Rectangle(0, 50, 100, 30), TextManager.Get("ServerPort"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
-            portBox.Text = NetConfig.DefaultPort.ToString();
-            portBox.ToolTip = "Server port";
-
-            new GUITextBlock(new Rectangle(0, 100, 100, 30), TextManager.Get("MaxPlayers"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, "", menuTabs[(int)Tab.HostServer]);
-            maxPlayersBox.Text = "8";
-            maxPlayersBox.Enabled = false;
-
-            var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", "", menuTabs[(int)Tab.HostServer]);
-            minusPlayersBox.UserData = -1;
-            minusPlayersBox.OnClicked = ChangeMaxPlayers;
-
-            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", "", menuTabs[(int)Tab.HostServer]);
-            plusPlayersBox.UserData = 1;
-            plusPlayersBox.OnClicked = ChangeMaxPlayers;
-            
-            new GUITextBlock(new Rectangle(0, 150, 100, 30), TextManager.Get("Password"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
-            
-            isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), TextManager.Get("PublicServer"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            isPublicBox.ToolTip = TextManager.Get("PublicServerToolTip");
-            
-            useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), TextManager.Get("AttemptUPnP"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            useUpnpBox.ToolTip = TextManager.Get("AttemptUPnPToolTip");
-            
-            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
-            hostButton.OnClicked = HostServerClicked;
+            UpdateTutorialList();
 
             this.game = game;
         }
@@ -139,6 +248,8 @@ namespace Barotrauma
 
             Submarine.Unload();
 
+            UpdateTutorialList();
+
             campaignSetupUI.UpdateSubList();
 
             SelectTab(null, 0);
@@ -148,18 +259,18 @@ namespace Barotrauma
 
         public bool SelectTab(GUIButton button, object obj)
         {
-            try
+            if (obj is Tab)
             {
                 SelectTab((Tab)obj);
             }
-            catch
-            {
+            else
+            { 
                 selectedTab = 0;
             }
 
             if (button != null) button.Selected = true;
-            
-            foreach (GUIComponent child in buttonsTab.children)
+
+            foreach (GUIComponent child in buttonsParent.Children)
             {
                 GUIButton otherButton = child as GUIButton;
                 if (otherButton == null || otherButton == button) continue;
@@ -196,6 +307,7 @@ namespace Barotrauma
             {
                 case Tab.NewGame:
                     campaignSetupUI.CreateDefaultSaveName();
+                    campaignSetupUI.UpdateTutorialSelection();
                     break;
                 case Tab.LoadGame:
                     campaignSetupUI.UpdateLoadMenu();
@@ -207,16 +319,28 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateTutorialList()
+        {
+            var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
+            foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
+            {
+                if (((Tutorial)tutorialText.UserData).Completed)
+                {
+                    tutorialText.TextColor = Color.LightGreen;
+                }
+            }
+        }
+
         private bool ApplySettings(GUIButton button, object userData)
         {
-            GameMain.Config.Save("config.xml");
-            
-            if (userData is Tab) SelectTab((Tab)userData);            
+            GameMain.Config.Save();
+
+            if (userData is Tab) SelectTab((Tab)userData);
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox(
-                    TextManager.Get("RestartRequiredLabel"), 
+                    TextManager.Get("RestartRequiredLabel"),
                     TextManager.Get("RestartRequiredText"));
             }
 
@@ -230,27 +354,22 @@ namespace Barotrauma
 
             return true;
         }
-
-
-        private bool TutorialButtonClicked(GUIButton button, object obj)
+        
+        private bool JoinServerClicked(GUIButton button, object obj)
         {
-            //!!!!!!!!!!!!!!!!!! placeholder
-            TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
-
+            GameMain.ServerListScreen.Select();
             return true;
         }
 
-        private bool JoinServerClicked(GUIButton button, object obj)
-        {            
-            GameMain.ServerListScreen.Select();
+        private bool SteamWorkshopClicked(GUIButton button, object obj)
+        {
+            GameMain.SteamWorkshopScreen.Select();
             return true;
         }
 
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
-            int currMaxPlayers = 8;
-
-            int.TryParse(maxPlayersBox.Text, out currMaxPlayers);
+            int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
             currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers + (int)button.UserData, 1, NetConfig.MaxPlayers);
 
             maxPlayersBox.Text = currMaxPlayers.ToString();
@@ -267,8 +386,7 @@ namespace Barotrauma
                 return false;
             }
 
-            int port;
-            if (!int.TryParse(portBox.Text, out port) || port < 0 || port > 65535)
+            if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
             {
                 portBox.Text = NetConfig.DefaultPort.ToString();
                 portBox.Flash();
@@ -276,11 +394,21 @@ namespace Barotrauma
                 return false;
             }
 
-            GameMain.NetLobbyScreen = new NetLobbyScreen();
+            int queryPort = 0;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                if (!int.TryParse(queryPortBox.Text, out queryPort) || queryPort < 0 || queryPort > 65535)
+                {
+                    portBox.Text = NetConfig.DefaultQueryPort.ToString();
+                    portBox.Flash();
+                    return false;
+                }
+            }
 
+            GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));                  
+                GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             }
 
             catch (Exception e)
@@ -289,10 +417,8 @@ namespace Barotrauma
             }
 
             GameMain.NetLobbyScreen.IsServer = true;
-            //Game1.NetLobbyScreen.Select();
             return true;
         }
-
 
         private bool QuitClicked(GUIButton button, object obj)
         {
@@ -300,24 +426,34 @@ namespace Barotrauma
             return true;
         }
 
-
         public override void AddToGUIUpdateList()
         {
-            buttonsTab.AddToGUIUpdateList();
-            if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
+            Frame.AddToGUIUpdateList(ignoreChildren: true);
+            buttonsParent.AddToGUIUpdateList();
+            if (selectedTab > 0)
+            {
+                menuTabs[(int)selectedTab].AddToGUIUpdateList();
+            }
         }
 
         public override void Update(double deltaTime)
         {
-            buttonsTab.Update((float)deltaTime);
-
-            if (selectedTab>0) menuTabs[(int)selectedTab].Update((float)deltaTime);
-
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
-                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f), 
-                    0.1f);                
+                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
+                    0.1f);
+#if !DEBUG
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                }
+                steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
+            }
+#endif
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -327,15 +463,10 @@ namespace Barotrauma
             GameMain.TitleScreen.DrawLoadingText = false;
             GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
-            //Game1.GameScreen.DrawMap(graphics, spriteBatch);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
-            buttonsTab.Draw(spriteBatch);
-            if (selectedTab>0) menuTabs[(int)selectedTab].Draw(spriteBatch);
-
-            GUI.Draw((float)deltaTime, spriteBatch, null);
-
+            GUI.Draw(Cam, spriteBatch);
+            
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else
@@ -356,7 +487,7 @@ namespace Barotrauma
                 new GUIMessageBox("Save name already in use", "Please choose another name for the save file");
                 return;
             }
-            
+
             if (selectedSub == null)
             {
                 new GUIMessageBox(TextManager.Get("SubNotSelected"), TextManager.Get("SelectSubRequest"));
@@ -384,29 +515,116 @@ namespace Barotrauma
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
 
-            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            ContextualTutorial.Selected = campaignSetupUI.TutorialSelected;
+            GameMain.GameSession = new GameSession(selectedSub, saveName,
+                GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
+
 
             GameMain.LobbyScreen.Select();
         }
-        
+
         private void LoadGame(string saveFile)
         {
             if (string.IsNullOrWhiteSpace(saveFile)) return;
 
             try
             {
-                SaveUtil.LoadGame(saveFile);                
+                SaveUtil.LoadGame(saveFile);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading save \""+saveFile+"\" failed", e);
+                DebugConsole.ThrowError("Loading save \"" + saveFile + "\" failed", e);
                 return;
             }
 
 
             GameMain.LobbyScreen.Select();
         }
+
+        #region UI Methods
+      
+        private void CreateHostServerFields()
+        {
+            Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
+            Alignment textAlignment = Alignment.CenterLeft;
+            Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
+            Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.75f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            }; 
+            GUIComponent parent = paddedFrame;
+            
+            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont);
+
+            var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+
+            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
+            portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            {
+                Text = NetConfig.DefaultPort.ToString(),
+                ToolTip = TextManager.Get("ServerPortToolTip")
+            };
+
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerQueryPort"), textAlignment: textAlignment);
+                queryPortBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+                {
+                    Text = NetConfig.DefaultQueryPort.ToString(),
+                    ToolTip = TextManager.Get("ServerQueryPortToolTip")
+                };
+            }
+
+            var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
+            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.1f
+            };
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "-", textAlignment: Alignment.Center)
+            {
+                UserData = -1,
+                OnClicked = ChangeMaxPlayers
+            };
+
+            maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
+            {
+                Text = "8",
+                Enabled = false
+            };
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
+            {
+                UserData = 1,
+                OnClicked = ChangeMaxPlayers
+            };
+            
+            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
+            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            
+            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
+            {
+                ToolTip = TextManager.Get("PublicServerToolTip")
+            };
+            
+            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
+            {
+                ToolTip = TextManager.Get("AttemptUPnPToolTip")
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
+            {
+                RelativeOffset = new Vector2(0.05f, 0.05f)
+            }, TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = HostServerClicked
+            };
+        }
+        #endregion
 
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -16,8 +15,9 @@ namespace Barotrauma
         public delegate void OnValueChangedHandler(GUINumberInput numberInput);
         public OnValueChangedHandler OnValueChanged;
         
-        private GUITextBox textBox;
-        private GUIButton plusButton, minusButton;
+        public GUITextBox TextBox { get; private set; }
+        public GUIButton PlusButton { get; private set; }
+        public GUIButton MinusButton { get; private set; }
 
         private NumberType inputType;
         public NumberType InputType
@@ -26,12 +26,37 @@ namespace Barotrauma
             set
             {
                 inputType = value;
-                plusButton.Visible = inputType == NumberType.Int;
-                minusButton.Visible = inputType == NumberType.Int;
+                PlusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                MinusButton.Visible = PlusButton.Visible;
             }
         }
 
-        public float? MinValueFloat, MaxValueFloat;
+        private float? minValueFloat, maxValueFloat;
+        public float? MinValueFloat
+        {
+            get { return minValueFloat; }
+            set
+            {
+                minValueFloat = value;
+                ClampFloatValue();
+                PlusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                MinusButton.Visible = PlusButton.Visible;
+            }                
+        }
+        public float? MaxValueFloat
+        {
+            get { return maxValueFloat; }
+            set
+            {
+                maxValueFloat = value;
+                ClampFloatValue();
+                PlusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                MinusButton.Visible = PlusButton.Visible;
+            }
+        }
 
         private float floatValue;
         public float FloatValue
@@ -40,21 +65,24 @@ namespace Barotrauma
             set
             {
                 if (value == floatValue) return;
-
                 floatValue = value;
-                if (MinValueFloat != null)
-                {
-                    floatValue = Math.Max(floatValue, MinValueFloat.Value);
-                    minusButton.Enabled = floatValue > MinValueFloat;
-                }
-                if (MaxValueFloat != null)
-                {
-                    floatValue = Math.Min(floatValue, MaxValueFloat.Value);
-                    plusButton.Enabled = floatValue < MaxValueFloat;
-                }
-                textBox.Text = floatValue.ToString("G", CultureInfo.InvariantCulture);
-
+                ClampFloatValue();
+                float newValue = floatValue;
+                UpdateText();
+                //UpdateText may remove decimals from the value, force to full accuracy
+                floatValue = newValue; 
                 OnValueChanged?.Invoke(this);
+            }
+        }
+
+        private int decimalsToDisplay = 1;
+        public int DecimalsToDisplay
+        {
+            get { return decimalsToDisplay; }
+            set
+            {
+                decimalsToDisplay = value;
+                UpdateText();
             }
         }
 
@@ -67,93 +95,145 @@ namespace Barotrauma
             set
             {
                 if (value == intValue) return;
-
                 intValue = value;
-                if (MinValueInt != null)
-                {
-                    intValue = Math.Max(intValue, MinValueInt.Value);
-                    minusButton.Enabled = intValue > MinValueInt;
-                }
-                if (MaxValueInt != null)
-                {
-                    intValue = Math.Min(intValue, MaxValueInt.Value);
-                    plusButton.Enabled = intValue < MaxValueInt;
-                }
-                textBox.Text = this.intValue.ToString();
-
+                UpdateText();
                 OnValueChanged?.Invoke(this);
             }
         }
 
-        public GUINumberInput(Rectangle rect, string style, NumberType inputType, GUIComponent parent = null)
-            : this(rect, style, inputType, Alignment.TopLeft, parent)
+        public float valueStep;
+
+        private float pressedTimer;
+        private float pressedDelay = 0.5f;
+        private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
+
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
         {
-        }
+            int buttonHeight = Rect.Height / 2;
+            int margin = 2;
+            Point buttonSize = new Point(buttonHeight - margin, buttonHeight - margin);
+            TextBox = new GUITextBox(new RectTransform(new Point(Rect.Width, Rect.Height), rectT), textAlignment: textAlignment, style: style)
+            {
+                ClampText = false,
+                // For some reason the caret in the number inputs is dimmer than it should.
+                // It should not be rendered behind anything, as I first suspected.
+                // Therefore this hack.
+                CaretColor = Color.White
+            };
+            TextBox.OnTextChanged += TextChanged;
+            var buttonArea = new GUIFrame(new RectTransform(new Point(buttonSize.X, buttonSize.Y * 2), rectT, Anchor.CenterRight), style: null);
+            PlusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform), "+");
+            PlusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            PlusButton.OnClicked += (button, data) =>
+            {
+                IncreaseValue();
+                return true;
+            };
+            PlusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IncreaseValue();
+                }
+                return true;
+            };
+            PlusButton.Visible = inputType == NumberType.Int;
 
-        public GUINumberInput(Rectangle rect, string style, NumberType inputType, Alignment alignment, GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-
-            this.alignment = alignment;
-
-            if (parent != null)
-                parent.AddChild(this);
-
-            textBox = new GUITextBox(Rectangle.Empty, style, this);
-            textBox.OnTextChanged += TextChanged;
-            
-            plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", null, Alignment.TopRight, Alignment.Center, style, this);
-            plusButton.OnClicked += ChangeIntValue;
-            plusButton.Visible = inputType == NumberType.Int;
-            minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", null, Alignment.BottomRight, Alignment.Center, style, this);
-            minusButton.OnClicked += ChangeIntValue;
-            minusButton.Visible = inputType == NumberType.Int;
+            MinusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform, Anchor.BottomRight), "-");
+            MinusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            MinusButton.OnClicked += (button, data) =>
+            {
+                ReduceValue();
+                return true;
+            };
+            MinusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    ReduceValue();
+                }
+                return true;
+            };
+            MinusButton.Visible = inputType == NumberType.Int;
 
             if (inputType == NumberType.Int)
             {
-                textBox.Text = "0";
-                textBox.OnEnterPressed += (txtBox, txt) =>
+                UpdateText();
+                TextBox.OnEnterPressed += (txtBox, txt) =>
                 {
-                    textBox.Text = IntValue.ToString();
-                    textBox.Deselect();
+                    UpdateText();
+                    TextBox.Deselect();
                     return true;
                 };
-                textBox.OnDeselected += (txtBox, key) =>
-                {
-                    textBox.Text = IntValue.ToString();
-                };
+                TextBox.OnDeselected += (txtBox, key) => UpdateText();
             }
             else if (inputType == NumberType.Float)
             {
-                textBox.Text = "0.0";
-                textBox.OnDeselected += (txtBox, key) =>
+                UpdateText();
+                TextBox.OnDeselected += (txtBox, key) => UpdateText();
+                TextBox.OnEnterPressed += (txtBox, txt) =>
                 {
-                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
-                };
-                textBox.OnEnterPressed += (txtBox, txt) =>
-                {
-                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
-                    textBox.Deselect();
+                    UpdateText();
+                    TextBox.Deselect();
                     return true;
                 };
             }
-
             InputType = inputType;
+            switch (InputType)
+            {
+                case NumberType.Int:
+                    TextBox.textFilterFunction = text => new string(text.Where(c => char.IsNumber(c)).ToArray());
+                    break;
+                case NumberType.Float:
+                    TextBox.textFilterFunction = text => new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+                    break;
+            }
         }
-        
-        private bool ChangeIntValue(GUIButton button, object userData)
-        {
-            if (button == plusButton)
-            {
-                IntValue++;
-            }
-            else
-            {
-                IntValue--;
-            }
 
-            return false;
+        private void ReduceValue()
+        {
+            if (inputType == NumberType.Int)
+            {
+                IntValue -= valueStep > 0 ? (int)valueStep : 1;
+            }
+            else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+            {
+                FloatValue -= valueStep > 0 ? valueStep : Round();
+            }
+        }
+
+        private void IncreaseValue()
+        {
+            if (inputType == NumberType.Int)
+            {
+                IntValue += valueStep > 0 ? (int)valueStep : 1;
+            }
+            else if (inputType == NumberType.Float)
+            {
+                FloatValue += valueStep > 0 ? valueStep : Round();
+            }
+        }
+
+        /// <summary>
+        /// Calculates one percent between the range as the increment/decrement.
+        /// This value is rounded so that the bigger it is, the less decimals are used (min 0, max 3).
+        /// Return value is clamped between 0.1f and 1000.
+        /// </summary>
+        private float Round()
+        {
+            if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return 0;
+            float onePercent = MathHelper.Lerp(minValueFloat.Value, maxValueFloat.Value, 0.01f);
+            float diff = maxValueFloat.Value - minValueFloat.Value;
+            int decimals = (int)MathHelper.Lerp(3, 0, MathUtils.InverseLerp(10, 1000, diff));
+            return MathHelper.Clamp((float)Math.Round(onePercent, decimals), 0.1f, 1000);
         }
 
         private bool TextChanged(GUITextBox textBox, string text)
@@ -162,50 +242,81 @@ namespace Barotrauma
             {
                 case NumberType.Int:
                     int newIntValue = IntValue;
-                    if (text == "" || text == "-") 
+                    if (string.IsNullOrWhiteSpace(text) || text == "-")
                     {
-                        IntValue = 0;
-                        textBox.Text = text;
+                        intValue = 0;
                     }
                     else if (int.TryParse(text, out newIntValue))
                     {
-                        IntValue = newIntValue;
+                        intValue = newIntValue;
                     }
-                    else
-                    {
-                        textBox.Text = IntValue.ToString();
-                    }
+                    ClampIntValue();
                     break;
                 case NumberType.Float:
                     float newFloatValue = FloatValue;
-
-                    text = new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
-
-                    if (text == "" || text == "-")
+                    if (string.IsNullOrWhiteSpace(text) || text == "-")
                     {
-                        FloatValue = 0;
-                        textBox.Text = text;
+                        floatValue = 0;
                     }
                     else if (float.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out newFloatValue))
                     {
-                        FloatValue = newFloatValue;
-                        textBox.Text = text;
+                        floatValue = newFloatValue;
                     }
-                    /*else
-                    {
-                        textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
-                    }*/
+                    ClampFloatValue();
                     break;
             }
-
+            OnValueChanged?.Invoke(this);
             return true;
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        private void ClampFloatValue()
         {
-            if (!Visible) return;
+            if (MinValueFloat != null)
+            {
+                floatValue = Math.Max(floatValue, MinValueFloat.Value);
+                MinusButton.Enabled = floatValue > MinValueFloat;
+            }
+            if (MaxValueFloat != null)
+            {
+                floatValue = Math.Min(floatValue, MaxValueFloat.Value);
+                PlusButton.Enabled = floatValue < MaxValueFloat;
+            }
+        }
 
-            DrawChildren(spriteBatch);
+        private void ClampIntValue()
+        {
+            if (MinValueInt != null)
+            {
+                intValue = Math.Max(intValue, MinValueInt.Value);
+                MinusButton.Enabled = intValue > MinValueInt;
+            }
+            if (MaxValueInt != null)
+            {
+                intValue = Math.Min(intValue, MaxValueInt.Value);
+                PlusButton.Enabled = intValue < MaxValueInt;
+            }
+        }
+
+        private void UpdateText()
+        {
+            switch (InputType)
+            {
+                case NumberType.Float:
+                    TextBox.Text = FloatValue.Format(decimalsToDisplay);
+                    break;
+                case NumberType.Int:
+                    TextBox.Text = IntValue.ToString();
+                    break;
+            }
+        }
+
+        protected override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            if (IsPressedTimerRunning)
+            {
+                pressedTimer -= deltaTime;
+            }
         }
     }
 }

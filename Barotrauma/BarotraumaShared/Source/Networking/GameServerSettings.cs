@@ -19,11 +19,17 @@ namespace Barotrauma.Networking
         No = 0, Maybe = 1, Yes = 2
     }
 
+    enum BotSpawnMode
+    {
+        Normal, Fill
+    }
+
     partial class GameServer : NetworkMember, ISerializableEntity
     {
         private class SavedClientPermission
         {
             public readonly string IP;
+            public readonly ulong SteamID;
             public readonly string Name;
             public List<DebugConsole.Command> PermittedCommands;
 
@@ -33,6 +39,14 @@ namespace Barotrauma.Networking
             {
                 this.Name = name;
                 this.IP = ip;
+
+                this.Permissions = permissions;
+                this.PermittedCommands = permittedCommands;
+            }
+            public SavedClientPermission(string name, ulong steamID, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            {
+                this.Name = name;
+                this.SteamID = steamID;
 
                 this.Permissions = permissions;
                 this.PermittedCommands = permittedCommands;
@@ -57,6 +71,8 @@ namespace Barotrauma.Networking
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
 
         private SelectionMode subSelectionMode, modeSelectionMode;
+
+        private float selectedLevelDifficulty;
 
         private bool registeredToMaster;
 
@@ -102,13 +118,26 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
-
+        
         [Serialize(60.0f, true)]
         public float AutoRestartInterval
         {
             get;
             set;
+        }
+
+        [Serialize(false, true)]
+        public bool StartWhenClientsReady
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.8f, true)]
+        public float StartWhenClientsReadyRatio
+        {
+            get;
+            private set;
         }
 
         [Serialize(true, true)]
@@ -176,6 +205,32 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        [Serialize(0, true)]
+        public int BotCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(16, true)]
+        public int MaxBotCount
+        {
+            get;
+            set;
+        }
+        
+        public BotSpawnMode BotSpawnMode
+        {
+            get;
+            set;
+        }
+
+        public float SelectedLevelDifficulty
+        {
+            get { return selectedLevelDifficulty; }
+            set { selectedLevelDifficulty = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
 
         [Serialize(true, true)]
         public bool AllowDisguises
@@ -233,6 +288,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(120.0f, true)]
+        public float KickAFKTime
+        {
+            get;
+            private set;
+        }
+
         [Serialize(true, true)]
         public bool TraitorUseRatio
         {
@@ -254,8 +316,8 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Sandbox", true)]
-        public string GameMode
+        [Serialize("sandbox", true)]
+        public string GameModeIdentifier
         {
             get;
             set;
@@ -267,8 +329,13 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        public int MaxPlayers
+        {
+            get { return maxPlayers; }
+        }
 
-        public List<string> AllowedRandomMissionTypes
+        public List<MissionType> AllowedRandomMissionTypes
         {
             get;
             set;
@@ -305,17 +372,22 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("name", name);
             doc.Root.SetAttributeValue("public", isPublic);
-            doc.Root.SetAttributeValue("port", config.Port);
+            doc.Root.SetAttributeValue("port", NetPeerConfiguration.Port);
+            if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
-            doc.Root.SetAttributeValue("enableupnp", config.EnableUPnP);
+            doc.Root.SetAttributeValue("enableupnp", NetPeerConfiguration.EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
-
+            doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
+            /*doc.Root.SetAttributeValue("BotCount", BotCount);
+            doc.Root.SetAttributeValue("MaxBotCount", MaxBotCount);*/
+            doc.Root.SetAttributeValue("BotSpawnMode", BotSpawnMode.ToString());
+            
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
@@ -374,10 +446,17 @@ namespace Barotrauma.Networking
             Enum.TryParse(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
+            selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
+            GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
+
             var traitorsEnabled = TraitorsEnabled;
             Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+            
+            var botSpawnMode = BotSpawnMode.Fill;
+            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Fill"), out botSpawnMode);
+            BotSpawnMode = botSpawnMode;
 
             //"65-90", "97-122", "48-59" = upper and lower case english alphabet and numbers
             string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", new string[] { "32-33", "65-90", "97-122", "48-59" });
@@ -406,12 +485,20 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (min > -1 && max > -1) AllowedClientNameChars.Add(Pair<int, int>.Create(min, max));
+                if (min > -1 && max > -1) AllowedClientNameChars.Add(new Pair<int, int>(min, max));
             }
 
-            AllowedRandomMissionTypes = doc.Root.GetAttributeStringArray(
-                "AllowedRandomMissionTypes",
-                MissionPrefab.MissionTypes.ToArray()).ToList();
+            AllowedRandomMissionTypes = new List<MissionType>();
+            string[] allowedMissionTypeNames = doc.Root.GetAttributeStringArray(
+                "AllowedRandomMissionTypes", Enum.GetValues(typeof(MissionType)).Cast<MissionType>().Select(m => m.ToString()).ToArray());
+            foreach (string missionTypeName in allowedMissionTypeNames)
+            {
+                if (Enum.TryParse(missionTypeName, out MissionType missionType))
+                {
+                    if (missionType == Barotrauma.MissionType.None) continue;
+                    AllowedRandomMissionTypes.Add(missionType);
+                }
+            }
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
@@ -421,17 +508,20 @@ namespace Barotrauma.Networking
             {
 #if SERVER
                 GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
-                GameMain.NetLobbyScreen.SelectedModeName = GameMode;
+                GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
                 GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 #endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
 
+            GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
+            GameMain.NetLobbyScreen.SetBotCount(BotCount);
+
 #if CLIENT
             showLogButton.Visible = SaveServerLogs;
 #endif
 
-            List<string> monsterNames = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+            List<string> monsterNames = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
             for (int i = 0; i < monsterNames.Count; i++)
             {
                 monsterNames[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames[i]));
@@ -465,15 +555,29 @@ namespace Barotrauma.Networking
             {
                 string clientName = clientElement.GetAttributeString("name", "");
                 string clientIP = clientElement.GetAttributeString("ip", "");
-                if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientIP))
+                string steamIdStr = clientElement.GetAttributeString("steamid", "");
+
+                if (string.IsNullOrWhiteSpace(clientName))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
                     continue;
                 }
+                if (string.IsNullOrWhiteSpace(clientIP) && string.IsNullOrWhiteSpace(steamIdStr))
+                {
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an IP address or a Steam ID.");
+                    continue;
+                }
 
                 string permissionsStr = clientElement.GetAttributeString("permissions", "");
-                ClientPermissions permissions;
-                if (!Enum.TryParse(permissionsStr, out permissions))
+                ClientPermissions permissions = ClientPermissions.None;
+                if (permissionsStr.ToLowerInvariant() == "all")
+                {
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        permissions |= permission;
+                    }
+                }
+                else if (!Enum.TryParse(permissionsStr, out permissions))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
                     continue;
@@ -498,7 +602,22 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                if (!string.IsNullOrEmpty(steamIdStr))
+                {
+                    if (ulong.TryParse(steamIdStr, out ulong steamID))
+                    {
+                        clientPermissions.Add(new SavedClientPermission(clientName, steamID, permissions, permittedCommands));
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + steamIdStr + "\" is not a valid Steam ID.");
+                        continue;
+                    }
+                }
+                else
+                {
+                    clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                }
             }
         }
 
@@ -554,8 +673,16 @@ namespace Barotrauma.Networking
             {
                 XElement clientElement = new XElement("Client", 
                     new XAttribute("name", clientPermission.Name),
-                    new XAttribute("ip", clientPermission.IP),
                     new XAttribute("permissions", clientPermission.Permissions.ToString()));
+
+                if (clientPermission.SteamID > 0)
+                {
+                    clientElement.Add(new XAttribute("steamid", clientPermission.SteamID));
+                }
+                else
+                {
+                    clientElement.Add(new XAttribute("ip", clientPermission.IP));
+                }
 
                 if (clientPermission.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
                 {

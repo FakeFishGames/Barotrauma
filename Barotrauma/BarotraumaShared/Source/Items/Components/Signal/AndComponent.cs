@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
         
-        [InGameEditable, Serialize(0.0f, true)]
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
         public float TimeFrame
         {
             get { return timeFrame; }
@@ -59,7 +59,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, signalOut, "signal_out", null);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {

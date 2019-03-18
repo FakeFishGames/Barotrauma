@@ -5,43 +5,59 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    enum MissionType
+    {
+        Random,
+        None,
+        Salvage,
+        Monster,
+        Cargo,
+        Combat
+    }
+
     class MissionPrefab
     {
-        public static List<MissionPrefab> List = new List<MissionPrefab>();
-        public static List<string> MissionTypes = new List<string>() { "Random" };
+        public static readonly List<MissionPrefab> List = new List<MissionPrefab>();
 
-        private string name;
-
-        public string Name
+        private static readonly Dictionary<MissionType, Type> missionClasses = new Dictionary<MissionType, Type>()
         {
-            get { return name; }
-        }
-
-        private Type missionType;
+            { MissionType.Salvage, typeof(SalvageMission) },
+            { MissionType.Monster, typeof(MonsterMission) },
+            { MissionType.Cargo, typeof(CargoMission) },
+            { MissionType.Combat, typeof(CombatMission) },
+        };
+        
         private ConstructorInfo constructor;
 
-        public virtual string Description { get; private set; }
+        public readonly MissionType type;
 
-        public bool MultiplayerOnly {  get; private set; }
-        public bool SingleplayerOnly { get; private set; }
+        public readonly bool MultiplayerOnly, SingleplayerOnly;
 
-        public float Commonness { get; private set; }
+        public readonly string Identifier;
 
-        public int Reward { get; private set; }
+        public readonly string Name;
+        public readonly string Description;
+        public readonly string SuccessMessage;
+        public readonly string FailureMessage;
+        public readonly string SonarLabel;
 
-        public string RadarLabel { get; private set; }
+        public readonly string AchievementIdentifier;
 
-        public List<string> Headers { get; private set; }
-        public List<string> Messages { get; private set; }
+        public readonly int Commonness;
 
-        public string SuccessMessage { get; private set; }
-        public string FailureMessage { get; private set; }
+        public readonly int Reward;
 
-        public XElement ConfigElement { get; private set; }
+        public readonly List<string> Headers;
+        public readonly List<string> Messages;
+
+        //the mission can only be received when travelling from Pair.First to Pair.Second
+        public readonly List<Pair<string, string>> AllowedLocationTypes;
+
+        public readonly XElement ConfigElement;
 
         public static void Init()
         {
-            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
+            var files = GameMain.Instance.GetFilesOfType(ContentType.Missions);
             foreach (string file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
@@ -49,13 +65,8 @@ namespace Barotrauma
 
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    string missionTypeName = element.Name.ToString();
-                    missionTypeName = missionTypeName.Replace("Mission", "");
-
                     List.Add(new MissionPrefab(element));
-                    if (!MissionTypes.Contains(missionTypeName)) MissionTypes.Add(missionTypeName);
                 }
-
             }
         }
 
@@ -63,56 +74,86 @@ namespace Barotrauma
         {
             ConfigElement = element;
 
-            name = element.GetAttributeString("name", "");
-            Description = element.GetAttributeString("description", "");
-            Commonness = element.GetAttributeFloat("commonness", 1.0f);
-            SingleplayerOnly = element.GetAttributeBool("singleplayeronly", false);
-            MultiplayerOnly = element.GetAttributeBool("multiplayeronly", false);
+            Identifier = element.GetAttributeString("identifier", "");
 
-            Reward = element.GetAttributeInt("reward", 1);
+            Name        = TextManager.Get("MissionName." + Identifier, true) ?? element.GetAttributeString("name", "");
+            Description = TextManager.Get("MissionDescription." + Identifier, true) ?? element.GetAttributeString("description", "");
+            Reward      = element.GetAttributeInt("reward", 1);
 
-            SuccessMessage = element.GetAttributeString("successmessage", "Mission completed successfully");
-            FailureMessage = element.GetAttributeString("failuremessage", "Mission failed");
-            RadarLabel = element.GetAttributeString("radarlabel", "");
+            Commonness  = element.GetAttributeInt("commonness", 1);
 
-            Messages = new List<string>();
+            SuccessMessage  = TextManager.Get("MissionSuccess." + Identifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
+            FailureMessage  = TextManager.Get("MissionFailure." + Identifier, true) ?? element.GetAttributeString("failuremessage", "Mission failed");
+
+            SonarLabel      = TextManager.Get("MissionSonarLabel." + Identifier, true) ?? element.GetAttributeString("sonarlabel", "");
+
+            MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
+            SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);
+
+            AchievementIdentifier = element.GetAttributeString("achievementidentifier", "");
+
             Headers = new List<string>();
+            Messages = new List<string>();
+            AllowedLocationTypes = new List<Pair<string, string>>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "message") continue;
-                Headers.Add(subElement.GetAttributeString("header", ""));
-                Messages.Add(subElement.GetAttributeString("text", ""));
-            }
-
-            string type = element.Name.ToString();
-
-            try
-            {
-                missionType = Type.GetType("Barotrauma." + type, true, true);
-                if (missionType == null)
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    DebugConsole.ThrowError("Error in mission prefab " + Name + "! Could not find a mission class of the type \"" + type + "\".");
-                    return;
+                    case "message":
+                        int index = Messages.Count;
+
+                        Headers.Add(TextManager.Get("MissionHeader" + index + "." + Identifier, true) ?? subElement.GetAttributeString("header", ""));
+                        Messages.Add(TextManager.Get("MissionMessage" + index + "." + Identifier, true) ?? subElement.GetAttributeString("text", ""));
+                        break;
+                    case "locationtype":
+                        AllowedLocationTypes.Add(new Pair<string, string>(
+                            subElement.GetAttributeString("from", ""),
+                            subElement.GetAttributeString("to", "")));
+                        break;
                 }
             }
-            catch
+
+            string missionTypeName = element.GetAttributeString("type", "");
+            if (!Enum.TryParse(missionTypeName, out type))
             {
-                DebugConsole.ThrowError("Error in mission prefab " + Name + "! Could not find a mission class of the type \"" + type + "\".");
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
                 return;
             }
-            constructor = missionType.GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+            if (type == MissionType.Random)
+            {
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be random.");
+                return;
+            }
+            if (type == MissionType.None)
+            {
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
+                return;
+            }
+
+            constructor = missionClasses[type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+        }
+
+        public bool IsAllowed(Location from, Location to)
+        {
+            foreach (Pair<string, string> allowedLocationType in AllowedLocationTypes)
+            {
+                if (allowedLocationType.First.ToLowerInvariant() == "any" ||
+                    allowedLocationType.First.ToLowerInvariant() == from.Type.Name.ToLowerInvariant())
+                {
+                    if (allowedLocationType.Second.ToLowerInvariant() == "any" ||
+                        allowedLocationType.Second.ToLowerInvariant() == to.Type.Name.ToLowerInvariant())
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
         
         public Mission Instantiate(Location[] locations)
         {
             return constructor?.Invoke(new object[] { this, locations }) as Mission;
-        }
-
-        public bool TypeMatches(string typeName)
-        {
-            //TODO: use enums instead of strings?
-            typeName = typeName.ToLowerInvariant();
-            return missionType.Name.ToString().Replace("Mission", "").ToLowerInvariant() == typeName;
         }
     }
 }

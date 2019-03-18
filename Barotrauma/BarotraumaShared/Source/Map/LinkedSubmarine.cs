@@ -62,8 +62,10 @@ namespace Barotrauma
 
         public static LinkedSubmarine CreateDummy(Submarine mainSub, Submarine linkedSub)
         {
-            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
-            sl.sub = linkedSub;
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub)
+            {
+                sub = linkedSub
+            };
 
             return sl;
         }
@@ -114,10 +116,13 @@ namespace Barotrauma
 
             foreach (XElement element in rootElement.Elements())
             {
-                if (element.Name != "Structure") continue;
+                if (element.Name != "Structure") { continue; }
 
                 string name = element.GetAttributeString("name", "");
-                if (!wallPrefabs.Any(wp => wp.Name == name)) continue;
+                string identifier = element.GetAttributeString("identifier", "");
+
+                StructurePrefab prefab = Structure.FindPrefab(name, identifier);
+                if (prefab == null) { continue; }
 
                 var rect = element.GetAttributeVector4("rect", Vector4.Zero);
                 
@@ -130,7 +135,7 @@ namespace Barotrauma
             wallVertices = MathUtils.GiftWrap(points);
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static LinkedSubmarine Load(XElement element, Submarine submarine)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
 
@@ -138,21 +143,21 @@ namespace Barotrauma
 
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                //string filePath = ToolBox.GetAttributeString(element, "filepath", "");
-                
                 linkedSub = CreateDummy(submarine, element, pos);
                 linkedSub.saveElement = element;
             }
             else
             {
-                linkedSub = new LinkedSubmarine(submarine);
-                linkedSub.saveElement = element;
+                linkedSub = new LinkedSubmarine(submarine)
+                {
+                    saveElement = element
+                };
 
                 string levelSeed = element.GetAttributeString("location", "");
                 if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
                 {
                     linkedSub.loadSub = false;
-                    return;
+                    return null;
                 }
 
                 linkedSub.loadSub = true;
@@ -171,7 +176,7 @@ namespace Barotrauma
                     linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
                 }
             }
-
+            return linkedSub;
         }
 
         public override void OnMapLoaded()
@@ -197,7 +202,7 @@ namespace Barotrauma
             MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
             if (linkedItem == null)
             {
-                linkedPort = DockingPort.list.Find(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
+                linkedPort = DockingPort.List.FirstOrDefault(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
             }
             else
             {
@@ -210,7 +215,7 @@ namespace Barotrauma
             }
 
             float closestDistance = 0.0f;
-            foreach (DockingPort port in DockingPort.list)
+            foreach (DockingPort port in DockingPort.List)
             {
                 if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
 
@@ -230,10 +235,7 @@ namespace Barotrauma
                     Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
                 offset *= myPort.DockedDistance;
 
-                sub.SetPosition(
-                    (linkedPort.Item.WorldPosition - portDiff)
-                    - offset);
-
+                sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
                 myPort.Dock(linkedPort);   
                 myPort.Lock(true);

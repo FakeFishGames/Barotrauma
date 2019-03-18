@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace Barotrauma
 {
@@ -19,16 +20,25 @@ namespace Barotrauma
             get { return aiController; }
         }
         
-        public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
-            : base(file, position, characterInfo, isNetworkPlayer)
+        public AICharacter(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
+            : base(file, position, seed, characterInfo, isNetworkPlayer, ragdoll)
         {
-
         }
+
         partial void InitProjSpecific();
 
         public void SetAI(AIController aiController)
         {
+            if (AIController != null)
+            {
+                OnAttacked -= AIController.OnAttacked;
+            }
+
             this.aiController = aiController;
+            if (aiController != null)
+            {
+                OnAttacked += aiController.OnAttacked;
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -67,7 +77,7 @@ namespace Barotrauma
                 }
             }
 
-            if (IsDead || Health <= 0.0f || IsUnconscious || Stun > 0.0f) return;
+            if (IsDead || Vitality <= 0.0f || IsUnconscious || Stun > 0.0f) return;
             if (Controlled == this || !aiController.Enabled) return;
             
             SoundUpdate(deltaTime);
@@ -78,21 +88,5 @@ namespace Barotrauma
             }
         }
         partial void SoundUpdate(float deltaTime);
-
-        public override void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
-        {
-            base.AddDamage(causeOfDeath, amount, attacker);
-
-            if (attacker != null) aiController.OnAttacked(attacker, amount);
-        }
-
-        public override AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb limb = null)
-        {
-            AttackResult result = base.ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, limb);
-
-            aiController.OnAttacked(attacker, result.Damage + result.Bleeding);
-
-            return result;
-        }
     }
 }

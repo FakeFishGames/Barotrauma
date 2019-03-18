@@ -75,18 +75,19 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            string signalOut = previousResult ? Output : FalseOutput;
             if (ContinuousOutput)
             {
-                item.SendSignal(0, previousResult ? Output : FalseOutput, "signal_out", null);
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
             }
             else if (!nonContinuousOutputSent)
             {
-                item.SendSignal(0, previousResult ? Output : FalseOutput, "signal_out", null);
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
                 nonContinuousOutputSent = true;
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {

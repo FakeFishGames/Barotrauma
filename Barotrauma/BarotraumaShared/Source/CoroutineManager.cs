@@ -14,10 +14,13 @@ namespace Barotrauma
         public readonly IEnumerator<object> Coroutine;
         public readonly string Name;
 
+        public Exception Exception;
+
         public CoroutineHandle(IEnumerator<object> coroutine, string name = "")
         {
             Coroutine = coroutine;
             Name = string.IsNullOrWhiteSpace(name) ? coroutine.ToString() : name;
+            Exception = null;
         }
 
     }
@@ -37,9 +40,9 @@ namespace Barotrauma
             return handle;
         }
 
-        public static void InvokeAfter(Action action, float delay)
+        public static CoroutineHandle InvokeAfter(Action action, float delay)
         {
-            StartCoroutine(DoInvokeAfter(action, delay));
+            return StartCoroutine(DoInvokeAfter(action, delay));
         }
 
         private static IEnumerable<object> DoInvokeAfter(Action action, float delay)
@@ -107,6 +110,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message + "\n" + e.StackTrace.ToString());
+                handle.Exception = e;
                 return true;
             }
         }

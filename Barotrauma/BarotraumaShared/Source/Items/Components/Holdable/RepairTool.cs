@@ -3,15 +3,15 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
-
 #if CLIENT
 using Barotrauma.Particles;
 #endif
 
 namespace Barotrauma.Items.Components
 {
-    class RepairTool : ItemComponent
+    partial class RepairTool : ItemComponent
     {
         private readonly List<string> fixableEntities;
 
@@ -20,9 +20,7 @@ namespace Barotrauma.Items.Components
         private Vector2 pickedPosition;
 
         private Vector2 barrelPos;
-
-        private string particles;
-
+        
         private float activeTimer;
 
         [Serialize(0.0f, false)]
@@ -44,25 +42,11 @@ namespace Barotrauma.Items.Components
             get; set;
         }
         [Serialize(0.0f, false)]
-        public float ExtinquishAmount
+        public float ExtinguishAmount
         {
             get; set;
         }
-
-#if CLIENT
-        public ParticleEmitter ParticleEmitter
-        {
-            get;
-            private set;
-        }
-
-        private List<ParticleEmitter> ParticleEmitterHitStructure = new List<ParticleEmitter>();
-
-        private List<ParticleEmitter> ParticleEmitterHitItem = new List<ParticleEmitter>();
-
-        private List<ParticleEmitter> ParticleEmitterHitCharacter = new List<ParticleEmitter>();
-#endif
-
+        
         [Serialize("0.0,0.0", false)]
         public Vector2 BarrelPos
         {
@@ -92,25 +76,23 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "fixable":
-                        fixableEntities.Add(subElement.Attribute("name").Value);
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
+                            fixableEntities.Add(subElement.Attribute("name").Value);
+                        }
+                        else
+                        {
+                            fixableEntities.Add(subElement.GetAttributeString("identifier", ""));
+                        }
                         break;
-#if CLIENT
-                    case "particleemitter":
-                        ParticleEmitter = new ParticleEmitter(subElement);
-                        break;
-                    case "particleemitterhititem":
-                        ParticleEmitterHitItem.Add(new ParticleEmitter(subElement));
-                        break;
-                    case "particleemitterhitstructure":
-                        ParticleEmitterHitStructure.Add(new ParticleEmitter(subElement));
-                        break;
-                    case "particleemitterhitcharacter":
-                        ParticleEmitterHitCharacter.Add(new ParticleEmitter(subElement));
-                        break;
-#endif
                 }
             }
+
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -123,7 +105,7 @@ namespace Barotrauma.Items.Components
             if (character == null || character.Removed) return false;
             if (!character.IsKeyDown(InputType.Aim)) return false;
             
-            float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
+            float degreeOfSuccess = DegreeOfSuccess(character);
 
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
             {
@@ -163,32 +145,26 @@ namespace Barotrauma.Items.Components
                 Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
 
-#if CLIENT
-            if (ParticleEmitter != null)
-            {
-                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                ParticleEmitter.Emit(
-                    deltaTime, item.WorldPosition + TransformedBarrelPos, 
-                    item.CurrentHull, particleAngle, -particleAngle);
-            }
-#endif
-          
+            UseProjSpecific(deltaTime);
+
             return true;
         }
 
+        partial void UseProjSpecific(float deltaTime);
+
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies,
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
                 Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
-            if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
+            if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
             {
                 List<FireSource> fireSourcesInRange = new List<FireSource>();
                 //step along the ray in 10% intervals, collecting all fire sources in the range
                 for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
-                    displayPos += item.CurrentHull.Submarine.Position;
+                    if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }                    
 
                     Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
                     if (hull == null) continue;
@@ -203,52 +179,25 @@ namespace Barotrauma.Items.Components
 
                 foreach (FireSource fs in fireSourcesInRange)
                 {
-                    fs.Extinguish(deltaTime, ExtinquishAmount);
+                    fs.Extinguish(deltaTime, ExtinguishAmount);
                 }
             }
 
             if (targetBody == null || targetBody.UserData == null) return;
 
             pickedPosition = Submarine.LastPickedPosition;
-
-            Structure targetStructure;
-            Character targetCharacter;
-            Limb targetLimb;
-            Item targetItem;
-            if ((targetStructure = (targetBody.UserData as Structure)) != null)
+            
+            if (targetBody.UserData is Structure targetStructure)
             {
-                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Name)) return;
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) return;
                 if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
                 if (sectionIndex < 0) return;
 
-#if CLIENT
-                Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
-                if (targetStructure.Submarine != null)
-                {
-                    progressBarPos += targetStructure.Submarine.DrawPosition;
-                }
-
-                var progressBar = user.UpdateHUDProgressBar(
-                    targetStructure,
-                    progressBarPos,
-                    1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
-                    Color.Red, Color.Green);
-
-                if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
-
-                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition; 
-                foreach (var emitter in ParticleEmitterHitStructure)
-                {
-                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
-                }
-#endif
-
+                FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
-
+                
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
                 for (int i = -1; i < 2; i += 2)
@@ -263,34 +212,25 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            else if ((targetCharacter = (targetBody.UserData as Character)) != null)
+            else if (targetBody.UserData is Character targetCharacter)
             {
-                targetCharacter.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
-#if CLIENT
-                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetCharacter.Submarine != null) particlePos += targetCharacter.Submarine.DrawPosition;
-                foreach (var emitter in ParticleEmitterHitCharacter)
-                {
-                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
-                }
-#endif
-            }
-            else if ((targetLimb = (targetBody.UserData as Limb)) != null)
-            {
-                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+                Vector2 hitPos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetCharacter.Submarine != null) hitPos += targetCharacter.Submarine.Position;
 
-#if CLIENT
-                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetLimb.character.Submarine != null) particlePos += targetLimb.character.Submarine.DrawPosition;
-                foreach (var emitter in ParticleEmitterHitCharacter)
-                {
-                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
-                }
-#endif
+                targetCharacter.LastDamageSource = item;
+                targetCharacter.AddDamage(hitPos,
+                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
+                FixCharacterProjSpecific(user, deltaTime, targetCharacter);
             }
-            else if ((targetItem = (targetBody.UserData as Item)) != null)
+            else if (targetBody.UserData is Limb targetLimb)
+            {
+                targetLimb.character.LastDamageSource = item;
+                targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
+                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess, user) }, 0.0f, false, 0.0f, user);
+
+                FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
+            }
+            else if (targetBody.UserData is Item targetItem)
             {
                 targetItem.IsHighlighted = true;
 
@@ -298,30 +238,26 @@ namespace Barotrauma.Items.Components
 
                 ApplyStatusEffectsOnTarget(deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
 
-#if CLIENT
-                if (item.Condition != prevCondition)
+                var levelResource = targetItem.GetComponent<LevelResource>();
+                if (levelResource != null && levelResource.IsActive &&
+                    levelResource.HasRequiredItems(user, addMessage: false))
                 {
-                    Vector2 progressBarPos = targetItem.DrawPosition;
-
-                    var progressBar = user.UpdateHUDProgressBar(
-                        targetItem,
-                        progressBarPos,
-                        targetItem.Condition / 100.0f,
+                    levelResource.DeattachTimer += deltaTime;
+#if CLIENT
+                    Character.Controlled?.UpdateHUDProgressBar(
+                        this,
+                        targetItem.WorldPosition,
+                        levelResource.DeattachTimer / levelResource.DeattachDuration,
                         Color.Red, Color.Green);
-
-                    if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
-
-                    Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                    if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
-                    foreach (var emitter in ParticleEmitterHitItem)
-                    {
-                        float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                        emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
-                    }
+#endif                    
                 }
-#endif
+                FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
             }
         }
+
+        partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
+        partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
@@ -332,17 +268,24 @@ namespace Barotrauma.Items.Components
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
             if (dist > range * 5.0f) return true;
-            
+
+            Vector2 gapDiff = leak.WorldPosition - item.WorldPosition;
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
+                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            {
+                ((HumanoidAnimController)character.AnimController).Crouching = true;
+            }
+
             //steer closer if almost in range
             if (dist > range)
             {
                 Vector2 standPos = leak.IsHorizontal ?
-                    new Vector2(Math.Sign(item.WorldPosition.X - leak.WorldPosition.X), 0.0f)
-                    : new Vector2(0.0f, Math.Sign(item.WorldPosition.Y - leak.WorldPosition.Y));
+                    new Vector2(Math.Sign(-gapDiff.X), 0.0f)
+                    : new Vector2(0.0f, Math.Sign(-gapDiff.Y) * 0.5f);
 
                 standPos = leak.WorldPosition + standPos * range;
 
-                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);   
+                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);
             }
             else
             {
@@ -355,7 +298,21 @@ namespace Barotrauma.Items.Components
 
             Use(deltaTime, character);
 
-            return leak.Open <= 0.0f;
+            bool leakFixed = leak.Open <= 0.0f || leak.Removed;
+
+            if (leakFixed && leak.FlowTargetHull != null)
+            {
+                if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
+                {
+                    character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leaksfixed", 10.0f);
+                }
+                else
+                {
+                    character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leakfixed", 10.0f);
+                }
+            }
+
+            return leakFixed;
         }
 
         private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)
@@ -367,7 +324,7 @@ namespace Barotrauma.Items.Components
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.UseTarget))
+                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }

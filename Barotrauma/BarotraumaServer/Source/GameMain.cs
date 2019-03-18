@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Steam;
 using FarseerPhysics.Dynamics;
 using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -41,25 +43,19 @@ namespace Barotrauma
         //null screens because they are not implemented by the server,
         //but they're checked for all over the place
         //TODO: maybe clean up instead of having these constants
-        public static readonly Screen MainMenuScreen = UnimplementedScreen.Instance;
-        public static readonly Screen LobbyScreen = UnimplementedScreen.Instance;
-
-        public static readonly Screen ServerListScreen = UnimplementedScreen.Instance;
-
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
-        public static readonly Screen CharacterEditorScreen = UnimplementedScreen.Instance;
         
         public static bool ShouldRun = true;
 
-        public static ContentPackage SelectedPackage
+        public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackage; }
+            get { return Config.SelectedContentPackages; }
         }
 
         public GameMain()
         {
             Instance = this;
-
+            
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -71,14 +67,14 @@ namespace Barotrauma
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
-                Config.Save("config.xml");
+                Config.Save();
             }
 
-            if (GameSettings.SendUserStatistics)
-            {
-                GameAnalyticsManager.Init();
-            }
+            TextManager.LoadTextPacks();
 
+            SteamManager.Initialize();
+            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
+            
             GameScreen = new GameScreen();
         }
 
@@ -86,15 +82,19 @@ namespace Barotrauma
         {
             MissionPrefab.Init();
             MapEntityPrefab.Init();
+            MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            ScriptedEventSet.LoadPrefabs();
 
-            JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
-            StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-
-            ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
+            ItemAssemblyPrefab.LoadAll();
+            LevelObjectPrefab.LoadAll();
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
-
             LocationType.Init();
 
             Submarine.RefreshSavedSubs();
@@ -109,22 +109,35 @@ namespace Barotrauma
 
         private void CheckContentPackage()
         {
-            var exePaths = Config.SelectedContentPackage.GetFilesOfType(ContentType.ServerExecutable);
-            if (exePaths.Count > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths[0])
+
+            foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
             {
-                DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
-                        .Replace("[selectedpackage]", Config.SelectedContentPackage.Name)
-                        .Replace("[exename]", exePaths[0]), 
-                        (option) => 
+                var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
+                if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
+                {
+                    DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
+                            .Replace("[selectedpackage]", contentPackage.Name)
+                            .Replace("[exename]", exePaths.First()),
+                        (option) =>
                         {
                             if (option.ToLower() == "y" || option.ToLower() == "yes")
                             {
-                                string fullPath = Path.GetFullPath(exePaths[0]);
+                                string fullPath = Path.GetFullPath(exePaths.First());
                                 Process.Start(fullPath);
                                 ShouldRun = false;
-                            }                            
+                            }
                         });
+                    break;
+                }
             }
+        }
+
+        /// <summary>
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
+        /// </summary>
+        public IEnumerable<string> GetFilesOfType(ContentType type)
+        {
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
 
         public void StartServer()
@@ -133,13 +146,14 @@ namespace Barotrauma
             if (doc == null)
             {
                 DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
-                Server = new GameServer("Server", 14242, false, "", false, 10);
+                Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
                 return;
             }
 
             Server = new GameServer(
                 doc.Root.GetAttributeString("name", "Server"),
-                doc.Root.GetAttributeInt("port", 14242),
+                doc.Root.GetAttributeInt("port", NetConfig.DefaultPort),
+                doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort),
                 doc.Root.GetAttributeBool("public", false),
                 doc.Root.GetAttributeString("password", ""),
                 doc.Root.GetAttributeBool("enableupnp", false),
@@ -184,6 +198,7 @@ namespace Barotrauma
                     DebugConsole.Update();
                     if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
+                    SteamManager.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;
@@ -194,6 +209,9 @@ namespace Barotrauma
             stopwatch.Stop();
 
             CloseServer();
+
+            SteamManager.ShutDown();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
         }
         
         public void ProcessInput()
@@ -211,6 +229,11 @@ namespace Barotrauma
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
+        }
+
+        public void Exit()
+        {
+            ShouldRun = false;
         }
     }
 }

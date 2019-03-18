@@ -17,7 +17,6 @@ namespace Barotrauma
             : base(prefab, locations)
         {
             itemConfig = prefab.ConfigElement.Element("Items");
-
             requiredDeliveryAmount = prefab.ConfigElement.GetAttributeInt("requireddeliveryamount", 0);
         }
 
@@ -25,7 +24,7 @@ namespace Barotrauma
         {
             items = new List<Item>();
 
-            if (itemConfig==null)
+            if (itemConfig == null)
             {
                 DebugConsole.ThrowError("Failed to initialize items for cargo mission (itemConfig == null)");
                 return;
@@ -41,9 +40,29 @@ namespace Barotrauma
 
         private void LoadItemAsChild(XElement element, Item parent)
         {
-            string itemName = element.GetAttributeString("name", "");
+            ItemPrefab itemPrefab;
+            if (element.Attribute("name") != null)
+            {
+                DebugConsole.ThrowError("Error in cargo mission \"" + Name + "\" - use item identifiers instead of names to configure the items.");
+                string itemName = element.GetAttributeString("name", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + itemName + "\" not found");
+                    return;
+                }
+            }
+            else
+            {
+                string itemIdentifier = element.GetAttributeString("identifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + itemIdentifier + "\" not found");
+                    return;
+                }
+            }
 
-            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
             {
                 DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + element.Name.ToString() + "\" not found");

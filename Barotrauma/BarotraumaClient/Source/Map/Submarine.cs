@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -7,12 +8,89 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    class RoundSound
+    {
+        public Sound Sound;
+        public readonly float Volume;
+        public readonly float Range;
+        public readonly bool Stream;
+
+        public string Filename
+        {
+            get { return Sound.Filename; }
+        }
+
+        public RoundSound(XElement element, Sound sound)
+        {
+            Sound = sound;
+            Stream = sound.Stream;
+            Range = element.GetAttributeFloat("range", 1000.0f);
+            Volume = element.GetAttributeFloat("volume", 1.0f);
+        }
+    }
+
     partial class Submarine : Entity, IServerSerializable
     {
         public Sprite PreviewImage;
+
+        private static List<RoundSound> roundSounds = null;
+        public static RoundSound LoadRoundSound(XElement element, bool stream=false)
+        {
+            string filename = element.GetAttributeString("file", "");
+            if (string.IsNullOrEmpty(filename)) filename = element.GetAttributeString("sound", "");
+
+            if (string.IsNullOrEmpty(filename))
+            {
+                DebugConsole.ThrowError("Error when loading round sound (" + element + ") - file path not set");
+                return null;
+            }
+
+            filename = Path.GetFullPath(filename);            
+            Sound existingSound = null;
+            if (roundSounds == null)
+            {
+                roundSounds = new List<RoundSound>();
+            }
+            else
+            {
+                existingSound = roundSounds.Find(s => s.Filename == filename && s.Stream == stream)?.Sound;
+            }
+
+            if (existingSound == null)
+            {
+                existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+            }
+
+            RoundSound newSound = new RoundSound(element, existingSound);
+
+            roundSounds.Add(newSound);
+            return newSound;
+        }
+
+        private static void RemoveRoundSound(RoundSound roundSound)
+        {
+            roundSound.Sound?.Dispose();
+            if (roundSounds == null) return;
+
+            if (roundSounds.Contains(roundSound)) roundSounds.Remove(roundSound);
+            foreach (RoundSound otherSound in roundSounds)
+            {
+                if (otherSound.Sound == roundSound.Sound) otherSound.Sound = null;
+            }
+        }
+
+        public static void RemoveAllRoundSounds()
+        {
+            if (roundSounds == null) return;
+            for (int i = roundSounds.Count - 1; i >= 0; i--)
+            {
+                RemoveRoundSound(roundSounds[i]);
+            }
+        }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
@@ -118,46 +196,103 @@ namespace Barotrauma
             return MainSub.SaveAs(filePath, previewImage);
         }
 
-        public void CreatePreviewWindow(GUIComponent frame)
+        public void CreatePreviewWindow(GUIMessageBox messageBox)
         {
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), Name, "", Alignment.TopCenter, Alignment.TopCenter, frame, true, GUI.LargeFont);
+            var background = new GUIButton(new RectTransform(Vector2.One, messageBox.RectTransform), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) messageBox.Close(); return true; }
+            };
+            background.RectTransform.SetAsFirstChild();
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+
+            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
+            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter));
 
             if (PreviewImage == null)
             {
-                var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
-                txtBlock.OutlineColor = txtBlock.TextColor;
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
             {
-                new GUIImage(new Rectangle(-10, 60, 256, 128), PreviewImage, Alignment.TopLeft, frame);
+                new GUIImage(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), PreviewImage);
             }
 
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
             string dimensionsStr = realWorldDimensions == Vector2.Zero ?
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
+
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform, Anchor.TopRight));
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+                $"{TextManager.Get("Dimensions")}: {dimensionsStr}",
+                font: GUI.SmallFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("RecommendedCrewSize")}: {(RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax)}",
+                font: GUI.SmallFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("RecommendedCrewExperience")}: {(string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : TextManager.Get(RecommendedCrewExperience))}",
+                font: GUI.SmallFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
+                font: GUI.SmallFont, wrap: true);
             
-            new GUITextBlock(new Rectangle(246, 60, 100, 20),
-                TextManager.Get("Dimensions") + ": " + dimensionsStr,
-                "", frame, GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
+            {
+                CanBeFocused = false
+            };
+        }
 
-            new GUITextBlock(new Rectangle(246, 80, 100, 20),
-                TextManager.Get("RecommendedCrewSize") + ": " + (RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax),
-                "", frame, GUI.SmallFont);
+        public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
+        {
+            Rectangle worldBorders = GetDockedBorders();
+            worldBorders.Location += WorldPosition.ToPoint();
 
-            new GUITextBlock(new Rectangle(246, 100, 100, 20),
-                TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : TextManager.Get(RecommendedCrewExperience)),
-                "", frame, GUI.SmallFont);
+            //create a container that has the same "aspect ratio" as the sub
+            float aspectRatio = worldBorders.Width / (float)worldBorders.Height;
+            float parentAspectRatio = parent.Rect.Width / (float)parent.Rect.Height;
 
-            new GUITextBlock(new Rectangle(246, 120, 0, 20),
-                TextManager.Get("CompatibleContentPackages") + ":\n" + string.Join(", ", CompatibleContentPackages),
-                "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            float scale = 0.9f;
 
-            var descrBox = new GUIListBox(new Rectangle(0, 200, 0, 120), "", frame);
+            GUIFrame hullContainer = new GUIFrame(new RectTransform(
+                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale, 
+                parent.RectTransform, Anchor.Center), 
+                style: null);
 
-            var descr = new GUITextBlock(new Rectangle(0, 0, descrBox.Rect.Width - 15, 0), Description + "\n", "", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
-            descrBox.AddChild(descr);
-            descr.CanBeFocused = false;
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (hull.Submarine != this && !DockedTo.Contains(hull.Submarine)) continue;
+
+                Vector2 relativeHullPos = new Vector2(
+                    (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width, 
+                    (worldBorders.Y - hull.WorldRect.Y) / (float)worldBorders.Height);
+                Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
+
+                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: Color.DarkCyan * 0.8f)
+                {
+                    UserData = hull
+                };
+                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: Color.DarkCyan * 0.8f);
+            }
+
+            if (pointsOfInterest != null)
+            {
+                foreach (Entity entity in pointsOfInterest)
+                {
+                    Vector2 relativePos = new Vector2(
+                        (entity.WorldPosition.X - worldBorders.X) / Borders.Width,
+                        (worldBorders.Y - entity.WorldPosition.Y) / Borders.Height);
+                    new GUIFrame(new RectTransform(new Point(1, 1), hullContainer.RectTransform) { RelativeOffset = relativePos }, style: null)
+                    {
+                        CanBeFocused = false,
+                        UserData = entity
+                    };
+                }
+            }
         }
 
         public void CheckForErrors()
@@ -190,9 +325,26 @@ namespace Barotrauma
                 errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
             }
 
+            if (!Item.ItemList.Any(it => it.GetComponent<Items.Components.Pump>() != null && it.HasTag("ballast")))
+            {
+                errorMsgs.Add(TextManager.Get("NoBallastTagsWarning"));
+            }
+
             if (errorMsgs.Any())
             {
                 new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);
+            }
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
+                {
+                    //move disabled items (wires, items inside containers) inside the sub
+                    if (e is Item item && item.body != null && !item.body.Enabled)
+                    {
+                        item.SetTransform(ConvertUnits.ToSimUnits(HiddenSubPosition), 0.0f);
+                    }
+                }
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList)

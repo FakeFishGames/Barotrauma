@@ -6,13 +6,17 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class WifiComponent : ItemComponent
+    partial class WifiComponent : ItemComponent
     {
         private static List<WifiComponent> list = new List<WifiComponent>();
 
         private float range;
 
         private int channel;
+        
+        private float chatMsgCooldown;
+
+        private string prevSignal;
 
         public byte TeamID;
 
@@ -33,8 +37,26 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(ToolTip = "If enabled, any signals received by the item are displayed as chat messages in the chatbox of the player holding the item."), Serialize(false, false)]
+        [Editable(ToolTip = 
+            "If enabled, any signals received from another chat-linked wifi component are displayed "+
+            "as chat messages in the chatbox of the player holding the item."), Serialize(false, false)]
         public bool LinkToChat
+        {
+            get;
+            set;
+        }
+
+        [Editable(ToolTip = "How many seconds have to pass between signals for a message to be displayed in the chatbox. "+
+            "Setting this to a very low value is not recommended, because it may cause an excessive amount of chat messages to be created "+
+            "if there are chat-linked wifi components that transmit a continuous signal."), Serialize(1.0f, true)]
+        public float MinChatMessageInterval
+        {
+            get;
+            set;
+        }
+
+        [Editable(ToolTip = "If set to true, the component will only create chat messages when the received signal changes."), Serialize(false, true)]
+        public bool DiscardDuplicateChatMessages
         {
             get;
             set;
@@ -43,8 +65,8 @@ namespace Barotrauma.Items.Components
         public WifiComponent(Item item, XElement element)
             : base (item, element)
         {
-
             list.Add(this);
+            IsActive = true;
         }
 
         public bool CanTransmit()
@@ -59,57 +81,86 @@ namespace Barotrauma.Items.Components
 
         public bool CanReceive(WifiComponent sender)
         {
-            if (!HasRequiredContainedItems(false)) return false;
-
             if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
+            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) return false;
 
-            return Vector2.Distance(item.WorldPosition, sender.item.WorldPosition) <= sender.Range;
+            return HasRequiredContainedItems(false);
         }
-        
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+
+        public override void Update(float deltaTime, Camera cam)
         {
-            var senderComponent = source.GetComponent<WifiComponent>();
+            chatMsgCooldown -= deltaTime;
+        }
+
+        public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sendToChat, float signalStrength = 1.0f)
+        {
+            var senderComponent = source?.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) return;
 
-            if (LinkToChat)
+            bool chatMsgSent = false;
+
+            var receivers = GetReceiversInRange();
+            foreach (WifiComponent wifiComp in receivers)
             {
-                if (item.ParentInventory != null && 
-                    item.ParentInventory.Owner != null && 
-                    item.ParentInventory.Owner == Character.Controlled &&
-                    GameMain.NetworkMember != null)
+                //signal strength diminishes by distance
+                float sentSignalStrength = signalStrength *
+                    MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
+                wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender, 0, source, sentSignalStrength);
+                
+                if (source != null)
                 {
-                    if (senderComponent != null)
+                    foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
                     {
-                        signal = ChatMessage.ApplyDistanceEffect(item, sender, signal, senderComponent.range);
-                    }
-
-                    GameMain.NetworkMember.AddChatMessage(signal, ChatMessageType.Radio);
-                }
-            }
-
-            if (connection == null) return;
-
-            switch (connection.Name)
-            {
-                case "signal_in":
-                    var receivers = GetReceiversInRange();
-
-                    foreach (WifiComponent wifiComp in receivers)
-                    {
-                        wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender);
-                        if (source != null)
+                        if (!source.LastSentSignalRecipients.Contains(receiverItem))
                         {
-                            foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
-                            {
-                                if (!source.LastSentSignalRecipients.Contains(receiverItem))
-                                {
-                                    source.LastSentSignalRecipients.Add(receiverItem);
-                                }
-                            }
+                            source.LastSentSignalRecipients.Add(receiverItem);
                         }
                     }
-                    break;
+                }                
+
+                if (DiscardDuplicateChatMessages && signal == prevSignal) continue;
+
+                if (LinkToChat && wifiComp.LinkToChat && chatMsgCooldown <= 0.0f && sendToChat)
+                {
+                    if (wifiComp.item.ParentInventory != null &&
+                        wifiComp.item.ParentInventory.Owner != null &&
+                        GameMain.NetworkMember != null)
+                    {
+                        string chatMsg = signal;
+                        if (senderComponent != null)
+                        {
+                            chatMsg = ChatMessage.ApplyDistanceEffect(chatMsg, 1.0f - sentSignalStrength);
+                        }
+                        if (chatMsg.Length > ChatMessage.MaxLength) chatMsg = chatMsg.Substring(0, ChatMessage.MaxLength);
+                        if (string.IsNullOrEmpty(chatMsg)) continue;
+
+                        if (wifiComp.item.ParentInventory.Owner == Character.Controlled)
+                        {
+                            if (GameMain.Client == null)
+                                GameMain.NetworkMember.AddChatMessage(signal, ChatMessageType.Radio, source == null ? "" : source.Name);
+                        }
+                        else if (GameMain.Server != null)
+                        {
+                            Client recipientClient = GameMain.Server.ConnectedClients.Find(c => c.Character == wifiComp.item.ParentInventory.Owner);
+                            if (recipientClient != null)
+                            {
+                                GameMain.Server.SendDirectChatMessage(
+                                    ChatMessage.Create(source == null ? "" : source.Name, chatMsg, ChatMessageType.Radio, null), recipientClient);
+                            }
+                        }
+                        chatMsgSent = true;
+                    }
+                }
             }
+            if (chatMsgSent) chatMsgCooldown = MinChatMessageInterval;
+
+            prevSignal = signal;
+        }
+                
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        {
+            if (connection == null || connection.Name != "signal_in") return;
+            TransmitSignal(stepsTaken, signal, source, sender, true, signalStrength);
         }
 
         protected override void RemoveComponentSpecific()

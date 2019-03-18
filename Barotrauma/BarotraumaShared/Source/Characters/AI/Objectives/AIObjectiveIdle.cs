@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +14,15 @@ namespace Barotrauma
         private AITarget currentTarget;
         private float newTargetTimer;
 
+        private float standStillTimer;
+        private float walkDuration;
+
         private AIObjectiveFindSafety findSafety;
 
         public AIObjectiveIdle(Character character) : base(character, "")
         {
+            standStillTimer = Rand.Range(-10.0f, 10.0f);
+            walkDuration = Rand.Range(0.0f, 10.0f);
         }
 
         public override bool IsCompleted()
@@ -33,6 +40,16 @@ namespace Barotrauma
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
             if (pathSteering == null) return;
 
+            //don't keep dragging others when idling
+            if (character.SelectedCharacter != null)
+            {
+                character.DeselectCharacter();
+            }
+            if (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Ladder>() == null)
+            {
+                character.SelectedConstruction = null;
+            }
+            
             if (character.AnimController.InWater)
             {
                 //attempt to find a safer place if in water
@@ -48,10 +65,13 @@ namespace Barotrauma
                 if (currentTarget != null)
                 {
                     Vector2 pos = character.SimPosition;
-                    if (character != null && character.Submarine == null) pos -= Submarine.MainSub.SimPosition;
-                    
-                    var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition);
-                    if (path.Cost > 200.0f && character.AnimController.CurrentHull!=null) return;
+                    if (character != null && character.Submarine == null) { pos -= Submarine.MainSub.SimPosition; }
+
+                    string errorMsg = "(Character " + character.Name + " idling, target "
+                        + ((currentTarget.Entity is Hull hull && hull.RoomName != null) ? hull.RoomName : currentTarget.Entity.ToString()) + ")";
+
+                    var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition, errorMsg);
+                    if (path.Cost > 1000.0f && character.AnimController.CurrentHull!=null) return;
 
                     pathSteering.SetPath(path);
                 }
@@ -70,6 +90,19 @@ namespace Barotrauma
             if (pathSteering == null || (pathSteering.CurrentPath != null &&
                 (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable || pathSteering.CurrentPath.HasOutdoorsNodes)))
             {
+                standStillTimer -= deltaTime;
+                if (standStillTimer > 0.0f)
+                {
+                    walkDuration = Rand.Range(1.0f, 5.0f);
+                    pathSteering.Reset();
+                    return;
+                }
+
+                if (standStillTimer < -walkDuration)
+                {
+                    standStillTimer = Rand.Range(1.0f, 10.0f);
+                }
+
                 //steer away from edges of the hull
                 if (character.AnimController.CurrentHull != null)
                 {
@@ -102,7 +135,7 @@ namespace Barotrauma
                     }
                 }
                 
-                character.AIController.SteeringManager.SteeringWander();
+                character.AIController.SteeringManager.SteeringWander(character.AnimController.GetCurrentSpeed(false));
                 //reset vertical steering to prevent dropping down from platforms etc
                 character.AIController.SteeringManager.ResetY();                
 
@@ -115,20 +148,21 @@ namespace Barotrauma
                 currentTarget = null;
                 return;
             }
-            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, 2.0f);
+            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, character.AnimController.GetCurrentSpeed(true));
         }
 
         private AITarget FindRandomTarget()
         {
-            if (Rand.Int(5)==1)
+            //random chance of navigating back to the room where the character spawned
+            if (Rand.Int(5) == 1)
             {
-                var idCard = character.Inventory.FindItem("ID Card");
-                if (idCard==null) return null;
+                var idCard = character.Inventory.FindItemByIdentifier("idcard");
+                if (idCard == null) return null;
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull==null) continue;
-                 
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) continue;
+
                     foreach (string tag in wp.IdCardTags)
                     {
                         if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;
@@ -140,9 +174,31 @@ namespace Barotrauma
                 List<Hull> targetHulls = new List<Hull>(Hull.hullList);
                 //ignore all hulls with fires or water in them
                 targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
-                if (!targetHulls.Any()) return null;
+                if (character.Submarine != null)
+                {
+                    targetHulls.RemoveAll(h => h.Submarine != character.Submarine);
+                }
 
-                return targetHulls[Rand.Range(0, targetHulls.Count)].AiTarget;
+                //remove ballast hulls
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.HasTag("ballast") && targetHulls.Contains(item.CurrentHull))
+                    {
+                        targetHulls.Remove(item.CurrentHull);
+                    }
+                }
+
+                //ignore hulls that are too low to stand inside
+                if (character.AnimController is HumanoidAnimController animController)
+                {
+                    float minHeight = ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value);
+                    targetHulls.RemoveAll(h => h.CeilingHeight < minHeight);
+                }
+                if (!targetHulls.Any()) return null;
+                
+                //prefer larger hulls
+                var targetHull = ToolBox.SelectWeightedRandom(targetHulls, targetHulls.Select(h => h.Volume).ToList(), Rand.RandSync.Unsynced);
+                return targetHull?.AiTarget;
             }
 
             return null;

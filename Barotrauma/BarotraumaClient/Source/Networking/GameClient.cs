@@ -1,9 +1,10 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Steam;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -13,8 +14,8 @@ namespace Barotrauma.Networking
     {
         private NetClient client;
 
-        private GUIMessageBox reconnectBox;
-        
+        private GUIMessageBox reconnectBox, waitInServerQueueBox;
+
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
 
@@ -33,6 +34,7 @@ namespace Barotrauma.Networking
         private bool requiresPw;
         private int nonce;
         private string saltedPw;
+        private Facepunch.Steamworks.Auth.Ticket steamAuthTicket;
 
         private UInt16 lastSentChatMsgID = 0; //last message this client has successfully sent
         private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
@@ -51,7 +53,7 @@ namespace Barotrauma.Networking
         {
             get { return myID; }
         }
-        
+
         public override List<Client> ConnectedClients
         {
             get
@@ -64,7 +66,7 @@ namespace Barotrauma.Networking
         {
             get { return fileReceiver; }
         }
-
+        
         public bool MidRoundSyncing
         {
             get { return entityEventManager.MidRoundSyncing; }
@@ -78,28 +80,54 @@ namespace Barotrauma.Networking
         
         public GameClient(string newName)
         {
-            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
-            endVoteTickBox.OnSelected = ToggleEndRoundVote;
-            endVoteTickBox.Visible = false;
-
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
-            endRoundButton.OnClicked = (btn, userdata) => 
+            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
+                isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
-                if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
-
-                RequestRoundEnd();
-
-                return true; 
+                CanBeFocused = false
             };
-            endRoundButton.Visible = false;
 
-            newName = newName.Replace(":", "");
-            newName = newName.Replace(";", "");
+            endRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("EndRound"))
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
+                    RequestRoundEnd();
+                    return true;
+                },
+                Visible = false
+            };
+
+            endVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("EndRound"))
+            {
+                OnSelected = ToggleEndRoundVote,
+                Visible = false
+            };
+            
+            showLogButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("ServerLog"))
+            {
+                OnClicked = (GUIButton button, object userData) =>
+                {
+                    if (ServerLog.LogFrame == null)
+                    {
+                        ServerLog.CreateLogFrame();
+                    }
+                    else
+                    {
+                        ServerLog.LogFrame = null;
+                        GUI.KeyboardDispatcher.Subscriber = null;
+                    }
+                    return true;
+                }
+            };
 
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
             Hull.EditWater = false;
 
+            newName = newName.Replace(":", "").Replace(";", "");
             name = newName;
 
             entityEventManager = new ClientEntityEventManager(this);
@@ -107,9 +135,11 @@ namespace Barotrauma.Networking
             fileReceiver = new FileReceiver();
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
-            
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name,Gender.None,null);
-            characterInfo.Job = null;
+
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
+            {
+                Job = null
+            };
 
             otherClients = new List<Client>();
 
@@ -145,24 +175,15 @@ namespace Barotrauma.Networking
             ChatMessage.LastID = 0;
 
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
-            NetPeerConfiguration config = new NetPeerConfiguration("barotrauma");
-
-#if DEBUG
-            config.SimulatedLoss = 0.05f;
-            config.SimulatedDuplicatesChance = 0.05f;
-            config.SimulatedMinimumLatency = 0.1f;
-            config.SimulatedRandomLatency = 0.05f;
-
-            config.ConnectionTimeout = 600.0f;
-#endif 
-
-            config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
+            NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
+            
+            NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
                 | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
 
-            client = new NetClient(config);
-            netPeer = client;
+            client = new NetClient(NetPeerConfiguration);
+            NetPeer = client;
             client.Start();
-            
+
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
@@ -170,12 +191,13 @@ namespace Barotrauma.Networking
             }
             catch
             {
-                new GUIMessageBox("Could not connect to server", "Failed to resolve address \"" + serverIP + ":" + Port + "\". Please make sure you have entered a valid IP address.");
+                new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"),
+                    TextManager.Get("InvalidIPAddress").Replace("[serverip]", serverIP).Replace("[port]", Port.ToString()));
                 return;
             }
 
             NetOutgoingMessage outmsg = client.CreateMessage();
-            outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+            WriteAuthRequest(outmsg);
 
             // Connect client, to ip previously requested from user 
             try
@@ -193,7 +215,7 @@ namespace Barotrauma.Networking
 
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
-            CoroutineManager.StartCoroutine(WaitForStartingInfo());
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
         }
 
         private bool RetryConnection(GUIButton button, object obj)
@@ -211,7 +233,7 @@ namespace Barotrauma.Networking
             GameMain.NetworkMember = null;
             GameMain.GameSession = null;
             GameMain.ServerListScreen.Select();
-            
+
             return true;
         }
 
@@ -232,29 +254,24 @@ namespace Barotrauma.Networking
             connectCancelled = false;
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
-            
-            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,20);
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 20);
             DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
             // Loop until we are approved
+            //TODO: show the name of the server instead of IP when connecting through the server list (more streamer-friendly)
+            string connectingText = TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP);
             while (!CanStart && !connectCancelled)
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[] { "Cancel" });
+                    reconnectBox = new GUIMessageBox(TextManager.Get("Connecting"), connectingText, new string[] { TextManager.Get("Cancel") });
 
                     reconnectBox.Buttons[0].OnClicked += CancelConnect;
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                int seconds = DateTime.Now.Second;
-
-                string connectingText = "Connecting to " + serverIP;
-                for (int i = 0; i < 1 + (seconds % 3); i++ )
-                {
-                    connectingText += ".";
-                }
-                reconnectBox.Text = connectingText;
+                reconnectBox.Text.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
 
                 if (DateTime.Now > reqAuthTime)
                 {
@@ -262,33 +279,31 @@ namespace Barotrauma.Networking
                     {
                         //request auth again
                         NetOutgoingMessage reqAuthMsg = client.CreateMessage();
-                        reqAuthMsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+                        WriteAuthRequest(reqAuthMsg);
                         client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
                     }
                     else
                     {
                         //request init again
-                        if (!requiresPw)
+                        NetOutgoingMessage outmsg = client.CreateMessage();
+                        outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
+                        if (requiresPw)
                         {
-                            NetOutgoingMessage outmsg = client.CreateMessage();
-                            outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
-                            outmsg.Write(GameMain.Version.ToString());
-                            outmsg.Write(GameMain.SelectedPackage.Name);
-                            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
-                            outmsg.Write(name);
-                            client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
-                        }
-                        else
-                        {
-                            NetOutgoingMessage outmsg = client.CreateMessage();
-                            outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
                             outmsg.Write(saltedPw);
-                            outmsg.Write(GameMain.Version.ToString());
-                            outmsg.Write(GameMain.SelectedPackage.Name);
-                            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
-                            outmsg.Write(name);
-                            client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
                         }
+                        outmsg.Write(GameMain.Version.ToString());
+
+                        var mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+                        outmsg.Write((UInt16)mpContentPackages.Count());
+                        foreach (ContentPackage contentPackage in mpContentPackages)
+                        {
+                            outmsg.Write(contentPackage.Name);
+                            outmsg.Write(contentPackage.MD5hash.Hash);
+                        }
+                        outmsg.Write(name);
+                        client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
+
+                        DebugConsole.Log("Sending init request (" + (requiresPw ? "password required" : "no password required") + ")");
                     }
                     reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
                 }
@@ -300,7 +315,7 @@ namespace Barotrauma.Networking
                 NetIncomingMessage inc;
                 // If new messages arrived
                 if ((inc = client.ReadMessage()) == null) continue;
-                
+
                 string pwMsg = "Password required";
 
                 try
@@ -308,20 +323,25 @@ namespace Barotrauma.Networking
                     switch (inc.MessageType)
                     {
                         case NetIncomingMessageType.Data:
+                            DecompressIncomingMessage(inc);
+
                             ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
                             switch (header)
                             {
                                 case ServerPacketHeader.AUTH_RESPONSE:
+                                    DebugConsole.Log("Received auth response (needauth: " + needAuth + ")");
                                     if (needAuth)
                                     {
                                         if (inc.ReadBoolean())
                                         {
+                                            DebugConsole.Log("  password required.");
                                             //requires password
                                             nonce = inc.ReadInt32();
                                             requiresPw = true;
                                         }
                                         else
                                         {
+                                            DebugConsole.Log("  password not required.");
                                             requiresPw = false;
                                             reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
                                         }
@@ -330,10 +350,12 @@ namespace Barotrauma.Networking
                                     break;
                                 case ServerPacketHeader.AUTH_FAILURE:
                                     //failed to authenticate, can still use same nonce
+                                    DebugConsole.Log("Received auth failure message");
                                     pwMsg = inc.ReadString();
                                     requiresPw = true;
                                     break;
                                 case ServerPacketHeader.UPDATE_LOBBY:
+                                    DebugConsole.Log("Recived lobby update");
                                     //server accepted client
                                     ReadLobbyUpdate(inc);
                                     CanStart = true;
@@ -344,11 +366,7 @@ namespace Barotrauma.Networking
                             NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
                             if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
-                                string denyMessage = inc.ReadString();
-
-                                var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
-                                cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
-
+                                ReadDisconnectMessage(inc, false);
                                 connectCancelled = true;
                             }
                             break;
@@ -369,9 +387,12 @@ namespace Barotrauma.Networking
                         reconnectBox = null;
                     }
 
-                    var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
-                    var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, "", msgBox.children[0]);
-                    passwordBox.UserData = "password";
+                    var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") });
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.Center))
+                    {
+                        IgnoreLayoutGroups = true,
+                        UserData = "password"
+                    };
 
                     var okButton = msgBox.Buttons[0];
                     var cancelButton = msgBox.Buttons[1];
@@ -386,11 +407,7 @@ namespace Barotrauma.Networking
                                     NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
                                     if (connectionStatus == NetConnectionStatus.Disconnected)
                                     {
-                                        string denyMessage = inc.ReadString();
-
-                                        var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
-                                        cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
-
+                                        ReadDisconnectMessage(inc, false);
                                         msgBox.Close(null, null);
                                         connectCancelled = true;
                                     }
@@ -402,7 +419,7 @@ namespace Barotrauma.Networking
                         {
                             //request auth again to prevent timeout
                             NetOutgoingMessage reqAuthMsg = client.CreateMessage();
-                            reqAuthMsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+                            WriteAuthRequest(reqAuthMsg);
                             client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
                             reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 3);
                         }
@@ -444,9 +461,11 @@ namespace Barotrauma.Networking
 
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
-                var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to the server.", new string[] { "Retry", "Cancel" });
+                steamAuthTicket?.Cancel();
+                steamAuthTicket = null;
+                var reconnect = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get("CouldNotConnectToServer"), new string[] { TextManager.Get("Retry"), TextManager.Get("Cancel") });
 
-                DebugConsole.NewMessage("Failed to connect to the server - connection status: "+client.ConnectionStatus.ToString(), Color.Orange);
+                DebugConsole.NewMessage("Failed to connect to the server - connection status: " + client.ConnectionStatus.ToString(), Color.Orange);
 
                 reconnect.Buttons[0].OnClicked += RetryConnection;
                 reconnect.Buttons[0].OnClicked += reconnect.Close;
@@ -465,22 +484,54 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
+        private void WriteAuthRequest(NetOutgoingMessage outmsg)
+        {
+            if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
+            {
+                if (steamAuthTicket == null)
+                {
+                    steamAuthTicket = SteamManager.GetAuthSessionTicket();
+                }
+
+                DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 3);
+                while ((steamAuthTicket.Data == null || steamAuthTicket.Data.Length == 0) &&
+                    DateTime.Now < timeOut)
+                {
+                    System.Threading.Thread.Sleep(10);
+                }
+
+                outmsg.Write((byte)ClientPacketHeader.REQUEST_STEAMAUTH);
+                outmsg.Write(SteamManager.GetSteamID());
+                outmsg.Write(steamAuthTicket.Data.Length);
+                outmsg.Write(steamAuthTicket.Data);
+
+                DebugConsole.Log("Sending Steam auth request");
+                DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
+                DebugConsole.Log("   Ticket data: " + 
+                    ToolBox.LimitString(string.Concat(steamAuthTicket.Data.Select(b => b.ToString("X2"))), 16));
+                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);                
+            }
+            else
+            {
+                DebugConsole.Log("Sending auth request");
+                outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+            }
+        }
+
         public override void Update(float deltaTime)
         {
 #if DEBUG
             if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
 #endif
-#if CLIENT
-            if (ServerLog.LogFrame != null) ServerLog.LogFrame.Update(deltaTime);
-#endif
+            if (gameStarted) SetRadioButtonColor();
 
             base.Update(deltaTime);
 
             if (!connected) return;
-            
-            if (reconnectBox!=null)
+
+            if (reconnectBox != null)
             {
-                reconnectBox.Close(null,null);
+                reconnectBox.Close(null, null);
                 reconnectBox = null;
             }
 
@@ -490,11 +541,15 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-#if DEBUG
-                DebugConsole.ThrowError("Error while receiving message from server", e);
-#endif            
+                string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                DebugConsole.ThrowError("Error while reading a message from server.", e);
+                new GUIMessageBox(TextManager.Get("Error"), "Error while reading a message from the server. (" + e.Message + " Target site: " + e.TargetSite + ")");
+                Disconnect();
+                GameMain.MainMenuScreen.Select();
+                return;
             }
-                                    
+
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 endVoteTickBox.Visible = Voting.AllowEndVoting && HasSpawned;
@@ -519,6 +574,32 @@ namespace Barotrauma.Networking
 
         private CoroutineHandle startGameCoroutine;
 
+        private void DecompressIncomingMessage(NetIncomingMessage inc)
+        {
+            byte[] data = inc.Data;
+            if (data[data.Length - 1] == 1)
+            {
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    stream.Write(data, 0, inc.LengthBytes-1);
+                    stream.Position = 0;
+                    using (MemoryStream decompressed = new MemoryStream())
+                    {
+                        using (DeflateStream deflate = new DeflateStream(stream, CompressionMode.Decompress, false))
+                        {
+                            deflate.CopyTo(decompressed);
+                        }
+                        byte[] newData = decompressed.ToArray();
+
+                        inc.Data = newData;
+                        inc.LengthBytes = newData.Length;
+                        inc.Position = 0;
+                    }
+
+                }
+            }
+        }
+
         /// <summary>
         /// Check for new incoming messages from server
         /// </summary>
@@ -534,6 +615,8 @@ namespace Barotrauma.Networking
                 switch (inc.MessageType)
                 {
                     case NetIncomingMessageType.Data:
+                        DecompressIncomingMessage(inc);
+
                         ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
                         switch (header)
                         {
@@ -579,6 +662,9 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.PERMISSIONS:
                                 ReadPermissions(inc);
                                 break;
+                            case ServerPacketHeader.ACHIEVEMENT:
+                                ReadAchievement(inc);
+                                break;
                             case ServerPacketHeader.FILE_TRANSFER:
                                 fileReceiver.ReadMessage(inc);
                                 break;
@@ -590,35 +676,121 @@ namespace Barotrauma.Networking
 
                         if (connectionStatus == NetConnectionStatus.Disconnected)
                         {
-                            string disconnectMsg = inc.ReadString();
-
-                            if (disconnectMsg.Contains("You have been disconnected") ||
-                                disconnectMsg.Contains("You have been banned") ||
-                                disconnectMsg.Contains("You have been kicked") ||
-                                disconnectMsg == "The server has been shut down")
-                            {
-                                var msgBox = new GUIMessageBox("CONNECTION LOST", disconnectMsg);
-                                msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                            }
-                            else
-                            {
-                                reconnectBox = new GUIMessageBox(
-                                    "CONNECTION LOST", 
-                                    "You have been disconnected from the server. Reconnecting...", new string[0]);
-                                    
-                                connected = false;
-                                ConnectToServer(serverIP);
-                            }
+                            ReadDisconnectMessage(inc, true);
                         }
                         break;
                 }
             }
         }
 
+        private void ReadDisconnectMessage(NetIncomingMessage inc, bool allowReconnect)
+        {
+            steamAuthTicket?.Cancel();
+            steamAuthTicket = null;
+
+            string disconnectMsg = inc.ReadString();
+            string[] splitMsg = disconnectMsg.Split(';');
+            DisconnectReason disconnectReason = DisconnectReason.Unknown;
+            if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+
+            if (disconnectReason == DisconnectReason.ServerFull)
+            {
+                //already waiting for a slot to free up, do nothing
+                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
+
+                reconnectBox?.Close(); reconnectBox = null;
+
+                var queueBox = new GUIMessageBox(
+                    TextManager.Get("DisconnectReason.ServerFull"),
+                    TextManager.Get("ServerFullQuestionPrompt"), new string[] { TextManager.Get("Cancel"), TextManager.Get("ServerQueue") });
+
+                queueBox.Buttons[0].OnClicked += queueBox.Close;
+                queueBox.Buttons[1].OnClicked += queueBox.Close;
+                queueBox.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    reconnectBox?.Close(); reconnectBox = null;
+                    CoroutineManager.StartCoroutine(WaitInServerQueue(), "WaitInServerQueue");
+                    return true;
+                };
+                return;
+            }
+            else
+            {
+                //disconnected/denied for some other reason than the server being full
+                // -> stop queuing and show a message box
+                waitInServerQueueBox?.Close();
+                waitInServerQueueBox = null;
+                CoroutineManager.StopCoroutines("WaitInServerQueue");
+            }
+
+            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+            {
+                reconnectBox = new GUIMessageBox(
+                    TextManager.Get("ConnectionLost"),
+                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
+                connected = false;
+                ConnectToServer(serverIP);
+            }
+            else
+            {
+                string msg = "";
+                if (disconnectReason == DisconnectReason.Unknown)
+                {
+                    msg = disconnectMsg;
+                }
+                else
+                {
+                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
+                    for (int i = 1; i < splitMsg.Length; i++)
+                    {
+                        msg += splitMsg[i];
+                    }
+                }
+                var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
+                msgBox.Buttons[0].OnClicked += ReturnToServerList;
+            }
+        }
+
+        private IEnumerable<object> WaitInServerQueue()
+        {
+            waitInServerQueueBox = new GUIMessageBox(
+                    TextManager.Get("ServerQueuePleaseWait"),
+                    TextManager.Get("WaitingInServerQueue"), new string[] { TextManager.Get("Cancel") });
+            waitInServerQueueBox.Buttons[0].OnClicked += (btn, userdata) =>
+            {
+                CoroutineManager.StopCoroutines("WaitInServerQueue");
+                waitInServerQueueBox?.Close();
+                waitInServerQueueBox = null;
+                return true;
+            };
+
+            while (!connected)
+            {
+                if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
+                {
+                    ConnectToServer(serverIP);
+                    yield return new WaitForSeconds(2.0f);
+                }
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            waitInServerQueueBox?.Close();
+            waitInServerQueueBox = null;
+
+            yield return CoroutineStatus.Success;
+        }
+
+
+        private void ReadAchievement(NetIncomingMessage inc)
+        {
+            string achievementIdentifier = inc.ReadString();
+            SteamAchievementManager.UnlockAchievement(achievementIdentifier);
+        }
+
         private void ReadPermissions(NetIncomingMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
-            ClientPermissions newPermissions = (ClientPermissions)inc.ReadByte();
+            ClientPermissions newPermissions = (ClientPermissions)inc.ReadUInt16();
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 UInt16 consoleCommandCount = inc.ReadUInt16();
@@ -644,39 +816,44 @@ namespace Barotrauma.Networking
             string msg = "";
             if (newPermissions == ClientPermissions.None)
             {
-                msg = "The host has removed all your special permissions.";
+                msg = TextManager.Get("PermissionsRemoved");
             }
             else
             {
-                msg = "Your current permissions:\n";
+                msg = TextManager.Get("CurrentPermissions") + '\n';
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
-                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                    msg += "   - " + attributes[0].Description + "\n";
+                    msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
                 }
             }
 
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
-            GUIMessageBox msgBox = new GUIMessageBox("Permissions changed", msg, GUIMessageBox.DefaultWidth, 0);
-            msgBox.UserData = "permissions";
+            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
+            {
+                UserData = "permissions"
+            };
 
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
-                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width - msgBox.InnerFrame.Padding.X - msgBox.InnerFrame.Padding.Z) / 2 - 30;
-                new GUITextBlock(new Rectangle(0, 0, listBoxWidth, 15), "Permitted console commands:", "", Alignment.TopRight, Alignment.TopLeft, msgBox.InnerFrame, true, GUI.SmallFont);
-                var commandList = new GUIListBox(new Rectangle(0, 20, listBoxWidth, 0), "", Alignment.BottomRight, msgBox.InnerFrame);
+                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
+                     TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
                 foreach (string permittedCommand in permittedConsoleCommands)
                 {
-                    new GUITextBlock(new Rectangle(0, 0, 0, 15), permittedCommand, "", commandList, GUI.SmallFont).CanBeFocused = false;
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
+                        permittedCommand, font: GUI.SmallFont)
+                    {
+                        CanBeFocused = false
+                    };
                 }
             }
             
             GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
             GameMain.NetLobbyScreen.ModeList.Enabled = Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
-            GameMain.NetLobbyScreen.InfoFrame.FindChild("showlog").Visible = HasPermission(ClientPermissions.ServerLog);
+            GameMain.NetLobbyScreen.ShowLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
             showLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
 
             endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);      
@@ -700,6 +877,9 @@ namespace Barotrauma.Networking
 
             int seed                = inc.ReadInt32();
             string levelSeed        = inc.ReadString();
+            float levelDifficulty   = inc.ReadFloat();
+
+            byte losMode            = inc.ReadByte();
 
             int missionTypeIndex    = inc.ReadByte();
 
@@ -710,7 +890,7 @@ namespace Barotrauma.Networking
             string shuttleName      = inc.ReadString();
             string shuttleHash      = inc.ReadString();
 
-            string modeName         = inc.ReadString();
+            string modeIdentifier   = inc.ReadString();
             int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
@@ -723,7 +903,7 @@ namespace Barotrauma.Networking
             //monster spawn settings
             if (monsterEnabled == null)
             {
-                List<string> monsterNames1 = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+                List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
                 for (int i = 0; i < monsterNames1.Count; i++)
                 {
                     monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
@@ -743,17 +923,18 @@ namespace Barotrauma.Networking
             }
             inc.ReadPadBits();
 
-            GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
+            GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
             MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
             if (gameMode == null)
             {
-                DebugConsole.ThrowError("Game mode \"" + modeName + "\" not found!");
+                DebugConsole.ThrowError("Game mode \"" + modeIdentifier + "\" not found!");
                 yield return CoroutineStatus.Success;
             }
 
             GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
+            GameMain.LightManager.LosMode = (LosMode)losMode;
 
             AllowDisguises = disguisesAllowed;
 
@@ -775,7 +956,7 @@ namespace Barotrauma.Networking
             if (campaign == null)
             {
                 GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
-                GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
+                GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
             {
@@ -810,7 +991,7 @@ namespace Barotrauma.Networking
             float endPreviewLength = 10.0f;
             if (Screen.Selected == GameMain.GameScreen)
             {
-                new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+                new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
                 float secondsLeft = endPreviewLength;
                 do
                 {
@@ -862,11 +1043,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                new GUIMessageBox("Please wait",
-                    (allowSpectating) ?
-                    "A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round." :
-                    "A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.");
-
+                new GUIMessageBox("Please wait", TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
                 GameMain.NetLobbyScreen.Select();
             }
         }
@@ -910,11 +1087,15 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, MissionPrefab.MissionTypes.Count - 1);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, Enum.GetValues(typeof(MissionType)).Length - 1);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
+                            float levelDifficulty       = inc.ReadFloat();
 
+                            byte botCount               = inc.ReadByte();
+                            BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
+                            
                             bool autoRestartEnabled     = inc.ReadBoolean();
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
 
@@ -938,43 +1119,50 @@ namespace Barotrauma.Networking
 
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
-
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
-                                if (!allowSubVoting)
-                                {
-                                    GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
-                                }
+                                if (!allowSubVoting) GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
                                 GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
 
-                                if (!allowModeVoting)
-                                {
-                                    GameMain.NetLobbyScreen.SelectMode(modeIndex);
-                                }
+                                if (!allowModeVoting) GameMain.NetLobbyScreen.SelectMode(modeIndex);                                
                                 
-                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);                                
-
+                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
-                                
+                                GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
+                                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                                GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
-                                ConnectedClients.Clear();
-                                GameMain.NetLobbyScreen.ClearPlayers();
+                                List<Client> currentClients = new List<Client>();
                                 for (int i = 0; i < clientNames.Count; i++)
                                 {
-                                    var newClient = new Client(clientNames[i], clientIDs[i]);
+                                    //see if the client already exists
+                                    var existingClient = ConnectedClients.Find(c => c.ID == clientIDs[i] && c.Name == clientNames[i]);
+                                    if (existingClient == null) //if not, create it
+                                    {
+                                        existingClient = new Client(clientNames[i], clientIDs[i]);
+                                        ConnectedClients.Add(existingClient);
+                                        GameMain.NetLobbyScreen.AddPlayer(existingClient.Name);
+                                    }
                                     if (characterIDs[i] > 0)
                                     {
-                                        newClient.Character = Entity.FindEntityByID(characterIDs[i]) as Character;
+                                        existingClient.Character = Entity.FindEntityByID(characterIDs[i]) as Character;
                                     }
-
-                                    ConnectedClients.Add(newClient);
-                                    GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
+                                    currentClients.Add(existingClient);
                                 }
-
+                                //remove clients that aren't present anymore
+                                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
+                                {
+                                    if (!currentClients.Contains(ConnectedClients[i]))
+                                    {
+                                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                                        ConnectedClients.RemoveAt(i);
+                                    }
+                                }
+                                
                                 Voting.AllowSubVoting = allowSubVoting;
                                 Voting.AllowModeVoting = allowModeVoting;
                             }
@@ -1119,6 +1307,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(campaign.LastSaveID);
                 outmsg.Write(campaign.CampaignID);
                 outmsg.Write(campaign.LastUpdateID);
+                outmsg.Write(GameMain.NetLobbyScreen.CampaignCharacterDiscarded);
             }
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
@@ -1176,14 +1365,22 @@ namespace Barotrauma.Networking
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }
 
-        public void SendChatMessage(string message)
+        public void SendChatMessage(ChatMessage msg)
+        {
+            if (client.ServerConnection == null) return;            
+            lastQueueChatMsgID++;
+            msg.NetStateID = lastQueueChatMsgID;
+            chatMsgQueue.Add(msg);
+        }
+
+        public void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
         {
             if (client.ServerConnection == null) return;
 
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, 
-                ChatMessageType.Default, 
+                message,
+                type, 
                 gameStarted && myCharacter != null ? myCharacter : null);
 
             lastQueueChatMsgID++;
@@ -1222,7 +1419,7 @@ namespace Barotrauma.Networking
             switch (transfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    new GUIMessageBox("Download finished", "File \"" + transfer.FileName + "\" was downloaded succesfully.");
+                    new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.Get("FileDownloadedNotification").Replace("[filename]", transfer.FileName));
                     var newSub = new Submarine(transfer.FilePath);
                     var existingSubs = Submarine.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
                     foreach (Submarine existingSub in existingSubs)
@@ -1233,15 +1430,15 @@ namespace Barotrauma.Networking
 
                     for (int i = 0; i < 2; i++)
                     {
-                        List<GUIComponent> subListChildren = (i == 0) ? 
-                            GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
-                            GameMain.NetLobbyScreen.SubList.children;
+                        IEnumerable<GUIComponent> subListChildren = (i == 0) ? 
+                            GameMain.NetLobbyScreen.ShuttleList.ListBox.Content.Children : 
+                            GameMain.NetLobbyScreen.SubList.Content.Children;
 
-                        var subElement = subListChildren.Find(c => 
+                        var subElement = subListChildren.FirstOrDefault(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 
                             ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
-
                         if (subElement == null) continue;
+
                         subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
                         subElement.UserData = newSub;
                         subElement.ToolTip = newSub.Description;
@@ -1249,13 +1446,13 @@ namespace Barotrauma.Networking
                         GUIButton infoButton = subElement.GetChild<GUIButton>();
                         if (infoButton == null)
                         {
-                            infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", subElement);
+                            int buttonSize = (int)(subElement.Rect.Height * 0.8f);
+                            infoButton = new GUIButton(new RectTransform(new Point(buttonSize), subElement.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?");
                         }
                         infoButton.UserData = newSub;
                         infoButton.OnClicked = (component, userdata) =>
                         {
-                            var msgBox = new GUIMessageBox("", "", 550, 400);
-                            ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                             return true;
                         };
                     }
@@ -1280,8 +1477,6 @@ namespace Barotrauma.Networking
                     if (campaign == null) return;
 
                     GameMain.GameSession.SavePath = transfer.FilePath;
-                    campaign.LastSaveID = campaign.PendingSaveID;
-
                     if (GameMain.GameSession.Submarine == null)
                     {
                         var gameSessionDoc = SaveUtil.LoadGameSessionDoc(GameMain.GameSession.SavePath);
@@ -1290,6 +1485,10 @@ namespace Barotrauma.Networking
                     }
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    campaign.LastSaveID = campaign.PendingSaveID;
+                    //decrement campaign update ID so the server will send us the latest data
+                    //(as there may have been campaign updates after the save file was created)
+                    campaign.LastUpdateID--;
                     break;
             }
         }
@@ -1323,23 +1522,6 @@ namespace Barotrauma.Networking
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-
-            if (Screen.Selected == GameMain.GameScreen && !GUI.DisableHUD)
-            {
-                if (EndVoteCount > 0)
-                {
-                    if (!HasSpawned)
-                    {
-                        GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                            "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                    }
-                    else
-                    {
-                        GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
-                            "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                    }
-                }
-            }
             
             if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
             {
@@ -1358,14 +1540,14 @@ namespace Barotrauma.Networking
                     
                     GUI.DrawString(spriteBatch,
                         pos,
-                        ToolBox.LimitString("Downloading " + transfer.FileName, GUI.SmallFont, 200),
+                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, 200),
                         Color.White, null, 0, GUI.SmallFont);
                     GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 15), new Vector2(135, 15), transfer.Progress, Color.Green);
                     GUI.DrawString(spriteBatch, pos + new Vector2(5, 15),
                         MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
                         Color.White, null, 0, GUI.SmallFont);
 
-                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
+                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
                     {
                         CancelFileTransfer(transfer);
                         fileReceiver.StopTransfer(transfer);
@@ -1405,6 +1587,8 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             client.Shutdown("");
+            steamAuthTicket?.Cancel();
+            steamAuthTicket = null;
 
             foreach (var fileTransfer in FileReceiver.ActiveTransfers)
             {
@@ -1425,14 +1609,19 @@ namespace Barotrauma.Networking
             if (characterInfo == null) return;
 
             msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write((byte)characterInfo.Race);
             msg.Write((byte)characterInfo.HeadSpriteId);
+            msg.Write((byte)characterInfo.HairIndex);
+            msg.Write((byte)characterInfo.BeardIndex);
+            msg.Write((byte)characterInfo.MoustacheIndex);
+            msg.Write((byte)characterInfo.FaceAttachmentIndex);
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);
             msg.Write((byte)count);
             for (int i = 0; i < count; i++)
             {
-                msg.Write(jobPreferences[i].Name);
+                msg.Write(jobPreferences[i].Identifier);
             }
         }
 
@@ -1447,27 +1636,34 @@ namespace Barotrauma.Networking
 
                 if (HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Ban"), Alignment.BottomRight, "", characterFrame);
-                    banButton.UserData = character.Name;
-                    banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight),
+                        TextManager.Get("Ban"))
+                    {
+                        UserData = character.Name,
+                        OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                    };
                 }
                 if (HasPermission(ClientPermissions.Kick))
                 {
-                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Kick"), Alignment.BottomLeft, "", characterFrame);
-                    kickButton.UserData = character.Name;
-                    kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomLeft),
+                        TextManager.Get("Kick"))
+                    {
+                        UserData = character.Name,
+                        OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                    };
                 }
                 else if (Voting.AllowVoteKick)
                 {
-                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), TextManager.Get("VoteToKick"), Alignment.BottomLeft, "", characterFrame);
-
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
+                        TextManager.Get("VoteToKick"))
+                    {
+                        UserData = character,
+                        OnClicked = VoteForKick
+                    };
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
                         kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
                     }
-
-                    kickVoteButton.UserData = character;
-                    kickVoteButton.OnClicked += VoteForKick;
                 }                
             }
 
@@ -1639,6 +1835,19 @@ namespace Barotrauma.Networking
             client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
 
             return false;
+        }
+
+        public bool SetReadyToStart(GUITickBox tickBox)
+        {
+            if (gameStarted)
+            {
+                tickBox.Visible = false;
+                return false;
+            }
+
+            Vote(VoteType.StartRound, tickBox.Selected);
+
+            return true;
         }
 
         public bool ToggleEndRoundVote(GUITickBox tickBox)

@@ -1,60 +1,163 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    static class TextManager
+    public static class TextManager
     {
-        private static Dictionary<string, List<string>> texts;
+        //only used if none of the selected content packages contain any text files
+        const string VanillaTextFilePath = "Content/Texts/EnglishVanilla.xml";
 
-        static TextManager()
+        //key = language
+        private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
+
+        public static string Language;
+        
+        private static HashSet<string> availableLanguages = new HashSet<string>();
+        public static IEnumerable<string> AvailableLanguages
         {
-            Load(Path.Combine("Content", "Texts.xml"));            
+            get { return availableLanguages; }
         }
 
-        private static void Load(string file)
+        public static List<string> GetTextFiles()
         {
-            texts = new Dictionary<string, List<string>>();
+            var list = new List<string>();
+            GetTextFilesRecursive(Path.Combine("Content", "Texts"), ref list);
+            return list;
+        }
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;            
-
-            foreach (XElement subElement in doc.Root.Elements())
+        private static void GetTextFilesRecursive(string directory, ref List<string> list)
+        {
+            foreach (string file in Directory.GetFiles(directory))
             {
-                string infoName = subElement.Name.ToString().ToLowerInvariant();
-                List<string> infoList = null;
-                if (!texts.TryGetValue(infoName, out infoList))
-                {
-                    infoList = new List<string>();
-                    texts.Add(infoName, infoList);
-                }
+                list.Add(file);
+            }
+            foreach (string subDir in Directory.GetDirectories(directory))
+            {
+                GetTextFilesRecursive(subDir, ref list);
+            }
+        }
+        
+        public static void LoadTextPacks()
+        {
+            var textFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Text);
 
-                infoList.Add(subElement.ElementInnerText());
+            foreach (string file in textFiles)
+            {
+                try
+                {
+                    var textPack = new TextPack(file);
+                    availableLanguages.Add(textPack.Language);
+                    if (!textPacks.ContainsKey(textPack.Language))
+                    {
+                        textPacks.Add(textPack.Language, new List<TextPack>());
+                    }
+                    textPacks[textPack.Language].Add(textPack);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
+                }
+            }
+
+            if (textPacks.Count == 0)
+            {
+                DebugConsole.ThrowError("No text files available in any of the selected content packages. Attempting to find a vanilla English text file...");
+                if (!File.Exists(VanillaTextFilePath))
+                {
+                    throw new Exception("No text files found in any of the selected content packages or in the default text path!");
+                }
+                var textPack = new TextPack(VanillaTextFilePath);
+                availableLanguages.Add(textPack.Language);
+                textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
         }
 
-        public static string Get(string textTag)
+        public static string Get(string textTag, bool returnNull = false)
         {
-            List<string> textList = null;
-            if (!texts.TryGetValue(textTag.ToLowerInvariant(), out textList) || !textList.Any())
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            foreach (TextPack textPack in textPacks[Language])
+            {
+                string text = textPack.Get(textTag);
+                if (text != null) return text;
+            }
+
+            //if text was not found and we're using a language other than English, see if we can find an English version
+            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
+            if (Language != "English" && textPacks.ContainsKey("English"))
+            {
+                foreach (TextPack textPack in textPacks["English"])
+                {
+                    string text = textPack.Get(textTag);
+                    if (text != null) return text;
+                }
+            }
+
+            if (returnNull)
+            {
+                return null;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
+                return textTag;
+            }
+        }
+
+        public static string Get(string textTag, bool returnNull = false, params object[] args)
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            foreach (TextPack textPack in textPacks[Language])
+            {
+                string text = textPack.Get(textTag);
+                if (text != null)
+                {
+                    text = string.Format(text, args);
+                    return text;
+                }
+            }
+
+            if (Language != "English" && textPacks.ContainsKey("English"))
+            {
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    string text = textPack.Get(textTag);
+                    if (text != null)
+                    {
+                        text = string.Format(text, args);
+                        return text;
+                    }
+                }
+            }
+
+            if (returnNull)
+            {
+                return null;
+            }
+            else
             {
                 DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
                 return textTag;
             }
-
-            string text = textList[Rand.Int(textList.Count)].Replace(@"\n", "\n");
-
-            //todo: get rid of these and only do where needed?
-#if CLIENT
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                text = text.Replace("[" + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
-            }
-#endif
-            return text;
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)

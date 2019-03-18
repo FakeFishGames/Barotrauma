@@ -11,18 +11,16 @@ namespace Barotrauma.Items.Components
     {
         enum UsableIn
         {
-            Air,Water,Both
+            Air, Water, Both
         };
 
         private float force;
 
-        private string particles;
-
         private float useState;
         
         private UsableIn usableIn;
-                
-        [Serialize(0.0f, false)]
+
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float Force
         {
             get { return force; }
@@ -30,6 +28,7 @@ namespace Barotrauma.Items.Components
         }
 
 #if CLIENT
+        private string particles;
         [Serialize("", false)]
         public string Particles
         {

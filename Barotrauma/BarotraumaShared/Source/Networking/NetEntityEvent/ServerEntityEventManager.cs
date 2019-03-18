@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (((Entity)entity).Removed)
+            if (((Entity)entity).Removed && !(entity is Level))
             {
                 DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace);
                 return;
@@ -338,7 +338,7 @@ namespace Barotrauma.Networking
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
 
-                if (entityID == 0)
+                if (entityID == Entity.NullEntityID)
                 {
                     msg.ReadPadBits();
                     if (thisEventID == (UInt16)(sender.LastSentEntityEventID + 1)) sender.LastSentEntityEventID++;

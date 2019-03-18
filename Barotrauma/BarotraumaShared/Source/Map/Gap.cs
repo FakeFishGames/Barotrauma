@@ -16,8 +16,12 @@ namespace Barotrauma
 
         const float OutsideColliderRaycastInterval = 0.1f;
 
-        public readonly bool IsHorizontal;
-        
+        public bool IsHorizontal
+        {
+            get;
+            private set;
+        }
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;           
 
@@ -91,15 +95,7 @@ namespace Barotrauma
                 return "Gap";
             }
         }
-
-        public override bool SelectableInEditor
-        {
-            get
-            {
-                return ShowGaps;
-            }
-        }
-
+        
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.MainSub)
         { }
@@ -109,7 +105,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
-            : base (MapEntityPrefab.Find("Gap"), submarine)
+            : base (MapEntityPrefab.Find(null, "gap"), submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -159,6 +155,40 @@ namespace Barotrauma
         {
             return ShowGaps && Submarine.RectContains(WorldRect, position) &&
                 !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -5), position);
+        }
+
+        public void AutoOrient()
+        {
+            Vector2 searchPosLeft = new Vector2(rect.X, rect.Y - rect.Height / 2);
+            Hull hullLeft = Hull.FindHullOld(searchPosLeft, null, false);
+            Vector2 searchPosRight = new Vector2(rect.Right, rect.Y - rect.Height / 2);
+            Hull hullRight = Hull.FindHullOld(searchPosRight, null, false);
+
+            if (hullLeft != null && hullRight != null && hullLeft != hullRight)
+            {
+                IsHorizontal = true;
+                return;
+            }
+
+            Vector2 searchPosTop = new Vector2(rect.Center.X, rect.Y);
+            Hull hullTop = Hull.FindHullOld(searchPosTop, null, false);
+            Vector2 searchPosBottom = new Vector2(rect.Center.X, rect.Y - rect.Height);
+            Hull hullBottom = Hull.FindHullOld(searchPosBottom, null, false);
+
+            if (hullTop != null && hullBottom != null && hullTop != hullBottom)
+            {
+                IsHorizontal = false;
+                return;
+            }
+
+            if ((hullLeft == null) != (hullRight == null))
+            {
+                IsHorizontal = true;
+            }
+            else if ((hullTop == null) != (hullBottom == null))
+            {
+                IsHorizontal = false;
+            }
         }
 
         private void FindHulls()
@@ -289,17 +319,15 @@ namespace Barotrauma
             if (linkedTo.Count < 2) return;
             Hull hull1 = (Hull)linkedTo[0];
             Hull hull2 = (Hull)linkedTo[1];
-            
+
             Vector2 subOffset = Vector2.Zero;
             if (hull1.Submarine != Submarine)
             {
-                subOffset =Submarine.Position - hull1.Submarine.Position;
+                subOffset = Submarine.Position - hull1.Submarine.Position;
             }
             else if (hull2.Submarine != Submarine)
             {
-
                 subOffset = hull2.Submarine.Position - Submarine.Position;
-
             }
 
             if (hull1.WaterVolume <= 0.0 && hull2.WaterVolume <= 0.0) return;
@@ -391,7 +419,7 @@ namespace Barotrauma
             else
             {
                 //lower room is full of water
-                if (hull2.Pressure + subOffset.Y > hull1.Pressure)
+                if (hull2.Pressure + subOffset.Y > hull1.Pressure && hull2.WaterVolume > 0.0f)
                 {
                     float delta = Math.Min(hull2.WaterVolume - hull2.Volume + Hull.MaxCompress, deltaTime * 8000.0f * sizeModifier);
 
@@ -606,7 +634,7 @@ namespace Barotrauma
             hull2.Oxygen -= deltaOxygen;            
         }
 
-        public static Gap FindAdjacent(List<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
         {
             foreach (Gap gap in gaps)
             {
@@ -666,7 +694,7 @@ namespace Barotrauma
             if (!DisableHullRechecks) FindHulls();
         }
         
-        public static void Load(XElement element, Submarine submarine)
+        public static Gap Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
 
@@ -687,15 +715,15 @@ namespace Barotrauma
             bool isHorizontal = rect.Height > rect.Width;
 
             var horizontalAttribute = element.Attribute("horizontal");
-            if (horizontalAttribute!=null)
+            if (horizontalAttribute != null)
             {
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";
             }
 
             Gap g = new Gap(rect, isHorizontal, submarine);
-            g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-            
+            g.ID = (ushort)int.Parse(element.Attribute("ID").Value);            
             g.linkedToID = new List<ushort>();
+            return g;
         }
 
         public override XElement Save(XElement parentElement)

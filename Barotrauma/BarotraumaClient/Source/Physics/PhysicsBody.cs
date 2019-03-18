@@ -15,17 +15,31 @@ namespace Barotrauma
             get { return bodyShapeTexture; }
         }
 
+        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color)
+        {
+            if (!Enabled) return;
+            UpdateDrawPosition();
+            deformSprite?.Draw(cam, 
+                new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), 
+                deformSprite.Origin, 
+                -DrawRotation, 
+                scale, 
+                color,
+                flip: Dir < 0);
+        }
+
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
         {
             if (!Enabled) return;
-
             UpdateDrawPosition();
-
             if (sprite == null) return;
+            SpriteEffects spriteEffect = (Dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
+        }
 
-            SpriteEffects spriteEffect = (dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-
-            if (GameMain.DebugDraw)
+        public void DebugDraw(SpriteBatch spriteBatch, Color color, bool forceColor = false)
+        {
+            if (!forceColor)
             {
                 if (!body.Enabled)
                 {
@@ -35,35 +49,29 @@ namespace Barotrauma
                 {
                     color = Color.Blue;
                 }
-
-                if (targetPosition != null)
-                {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)targetPosition);
-                    if (Submarine != null) pos += Submarine.DrawPosition;
-
-                    GUI.DrawRectangle(spriteBatch,
-                        new Vector2(pos.X - 5, -(pos.Y + 5)),
-                        Vector2.One * 10.0f, Color.Red, false, 0, 3);
-                }
-
-                if (offsetFromTargetPos != Vector2.Zero)
-                {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
-                    if (Submarine != null) pos += Submarine.DrawPosition;
-
-                    GUI.DrawLine(spriteBatch,
-                        new Vector2(pos.X, -pos.Y),
-                        new Vector2(DrawPosition.X, -DrawPosition.Y),
-                        Color.Cyan, 0, 5);
-                }
             }
 
-            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
-        }
+            if (targetPosition != null)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)targetPosition);
+                if (Submarine != null) pos += Submarine.DrawPosition;
 
-        public void DebugDraw(SpriteBatch spriteBatch, Color color)
-        {
-            if (bodyShapeTexture == null)
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(pos.X - 5, -(pos.Y + 5)),
+                    Vector2.One * 10.0f, Color.Red, false, 0, 3);
+            }
+
+            if (offsetFromTargetPos != Vector2.Zero)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
+                if (Submarine != null) pos += Submarine.DrawPosition;
+
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(pos.X, -pos.Y),
+                    new Vector2(DrawPosition.X, -DrawPosition.Y),
+                    Color.Cyan, 0, 5);
+            }
+            if (bodyShapeTexture == null && IsValidShape(radius, height, width))
             {
                 switch (BodyShape)
                 {
@@ -85,6 +93,7 @@ namespace Barotrauma
                             break;
                         }
                     case Shape.Capsule:
+                    case Shape.HorizontalCapsule:
                         {
                             float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(radius), ConvertUnits.ToDisplayUnits(Math.Max(height, width)));
                             if (maxSize > 128.0f)
@@ -112,11 +121,13 @@ namespace Barotrauma
                         }
                         bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale));
                         break;
+                    default:
+                        throw new NotImplementedException();
                 }
             }
 
             float rot = -DrawRotation;
-            if (bodyShape == Shape.Capsule && width > height)
+            if (bodyShape == Shape.HorizontalCapsule)
             {
                 rot -= MathHelper.PiOver2;
             }

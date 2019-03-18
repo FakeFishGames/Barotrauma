@@ -8,8 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        public const int MaxInventoryCount = 4;
-
         private List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 
@@ -18,14 +16,15 @@ namespace Barotrauma.Items.Components
         private ushort[] itemIds;
 
         //how many items can be contained
+        private int capacity;
         [Serialize(5, false)]
         public int Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1); }
         }
-        private int capacity;
 
+        private bool hideItems;
         [Serialize(true, false)]
         public bool HideItems
         {
@@ -36,61 +35,26 @@ namespace Barotrauma.Items.Components
                 Drawable = !hideItems;
             }
         }
-        private bool hideItems;
-
-        [Serialize(false, false)]
+        
+        [Serialize(true, false)]
         public bool DrawInventory
         {
-            get { return drawInventory; }
-            set { drawInventory = value; }
+            get;
+            set;
         }
-        private bool drawInventory;
 
-        //the position of the first item in the container
-        [Serialize("0.0,0.0", false)]
-        public Vector2 ItemPos
+
+        [Serialize(false, false)]
+        public bool AutoInteractWithContained
         {
-            get { return itemPos; }
-            set { itemPos = value; }
+            get;
+            set;
         }
-        private Vector2 itemPos;
 
-        //item[i].Pos = itemPos + itemInterval*i 
-        [Serialize("0.0,0.0", false)]
-        public Vector2 ItemInterval
-        {
-            get { return itemInterval; }
-            set { itemInterval = value; }
-        }
-        private Vector2 itemInterval;
-
-        [Serialize(0.0f, false)]
-        public float ItemRotation
-        {
-            get { return MathHelper.ToDegrees(itemRotation); }
-            set { itemRotation = MathHelper.ToRadians(value); }
-        }
-        private float itemRotation;
-
-
-        [Serialize("0.5,0.9", false)]
-        public Vector2 HudPos
-        {
-            get { return hudPos; }
-            set 
-            { 
-                hudPos = value;
-            }
-        }
-        private Vector2 hudPos;
-
+        [Serialize("0.5,0.5", false)]
+        public Vector2 HudPos { get; set; }
         [Serialize(5, false)]
-        public int SlotsPerRow
-        {
-            get { return slotsPerRow; }
-            set { slotsPerRow = value; }
-        }
-        private int slotsPerRow;
+        public int SlotsPerRow { get; set; }
 
         public List<RelatedItem> ContainableItems
         {
@@ -100,7 +64,7 @@ namespace Barotrauma.Items.Components
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            Inventory = new ItemInventory(item, this, capacity, hudPos, slotsPerRow);            
+            Inventory = new ItemInventory(item, this, capacity, HudPos, SlotsPerRow);            
             containableItems = new List<RelatedItem>();
             
             foreach (XElement subElement in element.Elements())
@@ -108,17 +72,23 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "containable":
-                        RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable == null) continue;
-                        
+                        RelatedItem containable = RelatedItem.Load(subElement, item.Name);
+                        if (containable == null)
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
+                            continue;
+                        }
                         containableItems.Add(containable);
-
                         break;
                 }
             }
 
+            InitProjSpecific(element);
+
             itemsWithStatusEffects = new List<Pair<Item, StatusEffect>>();
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public void OnItemContained(Item containedItem)
         {
@@ -129,7 +99,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    itemsWithStatusEffects.Add(Pair<Item, StatusEffect>.Create(containedItem, effect));
+                    itemsWithStatusEffects.Add(new Pair<Item, StatusEffect>(containedItem, effect));
                 }
             }
 
@@ -167,15 +137,43 @@ namespace Barotrauma.Items.Components
 
                 StatusEffect effect = itemAndEffect.Second;
 
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))                 
+                if (effect.HasTargetType(StatusEffect.TargetType.This))                 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) 
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained)) 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
             }
         }
 
+        public override bool Select(Character character)
+        {
+            if (AutoInteractWithContained)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    if (contained.TryInteract(character))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return base.Select(character);
+        }
+
         public override bool Pick(Character picker)
         {
+            if (AutoInteractWithContained)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    if (contained.TryInteract(picker))
+                    {
+                        return true;
+                    }
+                }
+            }
+
             return (picker != null);
         }
 
@@ -239,6 +237,11 @@ namespace Barotrauma.Items.Components
                 Item item = Entity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
 
+                if (i >= Inventory.Capacity)
+                {
+                    continue;
+                }
+
                 Inventory.TryPutItem(item, i, false, false, null, false);
             }
 
@@ -251,12 +254,53 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+#if CLIENT
+            inventoryTopSprite?.Remove();
+            inventoryBackSprite?.Remove();
+            inventoryBottomSprite?.Remove();
+            ContainedStateIndicator?.Remove();
+
+            if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
+            {
+                string itemNames = string.Empty;
+
+                foreach (Item item in Inventory.Items)
+                {
+                    if (item == null) continue;
+                    itemNames += item.Name + "\n";
+                }
+
+                if (itemNames.Length > 0)
+                {
+                    var msgBox = new GUIMessageBox(Item.Name, TextManager.Get("DeletingContainerWithItems") + itemNames, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                    {
+                        Inventory.DeleteAllItems();
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    msgBox.Buttons[1].OnClicked = (btn, userdata) =>
+                    {
+                        foreach (Item item in Inventory.Items)
+                        {
+                            if (item == null) continue;
+                            item.Drop();
+                        }
+                        msgBox.Close();
+                        return true;
+                    };
+                }
+                return;
+            }
+#endif
+
             foreach (Item item in Inventory.Items)
             {
                 if (item == null) continue;
                 item.Drop();
-            }
-        }
+            }               
+        }        
 
         public override void Load(XElement componentElement)
         {

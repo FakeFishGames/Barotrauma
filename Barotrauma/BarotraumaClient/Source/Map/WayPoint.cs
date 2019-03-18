@@ -45,7 +45,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    Color.Green);
+                    Color.Green, width: 5);
             }
         }
 
@@ -67,9 +67,7 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD();
             }
-
-            editingHUD.Update((float)Timing.Step);
-
+            
             if (PlayerInput.LeftButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -87,14 +85,9 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null) editingHUD.Draw(spriteBatch);
-        }
-
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
-            GUITextBlock spawnTypeText = button.Parent as GUITextBlock;
+            GUITextBlock spawnTypeText = button.Parent.GetChildByUserData("spawntypetext") as GUITextBlock;
 
             spawnType += (int)button.UserData;
 
@@ -119,30 +112,12 @@ namespace Barotrauma
         private bool EnterIDCardTags(GUITextBox textBox, string text)
         {
             IdCardTags = text.Split(',');
-            textBox.Text = text;
-            textBox.Color = Color.Green;
-
+            textBox.Text = string.Join(",", IdCardTags);
+            textBox.Flash(Color.Green);
             textBox.Deselect();
-
             return true;
         }
-
-        private bool EnterAssignedJob(GUITextBox textBox, string text)
-        {
-            string trimmedName = text.ToLowerInvariant().Trim();
-            assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == trimmedName);
-
-            if (assignedJob != null && trimmedName != TextManager.Get("None").ToLowerInvariant())
-            {
-                textBox.Color = Color.Green;
-                textBox.Text = (assignedJob == null) ? TextManager.Get("None") : assignedJob.Name;
-            }
-
-            textBox.Deselect();
-
-            return true;
-        }
-
+        
         private bool TextBoxChanged(GUITextBox textBox, string text)
         {
             textBox.Color = Color.Red;
@@ -153,66 +128,97 @@ namespace Barotrauma
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int width = 500;
-            int height = spawnType == SpawnType.Path ? 100 : 200;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
+            int height = spawnType == SpawnType.Path ? 80 : 200;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, height));
-            editingHUD.Padding = new Vector4(10, 10, 20, 0);
-            editingHUD.UserData = this;
+            editingHUD = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
+
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), editingHUD.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
             if (spawnType == SpawnType.Path)
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Editing")+" " +TextManager.Get("Waypoint"), "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 20, 100, 20), TextManager.Get("LinkWaypoint"), "", editingHUD);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Editing") + " " + TextManager.Get("Waypoint"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("LinkWaypoint"));
             }
             else
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Editing") + " " + TextManager.Get("Spawnpoint"), "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 25, 100, 20), TextManager.Get("SpawnType") + ": ", "", editingHUD);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Editing") + " " + TextManager.Get("Spawnpoint"));
+                
+                var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), spawnTypeContainer.RectTransform), TextManager.Get("SpawnType") + ": ");
 
-                var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), "", Alignment.Right, Alignment.TopLeft, editingHUD);
+                var button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "-")
+                {
+                    UserData = -1,
+                    OnClicked = ChangeSpawnType
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), spawnTypeContainer.RectTransform), spawnType.ToString(), textAlignment: Alignment.Center)
+                {
+                    UserData = "spawntypetext"
+                };
+                button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "+")
+                {
+                    UserData = 1,
+                    OnClicked = ChangeSpawnType
+                };
 
-                var button = new GUIButton(new Rectangle(-30, 0, 20, 20), "-", Alignment.Right, "", spawnTypeText);
-                button.UserData = -1;
-                button.OnClicked = ChangeSpawnType;
 
-                button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, "", spawnTypeText);
-                button.UserData = 1;
-                button.OnClicked = ChangeSpawnType;
+                var descText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
+                    TextManager.Get("IDCardDescription"), font: GUI.SmallFont);
+                GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), descText.RectTransform, Anchor.CenterRight), idCardDesc)
+                {
+                    MaxTextLength = 150,
+                    OnEnterPressed = EnterIDCardDesc,
+                    ToolTip = TextManager.Get("IDCardDescriptionTooltip")
+                };
+                propertyBox.OnTextChanged += TextBoxChanged;
 
-                y = 40 + 20;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("IDCardDescription"), "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(150, y, 0, 20), "", editingHUD);
-                propertyBox.MaxTextLength = 150;
-                propertyBox.Text = idCardDesc;
-                propertyBox.OnEnterPressed = EnterIDCardDesc;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = TextManager.Get("IDCardDescriptionTooltip");
+                var tagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
+                    TextManager.Get("IDCardTags"), font: GUI.SmallFont);
+                propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), tagsText.RectTransform, Anchor.CenterRight), string.Join(", ", idCardTags))
+                {
+                    MaxTextLength = 60,
+                    OnEnterPressed = EnterIDCardTags,
+                    ToolTip = TextManager.Get("IDCardTagsTooltip")
+                };
+                propertyBox.OnTextChanged += TextBoxChanged;
 
-                y = y + 30;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("IDCardTags"), "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                propertyBox = new GUITextBox(new Rectangle(150, y, 0, 20), "", editingHUD);
-                propertyBox.MaxTextLength = 60;
-                propertyBox.Text = string.Join(", ", idCardTags);
-                propertyBox.OnEnterPressed = EnterIDCardTags;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = TextManager.Get("IDCardTagsTooltip");
-
-                y = y + 30;
-
-                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("SpawnpointJobs"), "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                propertyBox = new GUITextBox(new Rectangle(150, y, 0, 20), "", editingHUD);
-                propertyBox.MaxTextLength = 60;
-                propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
-                propertyBox.OnEnterPressed = EnterAssignedJob;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = TextManager.Get("SpawnpointJobsTooltip");
-
+                var jobsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
+                    TextManager.Get("SpawnpointJobs"), font: GUI.SmallFont)
+                {
+                    ToolTip = TextManager.Get("SpawnpointJobsTooltip")
+                };
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), jobsText.RectTransform, Anchor.CenterRight))
+                {
+                    ToolTip = TextManager.Get("SpawnpointJobsTooltip"),
+                    OnSelected = (selected, userdata) =>
+                    {
+                        assignedJob = userdata as JobPrefab;
+                        return true;
+                    }
+                };
+                jobDropDown.AddItem(TextManager.Get("Any"), null);
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                {
+                    jobDropDown.AddItem(jobPrefab.Name, jobPrefab);
+                }
+                jobDropDown.SelectItem(assignedJob);
             }
             
-            y = y + 30;
+            PositionEditingHUD();
 
             return editingHUD;
         }        

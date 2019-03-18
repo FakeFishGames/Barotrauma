@@ -10,39 +10,57 @@ namespace Barotrauma
     {
         public static GUIComponent StartCampaignSetup()
         {
-            GUIFrame background = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
+            GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
-            GUIFrame setupBox = new GUIFrame(new Rectangle(0, 0, 500, 500), null, Alignment.Center, "", background);
-            setupBox.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-            new GUITextBlock(new Rectangle(0, 0, 10, 10), "Campaign Setup", "", setupBox, GUI.LargeFont);
-            setupBox.Padding = new Vector4(20.0f, 80.0f, 20.0f, 20.0f);
+            GUIFrame setupBox = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.45f), background.RectTransform, Anchor.Center) { MinSize = new Point(500, 500) });
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), setupBox.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
 
-            var newCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox);
-            var loadCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform,Anchor.TopCenter),
+                TextManager.Get("CampaignSetup"), font: GUI.LargeFont);
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f
+            };
+
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), paddedFrame.RectTransform, Anchor.BottomLeft), style: null);
+            
+            var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
+            var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
             var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer);
 
-            var newCampaignButton = new GUIButton(new Rectangle(0, 0, 120, 20), "New campaign", "", setupBox);
-            newCampaignButton.OnClicked += (btn, obj) =>
+            var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
+                TextManager.Get("NewCampaign"))
             {
-                newCampaignContainer.Visible = true;
-                loadCampaignContainer.Visible = false;
-                return true;
+                OnClicked = (btn, obj) =>
+                {
+                    newCampaignContainer.Visible = true;
+                    loadCampaignContainer.Visible = false;
+                    return true;
+                }
             };
 
-            var loadCampaignButton = new GUIButton(new Rectangle(130, 0, 120, 20), "Load campaign", "", setupBox);
-            loadCampaignButton.OnClicked += (btn, obj) =>
+            var loadCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.00f), buttonContainer.RectTransform),
+                TextManager.Get("LoadCampaign"))
             {
-                newCampaignContainer.Visible = false;
-                loadCampaignContainer.Visible = true;
-                return true;
+                OnClicked = (btn, obj) =>
+                {
+                    newCampaignContainer.Visible = false;
+                    loadCampaignContainer.Visible = true;
+                    return true;
+                }
             };
 
             loadCampaignContainer.Visible = false;
 
             campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
             {
-                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, 
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
                 var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.GenerateMap(mapSeed);
                 campaign.SetDelegates();
@@ -58,6 +76,12 @@ namespace Barotrauma
             campaignSetupUI.LoadGame = (string fileName) =>
             {
                 SaveUtil.LoadGame(fileName);
+                if (!(GameMain.GameSession.GameMode is MultiPlayerCampaign))
+                {
+                    DebugConsole.ThrowError("Failed to load the campaign. The save file appears to be for a single player campaign.");
+                    return;
+                }
+
                 var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.LastSaveID++;
 
@@ -67,19 +91,22 @@ namespace Barotrauma
                 campaign.Map.SelectRandomLocation(true);
             };
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 120, 30), "Cancel", Alignment.BottomLeft, "", setupBox);
-            cancelButton.OnClicked += (btn, obj) =>
+            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), paddedFrame.RectTransform, Anchor.BottomLeft), TextManager.Get("Cancel"))
             {
-                background.Visible = false;
-                int otherModeIndex = 0;
-                for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.children.Count; otherModeIndex++)
+                OnClicked = (btn, obj) =>
                 {
-                    if (GameMain.NetLobbyScreen.ModeList.children[otherModeIndex].UserData is MultiPlayerCampaign) continue;
-                    break;
-                }
+                    //find the first mode that's not multiplayer campaign and switch to that
+                    background.Visible = false;
+                    int otherModeIndex = 0;
+                    for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Content.CountChildren; otherModeIndex++)
+                    {
+                        if (GameMain.NetLobbyScreen.ModeList.Content.GetChild(otherModeIndex).UserData is MultiPlayerCampaign) continue;
+                        break;
+                    }
 
-                GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
-                return true;
+                    GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
+                    return true;
+                }
             };
 
             return background;
@@ -90,12 +117,13 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.itemPrefab));
-                msg.Write((UInt16)pi.quantity);
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
+                msg.Write((UInt16)pi.Quantity);
             }
         }
 
@@ -108,6 +136,7 @@ namespace Barotrauma
             string mapSeed = msg.ReadString();
             UInt16 currentLocIndex = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            byte selectedMissionIndex = msg.ReadByte();
 
             int money = msg.ReadInt32();
 
@@ -120,12 +149,20 @@ namespace Barotrauma
                 purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
             }
 
+            bool hasCharacterData = msg.ReadBoolean();
+            CharacterInfo myCharacterInfo = null;
+            if (hasCharacterData)
+            {
+                myCharacterInfo = CharacterInfo.ClientRead(Character.HumanConfigFile, msg);
+            }
+            
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaignID != campaign.CampaignID)
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                GameMain.GameSession = new GameSession(null, savePath,
+                    GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
 
                 campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
                 campaign.CampaignID = campaignID;
@@ -155,9 +192,20 @@ namespace Barotrauma
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                campaign.Map.SelectMission(selectedMissionIndex);
 
                 campaign.Money = money;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);
+
+                if (myCharacterInfo != null)
+                {
+                    GameMain.NetworkMember.CharacterInfo = myCharacterInfo;
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(myCharacterInfo);
+                }
+                else
+                {
+                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+                }
 
                 campaign.lastUpdateID = updateID;
             }

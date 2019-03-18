@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
     enum ClientPacketHeader
     {
         REQUEST_AUTH,   //ask the server if a password is needed, if so we'll get nonce for encryption
+        REQUEST_STEAMAUTH, //the same as REQUEST_AUTH, but in addition we want to authenticate the player's Steam ID
         REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
@@ -45,6 +46,7 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
+        ACHIEVEMENT,        //give the client a steam achievement
 
         FILE_TRANSFER,
 
@@ -60,7 +62,7 @@ namespace Barotrauma.Networking
         VOTE,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        ENTITY_EVENT_INITIAL,
     }
 
     enum VoteType
@@ -69,7 +71,29 @@ namespace Barotrauma.Networking
         Sub,
         Mode,
         EndRound,
-        Kick
+        Kick,
+        StartRound
+    }
+
+    enum DisconnectReason
+    {
+        Unknown,
+        Banned,
+        Kicked,
+        ServerShutdown,
+        ServerFull,
+        AuthenticationRequired,
+        SteamAuthenticationRequired,
+        SteamAuthenticationFailed,
+        SessionTaken,
+        TooManyFailedLogins,
+        NoName,
+        InvalidName,
+        NameTaken,
+        InvalidVersion,
+        MissingContentPackage,
+        IncompatibleContentPackage,
+        NotOnWhitelist,
     }
 
     abstract partial class NetworkMember
@@ -78,7 +102,7 @@ namespace Barotrauma.Networking
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
 
-        public NetPeer netPeer
+        public NetPeer NetPeer
         {
             get;
             protected set;
@@ -136,6 +160,12 @@ namespace Barotrauma.Networking
             protected set;
         }
 
+        public NetPeerConfiguration NetPeerConfiguration
+        {
+            get;
+            protected set;
+        }
+
         public NetworkMember()
         {
             InitProjSpecific();
@@ -155,17 +185,15 @@ namespace Barotrauma.Networking
             return radioComponent.HasRequiredContainedItems(false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName="", Character senderCharacter = null)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null)
         {
             AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter));
         }
-        
+
         public void AddChatMessage(ChatMessage message)
         {
             GameServer.Log(message.TextWithSender, ServerLog.MessageType.Chat);
-
-            string displayedText = message.Text;
-
+            
             if (message.Sender != null && !message.Sender.IsDead)
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
@@ -173,42 +201,7 @@ namespace Barotrauma.Networking
 
 #if CLIENT
             GameMain.NetLobbyScreen.NewChatMessage(message);
-
-            while (chatBox.CountChildren > 20)
-            {
-                chatBox.RemoveChild(chatBox.children[0]);
-            }
-
-            if (!string.IsNullOrWhiteSpace(message.SenderName))
-            {
-                displayedText = (message.Type == ChatMessageType.Private ? "[PM] " : "" ) + message.SenderName + ": " + displayedText;
-            }
-            
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 40, 0), displayedText,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
-                Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
-            msg.UserData = message.SenderName;
-
-            msg.Padding = new Vector4(20.0f, 0, 0, 0);
-
-            float prevSize = chatBox.BarSize;
-
-            msg.Padding = new Vector4(20, 0, 0, 0);
-            chatBox.AddChild(msg);
-
-            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
-
-            GUISoundType soundType = GUISoundType.Message;
-            if (message.Type == ChatMessageType.Radio)
-            {
-                soundType = GUISoundType.RadioMessage;
-            }
-            else if (message.Type == ChatMessageType.Dead)
-            {
-                soundType = GUISoundType.DeadMessage;
-            }
-
-            GUI.PlayUISound(soundType);
+            chatBox.AddMessage(message);
 #endif
         }
 
@@ -221,44 +214,7 @@ namespace Barotrauma.Networking
         public virtual void Update(float deltaTime) 
         {
 #if CLIENT
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatMsgBox : GameMain.NetLobbyScreen.TextBox);
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
-            {
-                msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
-
-                if (!GUI.DisableHUD)
-                {
-                    inGameHUD.Update(deltaTime);
-                    GameMain.GameSession.CrewManager.Update(deltaTime);
-                }
-                
-                if (Character.Controlled == null || Character.Controlled.IsDead)
-                {
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-                    GameMain.LightManager.LosEnabled = false;
-                }
-            }
-
-            //tab doesn't autoselect the chatbox when debug console is open, 
-            //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
-            {
-                if (msgBox.Selected)
-                {
-                    msgBox.Text = "";
-                    msgBox.Deselect();
-                }
-                else
-                {
-                    msgBox.Select();
-                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
-                    {
-                        msgBox.Text = "r; ";
-                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
-                    }
-                }
-            }
+            UpdateHUD(deltaTime);            
 #endif
         }
 

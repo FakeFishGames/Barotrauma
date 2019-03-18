@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -146,7 +147,7 @@ namespace Barotrauma.Items.Components
 
                 limb.Disabled = true;
                 
-                Vector2 worldPosition = lb.position + new Vector2(item.WorldRect.X, item.WorldRect.Y);
+                Vector2 worldPosition = new Vector2(item.WorldRect.X, item.WorldRect.Y) + lb.position * item.Scale;
                 Vector2 diff = worldPosition - limb.WorldPosition;
 
                 limb.PullJointEnabled = true;
@@ -225,7 +226,7 @@ namespace Barotrauma.Items.Components
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        centerPos = new Vector2(targetItem.WorldRect.X + turret.BarrelPos.X, targetItem.WorldRect.Y - turret.BarrelPos.Y);
+                        centerPos = new Vector2(targetItem.WorldRect.X + turret.TransformedBarrelPos.X, targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
 
@@ -240,7 +241,7 @@ namespace Barotrauma.Items.Components
 
         private Item GetFocusTarget()
         {
-            item.SendSignal(0, targetRotation.ToString(), "position_out", character);
+            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", character);
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
@@ -259,7 +260,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, "1", "signal_out", picker);
 
 #if CLIENT
-            PlaySound(ActionType.OnUse, item.WorldPosition);
+            PlaySound(ActionType.OnUse, item.WorldPosition, picker);
 #endif
 
             return true;
@@ -308,7 +309,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
             if (dir != Direction.None)
             {
@@ -319,16 +320,32 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < limbPositions.Count; i++)
             {
-                float diff = (item.Rect.X + limbPositions[i].position.X) - item.Rect.Center.X;
+                float diff = (item.Rect.X + limbPositions[i].position.X * item.Scale) - item.Rect.Center.X;
 
                 Vector2 flippedPos =
                     new Vector2(
-                        item.Rect.Center.X - diff - item.Rect.X,
+                        (item.Rect.Center.X - diff - item.Rect.X) / item.Scale,
                         limbPositions[i].position.Y);
 
                 limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
             }
         }
 
+        public override void FlipY(bool relativeToSub)
+        {
+            userPos.Y = -UserPos.Y;
+
+            for (int i = 0; i < limbPositions.Count; i++)
+            {
+                float diff = (item.Rect.Y + limbPositions[i].position.Y) - item.Rect.Center.Y;
+
+                Vector2 flippedPos =
+                    new Vector2(
+                        limbPositions[i].position.X,
+                        item.Rect.Center.Y - diff - item.Rect.Y);
+
+                limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
+            }
+        }
     }
 }

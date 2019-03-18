@@ -9,6 +9,7 @@ namespace Barotrauma.Networking
     {
         public string Name;
         public byte ID;
+        public ulong SteamID;
 
         private float karma = 1.0f;
         public float Karma
@@ -63,6 +64,8 @@ namespace Barotrauma.Networking
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
+
+        public float KickAFKTimer;
         
         public double MidRoundSyncTimeOut;
 
@@ -85,6 +88,8 @@ namespace Barotrauma.Networking
         public JobPrefab AssignedJob;
         
         public float DeleteDisconnectedTimer;
+
+        public HashSet<string> GivenAchievements = new HashSet<string>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
         public List<DebugConsole.Command> PermittedConsoleCommands
@@ -136,8 +141,8 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name, GameServer server)
         {
-            if (name.Contains("\n") || name.Contains("\r")) return false;
-            if (name.Any(c => c == ';' || c == ',' || c == '<' || c == '/')) return false;
+            char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
+            if (name.Any(c => disallowedChars.Contains(c))) return false;
 
             foreach (char character in name)
             {

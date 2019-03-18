@@ -1,5 +1,6 @@
 ﻿using GameAnalyticsSDK.Net;
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -54,11 +55,16 @@ namespace Barotrauma
                 return;
             }
             
-            string contentPackageName = GameMain.Config?.SelectedContentPackage?.Name;
-            if (!string.IsNullOrEmpty(contentPackageName))
+            if (GameMain.Config?.SelectedContentPackages.Count > 0)
             {
-                GameAnalytics.AddDesignEvent("ContentPackage:" +
-                    contentPackageName.Replace(":", "").Substring(0, Math.Min(32, contentPackageName.Length)));
+                StringBuilder sb = new StringBuilder("ContentPackage:");
+                int i = 0;
+                foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
+                {
+                    sb.Append(cp.Name.Replace(":", "").Substring(0, Math.Min(32, cp.Name.Length)));
+                    if (i < GameMain.Config.SelectedContentPackages.Count - 1) sb.Append(",");
+                }
+                GameAnalytics.AddDesignEvent(sb.ToString());
             }
         }
 

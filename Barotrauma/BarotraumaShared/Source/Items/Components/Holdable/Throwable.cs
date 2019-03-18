@@ -24,6 +24,10 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             //throwForce = ToolBox.GetAttributeFloat(element, "throwforce", 1.0f);
+            if (aimPos == Vector2.Zero)
+            {
+                aimPos = new Vector2(0.6f, 0.1f);
+            }
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -77,22 +81,21 @@ namespace Barotrauma.Items.Components
             {
                 if (picker.IsKeyDown(InputType.Aim))
                 {
-                    throwPos = (float)System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.Pi * 0.7f);
-
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.0f), new Vector2(-0.3f, 0.2f), false, throwPos);
+                    throwPos = MathUtils.WrapAnglePi(System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.PiOver2));
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, throwPos);
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, false, holdAngle);
+                    throwPos = 0;
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, false, holdAngle);
                 }
             }
             else
             {
-                throwPos -= deltaTime * 15.0f;
+                throwPos = MathUtils.WrapAnglePi(throwPos - deltaTime * 15.0f);
+                ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, throwPos);
 
-                ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, 0.0f), new Vector2(-0.3f, 0.2f), false, throwPos);
-
-                if (throwPos < -0.0)
+                if (throwPos < 0)
                 {
                     Vector2 throwVector = Vector2.Normalize(picker.CursorWorldPosition - picker.WorldPosition);
                     //throw upwards if cursor is at the position of the character
@@ -108,6 +111,7 @@ namespace Barotrauma.Items.Components
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
+                    throwPos = 0;
                     throwDone = true;
                     ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, picker); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
                     throwing = false;

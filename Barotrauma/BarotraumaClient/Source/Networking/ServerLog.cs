@@ -6,41 +6,52 @@ namespace Barotrauma.Networking
 {
     partial class ServerLog
     {
-        public GUIFrame LogFrame;
-
+        public GUIButton LogFrame;
         private GUIListBox listBox;
 
         public void CreateLogFrame()
         {
-            LogFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
+            LogFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) LogFrame = null; return true; }
+            };
+            new GUIButton(new RectTransform(Vector2.One, LogFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
+            {
+                LogFrame = null;
+                return true;
+            };
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 600, 420), null, Alignment.Center, "", LogFrame);
-            innerFrame.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.4f), LogFrame.RectTransform, Anchor.Center) { MinSize = new Point(600, 420) });
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.03f) }, style: null);
 
-            new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, innerFrame, false, GUI.SmallFont);
-
-            GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, "", innerFrame);
-            searchBox.Font = GUI.SmallFont;
-            searchBox.OnTextChanged = (textBox, text) =>
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), "Filter", font: GUI.SmallFont);            
+            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), font: GUI.SmallFont);
+            searchBox.OnTextChanged += (textBox, text) =>
             {
                 msgFilter = text;
                 FilterMessages();
                 return true;
             };
-            GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
+            GUI.KeyboardDispatcher.Subscriber = searchBox;
 
-            var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, "", innerFrame);
-            clearButton.OnClicked = ClearFilter;
-            clearButton.UserData = searchBox;
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.05f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), "x")
+            {
+                OnClicked = ClearFilter,
+                UserData = searchBox
+            };
 
-            listBox = new GUIListBox(new Rectangle(0, 30, 450, 340), "", Alignment.TopRight, innerFrame);
+            listBox = new GUIListBox(new RectTransform(new Vector2(0.75f, 0.95f), paddedFrame.RectTransform, Anchor.BottomRight));
+
+            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 0.95f), paddedFrame.RectTransform, Anchor.BottomLeft));
 
             int y = 30;
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, innerFrame);
-                tickBox.Selected = true;
-                tickBox.TextColor = messageColor[(int)msgType];
+                var tickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform), messageTypeName[(int)msgType], font: GUI.SmallFont)
+                {
+                    Selected = true,
+                    TextColor = messageColor[(int)msgType]
+                };
 
                 tickBox.OnSelected += (GUITickBox tb) =>
                 {
@@ -66,7 +77,7 @@ namespace Barotrauma.Networking
 
             if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) listBox.BarScroll = 1.0f;
 
-            GUIButton closeButton = new GUIButton(new Rectangle(-100, 10, 100, 15), "Close", Alignment.BottomRight, "", innerFrame);
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), innerFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.02f, 0.03f) }, "Close");
             closeButton.OnClicked = (button, userData) =>
             {
                 LogFrame = null;
@@ -80,8 +91,8 @@ namespace Barotrauma.Networking
         {
             float prevSize = listBox.BarSize;
 
-            var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, "", Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
-            textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), 
+                line.Text, wrap: true, font: GUI.SmallFont);
             textBlock.TextColor = messageColor[(int)line.Type];
             textBlock.Visible = !msgTypeHidden[(int)line.Type];
             textBlock.CanBeFocused = false;
@@ -94,7 +105,7 @@ namespace Barotrauma.Networking
         {
             string filter = msgFilter == null ? "" : msgFilter.ToLower();
 
-            foreach (GUIComponent child in listBox.children)
+            foreach (GUIComponent child in listBox.Content.Children)
             {
                 var textBlock = child as GUITextBlock;
                 if (textBlock == null) continue;
