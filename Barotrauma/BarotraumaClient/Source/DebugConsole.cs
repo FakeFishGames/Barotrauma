@@ -1050,6 +1050,189 @@ namespace Barotrauma
                 TextManager.WriteToCSV();
                 NPCConversation.WriteToCSV();
             }));
+#endif
+
+            commands.Add(new Command("cleanbuild", "", (string[] args) =>
+            {
+                GameMain.Config.MusicVolume = 0.5f;
+                GameMain.Config.SoundVolume = 0.5f;
+                NewMessage("Music and sound volume set to 0.5", Color.Green);
+
+            commands.Add(new Command("camerasettings", "camerasettings [defaultzoom] [zoomsmoothness] [movesmoothness] [minzoom] [maxzoom]: debug command for testing camera settings. The values default to 1.1, 8.0, 8.0, 0.1 and 2.0.", (string[] args) =>
+            {
+                float defaultZoom = Screen.Selected.Cam.DefaultZoom;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out defaultZoom);
+
+                float zoomSmoothness = Screen.Selected.Cam.ZoomSmoothness;
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out zoomSmoothness);
+                float moveSmoothness = Screen.Selected.Cam.MoveSmoothness;
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out moveSmoothness);
+
+                float minZoom = Screen.Selected.Cam.MinZoom;
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out minZoom);
+                float maxZoom = Screen.Selected.Cam.MaxZoom;
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out maxZoom);
+
+                Screen.Selected.Cam.DefaultZoom = defaultZoom;
+                Screen.Selected.Cam.ZoomSmoothness = zoomSmoothness;
+                Screen.Selected.Cam.MoveSmoothness = moveSmoothness;
+                Screen.Selected.Cam.MinZoom = minZoom;
+                Screen.Selected.Cam.MaxZoom = maxZoom;
+            }));
+
+            commands.Add(new Command("waterparams", "waterparams [distortionscalex] [distortionscaley] [distortionstrengthx] [distortionstrengthy] [bluramount]: default 0.5 0.5 0.5 0.5 1", (string[] args) =>
+            {
+                float distortScaleX = 0.5f, distortScaleY = 0.5f;
+                float distortStrengthX = 0.5f, distortStrengthY = 0.5f;
+                float blurAmount = 0.0f;
+                if (args.Length > 0) float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleX);
+                if (args.Length > 1) float.TryParse(args[1], NumberStyles.Number, CultureInfo.InvariantCulture, out distortScaleY);
+                if (args.Length > 2) float.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthX);
+                if (args.Length > 3) float.TryParse(args[3], NumberStyles.Number, CultureInfo.InvariantCulture, out distortStrengthY);
+                if (args.Length > 4) float.TryParse(args[4], NumberStyles.Number, CultureInfo.InvariantCulture, out blurAmount);
+                WaterRenderer.DistortionScale = new Vector2(distortScaleX, distortScaleY);
+                WaterRenderer.DistortionStrength = new Vector2(distortStrengthX, distortStrengthY);
+                WaterRenderer.BlurAmount = blurAmount;
+            }));
+
+
+            commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
+            {
+                //TODO: maybe do this automatically during loading when possible?
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s) first!");
+                    }
+                    else
+                    {
+                        foreach (var mapEntity in MapEntity.SelectedList)
+                        {
+                            if (mapEntity is Item item)
+                            {
+                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale),
+                                    (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
+                            }
+                            else if (mapEntity is Structure structure)
+                            {
+                                if (!structure.ResizeHorizontal)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        (int)structure.Prefab.ScaledSize.X,
+                                        structure.Rect.Height);
+                                }
+                                if (!structure.ResizeVertical)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        structure.Rect.Width,
+                                        (int)structure.Prefab.ScaledSize.Y);
+                                }
+                            }
+                        }
+                    }
+                }
+            }, isCheat: false));
+#endif
+
+                GameMain.Config.SaveNewPlayerConfig();
+
+            commands.Add(new Command("loadtexts", "loadtexts [sourcefile] [destinationfile]: Loads all lines of text from a given .txt file and inserts them sequientially into the elements of an xml file. If the file paths are omitted, EnglishVanilla.txt and EnglishVanilla.xml are used.", (string[] args) =>
+            {
+                string sourcePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.txt";
+                string destinationPath = args.Length > 1 ? args[1] : "Content/Texts/EnglishVanilla.xml";
+
+                string[] lines;
+                try
+                {
+                    lines = File.ReadAllLines(sourcePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Reading the file \"" + sourcePath + "\" failed.", e);
+                    return;
+                }
+                var doc = XMLExtensions.TryLoadXml(destinationPath);
+                int i = 0;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (i >= lines.Length)
+                    {
+                        ThrowError("Error while loading texts to the xml file. The xml has more elements than the number of lines in the text file.");
+                        return;
+                    }
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
+                    files.Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("updatetextfile", "updatetextfile [sourcefile] [destinationfile]: Inserts all the xml elements that are only present in the source file into the destination file. Can be used to update outdated translation files more easily.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                string sourcePath = args[0];
+                string destinationPath = args[1];
+
+                var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
+                var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                XElement destinationElement = destinationDoc.Root.Elements().First();
+                foreach (XElement element in sourceDoc.Root.Elements())
+                {
+                    if (destinationDoc.Root.Element(element.Name) == null)
+                    {
+                        element.Value = "!!!!!!!!!!!!!" + element.Value;
+                        destinationElement.AddAfterSelf(element);
+                    }
+                    XNode nextNode = destinationElement.NextNode;
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
+                    destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
+                }
+                File.WriteAllLines(filePath, lines);
+            }));
+#if DEBUG
+            commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
+            {
+                if (args.Length != 1) return;
+                TextManager.CheckForDuplicates(args[0]);
+            }));
+
+            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            {
+                TextManager.WriteToCSV();
+                NPCConversation.WriteToCSV();
+            }));
 
             commands.Add(new Command("loadtexts", "loadtexts [sourcefile] [destinationfile]: Loads all lines of text from a given .txt file and inserts them sequientially into the elements of an xml file. If the file paths are omitted, EnglishVanilla.txt and EnglishVanilla.xml are used.", (string[] args) =>
             {

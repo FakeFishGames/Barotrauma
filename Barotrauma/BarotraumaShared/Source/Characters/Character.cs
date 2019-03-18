@@ -1035,6 +1035,61 @@ namespace Barotrauma
 
             ResetSpeedMultiplier(); // Reset, items will set the value before the next update
 
+            return targetMovement;
+        }
+
+        /// <summary>
+        /// Can be used to modify the character's speed via StatusEffects
+        /// </summary>
+        public float SpeedMultiplier
+        {
+            get
+            {
+                if (speedMultipliers.Count == 0) return 1f;
+
+                float greatestPositive = 1f;
+                float greatestNegative = 1f;
+
+                for (int i = 0; i < speedMultipliers.Count; i++)
+                {
+                    float val = speedMultipliers[i];
+                    if (val < 1f)
+                    {
+                        if (val < greatestNegative)
+                        {
+                            greatestNegative = val;
+                        }
+                    }
+                    else
+                    {
+                        if (val > greatestPositive)
+                        {
+                            greatestPositive = val;
+                        }
+                    }
+                }
+
+                return greatestPositive - (1f - greatestNegative);
+            }
+            set
+            {
+                if (value == 1f) return;
+                speedMultipliers.Add(value);
+            }
+        }
+
+        public void ResetSpeedMultiplier()
+        {
+            speedMultipliers.Clear();
+        }
+
+        /// <summary>
+        /// Applies temporary limits to the speed (damage).
+        /// </summary>
+        public float GetCurrentMaxSpeed(bool run)
+        {
+            float currMaxSpeed = AnimController.GetCurrentSpeed(run);
+
             //?
             //currMaxSpeed *= 1.5f;
 
@@ -1050,6 +1105,38 @@ namespace Barotrauma
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
                 currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+            }
+
+            return currMaxSpeed;
+        }
+
+        public void Control(float deltaTime, Camera cam)
+        {
+            ViewTarget = null;
+            if (!AllowInput) return;
+
+            Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
+            if (Controlled == this)
+            {
+                SmoothedCursorPosition = cursorPosition;
+            }
+            else
+            {
+                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
+                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
+            }
+            
+            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
+            {
+                Vector2 targetMovement = GetTargetMovement();
+
+                AnimController.TargetMovement = targetMovement;
+                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
+            }
+
+            if (AnimController is HumanoidAnimController)
+            {
+                ((HumanoidAnimController) AnimController).Crouching = IsKeyDown(InputType.Crouch);
             }
 
             return currMaxSpeed;

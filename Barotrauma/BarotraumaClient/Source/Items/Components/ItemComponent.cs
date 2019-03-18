@@ -184,63 +184,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            public void ApplyTo(RectTransform target)
-            {
-                if (RelativeOffset.HasValue)
-                {
-                    target.RelativeOffset = RelativeOffset.Value;
-                }
-                else if (AbsoluteOffset.HasValue)
-                {
-                    target.AbsoluteOffset = AbsoluteOffset.Value;
-                }
-                if (RelativeSize.HasValue)
-                {
-                    target.RelativeSize = RelativeSize.Value;
-                }
-                else if (AbsoluteSize.HasValue)
-                {
-                    target.NonScaledSize = AbsoluteSize.Value;
-                }
-                if (Anchor.HasValue)
-                {
-                    target.Anchor = Anchor.Value;
-                }
-                if (Pivot.HasValue)
-                {
-                    target.Pivot = Pivot.Value;
-                }
-                else
-                {
-                    target.Pivot = RectTransform.MatchPivotToAnchor(target.Anchor);
-                }
-                target.RecalculateChildren(true, true);
-            }
-        }
-
-        public GUIFrame GuiFrame { get; protected set; }
-
-        [Serialize(false, false)]
-        public bool AllowUIOverlap
-        {
-            get;
-            set;
-        }
-
-        private ItemComponent linkToUIComponent;
-        [Serialize("", false)]
-        public string LinkUIToComponent
-        {
-            get;
-            set;
-        }
-
-        [Serialize(0, false)]
-        public int HudPriority
-        {
-            get;
-            private set;
         }
 
         private bool shouldMuffleLooping;

@@ -300,6 +300,7 @@ namespace Barotrauma
             playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
                 TextManager.Get("PlayYourself"))
             {
+                Selected = true,
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
             };
@@ -794,11 +795,6 @@ namespace Barotrauma
             if (GameMain.Client != null)
             {
                 GameMain.Client.ServerSettings.Voting.ResetVotes(GameMain.Client.ConnectedClients);
-                if (!playYourself.Selected)
-                {
-                    playYourself.Selected = true;
-                    TogglePlayYourself(playYourself);
-                }
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
                 ReadyToStartBox.OnSelected = GameMain.Client.SetReadyToStart;
             }
@@ -1102,6 +1098,13 @@ namespace Barotrauma
 
         public void SetAllowSpectating(bool allowSpectating)
         {
+            //server owner is allowed to spectate regardless of the server settings
+            if (GameMain.Client != null && GameMain.Client.IsServerOwner)
+            {
+                return;
+            }
+        }
+
             //show the player config menu if spectating is not allowed
             if (!playYourself.Selected && !allowSpectating)
             {

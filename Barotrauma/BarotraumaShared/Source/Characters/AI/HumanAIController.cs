@@ -179,15 +179,6 @@ namespace Barotrauma
         {
             if (GameMain.Client != null) return;
 
-            Order newOrder = null;
-            if (Character.CurrentHull != null)
-            {
-                if (Character.CurrentHull.FireSources.Count > 0)
-                {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                }
-
         partial void ReportProblems();
 
         private void UpdateSpeaking()

@@ -140,11 +140,6 @@ namespace Barotrauma
         }
 #endif
 
-        public KeyOrMouse State
-        {
-            get { return binding; }
-        }
-
         public void SetState()
         {
             hit = binding.IsHit();

@@ -438,6 +438,43 @@ namespace Barotrauma
                         UpdateSourceRect(limb, newRect);
                     }
                 }
+                UpdateJointCreation();
+                if (PlayerInput.KeyHit(Keys.Left))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.X--;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.Right))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.X++;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.Down))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.Y++;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
+                if (PlayerInput.KeyHit(Keys.Up))
+                {
+                    foreach (var limb in selectedLimbs)
+                    {
+                        var newRect = limb.ActiveSprite.SourceRect;
+                        newRect.Y--;
+                        UpdateSourceRect(limb, newRect);
+                    }
+                }
             }
             if (!isFreezed)
             {

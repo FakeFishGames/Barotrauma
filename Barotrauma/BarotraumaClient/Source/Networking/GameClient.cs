@@ -92,6 +92,11 @@ namespace Barotrauma.Networking
 
         private int ownerKey;
 
+        public bool IsServerOwner
+        {
+            get { return ownerKey > 0; }
+        }
+
         public GameClient(string newName, string ip, int ownerKey=0)
         {
             //TODO: gui stuff should probably not be here?
@@ -894,6 +899,7 @@ namespace Barotrauma.Networking
                 }
                 yield return new WaitForSeconds(0.5f);
             }
+        }
 
             waitInServerQueueBox?.Close();
             waitInServerQueueBox = null;
@@ -935,16 +941,7 @@ namespace Barotrauma.Networking
             {
                 if (newPermissions == permissions) return;
             }
-        }
 
-        private void SetMyPermissions(ClientPermissions newPermissions, IEnumerable<string> permittedConsoleCommands)
-        {
-            if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
-                permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
-            {
-                if (newPermissions == permissions) return;
-            }
-            
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
             //don't show the "permissions changed" popup if the client owns the server
