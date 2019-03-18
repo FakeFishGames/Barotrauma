@@ -8,6 +8,8 @@ namespace Barotrauma
     class AIObjectiveFixLeak : AIObjective
     {
         private readonly Gap leak;
+
+        private bool pathUnreachable;
         
         public Gap Leak
         {
@@ -22,12 +24,13 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return leak.Open <= 0.0f || leak.Removed;
+            return leak.Open <= 0.0f || leak.Removed || pathUnreachable;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (leak.Open == 0.0f) return 0.0f;
+            if (leak.Open == 0.0f) { return 0.0f; }
+            if (pathUnreachable) { return 0.0f; }
 
             float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
 
@@ -66,7 +69,7 @@ namespace Barotrauma
             }
 
             var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null) return;
+            if (repairTool == null) { return; }
 
             Vector2 standPosition = GetStandPosition();
 
@@ -83,7 +86,11 @@ namespace Barotrauma
                 var gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(standPosition), character);
                 if (!gotoObjective.IsCompleted())
                 {
-                    AddSubObjective(gotoObjective);
+                    pathUnreachable = !gotoObjective.CanBeCompleted;
+                    if (!pathUnreachable)
+                    {
+                        AddSubObjective(gotoObjective);
+                    }
                     return;
                 }
             }

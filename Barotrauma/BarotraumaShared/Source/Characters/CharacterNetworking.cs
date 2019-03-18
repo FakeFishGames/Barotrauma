@@ -575,20 +575,27 @@ namespace Barotrauma
 
         public void WriteSpawnData(NetBuffer msg)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null) { return; }
 
             msg.Write(Info == null);
             msg.Write(ID);
             msg.Write(ConfigPath);
             msg.Write(seed);
 
-            msg.Write(WorldPosition.X);
-            msg.Write(WorldPosition.Y);
-
+            if (Removed)
+            {
+                msg.Write(0.0f);
+                msg.Write(0.0f);
+            }
+            else
+            {
+                msg.Write(WorldPosition.X);
+                msg.Write(WorldPosition.Y);
+            }
             msg.Write(Enabled);
 
             //character with no characterinfo (e.g. some monster)
-            if (Info == null) return;
+            if (Info == null) { return; }
             
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)

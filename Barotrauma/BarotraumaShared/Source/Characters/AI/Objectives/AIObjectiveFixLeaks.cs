@@ -98,13 +98,15 @@ namespace Barotrauma
 
         private void UpdateGapList()
         {
-            if (objectiveList == null) objectiveList = new List<AIObjectiveFixLeak>();
-            objectiveList.Clear();
-            
+            if (objectiveList == null) { objectiveList = new List<AIObjectiveFixLeak>(); }
+            objectiveList.Clear(); 
+
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.ConnectedWall == null) continue;
-                if (gap.ConnectedDoor != null || gap.Open <= 0.0f) continue;
+                if (gap.ConnectedWall == null) { continue; }
+                if (gap.ConnectedDoor != null || gap.Open <= 0.0f) { continue; }
+                //not linked to a hull -> ignore
+                if (gap.linkedTo.All(l => l == null)) { continue; }
                 
                 if (character.TeamID == 0)
                 {

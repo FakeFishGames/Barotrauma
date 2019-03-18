@@ -211,7 +211,7 @@ namespace Barotrauma
             Entity.Spawner.AddToRemoveQueue(character);
 
             var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-            var configFile = characterFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
+            var configFile = characterFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f)?.ToLowerInvariant() == "humanhusk");
 
             if (string.IsNullOrEmpty(configFile))
             {

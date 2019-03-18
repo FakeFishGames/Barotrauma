@@ -443,9 +443,8 @@ namespace Barotrauma.Items.Components
                 //if already fabricating the selected item, return
                 if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
                 if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
-
 #if CLIENT
-                SelectItem(null, fabricableItems[itemIndex]);
+                SelectItem(c.Character, fabricableItems[itemIndex]);
 #endif
                 StartFabricating(fabricableItems[itemIndex], c.Character);
             }

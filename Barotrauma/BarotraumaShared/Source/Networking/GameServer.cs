@@ -357,7 +357,8 @@ namespace Barotrauma.Networking
                 unauthClient.AuthTimer -= deltaTime;
                 if (unauthClient.AuthTimer <= 0.0f)
                 {
-                    unauthClient.Connection.Disconnect("Connection timed out");
+                    unauthClient.Connection.Disconnect("Authentication timed out.");
+                    Log("Disconnected unauthenticated client (authentication timed out).", ServerLog.MessageType.ServerMessage);
                 }
             }
 
