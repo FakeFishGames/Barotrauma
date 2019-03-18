@@ -179,9 +179,14 @@ namespace Barotrauma.Items.Components
                         if (item.ParentInventory != inputContainer.Inventory && IsItemValidIngredient(item, requiredItem))
                         {
                             int availableSlotIndex = Array.IndexOf(item.ParentInventory.Items, item);
-                            if (item.ParentInventory.slots[availableSlotIndex].HighlightTimer <= 0.0f)
+                            //slots are null if the inventory has never been displayed 
+                            //(linked item, but the UI is not set to be displayed at the same time)
+                            if (item.ParentInventory.slots != null)
                             {
-                                item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(Color.LightGreen * 0.5f, 0.5f, 0.5f);
+                                if (item.ParentInventory.slots[availableSlotIndex].HighlightTimer <= 0.0f)
+                                {
+                                    item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(Color.LightGreen * 0.5f, 0.5f, 0.5f);
+                                }
                             }
                         }
                     }

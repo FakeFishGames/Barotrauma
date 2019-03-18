@@ -1,4 +1,34 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "incorrect filename case" errors.
+- Fixed crew UI occasionally overlapping with device interfaces (such as the "passive sonar" checkbox).
+- Fixed second submarine overlapping with the outpost at the end of the level in combat missions.
+- Steam query port can be automatically forwarded using UPnP if your router supports UPnP.
+- Fixed water currents inside the sub occasionally being way too strong to break free from.
+- Fixed rewards mentioned in the mission descriptions not matching the actual reward of the mission.
+- Fixed "can't create an entity event for Hull - the entity has been removed" errors when removing hulls
+with fires inside them.
+- Fixed submarine/mode selection tickboxes in the server settings menu.
+- Fixed crashing when attempting to select an item in Humpback's fabricator interface.
+- Fixed crashing when attempting to use active sonar in the submarine editor.
+- Fixed the husk appendage not appearing on huskified humans.
+- Fixed order/report messages being flagged as spam way too easily, causing frequent spam kicks.
+- Fixed sliders buttons being invisible while pressed in device interfaces.
+- Fixed an item being spawned in the submarine editor when selecting an item from the menu while another 
+one is already selected.
+- Fixed submarine colliders not taking into account the body offsets of the wall structures, causing
+some items outside the submarine's walls to be impossible to interact with (the most noticeable being the
+button that opens Orca's airlock from the outside).
+- Added a small stun effect to railgun shells.
+- Added a little extra fuel to vanilla subs.
+- Slowed down item deterioration rates.
+- Moved the position of turrets in Orca and Typhon to prevent players getting caught under them.
+- Moved humpback's cargo spawn position a bit to prevent the cargo from falling down the hatch under it.
+- Added better visual feedback when reactor is in poor condition.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.1 (closed alpha)
 ---------------------------------------------------------------------------------------------------------
 

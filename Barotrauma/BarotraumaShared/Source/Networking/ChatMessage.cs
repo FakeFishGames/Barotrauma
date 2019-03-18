@@ -234,18 +234,22 @@ namespace Barotrauma.Networking
             }
 
             float similarity = 0.0f;
-            for (int i = 0; i < c.LastSentChatMessages.Count; i++)
+            //don't do message similarity checks on order messages
+            if (orderMsg == null)
             {
-                float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
-                if (string.IsNullOrEmpty(txt))
+                for (int i = 0; i < c.LastSentChatMessages.Count; i++)
                 {
-                    similarity += closeFactor;
+                    float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
+                    if (string.IsNullOrEmpty(txt))
+                    {
+                        similarity += closeFactor;
+                    }
+                    else
+                    {
+                        int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
+                        similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
+                    }                
                 }
-                else
-                {
-                    int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
-                    similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
-                }                
             }
 
             if (similarity + c.ChatSpamSpeed > 5.0f)

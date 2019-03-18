@@ -12,6 +12,10 @@ namespace Barotrauma.Networking
         void InitUPnP()
         {
             server.UPnP.ForwardPort(NetPeerConfiguration.Port, "barotrauma");
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                server.UPnP.ForwardPort(QueryPort, "barotrauma");
+            }
         }
 
         bool DiscoveringUPnP()

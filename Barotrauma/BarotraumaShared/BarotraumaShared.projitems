@@ -93,7 +93,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Human.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Huskappendage.xml" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Huskappendage.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\Ragdolls\LegacycrawlerDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

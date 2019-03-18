@@ -207,6 +207,10 @@ namespace Barotrauma.Networking
         void InitUPnP()
         {
             server.UPnP.ForwardPort(NetPeerConfiguration.Port, "barotrauma");
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                server.UPnP.ForwardPort(QueryPort, "barotrauma");
+            }
 
             upnpBox = new GUIMessageBox(TextManager.Get("PleaseWaitUPnP"), TextManager.Get("AttemptingUPnP"), new string[] { TextManager.Get("Cancel") });
             upnpBox.Buttons[0].OnClicked = upnpBox.Close;

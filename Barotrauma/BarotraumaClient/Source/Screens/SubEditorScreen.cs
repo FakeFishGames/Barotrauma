@@ -1857,7 +1857,10 @@ namespace Barotrauma
 
             if (!CharacterMode && !WiringMode)
             {
-                if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
+                if (MapEntityPrefab.Selected != null && GUI.MouseOn == null)
+                {
+                    MapEntityPrefab.Selected.UpdatePlacing(cam);
+                }
                 
                 MapEntity.UpdateEditor(cam);
             }
@@ -1951,9 +1954,9 @@ namespace Barotrauma
            
             Submarine.Draw(spriteBatch, true);
 
-            if (!CharacterMode && !WiringMode)
+            if (!CharacterMode && !WiringMode && GUI.MouseOn == null)
             {
-                if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.DrawPlacing(spriteBatch,cam);
+                MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);                
                 MapEntity.DrawSelecting(spriteBatch, cam);
             }
             spriteBatch.End();

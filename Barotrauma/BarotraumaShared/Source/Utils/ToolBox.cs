@@ -38,6 +38,12 @@ namespace Barotrauma
     {
         public static bool IsProperFilenameCase(string filename)
         {
+            //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
+            //It also seems Path.GetFullPath may return a path with an incorrect case on Windows when the case of any of the game's
+            //parent folders have been changed.
+#if !DEBUG && !LINUX
+            return true;
+#endif
             char[] delimiters = { '/', '\\' };
             string[] subDirs = filename.Split(delimiters);
             string originalFilename = filename;
