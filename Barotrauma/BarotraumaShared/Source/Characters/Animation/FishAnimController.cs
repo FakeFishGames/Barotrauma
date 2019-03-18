@@ -131,22 +131,22 @@ namespace Barotrauma
         {
             if (Frozen) return;
             if (MainLimb == null) { return; }
-
-            if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
+            
+            if (!character.AllowInput)
             {
-                Collider.Enabled = false;
+                levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
-                //set linear velocity even though the collider is disabled, 
-                //because the character won't be able to switch back from ragdoll mode until the velocity of the collider is low enough
-                Collider.LinearVelocity = MainLimb.LinearVelocity;
-                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
-
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    Collider.LinearVelocity = MainLimb.LinearVelocity;
+                    Collider.FarseerBody.FixedRotation = false;
+                    Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
                     UpdateDying(deltaTime);                    
-                }
-                
+                }                
                 return;
             }
             else
@@ -266,6 +266,11 @@ namespace Barotrauma
             }
         }
 
+        private bool CanDrag(Character target)
+        {
+            return Mass / target.Mass > 0.1f;
+        }
+
         private float eatTimer = 0.0f;
 
         public override void DragCharacter(Character target, float deltaTime)
@@ -294,9 +299,12 @@ namespace Barotrauma
             {
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
-                targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
-                targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation);
-                targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                if (CanDrag(target))
+                {
+                    targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                    targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, 20.0f);
+                    targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                }
 
                 //pull the character's mouth to the target character (again with a fluctuating force)
                 float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
@@ -496,7 +504,7 @@ namespace Barotrauma
             Vector2 colliderBottom = GetColliderBottom();
 
             float movementAngle = 0.0f;
-            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle ?? 0 : HeadAngle ?? 0) * Dir;
             while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
             {
                 movementAngle += MathHelper.TwoPi;
@@ -669,6 +677,8 @@ namespace Barotrauma
 
                 limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
             }
+
+            limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
         }
 
         private void SmoothRotateWithoutWrapping(Limb limb, float angle, Limb referenceLimb, float torque)
@@ -707,8 +717,17 @@ namespace Barotrauma
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
                     true);
+                l.body.PositionSmoothingFactor = 0.8f;
             }
-        }
-  
+            if (character.SelectedCharacter != null && CanDrag(character.SelectedCharacter))
+            {
+                float diff = character.SelectedCharacter.SimPosition.X - centerOfMass.X;
+                if (diff < 100.0f)
+                {
+                    character.SelectedCharacter.AnimController.SetPosition(
+                        new Vector2(centerOfMass.X - diff, character.SelectedCharacter.SimPosition.Y), lerp: true);
+                }
+            }
+        }  
     }
 }

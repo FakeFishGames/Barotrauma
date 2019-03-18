@@ -76,7 +76,9 @@ namespace Barotrauma.Items.Components
                 if (IsActive == value) return;
                 
                 IsActive = value;
+#if SERVER
                 if (GameMain.Server != null) item.CreateServerEvent(this);
+#endif
             }
         }
         
@@ -152,6 +154,7 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
+            item.AddTag("light");
         }
         
         public override void Update(float deltaTime, Camera cam)
@@ -174,7 +177,7 @@ namespace Barotrauma.Items.Components
             if (body != null)
             {
 #if CLIENT
-                light.Rotation = body.Dir > 0.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
+                light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
                 light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
 #endif
                 if (!body.Enabled)
@@ -234,9 +237,16 @@ namespace Barotrauma.Items.Components
                 light.Color = lightColor * lightBrightness * (1.0f - Rand.Range(0.0f, Flicker));
                 light.Range = range;
 #endif
-                item.SightRange = Math.Max(range * (float)Math.Sqrt(lightBrightness), item.SightRange);
             }
-            
+            if (AITarget != null)
+            {
+                UpdateAITarget(AITarget);
+            }
+            if (item.AiTarget != null)
+            {
+                UpdateAITarget(item.AiTarget);
+            }
+
             voltage = 0.0f;
         }
                 
@@ -278,6 +288,17 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(IsOn);
+        }
+
+        private void UpdateAITarget(AITarget target)
+        {
+            //voltage > minVoltage || powerConsumption <= 0.0f; <- ?
+            target.Enabled = IsActive;
+            if (target.MaxSightRange <= 0)
+            {
+                target.MaxSightRange = Range * 5;
+            }
+            target.SightRange = IsActive ? target.MaxSightRange * lightBrightness : 0;
         }
     }
 }

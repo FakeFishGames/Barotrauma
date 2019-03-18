@@ -1,9 +1,10 @@
+using Barotrauma.Extensions;
+using Lidgren.Network;
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -218,6 +219,56 @@ namespace Barotrauma
                 depth = head.Depth - depthStep;
             }
             attachment.Sprite.Draw(spriteBatch, drawPos, Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
+        }
+
+
+        public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
+        {
+            ushort infoID = inc.ReadUInt16();
+            string newName = inc.ReadString();
+            int gender = inc.ReadByte();
+            int race = inc.ReadByte();
+            int headSpriteID = inc.ReadByte();
+            int hairIndex = inc.ReadByte();
+            int beardIndex = inc.ReadByte();
+            int moustacheIndex = inc.ReadByte();
+            int faceAttachmentIndex = inc.ReadByte();
+            string ragdollFile = inc.ReadString();
+
+            string jobIdentifier = inc.ReadString();
+            JobPrefab jobPrefab = null;
+            Dictionary<string, float> skillLevels = new Dictionary<string, float>();
+            if (!string.IsNullOrEmpty(jobIdentifier))
+            {
+                jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
+                for (int i = 0; i < jobPrefab.Skills.Count; i++)
+                {
+                    float skillLevel = inc.ReadSingle();
+                    skillLevels.Add(jobPrefab.Skills[i].Identifier, skillLevel);
+                }
+            }
+
+            // TODO: animations
+            CharacterInfo ch = new CharacterInfo(configPath, newName, jobPrefab, ragdollFile)
+            {
+                ID = infoID,
+            };
+            ch.RecreateHead(headSpriteID,(Race)race, (Gender)gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+            System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
+            if (ch.Job != null)
+            {
+                foreach (KeyValuePair<string, float> skill in skillLevels)
+                {
+                    Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
+                    if (matchingSkill == null)
+                    {
+                        DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
+                        continue;
+                    }
+                    matchingSkill.Level = skill.Value;
+                }
+            }
+            return ch;
         }
     }
 }

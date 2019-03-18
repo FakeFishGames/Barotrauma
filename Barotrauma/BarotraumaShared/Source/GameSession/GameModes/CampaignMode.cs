@@ -14,8 +14,8 @@ namespace Barotrauma
 
         const int InitialMoney = 4500;
 
-        private bool watchmenSpawned;
-        private Character startWatchman, endWatchman;
+        protected bool watchmenSpawned;
+        protected Character startWatchman, endWatchman;
 
         //key = dialog flag, double = Timing.TotalTime when the line was last said
         private Dictionary<string, double> dialogLastSpoken = new Dictionary<string, double>();
@@ -76,13 +76,18 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (GameMain.Client != null || !IsRunning) { return; }
-
+            if (!IsRunning) { return; }
+#if CLIENT
+            if (GameMain.Client != null) { return; }
+#endif
             if (!watchmenSpawned)
             {
                 if (Level.Loaded.StartOutpost != null) { startWatchman = SpawnWatchman(Level.Loaded.StartOutpost); }
                 if (Level.Loaded.EndOutpost != null) { endWatchman = SpawnWatchman(Level.Loaded.EndOutpost); }
                 watchmenSpawned = true;
+#if SERVER
+                (this as MultiPlayerCampaign).LastUpdateID++;
+#endif
             }
             else
             {
@@ -133,13 +138,7 @@ namespace Barotrauma
             CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
-            spawnedCharacter.CharacterHealth.UseHealthWindow = false;
-            spawnedCharacter.CharacterHealth.Unkillable = true;
-            spawnedCharacter.CanInventoryBeAccessed = false;
-            spawnedCharacter.CanBeDragged = false;
-            spawnedCharacter.SetCustomInteract(
-                WatchmanInteract,
-                hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
+            InitializeWatchman(spawnedCharacter);
             (spawnedCharacter.AIController as HumanAIController)?.ObjectiveManager.SetOrder(
                 new AIObjectiveGoTo(watchmanSpawnpoint, spawnedCharacter, repeat: true, getDivingGearIfNeeded: false));
             if (watchmanJob != null)
@@ -147,6 +146,18 @@ namespace Barotrauma
                 spawnedCharacter.GiveJobItems();
             }
             return spawnedCharacter;
+        }
+
+        protected void InitializeWatchman(Character character)
+        {
+            character.CharacterHealth.UseHealthWindow = false;
+            character.CharacterHealth.Unkillable = true;
+            character.CanInventoryBeAccessed = false;
+            character.CanBeDragged = false;
+            character.TeamID = Character.TeamType.FriendlyNPC;
+            character.SetCustomInteract(
+                WatchmanInteract,
+                hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
         }
 
         protected abstract void WatchmanInteract(Character watchman, Character interactor);

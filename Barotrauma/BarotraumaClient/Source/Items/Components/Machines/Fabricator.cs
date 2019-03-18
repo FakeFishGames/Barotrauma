@@ -306,13 +306,6 @@ namespace Barotrauma.Items.Components
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text,
                     textColor: inadequateSkills.Any() ? Color.Red : Color.LightGreen, font: GUI.SmallFont);
             }
-            
-            if (tooltip != null)
-            {
-                GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
-                tooltip = null;
-            }
-        }
 
             float degreeOfSuccess = user == null ? 0.0f : DegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
@@ -343,11 +336,7 @@ namespace Barotrauma.Items.Components
                 CancelFabricating(Character.Controlled);
             }
 
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
-            }
-            else if (GameMain.Client != null)
+            if (GameMain.Client != null)
             {
                 item.CreateClientEvent(this);
             }

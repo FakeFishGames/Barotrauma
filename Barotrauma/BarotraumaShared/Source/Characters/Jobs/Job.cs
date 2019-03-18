@@ -96,6 +96,12 @@ namespace Barotrauma
             {
                 skill.Level += increase;
             }
+            else
+            {
+                skills.Add(
+                    skillIdentifier,
+                    new Skill(skillIdentifier, increase));
+            }
         }
 
         public void GiveJobItems(Character character, WayPoint spawnPoint = null)
@@ -134,11 +140,13 @@ namespace Barotrauma
             }
 
             Item item = new Item(itemPrefab, character.Position, null);
-            
+
+#if SERVER
             if (GameMain.Server != null && Entity.Spawner != null)
             {
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
+#endif
 
             if (itemElement.GetAttributeBool("equip", false))
             {

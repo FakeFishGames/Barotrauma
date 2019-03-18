@@ -14,7 +14,7 @@ namespace Barotrauma
 
         public static int size = 20;
 
-        private List<GUITickBox> radioButtonGroup;
+        private GUIRadioButtonGroup radioButtonGroup;
 
         private bool selected;
 
@@ -24,30 +24,21 @@ namespace Barotrauma
             set 
             { 
                 if (value == selected) return;
-                if (radioButtonGroup != null && !value) return;
-
+                if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
+                {
+                    selected = true;
+                    return;
+                }
+                
                 selected = value;
                 state = (selected) ? ComponentState.Selected : ComponentState.None;
                 box.State = state;
-                if (radioButtonGroup != null)
+                if (value && radioButtonGroup != null)
                 {
-                    foreach (GUITickBox tickBox in radioButtonGroup)
-                    {
-                        if (tickBox == this) continue;
-                        tickBox.selected = false;
-                        tickBox.state = tickBox.box.State = ComponentState.None;
-                    }
+                    radioButtonGroup.SelectRadioButton(this);
                 }
 
                 OnSelected?.Invoke(this);
-                if (radioButtonGroup != null)
-                {
-                    foreach (GUITickBox tickBox in radioButtonGroup)
-                    {
-                        if (tickBox == this) continue;
-                        tickBox.OnSelected?.Invoke(tickBox);
-                    }
-                }
             }
         }
         
@@ -123,14 +114,10 @@ namespace Barotrauma
             rectT.ScaleChanged += ResizeBox;
             rectT.SizeChanged += ResizeBox;
         }
-
-        public static void CreateRadioButtonGroup(IEnumerable<GUITickBox> tickBoxes)
+        
+        public void SetRadioButtonGroup(GUIRadioButtonGroup rbg)
         {
-            var group = new List<GUITickBox>(tickBoxes);
-            foreach (GUITickBox tickBox in tickBoxes)
-            {
-                tickBox.radioButtonGroup = group;
-            }
+            radioButtonGroup = rbg;
         }
 
         private void ResizeBox()

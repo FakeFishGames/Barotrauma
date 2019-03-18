@@ -1416,15 +1416,15 @@ namespace Barotrauma
             {
                 wall.Update(deltaTime);
             }
-
-            if (GameMain.Server != null)
+            
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 networkUpdateTimer += deltaTime;
                 if (networkUpdateTimer > NetworkUpdateInterval)
                 {
                     if (extraWalls.Any(w => w.Body.BodyType != BodyType.Static))
                     {
-                        GameMain.Server.CreateEntityEvent(this);
+                        GameMain.NetworkMember.CreateEntityEvent(this);
                     }
                     networkUpdateTimer = 0.0f;
                 }

@@ -1,4 +1,107 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.4
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer improvements:
+- Got rid of the listen server: when hosting as a client, the game actually runs the dedicated server executable
+in the background. Makes client-hosted servers a little smoother due to the better performance of the dedicated
+server, and also makes it much easier for us to maintain and test the multiplayer because we no longer have
+two separate server applications.
+- Added multiplayer campaign.
+- VOIP support! Still a work in progress, so minor audio glitches are to be expected.
+- Improved character and submarine position syncing. Way less rubberbanding and teleporting!
+- Fixed servers occasionally starting the round multiple times when autorestarting or starting by voting.
+- Fixes players being unable to log in as a client when they're hosting a dedicated server on another machine.
+- Option to randomize your job preferences in the server lobby.
+- Fixed a server timing issue that occasionally caused the server to kick clients due to desync when a round starts.
+- Fixed occasional server-side "maximum packet size exceeded" errors.
+- Require the players to either dock with the ending outpost or to get the sub close and enter the outpost before 
+automatically ending the round.
+
+Bugfixes:
+- Fixed crashing if the round ends while the health window is open.
+- Fixed incorrect item panel positioning in the crew command interface when the sub is docked to something. 
+- Fixed crashing when an incompatible content package is selected in config.xml or if the content package 
+cannot be found.
+- Fixed screen distortion effects on Linux.
+- Fixed non-character key input on Linux (arrow keys, tab, etc).
+- Fixed fullscreen option not taking effect on game launch.
+- Fixes to a bunch of crashes in the character editor.
+- Fixed subinventories not being displayed on the inner clothes slot, making it impossible to use the extra
+slots in uniforms.
+- Fixed game settings resetting every time the game is updated.
+- Fixed bots shooting at their own crew with turrets.
+- Fixed wifi components not receiving chat messages in single player.
+- Fixed AI not reloading coilguns if an empty box of ammunition is inserted in the loader.
+- Fixed incorrect deusizine scale.
+- Fixed turret light toggle not doing anything.
+- Fixed character skills that aren't defined in the job xml never increasing, resulting in all jobs except 
+the captain always having a helm skill of 0.
+- Fixed flashlight & scooter light cones being "clipped".
+- Fixed StatusEffects bypassing limb damage modifiers.
+- Fixed waypoints not getting connected between docking ports on some subs.
+- Fixed target identifiers being bypassed when a StatusEffect is set to target nearby items or characters.
+- Fixed the "insufficient skills to use the item" text popping up if a character doesn't have sufficient 
+skills to operate one of the item's components, even if the component was not interacted with (e.g. captains 
+got a warning about not being able to use the connection panel of a nav terminal, even if they didn't select 
+the connection panel).
+
+Steam Workshop:
+- Update installed workshop items automatically on startup.
+- Allow adding submarines to workshop items with the "add file" dialog.
+- If creating an update for a workshop item that's currently installed, use the installed version instead 
+of the one downloaded from the workshop.
+
+Additions:
+- Some new random events.
+- A bunch of new afflictions and medical items.
+- Some new item sprites.
+- Added some new items that can be crafted from alien materials.
+- Display linked hulls as one room on the status monitor.
+- Tons of new sound effects.
+- Display the controlled character in the crew interface.
+- Option to "give orders" to the character you're controlling. In single player it can be useful if you want 
+the controlled character to keep doing something when switching to another one, in the multiplayer it can be 
+used to let others know what you're doing.
+- Added a weak spot to Moloch's bladder.
+- Baby Moloch, doo doo doo doo doo doo 
+- Added damage particles to Mud Raptors and Molochs.
+- Added "minimum velocity" property to to motion sensors. Allows making sensors that, for example, keep a door open 
+when a character is standing in the doorway.
+- Option to choose whether to use AND/OR logic in StatusEffects with multiple conditionals. Defaults to AND.
+- Added a 1 second "cooldown" to water detector state switches to prevent alarms from toggling on and off constantly 
+when the water level is fluctuating around the position of the detector.
+- Added scram option (reactor shutdown) to the nav consoles in the vanilla subs.
+- Support for binding Mouse4, Mouse5 and MouseWheel.
+- Made Hammerhead and Mudraptor attracted to light. 
+- New husk sprite (still WIP).
+
+Misc:
+- Decreased deterioration rates across the board. Repairing a damaged item to full condition also now resets
+the deterioration delay, meaning that the item will not start deteriorating again immediately after it's been
+repaired.
+- Miscellaneous optimization.
+- Removed the info button from the top-left corner - the info menu is now opened with TAB.
+- Changed default chat/radio keybinds to T and Y.
+- Welding tools repair all the walls within the range of the raycast, not just the first wall the raycast hits. 
+Makes it easier to repair overlapping and multi-layered walls.
+- Decreased the range of passive sonar - previously there was often no reason to use the active sonar because
+the passive mode showed the area around the sub so clearly.
+- Health scanner shows all active afflictions (not just those that are visible in the health interface). 
+Allows detecting afflictions at an earlier stage, making the item much more useful.
+- Nerfed the structure damage done by Molochs and Crawlers.
+- Reduced creature HP across the board.
+- Increased the amount of minerals in levels.
+- Increased flare burn time, making them more useful as path markers during exploration of ruins.
+- RepairTool damage is configured using StatusEffects and Afflictions instead of the "limbfixamount" attribute 
+that always does burn damage.
+- Made headsets craftable.
+- Battery output doesn't start dropping until the charge is below 10%.
+- Restrict the amount of power going through relay components to the MaxPower value of the relay.
+- Set Humpback reactor output a bit higher, batteries now start at full charge and relays can't be overloaded.
+- Miscellaneous fixes and balancing to vanilla subs.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.3
 ---------------------------------------------------------------------------------------------------------
 

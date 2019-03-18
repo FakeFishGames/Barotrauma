@@ -17,8 +17,9 @@ namespace Barotrauma
                 Vector2 drawPos = ev.DebugDrawPos;
                 drawPos.Y = -drawPos.Y;
 
-                GUI.SubmarineIcon.Draw(spriteBatch, drawPos, Color.White * 0.5f, GUI.SubmarineIcon.size / 2, 0.0f, 40.0f);
-                GUI.DrawString(spriteBatch, drawPos, ev.ToString(), Color.White, Color.Black, 0, GUI.LargeFont);
+                var textOffset = new Vector2(-150, 0);
+                ShapeExtensions.DrawCircle(spriteBatch, drawPos, 600, 6, Color.White, thickness: 20);
+                GUI.DrawString(spriteBatch, drawPos + textOffset, ev.ToString(), Color.White, Color.Black, 0, GUI.LargeFont);
             }
         }
 

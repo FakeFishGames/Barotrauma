@@ -38,6 +38,21 @@ namespace Barotrauma
             return doc;
         }
 
+        public static XDocument LoadXml(string filePath)
+        {
+            XDocument doc = null;
+
+            ToolBox.IsProperFilenameCase(filePath);
+
+            if (File.Exists(filePath))
+            {
+                doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
+                if (doc.Root == null) return null;
+            }
+
+            return doc;
+        }
+
         public static object GetAttributeObject(XAttribute attribute)
         {
             if (attribute == null) return null;
@@ -213,6 +228,24 @@ namespace Barotrauma
             try
             {
                 val = Int32.Parse(element.Attribute(name).Value);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "! ", e);
+            }
+
+            return val;
+        }
+
+        public static uint GetAttributeUInt(this XElement element, string name, uint defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            uint val = defaultValue;
+
+            try
+            {
+                val = UInt32.Parse(element.Attribute(name).Value);
             }
             catch (Exception e)
             {

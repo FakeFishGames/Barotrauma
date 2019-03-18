@@ -107,6 +107,7 @@ namespace Barotrauma
         public string[] propertyNames;
         private object[] propertyEffects;
 
+        private PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.And;
         private List<PropertyConditional> propertyConditionals;
 
         private bool setValue;
@@ -205,12 +206,7 @@ namespace Barotrauma
                 switch (attribute.Name.ToString())
                 {
                     case "type":
-                        try
-                        {
-                            type = (ActionType)Enum.Parse(typeof(ActionType), attribute.Value, true);
-                        }
-
-                        catch
+                        if (!Enum.TryParse(attribute.Value, true, out type))
                         {
                             DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
@@ -219,9 +215,15 @@ namespace Barotrauma
                         string[] Flags = attribute.Value.Split(',');
                         foreach (string s in Flags)
                         {
-                            targetTypes |= (TargetType)Enum.Parse(typeof(TargetType), s, true);
+                            if (!Enum.TryParse(s, true, out TargetType targetType))
+                            {
+                                DebugConsole.ThrowError("Invalid target type \"" + s + "\" in StatusEffect (" + parentDebugName + ")");
+                            }
+                            else
+                            {
+                                targetTypes |= targetType;
+                            }
                         }
-
                         break;
                     case "disabledeltatime":
                         disableDeltaTime = attribute.GetAttributeBool(false);
@@ -248,6 +250,13 @@ namespace Barotrauma
                         break;
                     case "checkconditionalalways":
                         CheckConditionalAlways = attribute.GetAttributeBool(false);
+                        break;
+                    case "conditionalcomparison":
+                    case "comparison":
+                        if (!Enum.TryParse(attribute.Value, out conditionalComparison))
+                        {
+                            DebugConsole.ThrowError("Invalid conditional comparison type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
+                        }
                         break;
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
@@ -370,16 +379,18 @@ namespace Barotrauma
                         break;
                     case "sound":
                         var sound = Submarine.LoadRoundSound(subElement);
-                        loopSound = subElement.GetAttributeBool("loop", false);
-                        if (subElement.Attribute("selectionmode") != null)
+                        if (sound != null)
                         {
-                            if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                            loopSound = subElement.GetAttributeBool("loop", false);
+                            if (subElement.Attribute("selectionmode") != null)
                             {
-                                soundSelectionMode = selectionMode;
+                                if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
+                                {
+                                    soundSelectionMode = selectionMode;
+                                }
                             }
+                            sounds.Add(sound);
                         }
-
-                        sounds.Add(sound);
                         break;
 #endif
                 }
@@ -419,7 +430,7 @@ namespace Barotrauma
             {
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (!c.Enabled) { continue; }
+                    if (!c.Enabled || c.Removed || !IsValidTarget(c)) { continue; }
                     float xDiff = Math.Abs(c.WorldPosition.X - worldPosition.X);
                     if (xDiff > Range) { continue; }
                     float yDiff = Math.Abs(c.WorldPosition.Y - worldPosition.Y);
@@ -432,6 +443,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Removed || !IsValidTarget(item)) { continue; }
                     float xDiff = Math.Abs(item.WorldPosition.X - worldPosition.X);
                     if (xDiff > Range) { continue; }
                     float yDiff = Math.Abs(item.WorldPosition.Y - worldPosition.Y);
@@ -440,21 +452,68 @@ namespace Barotrauma
                     if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(item); }
                 }
             }
-            return;
         }
 
         public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
             if (!propertyConditionals.Any()) return true;
-            foreach (ISerializableEntity target in targets)
+            switch (conditionalComparison)
             {
-                if (target == null || target.SerializableProperties == null) continue;
-                foreach (PropertyConditional pc in propertyConditionals)
-                {
-                    if (pc.Matches(target)) return true;
-                }
+                case PropertyConditional.Comparison.Or:
+                    foreach (ISerializableEntity target in targets)
+                    {
+                        if (target == null || target.SerializableProperties == null) { continue; }
+                        foreach (PropertyConditional pc in propertyConditionals)
+                        {
+                            if (pc.Matches(target)) { return true; }
+                        }
+                    }
+                    return false;
+                case PropertyConditional.Comparison.And:
+                    foreach (ISerializableEntity target in targets)
+                    {
+                        if (target == null || target.SerializableProperties == null) { continue; }
+                        foreach (PropertyConditional pc in propertyConditionals)
+                        {
+                            if (!pc.Matches(target)) { return false; }
+                        }
+                    }
+                    return true;
+                default:
+                    throw new NotImplementedException();
             }
-            return false;
+        }
+
+        protected bool IsValidTarget(ISerializableEntity entity)
+        {
+            if (entity is Item item)
+            {
+                if (item.HasTag(targetIdentifiers)) return true;
+                if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
+            }
+            else if (entity is ItemComponent itemComponent)
+            {
+                if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
+                if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
+            }
+            else if (entity is Structure structure)
+            {
+                if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
+            }
+            else if (entity is Character character)
+            {
+                if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
+            }
+
+            return targetIdentifiers.Any(id => id == entity.Name);
+        }
+
+        public void SetUser(Character user)
+        {
+            foreach (Affliction affliction in Afflictions)
+            {
+                affliction.Source = user;
+            }
         }
 
         protected bool IsValidTarget(ISerializableEntity entity)
@@ -498,7 +557,7 @@ namespace Barotrauma
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target);
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.FirstOrDefault() == target);
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
@@ -513,23 +572,30 @@ namespace Barotrauma
             Apply(deltaTime, entity, targets);
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
+        protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets)
         {
             if (this.type != type) return;
 
-            //remove invalid targets
-            if (targetIdentifiers != null)
+            currentTargets.Clear();
+            foreach (ISerializableEntity target in targets)
             {
-                targets.RemoveAll(t => !IsValidTarget(t));
-                if (targets.Count == 0) return;
+                if (targetIdentifiers != null)
+                {
+                    //ignore invalid targets
+                    if (!IsValidTarget(target)) { continue; }
+                }
+                currentTargets.Add(target);
             }
 
-            if (!HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+            if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
+
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) return;
 
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(targets));
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(currentTargets));
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
@@ -537,7 +603,7 @@ namespace Barotrauma
                 }
             }
 
-            Apply(deltaTime, entity, targets);
+            Apply(deltaTime, entity, currentTargets);
         }
 
         protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
@@ -609,7 +675,7 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                foreach (Item item in targets.Where(t => t is Item).Cast<Item>())
                 {
                     Entity.Spawner?.AddToRemoveQueue(item);
                 }
@@ -640,7 +706,7 @@ namespace Barotrauma
                     {
                         if (target == null || target.SerializableProperties == null || 
                             !target.SerializableProperties.TryGetValue(propertyNames[i], out SerializableProperty property)) continue;
-                        ApplyToProperty(property, propertyEffects[i], deltaTime);
+                        ApplyToProperty(target, property, propertyEffects[i], deltaTime);
                     }
                 }                
             }
@@ -657,11 +723,11 @@ namespace Barotrauma
                     if (target is Character character)
                     {
                         character.LastDamageSource = entity;
-                        character.CharacterHealth.ApplyAffliction(null, multipliedAffliction);
+                        character.AddDamage(entity.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
+                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
                     }
                 }
 
@@ -683,6 +749,67 @@ namespace Barotrauma
             {
                 var fire = new FireSource(entity.WorldPosition, hull);
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
+            }
+            
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
+            {
+                foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
+                {
+                    switch (itemSpawnInfo.SpawnPosition)
+                    {
+                        case ItemSpawnInfo.SpawnPositionType.This:
+                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, entity.WorldPosition);
+                            break;
+                        case ItemSpawnInfo.SpawnPositionType.ThisInventory:
+                            { 
+                                if (entity is Character character)
+                                {
+                                    if (character.Inventory != null && character.Inventory.Items.Any(it => it == null))
+                                    {
+                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
+                                    }
+                                }
+                                else if (entity is Item item)
+                                {
+                                    var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    if (inventory != null && inventory.Items.Any(it => it == null))
+                                    {
+                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                    }
+                                }
+                            }
+                            break;
+                        case ItemSpawnInfo.SpawnPositionType.ContainedInventory:
+                            {
+                                Inventory thisInventory = null;
+                                if (entity is Character character)
+                                {
+                                    thisInventory = character.Inventory;
+                                }
+                                else if (entity is Item item)
+                                {
+                                    thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                }
+                                if (thisInventory != null)
+                                {
+                                    foreach (Item item in thisInventory.Items)
+                                    {
+                                        if (item == null) continue;
+                                        Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
+                                        if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
+                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
+                                        break;
+                                    }
+                                }                                
+                            }
+                            break;
+                    }
+                }
             }
 
             if (GameMain.Client == null && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
@@ -761,36 +888,36 @@ namespace Barotrauma
 #endif
         }
 
-        private void ApplyToProperty(SerializableProperty property, object value, float deltaTime)
+        private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
             if (disableDeltaTime || setValue) deltaTime = 1.0f;
 
             Type type = value.GetType();
             if (type == typeof(float) ||
-                (type == typeof(int) && property.GetValue() is float))
+                (type == typeof(int) && property.GetValue(target) is float))
             {
                 float floatValue = Convert.ToSingle(value) * deltaTime;
-                
-                if (!setValue) floatValue += (float)property.GetValue();
-                property.TrySetValue(floatValue);
+
+                if (!setValue) floatValue += (float)property.GetValue(target);
+                property.TrySetValue(target, floatValue);
             }
             else if (type == typeof(int) && value is int)
             {
                 int intValue = (int)((int)value * deltaTime);
-                if (!setValue) intValue += (int)property.GetValue();
-                property.TrySetValue(intValue);
+                if (!setValue) intValue += (int)property.GetValue(target);
+                property.TrySetValue(target, intValue);
             }
             else if (type == typeof(bool) && value is bool)
             {
-                property.TrySetValue((bool)value);
+                property.TrySetValue(target, (bool)value);
             }
             else if (type == typeof(string))
             {
-                property.TrySetValue((string)value);
+                property.TrySetValue(target, (string)value);
             }
             else
             {
-                DebugConsole.ThrowError("Couldn't apply value " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                DebugConsole.ThrowError("Couldn't apply value " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue(target).GetType() + ")! "
                     + "Make sure the type of the value set in the config files matches the type of the property.");
             }
         }
@@ -821,8 +948,40 @@ namespace Barotrauma
                 {
                     for (int n = 0; n < element.Parent.propertyNames.Length; n++)
                     {
-                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out SerializableProperty property)) continue;
-                        element.Parent.ApplyToProperty(property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
+                        if (target == null ||
+                            target.SerializableProperties == null ||
+                            !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out SerializableProperty property))
+                        {
+                            continue;
+                        }
+                        element.Parent.ApplyToProperty(target, property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
+                    }
+
+                    foreach (Affliction affliction in element.Parent.Afflictions)
+                    {
+                        Affliction multipliedAffliction = affliction;
+                        if (!element.Parent.disableDeltaTime) { multipliedAffliction = affliction.CreateMultiplied(deltaTime); }
+
+                        if (target is Character character)
+                        {
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false);
+                        }
+                        else if (target is Limb limb)
+                        {
+                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                        }
+                    }
+
+                    foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
+                    {
+                        if (target is Character)
+                        {
+                            ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                        }
+                        else if (target is Limb limb)
+                        {
+                            limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                        }
                     }
 
                     foreach (Affliction affliction in element.Parent.Afflictions)

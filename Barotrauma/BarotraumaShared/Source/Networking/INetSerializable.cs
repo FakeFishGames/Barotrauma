@@ -12,7 +12,9 @@ namespace Barotrauma.Networking
 #if CLIENT
         void ClientWrite(NetBuffer msg, object[] extraData = null);
 #endif
+#if SERVER
         void ServerRead(ClientNetObject type, NetBuffer msg, Client c);        
+#endif
     }
 
     /// <summary>
@@ -20,7 +22,9 @@ namespace Barotrauma.Networking
     /// </summary>
     interface IServerSerializable : INetSerializable
     {
+#if SERVER
         void ServerWrite(NetBuffer msg, Client c, object[] extraData = null);
+#endif
 #if CLIENT
         void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime);
 #endif

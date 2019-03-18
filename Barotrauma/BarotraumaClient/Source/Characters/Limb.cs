@@ -110,11 +110,28 @@ namespace Barotrauma
 
         public Sprite Sprite { get; protected set; }
         public DeformableSprite DeformSprite { get; protected set; }
-        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
-
+        public Sprite ActiveSprite
+        {
+            get
+            {
+                // TODO: should we optimize this? No need to check all the conditionals each time the property is accessed.
+                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.IsActive);
+                if (conditionalSprite != null)
+                {
+                    return conditionalSprite;
+                }
+                else
+                {
+                    return DeformSprite != null ? DeformSprite.Sprite : Sprite;
+                }
+            }
+        }
+        
         public float TextureScale => limbParams.Ragdoll.TextureScale;
 
-        public Sprite DamagedSprite { get; set; }
+        public Sprite DamagedSprite { get; private set; }
+
+        public List<ConditionalSprite> ConditionalSprites { get; private set; } = new List<ConditionalSprite>();
 
         public Color InitialLightSourceColor
         {
@@ -155,6 +172,9 @@ namespace Barotrauma
                         break;
                     case "damagedsprite":
                         DamagedSprite = new Sprite(subElement, "", GetSpritePath(subElement));
+                        break;
+                    case "conditionalsprite":
+                        ConditionalSprites.Add(new ConditionalSprite(subElement, character, file: GetSpritePath(subElement)));
                         break;
                     case "deformablesprite":
                         DeformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement));
@@ -241,28 +261,28 @@ namespace Barotrauma
             DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
 
-        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
+        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
         {
-            float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
+            float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
             float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-
+            float damageMultiplier = 1;
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
+                        SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
+                        damageMultiplier *= damageModifier.DamageMultiplier;
                         break;
                     }
                 }
-
-                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
             }
 
-            float damageParticleAmount = Math.Min(damage / 10, 1.0f);
+            // Always spawn damage particles
+            float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
             foreach (ParticleEmitter emitter in character.DamageEmitters)
             {
                 if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
@@ -271,20 +291,25 @@ namespace Barotrauma
                 emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
             }
 
-            float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f);
-            float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
-            foreach (ParticleEmitter emitter in character.BloodEmitters)
+            if (bleedingDamage > 0)
             {
-                if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
-                if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+                float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
+                float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
 
-                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);                
+                foreach (ParticleEmitter emitter in character.BloodEmitters)
+                {
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+
+                    emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);
+                }
+
+                if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
+                {
+                    character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
+                }
             }
-
-            if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
-            {
-                character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
-            }            
+           
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -353,7 +378,8 @@ namespace Barotrauma
 
             if (!hideLimb)
             {
-                if (DeformSprite != null)
+                var activeSprite = ActiveSprite;
+                if (DeformSprite != null && activeSprite == DeformSprite.Sprite)
                 {
                     if (Deformations != null && Deformations.Any())
                     {
@@ -368,7 +394,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    body.Draw(spriteBatch, Sprite, color, null, Scale * TextureScale);
+                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale);
                 }
             }
 
@@ -401,11 +427,12 @@ namespace Barotrauma
             {
                 float depth = ActiveSprite.Depth - 0.0000015f;
 
-                DamagedSprite.Draw(spriteBatch,
-                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), ActiveSprite.Origin,
-                    -body.DrawRotation,
-                    1.0f, spriteEffect, depth);
+                // TODO: enable when the damage overlay textures have been remade.
+                //DamagedSprite.Draw(spriteBatch,
+                //    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                //    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
+                //    -body.DrawRotation,
+                //    1.0f, spriteEffect, depth);
             }
 
             if (GameMain.DebugDraw)
@@ -415,6 +442,8 @@ namespace Barotrauma
                     Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
                 }
+                var bodyDrawPos = body.DrawPosition;
+                bodyDrawPos.Y = -bodyDrawPos.Y;
                 if (IsStuck)
                 {
                     Vector2 from = ConvertUnits.ToDisplayUnits(attachJoint.WorldAnchorA);
@@ -424,9 +453,7 @@ namespace Barotrauma
                     var localFront = body.GetLocalFront(MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation));
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
-                    var drawPos = body.DrawPosition;
-                    drawPos.Y = -drawPos.Y;
-                    GUI.DrawLine(spriteBatch, drawPos, front, Color.Yellow, width: 2);
+                    GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);
                     GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 1);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
@@ -440,7 +467,19 @@ namespace Barotrauma
                     //mainLimbDrawPos.Y = -mainLimbDrawPos.Y;
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
-
+                }
+                foreach (var modifier in damageModifiers)
+                {
+                    //float midAngle = MathUtils.GetMidAngle(modifier.ArmorSector.X, modifier.ArmorSector.Y);
+                    //float spritesheetOrientation = MathHelper.ToRadians(limbParams.Ragdoll.SpritesheetOrientation);
+                    //float offset = -body.Rotation - (midAngle + spritesheetOrientation) * Dir;
+                    float offset = GetArmorSectorRotationOffset(modifier.ArmorSector, -body.Rotation);
+                    Vector2 forward = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(offset));
+                    float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
+                    color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                    GUI.DrawLine(spriteBatch, bodyDrawPos, bodyDrawPos + Vector2.Normalize(forward) * size, color, width: (int)Math.Round(4 / cam.Zoom));
+                    if (Dir == -1) { offset += MathHelper.Pi; }
+                    ShapeExtensions.DrawSector(spriteBatch, bodyDrawPos, size, GetArmorSectorSize(modifier.ArmorSector) * Dir, 40, color, offset + MathHelper.Pi, thickness: 2 / cam.Zoom);
                 }
             }
         }
@@ -520,6 +559,9 @@ namespace Barotrauma
 
             DeformSprite?.Sprite?.Remove();
             DeformSprite = null;
+
+            ConditionalSprites.ForEach(s => s.Remove());
+            ConditionalSprites.Clear();
 
             LightSource?.Remove();
             LightSource = null;

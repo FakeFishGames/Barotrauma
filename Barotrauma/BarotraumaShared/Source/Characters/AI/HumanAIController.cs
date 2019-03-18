@@ -57,7 +57,7 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
             
-            if (Character.Submarine != null || selectedAiTarget?.Entity?.Submarine != null)
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
             {
                 if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
@@ -122,9 +122,11 @@ namespace Barotrauma
                 //apply speed multiplier if 
                 //  a. it's boosting the movement speed and the character is trying to move fast (= running)
                 //  b. it's a debuff that decreases movement speed
-                if (run || Character.SpeedMultiplier <= 0.0f) targetMovement *= Character.SpeedMultiplier;
-                
-                Character.SpeedMultiplier = 1.0f;   // Reset, items will set the value before the next update
+
+                float speedMultiplier = Character.SpeedMultiplier;
+                if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;               
+
+                Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
 
                 Character.AnimController.TargetMovement = targetMovement;
             }
@@ -225,6 +227,8 @@ namespace Barotrauma
             }
         }
 
+        partial void ReportProblems();
+
         private void UpdateSpeaking()
         {
             if (Character.Oxygen < 20.0f)
@@ -277,7 +281,23 @@ namespace Barotrauma
 
         public override void SelectTarget(AITarget target)
         {
-            selectedAiTarget = target;
+            SelectedAiTarget = target;
+        }
+
+        private void CheckCrouching(float deltaTime)
+        {
+            crouchRaycastTimer -= deltaTime;
+            if (crouchRaycastTimer > 0.0f) return;
+
+            crouchRaycastTimer = CrouchRaycastInterval;
+
+            //start the raycast in front of the character in the direction it's heading to
+            Vector2 startPos = Character.SimPosition;
+            startPos.X += MathHelper.Clamp(Character.AnimController.TargetMovement.X, -1.0f, 1.0f);
+
+            //do a raycast upwards to find any walls
+            float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
+            shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
 
         private void CheckCrouching(float deltaTime)

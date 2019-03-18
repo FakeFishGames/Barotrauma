@@ -11,6 +11,12 @@ namespace Barotrauma.Items.Components
         private GUIProgressBar chargeIndicator;
         private GUIScrollBar rechargeSpeedSlider;
 
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         partial void InitProjSpecific()
         {
             if (GuiFrame == null) return;
@@ -44,12 +50,7 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newRechargeSpeed - rechargeSpeed) < 0.1f) return false;
 
                     RechargeSpeed = newRechargeSpeed;
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
-                    }
-                    else if (GameMain.Client != null)
+                    if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;

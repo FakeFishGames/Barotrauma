@@ -1,7 +1,6 @@
 using Barotrauma.Extensions;
-﻿using Barotrauma.Items.Components;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -49,12 +48,12 @@ namespace Barotrauma
             public XElement BeardElement { get; set; }
             public XElement MoustacheElement { get; set; }
             public XElement FaceAttachment { get; set; }
-
+            
             public HeadInfo() { }
 
             public HeadInfo(int headId)
             {
-                _headSpriteId = headId;
+                _headSpriteId = Math.Max(headId, 1);
             }
 
             public void ResetAttachmentIndices()
@@ -66,7 +65,7 @@ namespace Barotrauma
             }
         }
 
-        private HeadInfo head = new HeadInfo();
+        private HeadInfo head;
         public HeadInfo Head
         {
             get { return head; }
@@ -78,10 +77,6 @@ namespace Barotrauma
                     if (head.race == Race.None)
                     {
                         head.race = GetRandomRace();
-                    }
-                    if (head.gender == Gender.None)
-                    {
-                        head.gender = GetRandomGender();
                     }
                     CalculateHeadSpriteRange();
                     Head.HeadSpriteId = value.HeadSpriteId;
@@ -101,16 +96,15 @@ namespace Barotrauma
             get
             {
                 string disguiseName = "?";
-                if (Character == null || !Character.HideFace || (GameMain.Server != null && !GameMain.Server.AllowDisguises))
+                if (Character == null || !Character.HideFace)
                 {
                     return Name;
                 }
-#if CLIENT
-                if (GameMain.Client != null && !GameMain.Client.AllowDisguises)
+                else if ((GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowDisguises))
                 {
                     return Name;
                 }
-#endif
+
                 if (Character.Inventory != null)
                 {
                     int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
@@ -133,6 +127,8 @@ namespace Barotrauma
                 return disguiseName;
             }
         }
+
+        public string SpeciesName => SourceElement.GetAttributeString("name", string.Empty);
 
         /// <summary>
         /// Note: Can be null.
@@ -237,78 +233,11 @@ namespace Barotrauma
 
         public readonly string ragdollFileName = string.Empty;
 
-        private Sprite headSprite;
-        public Sprite HeadSprite
-        {
-            get
-            {
-                if (headSprite == null)
-                {
-                    LoadHeadSprite();
-                }
-                return headSprite;
-            }
-        }
-
-        private Sprite portrait;
-        public Sprite Portrait
-        {
-            get
-            {
-                if (portrait == null)
-                {
-                    LoadHeadSprite();
-                }
-                return portrait;
-            }
-        }
-
-        private Sprite clothingSprite;
-        public Sprite ClothingSprite
-        {
-            get
-            {
-                if (clothingSprite == null)
-                {
-                    if (Job != null && Job.Prefab.ClothingElement != null)
-                    {
-                        clothingSprite = new Sprite(Job.Prefab.ClothingElement.Element("sprite"));
-                    }
-                }
-                return clothingSprite;
-            }
-        }
-
-        private NPCPersonalityTrait personalityTrait;
-
-        //unique ID given to character infos in MP
-        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
-        public ushort ID;
-
-        public XElement InventoryData;
-               
-
-        public XElement SourceElement { get; set; }
-
-        public XElement HairElement { get; private set; }
-        public XElement BeardElement { get; private set; }
-        public XElement MoustacheElement { get; private set; }
-        public XElement FaceAttachment { get; private set; }
-
-        public int HairIndex { get; set; } = -1;
-        public int BeardIndex { get; set; } = -1;
-        public int MoustacheIndex { get; set; } = -1;
-        public int FaceAttachmentIndex { get; set; } = -1;
-
-        public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
-
-        public readonly string ragdollFileName = string.Empty;
-
         public bool StartItemsGiven;
 
         public CauseOfDeath CauseOfDeath;
 
-        public byte TeamID;
+        public Character.TeamType TeamID;
 
         private NPCPersonalityTrait personalityTrait;
 
@@ -317,7 +246,6 @@ namespace Barotrauma
         public ushort ID;
 
         public XElement InventoryData;
-               
 
         public List<string> SpriteTags
         {
@@ -345,7 +273,8 @@ namespace Barotrauma
             }
         }
 
-        private Gender gender;
+        public readonly bool HasGenders;
+
         public Gender Gender
         {
             get { return Head.gender; }
@@ -399,7 +328,7 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    string speciesName = SourceElement.GetAttributeString("name", string.Empty);
+                    string speciesName = SpeciesName;
                     bool isHumanoid = SourceElement.GetAttributeBool("humanoid", false);
                     ragdoll = isHumanoid 
                         ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)
@@ -413,7 +342,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, string ragdollFileName = null)
+        public CharacterInfo(string file, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null)
         {
             ID = idCounter;
             idCounter++;
@@ -421,18 +350,13 @@ namespace Barotrauma
             SpriteTags = new List<string>();
             XDocument doc = GetConfig(file);
             SourceElement = doc.Root;
-            if (doc.Root.GetAttributeBool("genders", false))
+            head = new HeadInfo();
+            HasGenders = doc.Root.GetAttributeBool("genders", false);
+            if (HasGenders)
             {
-                Head.gender = gender == Gender.None ? GetRandomGender() : gender;
+                Head.gender = GetRandomGender();
             }
-            if (!Enum.TryParse(doc.Root.GetAttributeString("race", "None"), true, out Head.race))
-            {
-                Head.race = GetRandomRace();
-            }
-            if (Head.race == Race.None)
-            {
-                Head.race = GetRandomRace();
-            }
+            Head.race = GetRandomRace();
             CalculateHeadSpriteRange();
             Head.HeadSpriteId = GetRandomHeadID();
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab);
@@ -477,16 +401,28 @@ namespace Barotrauma
             idCounter++;
             Name = element.GetAttributeString("name", "unnamed");
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
-            Head.gender = (genderStr == "male") ? Gender.Male : Gender.Female;
-            Enum.TryParse(element.GetAttributeString("race", "white"), true, out Head.race);
             File = element.GetAttributeString("file", "");
             SourceElement = GetConfig(File).Root;
+            HasGenders = SourceElement.GetAttributeBool("genders", false);
             Salary = element.GetAttributeInt("salary", 1000);
-            Head.HeadSpriteId = element.GetAttributeInt("headspriteid", 1);
-            Head.HairIndex = element.GetAttributeInt("hairindex", -1);
-            Head.BeardIndex = element.GetAttributeInt("beardindex", -1);
-            Head.MoustacheIndex = element.GetAttributeInt("moustacheindex", -1);
-            Head.FaceAttachmentIndex = element.GetAttributeInt("faceattachmentindex", -1);
+            Enum.TryParse(element.GetAttributeString("race", "White"), true, out Race race);
+            Enum.TryParse(element.GetAttributeString("gender", "None"), true, out Gender gender);
+            if (HasGenders && gender == Gender.None)
+            {
+                gender = GetRandomGender();
+            }
+            else if (!HasGenders)
+            {
+                gender = Gender.None;
+            }
+            RecreateHead(
+                element.GetAttributeInt("headspriteid", 1),
+                race,
+                gender,
+                element.GetAttributeInt("hairindex", -1),
+                element.GetAttributeInt("beardindex", -1),
+                element.GetAttributeInt("moustacheindex", -1),
+                element.GetAttributeInt("faceattachmentindex", -1));
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             string personalityName = element.GetAttributeString("personality", "");
             ragdollFileName = element.GetAttributeString("ragdoll", string.Empty);
@@ -503,50 +439,6 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
-        public void LoadHeadSprite()
-        {
-            foreach (XElement limbElement in Ragdoll.MainElement.Elements())
-            {
-                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
-
-                XElement spriteElement = limbElement.Element("sprite");
-
-                string spritePath = spriteElement.Attribute("texture").Value;
-
-                spritePath = spritePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                spritePath = spritePath.Replace("[RACE]", Head.race.ToString().ToLowerInvariant());
-                spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
-                
-                string fileName = Path.GetFileNameWithoutExtension(spritePath);
-
-                //go through the files in the directory to find a matching sprite
-                foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
-                {
-                    if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-                    string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
-                    fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-                    if (fileWithoutTags != fileName) continue;
-
-                    HeadSprite = new Sprite(spriteElement, "", file);
-                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
-
-                    //extract the tags out of the filename
-                    SpriteTags = file.Split('[', ']').Skip(1).ToList();
-                    if (SpriteTags.Any())
-                    {
-                        SpriteTags.RemoveAt(SpriteTags.Count-1);
-                    }
-
-                    break;                    
-                }
-
-                break;
-            }
-        }
-
         private XDocument GetConfig(string file)
         {
             if (!cachedConfigs.TryGetValue(file, out XDocument doc))
@@ -558,8 +450,6 @@ namespace Barotrauma
             return doc;
         }
 
-        public Gender SetRandomGender() => Gender = GetRandomGender();
-        public Race SetRandomRace() => Race = GetRandomRace();
         public int SetRandomHead() => HeadSpriteId = GetRandomHeadID();
 
         public Gender GetRandomGender() => (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < SourceElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
@@ -592,7 +482,7 @@ namespace Barotrauma
         {
             if (elements == null) { return elements; }
             return elements.Where(w =>
-                Enum.TryParse(w.GetAttributeString("gender", "male"), true, out Gender g) && g == Head.gender &&
+                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == Head.gender &&
                 Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == Head.race);
         }
 
@@ -600,11 +490,13 @@ namespace Barotrauma
         {
             if (SourceElement == null) { return; }
             Head.headSpriteRange = SourceElement.GetAttributeVector2("headidrange", Vector2.Zero);
+            // If range is defined, we use it as it is
+            // Else we calculate the range from the wearables.
             if (Head.headSpriteRange == Vector2.Zero)
             {
-                // If range is defined, we use it as it is
-                // Else we calculate the range from the wearables.
-                var wearables = FilterElementsByGenderAndRace(Wearables);
+                var wearableElements = Wearables;
+                if (wearableElements == null) { return; }
+                var wearables = FilterElementsByGenderAndRace(wearableElements).ToList();
                 if (wearables == null)
                 {
                     Head.headSpriteRange = Vector2.Zero;
@@ -627,6 +519,74 @@ namespace Barotrauma
                     ids = ids.OrderBy(id => id);
                     Head.headSpriteRange = new Vector2(ids.First(), ids.Last());
                 }
+            }
+        }
+
+        public void RecreateHead(int headID, Race race, Gender gender, int hairIndex, int beardIndex, int moustacheIndex, int faceAttachmentIndex)
+        {
+            if (HasGenders && gender == Gender.None)
+            {
+                gender = GetRandomGender();
+            }
+            else if (!HasGenders)
+            {
+                gender = Gender.None;
+            }
+
+            head = new HeadInfo(headID)
+            {
+                race = race,
+                gender = gender,
+                HairIndex = hairIndex,
+                BeardIndex = beardIndex,
+                MoustacheIndex = moustacheIndex,
+                FaceAttachmentIndex = faceAttachmentIndex
+            };
+            CalculateHeadSpriteRange();
+            ReloadHeadAttachments();
+        }
+
+        public void LoadHeadSprite()
+        {
+            foreach (XElement limbElement in Ragdoll.MainElement.Elements())
+            {
+                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
+
+                XElement spriteElement = limbElement.Element("sprite");
+
+                string spritePath = spriteElement.Attribute("texture").Value;
+
+                spritePath = spritePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
+                spritePath = spritePath.Replace("[RACE]", Head.race.ToString().ToLowerInvariant());
+                spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
+
+                string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                //go through the files in the directory to find a matching sprite
+                foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
+                {
+                    if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                    string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                    fileWithoutTags = fileWithoutTags.Split('[', ']').First();
+                    if (fileWithoutTags != fileName) continue;
+
+                    HeadSprite = new Sprite(spriteElement, "", file);
+                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+
+                    //extract the tags out of the filename
+                    SpriteTags = file.Split('[', ']').Skip(1).ToList();
+                    if (SpriteTags.Any())
+                    {
+                        SpriteTags.RemoveAt(SpriteTags.Count - 1);
+                    }
+
+                    break;
+                }
+
+                break;
             }
         }
 
@@ -762,7 +722,7 @@ namespace Barotrauma
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
-            if (Job == null || GameMain.Client != null) return;            
+            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)) return;            
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);
@@ -771,9 +731,9 @@ namespace Barotrauma
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
 
-            if (GameMain.Server != null && (int)newLevel != (int)prevLevel)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (int)newLevel != (int)prevLevel)
             {
-                GameMain.Server.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
+                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
             }
         }
 
@@ -845,7 +805,7 @@ namespace Barotrauma
                 int slotIndex = itemElement.GetAttributeInt("i", 0);
                 if (newItem == null) continue;
 
-                Entity.Spawner.CreateNetworkEvent(newItem, false);
+                SpawnInventoryItemProjSpecific(newItem);
 
                 inventory.TryPutItem(newItem, slotIndex, false, false, null);
 
@@ -860,96 +820,8 @@ namespace Barotrauma
                 }
             }
         }
-
-        public void ServerWrite(NetBuffer msg)
-        {
-            msg.Write(ID);
-            msg.Write(Name);
-            msg.Write(Gender == Gender.Female);
-            msg.Write((byte)Race);
-            msg.Write((byte)HeadSpriteId);
-            msg.Write((byte)Head.HairIndex);
-            msg.Write((byte)Head.BeardIndex);
-            msg.Write((byte)Head.MoustacheIndex);
-            msg.Write((byte)Head.FaceAttachmentIndex);
-            msg.Write(ragdollFileName);
-
-            if (Job != null)
-            {
-                msg.Write(Job.Prefab.Identifier);
-                msg.Write((byte)Job.Skills.Count);
-                foreach (Skill skill in Job.Skills)
-                {
-                    msg.Write(skill.Identifier);
-                    msg.Write(skill.Level);
-                }
-            }
-            else
-            {
-                msg.Write("");
-            }
-            // TODO: animations
-        }
-
-        public static CharacterInfo ClientRead(string configPath, NetBuffer inc)
-        {
-            ushort infoID               = inc.ReadUInt16();
-            string newName              = inc.ReadString();
-            bool isFemale               = inc.ReadBoolean();
-            int race                    = inc.ReadByte();
-            int headSpriteID            = inc.ReadByte();
-            int hairIndex               = inc.ReadByte();
-            int beardIndex              = inc.ReadByte();
-            int moustacheIndex          = inc.ReadByte();
-            int faceAttachmentIndex     = inc.ReadByte();
-            string ragdollFile          = inc.ReadString();
-
-            string jobIdentifier        = inc.ReadString();
-            JobPrefab jobPrefab = null;
-            Dictionary<string, float> skillLevels = new Dictionary<string, float>();
-            if (!string.IsNullOrEmpty(jobIdentifier))
-            {
-                jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                int skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
-                {
-                    string skillIdentifier = inc.ReadString();
-                    float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
-                }
-            }
-
-            // TODO: animations
-
-            CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab, ragdollFile)
-            {
-                ID = infoID,
-            };
-            ch.Head.race = (Race)race;
-            ch.Head.HeadSpriteId = headSpriteID;
-            ch.HairIndex = hairIndex;
-            ch.BeardIndex = beardIndex;
-            ch.MoustacheIndex = moustacheIndex;
-            ch.FaceAttachmentIndex = faceAttachmentIndex;
-            ch.CalculateHeadSpriteRange();
-            ch.ReloadHeadAttachments();
-
-            System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
-            if (ch.Job != null)
-            {
-                foreach (KeyValuePair<string, float> skill in skillLevels)
-                {
-                    Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
-                    if (matchingSkill == null)
-                    {
-                        DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
-                        continue;
-                    }
-                    matchingSkill.Level = skill.Value;
-                }
-            }
-            return ch;
-        }
+        
+        partial void SpawnInventoryItemProjSpecific(Item item);
 
         public void ReloadHeadAttachments()
         {

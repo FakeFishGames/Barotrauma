@@ -6,8 +6,6 @@ namespace Barotrauma
     {
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
-            if (GameMain.Server != null) return;
-
             bool remove = message.ReadBoolean();
 
             if (remove)

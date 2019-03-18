@@ -38,11 +38,11 @@ namespace Barotrauma
             };
 
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
+            //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
             damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
             postProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
 #else
-            var blurEffect = content.Load<Effect>("Effects/blurshader");
+            //var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
             postProcessEffect = content.Load<Effect>("Effects/postprocess");
 #endif
@@ -52,6 +52,10 @@ namespace Barotrauma
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
             
+            distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
+            postProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
+        }
+
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
             postProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
         }
@@ -356,9 +360,13 @@ namespace Barotrauma
                 postProcessTechnique += "Distort";
                 postProcessEffect.Parameters["distortScale"].SetValue(Vector2.One * DistortStrength);
                 postProcessEffect.Parameters["distortUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
+#if LINUX || OSX
+                postProcessEffect.Parameters["xTexture"].SetValue(distortTexture);
+#else
                 postProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+#endif
             }
-            
+
             if (string.IsNullOrEmpty(postProcessTechnique))
             {
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None);
@@ -369,7 +377,11 @@ namespace Barotrauma
                 postProcessEffect.CurrentTechnique.Passes[0].Apply();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, effect: postProcessEffect);
             }
+#if LINUX || OSX
+            spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#else
             spriteBatch.Draw(DistortStrength > 0.0f ? distortTexture : renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#endif
             spriteBatch.End();            
         }
     }

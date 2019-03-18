@@ -35,7 +35,15 @@ namespace Barotrauma.Items.Components
             get { return RoundSound.Range; }
         }
 
-
+        public float VolumeMultiplier
+        {
+            get { return RoundSound.Volume; }
+        }
+        
+        public float Range
+        {
+            get { return RoundSound.Range; }
+        }
 
         public readonly bool Loop;
 
@@ -309,15 +317,15 @@ namespace Barotrauma.Items.Components
 
         private float GetSoundVolume(ItemSound sound)
         {
-            if (sound == null) return 0.0f;
-            if (sound.VolumeProperty == "") return 1.0f;
+            if (sound == null) { return 0.0f; }
+            if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
 
-            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out SerializableProperty property))
+            if (properties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
             {
                 float newVolume = 0.0f;
                 try
                 {
-                    newVolume = (float)property.GetValue();
+                    newVolume = (float)property.GetValue(this);
                 }
                 catch
                 {
@@ -353,7 +361,7 @@ namespace Barotrauma.Items.Components
             {
                 return null;
             }
-            foreach (ItemComponent component in item.components)
+            foreach (ItemComponent component in item.Components)
             {
                 if (component.name.ToLower() == LinkUIToComponent.ToLower())
                 {
@@ -427,9 +435,10 @@ namespace Barotrauma.Items.Components
                     }
                     
                     RoundSound sound = Submarine.LoadRoundSound(subElement);
+                    if (sound == null) { break; }
                     ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
                     {
-                        VolumeProperty = subElement.GetAttributeString("volumeproperty", "")
+                        VolumeProperty = subElement.GetAttributeString("volumeproperty", "").ToLowerInvariant()
                     };
 
                     if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();

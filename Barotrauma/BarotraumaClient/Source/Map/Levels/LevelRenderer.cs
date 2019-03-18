@@ -322,8 +322,14 @@ namespace Barotrauma
 
             Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
-                        
+
+            wallEdgeEffect.Texture = specular && level.GenerationParams.WallEdgeSpriteSpecular != null ?
+                level.GenerationParams.WallEdgeSpriteSpecular.Texture :
+                level.GenerationParams.WallEdgeSprite.Texture;
             wallEdgeEffect.World = transformMatrix;
+            wallCenterEffect.Texture = specular && level.GenerationParams.WallSpriteSpecular != null ?
+                level.GenerationParams.WallSpriteSpecular.Texture :
+                level.GenerationParams.WallSprite.Texture;
             wallCenterEffect.World = transformMatrix;
             
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;

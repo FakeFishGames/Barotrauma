@@ -51,7 +51,10 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
 
-            if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower) item.Condition = 0.0f;
+            if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower && CanBeOverloaded)
+            {
+                item.Condition = 0.0f;
+            }
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
@@ -81,12 +84,16 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool on, bool isNetworkMessage)
         {
+#if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) return;
+#endif
 
+#if SERVER
             if (on != IsOn && GameMain.Server != null)
             {
                 item.CreateServerEvent(this);
             }
+#endif
 
             IsOn = on;
         }

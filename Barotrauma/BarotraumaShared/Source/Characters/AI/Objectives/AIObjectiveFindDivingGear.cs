@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -19,7 +20,7 @@ namespace Barotrauma
                     var containedItems = character.Inventory.Items[i].ContainedItems;
                     if (containedItems == null) continue;
 
-                    var oxygenTank = Array.Find(containedItems, it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
+                    var oxygenTank = containedItems.FirstOrDefault(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
                     if (oxygenTank != null) return true;
                 }
             }

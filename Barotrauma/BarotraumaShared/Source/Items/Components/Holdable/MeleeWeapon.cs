@@ -140,7 +140,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip(item);
+            if (item.body.Dir != picker.AnimController.Dir) Flip();
 
             AnimController ac = picker.AnimController;
 
@@ -294,8 +294,9 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            if (GameMain.Client != null) return true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return true;
 
+#if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
 
@@ -308,13 +309,14 @@ namespace Barotrauma.Items.Components
                 });
 
                 string logStr = picker?.LogName + " used " + item.Name;
-                if (item.ContainedItems != null && item.ContainedItems.Length > 0)
+                if (item.ContainedItems != null && item.ContainedItems.Any())
                 {
-                    logStr += "(" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
+                    logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
                 }
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
+#endif
 
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {

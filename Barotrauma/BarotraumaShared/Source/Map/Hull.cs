@@ -49,16 +49,13 @@ namespace Barotrauma
         private bool update;
 
         public bool Visible = true;
-        
-        float[] waveY; //displacement from the surface of the water
-        float[] waveVel; //velocity of the point
 
-        float[] leftDelta;
-        float[] rightDelta;
+        private float[] waveY; //displacement from the surface of the water
+        private float[] waveVel; //velocity of the point
 
-        private float lastSentVolume, lastSentOxygen;
-        private float sendUpdateTimer;
-        
+        private float[] leftDelta;
+        private float[] rightDelta;
+                
         public List<Gap> ConnectedGaps;
 
         public override string Name
@@ -407,7 +404,10 @@ namespace Barotrauma
         {
             FireSources.Add(fireSource);
 
-            if (GameMain.Server != null && !IdFreed) GameMain.Server.CreateEntityEvent(this);
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !IdFreed)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -421,24 +421,6 @@ namespace Barotrauma
             aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 500.0f, 500.0f);
             aiTarget.SoundRange -= deltaTime * 1000.0f;
          
-            //update client hulls if the amount of water has changed by >10%
-            //or if oxygen percentage has changed by 5%
-            if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
-                Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
-            {
-                if (GameMain.Server != null && !IdFreed)
-                {
-                    sendUpdateTimer -= deltaTime;
-                    if (sendUpdateTimer < 0.0f)
-                    {
-                        GameMain.Server.CreateEntityEvent(this);
-                        lastSentVolume = waterVolume;
-                        lastSentOxygen = OxygenPercentage;
-                        sendUpdateTimer = NetworkUpdateInterval;
-                    }
-                }
-            }
-
             if (!update)
             {
                 lethalPressure = 0.0f;
@@ -597,9 +579,9 @@ namespace Barotrauma
         {
             FireSources.Remove(fire);
 
-            if (GameMain.Server != null && !Removed && !IdFreed)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !Removed && !IdFreed)
             {
-                GameMain.Server.CreateEntityEvent(this);
+                GameMain.NetworkMember.CreateEntityEvent(this);
             }
         }
 
@@ -632,15 +614,18 @@ namespace Barotrauma
         /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
         /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
         /// </summary>
-        public float GetApproximateDistance(Hull target, float maxDistance)
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance)
         {
-            return GetApproximateHullDistance(new HashSet<Hull>(), target, 0.0f, maxDistance);
+            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance);
         }
 
-        private float GetApproximateHullDistance(HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
         {
             if (distance >= maxDistance) return float.MaxValue;
-            if (this == target) return distance;
+            if (this == target)
+            {
+                return distance + Vector2.Distance(startPos, endPos);
+            }
 
             connectedHulls.Add(this);
 
@@ -663,7 +648,7 @@ namespace Barotrauma
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        float dist = hull.GetApproximateHullDistance(connectedHulls, target, distance + Vector2.Distance(g.Position, this.Position), maxDistance);
+                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
                         if (dist < float.MaxValue) return dist;
                     }
                 }
@@ -845,78 +830,6 @@ namespace Barotrauma
                 roomPos |= Alignment.Right;
 
             return TextManager.Get("Sub" + roomPos.ToString());
-        }
-
-        public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)
-        {
-            message.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
-
-            message.Write(FireSources.Count > 0);
-            if (FireSources.Count > 0)
-            {
-                message.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
-                for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
-                {
-                    var fireSource = FireSources[i];
-                    Vector2 normalizedPos = new Vector2(
-                        (fireSource.Position.X - rect.X) / rect.Width,
-                        (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
-
-                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-                    message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
-                }
-            }
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
-        {
-            WaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
-            OxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
-
-            bool hasFireSources = message.ReadBoolean();
-            int fireSourceCount = 0;
-            
-            if (hasFireSources)
-            {
-                fireSourceCount = message.ReadRangedInteger(0, 16);
-                for (int i = 0; i < fireSourceCount; i++)
-                {
-                    Vector2 pos = Vector2.Zero;
-                    float size = 0.0f;
-                    pos.X = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
-                    pos.Y = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
-                    size = message.ReadRangedSingle(0.0f, 1.0f, 8);
-
-                    pos = new Vector2(
-                        rect.X + rect.Width * pos.X, 
-                        rect.Y - rect.Height + (rect.Height * pos.Y));
-                    size = size * rect.Width;
-                    
-                    var newFire = i < FireSources.Count ? 
-                        FireSources[i] : 
-                        new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
-                    newFire.Position = pos;
-                    newFire.Size = new Vector2(size, newFire.Size.Y);
-
-                    //ignore if the fire wasn't added to this room (invalid position)?
-                    if (!FireSources.Contains(newFire))
-                    {
-                        newFire.Remove();
-                        continue;
-                    }                    
-                }
-            }
-
-            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
-            {
-                FireSources[i].Remove();
-                if (i < FireSources.Count)
-                {
-                    FireSources.RemoveAt(i);
-                }
-            }
         }
 
         public static Hull Load(XElement element, Submarine submarine)

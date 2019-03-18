@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -32,7 +33,7 @@ namespace Barotrauma
 
         private bool isMultiplayer;
 
-        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer)
+        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<string> saveFiles=null)
         {
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
@@ -70,7 +71,7 @@ namespace Barotrauma
 
             if (!isMultiplayer)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), "Tutorial active" + ":", textAlignment: Alignment.BottomLeft);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("TutorialActive") + ":", textAlignment: Alignment.BottomLeft);
                 contextualTutorialBox = new GUITickBox(new RectTransform(new Point(30, 30), rightColumn.RectTransform), string.Empty);
                 UpdateTutorialSelection();
             }
@@ -112,7 +113,14 @@ namespace Barotrauma
                             msgBox.Buttons[0].OnClicked = msgBox.Close;
                             msgBox.Buttons[0].OnClicked += (button, obj) =>
                             {
-                                if (GUIMessageBox.MessageBoxes.Count == 0) StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                if (GUIMessageBox.MessageBoxes.Count == 0)
+                                {
+                                    StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                    if (isMultiplayer)
+                                    {
+                                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                                    }
+                                }
                                 return true;
                             };
 
@@ -125,7 +133,15 @@ namespace Barotrauma
                                 TextManager.Get("ShuttleWarning"),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
-                            msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
+                            msgBox.Buttons[0].OnClicked = (button, obj) => 
+                            {
+                                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                if (isMultiplayer)
+                                {
+                                    CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                                }
+                                return true;
+                            };
                             msgBox.Buttons[0].OnClicked += msgBox.Close;
 
                             msgBox.Buttons[1].OnClicked = msgBox.Close;
@@ -135,13 +151,40 @@ namespace Barotrauma
                     else
                     {
                         StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                        if (isMultiplayer)
+                        {
+                            CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                        }
                     }
 
                     return true;
                 }
             };
 
-            UpdateLoadMenu();
+            UpdateLoadMenu(saveFiles);
+        }
+
+        private IEnumerable<object> WaitForCampaignSetup()
+        {
+            string headerText = TextManager.Get("CampaignStartingPleaseWait");
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new string[] { TextManager.Get("Cancel") });
+
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                GameMain.NetLobbyScreen.SelectMode(0);
+                CoroutineManager.StopCoroutines("WaitForCampaignSetup");
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (GameMain.NetLobbyScreen.CampaignUI == null && DateTime.Now < timeOut)
+            {
+                msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                yield return CoroutineStatus.Running;
+            }
+            msgBox.Close();
+            yield return CoroutineStatus.Success;
         }
 
         public void CreateDefaultSaveName()
@@ -211,12 +254,15 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateLoadMenu()
+        public void UpdateLoadMenu(IEnumerable<string> saveFiles=null)
         {
             loadGameContainer.ClearChildren();
 
-            string[] saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
-            
+            if (saveFiles == null)
+            {
+                saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
+            }
+
             saveList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform, Anchor.CenterLeft))
             {
                 OnSelected = SelectSaveFile
@@ -285,6 +331,10 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
                     LoadGame?.Invoke(saveList.SelectedData as string);
+                    if (isMultiplayer)
+                    {
+                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                    }
                     return true;
                 },
                 Enabled = false

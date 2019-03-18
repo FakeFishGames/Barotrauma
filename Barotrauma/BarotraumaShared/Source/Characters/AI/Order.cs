@@ -161,16 +161,16 @@ namespace Barotrauma
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, string orderOption = "")
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "")
         {
             orderOption = orderOption ?? "";
 
-            string messageTag = "OrderDialog." + AITag;
+            string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + AITag;
             if (!string.IsNullOrEmpty(orderOption)) messageTag += "." + orderOption;
 
             string msg = TextManager.Get(messageTag, true);
             if (msg == null) return "";
-            
+
             if (targetCharacterName == null) targetCharacterName = "";
             if (targetRoomName == null) targetRoomName = "";            
             return msg.Replace("[name]", targetCharacterName).Replace("[roomname]", targetRoomName);

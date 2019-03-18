@@ -41,6 +41,8 @@ namespace Barotrauma
         
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
+            availableLanguages.Clear();
+            textPacks.Clear();
             var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
 
             foreach (string file in textFiles)
@@ -114,7 +116,28 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag, bool returnNull = false, params object[] args)
+        public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
+        {
+            string text = Get(textTag, returnNull);
+
+            if (text == null || text.Length == 0)
+            {
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
+                    return textTag;
+                }
+            }
+
+            return string.Format(text, args);     
+        }
+
+        // Format: ServerMessage.Identifier1;ServerMessage.Indentifier2_[variable1]=value_[variable2]=value
+        public static string GetServerMessage(string serverMessage)
         {
             if (!textPacks.ContainsKey(Language))
             {
@@ -126,38 +149,68 @@ namespace Barotrauma
                 }
             }
 
+            string[] messages = serverMessage.Split(';');
+
+            for (int i = 0; i < messages.Length; i++)
+            {
+                if (!messages[i].Contains("_")) // No variables, just translate
+                {
+                    messages[i] = Get(messages[i]);
+                    continue;
+                }
+
+                string[] messageWithVariables = messages[i].Split('_');
+                messages[i] = Get(messageWithVariables[0]);
+
+                // First index is always the message identifier -> start at 1
+                for (int j = 1; j < messageWithVariables.Length; j++)
+                {
+                    string[] variableAndValue = messageWithVariables[j].Split('=');
+                    messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
+                }
+            }
+
+            string translatedServerMessage = string.Empty;
+            for (int i = 0; i < messages.Length; i++)
+            {
+                translatedServerMessage += messages[i];
+            }
+
+            return translatedServerMessage;
+        }
+
+        public static List<string> GetAll(string textTag)
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            List<string> allText;
+
             foreach (TextPack textPack in textPacks[Language])
             {
-                string text = textPack.Get(textTag);
-                if (text != null)
-                {
-                    text = string.Format(text, args);
-                    return text;
-                }
+                allText = textPack.GetAll(textTag);
+                if (allText != null) return allText;
             }
 
+            //if text was not found and we're using a language other than English, see if we can find an English version
+            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
             if (Language != "English" && textPacks.ContainsKey("English"))
             {
-                foreach (TextPack textPack in textPacks[Language])
+                foreach (TextPack textPack in textPacks["English"])
                 {
-                    string text = textPack.Get(textTag);
-                    if (text != null)
-                    {
-                        text = string.Format(text, args);
-                        return text;
-                    }
+                    allText = textPack.GetAll(textTag);
+                    if (allText != null) return allText;
                 }
             }
 
-            if (returnNull)
-            {
-                return null;
-            }
-            else
-            {
-                DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
-                return textTag;
-            }
+            return null;
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)
@@ -181,6 +234,42 @@ namespace Barotrauma
                     .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveFemale")));
             }
         }
+
+#if DEBUG
+        public static void CheckForDuplicates(string lang)
+        {
+            if (!textPacks.ContainsKey(lang))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
+                return;
+            }
+
+            int packIndex = 0;
+            foreach (TextPack textPack in textPacks[lang])
+            {
+                textPack.CheckForDuplicates(packIndex);
+                packIndex++;
+            }
+        }
+
+        public static void WriteToCSV()
+        {
+            string lang = "English";
+
+            if (!textPacks.ContainsKey(lang))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
+                return;
+            }
+
+            int packIndex = 0;
+            foreach (TextPack textPack in textPacks[lang])
+            {
+                textPack.WriteToCSV(packIndex);
+                packIndex++;
+            }
+        }
+#endif
 
         private static string Capitalize(string str)
         {

@@ -4,13 +4,21 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
-
 namespace Barotrauma.Items.Components
 {
     partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private ConvexHull convexHull;
         private ConvexHull convexHull2;
+
+        //openState when the vertices of the convex hull were last calculated
+        private float lastConvexHullState;
+
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
 
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
@@ -32,7 +40,7 @@ namespace Barotrauma.Items.Components
                 (int)(doorSprite.size.Y * item.Scale));
 
             Rectangle rect = doorRect;
-            if (isHorizontal)
+            if (IsHorizontal)
             {
                 rect.Width = (int)(rect.Width * (1.0f - openState));
             }
@@ -41,9 +49,9 @@ namespace Barotrauma.Items.Components
                 rect.Height = (int)(rect.Height * (1.0f - openState));
             }
 
-            if (window.Height > 0 && window.Width > 0)
+            if (Window.Height > 0 && Window.Width > 0)
             {
-                rect.Height = -(int)(window.Y * item.Scale);
+                rect.Height = -(int)(Window.Y * item.Scale);
 
                 rect.Y += (int)(doorRect.Height * openState);
                 rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
@@ -52,7 +60,7 @@ namespace Barotrauma.Items.Components
                 if (convexHull2 != null)
                 {
                     Rectangle rect2 = doorRect;
-                    rect2.Y = rect2.Y + (int)((window.Y * item.Scale - window.Height * item.Scale));
+                    rect2.Y = rect2.Y + (int)((Window.Y * item.Scale - Window.Height * item.Scale));
 
                     rect2.Y += (int)(doorRect.Height * openState);
                     rect2.Y = Math.Min(doorRect.Y, rect2.Y);
@@ -105,11 +113,11 @@ namespace Barotrauma.Items.Components
 
             if (openState == 1.0f)
             {
-                body.Enabled = false;
+                Body.Enabled = false;
                 return;
             }
 
-            if (isHorizontal)
+            if (IsHorizontal)
             {
                 Vector2 pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height / 2);
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
@@ -159,9 +167,49 @@ namespace Barotrauma.Items.Components
                             (int)brokenSprite.size.X, (int)(brokenSprite.size.Y * (1.0f - openState))),
                         color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, SpriteEffects.None, brokenSprite.Depth);
                 }
+            }
+        }
 
+
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage)
+        {
+            if (isStuck ||
+                (PredictedState == null && isOpen == open) ||
+                (PredictedState != null && isOpen == PredictedState.Value && isOpen == open))
+            {
+                return;
             }
 
+            if (GameMain.Client != null && !isNetworkMessage)
+            {
+                bool stateChanged = open != PredictedState;
+
+                //clients can "predict" that the door opens/closes when a signal is received
+                //the prediction will be reset after 1 second, setting the door to a state
+                //sent by the server, or reverting it back to its old state if no msg from server was received
+                PredictedState = open;
+                resetPredictionTimer = CorrectionDelay;
+                if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
+            }
+            else
+            {
+                isOpen = open;
+                if (!isNetworkMessage || open != PredictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
+            }
+
+            //opening a partially stuck door makes it less stuck
+            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
+            
+        }
+
+        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        {
+            base.ClientRead(type, msg, sendingTime);
+
+            SetState(msg.ReadBoolean(), isNetworkMessage: true, sendNetworkMessage: false);
+            Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+
+            PredictedState = null;
         }
     }
 }

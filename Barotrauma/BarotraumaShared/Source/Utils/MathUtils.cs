@@ -201,6 +201,26 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Returns the angle between the two angles, where the direction matters.
+        /// </summary>
+        public static float GetMidAngle(float from, float to)
+        {
+            float max = MathHelper.Max(from, to);
+            float min = MathHelper.Min(from, to);
+            float diff = max - min;
+            if (from < to)
+            {
+                // Clockwise
+                return from + diff / 2;
+            }
+            else
+            {
+                // CCW
+                return from - diff / 2;
+            }
+        }
+
+        /// <summary>
         /// solves the angle opposite to side a (parameters: lengths of each side)
         /// </summary>
         public static float SolveTriangleSSS(float a, float b, float c)

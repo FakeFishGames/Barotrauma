@@ -20,6 +20,7 @@ namespace Barotrauma
         
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
+        public OnMovedHandler OnReleased;
         
         public bool IsBooleanSwitch;
 
@@ -84,6 +85,39 @@ namespace Barotrauma
             {
                 if (Frame?.Style == null) return Vector4.Zero;
                 return Frame.Style.Padding;
+            }
+        }
+
+        private Vector2 range;
+        public Vector2 Range
+        {
+            get
+            {
+                return range;
+            }
+            set
+            {
+                float oldBarScrollValue = BarScrollValue;
+                range = value;
+                BarScrollValue = oldBarScrollValue;
+            }
+        }
+
+        public delegate float ScrollConversion(GUIScrollBar scrollBar, float f);
+        public ScrollConversion ScrollToValue = null;
+        public ScrollConversion ValueToScroll = null;
+
+        public float BarScrollValue
+        {
+            get
+            {
+                if (ScrollToValue==null) return (BarScroll * (Range.Y - Range.X)) + Range.X;
+                return ScrollToValue(this, BarScroll);
+            }
+            set
+            {
+                if (ValueToScroll==null) BarScroll = (value - Range.X) / (Range.Y - Range.X);
+                else BarScroll = ValueToScroll(this, value);
             }
         }
 
@@ -187,7 +221,11 @@ namespace Barotrauma
             
             if (draggingBar == this)
             {
-                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    OnReleased?.Invoke(this, BarScroll);
+                    draggingBar = null;
+                }
                 if ((isHorizontal && PlayerInput.MousePosition.X > Rect.X && PlayerInput.MousePosition.X < Rect.Right) ||
                     (!isHorizontal && PlayerInput.MousePosition.Y > Rect.Y && PlayerInput.MousePosition.Y < Rect.Bottom))
                 {
@@ -198,6 +236,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
+                    draggingBar?.OnReleased?.Invoke(draggingBar, draggingBar.BarScroll);
                     MoveButton(new Vector2(
                         Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
                         Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));

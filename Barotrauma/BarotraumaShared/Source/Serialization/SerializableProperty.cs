@@ -79,27 +79,15 @@ namespace Barotrauma
             { typeof(Color), "color" },
         };
 
-        private readonly PropertyDescriptor propertyDescriptor;
+        private static readonly Dictionary<Type, Dictionary<string, SerializableProperty>> cachedProperties = 
+            new Dictionary<Type, Dictionary<string, SerializableProperty>>();
+
         private readonly PropertyInfo propertyInfo;
-        private readonly object obj;
 
-        public string Name
-        {
-            get { return propertyDescriptor.Name; }
-        }
-
-        public AttributeCollection Attributes
-        {
-            get { return propertyDescriptor.Attributes; }
-        }
-
-        public Type PropertyType
-        {
-            get
-            {
-                return propertyInfo.PropertyType;
-            }
-        }
+        public readonly string Name;
+        public readonly string NameToLowerInvariant;
+        public readonly AttributeCollection Attributes;
+        public readonly Type PropertyType;
 
         public object ParentObject
         {
@@ -108,9 +96,11 @@ namespace Barotrauma
 
         public SerializableProperty(PropertyDescriptor property, object obj)
         {
-            this.propertyDescriptor = property;
+            Name = property.Name;
+            NameToLowerInvariant = Name.ToLowerInvariant();
             propertyInfo = property.ComponentType.GetProperty(property.Name);
-            this.obj = obj;
+            PropertyType = property.PropertyType;
+            Attributes = property.Attributes;
         }
 
         public T GetAttribute<T>() where T : Attribute
@@ -123,13 +113,18 @@ namespace Barotrauma
             return default(T);
         }
 
-        public bool TrySetValue(string value)
+        public void SetValue(object parentObject, object val)
         {
-            if (value == null) return false;
+            propertyInfo.SetValue(parentObject, val);
+        }
 
-            if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
+        public bool TrySetValue(object parentObject, string value)
+        {
+            if (value == null) { return false; }
+
+            if (!supportedTypes.TryGetValue(PropertyType, out string typeName))
             {
-                if (propertyDescriptor.PropertyType.IsEnum)
+                if (PropertyType.IsEnum)
                 {
                     object enumVal;
                     try
@@ -138,22 +133,22 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
                         return false;
                     }
                     try
                     {
-                        propertyInfo.SetValue(obj, enumVal);
+                        propertyInfo.SetValue(parentObject, enumVal);
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString(), e);
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
                         return false;
                     }
                 }
                 else
                 {
-                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value);
+                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value);
                     DebugConsole.ThrowError("(Type not supported)");
 
                     return false;
@@ -167,52 +162,55 @@ namespace Barotrauma
                 {
                     case "bool":
                         bool boolValue = value == "true" || value == "True";
-                        if (TrySetValueWithoutReflection(boolValue)) { return true; }
-                        propertyInfo.SetValue(obj, boolValue, null);
+                        if (TrySetValueWithoutReflection(parentObject, boolValue)) { return true; }
+                        propertyInfo.SetValue(parentObject, boolValue, null);
                         break;
                     case "int":
                         int intVal;
                         if (int.TryParse(value, out intVal))
                         {
-                            if (TrySetValueWithoutReflection(intVal)) { return true; }
-                            propertyInfo.SetValue(obj, intVal, null);
+                            if (TrySetValueWithoutReflection(parentObject, intVal)) { return true; }
+                            propertyInfo.SetValue(parentObject, intVal, null);
                         }
                         break;
                     case "float":
                         float floatVal;
                         if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
                         {
-                            if (TrySetValueWithoutReflection(floatVal)) { return true; }
-                            propertyInfo.SetValue(obj, floatVal, null);
+                            if (TrySetValueWithoutReflection(parentObject, floatVal)) { return true; }
+                            propertyInfo.SetValue(parentObject, floatVal, null);
                         }
                         break;
                     case "string":
-                        propertyInfo.SetValue(obj, value, null);
+                        propertyInfo.SetValue(parentObject, value, null);
+                        break;
+                    case "point":
+                        propertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint(value));
                         break;
                     case "point":
                         propertyInfo.SetValue(obj, XMLExtensions.ParsePoint(value));
                         break;
                     case "vector2":
-                        propertyInfo.SetValue(obj, XMLExtensions.ParseVector2(value));
+                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2(value));
                         break;
                     case "vector3":
-                        propertyInfo.SetValue(obj, XMLExtensions.ParseVector3(value));
+                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector3(value));
                         break;
                     case "vector4":
-                        propertyInfo.SetValue(obj, XMLExtensions.ParseVector4(value));
+                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector4(value));
                         break;
                     case "color":
-                        propertyInfo.SetValue(obj, XMLExtensions.ParseColor(value));
+                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseColor(value));
                         break;
                     case "rectangle":
-                        propertyInfo.SetValue(obj, XMLExtensions.ParseRect(value, true));
+                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
                         break;
                 }
             }
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString(), e);
+                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
                 return false;
             }
 
@@ -220,15 +218,15 @@ namespace Barotrauma
             return true;
         }
 
-        public bool TrySetValue(object value)
+        public bool TrySetValue(object parentObject, object value)
         {
-            if (value == null || obj == null || propertyDescriptor == null) return false;
+            if (value == null || parentObject == null || propertyInfo == null) return false;
 
             try
             {
-                if (!supportedTypes.TryGetValue(propertyDescriptor.PropertyType, out string typeName))
+                if (!supportedTypes.TryGetValue(PropertyType, out string typeName))
                 {
-                    if (propertyDescriptor.PropertyType.IsEnum)
+                    if (PropertyType.IsEnum)
                     {
                         object enumVal;
                         try
@@ -237,15 +235,15 @@ namespace Barotrauma
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
+                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
                             return false;
                         }
-                        propertyInfo.SetValue(obj, enumVal);
+                        propertyInfo.SetValue(parentObject, enumVal);
                         return true;
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value);
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value);
                         DebugConsole.ThrowError("(Type not supported)");
 
                         return false;
@@ -259,45 +257,48 @@ namespace Barotrauma
                         switch (typeName)
                         {
                             case "string":
-                                propertyInfo.SetValue(obj, value, null);
+                                propertyInfo.SetValue(parentObject, value, null);
+                                return true;
+                            case "point":
+                                propertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "point":
                                 propertyInfo.SetValue(obj, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "vector2":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParseVector2((string)value));
+                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2((string)value));
                                 return true;
                             case "vector3":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParseVector3((string)value));
+                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector3((string)value));
                                 return true;
                             case "vector4":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParseVector4((string)value));
+                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector4((string)value));
                                 return true;
                             case "color":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParseColor((string)value));
+                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseColor((string)value));
                                 return true;
                             case "rectangle":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParseRect((string)value, false));
+                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
                                 return true;
                             default:
-                                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
-                                DebugConsole.ThrowError("(Cannot convert a string to a " + propertyDescriptor.PropertyType.ToString() + ")");
+                                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
+                                DebugConsole.ThrowError("(Cannot convert a string to a " + PropertyType.ToString() + ")");
                                 return false;
                         }
                     }
-                    else if (propertyDescriptor.PropertyType != value.GetType())
+                    else if (PropertyType != value.GetType())
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
-                        DebugConsole.ThrowError("(Non-matching type, should be " + propertyDescriptor.PropertyType + " instead of " + value.GetType() + ")");
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
+                        DebugConsole.ThrowError("(Non-matching type, should be " + PropertyType + " instead of " + value.GetType() + ")");
                         return false;
                     }
 
-                    propertyInfo.SetValue(obj, value, null);
+                    propertyInfo.SetValue(parentObject, value, null);
                 }
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString(), e);
+                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
                     return false;
                 }
 
@@ -310,12 +311,12 @@ namespace Barotrauma
             }
         }
 
-        public bool TrySetValue(float value)
+        public bool TrySetValue(object parentObject, float value)
         {
             try
             {
-                if (TrySetValueWithoutReflection(value)) { return true; }
-                propertyInfo.SetValue(obj, value, null);
+                if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
+                propertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
             {
@@ -331,12 +332,12 @@ namespace Barotrauma
             return true;
         }
 
-        public bool TrySetValue(bool value)
+        public bool TrySetValue(object parentObject, bool value)
         {
             try
             {
-                if (TrySetValueWithoutReflection(value)) { return true; }
-                propertyInfo.SetValue(obj, value, null);
+                if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
+                propertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
             {
@@ -351,11 +352,11 @@ namespace Barotrauma
             return true;
         }
 
-        public bool TrySetValue(int value)
+        public bool TrySetValue(object parentObject, int value)
         {
             try
             {
-                propertyInfo.SetValue(obj, value, null);
+                propertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
             {
@@ -370,16 +371,16 @@ namespace Barotrauma
             return true;
         }
 
-        public object GetValue()
+        public object GetValue(object parentObject)
         {
-            if (obj == null || propertyDescriptor == null) { return false; }
+            if (parentObject == null || propertyInfo == null) { return false; }
 
-            var value = TryGetValueWithoutReflection();
+            var value = TryGetValueWithoutReflection(parentObject);
             if (value != null) { return value; }
             
             try
             {
-                return propertyInfo.GetValue(obj, null);
+                return propertyInfo.GetValue(parentObject, null);
             }
             catch (TargetInvocationException e)
             {
@@ -393,55 +394,65 @@ namespace Barotrauma
             }
         }
 
+        public static string GetSupportedTypeName(Type type)
+        {
+            if (type.IsEnum) return "Enum";
+            if (!supportedTypes.TryGetValue(type, out string typeName))
+            {
+                return null;
+            }
+            return typeName;
+        }
+
         /// <summary>
         /// Try getting the values of some commonly used properties directly without reflection
         /// </summary>
-        private object TryGetValueWithoutReflection()
+        private object TryGetValueWithoutReflection(object parentObject)
         {
             switch (Name)
             {
                 case "Condition":
-                    if (obj is Item item) { return item.Condition; }                    
+                    if (parentObject is Item item) { return item.Condition; }                    
                     break;
                 case "Voltage":
-                    if (obj is Powered powered) { return powered.Voltage; }
+                    if (parentObject is Powered powered) { return powered.Voltage; }
                     break;
                 case "Charge":
-                    if (obj is PowerContainer powerContainer) { return powerContainer.Charge; }
+                    if (parentObject is PowerContainer powerContainer) { return powerContainer.Charge; }
                     break;
                 case "AvailableFuel":
-                    { if (obj is Reactor reactor) { return reactor.AvailableFuel; } }
+                    { if (parentObject is Reactor reactor) { return reactor.AvailableFuel; } }
                     break;
                 case "FissionRate":
-                    { if (obj is Reactor reactor) { return reactor.FissionRate; } }
+                    { if (parentObject is Reactor reactor) { return reactor.FissionRate; } }
                     break;
                 case "OxygenFlow":
-                    if (obj is Vent vent) { return vent.OxygenFlow; }
+                    if (parentObject is Vent vent) { return vent.OxygenFlow; }
                     break;
                 case "CurrFlow":
-                    if (obj is Pump pump) { return pump.CurrFlow; }
-                    if (obj is OxygenGenerator oxygenGenerator) { return oxygenGenerator.CurrFlow; }
+                    if (parentObject is Pump pump) { return pump.CurrFlow; }
+                    if (parentObject is OxygenGenerator oxygenGenerator) { return oxygenGenerator.CurrFlow; }
                     break;
                 case "CurrentVolume":
-                    if (obj is Engine engine) { return engine.CurrentVolume; }
+                    if (parentObject is Engine engine) { return engine.CurrentVolume; }
                     break;
                 case "MotionDetected":
-                    if (obj is MotionSensor motionSensor) { return motionSensor.MotionDetected; }
+                    if (parentObject is MotionSensor motionSensor) { return motionSensor.MotionDetected; }
                     break;
                 case "Oxygen":
-                    { if (obj is Character character) { return character.Oxygen; } }
+                    { if (parentObject is Character character) { return character.Oxygen; } }
                     break;
                 case "Health":
-                    {  if (obj is Character character) { return character.Health; } }
+                    {  if (parentObject is Character character) { return character.Health; } }
                     break;
                 case "OxygenAvailable":
-                    { if (obj is Character character) { return character.OxygenAvailable; } }
+                    { if (parentObject is Character character) { return character.OxygenAvailable; } }
                     break;
                 case "PressureProtection":
-                    { if (obj is Character character) { return character.PressureProtection; } }
+                    { if (parentObject is Character character) { return character.PressureProtection; } }
                     break;
                 case "IsDead":
-                    { if (obj is Character character) { return character.IsDead; } }
+                    { if (parentObject is Character character) { return character.IsDead; } }
                     break;
             }
 
@@ -451,42 +462,42 @@ namespace Barotrauma
         /// <summary>
         /// Try setting the values of some commonly used properties directly without reflection
         /// </summary>
-        private bool TrySetValueWithoutReflection(object value)
+        private bool TrySetValueWithoutReflection(object parentObject, object value)
         {
             switch (Name)
             {
                 case "Condition":
-                    if (obj is Item item && value is float) { item.Condition = (float)value; return true; }
+                    if (parentObject is Item item && value is float) { item.Condition = (float)value; return true; }
                     break;
                 case "Voltage":
-                    if (obj is Powered powered && value is float) { powered.Voltage = (float)value; return true; }
+                    if (parentObject is Powered powered && value is float) { powered.Voltage = (float)value; return true; }
                     break;
                 case "Charge":
-                    if (obj is PowerContainer powerContainer && value is float) { powerContainer.Charge = (float)value; return true; }
+                    if (parentObject is PowerContainer powerContainer && value is float) { powerContainer.Charge = (float)value; return true; }
                     break;
                 case "AvailableFuel":
-                    if (obj is Reactor reactor && value is float) { reactor.AvailableFuel = (float)value; return true; }
+                    if (parentObject is Reactor reactor && value is float) { reactor.AvailableFuel = (float)value; return true; }
                     break;
                 case "Oxygen":
-                    { if (obj is Character character && value is float) { character.Oxygen = (float)value; return true; } }
+                    { if (parentObject is Character character && value is float) { character.Oxygen = (float)value; return true; } }
                     break;
                 case "HideFace":
-                    { if (obj is Character character && value is bool) { character.HideFace = (bool)value; return true; } }
+                    { if (parentObject is Character character && value is bool) { character.HideFace = (bool)value; return true; } }
                     break;
                 case "OxygenAvailable":
-                    { if (obj is Character character && value is float) { character.OxygenAvailable = (float)value; return true; } }
+                    { if (parentObject is Character character && value is float) { character.OxygenAvailable = (float)value; return true; } }
                     break;
                 case "ObstructVision":
-                    { if (obj is Character character && value is bool) { character.ObstructVision = (bool)value; return true; } }
+                    { if (parentObject is Character character && value is bool) { character.ObstructVision = (bool)value; return true; } }
                     break;
                 case "PressureProtection":
-                    { if (obj is Character character && value is float) { character.PressureProtection = (float)value; return true; } }
+                    { if (parentObject is Character character && value is float) { character.PressureProtection = (float)value; return true; } }
                     break;
                 case "LowPassMultiplier":
-                    { if (obj is Character character && value is float) { character.LowPassMultiplier = (float)value; return true; } }
+                    { if (parentObject is Character character && value is float) { character.LowPassMultiplier = (float)value; return true; } }
                     break;
                 case "SpeedMultiplier":
-                    { if (obj is Character character && value is float) { character.SpeedMultiplier = (float)value; return true; } }
+                    { if (parentObject is Character character && value is float) { character.SpeedMultiplier = (float)value; return true; } }
                     break;
             }
 
@@ -496,7 +507,6 @@ namespace Barotrauma
         public static List<SerializableProperty> GetProperties<T>(ISerializableEntity obj)
         {
             List<SerializableProperty> editableProperties = new List<SerializableProperty>();
-
             foreach (var property in obj.SerializableProperties.Values)
             {
                 if (property.Attributes.OfType<T>().Any()) editableProperties.Add(property);
@@ -505,35 +515,37 @@ namespace Barotrauma
             return editableProperties;
         }
 
-        public static Dictionary<string, SerializableProperty> GetProperties(ISerializableEntity obj)
+        public static Dictionary<string, SerializableProperty> GetProperties(object obj)
         {
+            Type objType = obj.GetType();
+            if (cachedProperties.ContainsKey(objType))
+            {
+                return cachedProperties[objType];
+            }
+
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
-
             Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
-
             foreach (var property in properties)
             {
-                dictionary.Add(property.Name.ToLowerInvariant(), new SerializableProperty(property, obj));
+                var serializableProperty = new SerializableProperty(property, obj);
+                dictionary.Add(serializableProperty.NameToLowerInvariant, serializableProperty);
             }
+
+            cachedProperties[objType] = dictionary;
 
             return dictionary;
         }
         
         public static Dictionary<string, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
         {
-            var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
+            Dictionary<string, SerializableProperty> dictionary = GetProperties(obj);
 
-            Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
-
-            foreach (var property in properties)
+            foreach (var property in dictionary.Values)
             {
-                SerializableProperty objProperty = new SerializableProperty(property, obj);
-                dictionary.Add(property.Name.ToLowerInvariant(), objProperty);
-
                 //set the value of the property to the default value if there is one
                 foreach (var ini in property.Attributes.OfType<Serialize>())
                 {
-                    objProperty.TrySetValue(ini.defaultValue);
+                    property.TrySetValue(obj, ini.defaultValue);
                     break;
                 }
             }
@@ -544,10 +556,9 @@ namespace Barotrauma
                 //and set the value of the matching property if it is initializable
                 foreach (XAttribute attribute in element.Attributes())
                 {
-                    SerializableProperty property = null;
-                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out property)) continue;
-                    if (!property.Attributes.OfType<Serialize>().Any()) continue;
-                    property.TrySetValue(attribute.Value);
+                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) { continue; }
+                    if (!property.Attributes.OfType<Serialize>().Any()) { continue; }
+                    property.TrySetValue(obj, attribute.Value);
                 }
             }
 
@@ -559,7 +570,7 @@ namespace Barotrauma
             var saveProperties = GetProperties<Serialize>(obj);
             foreach (var property in saveProperties)
             {
-                object value = property.GetValue();
+                object value = property.GetValue(obj);
                 if (value == null) continue;
 
                 if (!saveIfDefault)
@@ -627,7 +638,7 @@ namespace Barotrauma
                 }
 
                 element.Attribute(property.Name)?.Remove();
-                element.SetAttributeValue(property.Name.ToLowerInvariant(), stringValue);
+                element.SetAttributeValue(property.NameToLowerInvariant, stringValue);
             }
         }
     }

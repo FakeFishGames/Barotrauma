@@ -22,10 +22,15 @@ namespace Barotrauma.Items.Components
         //how fast it's currently being recharged (can be changed, so that
         //charging can be slowed down or disabled if there's a shortage of power)
         private float rechargeSpeed;
-
-        private float maxOutput;
-
         private float lastSentCharge;
+
+        //charge indicator description
+        protected Vector2 indicatorPosition, indicatorSize;
+
+        protected bool isHorizontal;
+
+        //a list of powered devices connected directly to this item
+        private readonly List<Pair<Powered, Connection>> directlyConnected = new List<Pair<Powered, Connection>>(10);
 
         //charge indicator description
         protected Vector2 indicatorPosition, indicatorSize;
@@ -60,11 +65,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Editable(ToolTip = "Maximum output of the device when fully charged (kW)."), Serialize(10.0f, true)]
-        public float MaxOutPut
-        {
-            set { maxOutput = value; }
-            get { return maxOutput; }
-        }
+        public float MaxOutPut { set; get; }
 
         [Serialize(10.0f, true), Editable(ToolTip = "The maximum capacity of the device (kW * min). "+
             "For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
@@ -86,7 +87,9 @@ namespace Barotrauma.Items.Components
                 //send a network event if the charge has changed by more than 5%
                 if (Math.Abs(charge - lastSentCharge) / capacity > 0.05f)
                 {
+#if SERVER
                     if (GameMain.Server != null) item.CreateServerEvent(this);
+#endif
                     lastSentCharge = charge;
                 }
             }
@@ -129,11 +132,11 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
-            float chargeRatio = (float)(Math.Sqrt(charge / capacity));
+            float chargeRatio = charge / capacity;
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
+            directlyConnected.Clear();
 
-            List<Pair<Powered, Connection>> directlyConnected = new List<Pair<Powered, Connection>>();
             foreach (Connection c in item.Connections)
             {
                 if (c.Name == "power_in") continue;
@@ -187,9 +190,16 @@ namespace Barotrauma.Items.Components
 
                 if (gridPower < gridLoad)
                 {
+                    //output starts dropping when the charge is less than 10%
+                    float maxOutputRatio = 1.0f;
+                    if (chargeRatio < 0.1f)
+                    {
+                        maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
+                    }
+
                     CurrPowerOutput = MathHelper.Lerp(
                        CurrPowerOutput,
-                       Math.Min(maxOutput * chargeRatio, gridLoad),
+                       Math.Min(MaxOutPut * maxOutputRatio, gridLoad),
                        deltaTime * 10.0f);
                 }
                 else
@@ -212,13 +222,17 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+#if CLIENT
             if (GameMain.Client != null) return false;
+#endif
 
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
                 if (Math.Abs(rechargeSpeed - maxRechargeSpeed * 0.5f) > 0.05f)
                 {
+#if SERVER
                     item.CreateServerEvent(this);
+#endif
                     RechargeSpeed = maxRechargeSpeed * 0.5f;
 #if CLIENT
                     rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
@@ -232,7 +246,9 @@ namespace Barotrauma.Items.Components
             {
                 if (rechargeSpeed > 0.0f)
                 {
+#if SERVER
                     item.CreateServerEvent(this);
+#endif
                     RechargeSpeed = 0.0f;
 #if CLIENT
                     rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
@@ -258,27 +274,6 @@ namespace Barotrauma.Items.Components
             {
                 outputVoltage = power;
             }
-        }
-                
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
-        {
-            float newRechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
-
-            if (item.CanClientAccess(c))
-            {
-                RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
-            }
-
-            item.CreateServerEvent(this);
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
-
-            float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
-            msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
         }
     }
 }

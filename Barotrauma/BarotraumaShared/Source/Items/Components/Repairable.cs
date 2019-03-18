@@ -12,9 +12,7 @@ namespace Barotrauma.Items.Components
         public static float SkillIncreaseMultiplier = 0.4f;
 
         private string header;
-        
-        private float lastSentProgress;
-        
+                
         private float fixDurationLowSkill, fixDurationHighSkill;
 
         private float deteriorationTimer;
@@ -71,7 +69,7 @@ namespace Barotrauma.Items.Components
             get { return currentFixer; }
             set
             {
-                if (currentFixer == value || item.Condition >= 100.0f) return;
+                if (currentFixer == value || item.Condition >= item.Prefab.Health) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
             }
@@ -93,8 +91,11 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+
+#if SERVER
             //let the clients know the initial deterioration delay
             item.CreateServerEvent(this);
+#endif
         }
 
         partial void InitProjSpecific(XElement element);
@@ -119,10 +120,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (deteriorationTimer > 0.0f)
                     {
-                        if (GameMain.Client == null)
+                        if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             deteriorationTimer -= deltaTime;
+#if SERVER
                             if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
+#endif
                         }
                         return;
                     }
@@ -144,7 +147,7 @@ namespace Barotrauma.Items.Components
 
             UpdateFixAnimation(CurrentFixer);
 
-            if (GameMain.Client != null) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
             foreach (Skill skill in requiredSkills)
@@ -166,10 +169,14 @@ namespace Barotrauma.Items.Components
             {
                 item.Condition += deltaTime / (fixDuration / item.Prefab.Health);
             }
-            
+
             if (wasBroken && item.Condition >= item.Prefab.Health)
             {
                 SteamAchievementManager.OnItemRepaired(item, currentFixer);
+                deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.RuinGeneration;
 using Barotrauma.Sounds;
 using FarseerPhysics;
 using Lidgren.Network;
@@ -62,7 +63,15 @@ namespace Barotrauma
 
             if (existingSound == null)
             {
-                existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+                try
+                {
+                    existingSound = GameMain.SoundManager.LoadSound(filename, stream);
+                }
+                catch (FileNotFoundException e)
+                {
+                    DebugConsole.ThrowError("Failed to load sound file \"" + filename + "\".", e);
+                    return null;
+                }
             }
 
             RoundSound newSound = new RoundSound(element, existingSound);
@@ -91,6 +100,71 @@ namespace Barotrauma
                 RemoveRoundSound(roundSounds[i]);
             }
         }
+        
+        //drawing ----------------------------------------------------
+
+        public static void CullEntities(Camera cam)
+        {
+            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+            foreach (Submarine sub in Loaded)
+            {
+                if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
+
+                Rectangle worldBorders = new Rectangle(
+                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
+                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
+                    sub.Borders.Width + 1000,
+                    sub.Borders.Height + 1000);
+
+                if (RectsOverlap(worldBorders, cam.WorldView))
+                {
+                    visibleSubs.Add(sub);
+                }
+            }
+
+            HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
+            if (Level.Loaded != null)
+            {
+                foreach (Ruin ruin in Level.Loaded.Ruins)
+                {
+                    Rectangle worldBorders = new Rectangle(
+                        ruin.Area.X - 500,
+                        ruin.Area.Y + ruin.Area.Height + 500,
+                        ruin.Area.Width + 1000,
+                        ruin.Area.Height + 1000);
+
+                    if (RectsOverlap(worldBorders, cam.WorldView))
+                    {
+                        visibleRuins.Add(ruin);
+                    }
+                }
+            }
+
+            if (visibleEntities == null)
+            {
+                visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count);
+            }
+            else
+            {
+                visibleEntities.Clear();
+            }
+
+            Rectangle worldView = cam.WorldView;
+            foreach (MapEntity entity in MapEntity.mapEntityList)
+            {
+                if (entity.Submarine != null)
+                {
+                    if (!visibleSubs.Contains(entity.Submarine)) { continue; }
+                }
+                else if (entity.ParentRuin != null)
+                {
+                    if (!visibleRuins.Contains(entity.ParentRuin)) { continue; }
+                }
+
+                if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }
+            }
+        }
+
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
@@ -128,14 +202,14 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
-                    if (sub.subBody.MemPos.Count < 2) continue;
+                    if (sub.subBody.PositionBuffer.Count < 2) continue;
 
-                    Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[0].Position);
+                    Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[0].Position);
                     prevPos.Y = -prevPos.Y;
 
-                    for (int i = 1; i < sub.subBody.MemPos.Count; i++)
+                    for (int i = 1; i < sub.subBody.PositionBuffer.Count; i++)
                     {
-                        Vector2 currPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[i].Position);
+                        Vector2 currPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[i].Position);
                         currPos.Y = -currPos.Y;
 
                         GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 10, (int)currPos.Y - 10, 20, 20), Color.Blue * 0.6f, true, 0.01f);
@@ -372,30 +446,19 @@ namespace Barotrauma
         
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            var newTargetPosition = new Vector2(
-                msg.ReadFloat(),
-                msg.ReadFloat());
-            
-            //already interpolating with more up-to-date data -> ignore
-            if (subBody.MemPos.Count > 1 && subBody.MemPos[0].Timestamp > sendingTime)
-            {
-                return;
-            }
+            var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Name);
+            msg.ReadPadBits();
 
-            int index = 0;
-            while (index < subBody.MemPos.Count && sendingTime > subBody.MemPos[index].Timestamp)
+            if (posInfo != null)
             {
-                index++;
-            }
+                int index = 0;
+                while (index < subBody.PositionBuffer.Count && sendingTime > subBody.PositionBuffer[index].Timestamp)
+                {
+                    index++;
+                }
 
-            //position with the same timestamp already in the buffer (duplicate packet?)
-            //  -> no need to add again
-            if (index < subBody.MemPos.Count && sendingTime == subBody.MemPos[index].Timestamp)
-            {
-                return;
+                subBody.PositionBuffer.Insert(index, posInfo);
             }
-            
-            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, 0.0f, sendingTime));
         }
     }
 }

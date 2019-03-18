@@ -14,6 +14,11 @@ namespace Barotrauma.Items.Components
     interface IDrawableComponent
     {
 #if CLIENT
+        /// <summary>
+        /// The extents of the sprites or other graphics this component needs to draw. Used to determine which items are visible on the screen.
+        /// </summary>
+        Vector2 DrawSize { get; }
+
         void Draw(SpriteBatch spriteBatch, bool editing);
 #endif
     }
@@ -98,12 +103,11 @@ namespace Barotrauma.Items.Components
                 drawable = value;
                 if (drawable)
                 {
-                    if (!item.drawableComponents.Contains((IDrawableComponent)this))
-                        item.drawableComponents.Add((IDrawableComponent)this);
+                    item.EnableDrawableComponent((IDrawableComponent)this);
                 }
                 else
                 {
-                    item.drawableComponents.Remove((IDrawableComponent)this);
+                    item.DisableDrawableComponent((IDrawableComponent)this);
                 }                
             }
         }
@@ -311,7 +315,7 @@ namespace Barotrauma.Items.Components
                         if (ic == null) break;
 
                         ic.Parent = this;
-                        item.components.Add(ic);
+                        item.AddComponent(ic);
                         break;
                 }
                 
@@ -531,6 +535,7 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
@@ -623,7 +628,7 @@ namespace Barotrauma.Items.Components
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
-                property.TrySetValue(attribute.Value);
+                property.TrySetValue(this, attribute.Value);
             }
 #if CLIENT 
             string msg = TextManager.Get(Msg, true);

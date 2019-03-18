@@ -79,10 +79,12 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Initialized ArtifactEvent (" + item.Name + ")", Color.White);
             }
 
+#if SERVER
             if (GameMain.Server != null)
             {
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
+#endif
         }
 
         public override void Update(float deltaTime)
