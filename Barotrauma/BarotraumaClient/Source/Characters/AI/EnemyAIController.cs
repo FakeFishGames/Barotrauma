@@ -27,7 +27,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
 
-                GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 20.0f, Color.Red);
+                GUI.Font.DrawString(spriteBatch, $"{selectedAiTarget.Entity.ToString()} ({targetValue.ToString()})", pos - Vector2.UnitY * 20.0f, Color.Red);
             }
 
             /*GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);

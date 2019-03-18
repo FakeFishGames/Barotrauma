@@ -26,6 +26,7 @@ namespace Facepunch.Steamworks
             public uint VotesUp { get; private set; }
             public DateTime Modified { get; private set; }
             public DateTime Created { get; private set; }
+            public int DownloadSize { get; private set; }
 
             public Item( ulong Id, Workshop workshop )
             {
@@ -46,6 +47,7 @@ namespace Facepunch.Steamworks
                 item.VotesDown = details.VotesDown;
                 item.Modified = Utility.Epoch.ToDateTime( details.TimeUpdated );
                 item.Created = Utility.Epoch.ToDateTime( details.TimeCreated );
+                item.DownloadSize = details.FileSize;
 
                 return item;
             }

@@ -1,4 +1,69 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.3
+---------------------------------------------------------------------------------------------------------
+
+- Made molochs slower.
+- Watchmen cannot be dragged or grabbed.
+- AI characters can give treatment to characters who aren't unconscious.
+- Added a button that dismisses the tutorial popups to prevent accidentally closing the popups.
+- Underwater scooters now attract monsters.
+- Improvements and balancing to vanilla submarines.
+- Made alien ruin walls more durable.
+- Reduced item deterioration speeds.
+- Added "yes to all" and "no to all" buttons to the prompts when deleting containers in the submarine editor.
+- Improved the background smoke texture in hydrothermal wastes.
+- Baby moloch, doo doo doo doo doo doo
+
+- Fixed console errors in the chemical shipment mission due to auxiliorizine being still present in the
+mission configuration despite the item being removed.
+- Made coilgun ammunition boxes craftable and purchaseable, coilgun bolts cannot be purchased anymore.
+- Fixed AI-controlled husk not spawning when a huskified player dies.
+- Fixed AI crew occasionally going outside to fix leaks.
+- Fixed server failing to sync clients who join the server after a character has been removed during 
+the round (e.g. eaten, turned into a husk).
+- Fixed server-side console errors when clients attempt to use a fabricator.
+- Display Steam authentication errors in the server logs.
+- Fixed status effects with a ReduceAffliction value of 0 freezing the game.
+- Fixed sliders not moving in the battery/supercapacitor interface when an AI character is operating it.
+- Fixed chatbox being deselected in the net lobby when receiving a lobby update from the server (i.e. 
+whenever the server host changes any setting).
+- Fixed OnBroken status effects firing in the submarine editor when an item's condition is set to zero
+(for example, reactors exploding and breaking all the nearby walls).
+- Fixed file number being added to the file extension of debug console log files ("file123.txt (2)" 
+instead of "file123 (2).txt").
+- Fixed battery positioning in charging docks.
+- Fixed crashing when ending a single player round while a character is outside the sub.
+- Fixed "attempting to remove an already removed item" console errors when ending a round.
+- Fixed fire sounds persisting in menus.
+- Fixed the layout of the extra cargo menu in server settings.
+- Fixed depth charges disappearing from loaders when interacting them with both hand slots full.
+- Fixed StatusEffects not being able to target item components. Caused doors to be impossible to weld 
+and most likely other issues with item StatusEffects as well. 
+- Artifacts spawn in artifact holders again.
+- Fixes to "attempted to move pulljoint extremely far" errors which occasionally caused severe problems
+in syncing characters' positions.
+- Fixed a bug that occasionally caused monsters to spawn very close to the submarine in monster missions.
+- Fixed servers occasionally starting the round multiple times when automatically starting the game via 
+autorestart or clients being ready. 
+- Fixed up-to-date content packages being reported as incompatible in the Steam workshop menu.
+- Changed the default radio chat hotkey to T.
+- Fixed the line of sight effect not working on ruins when looking at them from inside a sub.
+- Fixed fabricator allowing new items to be created when the output is not empty, resulting in wasted materials.
+- Fixed servers reporting incorrect player counts in the server list.
+- Fixed order messages not being visible in single player if the character issuing the order has no headset.
+- Fixed riot shields retaining their pushing ability even when the user is stunned or unconscious. 
+- Fixed rubber ducks not floating like a good duck should.
+- Prevent locations from being generated too close to each other in the campaign map.
+- Fixed battery and supercapacitor charges not staying in sync between the server and clients.
+- Fixed watchmen imploding continuously if they end up outside.
+- Fixed non-downloaded workshop items showing zero as the file size.
+- Fixed spectate button staying disabled if starting a round fails (due to a missing sub file for example).
+- Fixed crashing when teleporting characters from a submarine to ruins in multiplayer.
+- Fixed automatic temperature control setting turbine output above 100 if the power consumption is higher 
+than what the reactor can generate. Caused "failed to write an event for the entity" errors in multiplayer.
+- Fixed AI characters attempting to treat dead characters.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.2
 ---------------------------------------------------------------------------------------------------------
 

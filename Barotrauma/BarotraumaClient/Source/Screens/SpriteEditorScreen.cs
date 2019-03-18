@@ -333,6 +333,8 @@ namespace Barotrauma
                 element.Elements("BrokenSprite").ForEach(s => CreateSprite(s));
                 element.Elements("containedsprite").ForEach(s => CreateSprite(s));
                 element.Elements("ContainedSprite").ForEach(s => CreateSprite(s));
+                element.Elements("inventoryicon").ForEach(s => CreateSprite(s));
+                element.Elements("InventoryIcon").ForEach(s => CreateSprite(s));
                 //decorativesprites don't necessarily have textures (can be used to hide/disable other sprites)
                 element.Elements("decorativesprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
                 element.Elements("DecorativeSprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });

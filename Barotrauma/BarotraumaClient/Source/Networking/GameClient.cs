@@ -1182,6 +1182,15 @@ namespace Barotrauma.Networking
                                         ConnectedClients.RemoveAt(i);
                                     }
                                 }
+                                //remove clients that aren't present anymore
+                                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
+                                {
+                                    if (!currentClients.Contains(ConnectedClients[i]))
+                                    {
+                                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i].Name);
+                                        ConnectedClients.RemoveAt(i);
+                                    }
+                                }
                                 
                                 Voting.AllowSubVoting = allowSubVoting;
                                 Voting.AllowModeVoting = allowModeVoting;

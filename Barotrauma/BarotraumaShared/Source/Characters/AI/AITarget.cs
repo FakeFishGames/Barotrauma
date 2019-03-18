@@ -21,13 +21,13 @@ namespace Barotrauma
         public float SoundRange
         {
             get { return soundRange; }
-            set { soundRange = Math.Max(value, MinSoundRange); }
+            set { soundRange = MathHelper.Clamp(value, MinSoundRange, MaxSoundRange); }
         }
 
         public float SightRange
         {
             get { return sightRange; }
-            set { sightRange = Math.Max(value, MinSightRange); }
+            set { sightRange = MathHelper.Clamp(value, MinSightRange, MaxSoundRange); }
         }
 
         private float sectorRad = MathHelper.TwoPi;
@@ -58,7 +58,8 @@ namespace Barotrauma
 
         public bool Enabled = true;
 
-        public float MinSoundRange, MinSightRange;
+        public readonly float MinSoundRange, MinSightRange;
+        public readonly float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
 
         public Vector2 WorldPosition
         {
@@ -102,6 +103,17 @@ namespace Barotrauma
         {
             SightRange = MinSightRange = element.GetAttributeFloat("sightrange", 0.0f);
             SoundRange = MinSoundRange = element.GetAttributeFloat("soundrange", 0.0f);
+            // Use the min and max definitions if found.
+            if (element.Attribute("minsightrange") != null)
+            {
+                MinSightRange = element.GetAttributeFloat("minsightrange", MinSightRange);
+            }
+            if (element.Attribute("minsoundrange") != null)
+            {
+                MinSoundRange = element.GetAttributeFloat("minsoundrange", MinSoundRange);
+            }
+            MaxSightRange = element.GetAttributeFloat("maxsightrange", MaxSightRange);
+            MaxSoundRange = element.GetAttributeFloat("maxsoundrange", MaxSoundRange);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
         }
 

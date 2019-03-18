@@ -1897,6 +1897,8 @@ namespace Barotrauma.Networking
 
             Log(msg, ServerLog.MessageType.ServerMessage);
 
+            if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
+
             client.Connection.Disconnect(targetmsg);
             connectedClients.Remove(client);
 

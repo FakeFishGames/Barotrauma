@@ -613,7 +613,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modificationDate.RectTransform, Anchor.TopRight), item.Modified.ToString(), textAlignment: Alignment.TopRight);
             
             var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize") + ": ");
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable((long)item.Size), textAlignment: Alignment.TopRight);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item.Installed ? (long)item.Size : item.DownloadSize), textAlignment: Alignment.TopRight);
 
             new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), content.RectTransform), TextManager.Get("WorkshopShowItemInSteam"))
             {

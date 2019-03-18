@@ -349,7 +349,7 @@ namespace Barotrauma
             if (movement.LengthSquared() < 0.00001f)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
-                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, 0.5f);
+                MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
                 return;
             }
 
@@ -459,14 +459,21 @@ namespace Barotrauma
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
             }
 
+            Vector2 mainLimbDiff = MainLimb.PullJointWorldAnchorB - MainLimb.SimPosition;
             if (CurrentSwimParams.UseSineMovement)
             {
-                MainLimb.PullJointWorldAnchorB = Vector2.SmoothStep(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, (float)Math.Abs(Math.Sin(WalkPos)));
+                MainLimb.PullJointWorldAnchorB = Vector2.SmoothStep(
+                    MainLimb.PullJointWorldAnchorB,
+                    Collider.SimPosition,
+                    mainLimbDiff.LengthSquared() > 10.0f ? 1.0f : (float)Math.Abs(Math.Sin(WalkPos)));
             }
             else
             {
                 //MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(MainLimb.PullJointWorldAnchorB, Collider.SimPosition, 0.5f);
+                MainLimb.PullJointWorldAnchorB = Vector2.Lerp(
+                    MainLimb.PullJointWorldAnchorB, 
+                    Collider.SimPosition,
+                    mainLimbDiff.LengthSquared() > 10.0f ? 1.0f : 0.5f);
             }
 
             floorY = Limbs[0].SimPosition.Y;            

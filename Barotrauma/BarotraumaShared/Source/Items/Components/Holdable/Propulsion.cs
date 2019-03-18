@@ -53,6 +53,7 @@ namespace Barotrauma.Items.Components
                     usableIn = UsableIn.Both;
                     break;
             }
+            ResetSoundRange();
         }
         
         public override bool Use(float deltaTime, Character character = null)
@@ -108,7 +109,25 @@ namespace Barotrauma.Items.Components
             useState -= deltaTime;
 
             if (useState <= 0.0f) IsActive = false;
+
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SoundRange = IsActive ? item.AiTarget.MaxSoundRange : item.AiTarget.MinSoundRange;
+            }
         }
-        
+
+        public override void Unequip(Character character)
+        {
+            base.Unequip(character);
+            ResetSoundRange();
+        }
+
+        private void ResetSoundRange()
+        {
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SoundRange = item.AiTarget.MinSoundRange;
+            }
+        }
     }
 }

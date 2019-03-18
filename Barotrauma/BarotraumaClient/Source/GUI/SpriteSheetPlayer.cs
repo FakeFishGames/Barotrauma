@@ -25,6 +25,7 @@ namespace Barotrauma
         private int currentFrameIndex = 0;
 
         private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
+        private Action callbackOnStop;
 
         private bool isPlaying;
         public bool IsPlaying
@@ -117,17 +118,24 @@ namespace Barotrauma
             isPlaying = false;
         }
 
+        private bool OKButtonClicked(GUIButton button, object userData)
+        {
+            Stop();
+            callbackOnStop?.Invoke();
+            return true;
+        }
+
         public void AddToGUIUpdateList()
         {
             if (!isPlaying) return;
             background.AddToGUIUpdateList();
         }
 
-        public void LoadContent(string contentPath, XElement videoElement, string contentId, bool startPlayback)
+        public void LoadContent(string contentPath, XElement videoElement, string contentId, bool startPlayback, bool hasButton, Action callback = null)
         {
             totalElapsed = loopTimer = 0.0f;
             animationSpeed = videoElement.GetAttributeFloat("animationspeed", 0.1f);
-            loopDelay = videoElement.GetAttributeFloat("loopdelay", 0.0f); ;
+            loopDelay = videoElement.GetAttributeFloat("loopdelay", 0.0f);
 
             if (playingSheets != null)
             {
@@ -154,6 +162,17 @@ namespace Barotrauma
 
             title.Text = TextManager.Get(contentId);
             title.RectTransform.NonScaledSize = new Point(resolution.X, 30);
+
+            callbackOnStop = callback;
+
+            if (hasButton)
+            {
+                var okButton = new GUIButton(new RectTransform(new Point(160, 50), videoFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
+                    TextManager.Get("OK"))
+                {
+                    OnClicked = OKButtonClicked
+                };
+            }
 
             if (startPlayback) Play();
         }

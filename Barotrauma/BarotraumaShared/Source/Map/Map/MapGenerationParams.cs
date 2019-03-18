@@ -108,6 +108,9 @@ namespace Barotrauma
         [Serialize(10.0f, true), Editable(0.0f, 500.0f, ToolTip = "Connections smaller than this are removed.")]
         public float MinConnectionDistance { get; set; }
         
+        [Serialize(5.0f, true), Editable(0.0f, 100.0f, ToolTip = "Locations that are closer than this to another location are removed.")]
+        public float MinLocationDistance { get; set; }
+
         [Serialize(0.2f, true), Editable(0.0f, 10.0f, 
             ToolTip = "Affects how many iterations are done when generating the jagged shape of the connections (iterations = Sqrt(connectionLength * multiplier)).")]
         public float ConnectionIterationMultiplier { get; set; }

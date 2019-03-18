@@ -191,6 +191,14 @@ namespace Barotrauma.RuinGeneration
 
         private BTRoom entranceRoom;
 
+        private List<RuinEntity> ruinEntities = new List<RuinEntity>();
+        private List<Door> doors = new List<Door>();
+
+        public IEnumerable<RuinEntity> RuinEntities
+        {
+            get { return ruinEntities; }
+        }
+
         public List<RuinShape> RuinShapes
         {
             get { return allShapes; }
@@ -303,7 +311,7 @@ namespace Barotrauma.RuinGeneration
             GenerateRuinEntities(caveCells, area, mirror);
         }
         
-        class RuinEntity
+        public class RuinEntity
         {
             public readonly RuinEntityConfig Config;
             public readonly MapEntity Entity;
@@ -319,8 +327,6 @@ namespace Barotrauma.RuinGeneration
             }
         }
 
-        private List<RuinEntity> ruinEntities = new List<RuinEntity>();
-        private List<Door> doors = new List<Door>();
         private void GenerateRuinEntities(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
             var entityGrid = Hull.GenerateEntityGrid(new Rectangle(ruinArea.X, ruinArea.Y + ruinArea.Height, ruinArea.Width, ruinArea.Height));

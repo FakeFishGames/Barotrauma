@@ -383,6 +383,10 @@ namespace Barotrauma
                         {
                             CharacterRace = r;
                         }
+                        else
+                        {
+                            CharacterRace = Race.White;
+                        }
                         CharacterHairIndex = subElement.GetAttributeInt("hairindex", -1);
                         CharacterBeardIndex = subElement.GetAttributeInt("beardindex", -1);
                         CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", -1);
