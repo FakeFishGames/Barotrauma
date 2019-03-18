@@ -149,7 +149,7 @@ namespace Barotrauma
                     commands.SelectMany(c => c.names).ToArray(),
                     new string[0]
                 };
-            }));
+            }, isCheat: true));
 
 
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
@@ -382,8 +382,9 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(client.Name, reason, false, banDuration);
-                    });
+                ShowQuestionPrompt("Reason for kicking \"" + client.Name + "\"?", (reason) =>
+                {
+                    GameMain.NetworkMember.KickPlayer(client.Name, reason);
                 });
             }));
             
@@ -978,98 +979,6 @@ namespace Barotrauma
                 }
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
-            }));
-
-            commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
-            {
-                Submarine.MainSub?.FlipX();
-            }));
-
-            commands.Add(new Command("gender", "Set the gender of the controlled character. Allowed parameters: Male, Female, None.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character!");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No parameters provided!");
-                    return;
-                }
-                if (Enum.TryParse(args[0], true, out Gender gender))
-                {
-                    character.Info.Gender = gender;
-                    character.ReloadHead();
-                    foreach (var limb in character.AnimController.Limbs)
-                    {
-                        foreach (var wearable in limb.WearingItems)
-                        {
-                            if (wearable.Gender != Gender.None && wearable.Gender != gender)
-                            {
-                                wearable.Gender = gender;
-                            }
-                        }
-                    }
-                }
-            }));
-
-            commands.Add(new Command("race", "Set race of the controlled character. Allowed parameters: White, Black, Asian, None.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character!");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No parameters provided!");
-                    return;
-                }
-                if (Enum.TryParse(args[0], true, out Race race))
-                {
-                    character.Info.Race = race;
-                    character.ReloadHead();
-                }
-            }));
-
-            commands.Add(new Command("loadhead|head", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character!");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No head id provided!");
-                    return;
-                }
-                if (int.TryParse(args[0], out int id))
-                {
-                    int hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex;
-                    hairIndex = beardIndex = moustacheIndex = faceAttachmentIndex = -1;
-                    if (args.Length > 1)
-                    {
-                        int.TryParse(args[1], out hairIndex);
-                    }
-                    if (args.Length > 2)
-                    {
-                        int.TryParse(args[2], out beardIndex);
-                    }
-                    if (args.Length > 3)
-                    {
-                        int.TryParse(args[3], out moustacheIndex);
-                    }
-                    if (args.Length > 4)
-                    {
-                        int.TryParse(args[4], out faceAttachmentIndex);
-                    }
-                    character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
-                }
             }));
 
             commands.Add(new Command("money", "", args =>

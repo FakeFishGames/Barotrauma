@@ -1310,6 +1310,27 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
 
+                bool hasIntruders = Character.CharacterList.Any(c =>
+                    c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
+                    (c.AIController is EnemyAIController || (c.TeamID != Character.Controlled.TeamID && c.TeamID != Character.TeamType.FriendlyNPC)));
+
+                ToggleReportButton("reportintruders", hasIntruders);
+
+                foreach (GUIComponent reportButton in reportButtonFrame.Children)
+                {
+                    var highlight = reportButton.GetChildByUserData("highlighted");
+                    if (highlight.Visible)
+                    {
+                        highlight.RectTransform.LocalScale = new Vector2(1.25f + (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.25f);
+                    }
+                }
+            }
+            else
+            {
+                reportButtonFrame.Visible = false;
+            }
+        }
+
         /// <summary>
         /// Should report buttons be visible on the screen atm?
         /// </summary>

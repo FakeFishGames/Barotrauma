@@ -626,28 +626,6 @@ namespace Barotrauma
 
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
 
-                return true;
-            };
-
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
-
-            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"))
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (x, y) =>
-                {
-                    if (UnsavedSettings)
-                    {
-                        LoadPlayerConfig();
-                    }
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
-                    return true;
-                }
-            };
-
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
