@@ -288,7 +288,10 @@ namespace Barotrauma.Items.Components
                 availableAmmo.AddRange(itemContainer.Inventory.Items);                
             }            
                         
-            float chargeRate = powerConsumption <= 0.0f ? 1.0f : batteryCharge / batteryCapacity;
+            float chargeRate = 
+                powerConsumption <= 0.0f ? 
+                1.0f : 
+                batteryCapacity > 0.0f ? batteryCharge / batteryCapacity : 0.0f;
             bool charged = batteryCharge * 3600.0f > powerConsumption;
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
             if (ShowChargeIndicator && PowerConsumption > 0.0f)
