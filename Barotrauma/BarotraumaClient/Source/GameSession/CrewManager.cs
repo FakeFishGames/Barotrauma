@@ -800,6 +800,12 @@ namespace Barotrauma
                         style: "InnerFrame");
                     optionFrames.Add(optionFrame);
 
+                    new GUIFrame(new RectTransform(Vector2.One, optionFrame.RectTransform, Anchor.Center),
+                        style: "OuterGlow")
+                    {
+                        Color = Color.Black * 0.7f
+                    };
+
                     var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, Anchor.Center))
                     {
                         Stretch = true,
@@ -868,7 +874,9 @@ namespace Barotrauma
             }
             int shadowSize = (int)(200 * GUI.Scale);
             orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
-                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, style: "OuterGlow", color: Color.Black * 0.65f);
+                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) }, 
+                style: "OuterGlow",
+                color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
 
         private void DrawMiniMapOverlay(SpriteBatch spriteBatch, GUICustomComponent container)

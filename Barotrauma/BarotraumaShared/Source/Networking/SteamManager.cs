@@ -75,6 +75,10 @@ namespace Barotrauma.Steam
 
         private SteamManager()
         {
+#if SERVER
+            return;
+#endif
+
             try
             {
                 client = new Facepunch.Steamworks.Client(AppID);
@@ -118,34 +122,112 @@ namespace Barotrauma.Steam
             }
         }
 
-        public static ulong GetSteamID()
+
+        #region Server
+
+        public static bool CreateServer(Networking.GameServer server, bool isPublic)
+        {
+
+#if !SERVER
+            if (instance == null || !instance.isInitialized)
+            {
+                return false;
+            }
+#endif
+
+            ServerInit options = new ServerInit("Barotrauma", "Barotrauma")
+            {
+                GamePort = (ushort)server.Port,
+                QueryPort = (ushort)server.QueryPort
+            };
+
+            instance.server = new Server(AppID, options, isPublic);
+            if (!instance.server.IsValid)
+            {
+                instance.server.Dispose();
+                instance.server = null;
+                DebugConsole.ThrowError("Initializing Steam server failed.");
+                return false;
+            }
+#if SERVER
+            instance.isInitialized = true;
+#endif
+            RefreshServerDetails(server);
+
+            instance.server.Auth.OnAuthChange = server.OnAuthChange;
+            Instance.server.LogOnAnonymous();
+
+            return true;
+        }
+
+        public static bool RefreshServerDetails(Networking.GameServer server)
         {
             if (instance == null || !instance.isInitialized)
             {
-                return 0;
+                return false;
             }
-            return instance.client.SteamId;
+
+            // These server state variables may be changed at any time.  Note that there is no lnoger a mechanism
+            // to send the player count.  The player count is maintained by steam and you should use the player
+            // creation/authentication functions to maintain your player count.
+            instance.server.ServerName = server.Name;
+            instance.server.MaxPlayers = server.MaxPlayers;
+            instance.server.Passworded = server.HasPassword;
+            Instance.server.SetKey("message", GameMain.NetLobbyScreen.ServerMessageText);
+            Instance.server.SetKey("version", GameMain.Version.ToString());
+            Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
+            Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("contentpackageurl", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
+            Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
+            Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
+            Instance.server.SetKey("allowspectating", server.AllowSpectating.ToString());
+            Instance.server.SetKey("allowrespawn", server.AllowRespawn.ToString());
+            Instance.server.SetKey("traitors", server.TraitorsEnabled.ToString());
+            Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
+            Instance.server.SetKey("gamemode", server.GameModeIdentifier);
+
+#if SERVER
+            instance.server.DedicatedServer = true;
+#endif
+
+            return true;
         }
 
-        public static ulong GetWorkshopItemIDFromUrl(string url)
+        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
-            try
-            {
-                Uri uri = new Uri(url);
-                string idStr = HttpUtility.ParseQueryString(uri.Query).Get("id");
-                if (ulong.TryParse(idStr, out ulong id))
-                {
-                    return id;
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \""+url+"\"!", e);
-            }
+            if (instance == null || !instance.isInitialized || instance.server == null) return false;
 
-            return 0;
+            DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
+            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
+            {
+                DebugConsole.Log("Authentication failed");
+                return false;
+            }
+            return true;
         }
-        
+
+        public static void StopAuthSession(ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.server == null) return;
+
+            DebugConsole.Log("SteamManager ending auth session with Steam client " + clientSteamID);
+            instance.server.Auth.EndSession(clientSteamID);
+        }
+
+        public static bool CloseServer()
+        {
+            if (instance == null || !instance.isInitialized || instance.server == null) return false;
+
+            instance.server.Dispose();
+            instance.server = null;
+
+            return true;
+        }
+
+        #endregion
+
+
         public static bool UnlockAchievement(string achievementName)
         {
             if (instance == null || !instance.isInitialized)
@@ -173,7 +255,7 @@ namespace Barotrauma.Steam
 
         public static bool IncrementStat(string statName, int increment)
         {
-            if (instance == null || !instance.isInitialized) { return false; }
+            if (instance == null || !instance.isInitialized || instance.client == null) { return false; }
             DebugConsole.Log("Incremented stat \"" + statName + "\" by " + increment);
             bool success = instance.client.Stats.Add(statName, increment);
             if (!success)
@@ -187,7 +269,7 @@ namespace Barotrauma.Steam
 
         public static bool IncrementStat(string statName, float increment)
         {
-            if (instance == null || !instance.isInitialized) { return false; }
+            if (instance == null || !instance.isInitialized || instance.client == null) { return false; }
             DebugConsole.Log("Incremented stat \"" + statName + "\" by " + increment);
             bool success = instance.client.Stats.Add(statName, increment);
             if (!success)
@@ -199,7 +281,35 @@ namespace Barotrauma.Steam
             return success;
         }
 
+#if CLIENT
+        public static ulong GetSteamID()
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return 0;
+            }
+            return instance.client.SteamId;
+        }
 
+        public static ulong GetWorkshopItemIDFromUrl(string url)
+        {
+            try
+            {
+                Uri uri = new Uri(url);
+                string idStr = HttpUtility.ParseQueryString(uri.Query).Get("id");
+                if (ulong.TryParse(idStr, out ulong id))
+                {
+                    return id;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \""+url+"\"!", e);
+            }
+
+            return 0;
+        }
+                
         #region Connecting to servers
 
         public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
@@ -324,106 +434,6 @@ namespace Barotrauma.Steam
             }
 
             return instance.client.Auth.GetAuthSessionTicket();
-        }
-
-#endregion
-
-#region Server
-
-        public static bool CreateServer(Networking.GameServer server, bool isPublic)
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return false;
-            }
-
-            ServerInit options = new ServerInit("Barotrauma", "Barotrauma")
-            {
-                GamePort = (ushort)server.Port,
-                QueryPort = (ushort)server.QueryPort
-            };
-            //options.QueryShareGamePort();
-
-            instance.server = new Server(AppID, options, isPublic);
-            if (!instance.server.IsValid)
-            {
-                instance.server.Dispose();
-                instance.server = null;
-                DebugConsole.ThrowError("Initializing Steam server failed.");
-                return false;
-            }
-
-            RefreshServerDetails(server);
-
-            instance.server.Auth.OnAuthChange = server.OnAuthChange;
-            Instance.server.LogOnAnonymous();
-
-            return true;
-        }
-        
-        public static bool RefreshServerDetails(Networking.GameServer server)
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return false;
-            }
-
-            // These server state variables may be changed at any time.  Note that there is no lnoger a mechanism
-            // to send the player count.  The player count is maintained by steam and you should use the player
-            // creation/authentication functions to maintain your player count.
-            instance.server.ServerName = server.Name;
-            instance.server.MaxPlayers = server.MaxPlayers;
-            instance.server.Passworded = server.HasPassword;
-            Instance.server.SetKey("message", GameMain.NetLobbyScreen.ServerMessageText);
-            Instance.server.SetKey("version", GameMain.Version.ToString());
-            Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
-            Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
-            Instance.server.SetKey("contentpackageurl", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
-            Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
-            Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
-            Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
-            Instance.server.SetKey("allowspectating", server.AllowSpectating.ToString());
-            Instance.server.SetKey("allowrespawn", server.AllowRespawn.ToString());
-            Instance.server.SetKey("traitors", server.TraitorsEnabled.ToString());
-            Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
-            Instance.server.SetKey("gamemode", server.GameModeIdentifier);
-
-#if SERVER
-            instance.server.DedicatedServer = true;
-#endif
-
-            return true;
-        }
-
-        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
-
-            DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
-            {
-                DebugConsole.Log("Authentication failed");
-                return false;
-            }
-            return true;
-        }
-
-        public static void StopAuthSession(ulong clientSteamID)
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return;
-
-            DebugConsole.Log("SteamManager ending auth session with Steam client " + clientSteamID);
-            instance.server.Auth.EndSession(clientSteamID);
-        }
-
-        public static bool CloseServer()
-        {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
-            
-            instance.server.Dispose();
-            instance.server = null;
-            
-            return true;
         }
 
         #endregion
@@ -1028,6 +1038,8 @@ namespace Barotrauma.Steam
 
         #endregion
 
+#endif
+
         public static void Update(float deltaTime)
         {
             if (instance == null || !instance.isInitialized) return;
@@ -1040,15 +1052,11 @@ namespace Barotrauma.Steam
 
         public static void ShutDown()
         {
-            if (instance == null || !instance.isInitialized)
-            {
-                return;
-            }
-
             instance.client?.Dispose();
             instance.client = null;
             instance.server?.Dispose();
             instance.server = null;
+            instance = null;
         }
     }
 }

@@ -157,10 +157,10 @@ namespace Barotrauma
                 float scale = targetWidth * 0.9f / Portrait.size.X;
                 Vector2 offset = Portrait.size * backgroundScale / 4;
                 Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
-                if (AttachmentsSprites != null)
+                if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
-                    foreach (var attachment in AttachmentsSprites)
+                    foreach (var attachment in AttachmentSprites)
                     {
                         DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, SpriteEffects.FlipHorizontally);
                         depthStep += depthStep;
@@ -175,10 +175,10 @@ namespace Barotrauma
             {
                 float scale = Math.Min(targetAreaSize.X / HeadSprite.size.X, targetAreaSize.Y / HeadSprite.size.Y);
                 HeadSprite.Draw(spriteBatch, screenPos, scale: scale);
-                if (AttachmentsSprites != null)
+                if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
-                    foreach (var attachment in AttachmentsSprites)
+                    foreach (var attachment in AttachmentSprites)
                     {
                         DrawAttachmentSprite(spriteBatch, attachment, HeadSprite, screenPos, scale, depthStep);
                         depthStep += depthStep;
@@ -189,7 +189,7 @@ namespace Barotrauma
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            var list = AttachmentsSprites.ToList();
+            var list = AttachmentSprites.ToList();
             if (attachment.InheritSourceRect)
             {
                 if (attachment.SheetIndex.HasValue)

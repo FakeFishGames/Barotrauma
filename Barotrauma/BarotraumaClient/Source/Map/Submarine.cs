@@ -284,8 +284,8 @@ namespace Barotrauma
                 foreach (Entity entity in pointsOfInterest)
                 {
                     Vector2 relativePos = new Vector2(
-                        (entity.WorldPosition.X - worldBorders.X) / Borders.Width,
-                        (worldBorders.Y - entity.WorldPosition.Y) / Borders.Height);
+                        (entity.WorldPosition.X - worldBorders.X) / worldBorders.Width,
+                        (worldBorders.Y - entity.WorldPosition.Y) / worldBorders.Height);
                     new GUIFrame(new RectTransform(new Point(1, 1), hullContainer.RectTransform) { RelativeOffset = relativePos }, style: null)
                     {
                         CanBeFocused = false,

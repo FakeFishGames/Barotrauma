@@ -177,9 +177,7 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-
-            TextManager.LoadTextPacks();
-            
+                        
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";

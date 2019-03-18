@@ -306,13 +306,13 @@ namespace Barotrauma.Items.Components
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text,
                     textColor: inadequateSkills.Any() ? Color.Red : Color.LightGreen, font: GUI.SmallFont);
             }
-        }
-
-        private bool SelectItem(Character user, FabricableItem selectedItem)
-        {
-            selectedItemFrame.ClearChildren();
             
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f, Stretch = true };
+            if (tooltip != null)
+            {
+                GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
+                tooltip = null;
+            }
+        }
 
             float degreeOfSuccess = user == null ? 0.0f : DegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }

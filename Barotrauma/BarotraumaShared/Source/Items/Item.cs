@@ -2265,12 +2265,7 @@ namespace Barotrauma
             if (linkedTo != null && linkedTo.Count > 0)
             {
                 var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
-                string[] linkedToIDs = new string[saveableLinked.Count];
-                for (int i = 0; i < saveableLinked.Count; i++)
-                {
-                    linkedToIDs[i] = saveableLinked[i].ID.ToString();
-                }
-                element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
+                element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
 
             SerializableProperty.SerializeProperties(this, element);
