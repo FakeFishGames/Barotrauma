@@ -832,6 +832,8 @@ namespace Barotrauma.Networking
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
             if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
 
+            DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
             if (disconnectReason == DisconnectReason.ServerFull)
             {
                 //already waiting for a slot to free up, do nothing
@@ -864,6 +866,8 @@ namespace Barotrauma.Networking
 
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
             {
+                DebugConsole.NewMessage("Attempting to reconnect...");
+
                 string msg = TextManager.GetServerMessage(disconnectMsg);
                 msg = string.IsNullOrWhiteSpace(msg) ? 
                     TextManager.Get("ConnectionLostReconnecting") : 
@@ -880,10 +884,12 @@ namespace Barotrauma.Networking
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)
                 {
+                    DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
                     msg = disconnectMsg;
                 }
                 else
                 {
+                    DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
                     for (int i = 1; i < splitMsg.Length; i++)

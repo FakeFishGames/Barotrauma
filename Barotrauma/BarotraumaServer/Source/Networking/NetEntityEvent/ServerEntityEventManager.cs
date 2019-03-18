@@ -222,7 +222,7 @@ namespace Barotrauma.Networking
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago)" +
                                 " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.ServerMessage);
-                            server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesync");
+                            server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncOldEvent");
                         }
                     );
                 }
@@ -236,7 +236,7 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
                         GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
-                        server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesync");
+                        server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }
             }
@@ -260,6 +260,7 @@ namespace Barotrauma.Networking
                 //a client could potentially spam events with a much higher character state ID 
                 //than the state of their character and/or stop sending character inputs,
                 //so we'll drop some events to make sure no-one blows up our buffer
+                DebugConsole.Log("Excessive amount of events in a client's event buffer. The client may be spamming events or their event IDs might be out of sync. Dropping events...");
                 bufferedEvents.RemoveRange(0, 256);
             }
 
