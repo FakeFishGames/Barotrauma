@@ -27,12 +27,10 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
-        private float gain = 1.0f;
+        
         public float Gain
         {
-            get { return gain; }
-            set { gain = MathHelper.Clamp(value, 0.0f, 10.0f); }
+            get { return GameMain.Config?.MicrophoneVolume ?? 1.0f; }
         }
 
         public DateTime LastEnqueueAudio;
@@ -77,7 +75,7 @@ namespace Barotrauma.Networking
             {
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
-                    GameMain.Config?.ResetSettingsFrame();
+                    GUI.SettingsMenuOpen = false;
                     new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"))
                     {
                         UserData = "capturedevicenotfound"
@@ -169,7 +167,7 @@ namespace Barotrauma.Networking
                 double maxAmplitude = 0.0f;
                 for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
                 {
-                    uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * gain), -short.MaxValue, short.MaxValue);
+                    uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * Gain), -short.MaxValue, short.MaxValue);
                     double sampleVal = uncompressedBuffer[i] / (double)short.MaxValue;
                     maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));                    
                 }

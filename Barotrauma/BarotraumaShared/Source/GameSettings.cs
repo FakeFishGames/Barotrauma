@@ -168,7 +168,7 @@ namespace Barotrauma
             }
         }
 
-        private float soundVolume = 0.5f, musicVolume = 0.3f, voiceChatVolume = 0.5f;
+        private float soundVolume = 0.5f, musicVolume = 0.3f, voiceChatVolume = 0.5f, microphoneVolume = 1.0f;
 
         public float SoundVolume
         {
@@ -211,6 +211,20 @@ namespace Barotrauma
             }
         }
 
+        public float MicrophoneVolume
+        {
+            get { return microphoneVolume; }
+            set
+            {
+                microphoneVolume = MathHelper.Clamp(value, 0.1f, 5.0f);
+#if CLIENT
+                if (Networking.VoipCapture.Instance != null)
+                {
+                    Networking.VoipCapture.Instance.Gain = microphoneVolume;
+                }
+#endif
+            }
+        }
         public string Language
         {
             get { return TextManager.Language; }

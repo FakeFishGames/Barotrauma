@@ -2681,5 +2681,6 @@
   <!-- New Additions -->
 
   <NonLinkedGapsWarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</NonLinkedGapsWarning>
+  <MicrophoneVolume>Microphone volume</MicrophoneVolume>
   
 </infotexts>
