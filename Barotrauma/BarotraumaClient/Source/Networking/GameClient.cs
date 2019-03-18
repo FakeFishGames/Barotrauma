@@ -321,18 +321,17 @@ namespace Barotrauma.Networking
 
             // Loop until we are approved
             //TODO: show the name of the server instead of IP when connecting through the server list (more streamer-friendly)
-            string connectingText = TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP);
+            string connectingText = TextManager.Get("Connecting");
             while (!CanStart && !connectCancelled)
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox(TextManager.Get("Connecting"), connectingText, new string[] { TextManager.Get("Cancel") });
-
+                    reconnectBox = new GUIMessageBox(connectingText, TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += CancelConnect;
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                reconnectBox.Text.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
 
                 if (DateTime.Now > reqAuthTime)
                 {
@@ -865,9 +864,14 @@ namespace Barotrauma.Networking
 
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
             {
+                string msg = TextManager.GetServerMessage(disconnectMsg);
+                msg = string.IsNullOrWhiteSpace(msg) ? 
+                    TextManager.Get("ConnectionLostReconnecting") : 
+                    msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
+
                 reconnectBox = new GUIMessageBox(
                     TextManager.Get("ConnectionLost"),
-                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
+                    msg, new string[0]);
                 connected = false;
                 ConnectToServer(serverIP);
             }
