@@ -34,7 +34,7 @@
     Run="LeftShift"
     Crouch="LeftControl"
     Chat="Tab"
-    RadioChat="OemTilde"
+    RadioChat="T"
     CrewOrders="C"
     Ragdoll="Space"
     Health="H"

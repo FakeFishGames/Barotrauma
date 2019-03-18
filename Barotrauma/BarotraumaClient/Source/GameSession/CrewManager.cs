@@ -106,7 +106,7 @@ namespace Barotrauma
 
             characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
             {
-                Spacing = (int)(3 * GUI.Scale),
+                //Spacing = (int)(3 * GUI.Scale),
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
                 CanBeFocused = false

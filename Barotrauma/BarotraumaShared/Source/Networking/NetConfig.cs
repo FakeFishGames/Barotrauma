@@ -9,10 +9,14 @@
 
         public static string MasterServerUrl = GameMain.Config.MasterServerUrl;
 
-        //if a Character is further than this from the sub, the server will ignore it
+        //if a Character is further than this from the sub and the players, the server will disable it
         //(in display units)
-        public const float CharacterIgnoreDistance = 20000.0f;
-        public const float CharacterIgnoreDistanceSqr = CharacterIgnoreDistance * CharacterIgnoreDistance;
+        public const float DisableCharacterDist = 22000.0f;
+        public const float DisableCharacterDistSqr = DisableCharacterDist * DisableCharacterDist;
+
+        //the character needs to get this close to be re-enabled
+        public const float EnableCharacterDist = 20000.0f;
+        public const float EnableCharacterDistSqr = EnableCharacterDist * EnableCharacterDist;
 
         //how much the physics body of an item has to move until the server 
         //send a position update to clients (in sim units)

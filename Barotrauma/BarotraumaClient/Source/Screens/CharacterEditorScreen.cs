@@ -417,7 +417,7 @@ namespace Barotrauma
                 GameMain.World.Step((float)deltaTime);
             }
             // Camera
-            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
+            Cam.MoveCamera((float)deltaTime, allowMove: false);
             bool movementInput = PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down) || PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right);
             // 0.2f, because we want to allow the user to pan when the character is floating in the water without actively moving
             if (!isFreezed && (character.AnimController.Collider.LinearVelocity.LengthSquared() > 0.2f || movementInput))
