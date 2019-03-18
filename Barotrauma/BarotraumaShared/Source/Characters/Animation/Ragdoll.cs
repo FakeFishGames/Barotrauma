@@ -1327,6 +1327,19 @@ namespace Barotrauma
             }
             if (errorMsg != null)
             {
+                if (character.IsRemotePlayer)
+                {
+                    errorMsg += " Ragdoll controlled remotely.";
+                }
+                if (SimplePhysicsEnabled)
+                {
+                    errorMsg += " Simple physics enabled.";
+                }
+                if (GameMain.NetworkMember != null)
+                {
+                    errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
+                }
+
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
