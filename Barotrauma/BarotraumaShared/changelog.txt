@@ -13,6 +13,7 @@ themselves alive and less likely to get stuck.
 - New husk sprites.
 - Improved item/character highlight effect.
 - New signal items (divide, multiply, subtract, memory, equals, greater than, color, xor).
+- Option to adjust microphone volume in multiplayer.
 - Added a console commands for changing the gender and race of the character.
 - More intuitive BrokenSprite condition logic: a BrokenSprite with a MaxCondition of 50 will start 
 fading in at 50 (and be fully visible when the condition drops to 0 or down to the MaxCondition of 
@@ -43,6 +44,8 @@ suitable capture device.
 - Fixed crashing when starting a round if a submarine name contains underscores.
 - Fixed clients console errors when attempting to modify the properties of an ItemComponent in-game
 (for example, the color of a light component).
+- Added some more information to the console messages and error popups when a client gets disconnected.
+- Fixed enablecheats command crashing the server if it's used when there are no clients present.
 
 Misc bugfixes:
 - Audio fixes (less snap, crackle and pop).
@@ -55,12 +58,18 @@ identifiers.
 - Fixed item interfaces getting repositioned every frame when the editing HUD is open.
 - Fixed held items clipping with the sleeves of the character (e.g. when holding a revolver while an 
 uniform is equipped).
+- Fixed being able to levitate by spamming the ragdoll button.
 - Fixed dead characters draining oxygen tanks inside diving suits/masks.
+- Fixed reactor gauges getting messed up if the optimal fission rate is more than 100% (which may happen
+if the power consumption is larger than what the reactor can generate).
 - Fixed mud raptors not having an inventory (nor lootable items).
 - Fixed inability to interact with any items when aim assist is set to 0%. 
 - Fixed info panel flickering out and Tab getting "inverted" (= info panel shown when tab is not being held) 
 when selecting crew members in the panel.
 - Fixed characters arms occasionally getting stuck above their shoulders.
+- Fixed wire nodes occasionally being created at the wrong end of a wire (e.g. when moving a wire between 
+connections in a connection panel, the wire stretched from the device at the other end of the wire to 
+the device that's being rewired).
 
 Misc:
 - Changed the way arguments are given to the "setclientcharacter" command (no semicolon to separate the 
