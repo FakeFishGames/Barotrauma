@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -10,11 +11,24 @@ namespace Barotrauma.Items.Components
         protected float[] timeSinceReceived;
 
         protected float[] receivedSignal;
-
-
+        
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
-        
+
+        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(999999.0f, true)]
+        public float ClampMax
+        {
+            get;
+            set;
+        }
+
+        [InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f), Serialize(-999999.0f, true)]
+        public float ClampMin
+        {
+            get;
+            set;
+        }
+
         [InGameEditable(DecimalCount = 2), Serialize(0.0f, true)]
         public float TimeFrame
         {
@@ -43,7 +57,8 @@ namespace Barotrauma.Items.Components
             }
             if (sendOutput)
             {
-                item.SendSignal(0, (receivedSignal[0] + receivedSignal[1]).ToString(), "signal_out", null);
+                float output = receivedSignal[0] + receivedSignal[1];
+                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
             }
         }
 

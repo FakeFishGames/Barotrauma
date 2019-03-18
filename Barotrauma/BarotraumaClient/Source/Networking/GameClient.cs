@@ -814,7 +814,7 @@ namespace Barotrauma.Networking
             steamAuthTicket = null;
 
             string disconnectMsg = inc.ReadString();
-            string[] splitMsg = disconnectMsg.Split(';');
+            string[] splitMsg = disconnectMsg.Split('/');
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
             if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
 
@@ -1110,7 +1110,7 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
-            AddChatMessage($"ServerMessage.HowToCommunicate_[chatbutton]={GameMain.Config.KeyBind(InputType.Chat).ToString()}_[radiobutton]={GameMain.Config.KeyBind(InputType.RadioChat).ToString()}", ChatMessageType.Server);
+            AddChatMessage($"ServerMessage.HowToCommunicate~[chatbutton]={GameMain.Config.KeyBind(InputType.Chat).ToString()}~[radiobutton]={GameMain.Config.KeyBind(InputType.RadioChat).ToString()}", ChatMessageType.Server);
 
             yield return CoroutineStatus.Success;
         }

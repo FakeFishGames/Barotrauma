@@ -95,19 +95,52 @@ namespace Barotrauma
                 }
             }
 
+            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            reportButtonFrame = new GUILayoutGroup(new RectTransform(
+                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
+            {
+                AbsoluteSpacing = (int)(5 * GUI.Scale),
+                UserData = "reportbuttons",
+                CanBeFocused = false
+            };
+
+            //report buttons
+            foreach (Order order in reports)
+            {
+                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
+                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
+                {
+                    OnClicked = (GUIButton button, object userData) =>
+                    {
+                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
+                        SetCharacterOrder(null, order, null, Character.Controlled);
+                        return true;
+                    },
+                    UserData = order,
+                    ToolTip = order.Name
+                };
+
+                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
+                {
+                    Color = Color.Red * 0.8f,
+                    HoverColor = Color.Red * 1.0f,
+                    PressedColor = Color.Red * 0.6f,
+                    UserData = "highlighted",
+                    CanBeFocused = false,
+                    Visible = false
+                };
+
+                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
+                {
+                    Color = order.Color,
+                    HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
+                    ToolTip = order.Name
+                };
+            }
+
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
-        }
-
-
-        #endregion
-
-        #region Character list management
-
-        public Rectangle GetCharacterListArea()
-        {
-            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
@@ -1295,6 +1328,31 @@ namespace Barotrauma
             character.Info.CreateInfoFrame(previewPlayer);
 
             if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
+
+                ToggleReportButton("reportintruders", hasIntruders);
+
+                foreach (GUIComponent reportButton in reportButtonFrame.Children)
+                {
+                    var highlight = reportButton.GetChildByUserData("highlighted");
+                    if (highlight.Visible)
+                    {
+                        highlight.RectTransform.LocalScale = new Vector2(1.25f + (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.25f);
+                    }
+                }
+            }
+            else
+            {
+                reportButtonFrame.Visible = false;
+            }
+        }
+
+        /// <summary>
+        /// Should report buttons be visible on the screen atm?
+        /// </summary>
+        private bool ReportButtonsVisible()
+        {
+            return CharacterHealth.OpenHealthWindow == null;
+        }
 
         private bool ReportButtonClicked(GUIButton button, object userData)
         {

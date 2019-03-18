@@ -1,6 +1,6 @@
 # Barotrauma
 
-Copyright © Undertow Games 2017-2018
+Copyright © Undertow Games 2017-2019
 
 Before downloading the source code, please read the [EULA](EULA.txt).
 
@@ -20,8 +20,7 @@ If you're interested in working on the code, either to develop mods or to contri
 ### Windows
 - [Visual Studio](https://www.visualstudio.com/vs/community/) with C# 7.0 support (VS 2017 or later recommended)
 ### Linux
-- [Mono 5.16](http://www.mono-project.com)
-- [MonoDevelop 7.5](http://www.monodevelop.com/)
+- [mono-devel 5.18](http://www.mono-project.com)
 ### macOS
-- [Mono 5.8](http://www.mono-project.com)
+- [Mono 5.16](http://www.mono-project.com)
 - [Visual Studio](https://www.visualstudio.com/vs/community/)

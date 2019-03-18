@@ -12,6 +12,12 @@ namespace Barotrauma.Sounds
     public class SoundManager : IDisposable
     {
         public const int SOURCE_COUNT = 32;
+
+        public bool Disabled
+        {
+            Default = 0,
+            Voice = 1
+        }
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
@@ -21,7 +27,7 @@ namespace Barotrauma.Sounds
             Default = 0,
             Voice = 1
         }
-        private SoundSourcePool[] sourcePools;
+        private readonly SoundSourcePool[] sourcePools;
         
         private List<Sound> loadedSounds;
         private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
@@ -34,6 +40,7 @@ namespace Barotrauma.Sounds
             get { return listenerPosition; }
             set
             {
+                if (Disabled) { return; }
                 listenerPosition = value;
                 AL.Listener(ALListener3f.Position,value.X,value.Y,value.Z);
                 ALError alError = AL.GetError();
@@ -44,12 +51,13 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private float[] listenerOrientation;
+        private float[] listenerOrientation = new float[6];
         public Vector3 ListenerTargetVector
         {
             get { return new Vector3(listenerOrientation[0], listenerOrientation[1], listenerOrientation[2]); }
             set
             {
+                if (Disabled) { return; }
                 listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
                 AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
                 ALError alError = AL.GetError();
@@ -64,6 +72,7 @@ namespace Barotrauma.Sounds
             get { return new Vector3(listenerOrientation[3], listenerOrientation[4], listenerOrientation[5]); }
             set
             {
+                if (Disabled) { return; }
                 listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
                 AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
                 ALError alError = AL.GetError();
@@ -80,6 +89,7 @@ namespace Barotrauma.Sounds
             get { return listenerGain; }
             set
             {
+                if (Disabled) { return; }
                 if (Math.Abs(ListenerGain - value) < 0.001f) { return; }
                 listenerGain = value;
                 AL.Listener(ALListenerf.Gain, listenerGain);
@@ -100,20 +110,20 @@ namespace Barotrauma.Sounds
             get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
 
-        private Dictionary<string, Pair<float,bool>> categoryModifiers;
+        private Dictionary<string, Pair<float, bool>> categoryModifiers;
 
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
-
             streamingThread = null;
-
             categoryModifiers = null;
             
             alcDevice = Alc.OpenDevice(null);
             if (alcDevice == null)
             {
-                throw new Exception("Failed to open an ALC device!");
+                DebugConsole.ThrowError("Failed to open an ALC device! Disabling audio playback...");
+                Disabled = true;
+                return;
             }
 
             AlcError alcError = Alc.GetError(alcDevice);
@@ -122,13 +132,15 @@ namespace Barotrauma.Sounds
                 //The audio device probably wasn't ready, this happens quite often
                 //Just wait a while and try again
                 Thread.Sleep(100);
-                
+
                 alcDevice = Alc.OpenDevice(null);
 
                 alcError = Alc.GetError(alcDevice);
                 if (alcError != AlcError.NoError)
                 {
-                    throw new Exception("Error initializing ALC device: " + alcError.ToString());
+                    DebugConsole.ThrowError("Error initializing ALC device: " + alcError.ToString() + ". Disabling audio playback...");
+                    Disabled = true;
+                    return;
                 }
             }
 
@@ -136,18 +148,24 @@ namespace Barotrauma.Sounds
             alcContext = Alc.CreateContext(alcDevice, alcContextAttrs);
             if (alcContext == null)
             {
-                throw new Exception("Failed to create an ALC context! (error code: "+Alc.GetError(alcDevice).ToString()+")");
+                DebugConsole.ThrowError("Failed to create an ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + "). Disabling audio playback...");
+                Disabled = true;
+                return;
             }
-            
+
             if (!Alc.MakeContextCurrent(alcContext))
             {
-                throw new Exception("Failed to assign the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
+                DebugConsole.ThrowError("Failed to assign the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + "). Disabling audio playback...");
+                Disabled = true;
+                return;
             }
-            
+
             alcError = Alc.GetError(alcDevice);
             if (alcError != AlcError.NoError)
             {
-                throw new Exception("Error after assigning ALC context: " + alcError.ToString());
+                DebugConsole.ThrowError("Error after assigning ALC context: " + alcError.ToString() + ". Disabling audio playback...");
+                Disabled = true;
+                return;
             }
 
             ALError alError = ALError.NoError;
@@ -164,10 +182,11 @@ namespace Barotrauma.Sounds
             alError = AL.GetError();
             if (alError != ALError.NoError)
             {
-                throw new Exception("Error setting distance model: " + AL.GetErrorString(alError));
+                DebugConsole.ThrowError("Error setting distance model: " + AL.GetErrorString(alError) + ". Disabling audio playback...");
+                Disabled = true;
+                return;
             }
-            
-            listenerOrientation = new float[6];
+
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
@@ -175,6 +194,8 @@ namespace Barotrauma.Sounds
 
         public Sound LoadSound(string filename, bool stream = false)
         {
+            if (Disabled) { return null; }
+
             if (!File.Exists(filename))
             {
                 throw new FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
@@ -187,6 +208,8 @@ namespace Barotrauma.Sounds
 
         public Sound LoadSound(XElement element, bool stream = false)
         {
+            if (Disabled) { return null; }
+
             string filePath = element.GetAttributeString("file", "");
             if (!File.Exists(filePath))
             {
@@ -208,13 +231,13 @@ namespace Barotrauma.Sounds
 
         public SoundChannel GetSoundChannelFromIndex(SourcePoolIndex poolIndex, int ind)
         {
-            if (ind < 0 || ind >= playingChannels[(int)poolIndex].Length) return null;
+            if (Disabled || ind < 0 || ind >= playingChannels[(int)poolIndex].Length) return null;
             return playingChannels[(int)poolIndex][ind];
         }
 
         public uint GetSourceFromIndex(SourcePoolIndex poolIndex, int srcInd)
         {
-            if (srcInd < 0 || srcInd >= sourcePools[(int)poolIndex].ALSources.Length) return 0;
+            if (Disabled || srcInd < 0 || srcInd >= sourcePools[(int)poolIndex].ALSources.Length) return 0;
 
             if (!AL.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
             {
@@ -226,6 +249,8 @@ namespace Barotrauma.Sounds
 
         public int AssignFreeSourceToChannel(SoundChannel newChannel)
         {
+            if (Disabled) { return -1; }
+
             lock (playingChannels)
             {
                 //remove a channel that has stopped
@@ -244,7 +269,6 @@ namespace Barotrauma.Sounds
                 //we couldn't get a free source to assign to this channel!
                 return -1;
             }
-        }
 
 #if DEBUG
         public void DebugSource(int ind)
@@ -259,6 +283,7 @@ namespace Barotrauma.Sounds
 
         public bool IsPlaying(Sound sound)
         {
+            if (Disabled) { return false; }
             lock (playingChannels)
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
@@ -275,6 +300,7 @@ namespace Barotrauma.Sounds
 
         public int CountPlayingInstances(Sound sound)
         {
+            if (Disabled) { return 0; }
             int count = 0;
             lock (playingChannels)
             {
@@ -289,9 +315,11 @@ namespace Barotrauma.Sounds
             }
             return count;
         }
+#endif
 
         public SoundChannel GetChannelFromSound(Sound sound)
         {
+            if (Disabled) { return null; }
             lock (playingChannels)
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
@@ -308,6 +336,7 @@ namespace Barotrauma.Sounds
 
         public void KillChannels(Sound sound)
         {
+            if (Disabled) { return; }
             lock (playingChannels)
             {
                 for (int i = 0; i < playingChannels[(int)sound.SourcePoolIndex].Length; i++)
@@ -335,6 +364,7 @@ namespace Barotrauma.Sounds
 
         public void SetCategoryGainMultiplier(string category, float gain)
         {
+            if (Disabled) { return; }
             category = category.ToLower();
             if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
             if (!categoryModifiers.ContainsKey(category))
@@ -362,6 +392,7 @@ namespace Barotrauma.Sounds
 
         public float GetCategoryGainMultiplier(string category)
         {
+            if (Disabled) { return 0.0f; }
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
             return categoryModifiers[category].First;
@@ -369,6 +400,8 @@ namespace Barotrauma.Sounds
 
         public void SetCategoryMuffle(string category,bool muffle)
         {
+            if (Disabled) { return; }
+
             category = category.ToLower();
 
             if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
@@ -380,6 +413,7 @@ namespace Barotrauma.Sounds
             {
                 categoryModifiers[category].Second = muffle;
             }
+        }
 
             for (int i = 0; i < playingChannels.Length; i++)
             {
@@ -395,6 +429,8 @@ namespace Barotrauma.Sounds
 
         public bool GetCategoryMuffle(string category)
         {
+            if (Disabled) { return false; }
+
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
             return categoryModifiers[category].Second;
@@ -402,6 +438,7 @@ namespace Barotrauma.Sounds
 
         public void InitStreamThread()
         {
+            if (Disabled) { return; }
             if (streamingThread == null || streamingThread.ThreadState.HasFlag(ThreadState.Stopped))
             {
                 streamingThread = new Thread(UpdateStreaming)
@@ -446,6 +483,8 @@ namespace Barotrauma.Sounds
         
         public void Dispose()
         {
+            if (Disabled) { return; }
+
             lock (playingChannels)
             {
                 for (int i = 0; i < playingChannels.Length; i++)
@@ -464,8 +503,8 @@ namespace Barotrauma.Sounds
             {
                 loadedSounds[i].Dispose();
             }
-            sourcePools[(int)SourcePoolIndex.Default].Dispose();
-            sourcePools[(int)SourcePoolIndex.Voice].Dispose();
+            sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
+            sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
 
             if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
             {

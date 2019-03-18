@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -204,6 +205,15 @@ namespace Barotrauma.Items.Components
 
                 Charge -= CurrPowerOutput / 3600.0f;
             }
+            item.SendSignal(0, Charge.ToString(), "charge", null);
+            item.SendSignal(0, ((Charge / capacity) * 100).ToString(), "charge_%", null);
+            item.SendSignal(0, ((RechargeSpeed / maxRechargeSpeed) * 100).ToString(), "charge_rate", null);
+
+            foreach (Pair<Powered, Connection> connected in directlyConnected)
+            {
+                connected.First.ReceiveSignal(0, "", connected.Second, source: item, sender: null, 
+                    power: gridLoad <= 0.0f ? 1.0f : CurrPowerOutput / gridLoad);
+            }
 
             foreach (Pair<Powered, Connection> connected in directlyConnected)
             {
@@ -259,6 +269,15 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
+            if (connection.Name == "set_rate")
+            {
+                float tempSpeed;
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                {
+                    if (!MathUtils.IsValid(tempSpeed)) return;
+                    RechargeSpeed = MathHelper.Clamp(tempSpeed / 100.0f, 0.0f, 1.0f) * MaxRechargeSpeed;
+                }
+            }
             if (!connection.IsPower) return;
 
             if (connection.Name == "power_in")
