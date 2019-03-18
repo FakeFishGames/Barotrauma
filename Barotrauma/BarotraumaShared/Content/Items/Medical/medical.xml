@@ -2,54 +2,43 @@
 <Items>
   <!-- Ingredients / base chemicals **************************************************************************************** -->
   <Elastin name="Elastin" identifier="elastin" category="Material" Tags="smallitem,chem" cargocontaineridentifier="chemicalcrate" scale="0.2">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="772,771,52,59" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="223,149,118,136" depth="0.6" origin="0.5,0.5" />
     <Body width="110" height="120" density="20" />
-    
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Elastin>
-  
   <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
-    
     <!-- TODO: adjust prices -->
     <SuitableTreatment identifier="damage" suitability="50" />
     <SuitableTreatment identifier="burn" suitability="50" />
     <SuitableTreatment identifier="opiateoverdose" suitability="-50" />
     <SuitableTreatment identifier="oxygenlow" suitability="-50" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="50" />
-    
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,768,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="314,0,58,142" depth="0.6" origin="0.5,0.5" />
     <Body width="58" height="120" density="20" />
-    
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <RequiredSkill identifier="medical" level="25"></RequiredSkill>
-
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="damage" amount="4"/>
+        <ReduceAffliction identifier="damage" amount="4" />
         <ReduceAffliction identifier="burn" amount="4" />
         <Affliction identifier="opiateaddiction" amount="0.3" />
         <Affliction identifier="opiateoverdose" amount="0.3" />
         <Affliction identifier="oxygenlow" amount="3" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
       </StatusEffect>
-
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
@@ -215,141 +204,109 @@
       </StatusEffect>
     </MeleeWeapon>
   </SulphuricAcid>
-  
   <!-- meds **************************************************************************************** -->
   <Bandage name="Bandage" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="50" />
-    
     <SuitableTreatment identifier="bleeding" suitability="50" />
     <SuitableTreatment identifier="gunshotwound" suitability="50" />
     <SuitableTreatment identifier="burn" suitability="50" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="17,808,45,70" depth="0.6" origin="0.5,0.5" />
     <Body width="42" height="68" density="20" />
-    
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="15"></RequiredSkill>
-          
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
-      
       <StatusEffect type="OnUse" target="This, Limb" duration="1.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <ReduceAffliction identifier="bleeding" amount="20" />
         <ReduceAffliction identifier="burn" amount="15" />
       </StatusEffect>
-
       <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="1">
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <ReduceAffliction identifier="bleeding" amount="10" />
         <ReduceAffliction identifier="burn" amount="7.5" />
       </StatusEffect>
-      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-      
     </MeleeWeapon>
   </Bandage>
-  
   <Plastiseal name="Plastiseal" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="A synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true" scale="0.3">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="60" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="70" />
     <Price locationtype="Outpost" buyprice="70" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,771,63,59" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="67,808,45,70" depth="0.6" origin="0.5,0.5" />
     <Body width="43" height="68" density="20" />
-    
     <SuitableTreatment identifier="bleeding" suitability="80" />
     <SuitableTreatment identifier="gunshotwound" suitability="80" />
     <SuitableTreatment identifier="burn" suitability="70" />
-    
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
-
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
-      
       <StatusEffect type="OnUse" target="This, Limb" duration="1">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
         <ReduceAffliction identifier="bleeding" amount="30" />
         <ReduceAffliction identifier="burn" amount="20" />
       </StatusEffect>
-      
       <StatusEffect type="OnFailure" target="This, Limb" duration="1">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
         <ReduceAffliction identifier="bleeding" amount="15" />
         <ReduceAffliction identifier="burn" amount="10" />
       </StatusEffect>
-      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-      
     </MeleeWeapon>
   </Plastiseal>
-  
   <AntibioticGlue name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream." useinhealthinterface="true" scale="0.3">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="20,765,110,40" depth="0.6" origin="0.5,0.5" />
     <Body radius="15" height="60" density="20" />
-    
     <SuitableTreatment identifier="bleeding" suitability="80" />
     <SuitableTreatment identifier="gunshotwound" suitability="80" />
     <SuitableTreatment identifier="burn" suitability="80" />
     <SuitableTreatment identifier="damage" suitability="-15" />
-    
-    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">      
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
-      
       <RequiredSkill identifier="medical" level="22" />
-      
       <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <ReduceAffliction identifier="bleeding" amount="20"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="20" />
       </StatusEffect>
-      
       <StatusEffect type="OnFailure" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Affliction identifier="internaldamage" amount="5" />
         <ReduceAffliction identifier="bleeding" amount="10"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="10" />
       </StatusEffect>
-      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-      
     </MeleeWeapon>
   </AntibioticGlue>
-  
-
   <Morphine name="Morphine" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
     <SuitableTreatment identifier="damage" suitability="75" />
     <SuitableTreatment identifier="burn" suitability="75" />

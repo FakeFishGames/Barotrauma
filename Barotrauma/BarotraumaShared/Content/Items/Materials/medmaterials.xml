@@ -62,7 +62,7 @@
       <Item identifier="antibiotics" />
       <Item identifier="antibiotics" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,770,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,770,58,59" origin="0.5,0.5" />
     <Sprite texture="CraftingElements2.png" depth="0.2" sourcerect="0,288,91,29" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <LevelResource deattachduration="1">

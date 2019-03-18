@@ -1,111 +1,111 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Wire" identifier="wire" category="Electrical" Tags="smallitem,wire" spritecolor="210,215,218,255" InventoryIconColor="210,215,218,255" canbepicked="true" cargocontaineridentifier="metalcrate">
+  <Item name="Wire" identifier="wire" category="Electrical" Tags="smallitem,wire" spritecolor="210,215,218,255" InventoryIconColor="210,215,218,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="Red Wire" identifier="redwire" category="Electrical" Tags="smallitem,wire" spritecolor="254,23,17,255" InventoryIconColor="254,23,17,255" canbepicked="true" cargocontaineridentifier="metalcrate">
+  <Item name="Red Wire" identifier="redwire" category="Electrical" Tags="smallitem,wire" spritecolor="254,23,17,255" InventoryIconColor="254,23,17,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="Blue Wire" identifier="bluewire" category="Electrical" Tags="smallitem,wire" spritecolor="51,121,173,255" InventoryIconColor="51,121,173,255" canbepicked="true" cargocontaineridentifier="metalcrate">
+  <Item name="Blue Wire" identifier="bluewire" category="Electrical" Tags="smallitem,wire" spritecolor="51,121,173,255" InventoryIconColor="51,121,173,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="Orange Wire" identifier="orangewire" category="Electrical" Tags="smallitem,wire" spritecolor="255,140,13,255" InventoryIconColor="255,140,13,255" canbepicked="true" cargocontaineridentifier="metalcrate">
+  <Item name="Orange Wire" identifier="orangewire" category="Electrical" Tags="smallitem,wire" spritecolor="255,140,13,255" InventoryIconColor="255,140,13,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="Green Wire" identifier="greenwire" category="Electrical" Tags="smallitem,wire" spritecolor="56,143,111,255" InventoryIconColor="56,143,111,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
+  <Item name="Green Wire" identifier="greenwire" category="Electrical" Tags="smallitem,wire" spritecolor="56,143,111,255" InventoryIconColor="56,143,111,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="Black Wire" identifier="blackwire" category="Electrical" Tags="smallitem,wire" spritecolor="50,50,50,255" InventoryIconColor="50,50,50,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
+  <Item name="Black Wire" identifier="blackwire" category="Electrical" Tags="smallitem,wire" spritecolor="50,50,50,255" InventoryIconColor="50,50,50,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="Brown Wire" identifier="brownwire" category="Electrical" Tags="smallitem,wire" spritecolor="123,77,62,255" InventoryIconColor="123,77,62,255" canbepicked="true" cargocontaineridentifier="metalcrate" price="10">
+  <Item name="Brown Wire" identifier="brownwire" category="Electrical" Tags="smallitem,wire" spritecolor="123,77,62,255" InventoryIconColor="123,77,62,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Deconstruct time="5">
-      <Item identifier="copper" outcondition="0.2"/>
-      <Item identifier="rubber" outcondition="0.2"/>
+      <Item identifier="copper" outcondition="0.2" />
+      <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="77,106,48,20" origin="0.5,0.5" />
-    <Body radius="7" width="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
+    <Body radius="14" width="60" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
     <Wire />
   </Item>
-  <Item name="FPGA Circuit" identifier="fpgacircuit" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
+  <Item name="FPGA Circuit" identifier="fpgacircuit" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices." scale="0.5">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="60" />
     <Price locationtype="Outpost" buyprice="60" />
@@ -114,12 +114,12 @@
       <Item identifier="plastic" />
       <Item identifier="copper" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,15" origin="0.5,0.5" />
-    <Body width="16" height="15" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="122,68,36,36" origin="0.5,0.5" />
+    <Body width="36" height="36" density="30" />
     <Holdable slots="Any,RightHand,LeftHand" />
   </Item>
-  <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other.">
+  <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -128,10 +128,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="65,391,63,52" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="1,1,30,28" origin="0.5,0.5" />
     <AndComponent canbeselected="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -144,14 +144,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  
-  <Item
-    name="Equals Component"
-    identifier="equalscomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="false"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Equals Component" identifier="equalscomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -160,30 +153,22 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <EqualsComponent canbeselected="true"/>
-    <Body width="16" height="16" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="833,900,63,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="193,36,31,26" origin="0.5,0.5" />
+    <EqualsComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in1"/>
-      <input name="signal_in2"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Greater Component"
-    identifier="greatercomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="false"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Greater Component" identifier="greatercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -192,29 +177,22 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <GreaterComponent canbeselected="true"/>
-    <Body width="16" height="16" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="769,900,63,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="161,35,30,27" origin="0.5,0.5" />
+    <GreaterComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in1"/>
-      <input name="signal_in2"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item name="Adder Component" 
-    identifier="addercomponent" 
-    category="Electrical" 
-    Tags="smallitem" 
-    linkable="false" 
-    cargocontaineridentifier="metalcrate">
+  <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -223,10 +201,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,837,65,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,96,31,25" origin="0.5,0.5" />
     <AdderComponent canbeselected="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -238,14 +216,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  
-  <Item
-    name="Color Component"
-    identifier="colorcomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="false"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Color Component" identifier="colorcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -254,32 +225,24 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <ColorComponent canbeselected="true"/>
-    <Body width="16" height="16" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="447,900,65,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="129,2,32,25" origin="0.5,0.5" />
+    <ColorComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_r"/>
-      <input name="signal_g"/>
-      <input name="signal_b"/>
-      <input name="signal_a"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_r" />
+      <input name="signal_g" />
+      <input name="signal_b" />
+      <input name="signal_a" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Subtract Component"
-    identifier="subtractcomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="false"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Subtract Component" identifier="subtractcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -288,65 +251,22 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <SubtractComponent canbeselected="true"/>
-
-    <Body width="16" height="16" density="30"/>
-
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
-    </Holdable>
-
-    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in1"/>
-      <input name="signal_in2"/>
-      <output name="signal_out"/>
-    </ConnectionPanel>
-  </Item>
-
-  <Item
-    name="Multiply Component"
-    identifier="multiplycomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="false"
-    cargocontaineridentifier="metalcrate">
-    <Price locationtype="Research" buyprice="75" />
-    <Price locationtype="City" buyprice="80" />
-    <Price locationtype="Outpost" buyprice="80" />
-    <Price locationtype="Military" buyprice="80" />
-    <Deconstruct time="10">
-      <Item identifier="fpgacircuit" />
-      <Item identifier="tin" />
-    </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <MultiplyComponent canbeselected="true"/>
-    <Body width="16" height="16" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,900,63,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="192,2,31,25" origin="0.5,0.5" />
+    <SubtractComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in1"/>
-      <input name="signal_in2"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item
-    name="Divide Component"
-    identifier="dividecomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="false"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Multiply Component" identifier="multiplycomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -355,24 +275,22 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <DivideComponent canbeselected="true"/>
-    <Body width="16" height="16" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,837,64,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,96,31,25" origin="0.5,0.5" />
+    <MultiplyComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in1"/>
-      <input name="signal_in2"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal.">
+  <Item name="Divide Component" identifier="dividecomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -381,10 +299,34 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,900,63,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="224,2,31,25" origin="0.5,0.5" />
+    <DivideComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
+    </Holdable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5">
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="City" buyprice="80" />
+    <Price locationtype="Outpost" buyprice="80" />
+    <Price locationtype="Military" buyprice="80" />
+    <Deconstruct time="10">
+      <Item identifier="fpgacircuit" />
+      <Item identifier="tin" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="129,390,64,53" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,2,32,26" origin="0.5,0.5" />
     <OrComponent canbeselected="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -397,14 +339,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  
-  <Item
-    name="Xor Component"
-    identifier="xorcomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="true"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Xor Component" identifier="xorcomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -413,25 +348,23 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <XorComponent canbeselected = "true"/>
-    <Body width="16" height="16" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,900,63,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="160,3,31,25" origin="0.5,0.5" />
+    <XorComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in1"/>
-      <input name="signal_in2"/>
-      <input name="set_output"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal.">
+  <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -440,10 +373,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,15,15" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,390,64,53" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,2,31,26" origin="0.5,0.5" />
     <NotComponent canbeselected="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -454,7 +387,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs.">
+  <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -463,12 +396,12 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,388,63,57" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="96,35,31,26" origin="0.5,0.5" />
     <RelayComponent canbeselected="true" vulnerabletoemp="false" canbeoverloaded="false">
       <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI" />
     </RelayComponent>
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -486,7 +419,7 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time.">
+  <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -495,10 +428,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,35,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,388,63,57" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,67,31,27" origin="0.5,0.5" />
     <DelayComponent canbeselected="true" />
-    <Body width="16" height="8" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -509,14 +442,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  
-  <Item
-    name="Memory Component"
-    identifier="memorycomponent"
-    category="Electrical"
-    Tags="smallitem"
-    linkable="true"
-    cargocontaineridentifier="metalcrate">
+  <Item name="Memory Component" identifier="memorycomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -525,24 +451,22 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16" origin="0.5,0.5" />
-    <MemoryComponent canbeselected = "true"/>
-    <Body width="16" height="8" density="30"/>
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
-              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem identifier="wrench" type="Equipped"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,900,63,54" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="128,36,31,25" origin="0.5,0.5" />
+    <MemoryComponent canbeselected="true" />
+    <Body width="31" height="25" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <requireditem identifier="screwdriver" type="Equipped"/>
-      <input name="signal_in"/>
-      <input name="signal_store"/>
-      <output name="signal_out"/>
+      <requireditem identifier="screwdriver" type="Equipped" />
+      <input name="signal_in" />
+      <input name="signal_store" />
+      <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-
-  <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -551,13 +475,13 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="phosphorus" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,385,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,388,59,57" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,4,28,23" origin="0.5,0.5" />
     <LightComponent canbeselected="true" color="1.0,0.0,0.0,0.5" castshadows="false">
-      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5"/>
-      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="0,96,31,32" origin="0.5,0.5" />
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="68,35,23,24" origin="0.5,0.5" />
     </LightComponent>
-    <Body width="16" height="16" density="30" />
+    <Body width="28" height="23" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -578,7 +502,7 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="128,0,140,89" origin="0.5,0.5" />
     <OxygenDetector canbeselected="true" />
     <Body width="31" height="24" density="30" />
@@ -600,7 +524,7 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,129,89" origin="0.5,0.5" />
     <WaterDetector canbeselected="true" />
     <Body width="31" height="24" density="30" />
@@ -622,7 +546,7 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,320,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,320,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="269,0,140,89" origin="0.5,0.5" />
     <SmokeDetector FireSizeThreshold="50" />
     <Body width="31" height="24" density="30" />
@@ -644,7 +568,7 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="0,89,140,133" origin="0.5,0.5" />
     <MotionSensor range="100" canbeselected="true" />
     <Body width="31" height="24" density="30" />
@@ -657,7 +581,7 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received.">
+  <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -666,10 +590,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,388,63,57" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,35,31,26" origin="0.5,0.5" />
     <SignalCheckComponent canbeselected="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -682,7 +606,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern.">
+  <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -691,10 +615,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,390,64,52" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,35,31,26" origin="0.5,0.5" />
     <RegExFindComponent canbeselected="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="31" height="25" density="30" />
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -705,7 +629,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal.">
+  <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -714,10 +638,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,64,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,388,59,55" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="35,130,28,26" origin="0.5,0.5" />
     <OscillatorComponent canbeselected="true" outputtype="Pulse" frequency="1" />
-    <Body width="16" height="16" density="30" />
+    <Body width="28" height="26" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -729,7 +653,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel.">
+  <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -738,10 +662,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,384,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,35,16,16" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,388,64,57" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,67,28,26" origin="0.5,0.5" />
     <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true" />
-    <Body width="16" height="16" density="30" />
+    <Body width="28" height="26" density="30" />
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -752,7 +676,7 @@
       <output name="signal_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -761,14 +685,14 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="steel" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,128,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="38,32,20,31" origin="0.5,0.5" />
-    <Body width="32" height="30" density="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="204,133,39,52" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,64,42,63" origin="0.5,0.5" />
+    <Body radius="20" height="20" density="30" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemComponent>
-      <sound file="Content/Items/WarningSiren.ogg" type="OnActive" range="2000.0" loop="true" volume="0.5"/>
+      <sound file="Content/Items/WarningSiren.ogg" type="OnActive" range="2000.0" loop="true" volume="0.5" />
     </ItemComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -777,7 +701,7 @@
       <input name="set_state" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -786,14 +710,14 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,128,64,64" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,23" origin="0.5,0.5" />
-    <Body width="20" height="16" density="20" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="142,133,43,47" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,137,42,47" origin="0.5,0.5" />
+    <Body radius="20" density="20" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemComponent>
-      <sound file="Content/Items/WarningBeep.ogg" type="OnActive" range="1000.0" loop="true" volume="0.5"/>
+      <sound file="Content/Items/WarningBeep.ogg" type="OnActive" range="1000.0" loop="true" volume="0.5" />
     </ItemComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -802,16 +726,8 @@
       <input name="set_state" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" 
-        identifier="camera" 
-        category="Electrical" 
-        Tags="smallitem" 
-        focusonselected="true" 
-        offsetonselected="500" 
-        cargocontaineridentifier="metalcrate" 
-        description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub."
-        Scale="0.16">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" />
+  <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.16">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" origin="0.5,0.5" />
     <Sprite texture="camera.png" depth="0.8" sourcerect="0,0,176,137" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -819,14 +735,8 @@
       <input name="control_in" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera"
-        category="Legacy"
-        Tags="smallitem"
-        focusonselected="true"
-        offsetonselected="500"
-        cargocontaineridentifier="metalcrate"
-        description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">    
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32" origin="0.5,0.5" />
+  <Item name="Camera" category="Legacy" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="1,123,16,32" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
