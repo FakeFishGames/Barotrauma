@@ -13,7 +13,7 @@ namespace Barotrauma.Tutorials
         public static bool ContentRunning = false;
         public static bool Initialized = false;
 
-        private enum ContentTypes { None = 0, Video = 1, Text = 2 };
+        private enum ContentTypes { None = 0, Video = 1, TextOnly = 2 };
 
         private TutorialSegment activeSegment;
         private List<TutorialSegment> segments;
@@ -39,14 +39,17 @@ namespace Barotrauma.Tutorials
 
         private class TutorialSegment
         {
-            public string Name;
+            public string Id;
+            public string Objective;
             public ContentTypes ContentType;
-            public XElement Content;
+            public XElement TextContent;
+            public XElement VideoContent;
             public bool IsTriggered;
 
             public TutorialSegment(XElement config)
             {
-                Name = config.GetAttributeString("name", "Missing Name");
+                Id = config.GetAttributeString("id", "Missing ID");
+                Objective = config.GetAttributeString("objective", string.Empty);
                 Enum.TryParse(config.GetAttributeString("contenttype", "None"), true, out ContentType);
                 IsTriggered = config.GetAttributeBool("istriggered", false);
 
@@ -55,10 +58,11 @@ namespace Barotrauma.Tutorials
                     case ContentTypes.None:
                         break;
                     case ContentTypes.Video:
-                        Content = config.Element("Video");
+                        VideoContent = config.Element("Video");
+                        TextContent = config.Element("Text");
                         break;
-                    case ContentTypes.Text:
-                        Content = config.Element("Text");
+                    case ContentTypes.TextOnly:
+                        TextContent = config.Element("Text");
                         break;
                 }
             }
@@ -116,10 +120,11 @@ namespace Barotrauma.Tutorials
 
         private void PreloadVideoContent()
         {
+            return;
             for (int i = 0; i < segments.Count; i++)
             {
                 if (segments[i].ContentType != ContentTypes.Video || segments[i].IsTriggered) continue;
-                spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Name, segments[i].Content);
+                spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Id, segments[i].VideoContent);
             }
         }
 
@@ -465,26 +470,29 @@ namespace Barotrauma.Tutorials
             activeSegment = segments[index];
             activeSegment.IsTriggered = true;
 
+            string tutorialText = TextManager.GetFormatted(activeSegment.TextContent.GetAttributeString("tag", ""), true, args);
+
             switch (activeSegment.ContentType)
             {
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    string fileName = activeSegment.Content.GetAttributeString("file", "");
+                    string fileName = activeSegment.VideoContent.GetAttributeString("file", "");
                     if (fileName != "")
                     {
-                        videoPlayer.LoadContent(playableContentPath + fileName, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
+                        videoPlayer.LoadTutorialContent(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.TextContent, args), activeSegment.Id, true, true, CurrentSegmentStopCallback);
                     }
                     else
                     {
-                        spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
+                        spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.VideoContent, activeSegment.Id, true, true, CurrentSegmentStopCallback);
                     }
+
                     break;
-                case ContentTypes.Text:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.GetFormatted(activeSegment.Content.GetAttributeString("tag", ""), false, args),
-                                              activeSegment.Content.GetAttributeInt("width", 300),
-                                              activeSegment.Content.GetAttributeInt("height", 80),
-                                              activeSegment.Content.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);
+                case ContentTypes.TextOnly:
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Id), tutorialText,
+                                              activeSegment.TextContent.GetAttributeInt("width", 300),
+                                              activeSegment.TextContent.GetAttributeInt("height", 80),
+                                              activeSegment.TextContent.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);
                     break;
             }
 

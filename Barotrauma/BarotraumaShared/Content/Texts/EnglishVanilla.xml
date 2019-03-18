@@ -2493,21 +2493,21 @@
   <!-- Contextual tutorial -->
   <TutorialActive>Tutorial active</TutorialActive>
   <Welcome>Welcome</Welcome>
-  <WelcomeText>"Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?"</WelcomeText>
+  <WelcomeText>Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?</WelcomeText>
   <ReactorCommand>Command Reactor</ReactorCommand>  
   <NavConsole>Navigation Console</NavConsole>
   <DestinationObjective>Destination</DestinationObjective>
-  <DestinationObjectiveText>"Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up."</DestinationObjectiveText>
+  <DestinationObjectiveText>Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up.</DestinationObjectiveText>
   <Flood>Flooding</Flood>
   <ReactorUse>Reactor</ReactorUse>
   <EnemyOnSonar>Enemy on Sonar</EnemyOnSonar>
   <Degrading1>Degradation</Degrading1>
-  <Degrading1Text>"This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this."</Degrading1Text>
+  <Degrading1Text>This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this.</Degrading1Text>
   <Degrading2>Command Repair</Degrading2>
   <Medical>Medical</Medical>
   <Approach1>Approach I</Approach1>  
   <Approach2>Approach II</Approach2>
-  <Approach2Text>"Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance."</Approach2Text>
+  <Approach2Text>Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance.</Approach2Text>
 
   <!-- Afflictions -->
   <AfflictionName.InternalDamage>Internal Damage</AfflictionName.InternalDamage>
@@ -2681,5 +2681,29 @@
   <!-- New Additions -->
 
   <NonLinkedGapsWarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</NonLinkedGapsWarning>
-  
+
+  <!-- Tutorial START -->
+  <ReactorCommandObjective>Give the order to start up the reactor</ReactorCommandObjective>
+  <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
+
+  <NavConsoleObjective>Plot the course</NavConsoleObjective>
+  <NavConsoleText>Now that we have power, let's get her moving. Go attend to the navigation console and activate the ship's sonar so we can see where we're going. After that, we can safely undock and set the course to {0}.</NavConsoleText>
+
+  <FloodObjective>Repair hull breach</FloodObjective>
+  <FloodText><!-- TODO --></FloodText>
+
+  <ReactorUseText><!-- TODO --></ReactorUseText>
+
+  <EnemyOnSonarObjective>Dispatch enemies</EnemyOnSonarObjective>
+  <EnemyOnSonarText>Captain, we have a bogey on our sonar. Knowing these waters, it can't be anything too friendly. Order somebody to man the turret, preferably someone with some weapon know-how. Failing that, do it yourself. It's kill or be killed down here.</EnemyOnSonarText>
+
+  <Degrading2Objective>Order the crew to perform maintenance</Degrading2Objective>
+  <Degrading2Text><!-- TODO --></Degrading2Text>
+
+  <MedicalObjective>Give medical assistance to {0}</MedicalObjective>
+  <MedicalText>Captain! {0} is hurt. We should have somebody tend to {1} injuries or we risk losing them.</MedicalText>
+
+  <Approach1Objective>Dock at the outpost {0}</Approach1Objective>
+  <Approach1Text>We are close to {0}! Carefully now, we should be slowing down so we don't ram them. Maneuver the sub close to their docking port and close the clamps when we're there.</Approach1Text>
+  <!-- Tutorial END -->
 </infotexts>
