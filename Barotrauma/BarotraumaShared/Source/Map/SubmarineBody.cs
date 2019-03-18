@@ -700,6 +700,23 @@ namespace Barotrauma
             Vector2 impulse = direction * impact * 0.5f;            
             impulse = impulse.ClampLength(5.0f);
 
+            if (!MathUtils.IsValid(impulse))
+            {
+                string errorMsg =
+                    "Invalid impulse in SubmarineBody.ApplyImpact: " + impulse +
+                    ". Direction: " + direction + ", body position: " + Body.SimPosition + ", impact: " + impact + ".";
+                if (GameMain.NetworkMember != null)
+                {
+                    errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
+                }
+                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "SubmarineBody.ApplyImpact:InvalidImpulse",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
+            }
+
 #if CLIENT
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
