@@ -107,74 +107,6 @@ namespace Barotrauma
             };
             scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
 
-            if (isSinglePlayer)
-            {
-                chatBox = new ChatBox(guiFrame, isSinglePlayer: true)
-                {
-                    OnEnterMessage = (textbox, text) =>
-                    {
-                        if (Character.Controlled == null) { return true; }
-
-                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-
-                        if (!string.IsNullOrWhiteSpace(text))
-                        {
-                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
-                            AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.Name,
-                                msg,
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
-                                Character.Controlled);
-                            var headset = GetHeadset(Character.Controlled, true);
-                            if (headset != null && headset.CanTransmit())
-                            {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
-                            }
-                        }
-                        textbox.Deselect();
-                        textbox.Text = "";
-                        return true;
-                    }
-                };
-
-                chatBox.InputBox.OnTextChanged += chatBox.TypingChatMessage;
-            }
-
-            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
-            reportButtonFrame = new GUILayoutGroup(new RectTransform(
-                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
-            {
-                AbsoluteSpacing = (int)(5 * GUI.Scale),
-                UserData = "reportbuttons",
-                CanBeFocused = false
-            };
-
-            //report buttons
-            foreach (Order order in reports)
-            {
-                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
-                {
-                    OnClicked = (GUIButton button, object userData) =>
-                    {
-                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
-                        SetCharacterOrder(null, order, null, Character.Controlled);
-                        return true;
-                    },
-                    UserData = order,
-                    ToolTip = order.Name
-                };
-
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
-                {
-                    Color = Color.Red * 0.8f,
-                    HoverColor = Color.Red * 1.0f,
-                    PressedColor = Color.Red * 0.6f,
-                    UserData = "highlighted",
-                    CanBeFocused = false,
-                    Visible = false
-                };
-
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -1376,6 +1308,16 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
 
+        private bool ReportButtonClicked(GUIButton button, object userData)
+        {
+            //order targeted to all characters
+            Order order = userData as Order;
+            if (order.TargetAllCharacters)
+            {
+                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
+                AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+                SetCharacterOrder(null, order, "", Character.Controlled);
+            }
             return true;
         }
 

@@ -929,6 +929,24 @@ namespace Barotrauma.Networking
             List<string> permittedConsoleCommands = new List<string>();
             byte clientID = inc.ReadByte();
 
+            waitInServerQueueBox?.Close();
+            waitInServerQueueBox = null;
+
+            yield return CoroutineStatus.Success;
+        }
+
+
+        private void ReadAchievement(NetIncomingMessage inc)
+        {
+            string achievementIdentifier = inc.ReadString();
+            SteamAchievementManager.UnlockAchievement(achievementIdentifier);
+        }
+
+        private void ReadPermissions(NetIncomingMessage inc)
+        {
+            List<string> permittedConsoleCommands = new List<string>();
+            byte clientID = inc.ReadByte();
+
             ClientPermissions permissions = ClientPermissions.None;
             List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
             Client.ReadPermissions(inc, out permissions, out permittedCommands);
@@ -1288,6 +1306,9 @@ namespace Barotrauma.Networking
 
                             string levelSeed            = inc.ReadString();
                             float levelDifficulty       = inc.ReadFloat();
+
+                            byte botCount               = inc.ReadByte();
+                            BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
 
                             byte botCount               = inc.ReadByte();
                             BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
