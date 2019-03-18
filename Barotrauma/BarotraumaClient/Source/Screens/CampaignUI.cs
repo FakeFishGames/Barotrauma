@@ -118,7 +118,18 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            characterList = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.Center))
+            var crewContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), crewContent.RectTransform), "", font: GUI.LargeFont)
+            {
+                TextGetter = GetMoney
+            };
+
+            characterList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), crewContent.RectTransform))
             {
                 OnSelected = SelectCharacter
             };

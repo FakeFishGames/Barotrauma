@@ -1563,7 +1563,7 @@ namespace Barotrauma
             return isCombined;
         }
 
-        public void Drop(Character dropper = null)
+        public void Drop(Character dropper)
         {
             if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
                 GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))

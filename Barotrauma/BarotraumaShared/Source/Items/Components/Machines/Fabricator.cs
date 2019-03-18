@@ -420,7 +420,7 @@ namespace Barotrauma.Items.Components
                         if (inputContainer.Inventory.Items.All(it => it != null))
                         {
                             var unneededItem = inputContainer.Inventory.Items.FirstOrDefault(it => !usedItems.Contains(it));
-                            unneededItem?.Drop();
+                            unneededItem?.Drop(null);
                         }
                         inputContainer.Inventory.TryPutItem(matchingItem, user: null, createNetworkEvent: true);
                     }                    

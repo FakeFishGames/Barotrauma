@@ -3,7 +3,7 @@ sampler TextureSampler = sampler_state { Texture = <xTexture>; };
 
 float4x4 xTransform;
 
-static const int MaxDeformResolution = 15 * 15;
+const int MaxDeformResolution = 15 * 15;
 
 float2 deformArray[15 * 15];
 
@@ -14,6 +14,7 @@ float2 uvTopLeft;
 float2 uvBottomRight;
 
 float4 tintColor;
+float4 solidColor;
 
 struct VertexShaderInput
 {
@@ -51,8 +52,8 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
     float2 deformBottomLeft = deformArray[deformIndexTopLeft.x + deformIndexBottomRight.y * deformArrayWidth];
     float2 deformBottomRight = deformArray[deformIndexBottomRight.x + deformIndexBottomRight.y * deformArrayWidth];
 
-	float divX = 1.0 / deformArrayWidth;
-	float divY = 1.0 / deformArrayHeight;
+    float divX = 1.0 / (deformArrayWidth - 1);
+    float divY = 1.0 / (deformArrayHeight - 1);
 
 	float2 vertexOffset = 
 	{
@@ -74,11 +75,25 @@ float4 mainPS(VertexShaderOutput input) : COLOR
 	return xTexture.Sample(TextureSampler, input.TexCoords) * input.Color;
 }
 
+float4 solidColorPS(VertexShaderOutput input) : COLOR
+{
+	return solidColor * xTexture.Sample(TextureSampler, input.TexCoords).a;
+}
+
 technique DeformShader
 {
 	pass Pass1
-    {
-        VertexShader = compile vs_3_0 mainVS();
-        PixelShader = compile ps_3_0 mainPS();
+	{
+		VertexShader = compile vs_4_0_level_9_1 mainVS();
+		PixelShader = compile ps_4_0_level_9_1 mainPS();
 	}
+}
+
+technique DeformShaderSolidColor
+{
+    pass Pass1
+    {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
+        PixelShader = compile ps_4_0_level_9_1 solidColorPS();
+    }
 }

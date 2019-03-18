@@ -109,6 +109,12 @@ namespace Barotrauma.Sounds
         {
             get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
         }
+        public int UniqueLoadedSoundCount
+        {
+            get { return loadedSounds.Select(s => s.Filename).Distinct().Count(); }
+        }
+
+        private Dictionary<string, Pair<float, bool>> categoryModifiers;
 
         private Dictionary<string, Pair<float, bool>> categoryModifiers;
 
@@ -409,6 +415,10 @@ namespace Barotrauma.Sounds
             if (!categoryModifiers.ContainsKey(category))
             {
                 categoryModifiers.Add(category, new Pair<float, bool>(1.0f, muffle));
+            }
+            else
+            {
+                categoryModifiers[category].Second = muffle;
             }
             else
             {

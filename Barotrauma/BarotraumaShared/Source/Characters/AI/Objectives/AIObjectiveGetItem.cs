@@ -144,7 +144,7 @@ namespace Barotrauma
                             if (character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any })) continue;
 
                             //if everything else fails, simply drop the existing item
-                            character.Inventory.Items[i].Drop();
+                            character.Inventory.Items[i].Drop(character);
                         }
                     }
                 }

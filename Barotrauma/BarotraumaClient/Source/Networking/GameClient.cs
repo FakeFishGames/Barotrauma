@@ -202,6 +202,12 @@ namespace Barotrauma.Networking
 
         private void ConnectToServer(string hostIP)
         {
+            chatBox.InputBox.Enabled = false;
+            if (GameMain.NetLobbyScreen?.TextBox != null)
+            {
+                GameMain.NetLobbyScreen.TextBox.Enabled = false;
+            }
+
             string[] address = hostIP.Split(':');
             if (address.Length == 1)
             {
@@ -259,7 +265,11 @@ namespace Barotrauma.Networking
             {
                 DebugConsole.ThrowError("Couldn't connect to " + hostIP + ". Error message: " + e.Message);
                 Disconnect();
-
+                chatBox.InputBox.Enabled = true;
+                if (GameMain.NetLobbyScreen?.TextBox != null)
+                {
+                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                }
                 GameMain.ServerListScreen.Select();
                 return;
             }
@@ -530,6 +540,10 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.Select();
                 }
                 connected = true;
+                if (GameMain.NetLobbyScreen?.TextBox != null)
+                {
+                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                }
             }
 
             yield return CoroutineStatus.Success;

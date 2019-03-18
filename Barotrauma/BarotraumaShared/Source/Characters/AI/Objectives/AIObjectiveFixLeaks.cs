@@ -10,6 +10,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "fix leaks";
         public override bool KeepDivingGearOn => true;
+        public override bool ForceRun => true;
 
         public AIObjectiveFixLeaks(Character character) : base (character, "") { }
 

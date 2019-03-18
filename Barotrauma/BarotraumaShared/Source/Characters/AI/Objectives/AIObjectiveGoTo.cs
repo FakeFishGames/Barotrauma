@@ -45,17 +45,22 @@ namespace Barotrauma
             get
             {
                 bool canComplete = !cannotReach && !abandon;
-                if (FollowControlledCharacter && Character.Controlled == null) { canComplete = false; }
-                else if (Target != null && Target.Removed) { canComplete = false; }
-                else if (repeat || waitUntilPathUnreachable > 0.0f) { canComplete = true; }
-                else if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering)
+                if (canComplete)
                 {
-                    //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable TODO: add a timer?
-                    if (pathSteering.CurrentPath == null) { canComplete = true; }
-                    else if (!AllowGoingOutside && pathSteering.CurrentPath.HasOutdoorsNodes) { canComplete = false; }
-                    if (canComplete)
+                    if (FollowControlledCharacter && Character.Controlled == null)
                     {
-                        canComplete = !pathSteering.CurrentPath.Unreachable;
+                        canComplete = false;
+                    }
+                    else if (Target != null && Target.Removed)
+                    {
+                        canComplete = false;
+                    }
+                    else if (!repeat && waitUntilPathUnreachable < 0)
+                    {
+                        if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
+                        {
+                            canComplete = !PathSteering.CurrentPath.Unreachable;
+                        }
                     }
                 }
                 if (!canComplete)
@@ -144,9 +149,9 @@ namespace Barotrauma
             }
             else
             {
-                var indoorSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                bool targetIsOutside = (Target != null && Target.Submarine == null) || (indoorSteering != null && indoorSteering.CurrentPath != null && indoorSteering.CurrentPath.HasOutdoorsNodes);
-                if (targetIsOutside && !AllowGoingOutside)
+                bool targetIsOutside = (Target != null && Target.Submarine == null) || 
+                    (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.HasOutdoorsNodes);
+                if (targetIsOutside && character.CurrentHull != null && !AllowGoingOutside)
                 {
                     cannotReach = true;
                 }

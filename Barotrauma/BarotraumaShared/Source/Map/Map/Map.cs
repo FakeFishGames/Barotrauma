@@ -430,13 +430,6 @@ namespace Barotrauma
             }
             CurrentLocation.SelectedMissionIndex = missionIndex;
 
-            //the destination must be the same as the destination of the mission
-            if (CurrentLocation.SelectedMission != null && 
-                CurrentLocation.SelectedMission.Locations[1] != SelectedLocation)
-            {
-                SelectLocation(CurrentLocation.SelectedMission.Locations[1]);
-            }
-
             SelectedLocation = location;
             SelectedConnection = connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);

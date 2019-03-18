@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
 
         private void Launch(Vector2 impulse)
         {
-            item.Drop();
+            item.Drop(null);
 
             item.body.Enabled = true;            
             item.body.ApplyLinearImpulse(impulse);
@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
         {
             float rotation = item.body.Rotation;
             Vector2 simPositon = item.SimPosition;
-            item.Drop();
+            item.Drop(null);
 
             item.body.Enabled = true;
             //set the velocity of the body because the OnProjectileCollision method

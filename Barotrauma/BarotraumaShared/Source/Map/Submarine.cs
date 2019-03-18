@@ -467,6 +467,7 @@ namespace Barotrauma
         public List<Submarine> GetConnectedSubs()
         {
             connectedSubs.Clear();
+            connectedSubs.Add(this);
             GetConnectedSubsRecursive(connectedSubs);
 
             return connectedSubs;
@@ -522,6 +523,30 @@ namespace Barotrauma
                 {
                     maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                }
+            }
+            
+            if (minX < 0.0f && maxX > Level.Loaded.Size.X)
+            {
+                //no walls found at either side, just use the initial spawnpos and hope for the best
+            }
+            else if (minX < 0)
+            {
+                //no wall found at the left side, spawn to the left from the right-side wall
+                spawnPos.X = maxX - minWidth - 100.0f;
+            }
+            else if (maxX > Level.Loaded.Size.X)
+            {
+                //no wall found at right side, spawn to the right from the left-side wall
+                spawnPos.X = minX + minWidth + 100.0f;
+            }
+            else
+            {
+                //walls found at both sides, use their midpoint
+                spawnPos.X = (minX + maxX) / 2;
             }
             
             if (minX < 0.0f && maxX > Level.Loaded.Size.X)
@@ -655,7 +680,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -990,6 +1015,31 @@ namespace Barotrauma
 
             return closest;
         }
+
+        public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.hullList);
+        public List<Gap> GetGaps(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Gap.GapList);
+        public List<Item> GetItems(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Item.ItemList);
+
+        public List<T> GetEntities<T>(bool includingConnectedSubs, List<T> list) where T : MapEntity
+        {
+            return list.FindAll(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
+        }
+
+        public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
+        {
+            if (entity.Submarine == this) { return true; }
+            if (entity.Submarine == null) { return false; }
+            if (includingConnectedSubs)
+            {
+                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the sub is same as the other.
+        /// </summary>
+        public bool IsConnectedTo(Submarine otherSub) => this == otherSub || GetConnectedSubs().Contains(otherSub);
 
         public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.hullList);
         public List<Gap> GetGaps(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Gap.GapList);

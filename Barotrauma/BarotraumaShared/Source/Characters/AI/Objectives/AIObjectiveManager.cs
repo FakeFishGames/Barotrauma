@@ -56,23 +56,6 @@ namespace Barotrauma
             DelayedObjectives.Add(objective, coroutine);
         }
 
-        public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
-        public void AddObjective(AIObjective objective, float delay, Action callback = null)
-        {
-            if (DelayedObjectives.TryGetValue(objective, out CoroutineHandle coroutine))
-            {
-                CoroutineManager.StopCoroutines(coroutine);
-                DelayedObjectives.Remove(objective);
-            }
-            coroutine = CoroutineManager.InvokeAfter(() =>
-            {
-                DelayedObjectives.Remove(objective);
-                AddObjective(objective);
-                callback?.Invoke();
-            }, delay);
-            DelayedObjectives.Add(objective, coroutine);
-        }
-
         public T GetObjective<T>() where T : AIObjective
         {
             foreach (AIObjective objective in Objectives)
@@ -199,27 +182,6 @@ namespace Barotrauma
                     if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
                     if (order.TargetItemComponent == null) return;
                     CurrentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
-                    break;
-                case "chargebatteries":
-                    currentOrder = new AIObjectiveChargeBatteries(character, option);
-                    break;
-                case "rescue":
-                    currentOrder = new AIObjectiveRescueAll(character);
-                    break;
-                case "repairsystems":
-                    currentOrder = new AIObjectiveRepairItems(character) { RequireAdequateSkills = option != "all" };
-                    break;
-                case "pumpwater":
-                    currentOrder = new AIObjectivePumpWater(character, option);
-                    break;
-                case "extinguishfires":
-                    currentOrder = new AIObjectiveExtinguishFires(character);
-                    break;
-                case "steer":
-                    var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
-                    if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
-                    if (order.TargetItemComponent == null) return;
-                    currentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
                     break;
                 default:
                     if (order.TargetItemComponent == null) return;

@@ -355,8 +355,10 @@ namespace Barotrauma.Networking
 
                 entityEventManager.Update(connectedClients);
 
-                foreach (Character character in Character.CharacterList)
+                //go through the characters backwards to give rejoining clients control of the latest created character
+                for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
                 {
+                    Character character = Character.CharacterList[i];
                     if (character.IsDead || !character.ClientDisconnected) continue;
 
                     character.KillDisconnectedTimer += deltaTime;
@@ -1957,8 +1959,8 @@ namespace Barotrauma.Networking
             if (client == null) return;
             if (client.Connection == OwnerConnection) return;
 
-            string msg = DisconnectReason.Banned.ToString();
-            DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", msg, reason);
+            string targetMsg = DisconnectReason.Banned.ToString();
+            DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason);
 
             if (client.SteamID == 0 || range)
             {
@@ -2049,6 +2051,747 @@ namespace Barotrauma.Networking
         {
             ChatMessage msg = ChatMessage.Create("", txt, messageType, null);
             SendDirectChatMessage(msg, recipient);
+        }
+
+        public void SendConsoleMessage(string txt, Client recipient)
+        {
+            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, null);
+            SendDirectChatMessage(msg, recipient);
+        }
+
+        public void SendDirectChatMessage(ChatMessage msg, Client recipient)
+        {
+            if (recipient == null)
+            {
+                string errorMsg = "Attempted to send a chat message to a null client.\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.SendDirectChatMessage:ClientNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
+            msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
+                (ushort)(recipient.ChatMsgQueue.Last().NetStateID + 1) :
+                (ushort)(recipient.LastRecvChatMsgID + 1);
+
+            recipient.ChatMsgQueue.Add(msg);
+            recipient.LastChatMsgQueueID = msg.NetStateID;
+        }
+
+        /// <summary>
+        /// Add the message to the chatbox and pass it to all clients who can receive it
+        /// </summary>
+        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null, Character senderCharacter = null)
+        {
+            string senderName = "";
+
+            Client targetClient = null;
+
+            if (type == null)
+            {
+                string command = ChatMessage.GetChatMessageCommand(message, out string tempStr);
+                switch (command.ToLowerInvariant())
+                {
+                    case "r":
+                    case "radio":
+                        type = ChatMessageType.Radio;
+                        break;
+                    case "d":
+                    case "dead":
+                        type = ChatMessageType.Dead;
+                        break;
+                    default:
+                        if (command != "")
+                        {
+                            if (command == name.ToLowerInvariant())
+                            {
+                                //a private message to the host
+                            }
+                            else
+                            {
+                                targetClient = connectedClients.Find(c =>
+                                    command == c.Name.ToLowerInvariant() ||
+                                    (c.Character != null && command == c.Character.Name.ToLowerInvariant()));
+
+                                if (targetClient == null)
+                                {
+                                    if (senderClient != null)
+                                    {
+                                        var chatMsg = ChatMessage.Create(
+                                            "", $"ServerMessage.PlayerNotFound~[player]={command}",
+                                            ChatMessageType.Error, null);
+
+                                        chatMsg.NetStateID = senderClient.ChatMsgQueue.Count > 0 ?
+                                            (ushort)(senderClient.ChatMsgQueue.Last().NetStateID + 1) :
+                                            (ushort)(senderClient.LastRecvChatMsgID + 1);
+
+                                        senderClient.ChatMsgQueue.Add(chatMsg);
+                                        senderClient.LastChatMsgQueueID = chatMsg.NetStateID;
+                                    }
+                                    else
+                                    {
+                                        AddChatMessage($"ServerMessage.PlayerNotFound~[player]={command}", ChatMessageType.Error);
+                                    }
+
+                                    return;
+                                }
+                            }
+
+                            type = ChatMessageType.Private;
+                        }
+                        else
+                        {
+                            type = ChatMessageType.Default;
+                        }
+                        break;
+                }
+
+                message = tempStr;
+            }
+
+            if (gameStarted)
+            {
+                if (senderClient == null)
+                {
+                    //msg sent by the server
+                    if (senderCharacter == null)
+                    {
+                        senderName = name;
+                    }
+                    else //msg sent by an AI character
+                    {
+                        senderName = senderCharacter.Name;
+                    }
+                }
+                else //msg sent by a client
+                {
+                    senderCharacter = senderClient.Character;
+                    senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
+
+                    //sender doesn't have a character or the character can't speak -> only ChatMessageType.Dead allowed
+                    if (senderCharacter == null || senderCharacter.IsDead || senderCharacter.SpeechImpediment >= 100.0f)
+                    {
+                        type = ChatMessageType.Dead;
+                    }
+                    else if (type == ChatMessageType.Private)
+                    {
+                        //sender has an alive character, sending private messages not allowed
+                        return;
+                    }
+
+                }
+            }
+            else
+            {
+                if (senderClient == null)
+                {
+                    //msg sent by the server
+                    if (senderCharacter == null)
+                    {
+                        senderName = name;
+                    }
+                    else //sent by an AI character, not allowed when the game is not running
+                    {
+                        return;
+                    }
+                }
+                else //msg sent by a client          
+                {
+                    //game not started -> clients can only send normal and private chatmessages
+                    if (type != ChatMessageType.Private) type = ChatMessageType.Default;
+                    senderName = senderClient.Name;
+                }
+            }
+
+            //check if the client is allowed to send the message
+            WifiComponent senderRadio = null;
+            switch (type)
+            {
+                case ChatMessageType.Radio:
+                case ChatMessageType.Order:
+                    if (senderCharacter == null) return;
+
+                    //return if senderCharacter doesn't have a working radio
+                    var radio = senderCharacter.Inventory?.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
+                    if (radio == null || !senderCharacter.HasEquippedItem(radio)) return;
+
+                    senderRadio = radio.GetComponent<WifiComponent>();
+                    if (!senderRadio.CanTransmit()) return;
+                    break;
+                case ChatMessageType.Dead:
+                    //character still alive and capable of speaking -> dead chat not allowed
+                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead && senderCharacter.SpeechImpediment < 100.0f)
+                    {
+                        return;
+                    }
+                    break;
+            }
+
+            if (type == ChatMessageType.Server)
+            {
+                senderName = null;
+                senderCharacter = null;
+            }
+            else if (type == ChatMessageType.Radio)
+            {
+                //send to chat-linked wifi components
+                senderRadio.TransmitSignal(0, message, senderRadio.Item, senderCharacter, false);
+            }
+
+            //check which clients can receive the message and apply distance effects
+            foreach (Client client in ConnectedClients)
+            {
+                string modifiedMessage = message;
+
+                switch (type)
+                {
+                    case ChatMessageType.Default:
+                    case ChatMessageType.Radio:
+                    case ChatMessageType.Order:
+                        if (senderCharacter != null &&
+                            client.Character != null && !client.Character.IsDead)
+                        {
+                            modifiedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, client.Character);
+
+                            //too far to hear the msg -> don't send
+                            if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                        }
+                        break;
+                    case ChatMessageType.Dead:
+                        //character still alive -> don't send
+                        if (client != senderClient && client.Character != null && !client.Character.IsDead) continue;
+                        break;
+                    case ChatMessageType.Private:
+                        //private msg sent to someone else than this client -> don't send
+                        if (client != targetClient && client != senderClient) continue;
+                        break;
+                }
+
+                var chatMsg = ChatMessage.Create(
+                    senderName,
+                    modifiedMessage,
+                    (ChatMessageType)type,
+                    senderCharacter);
+
+                SendDirectChatMessage(chatMsg, client);
+            }
+
+            if (type.Value != ChatMessageType.MessageBox)
+            {
+                string myReceivedMessage = type == ChatMessageType.Server || type == ChatMessageType.Error ? TextManager.GetServerMessage(message) : message;
+                if (!string.IsNullOrWhiteSpace(myReceivedMessage) &&
+                    (targetClient == null || senderClient == null))
+                {
+                    AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter);
+                }
+            }
+        }
+
+        public void SendOrderChatMessage(OrderChatMessage message)
+        {
+            if (message.Sender == null || message.Sender.SpeechImpediment >= 100.0f) return;
+            ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
+
+            //check which clients can receive the message and apply distance effects
+            foreach (Client client in ConnectedClients)
+            {
+                string modifiedMessage = message.Text;
+
+                if (message.Sender != null &&
+                    client.Character != null && !client.Character.IsDead)
+                {
+                    modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, client.Character);
+
+                    //too far to hear the msg -> don't send
+                    if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                }
+
+                SendDirectChatMessage(message, client);
+            }
+
+            string myReceivedMessage = message.Text;
+            
+            if (!string.IsNullOrWhiteSpace(myReceivedMessage))
+            {
+                AddChatMessage(new OrderChatMessage(message.Order, message.OrderOption, myReceivedMessage, message.TargetEntity, message.TargetCharacter, message.Sender));
+            }
+        }
+
+        private void FileTransferChanged(FileSender.FileTransferOut transfer)
+        {
+            Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
+            if (transfer.FileType == FileTransferType.CampaignSave &&
+                (transfer.Status == FileTransferStatus.Sending || transfer.Status == FileTransferStatus.Finished) &&
+                recipient.LastCampaignSaveSendTime != null)
+            {
+                recipient.LastCampaignSaveSendTime.Second = (float)NetTime.Now;
+            }
+        }
+
+        public void SendCancelTransferMsg(FileSender.FileTransferOut transfer)
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.FILE_TRANSFER);
+            msg.Write((byte)FileTransferMessageType.Cancel);
+            msg.Write((byte)transfer.SequenceChannel);
+            CompressOutgoingMessage(msg);
+            server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+        }
+
+        public void UpdateVoteStatus()
+        {
+            if (server.Connections.Count == 0 || connectedClients.Count == 0) return;
+
+            Client.UpdateKickVotes(connectedClients);
+
+            var clientsToKick = connectedClients.FindAll(c => 
+                c.Connection != OwnerConnection &&
+                c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
+            foreach (Client c in clientsToKick)
+            {
+                SendChatMessage($"ServerMessage.KickedFromServer~[client]={c.Name}", ChatMessageType.Server, null);
+                KickClient(c, "ServerMessage.KickedByVote");
+                BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
+            }
+
+            GameMain.NetLobbyScreen.LastUpdateID++;
+
+            SendVoteStatus(connectedClients);
+
+            if (serverSettings.Voting.AllowEndVoting && EndVoteMax > 0 &&
+                ((float)EndVoteCount / (float)EndVoteMax) >= serverSettings.EndVoteRequiredRatio)
+            {
+                Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
+                EndGame();
+            }
+        }
+
+        public void SendVoteStatus(List<Client> recipients)
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
+            msg.Write((byte)ServerNetObject.VOTE);
+            serverSettings.Voting.ServerWrite(msg);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            CompressOutgoingMessage(msg);
+
+            server.SendMessage(msg, recipients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+        }
+
+        public void UpdateClientPermissions(Client client)
+        {
+            if (client.SteamID > 0)
+            {
+                serverSettings.ClientPermissions.RemoveAll(cp => cp.SteamID == client.SteamID);
+                if (client.Permissions != ClientPermissions.None)
+                {
+                    serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
+                        client.Name,
+                        client.SteamID,
+                        client.Permissions,
+                        client.PermittedConsoleCommands));
+                }
+            }
+            else
+            {
+                serverSettings.ClientPermissions.RemoveAll(cp => client.IPMatches(cp.IP));
+                if (client.Permissions != ClientPermissions.None)
+                {
+                    serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
+                        client.Name,
+                        client.Connection.RemoteEndPoint.Address,
+                        client.Permissions,
+                        client.PermittedConsoleCommands));
+                }
+            }
+
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.PERMISSIONS);
+            client.WritePermissions(msg);
+            CompressOutgoingMessage(msg);
+
+            //send the message to the client whose permissions are being modified and the clients who are allowed to modify permissions
+            List<NetConnection> recipients = new List<NetConnection>() { client.Connection };
+            foreach (Client otherClient in connectedClients)
+            {
+                if (otherClient.HasPermission(ClientPermissions.ManagePermissions) && !recipients.Contains(otherClient.Connection))
+                {
+                    recipients.Add(otherClient.Connection);
+                }
+            }
+            server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0);            
+
+            serverSettings.SaveClientPermissions();
+        }
+        
+        public void GiveAchievement(Character character, string achievementIdentifier)
+        {
+            achievementIdentifier = achievementIdentifier.ToLowerInvariant();
+            foreach (Client client in connectedClients)
+            {
+                if (client.Character == character)
+                {
+                    GiveAchievement(client, achievementIdentifier);
+                    return;
+                }
+            }
+        }
+
+        public void GiveAchievement(Client client, string achievementIdentifier)
+        {
+            if (client.GivenAchievements.Contains(achievementIdentifier)) return;
+            client.GivenAchievements.Add(achievementIdentifier);
+
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.ACHIEVEMENT);
+            msg.Write(achievementIdentifier);
+
+            CompressOutgoingMessage(msg);
+
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void UpdateCheatsEnabled()
+        {
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.CHEATS_ENABLED);
+            msg.Write(DebugConsole.CheatsEnabled);
+            msg.WritePadBits();
+
+            CompressOutgoingMessage(msg);
+            
+            server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);            
+        }
+
+        public void SetClientCharacter(Client client, Character newCharacter)
+        {
+            if (client == null) return;
+
+            //the client's previous character is no longer a remote player
+            if (client.Character != null)
+            {
+                client.Character.IsRemotePlayer = false;
+                client.Character.OwnerClientIP = null;
+                client.Character.OwnerClientName = null;
+            }
+
+            if (newCharacter == null)
+            {
+                if (client.Character != null) //removing control of the current character
+                {
+                    CreateEntityEvent(client.Character, new object[] { NetEntityEvent.Type.Control, null });
+                    client.Character = null;
+                }
+            }
+            else //taking control of a new character
+            {
+                newCharacter.ClientDisconnected = false;
+                newCharacter.KillDisconnectedTimer = 0.0f;
+                newCharacter.ResetNetState();
+                if (client.Character != null)
+                {
+                    newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
+                }
+
+                newCharacter.OwnerClientIP = client.Connection.RemoteEndPoint.Address.ToString();
+                newCharacter.OwnerClientName = client.Name;
+                newCharacter.IsRemotePlayer = true;
+                newCharacter.Enabled = true;
+                client.Character = newCharacter;
+                CreateEntityEvent(newCharacter, new object[] { NetEntityEvent.Type.Control, client });
+            }
+        }
+
+        private void UpdateCharacterInfo(NetIncomingMessage message, Client sender)
+        {
+            sender.SpectateOnly = message.ReadBoolean() && (serverSettings.AllowSpectating || sender.Connection == OwnerConnection);
+            if (sender.SpectateOnly)
+            {
+                return;
+            }
+
+            Gender gender = Gender.Male;
+            Race race = Race.White;
+            int headSpriteId = 0;
+            try
+            {
+                gender = (Gender)message.ReadByte();
+                race = (Race)message.ReadByte();
+                headSpriteId = message.ReadByte();
+            }
+            catch (Exception e)
+            {
+                //gender = Gender.Male;
+                //race = Race.White;
+                //headSpriteId = 0;
+                DebugConsole.Log("Received invalid characterinfo from \"" + sender.Name + "\"! { " + e.Message + " }");
+            }
+            int hairIndex = message.ReadByte();
+            int beardIndex = message.ReadByte();
+            int moustacheIndex = message.ReadByte();
+            int faceAttachmentIndex = message.ReadByte();
+
+            List<JobPrefab> jobPreferences = new List<JobPrefab>();
+            int count = message.ReadByte();
+            for (int i = 0; i < Math.Min(count, 3); i++)
+            {
+                string jobIdentifier = message.ReadString();
+
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
+                if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+            }
+
+            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name);
+            sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+
+            //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
+            Debug.Assert(sender.JobPreferences.Count > 0);
+            if (jobPreferences.Count > 0)
+            {
+                sender.JobPreferences = jobPreferences;
+            }
+        }
+
+        public void AssignJobs(List<Client> unassigned)
+        {
+            unassigned = new List<Client>(unassigned);
+
+            Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
+            foreach (JobPrefab jp in JobPrefab.List)
+            {
+                assignedClientCount.Add(jp, 0);
+            }
+
+            Character.TeamType teamID = Character.TeamType.None;
+            if (unassigned.Count > 0) { teamID = unassigned[0].TeamID; }
+
+            //if we're playing a multiplayer campaign, check which clients already have a character and a job
+            //(characters are persistent in campaigns)
+            if (GameMain.GameSession.GameMode is MultiPlayerCampaign multiplayerCampaign)
+            {
+                var campaignAssigned = multiplayerCampaign.GetAssignedJobs(connectedClients);
+                //remove already assigned clients from unassigned
+                unassigned.RemoveAll(u => campaignAssigned.ContainsKey(u));
+                //add up to assigned client count
+                foreach (KeyValuePair<Client, Job> clientJob in campaignAssigned)
+                {
+                    assignedClientCount[clientJob.Value.Prefab]++;
+                    clientJob.Key.AssignedJob = clientJob.Value.Prefab;
+                }
+            }
+
+            //count the clients who already have characters with an assigned job
+            foreach (Client c in connectedClients)
+            {
+                if (c.TeamID != teamID || unassigned.Contains(c)) continue;
+                if (c.Character?.Info?.Job != null && !c.Character.IsDead)
+                {
+                    assignedClientCount[c.Character.Info.Job.Prefab]++;
+                }
+            }
+
+            //if any of the players has chosen a job that is Always Allowed, give them that job
+            for (int i = unassigned.Count - 1; i >= 0; i--)
+            {
+                if (unassigned[i].JobPreferences.Count == 0) continue;
+                if (!unassigned[i].JobPreferences[0].AllowAlways) continue;
+                unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
+                unassigned.RemoveAt(i);
+            }
+
+            //go throught the jobs whose MinNumber>0 (i.e. at least one crew member has to have the job)
+            bool unassignedJobsFound = true;
+            while (unassignedJobsFound && unassigned.Count > 0)
+            {
+                unassignedJobsFound = false;
+
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                {
+                    if (unassigned.Count == 0) break;
+                    if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) continue;
+
+                    //find the client that wants the job the most, or force it to random client if none of them want it
+                    Client assignedClient = FindClientWithJobPreference(unassigned, jobPrefab, true);
+
+                    assignedClient.AssignedJob = jobPrefab;
+                    assignedClientCount[jobPrefab]++;
+                    unassigned.Remove(assignedClient);
+
+                    //the job still needs more crew members, set unassignedJobsFound to true to keep the while loop running
+                    if (assignedClientCount[jobPrefab] < jobPrefab.MinNumber) unassignedJobsFound = true;
+                }
+            }
+
+            //attempt to give the clients a job they have in their job preferences
+            for (int i = unassigned.Count - 1; i >= 0; i--)
+            {
+                foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
+                {
+                    //the maximum number of players that can have this job hasn't been reached yet
+                    // -> assign it to the client
+                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && unassigned[i].Karma >= preferredJob.MinKarma)
+                    {
+                        unassigned[i].AssignedJob = preferredJob;
+                        assignedClientCount[preferredJob]++;
+                        unassigned.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            //give random jobs to rest of the clients
+            foreach (Client c in unassigned)
+            {
+                //find all jobs that are still available
+                var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+
+                //all jobs taken, give a random job
+                if (remainingJobs.Count == 0)
+                {
+                    DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    int jobIndex = Rand.Range(0, JobPrefab.List.Count);
+                    int skips = 0;
+                    while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
+                    {
+                        jobIndex++;
+                        skips++;
+                        if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
+                        if (skips >= JobPrefab.List.Count) break;
+                    }
+                    c.AssignedJob = JobPrefab.List[jobIndex];
+                    assignedClientCount[c.AssignedJob]++;
+                }
+                else //some jobs still left, choose one of them by random
+                {
+                    c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
+                    assignedClientCount[c.AssignedJob]++;
+                }
+            }
+        }
+
+        public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
+        {
+            Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
+            foreach (JobPrefab jp in JobPrefab.List)
+            {
+                assignedPlayerCount.Add(jp, 0);
+            }
+            
+            //count the clients who already have characters with an assigned job
+            foreach (Client c in connectedClients)
+            {
+                if (c.TeamID != teamID) continue;
+                if (c.Character?.Info?.Job != null && !c.Character.IsDead)
+                {
+                    assignedPlayerCount[c.Character.Info.Job.Prefab]++;
+                }
+                else if (c.CharacterInfo?.Job != null)
+                {
+                    assignedPlayerCount[c.CharacterInfo?.Job.Prefab]++;
+                }
+            }
+
+            List<CharacterInfo> unassignedBots = new List<CharacterInfo>(bots);
+            foreach (CharacterInfo bot in bots)
+            {
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                {
+                    if (jobPrefab.MinNumber < 1 || assignedPlayerCount[jobPrefab] >= jobPrefab.MinNumber) continue;
+                    bot.Job = new Job(jobPrefab);
+                    assignedPlayerCount[jobPrefab]++;
+                    unassignedBots.Remove(bot);
+                    break;
+                }
+            }
+
+            //find a suitable job for the rest of the players
+            foreach (CharacterInfo c in unassignedBots)
+            {
+                //find all jobs that are still available
+                var remainingJobs = JobPrefab.List.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                //all jobs taken, give a random job
+                if (remainingJobs.Count == 0)
+                {
+                    DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    c.Job = new Job(JobPrefab.List[Rand.Range(0, JobPrefab.List.Count)]);
+                    assignedPlayerCount[c.Job.Prefab]++;
+                }
+                else //some jobs still left, choose one of them by random
+                {
+                    c.Job = new Job(remainingJobs[Rand.Range(0, remainingJobs.Count)]);
+                    assignedPlayerCount[c.Job.Prefab]++;
+                }
+            }
+        }
+
+        private Client FindClientWithJobPreference(List<Client> clients, JobPrefab job, bool forceAssign = false)
+        {
+            int bestPreference = 0;
+            Client preferredClient = null;
+            foreach (Client c in clients)
+            {
+                if (c.Karma < job.MinKarma) continue;
+                int index = c.JobPreferences.IndexOf(job);
+                if (index == -1) index = 1000;
+
+                if (preferredClient == null || index < bestPreference)
+                {
+                    bestPreference = index;
+                    preferredClient = c;
+                }
+            }
+
+            //none of the clients wants the job, assign it to random client
+            if (forceAssign && preferredClient == null)
+            {
+                preferredClient = clients[Rand.Int(clients.Count)];
+            }
+
+            return preferredClient;
+        }
+
+        public static void Log(string line, ServerLog.MessageType messageType)
+        {
+            if (GameMain.Server == null || !GameMain.Server.ServerSettings.SaveServerLogs) return;
+
+            GameMain.Server.ServerSettings.ServerLog.WriteLine(line, messageType);
+
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                if (!client.HasPermission(ClientPermissions.ServerLog)) continue;
+                //use sendername as the message type
+                GameMain.Server.SendDirectChatMessage(
+                    ChatMessage.Create(messageType.ToString(), line, ChatMessageType.ServerLog, null),
+                    client);
+            }
+        }
+
+        public override void Disconnect()
+        {
+            serverSettings.BanList.Save();
+            serverSettings.SaveSettings();
+            SteamManager.CloseServer();
+
+            if (registeredToMaster)
+            {
+                if (restClient != null)
+                {
+                    var request = new RestRequest("masterserver2.php", Method.GET);
+                    request.AddParameter("action", "removeserver");
+                    request.AddParameter("serverport", Port);
+                    restClient.Execute(request);
+                    restClient = null;
+                }
+            }
+
+            if (serverSettings.SaveServerLogs)
+            {
+                Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
+                serverSettings.ServerLog.Save();
+            }
+
+            GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
+            server.Shutdown(DisconnectReason.ServerShutdown.ToString());
         }
 
         public void SendConsoleMessage(string txt, Client recipient)

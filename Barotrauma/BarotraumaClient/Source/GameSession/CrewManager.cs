@@ -107,14 +107,37 @@ namespace Barotrauma
             };
             scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
 
-                var characterInfo = new CharacterInfo(subElement);
-                characterInfos.Add(characterInfo);
-                foreach (XElement invElement in subElement.Elements())
+            if (isSinglePlayer)
+            {
+                chatBox = new ChatBox(guiFrame, isSinglePlayer: true)
                 {
-                    if (invElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
-                    characterInfo.InventoryData = invElement;
-                    break;
-                }
+                    OnEnterMessage = (textbox, text) =>
+                    {
+                        if (Character.Controlled == null) { return true; }
+
+                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
+                            AddSinglePlayerChatMessage(
+                                Character.Controlled.Info.Name,
+                                msg,
+                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
+                                Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
+                        }
+                        textbox.Deselect();
+                        textbox.Text = "";
+                        return true;
+                    }
+                };
+
+                chatBox.InputBox.OnTextChanged += chatBox.TypingChatMessage;
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
@@ -136,6 +159,7 @@ namespace Barotrauma
                     {
                         if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
                         SetCharacterOrder(null, order, null, Character.Controlled);
+                        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
                         return true;
                     },
                     UserData = order,
@@ -152,12 +176,14 @@ namespace Barotrauma
                     Visible = false
                 };
 
-                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
+                var characterInfo = new CharacterInfo(subElement);
+                characterInfos.Add(characterInfo);
+                foreach (XElement invElement in subElement.Elements())
                 {
-                    Color = order.Color,
-                    HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
-                    ToolTip = order.Name
-                };
+                    if (invElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
+                    characterInfo.InventoryData = invElement;
+                    break;
+                }
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);

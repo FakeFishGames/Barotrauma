@@ -62,7 +62,7 @@ namespace Barotrauma
                     if (containedItem == null) continue;
                     if (containedItem.Condition <= 0.0f)
                     {
-                        containedItem.Drop();
+                        containedItem.Drop(character);
                     }
                     else if (containedItem.Prefab.Identifier == "oxygentank" || containedItem.HasTag("oxygensource"))
                     {

@@ -16,17 +16,16 @@ namespace Barotrauma
         const float priorityIncrease = 25;
         const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
+        const float clearUnreachableInterval = 30;
 
         private List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
-
+        private float unreachableClearTimer;
         private float searchHullTimer;
 
         private AIObjectiveGoTo goToObjective;
         private AIObjective divingGearObjective;
-
-        public float? OverrideCurrentHullSafety;
 
         public AIObjectiveFindSafety(Character character) : base(character, "") {  }
 
@@ -52,13 +51,23 @@ namespace Barotrauma
                 if (divingGearObjective.IsCompleted())
                 {
                     divingGearObjective = null;
-                    priority = 0;
+                    Priority = 0;
                 }
                 else if (divingGearObjective.CanBeCompleted)
                 {
                     // If diving gear objective is active, wait for it to complete.
                     return;
                 }
+            }
+
+            if (unreachableClearTimer > 0)
+            {
+                unreachableClearTimer -= deltaTime;
+            }
+            else
+            {
+                unreachableClearTimer = clearUnreachableInterval;
+                unreachable.Clear();
             }
 
             if (searchHullTimer > 0.0f)
@@ -147,16 +156,35 @@ namespace Barotrauma
             }
         }
 
-        private Hull FindBestHull()
+        public Hull FindBestHull()
         {
             Hull bestHull = character.CurrentHull;
             float bestValue = currenthullSafety;
             foreach (Hull hull in Hull.hullList)
             {
-                if (unreachable.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
                 float hullSafety = 0;
-                if (character.Submarine == null)
+                if (character.Submarine != null && SteeringManager == PathSteering)
+                {
+                    // Inside or outside near the sub
+                    if (unreachable.Contains(hull)) { continue; }
+                    if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
+                    hullSafety = HumanAIController.GetHullSafety(hull, character);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
+                    int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
+                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
+                    float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
+                    hullSafety *= distanceFactor;
+                    // Each unsafe node reduces the hull safety value.
+                    hullSafety /= 1 + unsafeNodes;
+                    // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                    if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
+                    {
+                        hullSafety /= 10;
+                    }
+                }
+                else
                 {
                     // Outside
                     if (hull.RoomName?.ToLowerInvariant() == "airlock")
@@ -177,30 +205,11 @@ namespace Barotrauma
                     }
 
                     // Huge preference for closer targets
-                    float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 100000, Vector2.Distance(character.WorldPosition, hull.WorldPosition)));
+                    float distance = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
+                    float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
                     hullSafety *= distanceFactor;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.
                     if (hull.Submarine.TeamID != character.TeamID && hull.Submarine.TeamID != Character.TeamType.FriendlyNPC)
-                    {
-                        hullSafety /= 10;
-                    }
-                }
-                else
-                {
-                    // Inside
-                    // Not connected.
-                    if (!character.Submarine.GetConnectedSubs().Contains(hull.Submarine)) { continue; }
-                    hullSafety = HumanAIController.GetHullSafety(hull, character);
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
-                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
-                    float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
-                    hullSafety *= distanceFactor;
-                    // Each unsafe node reduces the hull safety value.
-                    hullSafety /= 1 + unsafeNodes;
-                    // If the target is not inside a friendly submarine, considerably reduce the hull safety.
-                    if (!character.Submarine.IsEntityFoundOnThisSub(hull, true))
                     {
                         hullSafety /= 10;
                     }
@@ -224,24 +233,24 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
-                priority = 5;
+                Priority = 5;
                 return;
             }
-            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { priority = 100; }
-            currenthullSafety = OverrideCurrentHullSafety ?? HumanAIController.GetHullSafety(character.CurrentHull);
+            if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
+            currenthullSafety = HumanAIController.GetHullSafety(character.CurrentHull);
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
-                priority -= priorityDecrease * deltaTime;
+                Priority -= priorityDecrease * deltaTime;
             }
             else
             {
                 float dangerFactor = (100 - currenthullSafety) / 100;
-                priority += dangerFactor * priorityIncrease * deltaTime;
+                Priority += dangerFactor * priorityIncrease * deltaTime;
             }
-            priority = MathHelper.Clamp(priority, 0, 100);
+            Priority = MathHelper.Clamp(Priority, 0, 100);
             if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
             {
-                priority = Math.Max(priority, AIObjectiveManager.OrderPriority + 10);
+                Priority = Math.Max(Priority, AIObjectiveManager.OrderPriority + 10);
             }
         }
     }

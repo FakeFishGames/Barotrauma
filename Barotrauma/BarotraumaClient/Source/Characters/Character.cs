@@ -338,7 +338,7 @@ namespace Barotrauma
             var entityList = Submarine.VisibleEntities ?? Item.ItemList;
 
             Item closestItem = null;
-            float closestItemDistance = aimAssistAmount;
+            float closestItemDistance = Math.Max(aimAssistAmount, 2.0f);
             foreach (MapEntity entity in entityList)
             {
                 if (!(entity is Item item))

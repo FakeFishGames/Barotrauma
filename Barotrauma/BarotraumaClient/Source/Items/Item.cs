@@ -849,6 +849,11 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) { return; }
 
+            if (parentInventory != null || body == null || !body.Enabled || Removed)
+            {
+                return;
+            }
+
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;
             float newAngularVelocity = body.AngularVelocity;

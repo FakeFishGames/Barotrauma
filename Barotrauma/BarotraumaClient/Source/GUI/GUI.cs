@@ -384,12 +384,12 @@ namespace Barotrauma
             Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
         }
 
-        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite)
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
         {
             double aberrationT = (Timing.TotalTime * 0.5f);
-            GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f);
+            GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f * aberrationStrength);
             GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
-                (float)(PerlinNoise.CalculatePerlin(aberrationT, aberrationT, 0) + 0.5f));
+                (float)(PerlinNoise.CalculatePerlin(aberrationT, aberrationT, 0) + 0.5f) * aberrationStrength);
             GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
             GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
 
