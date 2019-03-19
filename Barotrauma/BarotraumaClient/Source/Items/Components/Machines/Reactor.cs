@@ -331,8 +331,18 @@ namespace Barotrauma.Items.Components
             spriteBatch.GraphicsDevice.ScissorRectangle = container.Rect;
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
+            //make the pointer jitter a bit if it's at the upper limit of the fission rate
+            float jitter = 0.0f;
+            if (FissionRate > allowedFissionRate.Y - 5.0f)
+            {
+                float jitterAmount = Math.Min(targetFissionRate - allowedFissionRate.Y, 10.0f);
+                float t = graphTimer / updateGraphInterval;
+
+                jitter = (PerlinNoise.GetPerlin(t * 0.5f, t * 0.1f) - 0.5f) * jitterAmount;
+            }
+
             DrawMeter(spriteBatch, container.Rect,
-                fissionRateMeter, FissionRate, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
+                fissionRateMeter, FissionRate + jitter, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
 
             spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
