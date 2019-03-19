@@ -2530,7 +2530,14 @@ namespace Barotrauma
             {
                 item.Submarine = inventory.Owner.Submarine;
                 var itemElement = item.Save(parentElement);
-                itemElement.Add(new XAttribute("i", Array.IndexOf(inventory.Items, item)));
+
+                List<int> slotIndices = new List<int>();
+                for (int i = 0; i < inventory.Capacity; i++)
+                {
+                    if (inventory.Items[i] == item) { slotIndices.Add(i); }
+                }
+
+                itemElement.Add(new XAttribute("i", string.Join(",", slotIndices)));
 
                 foreach (ItemContainer container in item.GetComponents<ItemContainer>())
                 {
