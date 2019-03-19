@@ -78,6 +78,7 @@ namespace Barotrauma.Networking
             bool senderSpectating = sender.Character == null || sender.Character.IsDead;
 
             //spectators cannot speak with in-game players or vice versa
+            //TODO: allow spectators to hear the voice chat if close enough to the speaker?
             if (recipientSpectating != senderSpectating) { return false; }
 
             //both spectating, no need to do radio/distance checks
