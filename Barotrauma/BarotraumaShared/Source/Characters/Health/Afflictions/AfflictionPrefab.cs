@@ -151,7 +151,7 @@ namespace Barotrauma
         //how high the strength has to be for the affliction to take affect
         public readonly float ActivationThreshold = 0.0f;
         //how high the strength has to be for the affliction icon to be shown in the UI
-        public readonly float ShowIconThreshold = 0.0f;
+        public readonly float ShowIconThreshold = 0.05f;
         public readonly float MaxStrength = 100.0f;
         
         public float BurnOverlayAlpha;
@@ -254,7 +254,7 @@ namespace Barotrauma
             }
 
             ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
-            ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", ActivationThreshold);
+            ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", Math.Max(ActivationThreshold, 0.05f));
             MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
 
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
