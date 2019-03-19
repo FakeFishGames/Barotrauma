@@ -114,9 +114,9 @@ namespace Barotrauma.Networking
         private UInt16? firstNewID;
 
         /// <summary>
-        /// Read the events from the message, ignoring ones we've already received
+        /// Read the events from the message, ignoring ones we've already received. Returns false if reading the events fails.
         /// </summary>
-        public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime, List<IServerSerializable> entities)
+        public bool Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime, List<IServerSerializable> entities)
         {
             UInt16 unreceivedEntityEventCount = 0;
 
@@ -192,6 +192,7 @@ namespace Barotrauma.Networking
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             Microsoft.Xna.Framework.Color.Red);
                         GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
+                        return false;
                     }
                     
                     msg.Position += msgLength * 8;
@@ -230,6 +231,7 @@ namespace Barotrauma.Networking
                 }
                 msg.ReadPadBits();
             }
+            return true;
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
