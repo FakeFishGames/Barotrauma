@@ -2683,6 +2683,9 @@
   <NonLinkedGapsWarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</NonLinkedGapsWarning>
 
   <!-- Tutorial START -->
+  <NewObjective>New Objective</NewObjective>
+  <Objective>Objective</Objective>
+  
   <ReactorCommandObjective>Give the order to start up the reactor</ReactorCommandObjective>
   <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
 

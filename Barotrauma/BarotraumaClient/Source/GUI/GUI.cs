@@ -69,6 +69,9 @@ namespace Barotrauma
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
+        public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
+        public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
+        public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
 
         public static UISprite UIGlow => Style.UIGlow;
 
