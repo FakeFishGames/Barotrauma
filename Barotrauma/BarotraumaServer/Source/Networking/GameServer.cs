@@ -1807,6 +1807,7 @@ namespace Barotrauma.Networking
 
             msg.Write(seed);
             msg.Write(GameMain.GameSession.Level.Seed);
+            msg.Write(GameMain.GameSession.Level.EqualityCheckVal);
             msg.Write(serverSettings.SelectedLevelDifficulty);
 
             msg.Write((byte)GameMain.Config.LosMode);
