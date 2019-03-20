@@ -4,6 +4,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Tutorials
 {
@@ -17,8 +18,7 @@ namespace Barotrauma.Tutorials
 
         private TutorialSegment activeSegment;
         private List<TutorialSegment> segments;
-
-        private SpriteSheetPlayer spriteSheetPlayer;
+        
         private VideoPlayer videoPlayer;
 
         private Steering navConsole;
@@ -36,6 +36,11 @@ namespace Barotrauma.Tutorials
         private float degrading2ActivationCountdown;
 
         private bool disableTutorialOnDeficiencyFound = true;
+
+        private GUIFrame holderFrame, objectiveFrame;
+        private bool objectivesOpen = false;
+        private GUITextBlock objectiveTitle, objectiveText;
+        private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
 
         private class TutorialSegment
         {
@@ -87,7 +92,6 @@ namespace Barotrauma.Tutorials
             Initialized = true;
 
             base.Initialize();
-            spriteSheetPlayer = new SpriteSheetPlayer();
             videoPlayer = new VideoPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
 
@@ -118,14 +122,13 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        private void PreloadVideoContent()
+        private void PreloadVideoContent() // Have to see if needed with videos
         {
-            return;
-            for (int i = 0; i < segments.Count; i++)
+            /*for (int i = 0; i < segments.Count; i++)
             {
                 if (segments[i].ContentType != ContentTypes.Video || segments[i].IsTriggered) continue;
                 spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Id, segments[i].VideoContent);
-            }
+            }*/
         }
 
         public void SavePartiallyComplete(XElement element)
@@ -216,8 +219,6 @@ namespace Barotrauma.Tutorials
         public void Stop()
         {
             started = ContentRunning = Initialized = false;
-            spriteSheetPlayer.Remove();
-            spriteSheetPlayer = null;
             videoPlayer.Remove();
             videoPlayer = null;
             characterTimeOnSonar = null;
@@ -226,13 +227,13 @@ namespace Barotrauma.Tutorials
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            if (spriteSheetPlayer != null)
-            {
-                spriteSheetPlayer.AddToGUIUpdateList();
-            }
             if (videoPlayer != null)
             {
                 videoPlayer.AddToGUIUpdateList();
+            }
+            if (objectiveFrame != null && activeObjectives.Count > 0)
+            {
+                objectiveFrame.AddToGUIUpdateList();
             }
         }
 
@@ -241,7 +242,7 @@ namespace Barotrauma.Tutorials
             if (!started || ContentRunning) return;
 
             deltaTime *= 0.5f;
-
+                       
             for (int i = 0; i < segments.Count; i++)
             {
                 if (segments[i].IsTriggered) continue;
@@ -250,10 +251,25 @@ namespace Barotrauma.Tutorials
                     break;
                 }
             }
+
+            for (int i = 0; i < activeObjectives.Count; i++)
+            {
+                CheckActiveObjectives(activeObjectives[i]);
+            }
         }
 
         private void CurrentSegmentStopCallback()
         {
+            if (!string.IsNullOrEmpty(activeSegment.Objective))
+            {
+                if (objectiveFrame == null)
+                {
+                    CreateObjectiveFrame();
+                }
+
+                objectiveText.Text = activeSegment.Objective;
+            }
+
             activeSegment = null;
             ContentRunning = false;
         }
@@ -305,7 +321,9 @@ namespace Barotrauma.Tutorials
 
                         tutorialTimer = 30.5f;
                     }
-                    break;
+
+                    TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
+                    return true;
                 case 3: // Objective: Travel ~150 meters and while sub is not flooding [Text]
                     if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 12000f || IsFlooding())
                     {
@@ -382,7 +400,9 @@ namespace Barotrauma.Tutorials
                         if (member.Vitality < member.MaxVitality && !member.IsDead)
                         {
                             injuredFound = true;
-                            break;
+                            TriggerTutorialSegment(index, new string[] { member.DisplayName,
+                                (member.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
+                            return true;
                         }
                     }
 
@@ -393,7 +413,11 @@ namespace Barotrauma.Tutorials
                     {
                         return false;
                     }
-                    break;
+                    else
+                    {
+                        TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
+                        return true;
+                    }
                 case 11: // Approach2: Sub is docked [Text]
                     if (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0)
                     {
@@ -404,6 +428,29 @@ namespace Barotrauma.Tutorials
 
             TriggerTutorialSegment(index);
             return true;
+        }
+
+        private void CheckActiveObjectives(TutorialSegment objective)
+        {
+            switch(objective.Id)
+            {
+                case "ReactorCommand": // Reactor up and running
+
+                    break;
+                case "NavConsole": // traveled 100 meters
+
+                    break;
+                case "Flood": // Hull breaches repaired
+                    break;
+                case "EnemyOnSonar":
+                    break;
+                case "Degrading2":
+                    break;
+                case "Approach1":
+                    break;
+            }
+
+            activeObjectives.Remove(objective);
         }
 
         private bool HasOrder(string aiTag)
@@ -471,22 +518,29 @@ namespace Barotrauma.Tutorials
             activeSegment.IsTriggered = true;
 
             string tutorialText = TextManager.GetFormatted(activeSegment.TextContent.GetAttributeString("tag", ""), true, args);
+            string objectiveText = string.Empty;
+
+            if (!string.IsNullOrEmpty(activeSegment.Objective))
+            {
+                if (args.Length == 0)
+                {
+                    objectiveText = activeSegment.Objective;
+                }
+                else
+                {
+                    objectiveText = string.Format(activeSegment.Objective, args);
+                }
+
+                activeObjectives.Add(activeSegment);
+            }
 
             switch (activeSegment.ContentType)
             {
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    string fileName = activeSegment.VideoContent.GetAttributeString("file", "");
-                    if (fileName != "")
-                    {
-                        videoPlayer.LoadContentWithObjective(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.TextContent, args), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
-                    }
-                    else
-                    {
-                        spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.VideoContent, activeSegment.Id, true, true, CurrentSegmentStopCallback);
-                    }
-
+                    string fileName = "1_CommandReactor/command_reactor_video.mp4";
+                    videoPlayer.LoadContentWithObjective(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.TextContent, args), activeSegment.Id, true, objectiveText, CurrentSegmentStopCallback);
                     break;
                 case ContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Id), tutorialText,
@@ -502,6 +556,26 @@ namespace Barotrauma.Tutorials
             }
 
             CoroutineManager.StartCoroutine(WaitToStop()); // Completed
+        }
+
+        private void CreateObjectiveFrame()
+        {
+            holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
+            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveArea, holderFrame.RectTransform), style: null);
+            objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.3f), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), TextManager.Get("Objective"), textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.BottomRight);
+            objectiveText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.7f), objectiveFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter), "Repair Hull Breach", textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.TopRight);
+
+            int toggleButtonWidth = (int)(30 * GUI.Scale);
+            var toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ObjectiveArea.Height), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, -5) }, style: "UIToggleButton");
+            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                objectivesOpen = !objectivesOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = objectivesOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
+            };
         }
 
         private IEnumerable<object> WaitToStop()
