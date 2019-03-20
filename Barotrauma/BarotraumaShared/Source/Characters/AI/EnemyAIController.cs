@@ -712,6 +712,7 @@ namespace Barotrauma
             }
 
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
+
             if (Submarine.LastPickedFraction == 1.0f || closestBody == null)
             {
                 return;

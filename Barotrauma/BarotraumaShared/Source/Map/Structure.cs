@@ -1193,5 +1193,10 @@ namespace Barotrauma
                 SetDamage(i, Sections[i].damage, createNetworkEvent: false);
             }
         }
+
+        public virtual void Reset()
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+        }
     }
 }

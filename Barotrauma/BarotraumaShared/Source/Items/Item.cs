@@ -76,11 +76,7 @@ namespace Barotrauma
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
         
-        public readonly Dictionary<string, SerializableProperty> properties;
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get { return properties; }
-        }
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
         private bool? hasInGameEditableProperties;
         bool HasInGameEditableProperties
@@ -90,7 +86,7 @@ namespace Barotrauma
                 if (hasInGameEditableProperties == null)
                 {
                     hasInGameEditableProperties = false;
-                    if (properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                    if (SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
                     {
                         hasInGameEditableProperties = true;
                     }
@@ -99,7 +95,7 @@ namespace Barotrauma
                         foreach (ItemComponent component in components)
                         {
                             if (!component.AllowInGameEditing) { continue; }
-                            if (component.properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                            if (component.SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
                             {
                                 hasInGameEditableProperties = true;
                                 break;
@@ -468,8 +464,8 @@ namespace Barotrauma
 
             XElement element = itemPrefab.ConfigElement;
             if (element == null) return;
-            
-            properties = SerializableProperty.DeserializeProperties(this, element);
+
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             if (submarine == null || !submarine.Loading) FindHull();
 
@@ -586,10 +582,10 @@ namespace Barotrauma
         public override MapEntity Clone()
         {
             Item clone = new Item(rect, Prefab, Submarine, callOnItemLoaded: false);
-            foreach (KeyValuePair<string, SerializableProperty> property in properties)
+            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                clone.properties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
+                clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
 
             if (components.Count != clone.components.Count)
@@ -603,10 +599,10 @@ namespace Barotrauma
 
             for (int i = 0; i < components.Count && i < clone.components.Count; i++)
             {
-                foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
+                foreach (KeyValuePair<string, SerializableProperty> property in components[i].SerializableProperties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                    clone.components[i].properties[property.Key].TrySetValue(clone.components[i], property.Value.GetValue(components[i]));
+                    clone.components[i].SerializableProperties[property.Key].TrySetValue(clone.components[i], property.Value.GetValue(components[i]));
                 }
 
                 //clone requireditem identifiers
@@ -1881,7 +1877,7 @@ namespace Barotrauma
 
             foreach (XAttribute attribute in element.Attributes())
             {
-                if (!item.properties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
+                if (!item.SerializableProperties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
                 bool shouldBeLoaded = false;
                 foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                 {
@@ -1972,6 +1968,12 @@ namespace Barotrauma
             parentElement.Add(element);
 
             return element;
+        }
+
+        public virtual void Reset()
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+            components.ForEach(c => c.Reset());
         }
 
         public override void OnMapLoaded()

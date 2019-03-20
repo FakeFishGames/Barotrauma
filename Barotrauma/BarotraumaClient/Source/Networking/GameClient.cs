@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
 
         private List<Client> otherClients;
 
+        private readonly List<Submarine> serverSubmarines = new List<Submarine>();
+
         private string serverIP;
 
         private bool needAuth;
@@ -779,7 +781,7 @@ namespace Barotrauma.Networking
                                     saveFiles.Add(inc.ReadString());
                                 }
 
-                                GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(saveFiles);
+                                GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
                                 break;
                             case ServerPacketHeader.PERMISSIONS:
                                 ReadPermissions(inc);
@@ -1162,7 +1164,7 @@ namespace Barotrauma.Networking
             VoipClient = new VoipClient(this, client);
 
             UInt16 subListCount = inc.ReadUInt16();
-            List<Submarine> submarines = new List<Submarine>();
+            serverSubmarines.Clear();
             for (int i = 0; i < subListCount; i++)
             {
                 string subName = inc.ReadString();
@@ -1171,16 +1173,16 @@ namespace Barotrauma.Networking
                 var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
                 if (matchingSub != null)
                 {
-                    submarines.Add(matchingSub);
+                    serverSubmarines.Add(matchingSub);
                 }
                 else
                 {
-                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
+                    serverSubmarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
                 }
             }
 
-            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
-            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, serverSubmarines);
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, serverSubmarines);
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();

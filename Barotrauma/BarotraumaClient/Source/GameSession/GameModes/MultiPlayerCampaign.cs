@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         private UInt16 startWatchmanID, endWatchmanID;
 
-        public static GUIComponent StartCampaignSetup(IEnumerable<string> saveFiles)
+        public static GUIComponent StartCampaignSetup( IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
         {
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
@@ -35,7 +35,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
-            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, saveFiles);
+            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, submarines, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"))
