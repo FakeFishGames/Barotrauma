@@ -2684,5 +2684,6 @@
   <MicrophoneVolume>Microphone volume</MicrophoneVolume>
   <ServerMessage.ExcessiveDesyncOldEvent>You have been disconnected because of excessive desync (expecting a very old event).</ServerMessage.ExcessiveDesyncOldEvent>
   <ServerMessage.ExcessiveDesyncRemovedEvent>You have been disconnected because of excessive desync (expecting a removed event).</ServerMessage.ExcessiveDesyncRemovedEvent>
-
+  <CampaignStartFailedSubNotFound>Failed to start a campaign. Submarine [subpath] not found."</CampaignStartFailedSubNotFound>
+  
 </infotexts>
