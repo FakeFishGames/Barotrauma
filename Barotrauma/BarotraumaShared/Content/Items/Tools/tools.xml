@@ -215,13 +215,15 @@
     <Sprite texture="tools.png" sourcerect="41,6,24,12" depth="0.55" origin="0.5,0.5" />
     <Body width="31" height="6" density="40" />
     <AiTarget />
-    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
-    <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />    
+    <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="-0.1">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
-      <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.5,0.5" anchor="BottomLeft" absoluteoffset="20,0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
+      <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
+      <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
     </Sonar>
     <ItemContainer capacity="1" hideitems="true">
