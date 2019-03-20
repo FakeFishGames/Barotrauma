@@ -612,45 +612,13 @@ namespace Barotrauma.Items.Components
         public virtual void Load(XElement componentElement)
         {
             if (componentElement == null) return;
-
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                 property.TrySetValue(this, attribute.Value);
             }
-
             ParseMsg();
-
-            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
-            bool overrideRequiredItems = false;
-
-            foreach (XElement subElement in componentElement.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "requireditem":
-                        if (!overrideRequiredItems) requiredItems.Clear();
-                        overrideRequiredItems = true;
-
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
-                        if (newRequiredItem == null) continue;
-
-                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
-                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
-                        if (prevRequiredItem != null)
-                        {
-                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
-                            newRequiredItem.Msg = prevRequiredItem.Msg;
-                        }
-
-                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
-                        {
-                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
-                        }
-                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
-                        break;
-                }
-            }
+            OverrideRequiredItems(componentElement);
         }
 
         /// <summary>
@@ -744,7 +712,42 @@ namespace Barotrauma.Items.Components
 
         public virtual void Reset()
         {
-            Load(originalElement);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, originalElement);
+            ParseMsg();
+            OverrideRequiredItems(originalElement);
+        }
+
+        private void OverrideRequiredItems(XElement element)
+        {
+            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
+            bool overrideRequiredItems = false;
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
+
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
+                        if (newRequiredItem == null) continue;
+
+                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
+                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
+                        if (prevRequiredItem != null)
+                        {
+                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
+                            newRequiredItem.Msg = prevRequiredItem.Msg;
+                        }
+
+                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
+                        {
+                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
+                        }
+                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
+                        break;
+                }
+            }
         }
 
         partial void ParseMsg();
