@@ -313,7 +313,7 @@ namespace Barotrauma.Items.Components
             if (sound == null) { return 0.0f; }
             if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
 
-            if (properties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
+            if (SerializableProperties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
             {
                 float newVolume = 0.0f;
                 try
@@ -485,6 +485,19 @@ namespace Barotrauma.Items.Components
             delayedCorrectionCoroutine = null;
 
             yield return CoroutineStatus.Success;
+        }
+
+        partial void ParseMsg()
+        {
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                Msg = msg;
+            }
         }
     }
 }

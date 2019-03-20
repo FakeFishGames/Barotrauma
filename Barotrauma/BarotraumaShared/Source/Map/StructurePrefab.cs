@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
+        public XElement ConfigElement { get; private set; }
+
         private bool canSpriteFlipX, canSpriteFlipY;
 
         private float health;
@@ -150,6 +152,7 @@ namespace Barotrauma
             {
                 name = element.GetAttributeString("name", "")
             };
+            sp.ConfigElement = element;
             if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
             sp.identifier = element.GetAttributeString("identifier", "");
 
