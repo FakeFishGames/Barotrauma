@@ -60,7 +60,6 @@ namespace Barotrauma
 
         public readonly XElement StaticBodyConfig;
         
-        private bool needsPositionUpdate;
         private float lastSentCondition;
 
         private float condition;
@@ -1811,8 +1810,20 @@ namespace Barotrauma
         }
 
         partial void UpdateNetPosition(float deltaTime);
-        
+
         public static Item Load(XElement element, Submarine submarine)
+        {
+            return Load(element, submarine, createNetworkEvent: false);
+        }
+
+        /// <summary>
+        /// Instantiate a new item and load its data from the XML element.
+        /// </summary>
+        /// <param name="element">The element containing the data of the item</param>
+        /// <param name="submarine">The submarine to spawn the item in (can be null)</param>
+        /// <param name="createNetworkEvent">Should an EntitySpawner event be created to notify clients about the item being created.</param>
+        /// <returns></returns>
+        public static Item Load(XElement element, Submarine submarine, bool createNetworkEvent)
         {
             string name = element.Attribute("name").Value;            
             string identifier = element.GetAttributeString("identifier", "");
@@ -1857,6 +1868,13 @@ namespace Barotrauma
                 ID = (ushort)int.Parse(element.Attribute("ID").Value),
                 linkedToID = new List<ushort>()
             };
+
+#if SERVER
+            if (createNetworkEvent)
+            {
+                Spawner.CreateNetworkEvent(item, remove: false);
+            }
+#endif
 
             foreach (XAttribute attribute in element.Attributes())
             {
@@ -1904,7 +1922,7 @@ namespace Barotrauma
             {
                 component.OnItemLoaded();
             }
-
+            
             return item;
         }
 

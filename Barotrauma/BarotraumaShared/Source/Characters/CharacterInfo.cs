@@ -801,7 +801,7 @@ namespace Barotrauma
         {
             foreach (XElement itemElement in element.Elements())
             {
-                var newItem = Item.Load(itemElement, inventory.Owner.Submarine);
+                var newItem = Item.Load(itemElement, inventory.Owner.Submarine, createNetworkEvent: true);
                 if (newItem == null) { continue; }
 
                 int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
@@ -810,9 +810,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Invalid inventory data in character \"" + Name + "\" - no slot indices found");
                     continue;
                 }
-
-                SpawnInventoryItemProjSpecific(newItem);
-
+                
                 inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
 
                 //force the item to the correct slots
@@ -842,8 +840,6 @@ namespace Barotrauma
             }
         }
         
-        partial void SpawnInventoryItemProjSpecific(Item item);
-
         public void ReloadHeadAttachments()
         {
             ResetLoadedAttachments();
