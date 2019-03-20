@@ -1657,15 +1657,17 @@ namespace Barotrauma.Networking
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
 
                 campaign.AssignClientCharacterInfos(connectedClients);
+                Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
+                Log("Submarine: " + GameMain.GameSession.Submarine.Name, ServerLog.MessageType.ServerMessage);
+                Log("Level seed: " + campaign.Map.SelectedConnection.Level.Seed, ServerLog.MessageType.ServerMessage);
             }
             else
             {
                 GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, serverSettings.SelectedLevelDifficulty, teamCount > 1);
-            }
-            
-            Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
-            Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
-            Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
+                Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
+                Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
+                Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
+            }            
 
             bool missionAllowRespawn = campaign == null &&
                 (!(GameMain.GameSession.GameMode is MissionMode) ||

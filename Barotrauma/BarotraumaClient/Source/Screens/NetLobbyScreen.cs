@@ -632,6 +632,13 @@ namespace Barotrauma
                 Visible = false
             };
 
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), rightInfoColumn.RectTransform),
+                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
+                Visible = false
+            };
+
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
@@ -643,13 +650,6 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
-
-            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
-                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
-            {
-                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
-                Visible = false
-            };
 
             spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
