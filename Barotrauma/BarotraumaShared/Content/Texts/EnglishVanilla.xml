@@ -800,7 +800,6 @@
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
   <HoldToLink>Hold space and click with the mouse to link to another item.</HoldToLink>
   <AllowedLinks>Allowed links</AllowedLinks>
-  <ResetToPrefab>Reset to prefab</ResetToPrefab>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>
   <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
@@ -847,7 +846,6 @@
   <Shuttle>Shuttle</Shuttle>
   <HideInMenus>Hide in menus</HideInMenus>
   <UnspecifiedSubFileName>Unnamed</UnspecifiedSubFileName>
-  <ReloadSprite>Reload Sprite</ReloadSprite>
   <MirrorEntityX>Mirror X</MirrorEntityX>
   <MirrorEntityXToolTip>Mirror the entity horizontally. You can also use the shortcut Ctrl + N.</MirrorEntityXToolTip>
   <MirrorEntityY>Mirror Y</MirrorEntityY>
@@ -2276,9 +2274,6 @@
   <DialogAffirmative>Got it!</DialogAffirmative>
   <DialogAffirmative>Sure thing!</DialogAffirmative>
   <DialogAffirmative>Copy that.</DialogAffirmative>
-  <DialogNegative>Negative.</DialogNegative>
-  <DialogNegative>No way!</DialogNegative>
-  <DialogCannotReach>Can't reach the target.</DialogCannotReach>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
@@ -2686,5 +2681,12 @@
   <ServerMessage.ExcessiveDesyncOldEvent>You have been disconnected because of excessive desync (expecting a very old event).</ServerMessage.ExcessiveDesyncOldEvent>
   <ServerMessage.ExcessiveDesyncRemovedEvent>You have been disconnected because of excessive desync (expecting a removed event).</ServerMessage.ExcessiveDesyncRemovedEvent>
   <CampaignStartFailedSubNotFound>Failed to start a campaign. Submarine [subpath] not found."</CampaignStartFailedSubNotFound>
+  
+  <ResetToPrefab>Reset to prefab</ResetToPrefab>
+  <ReloadSprite>Reload Sprite</ReloadSprite>
+  
+  <DialogNegative>Negative.</DialogNegative>
+  <DialogNegative>No way!</DialogNegative>
+  <DialogCannotReach>Can't reach the target.</DialogCannotReach>
   
 </infotexts>
