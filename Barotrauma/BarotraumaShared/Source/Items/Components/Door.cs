@@ -471,11 +471,12 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "toggle")
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "requireditem":
-                        if (!overrideRequiredItems) requiredItems.Clear();
-                        overrideRequiredItems = true;
+                SetState(!wasOpen, false, true);
+            }
+            else if (connection.Name == "set_state")
+            {
+                SetState(signal != "0", false, true);
+            }
 
 #if SERVER
             if (sender != null && wasOpen != isOpen)
