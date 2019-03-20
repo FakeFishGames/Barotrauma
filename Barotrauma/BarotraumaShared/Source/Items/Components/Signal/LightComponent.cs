@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
                 
                 IsActive = value;
 #if SERVER
-                if (GameMain.Server != null) item.CreateServerEvent(this);
+                if (GameMain.Server != null && GameMain.Server.GameStarted) { item.CreateServerEvent(this); }
 #endif
             }
         }
