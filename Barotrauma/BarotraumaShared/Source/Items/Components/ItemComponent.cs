@@ -640,6 +640,38 @@ namespace Barotrauma.Items.Components
                 Msg = msg;
             }
 #endif
+            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
+            bool overrideRequiredItems = false;
+
+            foreach (XElement subElement in componentElement.Elements())
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
+
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
+                        if (newRequiredItem == null) continue;
+
+                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
+                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
+                        if (prevRequiredItem != null)
+                        {
+                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
+                            newRequiredItem.Msg = prevRequiredItem.Msg;
+                        }
+
+                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
+                        {
+                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
+                        }
+                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
+                        break;
+                }
+                Msg = msg;
+            }
+#endif
 
             // Only door override required items
             //var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
