@@ -24,7 +24,7 @@ namespace Barotrauma
                     if (wallTarget.Structure.Submarine != null) wallTargetPos += wallTarget.Structure.Submarine.Position;
                     wallTargetPos.Y = -wallTargetPos.Y;
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Red, false);
-                GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
+                    GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
 
                 GUI.Font.DrawString(spriteBatch, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.ToString()})", pos - Vector2.UnitY * 20.0f, Color.Red);

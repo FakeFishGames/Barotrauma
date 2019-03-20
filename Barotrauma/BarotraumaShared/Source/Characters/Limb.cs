@@ -491,10 +491,10 @@ namespace Barotrauma
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
-        public bool UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget, out AttackResult attackResult, float distance = -1)
+        public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1)
         {
             attackResult = default(AttackResult);
-            float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
+            float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackSimPos));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime);
 
@@ -511,7 +511,7 @@ namespace Barotrauma
                             ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
                             structureBody = Submarine.PickBody(
-                                SimPosition, attackPosition,
+                                SimPosition, attackSimPos,
                                 ignoredBodies, Physics.CollisionWall);
                             
                             if (damageTarget is Item)
@@ -607,7 +607,7 @@ namespace Barotrauma
                 attack.SetCoolDown();
             }
 
-            Vector2 diff = attackPosition - SimPosition;
+            Vector2 diff = attackSimPos - SimPosition;
             bool applyForces = (!attack.ApplyForcesOnlyOnce || !wasRunning) && diff.LengthSquared() > 0.00001f;
             if (applyForces)
             {
@@ -620,13 +620,13 @@ namespace Barotrauma
 
                         Limb limb = character.AnimController.Limbs[limbIndex];
                         Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
-                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos);
                     }
                 }
                 else
                 {
                     Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                    body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                    body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos);
                 }
             }
             return wasHit;
