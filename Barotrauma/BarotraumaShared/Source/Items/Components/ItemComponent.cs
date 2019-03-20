@@ -613,7 +613,12 @@ namespace Barotrauma.Items.Components
         {
             if (componentElement == null) return;
 
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, componentElement);
+            foreach (XAttribute attribute in componentElement.Attributes())
+            {
+                if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
+                property.TrySetValue(this, attribute.Value);
+            }
+
             ParseMsg();
 
             var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
