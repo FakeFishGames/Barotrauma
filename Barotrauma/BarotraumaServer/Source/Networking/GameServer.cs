@@ -696,10 +696,19 @@ namespace Barotrauma.Networking
                     {
                         string savePath = inc.ReadString();
                         string seed = inc.ReadString();
-                        string subName = inc.ReadString();
+                        string subPath = inc.ReadString();
 
-                        if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subName, seed);
-                    }
+                        if (!File.Exists(subPath))
+                        {
+                            SendDirectChatMessage(
+                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subpath]", subPath), 
+                                connectedClient, ChatMessageType.MessageBox);
+                        }
+                        else
+                        {
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subPath, seed);
+                        }
+                     }
                     else
                     {
                         string saveName = inc.ReadString();
