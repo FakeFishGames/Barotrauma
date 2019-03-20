@@ -70,7 +70,7 @@ namespace Barotrauma
         private readonly Queue<IEntitySpawnInfo> spawnQueue;
         private readonly Queue<Entity> removeQueue;
 
-        class SpawnOrRemove
+        public class SpawnOrRemove
         {
             public readonly Entity Entity;
 

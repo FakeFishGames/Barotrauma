@@ -782,6 +782,7 @@ namespace Barotrauma.Networking
             }
 
             Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
+            GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:LevelsDontMatch" + error, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorStr);
             KickClient(c, errorStr);
         }
 
@@ -839,8 +840,8 @@ namespace Barotrauma.Networking
                                 //(the server started a new campaign and the client isn't aware of it yet?)
                                 if (campaign.CampaignID != campaignID)
                                 {
-                                    c.LastRecvCampaignSave = 0;
-                                    c.LastRecvCampaignUpdate = 0;
+                                    c.LastRecvCampaignSave = (ushort)(campaign.LastSaveID - 1);
+                                    c.LastRecvCampaignUpdate = (ushort)(campaign.LastUpdateID - 1);
                                 }
                             }
                         }

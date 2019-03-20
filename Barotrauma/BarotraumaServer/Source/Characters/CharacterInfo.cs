@@ -4,11 +4,6 @@ namespace Barotrauma
 {
     partial class CharacterInfo
     {
-        partial void SpawnInventoryItemProjSpecific(Item item)
-        {
-            Entity.Spawner.CreateNetworkEvent(item, false);
-        }
-
         public void ServerWrite(NetBuffer msg)
         {
             msg.Write(ID);
