@@ -92,8 +92,7 @@ namespace Barotrauma
                 if (endWatchman != null) { InitializeWatchman(endWatchman); }
             }
         }
-
-
+        
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
             if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
@@ -107,8 +106,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (GameMain.Client != null && interactor == Character.Controlled && 
-                    (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || GameMain.Client.HasPermission(ClientPermissions.ManageCampaign)))
+            if (GameMain.Client != null && interactor == Character.Controlled)
             {
                 var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
                     .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
@@ -122,8 +120,7 @@ namespace Barotrauma
                     return true;
                 };
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
-            
+                msgBox.Buttons[1].OnClicked += msgBox.Close;            
             }
         }
 

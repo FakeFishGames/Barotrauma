@@ -696,10 +696,19 @@ namespace Barotrauma.Networking
                     {
                         string savePath = inc.ReadString();
                         string seed = inc.ReadString();
-                        string subName = inc.ReadString();
+                        string subPath = inc.ReadString();
 
-                        if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subName, seed);
-                    }
+                        if (!File.Exists(subPath))
+                        {
+                            SendDirectChatMessage(
+                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subpath]", subPath), 
+                                connectedClient, ChatMessageType.MessageBox);
+                        }
+                        else
+                        {
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subPath, seed);
+                        }
+                     }
                     else
                     {
                         string saveName = inc.ReadString();
@@ -995,7 +1004,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (!sender.HasPermission(command))
+            //clients are allowed to end the round by talking with the watchman in multiplayer 
+            //campaign even if they don't have the special permission
+            if (command == ClientPermissions.ManageRound && inc.PeekBoolean() && 
+                GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
+            {
+                if (!mpCampaign.AllowedToEndRound(sender.Character))
+                {
+                    return;
+                }
+            }
+            else if (!sender.HasPermission(command))
             {
                 Log("Client \"" + sender.Name + "\" sent a server command \"" + command + "\". Permission denied.", ServerLog.MessageType.ServerMessage);
                 return;

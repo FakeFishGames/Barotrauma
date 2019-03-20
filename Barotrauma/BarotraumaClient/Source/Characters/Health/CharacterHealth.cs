@@ -448,8 +448,8 @@ namespace Barotrauma
             else
             {
                 forceAfflictionContainerUpdate = true;
-                currentDisplayedAfflictions = GetAllAfflictions()
-                    .Where(a => a.Strength >= a.Prefab.ShowIconThreshold && a.Prefab.Icon != null).ToList();
+                currentDisplayedAfflictions = GetAllAfflictions(mergeSameAfflictions: true)
+                    .FindAll(a => a.Strength >= a.Prefab.ShowIconThreshold && a.Prefab.Icon != null);
                 currentDisplayedAfflictions.Sort((a1, a2) =>
                 {
                     int dmgPerSecond = Math.Sign(a2.DamagePerSecond - a1.DamagePerSecond);

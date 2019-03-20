@@ -72,6 +72,27 @@ namespace Barotrauma
             });
         }
 
+        public bool AllowedToEndRound(Character interactor)
+        {
+            if (interactor == null || Level.Loaded?.StartOutpost == null || Level.Loaded?.EndOutpost == null)
+            {
+                return false;
+            }
+
+            if (interactor.Submarine == Level.Loaded.StartOutpost && 
+                interactor.CanInteractWith(startWatchman))
+            {
+                return true;
+            }
+            if (interactor.Submarine == Level.Loaded.EndOutpost &&
+                interactor.CanInteractWith(endWatchman))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
             if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
@@ -85,8 +106,7 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Character == interactor);
-                hasPermissions = client != null &&
-                    (client.HasPermission(ClientPermissions.ManageRound) || client.HasPermission(ClientPermissions.ManageCampaign));
+                hasPermissions = client != null;
                 CreateDialog(new List<Character> { watchman }, hasPermissions ? "WatchmanInteract" : "WatchmanInteractNotAllowed", 1.0f);
             }
         }

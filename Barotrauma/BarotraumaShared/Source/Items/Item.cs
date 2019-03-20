@@ -1558,12 +1558,15 @@ namespace Barotrauma
             return isCombined;
         }
 
-        public void Drop(Character dropper)
+        public void Drop(Character dropper, bool createNetworkEvent = true)
         {
-            if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
-                GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+            if (createNetworkEvent)
             {
-                parentInventory.CreateNetworkEvent();
+                if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
+                    GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+                {
+                    parentInventory.CreateNetworkEvent();
+                }
             }
 
             foreach (ItemComponent ic in components) { ic.Drop(dropper); }

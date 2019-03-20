@@ -467,7 +467,7 @@ namespace Barotrauma
                         {
                             if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
                             {
-                                if (!(target is ItemComponent ic) || ic.GetType().ToString() != pc.TargetItemComponentName)
+                                if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
                                 {
                                     continue;
                                 }
@@ -484,7 +484,7 @@ namespace Barotrauma
                         {
                             if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
                             {
-                                if (!(target is ItemComponent ic) || ic.GetType().ToString() != pc.TargetItemComponentName)
+                                if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
                                 {
                                     continue;
                                 }
