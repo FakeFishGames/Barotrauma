@@ -360,6 +360,7 @@ namespace Barotrauma
                             -Bodies[i].Rotation, Color.White);
                     }
                 }
+                AiTarget?.Draw(spriteBatch);
             }
         }
 

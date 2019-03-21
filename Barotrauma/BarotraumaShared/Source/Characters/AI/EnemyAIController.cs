@@ -951,6 +951,10 @@ namespace Barotrauma
                             }
                         }
                     }
+                    else if (target.Entity is Structure s)
+                    {
+                        targetingTag = "wall";
+                    }
                     else
                     {
                         targetingTag = "room";
@@ -1014,12 +1018,10 @@ namespace Barotrauma
             }
 
             SelectedAiTarget = newTarget;
-
             if (SelectedAiTarget != _previousAiTarget)
             {
                 wallTarget = null;
             }
-            _previousAiTarget = SelectedAiTarget;
         }
 
         //find the targetMemory that corresponds to some AItarget or create if there isn't one yet
@@ -1071,7 +1073,7 @@ namespace Barotrauma
 
         private int GetMinimumPassableHoleCount()
         {
-            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
+            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize) / Structure.WallSectionSize);
         }
 
         private bool CanPassThroughHole(Structure wall, int sectionIndex)

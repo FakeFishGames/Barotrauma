@@ -35,8 +35,12 @@
     sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    aggressiveboarding="true">
-    <targetpriority tag="decoy" state="Attack" priority="600" />
+    aggressiveboarding="true"
+    aggressiongreed="50"
+    aggressionhurt="100">
+    <targetpriority tag="wall" state="Attack" priority="1000"/>
+    <!--
+    <targetpriority tag="decoy" state="Attack" priority="600"/>
     <targetpriority tag="provocative" state="Attack" priority="300"/>
     <targetpriority tag="light" state="Attack" priority="250"/>
     <targetpriority tag="human" state="Attack" priority="200"/>
@@ -47,6 +51,7 @@
     <targetpriority tag="door" state="Attack" priority="50"/>
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
+    -->
     <latchonto attachtowalls="true" attachtosub="false"/>
   </ai>
   
