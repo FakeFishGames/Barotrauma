@@ -1,4 +1,47 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.7
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- The fission rate gauge on the reactor now visualizes the amount of fuel available.
+- Doors and hatches can now also be repaired with wrenches.
+- Changed default StatusEffect conditional comparison type back to OR.
+- Clients communicate syncing errors to the server, and the server logs a more descriptive error about
+what went wrong. Should make it easier to diagnose disconnection issues from now on.
+- Ending a multiplayer campaign round by talking to watchman doesn't require any special permissions.
+- Added a button for resetting an entity's properties to the default values to the sub editor.
+- Updated handheld sonar UI graphics.
+
+Bugfixes:
+- Fixed non-radio chat/VOIP having an unlimited distance.
+- Fixed a networking bug that caused the server to send item state changes to the clients before sending
+a message about the item being spawned. For example, spawning any item with a LightComponent would always
+cause clients to get disconnected.
+- Changes to the way the clients are put in sync with the server when joining mid-round. Should make it 
+less likely for clients to get disconnected immediately after starting a round.
+- StatusEffects only apply non-limb-specific afflictions to one limb even if targeting the whole character. 
+Fixes drugs like fentanyl and morphine being way too harmful due to the oxygen loss affliction being 
+applied once per every limb. 
+- Fixed TargetItemComponentName not working in StatusEffect conditionals (making it impossible to create
+conditionals that target a specific component of an item).
+- Made all of the new medical items combinable and usable in a syringe gun (assuming the drug is in a syringe).
+- Fixed inability to throw anything in the multiplayer.
+- Fixed multiplayer campaign setup UI showing the client's subs instead of the server's.
+- Fixed campaign view button overlapping with the "ready to start" tickbox in the server lobby.
+- Fixed sub/mode voting not being enabled when changing the setting after the server has been started.
+- Fixed character inventories occasionally being saved incorrectly in the multiplayer campaign when an
+- Fixed flares not activating by left clicking.
+- Fixed affliction icons flickering rapidly in the health interface and above the health bar if their
+strength is fluctuating around the threshold where the icon becomes visible.
+- Fixed dedicated server crashing when typing in more text than can fit on one line. 
+- Fixed enemies "fleeing" after they have been shot. There was a steering issue when they targeted characters 
+inside the sub while being outside.
+- Fixed Hammerhead attack causing warping.
+- Fixed incorrect submarine and level seed in server logs when playing campaign mode.
+- Hide the start button from the campaign UI if the client doesn't have the permission to manage 
+the campaign or rounds.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.6
 ---------------------------------------------------------------------------------------------------------
 
