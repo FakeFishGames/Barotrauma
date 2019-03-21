@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 using Barotrauma.Media;
 using System.IO;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -155,6 +156,14 @@ namespace Barotrauma
             Stop();
             callbackOnStop?.Invoke();
             return true;
+        }
+
+        public void Update()
+        {
+            if (PlayerInput.KeyHit(Keys.Enter))
+            {
+                DisposeVideo(null, null);
+            }
         }
 
         public void AddToGUIUpdateList()
