@@ -81,11 +81,12 @@ namespace Barotrauma
                     //dequeue messages
                     lock (queuedMessages)
                     {
-                        if (queuedMessages.Count>0)
+                        if (queuedMessages.Count > 0)
                         {
+                            int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)Console.WindowWidth), 1);
                             Console.CursorLeft = 0;
                             Console.Write(new string(' ', consoleWidth));
-                            Console.CursorTop--; Console.CursorLeft = 0;
+                            Console.CursorTop -= inputLines; Console.CursorLeft = 0;
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
@@ -177,11 +178,11 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
-            Console.WriteLine(""); Console.CursorTop--;
-            int consoleWidth = Console.WindowWidth;
-            if (consoleWidth < 5) consoleWidth = 5;
-            int consoleHeight = Console.WindowHeight;
-            if (consoleHeight < 5) consoleHeight = 5;
+            int consoleWidth = Math.Max(Console.WindowWidth, 5);
+            int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)consoleWidth), 1);
+            int cursorLine = Math.Max((int)Math.Ceiling((input.Length + 1) / (float)consoleWidth), 1);
+
+            Console.WriteLine(""); Console.CursorTop -= inputLines;
 
             string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
             ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
@@ -190,9 +191,9 @@ namespace Barotrauma
             Console.Write(ln);
             Console.ForegroundColor = ConsoleColor.White;
             Console.CursorLeft = 0;
-            Console.CursorTop--;
+            Console.CursorTop -= cursorLine;
             Console.Write(input);
-            Console.CursorLeft = input.Length;
+            Console.CursorLeft = input.Length % Console.WindowWidth;
         }
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
