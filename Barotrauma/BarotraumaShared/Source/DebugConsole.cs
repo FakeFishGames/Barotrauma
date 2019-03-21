@@ -912,7 +912,7 @@ namespace Barotrauma
                     ThrowError(args[0] + " is not a valid latency value.");
                     return;
                 }
-                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float randomLatency))
+                if (!float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out float randomLatency))
                 {
                     ThrowError(args[1] + " is not a valid latency value.");
                     return;

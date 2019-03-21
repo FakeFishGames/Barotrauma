@@ -1554,9 +1554,9 @@ namespace Barotrauma
             }));
 
 #if DEBUG
-            commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
+            commands.Add(new Command("spamevents", "A debug command that creates a ton of entity events.", (string[] args) =>
             {
-                foreach (Item item in Item.ItemList)
+                /*foreach (Item item in Item.ItemList)
                 {
                     foreach (ItemComponent component in item.Components)
                     {
@@ -1573,16 +1573,18 @@ namespace Barotrauma
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
                     }
                 }
-
                 foreach (Character c in Character.CharacterList)
                 {
                     GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
+                }*/
+                foreach (Hull hull in Hull.hullList)
+                {
+                    GameMain.Server.CreateEntityEvent(hull);
                 }
-
                 foreach (Structure wall in Structure.WallList)
                 {
                     GameMain.Server.CreateEntityEvent(wall);
-                }
+                }                
             }));
 #endif
         }
