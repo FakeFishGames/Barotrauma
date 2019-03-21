@@ -101,7 +101,7 @@ namespace Barotrauma
 
         public AITarget(Entity e, XElement element) : this(e)
         {
-            SightRange = element.GetAttributeFloat("sightrange", 2000f);
+            SightRange = element.GetAttributeFloat("sightrange", 0.0f);
             SoundRange = element.GetAttributeFloat("soundrange", 0.0f);
             MinSightRange = element.GetAttributeFloat("minsightrange", SightRange);
             MinSoundRange = element.GetAttributeFloat("minsoundrange", SoundRange);
@@ -110,7 +110,7 @@ namespace Barotrauma
             SonarLabel = element.GetAttributeString("sonarlabel", "");
         }
 
-        public AITarget(Entity e, float sightRange = 2000, float soundRange = 0)
+        public AITarget(Entity e, float sightRange = 3000, float soundRange = 0)
         {
             Entity = e;
             SightRange = sightRange;

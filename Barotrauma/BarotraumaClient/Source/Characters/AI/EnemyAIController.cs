@@ -26,8 +26,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Red, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
-
-                GUI.Font.DrawString(spriteBatch, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.ToString()})", pos - Vector2.UnitY * 20.0f, Color.Red);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.FormatZeroDecimal()})", Color.Red, Color.Black);
             }
 
             /*GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
@@ -70,25 +69,27 @@ namespace Barotrauma
 
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
 
-            IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
-            if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
-
-            GUI.DrawLine(spriteBatch,
-                new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
-                Color.Orange * 0.6f, 0, 3);
-            
-            for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
+            if (steeringManager is IndoorsSteeringManager pathSteering)
             {
+                if (pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) { return; }
+
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
+                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
+                    new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
                     Color.Orange * 0.6f, 0, 3);
 
-                GUI.SmallFont.DrawString(spriteBatch,
-                    pathSteering.CurrentPath.Nodes[i].ID.ToString(),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
-                    Color.LightGreen);
+                for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
+                        new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
+                        Color.Orange * 0.6f, 0, 3);
+
+                    GUI.SmallFont.DrawString(spriteBatch,
+                        pathSteering.CurrentPath.Nodes[i].ID.ToString(),
+                        new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
+                        Color.LightGreen);
+                }
             }
         }
     }
