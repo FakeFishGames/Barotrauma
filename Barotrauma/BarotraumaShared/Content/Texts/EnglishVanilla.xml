@@ -2688,6 +2688,7 @@
   
   <ReactorCommandObjective>Give the order to start up the reactor</ReactorCommandObjective>
   <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
+  <ReactorCommandInstructions>-Click on "Operate reactor", then "Power up"</ReactorCommandInstructions>
 
   <NavConsoleObjective>Plot the course</NavConsoleObjective>
   <NavConsoleText>Now that we have power, let's get her moving. Go attend to the navigation console and activate the ship's sonar so we can see where we're going. After that, we can safely undock and set the course to {0}.</NavConsoleText>

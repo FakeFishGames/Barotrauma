@@ -29,6 +29,7 @@ namespace Barotrauma.Tutorials
         private Character mechanic;
         private Character engineer;
         private Character injuredMember = null;
+        private float injuredVitalitySnapshot;
 
         private List<Pair<Character, float>> characterTimeOnSonar;
         private float requiredTimeOnSonar = 5f;
@@ -53,6 +54,7 @@ namespace Barotrauma.Tutorials
             public XElement TextContent;
             public XElement VideoContent;
             public bool IsTriggered;
+            public GUIButton replayButton;
             public GUITextBlock LinkedTitle, LinkedText;
 
             public TutorialSegment(XElement config)
@@ -265,6 +267,11 @@ namespace Barotrauma.Tutorials
 
         public override void Update(float deltaTime)
         {
+            if (videoPlayer != null)
+            {
+                videoPlayer.Update();
+            }
+
             if (!started || ContentRunning) return;
 
             deltaTime *= 0.5f;
@@ -284,6 +291,12 @@ namespace Barotrauma.Tutorials
             }
         }
 
+        private void ClosePreTextAndTriggerVideoCallback()
+        {
+            string fileName = "1_CommandReactor/command_reactor_video.mp4";
+            videoPlayer.LoadContentWithObjective(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
+        }
+
         private void CurrentSegmentStopCallback()
         {
             if (!string.IsNullOrEmpty(activeSegment.Objective))
@@ -299,15 +312,20 @@ namespace Barotrauma.Tutorials
         {
             activeObjectives.Add(segment);
 
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f + (2.5f * activeObjectives.Count - 1)), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), TextManager.Get("Objective"), textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f + (2.5f * activeObjectives.Count - 1)), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+            segment.replayButton = new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f + (2.5f * activeObjectives.Count - 1)), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter));
+            segment.replayButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                ReplaySegmentVideo(segment);
+                return true;
+            };
+
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), segment.replayButton.RectTransform, Anchor.TopCenter, Pivot.TopCenter), TextManager.Get("Objective"), textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f), segment.replayButton.RectTransform, Anchor.TopCenter, Pivot.TopCenter), segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
         }
 
         private void RemoveCompletedObjective(TutorialSegment objective)
         {
-            objective.LinkedTitle.FadeOut(1f, true);
-            objective.LinkedText.FadeOut(1f, true);
-
+            objective.replayButton.FadeOut(1f, true);
             CoroutineManager.StartCoroutine(WaitForObjectiveFade(objective));
         }
 
@@ -442,6 +460,7 @@ namespace Barotrauma.Tutorials
                         Character member = crew[i];
                         if (member.Vitality < member.MaxVitality && !member.IsDead)
                         {
+                            injuredVitalitySnapshot = member.Vitality;
                             injuredMember = member;
                             TriggerTutorialSegment(index, new string[] { member.Info.DisplayName,
                                 (member.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
@@ -500,8 +519,9 @@ namespace Barotrauma.Tutorials
                     if (IsFlooding()) return;
                     break;
                 case "Medical":
-                    if (injuredMember.Vitality < injuredMember.MaxVitality && !injuredMember.IsDead)
+                    if (injuredVitalitySnapshot >= injuredMember.Vitality && !injuredMember.IsDead)
                     {
+                        injuredVitalitySnapshot = injuredMember.Vitality;
                         return;
                     }
                     break;
@@ -673,8 +693,10 @@ namespace Barotrauma.Tutorials
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    string fileName = "1_CommandReactor/command_reactor_video.mp4";
-                    videoPlayer.LoadContentWithObjective(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.TextContent, args), activeSegment.Id, true, objectiveText, CurrentSegmentStopCallback);
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Id), tutorialText,
+                          activeSegment.TextContent.GetAttributeInt("width", 300),
+                          activeSegment.TextContent.GetAttributeInt("height", 80),
+                          activeSegment.TextContent.GetAttributeString("anchor", "Center"), true, ClosePreTextAndTriggerVideoCallback);                    
                     break;
                 case ContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Id), tutorialText,
@@ -690,6 +712,14 @@ namespace Barotrauma.Tutorials
             }
 
             CoroutineManager.StartCoroutine(WaitToStop()); // Completed
+        }
+
+        private void ReplaySegmentVideo(TutorialSegment segment)
+        {
+            if (ContentRunning) return;
+            ContentRunning = true;
+            string fileName = "1_CommandReactor/command_reactor_video.mp4";
+            videoPlayer.LoadContent(playableContentPath + fileName, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, () => ContentRunning = false);
         }
 
         private IEnumerable<object> WaitToStop()
