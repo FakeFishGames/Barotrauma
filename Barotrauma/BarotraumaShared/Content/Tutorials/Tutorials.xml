@@ -6,15 +6,15 @@
     </Segment>
     <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="video" istriggered="false">
       <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video animationspeed="0.1" file="1_CommandReactor/command_reactor_video.mp4" text="ReactorCommandInstructions">
+      <Video animationspeed="0.1" file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions">
         <Sheet path="1_CommandReactor/Sheets1.png" columns="5" rows="9" empty="0"/>
         <Sheet path="1_CommandReactor/Sheets2.png" columns="5" rows="6" empty="4"/>
       </Video>
     </Segment>
     <Segment id="NavConsole" objective="NavConsoleObjective" contenttype="video" istriggered="false">
     <Text tag="NavConsoleText" width="900" height="80" anchor="Center"/>
-    <Video animationspeed="0.1">
-      <Sheet path="2_NavConsole/Sheets1.png" columns="5" rows="9"/>
+      <Video animationspeed="0.1" file="2_NavConsole/BaroTutorial_NavConsole.mp4" text="ReactorCommandInstructions">
+        <Sheet path="2_NavConsole/Sheets1.png" columns="5" rows="9"/>
       <Sheet path="2_NavConsole/Sheets2.png" columns="5" rows="9"/>
       <Sheet path="2_NavConsole/Sheets3.png" columns="5" rows="9"/>
       <Sheet path="2_NavConsole/Sheets4.png" columns="5" rows="9"/>
@@ -26,7 +26,7 @@
     </Segment>
     <Segment id="Flood" objective="FloodObjective" contenttype="video" istriggered="false">
       <Text tag="FloodText" width="900" height="80" anchor="Center"/>
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" file="3_Flood/BaroTutorial_Flood.mp4" text="ReactorCommandInstructions">
         <Sheet path="3_Flood/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="3_Flood/Sheets2.png" columns="5" rows="9"/>
         <Sheet path="3_Flood/Sheets3.png" columns="5" rows="9"/>
@@ -36,7 +36,7 @@
     </Segment>
     <Segment id="ReactorUse" contenttype="video" istriggered="false">
       <Text tag="ReactorUseText" width="900" height="80" anchor="Center"/>
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" file="4_Reactor/BaroTutorial_Reactor.mp4" text="ReactorCommandInstructions">
         <Sheet path="4_Reactor/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="4_Reactor/Sheets2.png" columns="5" rows="9"/>
         <Sheet path="4_Reactor/Sheets3.png" columns="5" rows="9"/>
@@ -46,7 +46,7 @@
     </Segment>
     <Segment id="EnemyOnSonar" objective="EnemyOnSonarObjective" contenttype="video" istriggered="false">
       <Text tag="NavConsoleText" width="900" height="80" anchor="Center"/>
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" file="5_EnemyOnSonar/BaroTutorial_EnemyOnSonar.mp4" text="ReactorCommandInstructions">
         <Sheet path="5_EnemyOnSonar/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="5_EnemyOnSonar/Sheets2.png" columns="5" rows="9"/>
         <Sheet path="5_EnemyOnSonar/Sheets3.png" columns="5" rows="7" empty="1"/>
@@ -57,14 +57,14 @@
     </Segment>
     <Segment id="Degrading2" objective="Degrading2Objective" contenttype="video" istriggered="false">
       <Text tag="Degrading2Text" width="900" height="80" anchor="Center"/>
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" file="6_Degrading2/BaroTutorial_Degrading.mp4" text="ReactorCommandInstructions">
         <Sheet path="6_Degrading2/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="6_Degrading2/Sheets2.png" columns="5" rows="7"/>
       </Video>
     </Segment>
     <Segment id="Medical" objective="MedicalObjective" contenttype="video" istriggered="false">
       <Text tag="MedicalText" width="900" height="80" anchor="Center"/>
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" file="7_Medical/BaroTutorial_Medical.mp4" text="ReactorCommandInstructions">
         <Sheet path="7_Medical/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="7_Medical/Sheets2.png" columns="5" rows="9"/>
         <Sheet path="7_Medical/Sheets3.png" columns="5" rows="9"/>
@@ -73,7 +73,7 @@
     </Segment>
     <Segment id="Approach1" objective="Approach1Objective" contenttype="video" istriggered="false">
       <Text tag="Approach1Text" width="900" height="80" anchor="Center"/>
-      <Video animationspeed="0.1">
+      <Video animationspeed="0.1" file="8_Approach1/BaroTutorial_Approach.mp4" text="ReactorCommandInstructions">
         <Sheet path="8_Approach1/Sheets1.png" columns="5" rows="9"/>
         <Sheet path="8_Approach1/Sheets2.png" columns="5" rows="9"/>
         <Sheet path="8_Approach1/Sheets3.png" columns="5" rows="9"/>
