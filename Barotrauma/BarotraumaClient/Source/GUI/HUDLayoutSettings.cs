@@ -50,7 +50,7 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Rectangle ObjectiveArea
+        public static Rectangle ObjectiveAnchor
         {
             get; private set;
         }
@@ -161,10 +161,9 @@ namespace Barotrauma
                 new Rectangle(Padding, CrewArea.Y, chatBoxWidth, chatBoxHeight) :
                 new Rectangle(GameMain.GraphicsWidth - Padding - chatBoxWidth, CrewArea.Y, chatBoxWidth, chatBoxHeight);
 
-            int objectiveAreaWidth = (int)(250 * GUI.Scale);
-            int objectiveAreaHeight = (int)(40 * GUI.Scale);
-            int objectiveAreaOffsetY = (int)(100 * GUI.Scale);
-            ObjectiveArea = new Rectangle(GameMain.GraphicsWidth - Padding - objectiveAreaWidth, CrewArea.Y + crewAreaHeight + objectiveAreaOffsetY, objectiveAreaWidth, objectiveAreaHeight);
+            int objectiveAnchorWidth = (int)(250 * GUI.Scale);
+            int objectiveAnchorOffsetY = (int)(100 * GUI.Scale);
+            ObjectiveAnchor = new Rectangle(GameMain.GraphicsWidth - Padding - objectiveAnchorWidth, CrewArea.Y + crewAreaHeight + objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
             int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.25f, 280);
             InventoryAreaLower = new Rectangle(Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2, lowerAreaHeight);

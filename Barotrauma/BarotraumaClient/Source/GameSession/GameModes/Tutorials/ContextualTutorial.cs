@@ -43,8 +43,12 @@ namespace Barotrauma.Tutorials
         private bool disableTutorialOnDeficiencyFound = true;
 
         private GUIFrame holderFrame, objectiveFrame;
+        private GUIButton toggleButton;
         private bool objectivesOpen = false;
+        private float openState = 0f;
         private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
+        private string objectiveTranslated;
+        private Point objectiveBaseOffset = Point.Zero;
 
         private class TutorialSegment
         {
@@ -54,7 +58,7 @@ namespace Barotrauma.Tutorials
             public XElement TextContent;
             public XElement VideoContent;
             public bool IsTriggered;
-            public GUIButton replayButton;
+            public GUIButton ReplayButton;
             public GUITextBlock LinkedTitle, LinkedText;
 
             public TutorialSegment(XElement config)
@@ -100,6 +104,7 @@ namespace Barotrauma.Tutorials
             base.Initialize();
             videoPlayer = new VideoPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
+            objectivesOpen = true;
 
             for (int i = 0; i < segments.Count; i++)
             {
@@ -172,6 +177,7 @@ namespace Barotrauma.Tutorials
 
             base.Start();
 
+            objectiveTranslated = TextManager.Get("Objective");
             CreateObjectiveFrame();
             activeSegment = null;
             tutorialTimer = 0.0f;
@@ -237,10 +243,11 @@ namespace Barotrauma.Tutorials
         private void CreateObjectiveFrame()
         {
             holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
-            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveArea, holderFrame.RectTransform), style: null);
+            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveAnchor, holderFrame.RectTransform), style: null);
 
             int toggleButtonWidth = (int)(30 * GUI.Scale);
-            var toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ObjectiveArea.Height), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, 20) }, style: "UIToggleButton");
+            int toggleButtonHeight = (int)(40 * GUI.Scale);
+            toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, toggleButtonHeight), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, 20) }, style: "UIToggleButton");
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 objectivesOpen = !objectivesOpen;
@@ -250,18 +257,20 @@ namespace Barotrauma.Tutorials
                 }
                 return true;
             };
+
+            objectiveBaseOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0);
         }
 
         public override void AddToGUIUpdateList()
         {
+            if (objectiveFrame != null && activeObjectives.Count > 0)
+            {
+                objectiveFrame.AddToGUIUpdateList();
+            }
             base.AddToGUIUpdateList();
             if (videoPlayer != null)
             {
                 videoPlayer.AddToGUIUpdateList();
-            }
-            if (objectiveFrame != null && activeObjectives.Count > 0)
-            {
-                objectiveFrame.AddToGUIUpdateList();
             }
         }
 
@@ -289,6 +298,36 @@ namespace Barotrauma.Tutorials
             {
                 CheckActiveObjectives(activeObjectives[i], deltaTime);
             }
+
+            if (activeObjectives.Count > 0)
+            {
+                if (objectivesOpen)
+                {
+                    openState -= deltaTime * 5.0f;
+                }
+                else
+                {
+                    openState += deltaTime * 5.0f;
+                }
+
+                openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
+
+                float widestObjective = 0f;
+                for (int i = 0; i < activeObjectives.Count; i++)
+                {
+                    if (activeObjectives[i].ReplayButton.Rect.Width > widestObjective)
+                    {
+                        widestObjective = activeObjectives[i].ReplayButton.Rect.Width;
+                    }
+                }
+
+                float objectivesHiddenOffset = widestObjective + toggleButton.Rect.Width + 100f;
+
+                for (int i = 0; i < activeObjectives.Count; i++)
+                {
+                    activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = objectiveBaseOffset + new Point((int)MathHelper.SmoothStep(0, objectivesHiddenOffset, openState), 0);
+                }
+            }
         }
 
         private void ClosePreTextAndTriggerVideoCallback()
@@ -311,20 +350,27 @@ namespace Barotrauma.Tutorials
         {
             activeObjectives.Add(segment);
 
-            segment.replayButton = new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f + (2.5f * activeObjectives.Count - 1)), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter));
-            segment.replayButton.OnClicked += (GUIButton btn, object userdata) =>
+            Point replayButtonSize = new Point((int)GUI.ObjectiveNameFont.MeasureString(segment.Objective).X, (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
+
+            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0) }, style: null);
+            segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 ReplaySegmentVideo(segment);
                 return true;
             };
 
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), segment.replayButton.RectTransform, Anchor.TopCenter, Pivot.TopCenter), TextManager.Get("Objective"), textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f), segment.replayButton.RectTransform, Anchor.TopCenter, Pivot.TopCenter), segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+            int yOffset = (int)(GUI.ObjectiveNameFont.MeasureString(objectiveTranslated).Y / 2f) + 5;
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, objectiveTranslated, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point(10, 0) }, segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+
+            segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
+            segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
+            segment.ReplayButton.Color = segment.ReplayButton.HoverColor = segment.ReplayButton.PressedColor = segment.ReplayButton.SelectedColor = Color.Transparent;
         }
 
         private void RemoveCompletedObjective(TutorialSegment objective)
         {
-            objective.replayButton.FadeOut(1f, true);
+            objective.ReplayButton.FadeOut(1f, true);
             CoroutineManager.StartCoroutine(WaitForObjectiveFade(objective));
         }
 
@@ -382,7 +428,7 @@ namespace Barotrauma.Tutorials
                     TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
                     return true;
                 case 3: // Objective: Travel ~150 meters and while sub is not flooding [Text]
-                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 12000f || IsFlooding())
+                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 8000f || IsFlooding())
                     {
                         return false;
                     }

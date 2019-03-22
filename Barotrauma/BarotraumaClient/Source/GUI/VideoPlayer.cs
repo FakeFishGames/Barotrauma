@@ -203,9 +203,9 @@ namespace Barotrauma
             callbackOnStop = callback;
             filePath = contentPath + videoSettings.File;
 
-            if (!File.Exists(contentPath))
+            if (!File.Exists(filePath))
             {
-                DebugConsole.ThrowError("No video found at: " + contentPath);
+                DebugConsole.ThrowError("No video found at: " + filePath);
                 DisposeVideo(null, null);
                 return;
             }
