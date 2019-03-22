@@ -18,7 +18,7 @@ namespace Barotrauma
             private set;
         }
 
-        public float Rotation
+        public float? Rotation
         {
             get;
             private set;
@@ -30,7 +30,7 @@ namespace Barotrauma
             private set;
         }
 
-        public float AngularVelocity
+        public float? AngularVelocity
         {
             get;
             private set;
@@ -39,17 +39,17 @@ namespace Barotrauma
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
-        public PosInfo(Vector2 pos, float rotation, Vector2 linearVelocity, float angularVelocity, float time)
+        public PosInfo(Vector2 pos, float? rotation, Vector2 linearVelocity, float? angularVelocity, float time)
             : this(pos, rotation, linearVelocity, angularVelocity, 0, time)
         {
         }
 
-        public PosInfo(Vector2 pos, float rotation, Vector2 linearVelocity, float angularVelocity, UInt16 ID)
+        public PosInfo(Vector2 pos, float? rotation, Vector2 linearVelocity, float? angularVelocity, UInt16 ID)
             : this(pos, rotation, linearVelocity, angularVelocity, ID, 0.0f)
         {
         }
 
-        protected PosInfo(Vector2 pos, float rotation, Vector2 linearVelocity, float angularVelocity, UInt16 ID, float time)
+        protected PosInfo(Vector2 pos, float? rotation, Vector2 linearVelocity, float? angularVelocity, UInt16 ID, float time)
         {
             Position = pos;
             Rotation = rotation;
@@ -775,8 +775,8 @@ namespace Barotrauma
 
             newVelocity = positionBuffer[0].LinearVelocity;
             newPosition = positionBuffer[0].Position;
-            newRotation = positionBuffer[0].Rotation;
-            newAngularVelocity = positionBuffer[0].AngularVelocity;
+            newRotation = positionBuffer[0].Rotation ?? Rotation;
+            newAngularVelocity = positionBuffer[0].AngularVelocity ?? AngularVelocity;
             
             positionBuffer.RemoveAt(0);            
         }
