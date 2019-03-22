@@ -620,9 +620,9 @@ namespace Barotrauma
                 }
             }
 
-            if (attackingLimb == null)
+            if (attackingLimb == null || _previousAiTarget != SelectedAiTarget)
             {
-                attackingLimb = GetAttackLimb(attackPos);
+                attackingLimb = GetAttackLimb(attackWorldPos);
             }
             if (canAttack)
             {
