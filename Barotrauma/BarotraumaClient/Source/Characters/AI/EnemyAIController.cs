@@ -71,26 +71,35 @@ namespace Barotrauma
 
             if (steeringManager is IndoorsSteeringManager pathSteering)
             {
-                if (pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) { return; }
-
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                    new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
-                    Color.Orange * 0.6f, 0, 3);
-
-                for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
+                var path = pathSteering.CurrentPath;
+                if (path != null)
                 {
-                    GUI.DrawLine(spriteBatch,
-                        new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
-                        new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
-                        Color.Orange * 0.6f, 0, 3);
+                    if (path.CurrentNode != null)
+                    {
+                        GUI.DrawLine(spriteBatch, pos,
+                            new Vector2(path.CurrentNode.DrawPosition.X, -path.CurrentNode.DrawPosition.Y),
+                            Color.DarkViolet, 0, 3);
 
-                    GUI.SmallFont.DrawString(spriteBatch,
-                        pathSteering.CurrentPath.Nodes[i].ID.ToString(),
-                        new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
-                        Color.LightGreen);
+                        GUI.DrawString(spriteBatch, pos - new Vector2(0, 100), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                    }
+                    for (int i = 1; i < path.Nodes.Count; i++)
+                    {
+                        var previousNode = path.Nodes[i - 1];
+                        var currentNode = path.Nodes[i];
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y),
+                            new Vector2(previousNode.DrawPosition.X, -previousNode.DrawPosition.Y),
+                            Color.Red * 0.5f, 0, 3);
+
+                        GUI.SmallFont.DrawString(spriteBatch,
+                            currentNode.ID.ToString(),
+                            new Vector2(currentNode.DrawPosition.X + 20, -currentNode.DrawPosition.Y - 20),
+                            Color.Red);
+                    }
                 }
             }
+            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Character.AnimController.TargetMovement.X, -Character.AnimController.TargetMovement.Y)), Color.SteelBlue, width: 2);
+            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
         }
     }
 }
