@@ -293,8 +293,7 @@ namespace Barotrauma.Tutorials
 
         private void ClosePreTextAndTriggerVideoCallback()
         {
-            string fileName = "1_CommandReactor/command_reactor_video.mp4";
-            videoPlayer.LoadContentWithObjective(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
+            videoPlayer.LoadContentWithObjective(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
         }
 
         private void CurrentSegmentStopCallback()
