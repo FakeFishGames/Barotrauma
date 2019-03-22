@@ -43,6 +43,7 @@ namespace Barotrauma.Networking
         private IRestResponse masterServerResponse;
 
         private bool autoRestartTimerRunning;
+        private float endRoundTimer;
 
         public VoipServer VoipServer
         {
@@ -405,20 +406,38 @@ namespace Barotrauma.Networking
                     }
                 }
 
+                if (isCrewDead && respawnManager == null)
+                {
+                    if (endRoundTimer <= 0.0f)
+                    {
+                        SendChatMessage(TextManager.Get("CrewDeadNoRespawns").Replace("[time]", "60"), ChatMessageType.Server);
+                    }
+                    endRoundTimer += deltaTime;
+                }
+                else
+                {
+                    endRoundTimer = 0.0f;
+                }
+
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((serverSettings.AutoRestart && isCrewDead)
                     ||
-                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd))
+                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
+                    ||
+                    (isCrewDead && respawnManager == null && endRoundTimer >= 60.0f))
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {
                         Log("Ending round (entire crew dead)", ServerLog.MessageType.ServerMessage);
                     }
-                    else
+                    else if (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
                     {
                         Log("Ending round (submarine reached the end of the level)", ServerLog.MessageType.ServerMessage);
                     }
-
+                    else
+                    {
+                        Log("Ending round (no living players left and respawning is not enabled during this round)", ServerLog.MessageType.ServerMessage);
+                    }
                     EndGame();
                     return;
                 }
@@ -1905,6 +1924,8 @@ namespace Barotrauma.Networking
 
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);
+            
+            endRoundTimer = 0.0f;
 
             if (serverSettings.AutoRestart)
             {
