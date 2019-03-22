@@ -2683,6 +2683,8 @@
   <NonLinkedGapsWarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</NonLinkedGapsWarning>
 
   <!-- Tutorial START -->
+  
+  <!-- old -->
   <TutorialActive>Tutorial active</TutorialActive>
   <Welcome>Welcome</Welcome>
   <WelcomeText>Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?</WelcomeText>
@@ -2690,7 +2692,8 @@
   <DestinationObjectiveText>Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up.</DestinationObjectiveText>
   <Approach2>Approach II</Approach2>
   <Approach2Text>Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance.</Approach2Text>
-
+  <!-- /old -->
+  
   <NewObjective>New Objective</NewObjective>
   <Objective>Objective</Objective>
 
