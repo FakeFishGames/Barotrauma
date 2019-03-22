@@ -71,14 +71,14 @@ namespace Barotrauma
             videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.CenterRight), "SonarFrame");
             videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
 
-            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.CenterLeft), "SonarFrame");
+            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), background.RectTransform, Anchor.Center, Pivot.CenterLeft), "SonarFrame");
             textFrame.RectTransform.AbsoluteOffset = new Point(borderSize, 0);
 
             videoView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
             title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, 10) }, string.Empty, font: GUI.VideoTitleFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
 
-            textContent = new GUITextBlock(new RectTransform(new Vector2(1f, .8f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, borderSize / 2 + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
+            textContent = new GUITextBlock(new RectTransform(new Vector2(1f, .8f), textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, borderSize / 2 + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
 
             objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
             objectiveTitle.Text = TextManager.Get("NewObjective");
@@ -182,8 +182,8 @@ namespace Barotrauma
 
             textContent.Text = textSettings.Text;
 
-            objectiveTitle.RectTransform.AbsoluteOffset = new Point(0, textContent.RectTransform.Rect.Height + (int)(textHeight * 1.5f));
-            objectiveText.RectTransform.AbsoluteOffset = new Point(0, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + textHeight * 2);
+            objectiveTitle.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + (int)(textHeight * 1.75f));
+            objectiveText.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + (int)(textHeight * 2.25f));
 
             textFrame.RectTransform.NonScaledSize += new Point(0, objectiveFrameHeight);
             objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, textHeight);
