@@ -416,7 +416,8 @@ namespace Barotrauma
                 return;
             }
 
-            Vector2 attackPos = SelectedAiTarget.WorldPosition;
+            Vector2 attackWorldPos = SelectedAiTarget.WorldPosition;
+            Vector2 attackSimPos = SelectedAiTarget.SimPosition;
 
             if (SelectedAiTarget.Entity is Item item)
             {
@@ -444,10 +445,11 @@ namespace Barotrauma
 
             if (wallTarget != null)
             {
-                attackPos = wallTarget.Position;
+                attackWorldPos = wallTarget.Position;
+                attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
                 if (Character.Submarine == null && wallTarget.Structure.Submarine != null)
                 {
-                    attackPos += wallTarget.Structure.Submarine.Position;
+                    attackWorldPos += wallTarget.Structure.Submarine.Position;
                 }
             }
             else if (SelectedAiTarget.Entity is Character c)
@@ -461,14 +463,25 @@ namespace Barotrauma
                     if (dist < closestDist)
                     {
                         closestDist = dist;
-                        attackPos = limb.WorldPosition;
+                        attackWorldPos = limb.WorldPosition;
+                        attackSimPos = limb.SimPosition;
                     }
                 }
             }
 
+            // Take the sub position into account in the sim pos
+            if (Character.Submarine == null && SelectedAiTarget.Entity.Submarine != null)
+            {
+                attackSimPos += SelectedAiTarget.Entity.Submarine.SimPosition;
+            }
+            else if (Character.Submarine != null && SelectedAiTarget.Entity.Submarine == null)
+            {
+                attackSimPos -= Character.Submarine.SimPosition;
+            }
+
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
             {
-                Character.AnimController.TargetDir = Character.WorldPosition.X < attackPos.X ? Direction.Right : Direction.Left;
+                Character.AnimController.TargetDir = Character.WorldPosition.X < attackWorldPos.X ? Direction.Right : Direction.Left;
             }
 
             if (aggressiveBoarding)
@@ -548,7 +561,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                UpdateFallBack(attackPos, deltaTime);
+                                UpdateFallBack(attackWorldPos, deltaTime);
                                 return;
                             }
                         }
@@ -563,7 +576,7 @@ namespace Barotrauma
                                     if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
                                     {
                                         // Fall back if cannot attack.
-                                        UpdateFallBack(attackPos, deltaTime);
+                                        UpdateFallBack(attackWorldPos, deltaTime);
                                         return;
                                     }
                                     attackingLimb = null;
@@ -572,7 +585,7 @@ namespace Barotrauma
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
                                     var previousLimb = attackingLimb;
-                                    var newLimb = GetAttackLimb(attackPos, previousLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
                                     if (newLimb != null)
                                     {
                                         attackingLimb = newLimb;
@@ -586,7 +599,7 @@ namespace Barotrauma
                                         }
                                         else
                                         {
-                                            UpdateFallBack(attackPos, deltaTime);
+                                            UpdateFallBack(attackWorldPos, deltaTime);
                                             return;
                                         }
                                     }
@@ -601,7 +614,7 @@ namespace Barotrauma
                         break;
                     case AIBehaviorAfterAttack.FallBack:
                     default:
-                        UpdateFallBack(attackPos, deltaTime);
+                        UpdateFallBack(attackWorldPos, deltaTime);
                         return;
 
                 }
@@ -619,24 +632,39 @@ namespace Barotrauma
             if (canAttack)
             {
                 // Check that we can reach the target
-                distance = Vector2.Distance(attackingLimb.WorldPosition, attackPos);
+                distance = Vector2.Distance(attackingLimb.WorldPosition, attackWorldPos);
                 canAttack = distance < attackingLimb.attack.Range;
             }
 
-            Limb steeringLimb = Character.AnimController.MainLimb;
+            // If the attacking limb is a hand or claw, for example, using it as the steering limb can end in the result where the character circles around the target. For example the Hammerhead steering with the claws when it should use the torso.
+            // If we always use the main limb, this causes the character to seek the target with it's torso/head, when it should not. For example Mudraptor steering with it's belly, when it should use it's head.
+            // So let's use the one that's closer to the attacking limb.
+            Limb steeringLimb;
+            var torso = Character.AnimController.GetLimb(LimbType.Torso);
+            var head = Character.AnimController.GetLimb(LimbType.Head);
+            if (attackingLimb == null)
+            {
+                steeringLimb = head ?? torso;
+            }
+            else
+            {
+                if (head != null && torso != null)
+                {
+                    steeringLimb = Vector2.DistanceSquared(attackingLimb.SimPosition, head.SimPosition) < Vector2.DistanceSquared(attackingLimb.SimPosition, torso.SimPosition) ? head : torso;
+                }
+                else
+                {
+                    steeringLimb = head ?? torso;
+                }
+            }
             if (steeringLimb != null)
             {
-                Vector2 toTarget = Vector2.Normalize(attackPos - steeringLimb.WorldPosition);
-                Vector2 targetingVector = toTarget * attackingLimb.attack.Range;
-                // Offset the position a bit so that we don't overshoot the movement.
-                Vector2 steerPos = attackPos + targetingVector;
-                steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(attackPos), 10);
-                if (Character.CurrentHull == null)
-                {
-                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f);
-                }
+                Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
+                // Offset so that we don't overshoot the movement
+                Vector2 steerPos = attackSimPos + offset;
+                SteeringManager.SteeringSeek(steerPos, 10);
 
-                if (steeringManager is IndoorsSteeringManager indoorsSteering)
+                if (SteeringManager is IndoorsSteeringManager indoorsSteering)
                 {
                     if (indoorsSteering.CurrentPath != null && !indoorsSteering.IsPathDirty)
                     {
@@ -644,11 +672,11 @@ namespace Barotrauma
                         {
                             //wander around randomly and decrease the priority faster if no path is found
                             if (selectedTargetMemory != null) selectedTargetMemory.Priority -= deltaTime * 10.0f;
-                            steeringManager.SteeringWander();
+                            SteeringManager.SteeringWander();
                         }
                         else if (indoorsSteering.CurrentPath.Finished)
                         {
-                            steeringManager.SteeringManual(deltaTime, toTarget);
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                         }
                         else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
                         {
@@ -662,11 +690,15 @@ namespace Barotrauma
                         }
                     }
                 }
+                else if (Character.CurrentHull == null)
+                {
+                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f);
+                }
             }
 
             if (canAttack)
             {
-                UpdateLimbAttack(deltaTime, attackingLimb, ConvertUnits.ToSimUnits(attackPos), distance);
+                UpdateLimbAttack(deltaTime, attackingLimb, attackSimPos, distance);
             }
         }
 
@@ -699,7 +731,7 @@ namespace Barotrauma
             }
 
             //check if there's a wall between the target and the Character   
-            Vector2 rayStart = Character.SimPosition;
+            Vector2 rayStart = SimPosition;
             Vector2 rayEnd = SelectedAiTarget.SimPosition;
             bool offset = SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null;
 
@@ -744,12 +776,12 @@ namespace Barotrauma
                 Vector2 attachTargetNormal;
                 if (wall.IsHorizontal)
                 {
-                    attachTargetNormal = new Vector2(0.0f, Math.Sign(Character.WorldPosition.Y - wall.WorldPosition.Y));
+                    attachTargetNormal = new Vector2(0.0f, Math.Sign(WorldPosition.Y - wall.WorldPosition.Y));
                     sectionPos.Y += (wall.BodyHeight <= 0.0f ? wall.Rect.Height : wall.BodyHeight) / 2 * attachTargetNormal.Y;
                 }
                 else
                 {
-                    attachTargetNormal = new Vector2(Math.Sign(Character.WorldPosition.X - wall.WorldPosition.X), 0.0f);
+                    attachTargetNormal = new Vector2(Math.Sign(WorldPosition.X - wall.WorldPosition.X), 0.0f);
                     sectionPos.X += (wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2 * attachTargetNormal.X;
                 }
 
@@ -825,9 +857,9 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateFallBack(Vector2 attackPosition, float deltaTime)
+        private void UpdateFallBack(Vector2 attackWorldPos, float deltaTime)
         {
-            Vector2 attackVector = attackPosition - Character.WorldPosition;
+            Vector2 attackVector = attackWorldPos - WorldPosition;
             float dist = attackVector.Length();
             float desiredDist = colliderSize * 2.0f;
             if (dist < desiredDist)
@@ -1135,6 +1167,5 @@ namespace Barotrauma
         {
             this.priority = priority;
         }
-
     }
 }
