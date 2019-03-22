@@ -43,6 +43,7 @@ namespace Barotrauma.Networking
         private IRestResponse masterServerResponse;
 
         private bool autoRestartTimerRunning;
+        private float endRoundTimer;
 
         public VoipServer VoipServer
         {
@@ -405,20 +406,38 @@ namespace Barotrauma.Networking
                     }
                 }
 
+                if (isCrewDead && respawnManager == null)
+                {
+                    if (endRoundTimer <= 0.0f)
+                    {
+                        SendChatMessage(TextManager.Get("CrewDeadNoRespawns").Replace("[time]", "60"), ChatMessageType.Server);
+                    }
+                    endRoundTimer += deltaTime;
+                }
+                else
+                {
+                    endRoundTimer = 0.0f;
+                }
+
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((serverSettings.AutoRestart && isCrewDead)
                     ||
-                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd))
+                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
+                    ||
+                    (isCrewDead && respawnManager == null && endRoundTimer >= 60.0f))
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {
                         Log("Ending round (entire crew dead)", ServerLog.MessageType.ServerMessage);
                     }
-                    else
+                    else if (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
                     {
                         Log("Ending round (submarine reached the end of the level)", ServerLog.MessageType.ServerMessage);
                     }
-
+                    else
+                    {
+                        Log("Ending round (no living players left and respawning is not enabled during this round)", ServerLog.MessageType.ServerMessage);
+                    }
                     EndGame();
                     return;
                 }
@@ -1630,8 +1649,22 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(roundStartSeed);
 
             int teamCount = 1;
-            MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+            MultiPlayerCampaign campaign = selectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
+
+            if (campaign != null && campaign.Map == null)
+            {
+                initiatedStartGame = false;
+                startGameCoroutine = null;
+                string errorMsg = "Starting the round failed. Campaign was still active, but the map has been disposed. Try selecting another game mode.";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.StartGame:InvalidCampaignState", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                if (OwnerConnection != null)
+                {
+                    SendDirectChatMessage(errorMsg, connectedClients.Find(c => c.Connection == OwnerConnection), ChatMessageType.Error);
+                }
+                yield return CoroutineStatus.Failure;
+            }
 
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
@@ -1891,6 +1924,8 @@ namespace Barotrauma.Networking
 
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.GameMode.End(endMessage);
+            
+            endRoundTimer = 0.0f;
 
             if (serverSettings.AutoRestart)
             {
