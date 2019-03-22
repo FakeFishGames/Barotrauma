@@ -158,7 +158,7 @@ namespace Barotrauma.Networking
             }
 
             //kick connected client if status becomes invalid (e.g. VAC banned, not connected to steam)
-            if (status != Facepunch.Steamworks.ServerAuth.Status.OK && GameMain.Config.RequireSteamAuthentication)
+            /*if (status != Facepunch.Steamworks.ServerAuth.Status.OK && GameMain.Config.RequireSteamAuthentication)
             {
                 var connectedClient = connectedClients.Find(c => c.SteamID == ownerID);
                 if (connectedClient != null)
@@ -166,7 +166,7 @@ namespace Barotrauma.Networking
                     Log("Disconnecting client " + connectedClient.Name + " (Steam ID: " + steamID + "). Steam authentication no longer valid (" + status + ").", ServerLog.MessageType.ServerMessage);                    
                     KickClient(connectedClient, $"DisconnectMessage.SteamAuthNoLongerValid_[status]={status.ToString()}");
                 }
-            }
+            }*/
         }
 
         private bool IsServerOwner(NetIncomingMessage inc, NetConnection senderConnection)

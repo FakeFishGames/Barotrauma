@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Extensions;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -206,15 +207,19 @@ namespace Barotrauma.Networking
                         lastSentToAll = owner.LastRecvEntityEventID;
                     }
                 }
-
                 inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) lastSentToAll = c.LastRecvEntityEventID; });
+
+                clients.Where(c => c.NeedsMidRoundSync).ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.FirstNewEventID)) lastSentToAll = (ushort)(c.FirstNewEventID - 1); });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
                 if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > 10.0f)
                 {
-                    //it's been 10 seconds since this event was created
-                    //kick everyone that hasn't received it yet, this is way too old
-                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID));
+                    //it's been 10 seconds since this event was created, kick everyone that hasn't received it yet, this is way too old
+                    //  UNLESS the event was created when the client was still midround syncing, in which case we'll wait until the timeout
+                    //  runs out before kicking the client
+                    List<Client> toKick = inGameClients.FindAll(c => 
+                        NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) && 
+                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut));
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
@@ -235,7 +240,7 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
-                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
+                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
                         server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }
@@ -318,15 +323,7 @@ namespace Barotrauma.Networking
 
             if (client.NeedsMidRoundSync)
             {
-                msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);
-
-                //how many (unique) events the clients had missed before joining
-                client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
-                //ID of the first event sent after the client joined 
-                //(after the client has been synced they'll switch their lastReceivedID 
-                //to the one before this, and the eventmanagers will start to function "normally")
-                client.FirstNewEventID = events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID;
-
+                msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
                 msg.Write(client.UnreceivedEntityEventCount);
                 msg.Write(client.FirstNewEventID);
 
@@ -394,9 +391,15 @@ namespace Barotrauma.Networking
                 midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 10.0f);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
-                client.FirstNewEventID = 0;
                 client.NeedsMidRoundSync = true;
                 client.MidRoundSyncTimeOut = Timing.TotalTime + midRoundSyncTimeOut;
+
+                //how many (unique) events the clients had missed before joining
+                client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
+                //ID of the first event sent after the client joined 
+                //(after the client has been synced they'll switch their lastReceivedID 
+                //to the one before this, and the eventmanagers will start to function "normally")
+                client.FirstNewEventID = events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID;
             }
         }
 

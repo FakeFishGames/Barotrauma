@@ -12,7 +12,7 @@
     <LevelResource deattachduration="1">
       <Commonness commonness="8" />
     </LevelResource>
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="Elastin Plant" identifier="elastinplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
     <Deconstruct time="5">
@@ -26,7 +26,7 @@
     <LevelResource deattachduration="1">
       <Commonness commonness="8" />
     </LevelResource>
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="Aquatic Poppy" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
     <Deconstruct time="5">
@@ -40,7 +40,7 @@
     <LevelResource deattachduration="1">
       <Commonness commonness="10" />
     </LevelResource>
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="Sea Yeast Shroom" identifier="yeastshroom" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
     <Deconstruct time="5">
@@ -54,7 +54,7 @@
     <LevelResource deattachduration="1">
       <Commonness commonness="10" />
     </LevelResource>
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="Slime Bacteria" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="A colony of myxobacteria. Can be processed into antibiotics." cargocontaineridentifier="metalcrate" scale="0.3">
     <Deconstruct time="5">
@@ -68,6 +68,6 @@
     <LevelResource deattachduration="1">
       <Commonness commonness="2" />
     </LevelResource>
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
 </Items>

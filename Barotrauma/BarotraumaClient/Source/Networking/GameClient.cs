@@ -132,6 +132,7 @@ namespace Barotrauma.Networking
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
+                AbsoluteSpacing = 5,
                 CanBeFocused = false
             };
 
@@ -147,9 +148,10 @@ namespace Barotrauma.Networking
                 Visible = false
             };
 
-            EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+            EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.4f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
                 TextManager.Get("EndRound"))
             {
+                UserData = TextManager.Get("EndRound"),
                 OnSelected = ToggleEndRoundVote,
                 Visible = false
             };
@@ -2209,13 +2211,25 @@ namespace Barotrauma.Networking
 
             if (EndVoteCount > 0)
             {
-                string endVoteText = TextManager.Get("EndRoundVotes")
-                    .Replace("[y]", EndVoteCount.ToString())
-                    .Replace("[n]", (EndVoteMax - EndVoteCount).ToString());
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 10.0f - GUI.SmallFont.MeasureString(endVoteText).X, 40),
-                    endVoteText,
-                    Color.White,
-                    font: GUI.SmallFont);
+                if (EndVoteTickBox.Visible)
+                {
+                    EndVoteTickBox.Text =
+                        (EndVoteTickBox.UserData as string) + " " + EndVoteCount + "/" + EndVoteMax;
+                }
+                else
+                {
+                    string endVoteText = TextManager.Get("EndRoundVotes")
+                        .Replace("[votes]", EndVoteCount.ToString())
+                        .Replace("[max]", EndVoteMax.ToString());
+                    GUI.DrawString(spriteBatch, EndVoteTickBox.Rect.Center.ToVector2() - GUI.SmallFont.MeasureString(endVoteText) / 2,
+                        endVoteText,
+                        Color.White,
+                        font: GUI.SmallFont);
+                }
+            }
+            else
+            {
+                EndVoteTickBox.Text = EndVoteTickBox.UserData as string;
             }
 
             if (respawnManager != null)

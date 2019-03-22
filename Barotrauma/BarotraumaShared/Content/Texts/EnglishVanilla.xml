@@ -566,7 +566,6 @@
   <LeaveSubsBehind>Some of your vessels aren't at the exit yet. Do you want to leave them behind?</LeaveSubsBehind>
 
   <!-- In-game UI -->
-  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
   <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
   <RespawningIn>Respawning players in [time]</RespawningIn>
   <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
@@ -2688,5 +2687,8 @@
   <DialogNegative>Negative.</DialogNegative>
   <DialogNegative>No way!</DialogNegative>
   <DialogCannotReach>Can't reach the target.</DialogCannotReach>
+
+  <EndRoundVotes>Votes to end the round [votes]/[max]</EndRoundVotes>
   
+  <CrewDeadNoRespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</CrewDeadNoRespawns>
 </infotexts>
