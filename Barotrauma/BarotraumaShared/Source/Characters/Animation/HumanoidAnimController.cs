@@ -1463,6 +1463,11 @@ namespace Barotrauma
                     targetRightHand.PullJointMaxForce = 5000.0f;
                 }
 
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                {
+                    Collider.ResetDynamics();
+                }
+
                 target.AnimController.IgnorePlatforms = true;
             }
             else

@@ -1498,7 +1498,8 @@ namespace Barotrauma
             float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
             float resetDist = allowedDist * 5.0f;
 
-            float distSqrd = Vector2.DistanceSquared(Collider.SimPosition, MainLimb.SimPosition);
+            Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;
+            float distSqrd = diff.LengthSquared();
 
             if (distSqrd > resetDist * resetDist)
             {
@@ -1509,10 +1510,13 @@ namespace Barotrauma
             {
                 //ragdoll too far from the collider, disable collisions until it's close enough
                 //(in case the ragdoll has gotten stuck somewhere)
+
+                Vector2 forceDir = diff / (float)Math.Sqrt(distSqrd);
                 foreach (Limb limb in Limbs)
                 {
                     if (limb.IsSevered) continue;
                     limb.body.CollidesWith = Physics.CollisionNone;
+                    limb.body.ApplyForce(forceDir * limb.Mass * 10.0f, maxVelocity: 10.0f);
                 }
 
                 collisionsDisabled = true;
