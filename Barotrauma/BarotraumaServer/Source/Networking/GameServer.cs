@@ -1630,8 +1630,22 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(roundStartSeed);
 
             int teamCount = 1;
-            MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+            MultiPlayerCampaign campaign = selectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
+
+            if (campaign != null && campaign.Map == null)
+            {
+                initiatedStartGame = false;
+                startGameCoroutine = null;
+                string errorMsg = "Starting the round failed. Campaign was still active, but the map has been disposed. Try selecting another game mode.";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.StartGame:InvalidCampaignState", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                if (OwnerConnection != null)
+                {
+                    SendDirectChatMessage(errorMsg, connectedClients.Find(c => c.Connection == OwnerConnection), ChatMessageType.Error);
+                }
+                yield return CoroutineStatus.Failure;
+            }
 
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
