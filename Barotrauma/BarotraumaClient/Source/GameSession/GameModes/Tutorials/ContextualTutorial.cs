@@ -718,8 +718,7 @@ namespace Barotrauma.Tutorials
         {
             if (ContentRunning) return;
             ContentRunning = true;
-            string fileName = "1_CommandReactor/command_reactor_video.mp4";
-            videoPlayer.LoadContent(playableContentPath + fileName, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, () => ContentRunning = false);
+            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, () => ContentRunning = false);
         }
 
         private IEnumerable<object> WaitToStop()
