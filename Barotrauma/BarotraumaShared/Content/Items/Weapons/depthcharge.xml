@@ -68,6 +68,10 @@
       <StatusEffect type="OnImpact" target="Contained">
         <Use />
       </StatusEffect>
+      <!-- Remove the item after exploding -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="true">
       <Containable identifiers="smallitem,explosive" />
@@ -127,6 +131,10 @@
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
         <Use />
+      </StatusEffect>
+      <!-- Remove the item after exploding -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
       </StatusEffect>
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="true">
