@@ -26,8 +26,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Red, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
-
-                GUI.Font.DrawString(spriteBatch, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.ToString()})", pos - Vector2.UnitY * 20.0f, Color.Red);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.FormatZeroDecimal()})", Color.Red, Color.Black);
             }
 
             /*GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
@@ -70,26 +69,37 @@ namespace Barotrauma
 
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
 
-            IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
-            if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
-
-            GUI.DrawLine(spriteBatch,
-                new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
-                Color.Orange * 0.6f, 0, 3);
-            
-            for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
+            if (steeringManager is IndoorsSteeringManager pathSteering)
             {
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
-                    Color.Orange * 0.6f, 0, 3);
+                var path = pathSteering.CurrentPath;
+                if (path != null)
+                {
+                    if (path.CurrentNode != null)
+                    {
+                        GUI.DrawLine(spriteBatch, pos,
+                            new Vector2(path.CurrentNode.DrawPosition.X, -path.CurrentNode.DrawPosition.Y),
+                            Color.DarkViolet, 0, 3);
 
-                GUI.SmallFont.DrawString(spriteBatch,
-                    pathSteering.CurrentPath.Nodes[i].ID.ToString(),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
-                    Color.LightGreen);
+                        GUI.DrawString(spriteBatch, pos - new Vector2(0, 100), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                    }
+                    for (int i = 1; i < path.Nodes.Count; i++)
+                    {
+                        var previousNode = path.Nodes[i - 1];
+                        var currentNode = path.Nodes[i];
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y),
+                            new Vector2(previousNode.DrawPosition.X, -previousNode.DrawPosition.Y),
+                            Color.Red * 0.5f, 0, 3);
+
+                        GUI.SmallFont.DrawString(spriteBatch,
+                            currentNode.ID.ToString(),
+                            new Vector2(currentNode.DrawPosition.X + 20, -currentNode.DrawPosition.Y - 20),
+                            Color.Red);
+                    }
+                }
             }
+            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Character.AnimController.TargetMovement.X, -Character.AnimController.TargetMovement.Y)), Color.SteelBlue, width: 2);
+            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
         }
     }
 }

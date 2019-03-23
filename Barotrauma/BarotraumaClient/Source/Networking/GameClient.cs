@@ -622,7 +622,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted) SetRadioButtonColor();
 
-            if (ShowNetStats)
+            if (ShowNetStats && client?.ServerConnection != null)
             {
                 netStats.AddValue(NetStats.NetStatType.ReceivedBytes, client.ServerConnection.Statistics.ReceivedBytes);
                 netStats.AddValue(NetStats.NetStatType.SentBytes, client.ServerConnection.Statistics.SentBytes);
