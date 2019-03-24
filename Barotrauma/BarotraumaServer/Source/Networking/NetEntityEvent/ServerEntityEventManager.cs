@@ -303,23 +303,16 @@ namespace Barotrauma.Networking
             }
 
             //too many events for one packet
-            if (eventsToSync.Count > MaxEventsPerWrite)
+            if (eventsToSync.Count > 200)
             {
-                if (eventsToSync.Count > MaxEventsPerWrite * 3 && !client.NeedsMidRoundSync)
+                if (eventsToSync.Count > 200 && !client.NeedsMidRoundSync)
                 {
-                    Color color = eventsToSync.Count > MaxEventsPerWrite * 20 ? Color.Red : Color.Orange;
-                    if (eventsToSync.Count < MaxEventsPerWrite * 5) { color = Color.Yellow; }
-                    DebugConsole.NewMessage("WARNING: event count very high: " + eventsToSync.Count + "/" + MaxEventsPerWrite, color);
+                    Color color = eventsToSync.Count > 500 ? Color.Red : Color.Orange;
+                    if (eventsToSync.Count < 300) { color = Color.Yellow; }
+                    DebugConsole.NewMessage("WARNING: event count very high: " + eventsToSync.Count, color);
                 }
-
-                eventsToSync.RemoveRange(MaxEventsPerWrite, eventsToSync.Count - MaxEventsPerWrite);
             }
 
-            foreach (NetEntityEvent entityEvent in eventsToSync)
-            {
-                (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
-            }
 
             if (client.NeedsMidRoundSync)
             {
@@ -327,14 +320,19 @@ namespace Barotrauma.Networking
                 msg.Write(client.UnreceivedEntityEventCount);
                 msg.Write(client.FirstNewEventID);
 
-                Write(msg, eventsToSync, client);
+                Write(msg, eventsToSync, out sentEvents, client);
             }
             else
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT);
-                Write(msg, eventsToSync, client);
+                Write(msg, eventsToSync, out sentEvents, client);
             }
-            sentEvents = eventsToSync;
+
+            foreach (NetEntityEvent entityEvent in sentEvents)
+            {
+                (entityEvent as ServerEntityEvent).Sent = true;
+                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
+            }
         }
 
         /// <summary>
@@ -351,17 +349,17 @@ namespace Barotrauma.Networking
             //find the index of the first event the client hasn't received
             int startIndex = eventList.Count;
             while (startIndex > 0 &&
-                NetIdUtils.IdMoreRecent(eventList[startIndex - 1].ID,client.LastRecvEntityEventID))
+                NetIdUtils.IdMoreRecent(eventList[startIndex - 1].ID, client.LastRecvEntityEventID))
             {
                 startIndex--;
             }
-            
+
             for (int i = startIndex; i < eventList.Count; i++)
             {
-                //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
-                client.EntityEventLastSent.TryGetValue(eventList[i].ID, out float lastSent);
+                //find the first event that hasn't been sent in roundtriptime or at all
+                client.EntityEventLastSent.TryGetValue(eventList[i].ID, out double lastSent);
 
-                float minInterval = Math.Max(client.Connection.AverageRoundtripTime * 1.5f, (float)server.UpdateInterval.TotalSeconds * 2);
+                float minInterval = Math.Max(client.Connection.AverageRoundtripTime, (float)server.UpdateInterval.TotalSeconds * 2);
 
                 if (lastSent > NetTime.Now - Math.Min(minInterval, 0.5f))
                 {
@@ -387,7 +385,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
+                double midRoundSyncTimeOut = uniqueEvents.Count / 100 * server.UpdateInterval.TotalSeconds;
                 midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 10.0f);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;

@@ -7,15 +7,16 @@ namespace Barotrauma.Networking
     abstract class NetEntityEventManager
     {
         public const int MaxEventBufferLength = 1024;
-        public const int MaxEventsPerWrite = 64;
         
         /// <summary>
         /// Write the events to the outgoing message. The recipient parameter is only needed for ServerEntityEventManager
         /// </summary>
-        protected void Write(NetOutgoingMessage msg, List<NetEntityEvent> eventsToSync, Client recipient = null)
+        protected void Write(NetOutgoingMessage msg, List<NetEntityEvent> eventsToSync, out List<NetEntityEvent> sentEvents, Client recipient = null)
         {
             //write into a temporary buffer so we can write the number of events before the actual data
             NetBuffer tempBuffer = new NetBuffer();
+
+            sentEvents = new List<NetEntityEvent>();
 
             int eventCount = 0;
             foreach (NetEntityEvent e in eventsToSync)
@@ -43,7 +44,7 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
-                if (msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > NetPeerConfiguration.kDefaultMTU - 20)
+                if (msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > MaxEventBufferLength)
                 {
                     //no more room in this packet
                     break;
@@ -76,6 +77,7 @@ namespace Barotrauma.Networking
                     tempBuffer.Write((byte)tempEventBuffer.LengthBytes);
                     tempBuffer.Write(tempEventBuffer);
                     tempBuffer.WritePadBits();
+                    sentEvents.Add(e);
                 }
 
                 eventCount++;
