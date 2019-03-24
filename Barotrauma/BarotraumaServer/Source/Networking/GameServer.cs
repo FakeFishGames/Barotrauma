@@ -715,23 +715,25 @@ namespace Barotrauma.Networking
                     {
                         string savePath = inc.ReadString();
                         string seed = inc.ReadString();
-                        string subPath = inc.ReadString();
+                        string subName = inc.ReadString();
+                        string subHash = inc.ReadString();
 
-                        if (!File.Exists(subPath))
+                        var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
+
+                        if (matchingSub == null)
                         {
                             SendDirectChatMessage(
-                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subpath]", subPath), 
+                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subname]", subName), 
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else
                         {
-                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subPath, seed);
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, matchingSub.FilePath, seed);
                         }
                      }
                     else
                     {
                         string saveName = inc.ReadString();
-
                         if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.LoadCampaign(saveName);
                     }
                     break;

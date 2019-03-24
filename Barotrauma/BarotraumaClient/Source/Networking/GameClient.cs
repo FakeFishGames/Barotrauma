@@ -1973,7 +1973,8 @@ namespace Barotrauma.Networking
             msg.Write(true); msg.WritePadBits();
             msg.Write(savePath);
             msg.Write(mapSeed);
-            msg.Write(sub.FilePath);
+            msg.Write(sub.Name);
+            msg.Write(sub.MD5Hash.Hash);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
