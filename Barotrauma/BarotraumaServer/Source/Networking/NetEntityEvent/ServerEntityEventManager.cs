@@ -309,10 +309,23 @@ namespace Barotrauma.Networking
                 {
                     Color color = eventsToSync.Count > 500 ? Color.Red : Color.Orange;
                     if (eventsToSync.Count < 300) { color = Color.Yellow; }
-                    DebugConsole.NewMessage("WARNING: event count very high: " + eventsToSync.Count, color);
+                    string warningMsg = "WARNING: event count very high: " + eventsToSync.Count;
+
+                    var sortedEvents = eventsToSync.GroupBy(e => e.Entity.ToString())
+                        .Select(e => new { Value = e.Key, Count = e.Count() })
+                        .OrderByDescending(e => e.Count);
+
+                    int count = 1;
+                    foreach (var sortedEvent in sortedEvents)
+                    {
+                        warningMsg += "\n" + count + ". " + (sortedEvent.Value?.ToString() ?? "null") + " x" + sortedEvent.Count;
+                        count++;
+                        if (count > 3) { break; }
+                    }
+
+                    DebugConsole.NewMessage(warningMsg, color);
                 }
             }
-
 
             if (client.NeedsMidRoundSync)
             {
