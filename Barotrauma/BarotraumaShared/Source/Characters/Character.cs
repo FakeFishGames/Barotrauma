@@ -1666,10 +1666,12 @@ namespace Barotrauma
                     focusedItem = null; 
                 }
                 findFocusedTimer -= deltaTime;
-            }            
+            }
 #endif
             //climb ladders automatically when pressing up/down inside their trigger area
-            if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
+            Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
+            if ((SelectedConstruction == null || currentLadder != null) && 
+                !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 bool isControlled = Controlled == this;
@@ -1680,6 +1682,19 @@ namespace Barotrauma
                     float minDist = float.PositiveInfinity;
                     foreach (Ladder ladder in Ladder.List)
                     {
+                        if (ladder == currentLadder)
+                        {
+                            continue;
+                        }
+                        else if (currentLadder != null)
+                        {
+                            //only switch from ladder to another if the ladders are above the current ladders and pressing up, or vice versa
+                            if (ladder.Item.WorldPosition.Y > currentLadder.Item.WorldPosition.Y != IsKeyDown(InputType.Up))
+                            {
+                                continue;
+                            }
+                        }
+
                         if (CanInteractWith(ladder.Item, out float dist, checkLinked: false) && dist < minDist)
                         {
                             minDist = dist;
