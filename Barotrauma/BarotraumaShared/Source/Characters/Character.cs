@@ -1110,13 +1110,15 @@ namespace Barotrauma
             ViewTarget = null;
             if (!AllowInput) return;
 
-            Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-            if (Controlled == this)
+            if (Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer))
             {
                 SmoothedCursorPosition = cursorPosition;
             }
             else
             {
+                //apply some smoothing to the cursor positions of remote players when playing as a client
+                //to make aiming look a little less choppy
+                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
                 smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }

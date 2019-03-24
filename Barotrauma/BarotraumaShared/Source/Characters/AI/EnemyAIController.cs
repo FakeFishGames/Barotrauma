@@ -940,7 +940,7 @@ namespace Barotrauma
                 string targetingTag = null;
                 if (targetCharacter != null)
                 {
-                    if (targetCharacter.Submarine != null && Character.Submarine == null)
+                    if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
                         if (targetCharacter.Submarine != Character.Submarine)
@@ -1036,11 +1036,6 @@ namespace Barotrauma
                          continue;
                     }
                 }
-
-                if (targetingTag == null) continue;
-                if (!targetingPriorities.ContainsKey(targetingTag)) continue;
-
-                valueModifier *= targetingPriorities[targetingTag].Priority;
 
                 if (targetingTag == null) continue;
                 if (!targetingPriorities.ContainsKey(targetingTag)) continue;
