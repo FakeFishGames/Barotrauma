@@ -1394,7 +1394,7 @@ namespace Barotrauma.Networking
 
             //---------------------------------------------------------------------------
 
-            for (int i = 0; i < MaxEventPacketsPerUpdate; i++)
+            for (int i = 0; i < NetConfig.MaxEventPacketsPerUpdate; i++)
             {
                 outmsg = server.CreateMessage();
                 outmsg.Write((byte)ServerPacketHeader.UPDATE_INGAME);
