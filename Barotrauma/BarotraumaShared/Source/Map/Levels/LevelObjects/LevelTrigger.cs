@@ -432,16 +432,12 @@ namespace Barotrauma
             {
                 if (ForceFluctuationStrength > 0.0f)
                 {
-                    //no need for force fluctuation (or network updates) if the trigger limits velocity and there are no triggerers
-                    if (forceMode != TriggerForceMode.LimitVelocity || triggerers.Any())
+                    forceFluctuationTimer += deltaTime;
+                    if (forceFluctuationTimer > ForceFluctuationInterval)
                     {
-                        forceFluctuationTimer += deltaTime;
-                        if (forceFluctuationTimer > ForceFluctuationInterval)
-                        {
-                            NeedsNetworkSyncing = true;
-                            currentForceFluctuation = Rand.Range(1.0f - ForceFluctuationStrength, 1.0f);
-                            forceFluctuationTimer = 0.0f;
-                        }
+                        NeedsNetworkSyncing = true;
+                        currentForceFluctuation = Rand.Range(1.0f - ForceFluctuationStrength, 1.0f);
+                        forceFluctuationTimer = 0.0f;
                     }
                 }
 
