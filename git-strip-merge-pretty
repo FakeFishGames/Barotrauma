@@ -130,7 +130,6 @@ firstmsgchar="${prevcommitmsg:1:1}"
 if [ $firstmsgchar = "(" ]; then
     prevcommitsha="${prevcommitmsg:1:7}"
 fi
-exit 1
 
 #create a commit message for out new "merge commit"
 #	hash1...hash2 + logs of the merged commits
