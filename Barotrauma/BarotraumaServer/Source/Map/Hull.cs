@@ -31,8 +31,8 @@ namespace Barotrauma
                     GameMain.NetworkMember.CreateEntityEvent(this);
                     lastSentVolume = waterVolume;
                     lastSentOxygen = OxygenPercentage;
-                    sendUpdateTimer = NetworkUpdateInterval;
-                }                
+                    sendUpdateTimer = NetConfig.HullUpdateInterval;
+                }
             }
         }
 
