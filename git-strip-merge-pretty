@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+#
+# git-strip-merge - a git-merge that delete files on branch before merging
+#
+#    Copyright (C) 2012 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program. If not see <http://www.gnu.org/licenses/gpl.html>
+#
+# Answer for "How to setup a git driver to ignore a folder on merge?"
+# See http://stackoverflow.com/questions/3111515
+
+#Defaults:
+msgcommit="remove files from '<branch>' before merge"
+msgmerge="Merge stripped branch '<branch>'"
+verbose=0
+quiet=(--quiet)
+
+usage() {
+	cat <<- USAGE
+	Usage: $myname [git-merge options] [-M <commitmsg>] <branch> FILE...
+	USAGE
+	if [[ "$1" ]] ; then
+		cat >&2 <<- USAGE
+		Try '$myname --help' for more information.
+		USAGE
+		exit 1
+	fi
+	cat <<-USAGE
+	git-merge that delete files on "foreign" <branch> before merging
+	Useful for ignoring a folder in <branch> before merging it with
+	current branch. Works by deleting FILE(S) in a detached commit based
+	on <branch>, and then performing the merge of this new commit in the
+	current branch. Note that <branch> is not changed by this procedure.
+	Also note that <branch> may actually be any reference, like a tag,
+	or a remote branch, or even a commit SHA.
+	For more information, see <http://stackoverflow.com/questions/3111515>
+	Options:
+	  -h, --help
+	     show this page.
+	  -v, --verbose
+	     do not use -q to suppress normal output of internal steps from git
+	     checkout, rm, commit. By default, only git merge output is shown.
+	     Errors, however, are never suppressed
+	  -M <message>, --msgcommit=<message>
+	     message for the removal commit in <branch>. Not to be confused
+	     with the message of the merge commit, which is set by -m. Default
+	     message is: "$msgcommit"
+	  -m <message>, --message=<message>
+	     message for the merge commit. Since we are not merging <branch>
+	     directly, but rather a detached commit based on it, we forge a
+	     message similar to git's default for a branch merge. Otherwise
+	     git would use in message the full and ugly SHA1 of our commit.
+	     Default message is: "$msgmerge"
+	  For both commit messages, the token "<branch>" is replaced for the
+	  actual <branch> name.
+	Additional options are passed unchecked to git merge.
+	All options must precede <branch> and FILE(s), except -h and --help
+	that may appear	anywhere on the command line.
+	Example:
+	  $myname design "photoshop/*"
+	Copyright (C) 2012 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
+	License: GPLv3 or later. See <http://www.gnu.org/licenses/gpl.html>
+	USAGE
+	exit 0
+}
+
+# Helper functions
+myname="${0##*/}"
+argerr()  { printf "%s: %s\n" "${0##*/}" "${1:-error}" >&2 ; usage 1 ; }
+invalid() { argerr "invalid option: $1" ; }
+missing() { argerr "missing ${2:+$2 }operand${1:+ from $1}." ; }
+
+# Option handling
+files=()
+mergeopts=()
+for arg in "$@"; do case "$arg" in -h|--help) usage ;; esac; done
+while (( $# )); do
+	case "$1" in
+	-v|--verbose  ) verbose=1            ;;
+	-M            ) shift ; msgcommit=$1 ;;
+	-m            ) shift ; msgmerge=$1  ;;
+	--msgcommit=* ) msgcommit=${1#*=}    ;;
+	--message=*   ) msgmerge=${1#*=}     ;;
+	-*            ) mergeopts+=( "$1" )  ;;
+	*             ) branch="$1"
+	                shift ; break        ;;
+	esac
+	shift
+done
+files+=( "$@" )
+
+# Argument handling
+
+msgcommit=${msgcommit//<branch>/$branch}
+msgmerge=${msgmerge//<branch>/$branch}
+
+[[ "$msgcommit" ]]  || missing "msgcommit" "MSG"
+[[ "$branch"   ]]   || missing ""          "<branch>"
+(( ${#files[@]} ))  || missing ""          "FILE"
+
+((verbose)) && quiet=()
+
+# Here the fun begins...
+gitsha()    { git rev-parse "$1" ; }
+gitbranch() {
+	git symbolic-ref "$1" 2> /dev/null | sed 's/refs\/heads\///' ||
+	gitsha "$1"
+}
+
+original=$(gitbranch HEAD)
+branchsha=$(gitsha "$branch")
+branchshortsha="${branchsha:0:7}"
+
+#get the hash of the last merged remote commit from the latest commit msg in this repo
+#assumes that the commit message starts with hash1...hash2
+prevcommitmsg="$(git log -1 --pretty=%B)"
+prevcommitsha="${prevcommitmsg:10:7}"
+firstmsgchar="${prevcommitmsg:0:1}"
+if [ $firstmsgchar = "(" ]; then
+    prevcommitsha="${prevcommitmsg:1:7}"
+fi
+
+#create a commit message for out new "merge commit"
+#	hash1...hash2 + logs of the merged commits
+echo "$prevcommitsha...$branchsha"
+logmsg="$(git log "$prevcommitsha"..."$branchsha" --pretty=oneline --abbrev-commit --reverse)"
+
+rm -rf temp.txt
+
+echo "$logmsg" >> "temp.txt"
+
+trap 'git checkout --quiet "$original"' EXIT
+
+while read p; do 
+	currHash="$(echo ${p%% *})"
+	echo "$currHash"
+
+    currMsg="$(echo ${p#* })"
+	echo "$currMsg"
+
+	echo ""
+	echo "********"
+	
+	git checkout "$currHash"  "${quiet[@]}" &&
+	git rm -rf -r "${files[@]}"   "${quiet[@]}" &&
+	git commit -m "$msgcommit" "${quiet[@]}" &&
+	newsha=$(gitsha HEAD)                    &&
+	git checkout "$original"   "${quiet[@]}" &&
+
+	git merge -m "$msgmerge" -X theirs "--squash" "$newsha"
+	git checkout HEAD .gitignore
+	git commit -m "($currHash) $currMsg"
+done < "temp.txt"
+
+rm -rf temp.txt
+
+#example usage
+#./git-strip-merge-pretty barotrauma-development/dev -f Barotrauma/BarotraumaShared/Content/*
