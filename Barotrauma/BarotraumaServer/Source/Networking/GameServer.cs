@@ -715,23 +715,25 @@ namespace Barotrauma.Networking
                     {
                         string savePath = inc.ReadString();
                         string seed = inc.ReadString();
-                        string subPath = inc.ReadString();
+                        string subName = inc.ReadString();
+                        string subHash = inc.ReadString();
 
-                        if (!File.Exists(subPath))
+                        var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
+
+                        if (matchingSub == null)
                         {
                             SendDirectChatMessage(
-                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subpath]", subPath), 
+                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subname]", subName), 
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else
                         {
-                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subPath, seed);
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, matchingSub.FilePath, seed);
                         }
                      }
                     else
                     {
                         string saveName = inc.ReadString();
-
                         if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.LoadCampaign(saveName);
                     }
                     break;
@@ -1335,10 +1337,6 @@ namespace Barotrauma.Networking
             WriteClientList(c, outmsg);
             clientListBytes = outmsg.LengthBytes - clientListBytes;
 
-            int eventManagerBytes = outmsg.LengthBytes;
-            entityEventManager.Write(c, outmsg, out List<NetEntityEvent> sentEvents);
-            eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
-
             int chatMessageBytes = outmsg.LengthBytes;
             WriteChatMessages(outmsg, c);
             chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
@@ -1387,25 +1385,55 @@ namespace Barotrauma.Networking
                 errorMsg +=
                     "  Client list size: " + clientListBytes + " bytes\n" +
                     "  Chat message size: " + chatMessageBytes + " bytes\n" +
-                    "  Event size: " + eventManagerBytes + " bytes\n" +
                     "  Position update size: " + positionUpdateBytes + " bytes\n\n";
-
-                if (sentEvents != null && sentEvents.Count > 0)
-                {
-                    errorMsg += "Sent events: \n";
-                    foreach (var entityEvent in sentEvents)
-                    {
-                        errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
-                    }
-                }
-
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
 
             CompressOutgoingMessage(outmsg);
-
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
+
+            //---------------------------------------------------------------------------
+
+            for (int i = 0; i < NetConfig.MaxEventPacketsPerUpdate; i++)
+            {
+                outmsg = server.CreateMessage();
+                outmsg.Write((byte)ServerPacketHeader.UPDATE_INGAME);
+                outmsg.Write((float)NetTime.Now);
+
+                int eventManagerBytes = outmsg.LengthBytes;
+                entityEventManager.Write(c, outmsg, out List<NetEntityEvent> sentEvents);
+                eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
+
+                if (sentEvents.Count == 0)
+                {
+                    break;
+                }
+
+                outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+                if (outmsg.LengthBytes > NetPeerConfiguration.MaximumTransmissionUnit)
+                {
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + NetPeerConfiguration.MaximumTransmissionUnit + ")\n";
+                    errorMsg +=
+                        "  Event size: " + eventManagerBytes + " bytes\n";
+
+                    if (sentEvents != null && sentEvents.Count > 0)
+                    {
+                        errorMsg += "Sent events: \n";
+                        foreach (var entityEvent in sentEvents)
+                        {
+                            errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
+                        }
+                    }
+
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                }
+
+                CompressOutgoingMessage(outmsg);
+                server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);     
+            }                  
         }
 
         private void WriteClientList(Client c, NetOutgoingMessage outmsg)

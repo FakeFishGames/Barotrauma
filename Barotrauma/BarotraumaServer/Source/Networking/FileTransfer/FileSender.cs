@@ -172,7 +172,7 @@ namespace Barotrauma.Networking
                 transfer.WaitTimer -= deltaTime;
                 if (transfer.WaitTimer > 0.0f) continue;
                 
-                if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, 1)) continue;
+                if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel)) continue;
 
                 transfer.WaitTimer = 0.05f;// transfer.Connection.AverageRoundtripTime;
 
@@ -187,13 +187,6 @@ namespace Barotrauma.Networking
                 {
                     message = peer.CreateMessage();
                     message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-                    message.Write((byte)FileTransferMessageType.Initiate);
-                    message.Write((byte)transfer.FileType);
-                    message.Write((ushort)chunkLen);
-                    message.Write((ulong)transfer.Data.Length);
-                    message.Write(transfer.FileName);
-                    GameMain.Server.CompressOutgoingMessage(message);
-                    transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
                     //if the recipient is the owner of the server (= a client running the server from the main exe)
                     //we don't need to send anything, the client can just read the file directly

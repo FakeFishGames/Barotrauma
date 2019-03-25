@@ -59,7 +59,7 @@ namespace Barotrauma
         public PhysicsBody body;
 
         public readonly XElement StaticBodyConfig;
-        
+
         private float lastSentCondition;
         private float sendConditionUpdateTimer;
         private bool conditionUpdatePending;
@@ -274,12 +274,11 @@ namespace Barotrauma
                 
                 SetActiveSprite();
 
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && lastSentCondition != condition)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(lastSentCondition, condition))
                 {
                     if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == Prefab.Health)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                        lastSentCondition = condition;
+                        conditionUpdatePending = true;
                     }
                 }
             }
@@ -996,6 +995,21 @@ namespace Barotrauma
                 aiTarget.SightRange -= deltaTime * 1000.0f;
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            {
+                sendConditionUpdateTimer -= deltaTime;
+                if (conditionUpdatePending)
+                {
+                    if (sendConditionUpdateTimer <= 0.0f)
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        lastSentCondition = condition;
+                        sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
+                        conditionUpdatePending = false;
+                    }
+                }
+            }
             
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
@@ -1272,7 +1286,11 @@ namespace Barotrauma
             LastSentSignalRecipients.Clear();
             if (connections == null) return;
 
-            stepsTaken++;
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
+        {
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             if (!connections.TryGetValue(connectionName, out Connection c)) return;
 
