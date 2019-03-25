@@ -153,10 +153,7 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown in the UI
         public readonly float ShowIconThreshold = 0.05f;
         public readonly float MaxStrength = 100.0f;
-
-        //how high the strength has to be for the affliction icon to be shown with a health scanner
-        public readonly float ShowInHealthScannerThreshold = 0.05f;
-
+        
         public float BurnOverlayAlpha;
         public float DamageOverlayAlpha;
 
@@ -259,8 +256,6 @@ namespace Barotrauma
             ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
             ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", Math.Max(ActivationThreshold, 0.05f));
             MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
-
-            ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", Math.Max(ActivationThreshold, 0.05f));
 
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);

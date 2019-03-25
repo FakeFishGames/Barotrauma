@@ -785,9 +785,8 @@ namespace Barotrauma.Items.Components
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (!limb.body.Enabled) { continue; }
-
                     float pointDist = ((limb.WorldPosition - pingSource) * displayScale).LengthSquared();
+
                     if (limb.SimPosition == Vector2.Zero || pointDist > DisplayRadius * DisplayRadius) continue;
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)

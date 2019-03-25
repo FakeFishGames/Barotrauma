@@ -9,8 +9,6 @@ Additions and changes:
 - Clients communicate syncing errors to the server, and the server logs a more descriptive error about
 what went wrong. Should make it easier to diagnose disconnection issues from now on.
 - Ending a multiplayer campaign round by talking to watchman doesn't require any special permissions.
-- Server automatically ends rounds if there have been no players alive in 60 seconds and respawning 
-is not allowed during the round.
 - Added a button for resetting an entity's properties to the default values to the sub editor.
 - Updated handheld sonar UI graphics.
 

@@ -1,6 +1,4 @@
-﻿using Barotrauma.Networking;
-using Barotrauma.Particles;
-using Lidgren.Network;
+﻿using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -114,7 +112,8 @@ namespace Barotrauma.Items.Components
             System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
             foreach (GUIComponent c in GuiFrame.GetChild(0).Children)
             {
-                if (!(c.UserData is Skill skill)) continue;
+                Skill skill = c.UserData as Skill;
+                if (skill == null) continue;
 
                 GUITextBlock textBlock = (GUITextBlock)c;
                 if (character.GetSkillLevel(skill.Identifier) < skill.Level)
@@ -126,16 +125,6 @@ namespace Barotrauma.Items.Components
                     textBlock.TextColor = Color.White;
                 }
             }
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            deteriorationTimer = msg.ReadSingle();
-        }
-
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
-        {
-            //no need to write anything, just letting the server know we started repairing
         }
     }
 }

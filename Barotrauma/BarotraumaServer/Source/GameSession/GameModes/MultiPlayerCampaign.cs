@@ -11,11 +11,11 @@ namespace Barotrauma
     {
         private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
 
-        public static void StartNewCampaign(string savePath, string subPath, string seed)
+        public static void StartNewCampaign(string savePath, string subName, string seed)
         {
             if (string.IsNullOrWhiteSpace(savePath)) return;
 
-            GameMain.GameSession = new GameSession(new Submarine(subPath, ""), savePath, 
+            GameMain.GameSession = new GameSession(new Submarine(subName, ""), savePath, 
                 GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
             var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
             campaign.GenerateMap(seed);
@@ -251,7 +251,6 @@ namespace Barotrauma
             }
 
             lastSaveID++;
-            DebugConsole.Log("Campaign saved, save ID " + lastSaveID);
         }
     }
 }

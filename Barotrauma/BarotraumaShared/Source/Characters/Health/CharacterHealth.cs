@@ -460,7 +460,6 @@ namespace Barotrauma
             {
                 affliction.Strength = 0.0f;
             }
-            CalculateVitality();
         }
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)

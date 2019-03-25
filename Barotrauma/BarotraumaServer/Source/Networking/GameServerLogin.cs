@@ -164,7 +164,7 @@ namespace Barotrauma.Networking
                 if (connectedClient != null)
                 {
                     Log("Disconnecting client " + connectedClient.Name + " (Steam ID: " + steamID + "). Steam authentication no longer valid (" + status + ").", ServerLog.MessageType.ServerMessage);                    
-                    KickClient(connectedClient, $"DisconnectMessage.SteamAuthNoLongerValid~[status]={status.ToString()}");
+                    KickClient(connectedClient, $"DisconnectMessage.SteamAuthNoLongerValid_[status]={status.ToString()}");
                 }
             }*/
         }
@@ -342,7 +342,7 @@ namespace Barotrauma.Networking
             if (clVersion != GameMain.Version.ToString())
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.InvalidVersion,
-                    $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version.ToString()}~[clientversion]={clVersion}");
+                    $"DisconnectMessage.InvalidVersion_[version]={GameMain.Version.ToString()}_[clientversion]={clVersion}");
 
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", Color.Red);
@@ -368,7 +368,7 @@ namespace Barotrauma.Networking
 
             if (missingPackages.Count == 1)
             {
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(missingPackages[0])}");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, $"DisconnectMessage.MissingContentPackage_[missingcontentpackage]={GetPackageStr(missingPackages[0])}");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -376,7 +376,7 @@ namespace Barotrauma.Networking
             {
                 List<string> packageStrs = new List<string>();
                 missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, $"DisconnectMessage.MissingContentPackages_[missingcontentpackages]={string.Join(", ", packageStrs)}");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -399,7 +399,7 @@ namespace Barotrauma.Networking
             if (incompatiblePackages.Count == 1)
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, 
-                    $"DisconnectMessage.IncompatibleContentPackage~[incompatiblecontentpackage]={GetPackageStr2(incompatiblePackages[0])}");
+                    $"DisconnectMessage.IncompatibleContentPackage_[incompatiblecontentpackage]={GetPackageStr2(incompatiblePackages[0])}");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content package " + GetPackageStr2(incompatiblePackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -408,7 +408,7 @@ namespace Barotrauma.Networking
                 List<string> packageStrs = new List<string>();
                 incompatiblePackages.ForEach(cp => packageStrs.Add(GetPackageStr2(cp)));
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, 
-                    $"DisconnectMessage.IncompatibleContentPackages~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}");
+                    $"DisconnectMessage.IncompatibleContentPackages_[incompatiblecontentpackages]={string.Join(", ", packageStrs)}");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -500,7 +500,7 @@ namespace Barotrauma.Networking
                 
         private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, DisconnectReason reason, string message)
         {
-            inc.SenderConnection.Disconnect(reason.ToString() + "/ " + TextManager.GetServerMessage(message));
+            inc.SenderConnection.Disconnect(reason.ToString() + "/ " + message);
             if (unauthClient.SteamID > 0) { Steam.SteamManager.StopAuthSession(unauthClient.SteamID); }
             if (unauthClient != null)
             {

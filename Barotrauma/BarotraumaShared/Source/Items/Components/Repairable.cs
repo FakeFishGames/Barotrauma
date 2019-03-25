@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
         public static float SkillIncreaseMultiplier = 0.4f;
 
         private string header;
+                
+        private float fixDurationLowSkill, fixDurationHighSkill;
 
         private float deteriorationTimer;
 
@@ -50,20 +52,17 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The amount of time it takes to fix the item with insufficient skill levels.")]
-        public float FixDurationLowSkill
+        /*private float repairProgress;
+        public float RepairProgress
         {
-            get;
-            set;
-        }
-
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The amount of time it takes to fix the item with sufficient skill levels.")]
-        public float FixDurationHighSkill
-        {
-            get;
-            set;
-        }
-
+            get { return repairProgress; }
+            set
+            {
+                repairProgress = MathHelper.Clamp(value, 0.0f, 1.0f);
+                if (repairProgress >= 1.0f && currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
+            }
+        }*/
+        
         private Character currentFixer;
         public Character CurrentFixer
         {
@@ -84,6 +83,8 @@ namespace Barotrauma.Items.Components
 
             this.item = item;
             header = element.GetAttributeString("name", "");
+            fixDurationLowSkill = element.GetAttributeFloat("fixdurationlowskill", 100.0f);
+            fixDurationHighSkill = element.GetAttributeFloat("fixdurationhighskill", 5.0f);
             InitProjSpecific(element);
         }
 
@@ -159,7 +160,7 @@ namespace Barotrauma.Items.Components
             }
 
             bool wasBroken = !item.IsFullCondition;
-            float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
+            float fixDuration = MathHelper.Lerp(fixDurationLowSkill, fixDurationHighSkill, successFactor);
             if (fixDuration <= 0.0f)
             {
                 item.Condition = item.MaxCondition;
@@ -184,6 +185,27 @@ namespace Barotrauma.Items.Components
         private void UpdateFixAnimation(Character character)
         {
             character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(deteriorationTimer);
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            deteriorationTimer = msg.ReadSingle();
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            //no need to write anything, just letting the server know we started repairing
+        }
+
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        {
+            if (c.Character == null) return;
+            StartRepairing(c.Character);
         }
     }
 }

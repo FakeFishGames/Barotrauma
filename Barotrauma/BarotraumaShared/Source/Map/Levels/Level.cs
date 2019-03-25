@@ -231,7 +231,7 @@ namespace Barotrauma
 
         public static Level CreateRandom(LocationConnection locationConnection)
         {
-            string seed = locationConnection.Locations[0].BaseName + locationConnection.Locations[1].BaseName;
+            string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
 
             float sizeFactor = MathUtils.InverseLerp(
                 MapGenerationParams.Instance.SmallLevelConnectionLength, 
