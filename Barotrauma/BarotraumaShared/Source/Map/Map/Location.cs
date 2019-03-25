@@ -15,6 +15,8 @@ namespace Barotrauma
 
         public int TypeChangeTimer;
 
+        public string BaseName { get => baseName; }
+
         public string Name { get; private set; }
 
         public Vector2 MapPosition { get; private set; }
@@ -34,7 +36,7 @@ namespace Barotrauma
 
                 for (int i = availableMissions.Count; i < Connections.Count * 2; i++)
                 {
-                    int seed = (ToolBox.StringToInt(Name) + MissionsCompleted * 10 + i) % int.MaxValue;
+                    int seed = (ToolBox.StringToInt(BaseName) + MissionsCompleted * 10 + i) % int.MaxValue;
                     MTRandom rand = new MTRandom(seed);
 
                     LocationConnection connection = Connections[(MissionsCompleted + i) % Connections.Count];

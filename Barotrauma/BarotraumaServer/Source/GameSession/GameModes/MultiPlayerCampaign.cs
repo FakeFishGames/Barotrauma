@@ -251,6 +251,7 @@ namespace Barotrauma
             }
 
             lastSaveID++;
+            DebugConsole.Log("Campaign saved, save ID " + lastSaveID);
         }
     }
 }
