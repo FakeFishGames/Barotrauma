@@ -1203,8 +1203,7 @@ namespace Barotrauma.Networking
                 ClientWriteLobby(c);
 
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
-                    NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave) && 
-                    c.Connection != OwnerConnection) //no need to send saves if the client is playing on the same machine
+                    NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
                     //already sent an up-to-date campaign save
                     if (c.LastCampaignSaveSendTime != null && campaign.LastSaveID == c.LastCampaignSaveSendTime.First)

@@ -15,7 +15,11 @@ namespace Barotrauma
 
         public static string TempPath
         {
+#if SERVER
+            get { return Path.Combine(SaveFolder, "temp_server"); }
+#else
             get { return Path.Combine(SaveFolder, "temp"); }
+#endif
         }
         
         public enum SaveType
@@ -26,12 +30,10 @@ namespace Barotrauma
 
         public static void SaveGame(string filePath)
         {
-            string tempPath = Path.Combine(SaveFolder, "temp");
-
-            Directory.CreateDirectory(tempPath);
+            Directory.CreateDirectory(TempPath);
             try
             {
-                ClearFolder(tempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
+                ClearFolder(TempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
             }
             catch (Exception e)
             {
@@ -42,7 +44,7 @@ namespace Barotrauma
             {
                 if (Submarine.MainSub != null)
                 {
-                    string subPath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
+                    string subPath = Path.Combine(TempPath, Submarine.MainSub.Name + ".sub");
                     if (Submarine.Loaded.Contains(Submarine.MainSub))
                     {
                         Submarine.MainSub.FilePath = subPath;
@@ -62,7 +64,7 @@ namespace Barotrauma
 
             try
             {
-                GameMain.GameSession.Save(Path.Combine(tempPath, "gamesession.xml"));
+                GameMain.GameSession.Save(Path.Combine(TempPath, "gamesession.xml"));
             }
 
             catch (Exception e)
@@ -72,7 +74,7 @@ namespace Barotrauma
 
             try
             {
-                CompressDirectory(tempPath, filePath, null);
+                CompressDirectory(TempPath, filePath, null);
             }
 
             catch (Exception e)
@@ -101,11 +103,9 @@ namespace Barotrauma
 
         public static XDocument LoadGameSessionDoc(string filePath)
         {
-            string tempPath = Path.Combine(SaveFolder, "temp");
-
             try
             {
-                DecompressToDirectory(filePath, tempPath, null);
+                DecompressToDirectory(filePath, TempPath, null);
             }
             catch (Exception e)
             {
@@ -113,7 +113,7 @@ namespace Barotrauma
                 return null;
             }
 
-            return XMLExtensions.TryLoadXml(Path.Combine(tempPath, "gamesession.xml"));
+            return XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
         }
 
         public static void DeleteSave(string filePath)

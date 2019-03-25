@@ -43,13 +43,8 @@ namespace Barotrauma.Networking
                     eventCount++;
                     continue;
                 }
-
-                if (msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > MaxEventBufferLength)
-                {
-                    //no more room in this packet
-                    break;
-                }
-
+                
+                //the length of the data is written as a byte, so the data needs to be less than 255 bytes long
                 if (tempEventBuffer.LengthBytes > 255)
                 {
                     DebugConsole.ThrowError("Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
@@ -58,27 +53,23 @@ namespace Barotrauma.Networking
                         "Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
 
                     //write an empty event to prevent breaking the event syncing
-                    tempBuffer.Write((UInt16)0);
+                    tempBuffer.Write(Entity.NullEntityID);
                     tempBuffer.WritePadBits();
                     eventCount++;
                     continue;
                 }
-                //the ID has been taken by another entity (the original entity has been removed) -> write an empty event
-                /*else if (Entity.FindEntityByID(e.Entity.ID) != e.Entity || e.Entity.IdFreed)
+
+                if (msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > MaxEventBufferLength)
                 {
-                    //technically the clients don't have any use for these, but removing events and shifting the IDs of all 
-                    //consecutive ones is so error-prone that I think this is a safer option
-                    tempBuffer.Write(Entity.NullEntityID);
-                    tempBuffer.WritePadBits();
-                }*/
-                else
-                {
-                    tempBuffer.Write((UInt16)e.Entity.ID);
-                    tempBuffer.Write((byte)tempEventBuffer.LengthBytes);
-                    tempBuffer.Write(tempEventBuffer);
-                    tempBuffer.WritePadBits();
-                    sentEvents.Add(e);
+                    //no more room in this packet
+                    break;
                 }
+
+                tempBuffer.Write((UInt16)e.Entity.ID);
+                tempBuffer.Write((byte)tempEventBuffer.LengthBytes);
+                tempBuffer.Write(tempEventBuffer);
+                tempBuffer.WritePadBits();
+                sentEvents.Add(e);                
 
                 eventCount++;
             }
