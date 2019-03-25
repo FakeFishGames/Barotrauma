@@ -29,7 +29,6 @@ namespace Barotrauma.Tutorials
         private Character mechanic;
         private Character engineer;
         private Character injuredMember = null;
-        private float injuredVitalitySnapshot;
 
         private List<Pair<Character, float>> characterTimeOnSonar;
         private float requiredTimeOnSonar = 5f;
@@ -176,6 +175,7 @@ namespace Barotrauma.Tutorials
 
             base.Start();
 
+            activeObjectives.Clear();
             objectiveTranslated = TextManager.Get("Objective");
             CreateObjectiveFrame();
             activeSegment = null;
@@ -285,7 +285,7 @@ namespace Barotrauma.Tutorials
                        
             for (int i = 0; i < segments.Count; i++)
             {
-                if (segments[i].IsTriggered) continue;
+                if (segments[i].IsTriggered || activeObjectives.Contains(segments[i])) continue;
                 if (CheckContextualTutorials(i, deltaTime)) // Found a relevant tutorial, halt finding new ones
                 {
                     break;
@@ -370,6 +370,7 @@ namespace Barotrauma.Tutorials
         {
             objectiveFrame.RemoveChild(objective.ReplayButton);
             activeObjectives.Remove(objective);
+            objective.IsTriggered = true;
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
@@ -480,7 +481,6 @@ namespace Barotrauma.Tutorials
                         Character member = crew[i];
                         if (member.Vitality < member.MaxVitality && !member.IsDead)
                         {
-                            injuredVitalitySnapshot = member.Vitality;
                             injuredMember = member;
                             TriggerTutorialSegment(index, new string[] { member.Info.DisplayName,
                                 (member.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
@@ -539,10 +539,9 @@ namespace Barotrauma.Tutorials
                     if (IsFlooding()) return;
                     break;
                 case "Medical":
-                    if (injuredVitalitySnapshot >= injuredMember.Vitality && !injuredMember.IsDead)
+                    if (injuredMember != null && !injuredMember.IsDead)
                     {
-                        injuredVitalitySnapshot = injuredMember.Vitality;
-                        return;
+                        if (injuredMember.CharacterHealth.DroppedItem == null) return;
                     }
                     break;
                 case "EnemyOnSonar": // Enemy dispatched
@@ -689,7 +688,6 @@ namespace Barotrauma.Tutorials
         {
             ContentRunning = true;
             activeSegment = segments[index];
-            activeSegment.IsTriggered = true;
 
             string tutorialText = TextManager.GetFormatted(activeSegment.TextContent.GetAttributeString("tag", ""), true, args);
             string objectiveText = string.Empty;
@@ -706,6 +704,10 @@ namespace Barotrauma.Tutorials
                 }
 
                 activeSegment.Objective = objectiveText;
+            }
+            else
+            {
+                activeSegment.IsTriggered = true; // Complete at this stage only if no related objective
             }
 
             switch (activeSegment.ContentType)
