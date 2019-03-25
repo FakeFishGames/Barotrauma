@@ -813,7 +813,16 @@ namespace Barotrauma.Networking
 
             Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
             GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:LevelsDontMatch" + error, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorStr);
-            KickClient(c, errorStr);
+
+            if (c.Connection == OwnerConnection)
+            {
+                SendDirectChatMessage(errorStr, c, ChatMessageType.MessageBox);
+                EndGame();
+            }
+            else
+            {
+                KickClient(c, errorStr);
+            }
         }
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
