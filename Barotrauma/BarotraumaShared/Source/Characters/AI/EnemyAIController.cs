@@ -1127,15 +1127,7 @@ namespace Barotrauma
                                 valueModifier = isOutdoor ? 1 : 0;
                                 valueModifier *= isOpen ? 5 : 1;
                             }
-                        }
-                    }
-                    else if (target.Entity is Structure s)
-                    {
-                        targetingTag = "wall";
-                        if (character.CurrentHull == null && aggressiveBoarding)
-                        {
-                            valueModifier = s.HasBody ? 2 : 0;
-                            foreach (var section in s.Sections)
+                            for (int i = 0; i < s.Sections.Length; i++)
                             {
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
