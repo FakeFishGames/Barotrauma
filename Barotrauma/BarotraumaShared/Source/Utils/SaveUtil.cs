@@ -2,7 +2,9 @@
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -30,6 +32,7 @@ namespace Barotrauma
 
         public static void SaveGame(string filePath)
         {
+            DebugConsole.Log("Saving the game to: " + filePath);
             Directory.CreateDirectory(TempPath);
             try
             {
@@ -52,6 +55,10 @@ namespace Barotrauma
                     }
                     else if (Submarine.MainSub.FilePath != subPath)
                     {
+                        if (File.Exists(subPath))
+                        {
+                            File.Delete(subPath);
+                        }
                         File.Copy(Submarine.MainSub.FilePath, subPath);
                         Submarine.MainSub.FilePath = subPath;
                     }
@@ -85,6 +92,7 @@ namespace Barotrauma
 
         public static void LoadGame(string filePath)
         {
+            DebugConsole.Log("Loading save file: " + filePath);
             DecompressToDirectory(filePath, TempPath, null);
 
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
@@ -96,6 +104,7 @@ namespace Barotrauma
 
         public static void LoadGame(string filePath, GameSession gameSession)
         {
+            DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
             DecompressToDirectory(filePath, TempPath, null);
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
             gameSession.Load(doc.Root);
@@ -103,6 +112,7 @@ namespace Barotrauma
 
         public static XDocument LoadGameSessionDoc(string filePath)
         {
+            DebugConsole.Log("Loading game session doc: " + filePath);
             try
             {
                 DecompressToDirectory(filePath, TempPath, null);
@@ -336,9 +346,23 @@ namespace Barotrauma
 
         public static void DecompressToDirectory(string sCompressedFile, string sDir, ProgressDelegate progress)
         {
-            using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                while (DecompressFile(sDir, zipStream, progress)) ;
+            DebugConsole.Log("Decompressing " + sCompressedFile + " to " + sDir + "...");
+            int maxRetries = 4;
+            for (int i = 0; i <= maxRetries; i++)
+            {
+                try
+                {
+                    using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                    using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
+                        while (DecompressFile(sDir, zipStream, progress)) ;
+                }
+                catch (IOException e)
+                {
+                    if (i >= maxRetries) { throw; }
+                    DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                    Thread.Sleep(250);
+                }
+            }
         }
 
         public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs)
@@ -379,18 +403,18 @@ namespace Barotrauma
             }
         }
 
-        public static void ClearFolder(string FolderName, string[] ignoredFiles = null)
+        public static void ClearFolder(string FolderName, string[] ignoredFileNames = null)
         {
             DirectoryInfo dir = new DirectoryInfo(FolderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {
-                if (ignoredFiles != null)
+                if (ignoredFileNames != null)
                 {
                     bool ignore = false;
-                    foreach (string ignoredFile in ignoredFiles)
+                    foreach (string ignoredFile in ignoredFileNames)
                     {
-                        if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                        if (Path.GetFileName(fi.FullName).Equals(Path.GetFileName(ignoredFile)))
                         {
                             ignore = true;
                             break;
@@ -404,7 +428,7 @@ namespace Barotrauma
 
             foreach (DirectoryInfo di in dir.GetDirectories())
             {
-                ClearFolder(di.FullName, ignoredFiles);
+                ClearFolder(di.FullName, ignoredFileNames);
                 di.Delete();
             }
         }
