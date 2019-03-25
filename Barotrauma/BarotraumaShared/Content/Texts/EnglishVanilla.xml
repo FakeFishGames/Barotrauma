@@ -2719,7 +2719,7 @@
   
   <EnemyOnSonar>Monsters</EnemyOnSonar>
   <EnemyOnSonarText>Captain, we have a bogey on our sonar. Knowing these waters, it can't be anything too friendly. Order somebody to man the turret, preferably someone with some weapons know-how. Failing that, do it yourself. It's kill or be killed down here.</EnemyOnSonarText>
-  <EnemyOnSonarInstructions>-Click on crew list to switch to Security officer\n-Use the periscope\n-Right mouse button to aim, left click to fire</EnemyOnSonarInstructions>
+  <EnemyOnSonarInstructions>-Use the periscope\n-Right mouse button to aim, left click to fire</EnemyOnSonarInstructions>
   <EnemyOnSonarObjective>Dispatch enemies</EnemyOnSonarObjective>
 
   <Degrading>Degrading machinery</Degrading>
@@ -2735,6 +2735,6 @@
   <Approach1>Docking</Approach1>
   <Approach1Text>We are close to {0}! Carefully now, we should be slowing down so we don't ram them. Maneuver the sub close to their docking port and close the clamps when we're there.</Approach1Text>
   <Approach1Instructions>-Maneuver so that the docking ports are close to each other\n-When docking line is green, toggle docking clamps</Approach1Instructions>
-  <Approach1Objective>Dock at the outpost {0}</Approach1Objective>
+  <Approach1Objective>Dock at {0}</Approach1Objective>
   <!-- Tutorial END -->
 </infotexts>
