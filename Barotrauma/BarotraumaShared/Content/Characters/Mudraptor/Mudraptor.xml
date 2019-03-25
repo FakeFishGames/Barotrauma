@@ -48,12 +48,12 @@
     <targetpriority tag="light" state="Attack" priority="250"/>
     <targetpriority tag="human" state="Attack" priority="200"/>
     <targetpriority tag="stronger" state="Escape" priority="150"/>
-    <targetpriority tag="dead" state="Eat" priority="100"/>
+    <targetpriority tag="dead" state="Eat" priority="140"/>
+    <targetpriority tag="weaker" state="Attack" priority="120"/>
+    <targetpriority tag="door" state="Attack" priority="100"/>
     <targetpriority tag="nasonov" state="Attack" priority="60"/>
     <targetpriority tag="sonar" state="Attack" priority="55"/>
-    <targetpriority tag="door" state="Attack" priority="45"/>
-    <targetpriority tag="wall" state="Attack" priority="40"/>
-    <targetpriority tag="weaker" state="Attack" priority="30"/>
-    <targetpriority tag="room" state="Attack" priority="20"/>
+    <targetpriority tag="wall" state="Attack" priority="20"/>
+    <targetpriority tag="room" state="Attack" priority="5"/>
   </ai>
 </Character>
