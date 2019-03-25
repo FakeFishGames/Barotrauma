@@ -177,75 +177,105 @@ namespace Barotrauma.Networking
                 t.Status == FileTransferStatus.Canceled ||
                 t.Status == FileTransferStatus.Finished), "List of active file transfers contains entires that should have been removed");
 
-            byte transferMessageType = inc.ReadByte();            
+            byte transferMessageType = inc.ReadByte();
             switch (transferMessageType)
             {
                 case (byte)FileTransferMessageType.Initiate:
-                    var existingTransfer = activeTransfers.Find(t => t.SequenceChannel == inc.SequenceChannel);
-                    if (existingTransfer != null)
                     {
-                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
-                        DebugConsole.ThrowError("File transfer error: file transfer initiated on a sequence channel that's already in use");
-                        return;
-                    }
-
-                    byte fileType   = inc.ReadByte();
-                    ushort chunkLen = inc.ReadUInt16();
-                    ulong fileSize  = inc.ReadUInt64();
-                    string fileName = inc.ReadString();
-
-                    string errorMsg;
-                    if (!ValidateInitialData(fileType, fileName, fileSize, out errorMsg))
-                    {
-                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
-                        DebugConsole.ThrowError("File transfer failed (" + errorMsg + ")");
-                        return;
-                    }
-
-                    if (GameSettings.VerboseLogging)
-                    {
-                        DebugConsole.Log("Received file transfer initiation message: ");
-                        DebugConsole.Log("  File: " + fileName);
-                        DebugConsole.Log("  Size: " + fileSize);
-                        DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
-                    }
-
-                    string downloadFolder = downloadFolders[(FileTransferType)fileType];
-
-                    if (!Directory.Exists(downloadFolder))
-                    {
-                        try
+                        var existingTransfer = activeTransfers.Find(t => t.SequenceChannel == inc.SequenceChannel);
+                        if (existingTransfer != null)
                         {
-                            Directory.CreateDirectory(downloadFolder);
-                        }
-                        catch (Exception e)
-                        {
-                            DebugConsole.ThrowError("Could not start a file transfer: failed to create the folder \"" + downloadFolder + "\".", e);
+                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            DebugConsole.ThrowError("File transfer error: file transfer initiated on a sequence channel that's already in use");
                             return;
                         }
+
+                        byte fileType = inc.ReadByte();
+                        ushort chunkLen = inc.ReadUInt16();
+                        ulong fileSize = inc.ReadUInt64();
+                        string fileName = inc.ReadString();
+
+                        string errorMsg;
+                        if (!ValidateInitialData(fileType, fileName, fileSize, out errorMsg))
+                        {
+                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            DebugConsole.ThrowError("File transfer failed (" + errorMsg + ")");
+                            return;
+                        }
+
+                        if (GameSettings.VerboseLogging)
+                        {
+                            DebugConsole.Log("Received file transfer initiation message: ");
+                            DebugConsole.Log("  File: " + fileName);
+                            DebugConsole.Log("  Size: " + fileSize);
+                            DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
+                        }
+
+                        string downloadFolder = downloadFolders[(FileTransferType)fileType];
+                        if (!Directory.Exists(downloadFolder))
+                        {
+                            try
+                            {
+                                Directory.CreateDirectory(downloadFolder);
+                            }
+                            catch (Exception e)
+                            {
+                                DebugConsole.ThrowError("Could not start a file transfer: failed to create the folder \"" + downloadFolder + "\".", e);
+                                return;
+                            }
+                        }
+
+                        FileTransferIn newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType)
+                        {
+                            SequenceChannel = inc.SequenceChannel,
+                            Status = FileTransferStatus.Receiving,
+                            FileSize = fileSize
+                        };
+
+                        try
+                        {
+                            newTransfer.OpenStream();
+                        }
+                        catch (IOException e)
+                        {
+                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}", Color.Red);
+
+                            newTransfer.Status = FileTransferStatus.Error;
+                            OnTransferFailed(newTransfer);
+                            return;
+                        }
+
+                        activeTransfers.Add(newTransfer);
                     }
-
-                    FileTransferIn newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
-                    newTransfer.SequenceChannel = inc.SequenceChannel;
-                    newTransfer.Status = FileTransferStatus.Receiving;
-                    newTransfer.FileSize = fileSize;
-
-                    try
+                    break;
+                case (byte)FileTransferMessageType.TransferOnSameMachine:
                     {
-                        newTransfer.OpenStream();
+                        byte fileType = inc.ReadByte();
+                        string filePath = inc.ReadString();
+
+                        if (GameSettings.VerboseLogging)
+                        {
+                            DebugConsole.Log("Received file transfer message on the same machine: ");
+                            DebugConsole.Log("  File: " + filePath);
+                            DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
+                        }
+
+                        if (!File.Exists(filePath))
+                        {
+                            DebugConsole.ThrowError("File transfer on the same machine failed, file \"" + filePath + "\" not found.");
+                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            return;
+                        }
+
+                        FileTransferIn directTransfer = new FileTransferIn(inc.SenderConnection, filePath, (FileTransferType)fileType)
+                        {
+                            SequenceChannel = inc.SequenceChannel,
+                            Status = FileTransferStatus.Finished,
+                            FileSize = 0
+                        };
+                        OnFinished(directTransfer);
                     }
-                    catch (IOException e)
-                    {
-                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
-                        DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}", Color.Red);
-
-                        newTransfer.Status = FileTransferStatus.Error;
-                        OnTransferFailed(newTransfer);
-                        return;
-                    }
-
-                    activeTransfers.Add(newTransfer);
-
                     break;
                 case (byte)FileTransferMessageType.Data:
                     var activeTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == inc.SequenceChannel);
@@ -287,8 +317,7 @@ namespace Barotrauma.Networking
                     {
                         activeTransfer.Dispose();
 
-                        string errorMessage = "";
-                        if (ValidateReceivedData(activeTransfer, out errorMessage))
+                        if (ValidateReceivedData(activeTransfer, out string errorMessage))
                         {
                             StopTransfer(activeTransfer);
                             OnFinished(activeTransfer);
@@ -387,9 +416,11 @@ namespace Barotrauma.Networking
                     {
                         stream.Position = 0;
 
-                        XmlReaderSettings settings = new XmlReaderSettings();
-                        settings.DtdProcessing = DtdProcessing.Prohibit;
-                        settings.IgnoreProcessingInstructions = true;
+                        XmlReaderSettings settings = new XmlReaderSettings
+                        {
+                            DtdProcessing = DtdProcessing.Prohibit,
+                            IgnoreProcessingInstructions = true
+                        };
 
                         using (var reader = XmlReader.Create(stream, settings))
                         {

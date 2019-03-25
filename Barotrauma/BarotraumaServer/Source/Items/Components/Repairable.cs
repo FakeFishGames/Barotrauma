@@ -1,9 +1,5 @@
 ﻿using Barotrauma.Networking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
@@ -13,6 +9,17 @@ namespace Barotrauma.Items.Components
         {
             //let the clients know the initial deterioration delay
             item.CreateServerEvent(this);
+        }
+
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        {
+            if (c.Character == null) return;
+            StartRepairing(c.Character);
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(deteriorationTimer);
         }
     }
 }

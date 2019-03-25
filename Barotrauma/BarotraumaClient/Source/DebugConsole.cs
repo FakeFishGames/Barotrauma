@@ -182,6 +182,9 @@ namespace Barotrauma
                 case "dumpids":
                 case "admin":
                 case "entitylist":
+                case "togglehud":
+                case "toggleupperhud":
+                case "togglecharacternames":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -400,6 +403,11 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
+#if DEBUG
+            AssignRelayToServer("simulatedlatency", false);
+            AssignRelayToServer("simulatedloss", false);
+            AssignRelayToServer("simulatedduplicateschance", false);
+#endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);

@@ -578,10 +578,12 @@ namespace Barotrauma
                         location.MissionsCompleted = missionsCompleted;
                         if (showNotifications && prevLocationType != location.Type)
                         {
-                            ChangeLocationType(
-                                location,
-                                prevLocationName,
-                                prevLocationType.CanChangeTo.Find(c => c.ChangeToType.ToLowerInvariant() == location.Type.Identifier.ToLowerInvariant()));
+                            var change = prevLocationType.CanChangeTo.Find(c =>
+                                c.ChangeToType.ToLowerInvariant() == location.Type.Identifier.ToLowerInvariant());
+                            if (change != null)
+                            {
+                                ChangeLocationType(location, prevLocationName, change);
+                            }
                         }
                         break;
                     case "connection":

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -317,7 +318,16 @@ namespace Barotrauma
 
             if (tryLoad)
             {
-                XDocument doc = OpenFile(filePath);
+                XDocument doc = null;
+                int maxLoadRetries = 4;
+                for (int i = 0; i <= maxLoadRetries; i++)
+                {
+                    doc = OpenFile(filePath);
+                    if (doc != null || i == maxLoadRetries) { break; }
+                    DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
+                    Thread.Sleep(250);
+                }
+                if (doc == null || doc.Root == null) { return; }
 
                 if (doc != null && doc.Root != null)
                 {
@@ -1177,9 +1187,16 @@ namespace Barotrauma
 
             if (submarineElement == null)
             {
-                XDocument doc = OpenFile(filePath);
-                if (doc == null || doc.Root == null) return;
-
+                XDocument doc = null;
+                int maxLoadRetries = 4;
+                for (int i = 0; i <= maxLoadRetries; i++)
+                {
+                    doc = OpenFile(filePath);
+                    if (doc != null || i == maxLoadRetries) { break; }
+                    DebugConsole.NewMessage("Loading the submarine \"" + Name + "\" failed, retrying in 250 ms...");
+                    Thread.Sleep(250);
+                }
+                if (doc == null || doc.Root == null) { return; }
                 submarineElement = doc.Root;
             }
 
