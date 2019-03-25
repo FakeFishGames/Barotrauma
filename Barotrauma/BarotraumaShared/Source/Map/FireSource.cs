@@ -175,12 +175,11 @@ namespace Barotrauma
             LimitSize();
 
             UpdateProjSpecific(growModifier);
-
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
-            if (size.X < 1.0f) Remove();
+            
+            if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+            {
+                Remove();
+            }
         }
 
         partial void UpdateProjSpecific(float growModifier);
@@ -285,6 +284,7 @@ namespace Barotrauma
                     spawnPos, speed, 0.0f, hull);
             }
 #endif
+            extinguishAmount = Math.Min(size.X, extinguishAmount);
 
             position.X += extinguishAmount / 2.0f;
             size.X -= extinguishAmount;
@@ -292,11 +292,10 @@ namespace Barotrauma
             //evaporate some of the water
             hull.WaterVolume -= extinguishAmount;
 
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
-            if (size.X < 1.0f) Remove();
+            if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+            {
+                Remove();
+            }
         }
 
         public void Extinguish(float deltaTime, float amount)
@@ -315,22 +314,25 @@ namespace Barotrauma
                     spawnPos, speed, 0.0f, hull);
             }
 #endif
+            extinguishAmount = Math.Min(size.X, extinguishAmount);
 
             position.X += extinguishAmount / 2.0f;
             size.X -= extinguishAmount;
 
             hull.WaterVolume -= extinguishAmount;
-
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
-
-            if (size.X < 1.0f) Remove();
+            
+            if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+            {
+                Remove();
+            }
         }
 
         public void Extinguish(float deltaTime, float amount, Vector2 worldPosition)
         {
-            if (IsInDamageRange(worldPosition, 100.0f)) Extinguish(deltaTime, amount);
+            if (IsInDamageRange(worldPosition, 100.0f))
+            {
+                Extinguish(deltaTime, amount);
+            }
         }
 
         public void Remove()
