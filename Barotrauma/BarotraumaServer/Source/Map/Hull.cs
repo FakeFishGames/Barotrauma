@@ -20,6 +20,16 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
             if (IdFreed) { return; }
+
+            //don't create updates if all clients are very far from the hull
+            float hullUpdateDistanceSqr = NetConfig.HullUpdateDistance * NetConfig.HullUpdateDistance;
+            if (!GameMain.Server.ConnectedClients.Any(c => 
+                c.Character != null && 
+                Vector2.DistanceSquared(c.Character.WorldPosition, WorldPosition) < hullUpdateDistanceSqr))
+            {
+                return;
+            }
+
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
@@ -31,8 +41,8 @@ namespace Barotrauma
                     GameMain.NetworkMember.CreateEntityEvent(this);
                     lastSentVolume = waterVolume;
                     lastSentOxygen = OxygenPercentage;
-                    sendUpdateTimer = NetworkUpdateInterval;
-                }                
+                    sendUpdateTimer = NetConfig.HullUpdateInterval;
+                }
             }
         }
 

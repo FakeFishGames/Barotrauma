@@ -494,7 +494,7 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null)
+        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f)
         {
             Rectangle dockedBorders = GetDockedBorders();
             Vector2 diffFromDockedBorders = 
@@ -542,17 +542,17 @@ namespace Barotrauma
             else if (minX < 0)
             {
                 //no wall found at the left side, spawn to the left from the right-side wall
-                spawnPos.X = maxX - minWidth - 100.0f;
+                spawnPos.X = maxX - minWidth - 100.0f + subDockingPortOffset;
             }
             else if (maxX > Level.Loaded.Size.X)
             {
                 //no wall found at right side, spawn to the right from the left-side wall
-                spawnPos.X = minX + minWidth + 100.0f;
+                spawnPos.X = minX + minWidth + 100.0f + subDockingPortOffset;
             }
             else
             {
                 //walls found at both sides, use their midpoint
-                spawnPos.X = (minX + maxX) / 2;
+                spawnPos.X = (minX + maxX) / 2 + subDockingPortOffset;
             }
             
             spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
