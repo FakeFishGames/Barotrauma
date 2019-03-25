@@ -126,9 +126,15 @@ branchshortsha="${branchsha:0:7}"
 #assumes that the commit message starts with hash1...hash2
 prevcommitmsg="$(git log -1 --pretty=%B)"
 prevcommitsha="${prevcommitmsg:10:7}"
+firstmsgchar="${prevcommitmsg:1:1}"
+if [ $firstmsgchar = "(" ]; then
+    prevcommitsha="${prevcommitmsg:1:7}"
+fi
+exit 1
 
 #create a commit message for out new "merge commit"
 #	hash1...hash2 + logs of the merged commits
+echo "$prevcommitsha...$branchsha"
 logmsg="$(git log "$prevcommitsha"..."$branchsha" --pretty=oneline --abbrev-commit --reverse)"
 
 rm -rf temp.txt
@@ -155,7 +161,7 @@ while read p; do
 
 	git merge -m "$msgmerge" -X theirs "--squash" "$newsha"
 	git checkout HEAD .gitignore
-	git commit -m "$currMsg"
+	git commit -m "($currHash) $currMsg"
 done < "temp.txt"
 
 rm -rf temp.txt
