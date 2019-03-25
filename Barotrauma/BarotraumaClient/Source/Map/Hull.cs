@@ -1,13 +1,14 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 using System.Linq;
+using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -18,8 +19,6 @@ namespace Barotrauma
         private List<Decal> decals = new List<Decal>();
 
         private float serverUpdateDelay;
-        private float remoteWaterVolume, remoteOxygenPercentage;
-        private List<Vector3> remoteFireSources;
 
         private bool networkUpdatePending;
         private float networkUpdateTimer;
@@ -140,10 +139,6 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
             serverUpdateDelay -= deltaTime;
-            if (serverUpdateDelay <= 0.0f)
-            {
-                ApplyRemoteState();
-            }
 
             if (networkUpdatePending)
             {
@@ -552,21 +547,56 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
         {
-            remoteWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
-            remoteOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
+            float newWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+            float newOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
 
             bool hasFireSources = message.ReadBoolean();
             int fireSourceCount = 0;
-            remoteFireSources = new List<Vector3>();
+            List<Vector3> newFireSources = new List<Vector3>();
             if (hasFireSources)
             {
                 fireSourceCount = message.ReadRangedInteger(0, 16);
                 for (int i = 0; i < fireSourceCount; i++)
                 {
-                    remoteFireSources.Add(new Vector3(
+                    newFireSources.Add(new Vector3(
                         MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
                         MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
                         message.ReadRangedSingle(0.0f, 1.0f, 8)));
+                }
+            }
+
+            if (serverUpdateDelay > 0.0f) { return; }
+
+            WaterVolume = newWaterVolume;
+            OxygenPercentage = newOxygenPercentage;
+            
+            for (int i = 0; i < fireSourceCount; i++)
+            {
+                Vector2 pos = new Vector2(
+                    rect.X + rect.Width * newFireSources[i].X,
+                    rect.Y - rect.Height + (rect.Height * newFireSources[i].Y));
+                float size = newFireSources[i].Z * rect.Width;
+
+                var newFire = i < FireSources.Count ?
+                    FireSources[i] :
+                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                newFire.Position = pos;
+                newFire.Size = new Vector2(size, newFire.Size.Y);
+
+                //ignore if the fire wasn't added to this room (invalid position)?
+                if (!FireSources.Contains(newFire))
+                {
+                    newFire.Remove();
+                    continue;
+                }
+            }
+
+            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
+            {
+                FireSources[i].Remove();
+                if (i < FireSources.Count)
+                {
+                    FireSources.RemoveAt(i);
                 }
             }
 

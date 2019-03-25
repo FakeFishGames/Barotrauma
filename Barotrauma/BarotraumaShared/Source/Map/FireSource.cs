@@ -175,11 +175,12 @@ namespace Barotrauma
             LimitSize();
 
             UpdateProjSpecific(growModifier);
-            
-            if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
-            {
-                Remove();
-            }
+
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+
+            if (size.X < 1.0f) Remove();
         }
 
         partial void UpdateProjSpecific(float growModifier);
@@ -292,6 +293,10 @@ namespace Barotrauma
             //evaporate some of the water
             hull.WaterVolume -= extinguishAmount;
 
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+
             if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
                 Remove();
@@ -320,11 +325,12 @@ namespace Barotrauma
             size.X -= extinguishAmount;
 
             hull.WaterVolume -= extinguishAmount;
-            
-            if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
-            {
-                Remove();
-            }
+
+#if CLIENT
+            if (GameMain.Client != null) return;
+#endif
+
+            if (size.X < 1.0f) Remove();
         }
 
         public void Extinguish(float deltaTime, float amount, Vector2 worldPosition)
