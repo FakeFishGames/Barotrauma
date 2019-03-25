@@ -31,7 +31,7 @@
     </Segment>
     
     <Segment id="EnemyOnSonar" objective="EnemyOnSonarObjective" contenttype="video" istriggered="false">
-      <Text tag="NavConsoleText" width="900" height="80" anchor="Center"/>
+      <Text tag="EnemyOnSonarText" width="900" height="80" anchor="Center"/>
       <Video file="5_EnemyOnSonar/BaroTutorial_EnemyOnSonar.mp4" text="EnemyOnSonarInstructions"/>
     </Segment>
     
