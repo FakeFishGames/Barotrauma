@@ -12,8 +12,6 @@ namespace Barotrauma
 {
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
-        const float NetworkUpdateInterval = 0.5f;
-
         public static List<Hull> hullList = new List<Hull>();
         public static List<EntityGrid> EntityGrids { get; } = new List<EntityGrid>();
 
@@ -21,7 +19,7 @@ namespace Barotrauma
 
         public static bool EditWater, EditFire;
         public const float OxygenDistributionSpeed = 500.0f;
-        public const float OxygenDetoriationSpeed = 0.3f;
+        public const float OxygenDeteriorationSpeed = 0.3f;
         public const float OxygenConsumptionSpeed = 1000.0f;
 
         public const int WaveWidth = 32;
@@ -416,7 +414,7 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime, cam);
 
-            Oxygen -= OxygenDetoriationSpeed * deltaTime;
+            Oxygen -= OxygenDeteriorationSpeed * deltaTime;
 
             FireSource.UpdateAll(FireSources, deltaTime);
 

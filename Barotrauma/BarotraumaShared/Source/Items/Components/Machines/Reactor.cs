@@ -201,19 +201,19 @@ namespace Barotrauma.Items.Components
             tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
             allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
             
-            float temperatureTolerance = MathHelper.Lerp(10.0f, 20.0f, degreeOfSuccess);
             optimalTemperature = Vector2.Lerp(new Vector2(40.0f, 60.0f), new Vector2(30.0f, 70.0f), degreeOfSuccess);
             allowedTemperature = Vector2.Lerp(new Vector2(30.0f, 70.0f), new Vector2(10.0f, 90.0f), degreeOfSuccess);
-
-            float fissionRateTolerance = MathHelper.Lerp(10.0f, 20.0f, degreeOfSuccess);
-            optimalFissionRate = Vector2.Lerp(new Vector2(40.0f, 70.0f), new Vector2(30.0f, 85.0f), degreeOfSuccess);
-            allowedFissionRate = Vector2.Lerp(new Vector2(30.0f, 85.0f), new Vector2(20.0f, 98.0f), degreeOfSuccess);
+            
+            optimalFissionRate = Vector2.Lerp(new Vector2(30, AvailableFuel - 20), new Vector2(20, AvailableFuel - 10), degreeOfSuccess);
+            optimalFissionRate.X = Math.Min(optimalFissionRate.X, optimalFissionRate.Y - 10);
+            allowedFissionRate = Vector2.Lerp(new Vector2(20, AvailableFuel), new Vector2(10, AvailableFuel), degreeOfSuccess);
+            allowedFissionRate.X = Math.Min(allowedFissionRate.X, allowedFissionRate.Y - 10);
 
             float heatAmount = fissionRate * (AvailableFuel / 100.0f) * 2.0f;
             float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
             if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
-
+            
             FissionRate = MathHelper.Lerp(fissionRate, Math.Min(targetFissionRate, AvailableFuel), deltaTime);
             TurbineOutput = MathHelper.Lerp(turbineOutput, targetTurbineOutput, deltaTime);
 
@@ -364,7 +364,7 @@ namespace Barotrauma.Items.Components
             }
             else if (-currPowerConsumption < load)
             {
-                targetFissionRate = Math.Min(targetFissionRate + speed * 2 * deltaTime, allowedFissionRate.Y);
+                targetFissionRate = Math.Min(targetFissionRate + speed * 2 * deltaTime, 100.0f);
             }
             targetFissionRate = MathHelper.Clamp(targetFissionRate, 0.0f, 100.0f);
         }

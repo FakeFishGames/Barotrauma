@@ -182,6 +182,9 @@ namespace Barotrauma
                 case "dumpids":
                 case "admin":
                 case "entitylist":
+                case "togglehud":
+                case "toggleupperhud":
+                case "togglecharacternames":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -400,6 +403,11 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
+#if DEBUG
+            AssignRelayToServer("simulatedlatency", false);
+            AssignRelayToServer("simulatedloss", false);
+            AssignRelayToServer("simulatedduplicateschance", false);
+#endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
@@ -436,7 +444,7 @@ namespace Barotrauma
 
             AssignOnExecute("ambientlight", (string[] args) =>
             {
-                Color color = XMLExtensions.ParseColor(string.Join("", args));
+                Color color = XMLExtensions.ParseColor(string.Join(",", args));
                 if (Level.Loaded != null)
                 {
                     Level.Loaded.GenerationParams.AmbientLightColor = color;
@@ -524,6 +532,28 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("resetall", "Reset all items and structures to prefabs. Only applicable in the subeditor.", args =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    Item.ItemList.ForEach(i => i.Reset());
+                    Structure.WallList.ForEach(s => s.Reset());
+                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    {
+                        if (entity is Item item)
+                        {
+                            item.CreateEditingHUD();
+                            break;
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            structure.CreateEditingHUD();
+                            break;
+                        }
+                    }
+                }
+            }));
 
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {

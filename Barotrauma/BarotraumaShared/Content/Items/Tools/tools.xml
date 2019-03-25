@@ -215,13 +215,15 @@
     <Sprite texture="tools.png" sourcerect="41,6,24,12" depth="0.55" origin="0.5,0.5" />
     <Body width="31" height="6" density="40" />
     <AiTarget />
-    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />
-    <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" />    
+    <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="-0.1">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
-      <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.5,0.5" anchor="BottomLeft" absoluteoffset="20,0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
+      <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
+      <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
     </Sonar>
     <ItemContainer capacity="1" hideitems="true">
@@ -297,7 +299,7 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
     <LightComponent LightColor="255,0.0,0.0,255" Flicker="0.5" range="600" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true">
-        <Conditional IsOn="eq False" />
+        <Conditional IsOn="eq False" targetitemcomponent="LightComponent"/>
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
       <StatusEffect type="OnActive" target="This" Condition="-0.25">
@@ -314,13 +316,13 @@
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,896,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="68,966,54,54" />
     <Sprite texture="tools.png" sourcerect="50,112,27,9" depth="0.55" origin="0.5,0.5" />
     <Body width="21" height="7" density="12" />
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10" />
     <LightComponent LightColor="0,162,232,255" Flicker="0.5" range="1000" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true">
-        <Conditional IsOn="eq False" />
+        <Conditional IsOn="eq False" targetitemcomponent="LightComponent"/>
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
       <StatusEffect type="OnActive" target="This" Condition="-0.125">

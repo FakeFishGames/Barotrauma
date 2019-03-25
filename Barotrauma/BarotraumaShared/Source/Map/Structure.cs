@@ -297,7 +297,13 @@ namespace Barotrauma
                     CreateStairBodies();
                 }
             }
-            
+
+            // Only add ai targets automatically to walls 
+            if (aiTarget == null && HasBody && Tags.Contains("wall"))
+            {
+                aiTarget = new AITarget(this);
+            }
+
             InsertToList();
         }
 
@@ -1192,6 +1198,11 @@ namespace Barotrauma
             {
                 SetDamage(i, Sections[i].damage, createNetworkEvent: false);
             }
+        }
+
+        public virtual void Reset()
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
         }
     }
 }

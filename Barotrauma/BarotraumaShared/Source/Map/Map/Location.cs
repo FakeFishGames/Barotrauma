@@ -15,6 +15,8 @@ namespace Barotrauma
 
         public int TypeChangeTimer;
 
+        public string BaseName { get => baseName; }
+
         public string Name { get; private set; }
 
         public Vector2 MapPosition { get; private set; }
@@ -31,10 +33,10 @@ namespace Barotrauma
             get
             {
                 CheckMissionCompleted();
-
+                
                 for (int i = availableMissions.Count; i < Connections.Count * 2; i++)
                 {
-                    int seed = (ToolBox.StringToInt(Name) + MissionsCompleted * 10 + i) % int.MaxValue;
+                    int seed = (ToolBox.StringToInt(BaseName) + MissionsCompleted * 10 + i) % int.MaxValue;
                     MTRandom rand = new MTRandom(seed);
 
                     LocationConnection connection = Connections[(MissionsCompleted + i) % Connections.Count];
@@ -45,7 +47,7 @@ namespace Barotrauma
                     if (availableMissions.Any(m => m.Prefab == mission.Prefab)) { continue; }
                     if (GameSettings.VerboseLogging && mission != null)
                     {
-                        DebugConsole.NewMessage("Generated a new mission for a location connection (seed: " + seed.ToString("X") + ", type: " + mission.Name + ")", Color.White);
+                        DebugConsole.NewMessage("Generated a new mission for a location (location: " + Name + ", seed: " + seed.ToString("X") + ", missions completed: " + MissionsCompleted + ", type: " + mission.Name + ")", Color.White);
                     }
                     availableMissions.Add(mission);
                 }
@@ -98,7 +100,16 @@ namespace Barotrauma
 
         public void ChangeType(LocationType newType)
         {
-            if (newType == Type) return;
+            if (newType == Type) { return; }
+
+            //clear missions from this and adjacent locations (they may be invalid now)
+            availableMissions.Clear();
+            foreach (LocationConnection connection in Connections)
+            {
+                connection.OtherLocation(this)?.availableMissions.Clear();
+            }
+
+            DebugConsole.Log("Location " + baseName + " changed it's type from " + Type + " to " + newType);
 
             Type = newType;
             Name = Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
@@ -110,6 +121,7 @@ namespace Barotrauma
             {
                 if (mission.Completed)
                 {
+                    DebugConsole.Log("Mission \"" + mission.Name + "\" completed in \"" + Name + "\".");
                     MissionsCompleted++;
                 }
             }

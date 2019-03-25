@@ -4,8 +4,8 @@
     <DockingPort pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <PowerTransfer canbeoverloaded="False" overloadvoltage="2" fireprobability="0" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <Wire pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Repair [Welding Tool]">
-      <requireditem identifiers="weldingtool" type="Equipped" msg="" />
+    <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Repair [Wrench]">
+      <requireditem identifiers="wrench" type="Equipped" msg="" />
     </Repairable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />

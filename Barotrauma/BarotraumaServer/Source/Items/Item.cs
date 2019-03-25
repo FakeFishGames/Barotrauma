@@ -335,6 +335,14 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
+            if (!ItemList.Contains(this))
+            {
+                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
             int index = components.IndexOf(ic);
             if (index == -1) return;
 

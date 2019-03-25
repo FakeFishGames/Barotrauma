@@ -150,10 +150,10 @@ namespace Barotrauma
             float MaxAngularVel     = NetConfig.MaxPhysicsBodyAngularVelocity;
 
             Vector2 newPosition         = SimPosition;
-            float newRotation           = Rotation;
+            float? newRotation          = null;
             bool awake                  = body.Awake;
             Vector2 newVelocity         = LinearVelocity;
-            float newAngularVelocity    = AngularVelocity;
+            float? newAngularVelocity   = null;
 
             newPosition = new Vector2(
                 msg.ReadFloat(), 
@@ -179,12 +179,12 @@ namespace Barotrauma
             msg.ReadPadBits();
 
             if (!MathUtils.IsValid(newPosition) || 
-                !MathUtils.IsValid(newRotation) ||
                 !MathUtils.IsValid(newVelocity) ||
-                !MathUtils.IsValid(newAngularVelocity))
+                (newRotation.HasValue && !MathUtils.IsValid(newRotation.Value)) ||
+                (newAngularVelocity.HasValue && !MathUtils.IsValid(newAngularVelocity.Value)))
             {
                 string errorMsg = "Received invalid position data for \"" + parentDebugName
-                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ", angular velocity: " + newAngularVelocity + ")";
+                    + "\" (position: " + newPosition + ", rotation: " + (newRotation ?? 0) + ", velocity: " + newVelocity + ", angular velocity: " + (newAngularVelocity ?? 0) + ")";
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif

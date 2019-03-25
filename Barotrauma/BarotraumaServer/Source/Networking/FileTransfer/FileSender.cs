@@ -1,8 +1,10 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -76,8 +78,21 @@ namespace Barotrauma.Networking
                 Status = FileTransferStatus.NotStarted;
                 
                 startingTime = DateTime.Now;
-
-                data = File.ReadAllBytes(filePath);
+                
+                int maxRetries = 4;
+                for (int i = 0; i <= maxRetries; i++)
+                {
+                    try
+                    {
+                        data = File.ReadAllBytes(filePath);
+                    }
+                    catch (IOException e)
+                    {
+                        if (i >= maxRetries) { throw; }
+                        DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                        Thread.Sleep(250);
+                    }
+                }
             }
         }
 
@@ -172,7 +187,7 @@ namespace Barotrauma.Networking
                 transfer.WaitTimer -= deltaTime;
                 if (transfer.WaitTimer > 0.0f) continue;
                 
-                if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, 1)) continue;
+                if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel)) continue;
 
                 transfer.WaitTimer = 0.05f;// transfer.Connection.AverageRoundtripTime;
 
@@ -187,22 +202,38 @@ namespace Barotrauma.Networking
                 {
                     message = peer.CreateMessage();
                     message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-                    message.Write((byte)FileTransferMessageType.Initiate);
-                    message.Write((byte)transfer.FileType);
-                    message.Write((ushort)chunkLen);
-                    message.Write((ulong)transfer.Data.Length);
-                    message.Write(transfer.FileName);
-                    GameMain.Server.CompressOutgoingMessage(message);
-                    transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
-                    transfer.Status = FileTransferStatus.Sending;
-
-                    if (GameSettings.VerboseLogging)
+                    //if the recipient is the owner of the server (= a client running the server from the main exe)
+                    //we don't need to send anything, the client can just read the file directly
+                    if (transfer.Connection == GameMain.Server.OwnerConnection)
                     {
-                        DebugConsole.Log("Sending file transfer initiation message: ");
-                        DebugConsole.Log("  File: " + transfer.FileName);
-                        DebugConsole.Log("  Size: " + transfer.Data.Length);
-                        DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
+                        message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
+                        message.Write((byte)transfer.FileType);
+                        message.Write(transfer.FilePath);
+                        GameMain.Server.CompressOutgoingMessage(message);
+                        transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+                        transfer.Status = FileTransferStatus.Finished;
+                        return;
+                    }
+                    else
+                    {
+                        message.Write((byte)FileTransferMessageType.Initiate);
+                        message.Write((byte)transfer.FileType);
+                        message.Write((ushort)chunkLen);
+                        message.Write((ulong)transfer.Data.Length);
+                        message.Write(transfer.FileName);
+                        GameMain.Server.CompressOutgoingMessage(message);
+                        transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+
+                        transfer.Status = FileTransferStatus.Sending;
+
+                        if (GameSettings.VerboseLogging)
+                        {
+                            DebugConsole.Log("Sending file transfer initiation message: ");
+                            DebugConsole.Log("  File: " + transfer.FileName);
+                            DebugConsole.Log("  Size: " + transfer.Data.Length);
+                            DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
+                        }
                     }
                 }
 

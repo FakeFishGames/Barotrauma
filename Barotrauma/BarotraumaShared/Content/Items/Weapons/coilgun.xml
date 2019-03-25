@@ -89,8 +89,10 @@
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
-      <!-- reduce condition to give the bolt a 5 second lifetime -->
-      <StatusEffect type="OnNotContained" target="This" condition="-20" />
+      <!-- a 5 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="5">
+        <Remove />
+      </StatusEffect>
       <StatusEffect type="OnImpact" target="This">
         <Remove />
       </StatusEffect>
@@ -130,10 +132,12 @@
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
-      <!-- reduce condition to give the bolt a 5 second lifetime -->
-      <StatusEffect type="OnNotContained" target="This" condition="-20" />
+      <!-- a 5 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="5">
+        <Remove />
+      </StatusEffect>
       <StatusEffect type="OnImpact" target="This">
-        <!--<Remove />-->
+        <Remove />
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <Remove />

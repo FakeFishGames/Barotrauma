@@ -293,13 +293,12 @@ namespace Barotrauma
                 node.G = 0.0f;
                 node.H = 0.0f;
             }
-              
+
             start.state = 1;
             while (true)
             {
-
                 PathNode currNode = null;
-                float dist = 10000.0f;
+                float dist = float.MaxValue;
                 foreach (PathNode node in nodes)
                 {
                     if (node.state != 1) continue;
@@ -367,7 +366,7 @@ namespace Barotrauma
 
             if (end.state == 0 || end.Parent == null)
             {
-                //path not found
+                //DebugConsole.NewMessage("Pathfinding error: path not found", Color.DarkRed);
                 return new SteeringPath(true);
             }
 

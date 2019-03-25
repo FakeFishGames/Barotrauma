@@ -2,54 +2,43 @@
 <Items>
   <!-- Ingredients / base chemicals **************************************************************************************** -->
   <Elastin name="Elastin" identifier="elastin" category="Material" Tags="smallitem,chem" cargocontaineridentifier="chemicalcrate" scale="0.2">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="772,771,52,59" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="223,149,118,136" depth="0.6" origin="0.5,0.5" />
     <Body width="110" height="120" density="20" />
-    
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Elastin>
-  
   <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
-    
     <!-- TODO: adjust prices -->
     <SuitableTreatment identifier="damage" suitability="50" />
     <SuitableTreatment identifier="burn" suitability="50" />
     <SuitableTreatment identifier="opiateoverdose" suitability="-50" />
     <SuitableTreatment identifier="oxygenlow" suitability="-50" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="50" />
-    
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,768,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="314,0,58,142" depth="0.6" origin="0.5,0.5" />
     <Body width="58" height="120" density="20" />
-    
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <RequiredSkill identifier="medical" level="25"></RequiredSkill>
-
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="damage" amount="4"/>
+        <ReduceAffliction identifier="damage" amount="4" />
         <ReduceAffliction identifier="burn" amount="4" />
         <Affliction identifier="opiateaddiction" amount="0.3" />
         <Affliction identifier="opiateoverdose" amount="0.3" />
         <Affliction identifier="oxygenlow" amount="3" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
       </StatusEffect>
-
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
@@ -68,7 +57,7 @@
     </MeleeWeapon>
   </Opium>
   
-  <Antibiotics name="Broad-spectrum Antibiotics" identifier="antibiotics" category="Material" Tags="smallitem,chem" description="A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds." cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
+  <Antibiotics name="Broad-spectrum Antibiotics" identifier="antibiotics" category="Material" Tags="smallitem,chem,medical,syringe" description="A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds." cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
@@ -80,8 +69,8 @@
     <Sprite texture="Medicines.png" sourcerect="436,234,63,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-      <RequiredSkill identifier="medical" level="17"></RequiredSkill>
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+      <RequiredSkill identifier="medical" level="17"/>
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
@@ -103,12 +92,22 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
-      </StatusEffect>
-      
+      </StatusEffect>      
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Limb" duration="60">
+        <ReduceAffliction identifier="huskinfection" amount="0.25" />
+        <Affliction identifier="internaldamage" amount="0.252" />
+        <Affliction identifier="huskinfectionresistance" amount="0.5"/>
+      </StatusEffect>
+    </Projectile>
   </Antibiotics>
   
-  <Stabilozine name="Stabilozine" identifier="stabilozine" category="Material" tags="smallitem,chem,medical" cargocontaineridentifier="chemicalcrate" description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage and burns, and slightly more effectively for oxygen deprivation." useinhealthinterface="true" scale="0.3">
+  <Stabilozine name="Stabilozine" identifier="stabilozine" category="Material" tags="smallitem,chem,medical,syringe" cargocontaineridentifier="chemicalcrate" description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage and burns, and slightly more effectively for oxygen deprivation." useinhealthinterface="true" scale="0.3">
     
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
@@ -122,7 +121,7 @@
     <SuitableTreatment identifier="damage" suitability="-25" />
     <SuitableTreatment identifier="huskinfection" suitability="25" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <RequiredSkill identifier="medical" level="16"></RequiredSkill>
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
@@ -146,9 +145,19 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
+      </StatusEffect>      
+    </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
-      
-    </MeleeWeapon> 
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
+        <ReduceAffliction identifier="damage" amount="0.5" />
+        <ReduceAffliction identifier="burn" amount="0.5" />
+        <ReduceAffliction identifier="oxygenlow" amount="1" />
+      </StatusEffect>
+    </Projectile>
   </Stabilozine>
   
   <Ethanol name="Ethanol" identifier="ethanol" category="Material" cargocontaineridentifier="chemicalcrate" description="Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not advised." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
@@ -163,7 +172,7 @@
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="162,0,75,143" depth="0.6" origin="0.5,0.5" />
     <Body width="75" height="143" density="20" />
     
-    <Holdable slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">      
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">      
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
         <Affliction identifier="drunk" amount="0.5" />
@@ -177,23 +186,30 @@
     </Holdable>
   </Ethanol>
   
-  <Adrenaline name="Adrenaline" identifier="adrenaline" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
+  <Adrenaline name="Adrenaline" identifier="adrenaline" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" scale="0.2">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="388,768,64,64" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="87,0,61,141" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="140" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+      <StatusEffect tags="medical" type="OnUse" target="This" Condition="-50.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
       <!-- TODO: some effect for adrenaline -->
       <!-- Remove the item when fully used -->
-      <StatusEffect type="OnBroken" target="This">
+      <StatusEffect tags="medical" type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <!-- TODO: some effect for adrenaline -->
+    </Projectile>
   </Adrenaline>
   <SulphuricAcid name="Sulphuric Acid" identifier="sulphuricacid" category="Material" cargocontaineridentifier="chemicalcrate" description="A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
     <!-- TODO: adjust prices -->
@@ -202,7 +218,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,768,64,64" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="0,0,76,140" depth="0.6" origin="0.5,0.5" />
     <Body width="75" height="140" density="15" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
@@ -215,141 +231,109 @@
       </StatusEffect>
     </MeleeWeapon>
   </SulphuricAcid>
-  
   <!-- meds **************************************************************************************** -->
   <Bandage name="Bandage" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="50" />
-    
     <SuitableTreatment identifier="bleeding" suitability="50" />
     <SuitableTreatment identifier="gunshotwound" suitability="50" />
     <SuitableTreatment identifier="burn" suitability="50" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="17,808,45,70" depth="0.6" origin="0.5,0.5" />
     <Body width="42" height="68" density="20" />
-    
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <RequiredSkill identifier="medical" level="15"></RequiredSkill>
-          
+      <RequiredSkill identifier="medical" level="15"/>
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
-      
-      <StatusEffect type="OnUse" target="This, Limb" duration="1.0">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="1.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <ReduceAffliction identifier="bleeding" amount="20" />
         <ReduceAffliction identifier="burn" amount="15" />
       </StatusEffect>
-
       <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="1">
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <ReduceAffliction identifier="bleeding" amount="10" />
         <ReduceAffliction identifier="burn" amount="7.5" />
       </StatusEffect>
-      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-      
     </MeleeWeapon>
   </Bandage>
-  
   <Plastiseal name="Plastiseal" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="A synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true" scale="0.3">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="60" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="70" />
     <Price locationtype="Outpost" buyprice="70" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,771,63,59" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="67,808,45,70" depth="0.6" origin="0.5,0.5" />
     <Body width="43" height="68" density="20" />
-    
     <SuitableTreatment identifier="bleeding" suitability="80" />
     <SuitableTreatment identifier="gunshotwound" suitability="80" />
     <SuitableTreatment identifier="burn" suitability="70" />
-    
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
-
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
-      
-      <StatusEffect type="OnUse" target="This, Limb" duration="1">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="1">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
         <ReduceAffliction identifier="bleeding" amount="30" />
         <ReduceAffliction identifier="burn" amount="20" />
       </StatusEffect>
-      
-      <StatusEffect type="OnFailure" target="This, Limb" duration="1">
+      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="1">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
         <ReduceAffliction identifier="bleeding" amount="15" />
         <ReduceAffliction identifier="burn" amount="10" />
       </StatusEffect>
-      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-      
     </MeleeWeapon>
   </Plastiseal>
-  
   <AntibioticGlue name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream." useinhealthinterface="true" scale="0.3">
-    
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
-    
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="20,765,110,40" depth="0.6" origin="0.5,0.5" />
     <Body radius="15" height="60" density="20" />
-    
     <SuitableTreatment identifier="bleeding" suitability="80" />
     <SuitableTreatment identifier="gunshotwound" suitability="80" />
     <SuitableTreatment identifier="burn" suitability="80" />
     <SuitableTreatment identifier="damage" suitability="-15" />
-    
-    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">      
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
-      
       <RequiredSkill identifier="medical" level="22" />
-      
-      <StatusEffect type="OnUse" target="This, Limb" duration="3.0">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <ReduceAffliction identifier="bleeding" amount="20"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="20" />
       </StatusEffect>
-      
-      <StatusEffect type="OnFailure" target="This, Limb" duration="3.0">
+      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="3.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Affliction identifier="internaldamage" amount="5" />
         <ReduceAffliction identifier="bleeding" amount="10"></ReduceAffliction>
         <ReduceAffliction identifier="burn" amount="10" />
       </StatusEffect>
-      
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-      
     </MeleeWeapon>
   </AntibioticGlue>
-  
-
   <Morphine name="Morphine" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3">
     <SuitableTreatment identifier="damage" suitability="75" />
     <SuitableTreatment identifier="burn" suitability="75" />
@@ -367,9 +351,7 @@
     <Sprite texture="Medicines.png" sourcerect="0,0,63,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
@@ -436,7 +418,7 @@
     <Sprite texture="Medicines.png" sourcerect="62,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
@@ -466,8 +448,7 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
-      </StatusEffect>>
-
+      </StatusEffect>
     </MeleeWeapon>
 
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
@@ -500,7 +481,7 @@
     <Sprite texture="Medicines.png" sourcerect="0,437,133,70" depth="0.6" origin="0.5,0.5" />
     <Body width="120" height="60" density="11" />
     
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
       
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
@@ -537,7 +518,7 @@
     <Sprite texture="Medicines.png" sourcerect="0,365,133,70" depth="0.6" origin="0.5,0.5" />
     <Body width="120" height="60" density="11" />
     
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
       <RequiredSkill identifier="medical" level="23" />
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
@@ -560,7 +541,7 @@
   </BloodPack>
   
   <Deusizine name="Deusizine" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate"
-             Tags="smallitem,chem,medical" 
+             Tags="smallitem,chem,medical,syringe" 
              description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." 
              useinhealthinterface="true"
              scale="0.3">
@@ -577,7 +558,7 @@
     <SuitableTreatment identifier="bloodloss" suitability="30" />
     <SuitableTreatment identifier="burn" suitability="90" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
@@ -604,11 +585,23 @@
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-    </MeleeWeapon>
+    </MeleeWeapon>    
+    
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="30">
+        <ReduceAffliction identifier="damage" amount="1.5" />
+        <ReduceAffliction identifier="burn" amount="1.5" />
+        <ReduceAffliction identifier="oxygenlow" amount="1.5" />
+        <ReduceAffliction identifier="bloodloss" amount="0.75" />
+      </StatusEffect>
+    </Projectile>
     
   </Deusizine>
   
-  <Calyxanide name="Calyxanide" identifier="calyxanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages." useinhealthinterface="true" scale="0.3">
+  <Calyxanide name="Calyxanide" identifier="calyxanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages." useinhealthinterface="true" scale="0.3">
     
     <Price locationtype="Research" buyprice="375" />
     <Price locationtype="Military" buyprice="350" />
@@ -620,7 +613,7 @@
     <Sprite texture="Medicines.png" sourcerect="372,122,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
@@ -667,7 +660,7 @@
     <Sprite texture="Medicines.png" sourcerect="64,235,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       
@@ -693,7 +686,7 @@
       <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
+      <StatusEffect tags="medical" type="OnImpact" target="Limb" duration="10">
         <ReduceAffliction identifier="psychosis" amount="25" />
       </StatusEffect>
     </Projectile>
@@ -715,7 +708,7 @@
     <Sprite texture="Medicines.png" sourcerect="311,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="8" height="16" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
@@ -757,7 +750,7 @@
     
   </Naloxone>
   
-  <MorbusineAntidote name="Morbusine Antidote" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute morbusine poisoning." useinhealthinterface="true" scale="0.3">
+  <MorbusineAntidote name="Morbusine Antidote" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute morbusine poisoning." useinhealthinterface="true" scale="0.3">
 
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -770,7 +763,7 @@
     <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
 
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
@@ -783,12 +776,20 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
-      </StatusEffect>
-    
+      </StatusEffect>    
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="1">
+        <ReduceAffliction identifier="morbusinepoisoning" amount="50.0" />
+      </StatusEffect>
+    </Projectile>
   </MorbusineAntidote>
   
-  <CyanideAntidote name="Cyanide Antidote" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute cyanide poisoning." useinhealthinterface="true" scale="0.3">
+  <CyanideAntidote name="Cyanide Antidote" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute cyanide poisoning." useinhealthinterface="true" scale="0.3">
 
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -801,11 +802,9 @@
     <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="cyanidepoisoning" amount="100.0" />
@@ -815,11 +814,19 @@
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="1">
+        <ReduceAffliction identifier="cyanidepoisoning" amount="50.0" />
+      </StatusEffect>
+    </Projectile>
   </CyanideAntidote>
 
-  <SufforinAntidote name="Sufforin Antidote" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute sufforin poisoning." useinhealthinterface="true" scale="0.3">
+  <SufforinAntidote name="Sufforin Antidote" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute sufforin poisoning." useinhealthinterface="true" scale="0.3">
 
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -832,11 +839,9 @@
     <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="sufforinpoisoning" amount="100.0" />
@@ -846,11 +851,19 @@
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="1">
+        <ReduceAffliction identifier="sufforinpoisoning" amount="50.0" />
+      </StatusEffect>
+    </Projectile>
   </SufforinAntidote>
 
-  <DeliriumineAntidote name="Deliriumine Antidote" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An antidote for acute deliriumine poisoning." useinhealthinterface="true" scale="0.3">
+  <DeliriumineAntidote name="Deliriumine Antidote" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute deliriumine poisoning." useinhealthinterface="true" scale="0.3">
 
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -863,11 +876,9 @@
     <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-
       <!--Heal deliriumine poisoning instantly, slowly lower psychosis-->
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
@@ -881,11 +892,19 @@
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="1">
+        <ReduceAffliction identifier="deliriuminepoisoning" amount="50.0" />
+      </StatusEffect>
+    </Projectile>
   </DeliriumineAntidote>
 
-  <AntiRad name="AntiRad" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Slows down cellular degradation caused by radiation." useinhealthinterface="true" scale="0.3">
+  <AntiRad name="AntiRad" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="Slows down cellular degradation caused by radiation." useinhealthinterface="true" scale="0.3">
 
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -898,11 +917,9 @@
     <Sprite texture="Medicines.png" sourcerect="375,351,62,113" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="1.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="radiationsickness" amount="100.0" />
@@ -912,11 +929,19 @@
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
-
     </MeleeWeapon>
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="1">
+        <ReduceAffliction identifier="radiationsickness" amount="50.0" />
+      </StatusEffect>
+    </Projectile>
   </AntiRad>
 
-  <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3">
+  <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3">
     
     <SuitableTreatment identifier="internaldamage" suitability="-15" />
     <SuitableTreatment identifier="oxygenloss" suitability="90" />
@@ -925,11 +950,9 @@
     <Sprite texture="Medicines.png" sourcerect="311,235,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
-
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />      
       <RequiredSkill identifier="medical" level="20" />
       
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
@@ -958,7 +981,16 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
-    
+
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="60">
+        <Affliction identifier="internaldamage" amount="0.5" />
+        <ReduceAffliction identifier="oxygenlow" amount="1.65" />
+      </StatusEffect>
+    </Projectile>
   </LiquidOxygenite>
   
   
@@ -973,7 +1005,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="138,759,63,150" depth="0.6" origin="0.5,0.5" />
     <Body radius="60" height="140" density="9" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10.0">
         <ReduceAffliction identifier="internaldamage" amount="0.5" />
@@ -986,14 +1018,14 @@
     </MeleeWeapon>
   </TonicLiquid>
   
-  <Methamphetamine name="Methamphetamine" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A potent nervous system stimulant." useinhealthinterface="true" scale="0.3">
+  <Methamphetamine name="Methamphetamine" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A potent nervous system stimulant." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="50" />
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64" />
     <Sprite texture="Medicines.png" sourcerect="124,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="15" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <ReduceAffliction identifier="internaldamage" amount="0.1" />
@@ -1003,22 +1035,36 @@
       </StatusEffect>
       <StatusEffect tags="medical" type="OnUse" target="Character" >
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <Affliction identifier="haste" amount ="80"/>
+        <Affliction identifier="haste" amount="80"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character">
+        <Affliction identifier="haste" amount="80"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="60.0">
+        <ReduceAffliction identifier="internaldamage" amount="0.1" />
+        <ReduceAffliction identifier="oxygenlow" amount="0.1" />
+        <ReduceAffliction identifier="stun" amount="10" />
+        <Affliction identifier="psychosis" amount="0.2" />
+      </StatusEffect>
+    </Projectile>
   </Methamphetamine>
-  <AnabolicSteroids name="Anabolic Steroids" identifier="steroids" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Temporarily increases muscular strength and physical performance." useinhealthinterface="true" scale="0.3">
+  <AnabolicSteroids name="Anabolic Steroids" identifier="steroids" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="Temporarily increases muscular strength and physical performance." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="125" />
     <Price locationtype="Military" buyprice="150" />
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,448,64,64" />
     <Sprite texture="Medicines.png" sourcerect="187,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="15" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
@@ -1031,14 +1077,24 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="60.0">
+        <ReduceAffliction identifier="oxygenlow" amount="0.2" />
+        <Affliction identifier="psychosis" amount="0.2" />
+        <Affliction identifier="strengthen" amount="1.6" />
+      </StatusEffect>
+    </Projectile>
   </AnabolicSteroids>
-  <Hyperzine name="Hyperzine" identifier="hyperzine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="An extremely potent muscle stimulant for those moments when you gotta go fast." useinhealthinterface="true" scale="0.3">
+  <Hyperzine name="Hyperzine" identifier="hyperzine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An extremely potent muscle stimulant for those moments when you gotta go fast." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="350" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,448,64,64" />
     <Sprite texture="Medicines.png" sourcerect="249,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="15" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
@@ -1054,19 +1110,33 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnImpact" target="Character" duration="60.0">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+        <ReduceAffliction identifier="internaldamage" amount="0.1" />
+        <ReduceAffliction identifier="oxygenlow" amount="0.1" />
+        <ReduceAffliction identifier="stun" amount="10" />
+        <Affliction identifier="psychosis" amount="0.1" />
+        <Affliction identifier="haste" amount ="100"/>
+        <Affliction identifier="strengthen" amount ="0.3"/>
+      </StatusEffect>
+    </Projectile>
   </Hyperzine>
   
   <!-- poisons and harmful chemicals **************************************************************************************** -->
   
-  <Morbusine name="Morbusine" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
+  <Morbusine name="Morbusine" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="450" />
     <Price locationtype="Military" buyprice="1000" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64" />
     <Sprite texture="Medicines.png" sourcerect="311,120,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Character">
+      <StatusEffect tags="poison" type="OnUse" target="Character">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <Affliction identifier="morbusinepoisoning" amount="1" />
       </StatusEffect>
@@ -1075,9 +1145,17 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="poison" type="OnImpact" target="Character">
+        <Affliction identifier="morbusinepoisoning" amount="1" />
+      </StatusEffect>
+    </Projectile>
   </Morbusine>
   
-  <ChloralHydrate name="Chloral Hydrate" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A sedative that can be used to knock someone out for a short period of time." useinhealthinterface="true" scale="0.3">
+  <ChloralHydrate name="Chloral Hydrate" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A sedative that can be used to knock someone out for a short period of time." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="30" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -1085,7 +1163,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="126,232,67,124" depth="0.6" origin="0.5,0.5" />
     <Body width="65" height="120" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="Limb">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
@@ -1097,16 +1175,25 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="Limb">
+        <Affliction identifier="internaldamage" amount="1" />
+        <Affliction identifier="stun" amount="10.0" />
+      </StatusEffect>
+    </Projectile>
   </ChloralHydrate>
-  <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A famous neurotoxin. Causes muscle spasms and eventual death." useinhealthinterface="true" scale="0.3">
+  <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A famous neurotoxin. Causes muscle spasms and eventual death." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,640,64,64" />
     <Sprite texture="Medicines.png" sourcerect="63,117,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Character">
+      <StatusEffect tags="poison" type="OnUse" target="Character">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <Affliction identifier="cyanidepoisoning" amount="1" />
       </StatusEffect>
@@ -1115,17 +1202,25 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="poison" type="OnImpact" target="Character">
+        <Affliction identifier="cyanidepoisoning" amount="1" />
+      </StatusEffect>
+    </Projectile>
   </Cyanide>
   
-  <Radiotoxin name="Radiotoxin" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly radioactive solution." useinhealthinterface="true" scale="0.3">
+  <Radiotoxin name="Radiotoxin" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly radioactive solution." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="500" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" />
     <Sprite texture="Medicines.png" sourcerect="0,115,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Character" duration="5">
+      <StatusEffect tags="poison" type="OnUse" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <Affliction identifier="radiationsickness" amount="8" />
       </StatusEffect>
@@ -1134,9 +1229,17 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="poison" type="OnImpact" target="Character" duration="5">
+        <Affliction identifier="radiationsickness" amount="4" />
+      </StatusEffect>
+    </Projectile>
   </Radiotoxin>
   
-  <Sufforin name="Sufforin" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
+  <Sufforin name="Sufforin" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="500" />
     
@@ -1144,10 +1247,9 @@
     <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      
-      <StatusEffect type="OnUse" target="Character">
+      <StatusEffect tags="poison" type="OnUse" target="Character">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <Affliction identifier="sufforinpoisoning" amount="1" />
       </StatusEffect>
@@ -1155,20 +1257,27 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
-      </StatusEffect>
-      
+      </StatusEffect>      
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="poison" type="OnImpact" target="Character">
+        <Affliction identifier="sufforinpoisoning" amount="1" />
+      </StatusEffect>
+    </Projectile>
   </Sufforin>
   
-  <Deliriumine name="Deliriumine" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A psychosis-inducing toxin." useinhealthinterface="true" scale="0.3">
+  <Deliriumine name="Deliriumine" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A psychosis-inducing toxin." useinhealthinterface="true" scale="0.3">
     <Price locationtype="Research" buyprice="250" />
     <Price locationtype="Military" buyprice="600" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="378,239,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Character">
+      <StatusEffect tags="poison" type="OnUse" target="Character">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <Affliction identifier="deliriuminepoisoning" amount="1" />
       </StatusEffect>
@@ -1177,6 +1286,14 @@
         <Remove />
       </StatusEffect>
     </MeleeWeapon>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="90">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+      </StatusEffect>
+      <StatusEffect tags="poison" type="OnImpact" target="Character">
+        <Affliction identifier="deliriuminepoisoning" amount="1" />
+      </StatusEffect>
+    </Projectile>
   </Deliriumine>
   <!-- legacy **************************************************************************************** -->
   <!-- Medical items -->

@@ -74,9 +74,6 @@
     spawntype="cave"
     itemidentifier="thermalartifact">
 
-    <LocationType from="City" to="None"/>
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Ruins"/>
@@ -104,7 +101,6 @@
     spawntype="ruin"
     itemidentifier="nasonovartifact">
 
-    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
@@ -134,10 +130,6 @@
     spawntype="cave"
     itemidentifier="nasonovartifact">
 
-    <LocationType from="City" to="None"/>
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Ruins"/>
     <LocationType from="Research" to="None"/>
@@ -161,18 +153,19 @@
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Molochboss/Molochboss.xml">
 
-    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="Lair"/>
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Military" to="Lair"/>
     
     <message header="Target terminated" text="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterMission>
@@ -182,25 +175,26 @@
     identifier="killtigerthresher"
     type="Monster"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
-    commonness="5"
+    commonness="7"
     reward="1000"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
-    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="Lair"/>
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Military" to="Lair"/>
     
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
@@ -212,25 +206,26 @@
   identifier="killhammerhead"
   type="Monster"
   description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
-  commonness="5"
+  commonness="7"
   reward="1000"
   sonarlabel="Hammerhead"
   successmessage="The Hammerhead has been killed."
   monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
-    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="Lair"/>
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Military" to="Lair"/>
 
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
@@ -297,9 +292,6 @@
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/Moloch.xml">
     
-    <LocationType from="City" to="None"/>
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Ruins"/>
@@ -321,8 +313,6 @@
     sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/Carrier.xml">
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="Research" to="City"/>
@@ -355,7 +345,6 @@
     </Items>
 
     <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="Military" to="City"/>
@@ -393,9 +382,10 @@
     </Items>
 
     <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    <LocationType from="Military" to="Mine"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
@@ -404,6 +394,7 @@
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
 
   </CargoMission>
 
@@ -456,8 +447,6 @@
     </Items>
     
     <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>

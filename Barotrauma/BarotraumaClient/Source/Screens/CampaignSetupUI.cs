@@ -31,14 +31,14 @@ namespace Barotrauma
             }
         }
 
-        private bool isMultiplayer;
+        private readonly bool isMultiplayer;
 
-        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<string> saveFiles=null)
+        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles = null)
         {
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
             this.loadGameContainer = loadGameContainer;
-            
+
             var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -63,7 +63,7 @@ namespace Barotrauma
                 OnSelected = CheckForPax
             };
 
-            UpdateSubList();
+            UpdateSubList(submarines);
 
             // New game right sideon
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
@@ -90,9 +90,8 @@ namespace Barotrauma
                         return false;
                     }
 
-                    Submarine selectedSub = subList.SelectedData as Submarine;
-                    if (selectedSub == null) return false;
-                    
+                    if (!(subList.SelectedData is Submarine selectedSub)) { return false; }
+
                     if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
                     {
                         ((GUITextBlock)subList.SelectedComponent).TextColor = Color.DarkRed * 0.8f;
@@ -196,12 +195,12 @@ namespace Barotrauma
             saveNameBox.Text = Path.GetFileNameWithoutExtension(savePath);
         }
 
-        public void UpdateSubList()
+        public void UpdateSubList(IEnumerable<Submarine> submarines)
         {
 #if DEBUG
-            var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
+            var subsToShow = submarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 #else
-            var subsToShow = Submarine.SavedSubmarines;
+            var subsToShow = submarines;
 #endif
 
             subList.ClearChildren();

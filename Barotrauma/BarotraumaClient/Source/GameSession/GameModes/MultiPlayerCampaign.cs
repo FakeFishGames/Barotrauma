@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         private UInt16 startWatchmanID, endWatchmanID;
 
-        public static GUIComponent StartCampaignSetup(IEnumerable<string> saveFiles)
+        public static GUIComponent StartCampaignSetup( IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
         {
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
@@ -35,7 +35,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
-            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, saveFiles);
+            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, submarines, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"))
@@ -92,8 +92,7 @@ namespace Barotrauma
                 if (endWatchman != null) { InitializeWatchman(endWatchman); }
             }
         }
-
-
+        
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
             if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
@@ -107,8 +106,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (GameMain.Client != null && interactor == Character.Controlled && 
-                    (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || GameMain.Client.HasPermission(ClientPermissions.ManageCampaign)))
+            if (GameMain.Client != null && interactor == Character.Controlled)
             {
                 var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
                     .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
@@ -122,8 +120,7 @@ namespace Barotrauma
                     return true;
                 };
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
-            
+                msgBox.Buttons[1].OnClicked += msgBox.Close;            
             }
         }
 

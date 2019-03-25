@@ -81,11 +81,10 @@ namespace Barotrauma.Networking
 
             for (int i = startIndex; i < events.Count; i++)
             {
-                //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
-                float lastSent = 0;
-                eventLastSent.TryGetValue(events[i].ID, out lastSent);
+                //find the first event that hasn't been sent in roundtriptime or at all
+                eventLastSent.TryGetValue(events[i].ID, out float lastSent);
 
-                if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime * 1.5f)
+                if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime)
                 {
                     continue;
                 }
@@ -93,14 +92,7 @@ namespace Barotrauma.Networking
                 eventsToSync.AddRange(events.GetRange(i, events.Count - i));
                 break;
             }
-            if (eventsToSync.Count == 0) return;
-
-            //too many events for one packet
-            if (eventsToSync.Count > MaxEventsPerWrite)
-            {
-                eventsToSync.RemoveRange(MaxEventsPerWrite, eventsToSync.Count - MaxEventsPerWrite);
-            }
-            if (eventsToSync.Count == 0) return;
+            if (eventsToSync.Count == 0) { return; }
 
             foreach (NetEntityEvent entityEvent in eventsToSync)
             {
@@ -108,15 +100,15 @@ namespace Barotrauma.Networking
             }
 
             msg.Write((byte)ClientNetObject.ENTITY_STATE);
-            Write(msg, eventsToSync);
+            Write(msg, eventsToSync, out _);
         }
 
         private UInt16? firstNewID;
 
         /// <summary>
-        /// Read the events from the message, ignoring ones we've already received
+        /// Read the events from the message, ignoring ones we've already received. Returns false if reading the events fails.
         /// </summary>
-        public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime, List<IServerSerializable> entities)
+        public bool Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime, List<IServerSerializable> entities)
         {
             UInt16 unreceivedEntityEventCount = 0;
 
@@ -192,6 +184,7 @@ namespace Barotrauma.Networking
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             Microsoft.Xna.Framework.Color.Red);
                         GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
+                        return false;
                     }
                     
                     msg.Position += msgLength * 8;
@@ -230,6 +223,7 @@ namespace Barotrauma.Networking
                 }
                 msg.ReadPadBits();
             }
+            return true;
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)

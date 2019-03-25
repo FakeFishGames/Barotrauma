@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using OpenTK.Audio.OpenAL;
 using System;
 using System.Linq;
@@ -25,6 +26,11 @@ namespace Barotrauma.Networking
         {
             get;
             private set;
+        }
+        
+        public float Gain
+        {
+            get { return GameMain.Config?.MicrophoneVolume ?? 1.0f; }
         }
 
         public DateTime LastEnqueueAudio;
@@ -69,6 +75,7 @@ namespace Barotrauma.Networking
             {
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
+                    GUI.SettingsMenuOpen = false;
                     new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"))
                     {
                         UserData = "capturedevicenotfound"
@@ -160,8 +167,9 @@ namespace Barotrauma.Networking
                 double maxAmplitude = 0.0f;
                 for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
                 {
-                    double sampleVal = (double)uncompressedBuffer[i] / (double)short.MaxValue;
-                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
+                    uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * Gain), -short.MaxValue, short.MaxValue);
+                    double sampleVal = uncompressedBuffer[i] / (double)short.MaxValue;
+                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));                    
                 }
                 double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
 

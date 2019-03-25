@@ -99,13 +99,13 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 throwVector = Vector2.Normalize(picker.CursorWorldPosition - picker.WorldPosition);
                     //throw upwards if cursor is at the position of the character
-                    if (!MathUtils.IsValid(throwVector)) throwVector = Vector2.UnitY;
+                    if (!MathUtils.IsValid(throwVector)) { throwVector = Vector2.UnitY; }
 
 #if SERVER
                     GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
 
-                    item.Drop(picker);
+                    item.Drop(picker, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);

@@ -51,6 +51,8 @@ namespace Barotrauma.Items.Components
 
         public ItemComponent Parent;
 
+        public readonly XElement originalElement;
+
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
         protected float correctionTimer;
@@ -64,11 +66,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public readonly Dictionary<string, SerializableProperty> properties;
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get { return properties; }
-        }
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
                 
         public virtual bool IsActive
         {
@@ -194,7 +192,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
 
-        [Editable, Serialize("", false)]
+        [Editable, Serialize("", true)]
         public string Msg
         {
             get { return msg; }
@@ -210,8 +208,9 @@ namespace Barotrauma.Items.Components
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
+            originalElement = element;
             name = element.Name.ToString();
-            properties = SerializableProperty.GetProperties(this);            
+            SerializableProperties = SerializableProperty.GetProperties(this);            
             requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>();
             requiredSkills = new List<Skill>();
 
@@ -245,18 +244,9 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
             
-            properties = SerializableProperty.DeserializeProperties(this, element);
-#if CLIENT
-            string msg = TextManager.Get(Msg, true);
-            if (msg != null)
-            {
-                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-                {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                }
-                Msg = msg;
-            }
-#endif
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            ParseMsg();
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -318,7 +308,6 @@ namespace Barotrauma.Items.Components
                         item.AddComponent(ic);
                         break;
                 }
-                
             }        
         }
 
@@ -623,53 +612,13 @@ namespace Barotrauma.Items.Components
         public virtual void Load(XElement componentElement)
         {
             if (componentElement == null) return;
-
             foreach (XAttribute attribute in componentElement.Attributes())
             {
-                if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
+                if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                 property.TrySetValue(this, attribute.Value);
             }
-#if CLIENT 
-            string msg = TextManager.Get(Msg, true);
-            if (msg != null)
-            {
-                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-                {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                }
-                Msg = msg;
-            }
-#endif
-            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
-            bool overrideRequiredItems = false;
-
-            foreach (XElement subElement in componentElement.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "requireditem":
-                        if (!overrideRequiredItems) requiredItems.Clear();
-                        overrideRequiredItems = true;
-
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);                        
-                        if (newRequiredItem == null) continue;
-
-                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
-                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
-                        if (prevRequiredItem != null)
-                        {
-                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
-                            newRequiredItem.Msg = prevRequiredItem.Msg;
-                        }
-
-                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
-                        {
-                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
-                        }
-                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
-                        break;
-                }
-            }
+            ParseMsg();
+            OverrideRequiredItems(componentElement);
         }
 
         /// <summary>
@@ -760,5 +709,47 @@ namespace Barotrauma.Items.Components
             parentElement.Add(componentElement);
             return componentElement;
         }
+
+        public virtual void Reset()
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, originalElement);
+            ParseMsg();
+            OverrideRequiredItems(originalElement);
+        }
+
+        private void OverrideRequiredItems(XElement element)
+        {
+            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
+            bool overrideRequiredItems = false;
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
+
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
+                        if (newRequiredItem == null) continue;
+
+                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
+                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
+                        if (prevRequiredItem != null)
+                        {
+                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
+                            newRequiredItem.Msg = prevRequiredItem.Msg;
+                        }
+
+                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
+                        {
+                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
+                        }
+                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
+                        break;
+                }
+            }
+        }
+
+        partial void ParseMsg();
     }
 }

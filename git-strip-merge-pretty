@@ -126,27 +126,44 @@ branchshortsha="${branchsha:0:7}"
 #assumes that the commit message starts with hash1...hash2
 prevcommitmsg="$(git log -1 --pretty=%B)"
 prevcommitsha="${prevcommitmsg:10:7}"
+firstmsgchar="${prevcommitmsg:0:1}"
+if [ $firstmsgchar = "(" ]; then
+    prevcommitsha="${prevcommitmsg:1:7}"
+fi
 
 #create a commit message for out new "merge commit"
 #	hash1...hash2 + logs of the merged commits
-logmsg="$prevcommitsha" 
-logmsg+="..." 
-logmsg+="$branchshortsha"
-logmsg+="
+echo "$prevcommitsha...$branchsha"
+logmsg="$(git log "$prevcommitsha"..."$branchsha" --pretty=oneline --abbrev-commit --reverse)"
 
-$(git log "$prevcommitsha"..."$branchsha")"
+rm -rf temp.txt
+
+echo "$logmsg" >> "temp.txt"
 
 trap 'git checkout --quiet "$original"' EXIT
 
-git checkout "$branchsha"  "${quiet[@]}" &&
-git rm -rf -r "${files[@]}"   "${quiet[@]}" &&
-git commit -m "$msgcommit" "${quiet[@]}" &&
-newsha=$(gitsha HEAD)                    &&
-git checkout "$original"   "${quiet[@]}" &&
+while read p; do 
+	currHash="$(echo ${p%% *})"
+	echo "$currHash"
 
-git merge -m "$msgmerge" -X theirs "--squash" "$newsha"
-git checkout HEAD .gitignore
-git commit -m "$logmsg"
+    currMsg="$(echo ${p#* })"
+	echo "$currMsg"
+
+	echo ""
+	echo "********"
+	
+	git checkout "$currHash"  "${quiet[@]}" &&
+	git rm -rf -r "${files[@]}"   "${quiet[@]}" &&
+	git commit -m "$msgcommit" "${quiet[@]}" &&
+	newsha=$(gitsha HEAD)                    &&
+	git checkout "$original"   "${quiet[@]}" &&
+
+	git merge -m "$msgmerge" -X theirs "--squash" "$newsha"
+	git checkout HEAD .gitignore
+	git commit -m "($currHash) $currMsg"
+done < "temp.txt"
+
+rm -rf temp.txt
 
 #example usage
-#./git-strip-merge barotrauma-development/dev -f Barotrauma/BarotraumaShared/Content/*
+#./git-strip-merge-pretty barotrauma-development/dev -f Barotrauma/BarotraumaShared/Content/*

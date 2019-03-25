@@ -177,7 +177,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="704,96,128,223" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="704,96,128,223" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 32 deg" identifier="shella32deg" description="Submarine wall" body="true" castshadow="true" health="200" width="160" height="128" bodywidth="150" bodyheight="60" bodyrotation="-32">
+  <shellA name="Shell A 32 deg" identifier="shella32deg" description="Submarine wall" body="true" castshadow="true" health="200" width="160" height="128" bodywidth="150" bodyheight="60" bodyoffset="13,-20" bodyrotation="-32">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="864,128,160,128" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="864,128,160,128" depth="0.85" />
   </shellA>

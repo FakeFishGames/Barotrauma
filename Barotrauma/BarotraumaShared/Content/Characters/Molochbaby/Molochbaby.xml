@@ -23,7 +23,7 @@
   <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle3.ogg" state="Idle" range="8000"/>  
 
   <ai
-    combatstrength="1200"
+    combatstrength="900"
     sight="0.0" hearing="1.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="stronger" state="Escape" priority="100"/>
