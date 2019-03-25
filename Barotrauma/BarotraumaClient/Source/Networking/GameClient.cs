@@ -1400,6 +1400,7 @@ namespace Barotrauma.Networking
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
+                bool eventReadFailed = false;
                 switch (objHeader)
                 {
                     case ServerNetObject.SYNC_IDS:
@@ -1428,7 +1429,11 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
-                        if (!entityEventManager.Read(objHeader, inc, sendingTime, entities)) { break; }
+                        if (!entityEventManager.Read(objHeader, inc, sendingTime, entities))
+                        {
+                            eventReadFailed = true;
+                            break;
+                        }
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
@@ -1484,6 +1489,11 @@ namespace Barotrauma.Networking
                 prevObjHeader = objHeader;
                 prevBitPos = inc.Position;
                 prevBytePos = inc.PositionInBytes;
+
+                if (eventReadFailed)
+                {
+                    break;
+                }
             }
         }
 
