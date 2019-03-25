@@ -185,7 +185,9 @@ namespace Barotrauma.Networking
                     string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.ThrowError("Failed to read server event for entity \"" + entityName + "\"!", e);
+                        string errorMsg = "Failed to read server event for entity \"" + entityName + "\"!";
+                        GameServer.Log(errorMsg + "\n" + e.StackTrace, ServerLog.MessageType.Error);
+                        DebugConsole.ThrowError(errorMsg, e);
                     }
                     GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
@@ -226,7 +228,7 @@ namespace Barotrauma.Networking
                             GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " 
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago)" +
-                                " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.ServerMessage);
+                                " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.Error);
                             server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncOldEvent");
                         }
                     );
@@ -240,7 +242,7 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
-                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.ServerMessage);
+                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
                         server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }
@@ -249,7 +251,7 @@ namespace Barotrauma.Networking
             var timedOutClients = clients.FindAll(c => c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             foreach (Client timedOutClient in timedOutClients)
             {
-                GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.ServerMessage);
+                GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);
                 GameMain.Server.DisconnectClient(timedOutClient, "", "ServerMessage.SyncTimeout");
             }
             
@@ -322,7 +324,10 @@ namespace Barotrauma.Networking
                         count++;
                         if (count > 3) { break; }
                     }
-
+                    if (GameSettings.VerboseLogging)
+                    {
+                        GameServer.Log(warningMsg, ServerLog.MessageType.Error);
+                    }
                     DebugConsole.NewMessage(warningMsg, color);
                 }
             }
@@ -443,7 +448,7 @@ namespace Barotrauma.Networking
                 {
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
+                        DebugConsole.NewMessage("Received msg " + thisEventID, Color.Red);
                     }
                     msg.Position += msgLength * 8;
                 }
