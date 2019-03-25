@@ -1,8 +1,10 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -76,8 +78,21 @@ namespace Barotrauma.Networking
                 Status = FileTransferStatus.NotStarted;
                 
                 startingTime = DateTime.Now;
-
-                data = File.ReadAllBytes(filePath);
+                
+                int maxRetries = 4;
+                for (int i = 0; i <= maxRetries; i++)
+                {
+                    try
+                    {
+                        data = File.ReadAllBytes(filePath);
+                    }
+                    catch (IOException e)
+                    {
+                        if (i >= maxRetries) { throw; }
+                        DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                        Thread.Sleep(250);
+                    }
+                }
             }
         }
 
