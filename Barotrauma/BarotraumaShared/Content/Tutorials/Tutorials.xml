@@ -3,7 +3,7 @@
   <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
     
     <Segment id="Welcome" contenttype="textonly" istriggered="false">
-      <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
+      <Text tag="WelcomeText" width="450" height="80" anchor="Center"/>
     </Segment>
     
     <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="video" istriggered="false">
@@ -17,41 +17,41 @@
     </Segment>
     
     <Segment id="DestinationObjective" contenttype="textonly" istriggered="false">
-      <Text tag="DestinationObjectiveText" width="300" height="80" anchor="Center"/>
+      <Text tag="DestinationObjectiveText" width="450" height="80" anchor="Center"/>
     </Segment>
     
     <Segment id="Flood" objective="FloodObjective" contenttype="video" istriggered="false">
-      <Text tag="FloodText" width="900" height="80" anchor="Center"/>
+      <Text tag="FloodText" width="450" height="80" anchor="Center"/>
       <Video file="3_Flood/BaroTutorial_Flood.mp4" text="FloodInstructions"/>
     </Segment>
     
     <Segment id="ReactorUse" contenttype="video" istriggered="false">
-      <Text tag="ReactorUseText" width="900" height="80" anchor="Center"/>
+      <Text tag="ReactorUseText" width="450" height="80" anchor="Center"/>
       <Video file="4_Reactor/BaroTutorial_Reactor.mp4" text="ReactorUseInstructions"/>
     </Segment>
     
     <Segment id="EnemyOnSonar" objective="EnemyOnSonarObjective" contenttype="video" istriggered="false">
-      <Text tag="EnemyOnSonarText" width="900" height="80" anchor="Center"/>
+      <Text tag="EnemyOnSonarText" width="450" height="80" anchor="Center"/>
       <Video file="5_EnemyOnSonar/BaroTutorial_EnemyOnSonar.mp4" text="EnemyOnSonarInstructions"/>
     </Segment>
     
     <Segment id="Degrading" objective="DegradingObjective" contenttype="video" istriggered="false">
-      <Text tag="DegradingText" width="900" height="80" anchor="Center"/>
+      <Text tag="DegradingText" width="450" height="80" anchor="Center"/>
       <Video file="6_Degrading2/BaroTutorial_Degrading.mp4" text="DegradingInstructions"/>
     </Segment>
     
     <Segment id="Medical" objective="MedicalObjective" contenttype="video" istriggered="false">
-      <Text tag="MedicalText" width="900" height="80" anchor="Center"/>
+      <Text tag="MedicalText" width="450" height="80" anchor="Center"/>
       <Video file="7_Medical/BaroTutorial_Medical.mp4" text="MedicalInstructions"/>
     </Segment>
     
     <Segment id="Approach1" objective="Approach1Objective" contenttype="video" istriggered="false">
-      <Text tag="Approach1Text" width="900" height="80" anchor="Center"/>
+      <Text tag="Approach1Text" width="450" height="80" anchor="Center"/>
       <Video animationspeed="0.1" file="8_Approach1/BaroTutorial_Approach.mp4" text="Approach1Instructions"/>
     </Segment>
     
     <Segment id="Approach2" contenttype="textonly" istriggered="false">
-      <Text tag="Approach2Text" width="300" height="80" anchor="Center"/>
+      <Text tag="Approach2Text" width="450" height="80" anchor="Center"/>
     </Segment>
     
   </ContextualTutorial>

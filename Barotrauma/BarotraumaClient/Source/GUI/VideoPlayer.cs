@@ -29,7 +29,7 @@ namespace Barotrauma
             return isPlaying;
         }
 
-        private readonly Point defaultResolution = new Point(520, 300);
+        private readonly Point defaultResolution = new Point(780, 450);
         private readonly int borderSize = 20;
         private readonly Point buttonSize = new Point(160, 50);
         private readonly int titleHeight = 30;
@@ -44,7 +44,7 @@ namespace Barotrauma
             public TextSettings(XElement element)
             {
                 Text = TextManager.GetFormatted(element.GetAttributeString("text", string.Empty), true);
-                Width = element.GetAttributeInt("width", 300);
+                Width = element.GetAttributeInt("width", 450);
             }
         }
 
@@ -57,8 +57,8 @@ namespace Barotrauma
             public VideoSettings(XElement element)
             {
                 File = element.GetAttributeString("file", string.Empty);
-                Width = element.GetAttributeInt("width", 0);
-                Height = element.GetAttributeInt("height", 0);
+                Width = 0;
+                Height = 0;
             }
         }
 
@@ -150,19 +150,14 @@ namespace Barotrauma
                 currentVideo = null;
             }
 
-            resolution = new Point(0, 0);
+            resolution = new Point(videoSettings.Width, videoSettings.Height);
 
-            if (currentVideo == null) // No preloaded video found
+            if (resolution.X == 0 || resolution.Y == 0)
             {
-                resolution = new Point(videoSettings.Width, videoSettings.Height);
-
-                if (resolution.X == 0 || resolution.Y == 0)
-                {
-                    resolution = defaultResolution;
-                }
-
-                currentVideo = CreateVideo();
+                resolution = defaultResolution;
             }
+
+            currentVideo = CreateVideo();
 
             objectiveTitle.Visible = objectiveText.Visible = true;
 
