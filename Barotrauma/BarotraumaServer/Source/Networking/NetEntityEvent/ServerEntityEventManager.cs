@@ -332,7 +332,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (client.NeedsMidRoundSync)
+            foreach (NetEntityEvent entityEvent in sentEvents)
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
                 msg.Write(client.UnreceivedEntityEventCount);
@@ -340,34 +340,11 @@ namespace Barotrauma.Networking
 
                 Write(msg, eventsToSync, out sentEvents, client);
             }
-            else
+
+            foreach (NetEntityEvent entityEvent in sentEvents)
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT);
                 Write(msg, eventsToSync, out sentEvents, client);
-            }
-
-            foreach (NetEntityEvent entityEvent in sentEvents)
-            {
-                (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
-            }
-
-            foreach (NetEntityEvent entityEvent in sentEvents)
-            {
-                (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
-            }
-
-            foreach (NetEntityEvent entityEvent in sentEvents)
-            {
-                (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
-            }
-
-            foreach (NetEntityEvent entityEvent in sentEvents)
-            {
-                (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
             }
 
             foreach (NetEntityEvent entityEvent in sentEvents)
