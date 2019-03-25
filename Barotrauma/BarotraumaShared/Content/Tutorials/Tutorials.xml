@@ -3,7 +3,7 @@
   <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
     
     <Segment id="Welcome" contenttype="textonly" istriggered="false">
-      <Text tag="WelcomeText" width="450" height="80" anchor="Center"/>
+      <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
     </Segment>
     
     <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="video" istriggered="false">

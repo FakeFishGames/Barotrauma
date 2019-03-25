@@ -29,7 +29,7 @@ namespace Barotrauma
             return isPlaying;
         }
 
-        private readonly Point defaultResolution = new Point(780, 450);
+        private readonly Point defaultResolution = new Point(936, 540);
         private readonly int borderSize = 20;
         private readonly Point buttonSize = new Point(160, 50);
         private readonly int titleHeight = 30;
@@ -111,7 +111,7 @@ namespace Barotrauma
         {
             if (currentVideo == null) return;
 
-            if (PlayerInput.KeyHit(Keys.Enter))
+            if (PlayerInput.KeyHit(Keys.Enter) || PlayerInput.KeyHit(Keys.Escape))
             {
                 DisposeVideo(null, null);
                 return;
