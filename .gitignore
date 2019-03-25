@@ -25,3 +25,6 @@ bld/
 
 # Mac
 *.DS_Store
+
+#Merge script
+temp.txt
