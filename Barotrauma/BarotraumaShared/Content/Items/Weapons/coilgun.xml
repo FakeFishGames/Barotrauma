@@ -90,7 +90,7 @@
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
       <!-- a 5 second lifetime after being fired -->
-      <StatusEffect type="OnNotContained" target="This" delay="5">
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="5">
         <Remove />
       </StatusEffect>
       <StatusEffect type="OnImpact" target="This">
@@ -133,7 +133,7 @@
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
       <!-- a 5 second lifetime after being fired -->
-      <StatusEffect type="OnNotContained" target="This" delay="5">
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="5">
         <Remove />
       </StatusEffect>
       <StatusEffect type="OnImpact" target="This">
