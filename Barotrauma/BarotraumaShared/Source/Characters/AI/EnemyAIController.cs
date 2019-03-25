@@ -447,6 +447,10 @@ namespace Barotrauma
             {
                 attackWorldPos = wallTarget.Position;
                 attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
+                if (Character.Submarine == null && wallTarget.Structure.Submarine != null)
+                {
+                    attackWorldPos += wallTarget.Structure.Submarine.Position;
+                }
             }
             else if (SelectedAiTarget.Entity is Character c)
             {
@@ -468,6 +472,15 @@ namespace Barotrauma
             // Take the sub position into account in the sim pos
             if (Character.Submarine == null && SelectedAiTarget.Entity.Submarine != null)
             {
+                attackSimPos += SelectedAiTarget.Entity.Submarine.SimPosition;
+            }
+            else if (Character.Submarine != null && SelectedAiTarget.Entity.Submarine == null)
+            {
+                attackSimPos -= Character.Submarine.SimPosition;
+            }
+
+            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
+            {
                 Character.AnimController.TargetDir = Character.WorldPosition.X < attackWorldPos.X ? Direction.Right : Direction.Left;
             }
 
@@ -477,24 +490,30 @@ namespace Barotrauma
                 if (wallTarget != null && wallTarget.SectionIndex > -1 && CanPassThroughHole(wallTarget.Structure, wallTarget.SectionIndex))
                 {
                     WallSection section = wallTarget.Structure.GetSection(wallTarget.SectionIndex);
-                    Vector2 targetPos = wallTarget.Structure.SectionPosition(wallTarget.SectionIndex, true);
-                    if (section?.gap != null && section.gap.IsRoomToRoom && SteerThroughGap(wallTarget.Structure, section, targetPos, deltaTime))
+                    Hull targetHull = section.gap?.FlowTargetHull;
+                    if (targetHull != null && !section.gap.IsRoomToRoom)
                     {
-                        return;
-                    }
-                }
-                else if (SelectedAiTarget.Entity is Structure wall)
-                {
-                    for (int i = 0; i < wall.Sections.Length; i++)
-                    {
-                        WallSection section = wall.Sections[i];
-                        if (CanPassThroughHole(wall, i) && section?.gap != null)
+                        Vector2 targetPos = wallTarget.Structure.SectionPosition(wallTarget.SectionIndex, true);
+                        if (wallTarget.Structure.IsHorizontal)
                         {
-                            if (SteerThroughGap(wall, section, section.gap.WorldPosition, deltaTime))
-                            {
-                                return;
-                            }
+                            targetPos.Y = targetHull.WorldRect.Y - targetHull.Rect.Height / 2;
                         }
+                        else
+                        {
+                            targetPos.X = targetHull.WorldRect.Center.X;
+                        }
+
+                        latchOntoAI?.DeattachFromBody();
+                        Character.AnimController.ReleaseStuckLimbs();
+                        if (steeringManager is IndoorsSteeringManager)
+                        {
+                            steeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetPos - Character.WorldPosition));
+                        }
+                        else
+                        {
+                            steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos));
+                        }
+                        return;
                     }
                 }
                 else if (SelectedAiTarget.Entity is Item i)
@@ -509,8 +528,6 @@ namespace Barotrauma
                             if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
                             {
                                 velocity.Y = 0;
-                                latchOntoAI?.DeattachFromBody();
-                                Character.AnimController.ReleaseStuckLimbs();
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
@@ -520,8 +537,6 @@ namespace Barotrauma
                             if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
                             {
                                 velocity.X = 0;
-                                latchOntoAI?.DeattachFromBody();
-                                Character.AnimController.ReleaseStuckLimbs();
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
                             }
@@ -687,34 +702,6 @@ namespace Barotrauma
             }
         }
 
-        private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
-        {
-            Hull targetHull = section.gap?.FlowTargetHull;
-            if (targetHull != null) // && !section.gap.IsRoomToRoom
-            {
-                if (wall.IsHorizontal)
-                {
-                    targetWorldPos.Y = targetHull.WorldRect.Y - targetHull.Rect.Height / 2;
-                }
-                else
-                {
-                    targetWorldPos.X = targetHull.WorldRect.Center.X;
-                }
-                latchOntoAI?.DeattachFromBody();
-                Character.AnimController.ReleaseStuckLimbs();
-                if (steeringManager is IndoorsSteeringManager)
-                {
-                    steeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetWorldPos - Character.WorldPosition));
-                }
-                else
-                {
-                    steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetWorldPos));
-                }
-                return true;
-            }
-            return false;
-        }
-
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
             AttackContext currentContext = Character.GetAttackContext();
@@ -738,6 +725,11 @@ namespace Barotrauma
         {
             wallTarget = null;
 
+            if (Character.AnimController.CurrentHull != null)
+            {            
+                return;
+            }
+
             //check if there's a wall between the target and the Character   
             Vector2 rayStart = SimPosition;
             Vector2 rayEnd = SelectedAiTarget.SimPosition;
@@ -745,7 +737,7 @@ namespace Barotrauma
 
             if (offset)
             {
-                rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                rayStart -= ConvertUnits.ToSimUnits(SelectedAiTarget.Entity.Submarine.Position);
             }
 
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true);
@@ -793,12 +785,8 @@ namespace Barotrauma
                     sectionPos.X += (wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2 * attachTargetNormal.X;
                 }
 
-                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, sectionPos, attachTargetNormal);
-                if (wall.Submarine != null)
-                {
-                    sectionPos += wall.Submarine.Position;
-                }
                 wallTarget = new WallTarget(sectionPos, wall, sectionIndex);
+                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
             }         
         }
 
@@ -1014,27 +1002,14 @@ namespace Barotrauma
                     else if (target.Entity is Structure s)
                     {
                         targetingTag = "wall";
-                        if (aggressiveBoarding)
+                        if (character.CurrentHull == null && aggressiveBoarding)
                         {
-                            // Ignore walls when inside.
-                            valueModifier = character.CurrentHull == null ? 2 : 0;
-                            if (valueModifier > 0)
+                            valueModifier = s.HasBody ? 2 : 0;
+                            foreach (var section in s.Sections)
                             {
-                                // Ignore structures that doesn't have a body (not walls)
-                                valueModifier *= s.HasBody ? 1 : 0;
-                            }
-                            for (int i = 0; i < s.Sections.Length; i++)
-                            {
-                                var section = s.Sections[i];
-                                if (CanPassThroughHole(s, i))
+                                if (section.gap != null)
                                 {
-                                    // Ignore walls that can be passed through
-                                    valueModifier = 0;
-                                    break;
-                                }
-                                else if (section.gap != null)
-                                {
-                                    // up to 100% priority increase for every gap in the wall
+                                    // up to 100% more priority for every gap in the wall
                                     valueModifier *= 1 + section.gap.Open;
                                 }
                             }

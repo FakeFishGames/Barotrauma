@@ -520,10 +520,9 @@ namespace Barotrauma
                                 // Ignore blocking on items, because it causes cases where a Mudraptor cannot hit the hatch, for example.
                                 wasHit = true;
                             }
-                            else if (damageTarget is Structure wall && structureBody != null && 
-                                (structureBody.UserData is Structure || (structureBody.UserData is Submarine sub && sub == wall.Submarine)))
+                            else if (damageTarget is Structure && structureBody?.UserData is Structure)
                             {
-                                // If the attack is aimed to a structure (wall) and hits a structure or the sub, it's successful
+                                // If the attack is aimed to a structure and hits a structure, it's successful
                                 wasHit = true;
                             }
                             else
