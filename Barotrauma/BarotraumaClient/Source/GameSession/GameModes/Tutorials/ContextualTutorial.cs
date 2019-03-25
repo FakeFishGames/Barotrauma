@@ -4,7 +4,6 @@ using System;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Tutorials
 {
@@ -47,6 +46,11 @@ namespace Barotrauma.Tutorials
         private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
         private string objectiveTranslated;
         //private Point objectiveBaseOffset = Point.Zero;
+
+        private float floodTutorialTimer = 0.0f;
+        private const float floodTutorialDelay = 2.0f;
+        private float medicalTutorialTimer = 0.0f;
+        private const float medicalTutorialDelay = 2.0f;
 
         private class TutorialSegment
         {
@@ -175,11 +179,12 @@ namespace Barotrauma.Tutorials
 
             base.Start();
 
+            injuredMember = null;
             activeObjectives.Clear();
             objectiveTranslated = TextManager.Get("Objective");
             CreateObjectiveFrame();
             activeSegment = null;
-            tutorialTimer = 0.0f;
+            tutorialTimer = floodTutorialTimer = medicalTutorialTimer = 0.0f;
             subStartingPosition = Vector2.Zero;
             characterTimeOnSonar.Clear();
 
@@ -330,7 +335,14 @@ namespace Barotrauma.Tutorials
 
         private void ClosePreTextAndTriggerVideoCallback()
         {
-            videoPlayer.LoadContentWithObjective(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
+            if (!string.IsNullOrEmpty(activeSegment.Objective))
+            {
+                videoPlayer.LoadContentWithObjective(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
+            }
+            else
+            {
+                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, CurrentSegmentStopCallback);
+            }
         }
 
         private void CurrentSegmentStopCallback()
@@ -434,6 +446,11 @@ namespace Barotrauma.Tutorials
                     {
                         return false;
                     }
+                    else if (floodTutorialTimer < floodTutorialDelay)
+                    {
+                        floodTutorialTimer += deltaTime;
+                        return false;
+                    }
                     break;
                 case 5: // Reactor: Player uses reactor for the first time [Video]
                     if (Character.Controlled?.SelectedConstruction != reactor.Item)
@@ -476,20 +493,32 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 8: // Medical: Crewmember is injured but not killed [Video]
-                    for (int i = 0; i < crew.Count; i++)
-                    {
-                        Character member = crew[i];
-                        if (member.Vitality < member.MaxVitality && !member.IsDead)
-                        {
-                            injuredMember = member;
-                            TriggerTutorialSegment(index, new string[] { member.Info.DisplayName,
-                                (member.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
-                            return true;
-                        }
-                    }
 
-                    if (injuredMember == null) return false;
-                    break;
+                    if (injuredMember == null)
+                    {
+                        for (int i = 0; i < crew.Count; i++)
+                        {
+                            Character member = crew[i];
+                            if (member.Vitality < member.MaxVitality && !member.IsDead)
+                            {
+                                injuredMember = member;
+                                break;
+                            }
+                        }
+
+                        return false;
+                    }
+                    else if (medicalTutorialTimer < medicalTutorialDelay)
+                    {
+                        medicalTutorialTimer += deltaTime;
+                        return false;
+                    }
+                    else
+                    {
+                        TriggerTutorialSegment(index, new string[] { injuredMember.Info.DisplayName,
+                                (injuredMember.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
+                        return true;
+                    }
                 case 9: // Approach1: Destination is within ~100m [Video]
                     if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 8000f)
                     {
