@@ -962,8 +962,6 @@ namespace Barotrauma
                             }
                         }
                     }
-                    element.Value = lines[i];
-                    i++;
                 }
             }, isCheat: false));
 #endif

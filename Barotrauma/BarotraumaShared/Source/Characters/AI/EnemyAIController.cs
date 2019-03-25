@@ -806,7 +806,6 @@ namespace Barotrauma
             if (closestBody.UserData is Structure wall && wall.Submarine != null)
             {
                 int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
-                int passableHoleCount = GetMinimumPassableHoleCount();
 
                 float sectionDamage = wall.SectionDamage(sectionIndex);
                 for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
@@ -1127,7 +1126,7 @@ namespace Barotrauma
                                 valueModifier = isOutdoor ? 1 : 0;
                                 valueModifier *= isOpen ? 5 : 1;
                             }
-                            for (int i = 0; i < s.Sections.Length; i++)
+                            else
                             {
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;

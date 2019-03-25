@@ -332,8 +332,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            //too many events for one packet
-            if (eventsToSync.Count > 200)
+            if (client.NeedsMidRoundSync)
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
                 msg.Write(client.UnreceivedEntityEventCount);
@@ -341,8 +340,7 @@ namespace Barotrauma.Networking
 
                 Write(msg, eventsToSync, out sentEvents, client);
             }
-
-            foreach (NetEntityEvent entityEvent in sentEvents)
+            else
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT);
                 Write(msg, eventsToSync, out sentEvents, client);
@@ -353,7 +351,6 @@ namespace Barotrauma.Networking
                 (entityEvent as ServerEntityEvent).Sent = true;
                 client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
             }
-            sentEvents = eventsToSync;
         }
 
         /// <summary>

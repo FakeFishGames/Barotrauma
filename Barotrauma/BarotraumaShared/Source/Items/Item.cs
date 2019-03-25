@@ -1286,11 +1286,7 @@ namespace Barotrauma
             LastSentSignalRecipients.Clear();
             if (connections == null) return;
 
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
-        {
-            List<T> connectedComponents = new List<T>();            
-            List<Item> alreadySearched = new List<Item>() { this };
-            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
+            stepsTaken++;
 
             if (!connections.TryGetValue(connectionName, out Connection c)) return;
 
