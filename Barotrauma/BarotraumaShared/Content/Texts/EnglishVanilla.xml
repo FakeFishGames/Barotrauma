@@ -2693,4 +2693,6 @@
   <EndRoundVotes>Votes to end the round [votes]/[max]</EndRoundVotes>
   
   <CrewDeadNoRespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</CrewDeadNoRespawns>
+  
+  <Create>Create</Create>
 </infotexts>
