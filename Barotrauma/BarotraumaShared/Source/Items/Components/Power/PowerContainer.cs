@@ -140,6 +140,8 @@ namespace Barotrauma.Items.Components
                 if (c.Name == "power_in") continue;
                 foreach (Connection c2 in c.Recipients)
                 {
+                    if (c2.Item.Condition <= 0.0f) { continue; }
+
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
                     if (pt == null)
                     {
@@ -151,7 +153,7 @@ namespace Barotrauma.Items.Components
                         }
                         continue;
                     }
-                    if (!pt.IsActive) { continue; }
+                    if (!pt.IsActive || !pt.CanTransfer) { continue; }
 
                     gridLoad += pt.PowerLoad;
                     gridPower -= pt.CurrPowerConsumption;
