@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Charybdis" humanoid="false">
+<Character name="Legacycharybdis" humanoid="false">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -13,7 +13,7 @@
     vitality="1000"
     doesbleed="true"/>
   
-  <sound file="Content/Characters/Charybdis/charybdisattack.ogg" state="Attack" range="8000" />
+  <sound file="Content/Characters/Legacycharybdis/charybdisattack.ogg" state="Attack" range="8000" />
 
   <ai
     combatstrength="1500"

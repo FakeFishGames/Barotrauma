@@ -1,7 +1,7 @@
-﻿<CharybdisSwimSlow
-  movementspeed="3"
-  waveamplitude="1"
-  wavelength="60"
+﻿<LegacycharybdisSwimFast
+  movementspeed="6"
+  waveamplitude="3"
+  wavelength="50"
   steertorque="100"
   flip="True"
   mirror="False"
@@ -9,7 +9,7 @@
   footangle="NaN"
   headangle="NaN"
   torsoangle="0"
-  animationtype="SwimSlow"
+  animationtype="SwimFast"
   torsotorque="150"
   headtorque="25"
   foottorque="25"
