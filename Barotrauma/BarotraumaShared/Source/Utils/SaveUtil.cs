@@ -169,7 +169,7 @@ namespace Barotrauma
 
             if (!Directory.Exists(folder))
             {
-                DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder");
+                DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder...");
                 try
                 {
                     Directory.CreateDirectory(folder);
@@ -358,8 +358,8 @@ namespace Barotrauma
                 }
                 catch (IOException e)
                 {
-                    if (i >= maxRetries) { throw; }
-                    DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                    if (i >= maxRetries || !File.Exists(sCompressedFile)) { throw; }
+                    DebugConsole.NewMessage("Failed decompress file \"" + sCompressedFile + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
                     Thread.Sleep(250);
                 }
             }
