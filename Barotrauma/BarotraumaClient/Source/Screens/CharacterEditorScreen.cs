@@ -118,6 +118,19 @@ namespace Barotrauma
             instance = this;
         }
 
+        private void Reset()
+        {
+            AnimParams.ForEach(a => a.Reset(true));
+            RagdollParams.Reset(true);
+            RagdollParams.ClearHistory();
+            CurrentAnimation.ClearHistory();
+            if (!character.Removed)
+            {
+                character.Remove();
+            }
+            character = null;
+        }
+
         public override void Deselect()
         {
             base.Deselect();
@@ -128,15 +141,7 @@ namespace Barotrauma
                 isEndlessRunner = false;
                 if (character != null)
                 {
-                    AnimParams.ForEach(a => a.Reset(true));
-                    RagdollParams.Reset(true);
-                    RagdollParams.ClearHistory();
-                    CurrentAnimation.ClearHistory();
-                    if (!character.Removed)
-                    {
-                        character.Remove();
-                    }
-                    character = null;
+                    Reset();
                 }
                 GameMain.World.ProcessChanges();
             }
@@ -393,6 +398,12 @@ namespace Barotrauma
             }
             if (!isFreezed)
             {
+                if (character.AnimController.Invalid)
+                {
+                    Reset();
+                    SpawnCharacter(currentCharacterConfig);
+                }
+
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
 
