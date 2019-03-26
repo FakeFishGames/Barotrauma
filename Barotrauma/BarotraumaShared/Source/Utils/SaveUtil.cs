@@ -32,6 +32,7 @@ namespace Barotrauma
 
         public static void SaveGame(string filePath)
         {
+            DebugConsole.Log("Saving the game to: " + filePath);
             Directory.CreateDirectory(TempPath);
             try
             {
@@ -111,6 +112,7 @@ namespace Barotrauma
 
         public static XDocument LoadGameSessionDoc(string filePath)
         {
+            DebugConsole.Log("Loading game session doc: " + filePath);
             try
             {
                 DecompressToDirectory(filePath, TempPath, null);
@@ -401,18 +403,18 @@ namespace Barotrauma
             }
         }
 
-        public static void ClearFolder(string FolderName, string[] ignoredFiles = null)
+        public static void ClearFolder(string FolderName, string[] ignoredFileNames = null)
         {
             DirectoryInfo dir = new DirectoryInfo(FolderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {
-                if (ignoredFiles != null)
+                if (ignoredFileNames != null)
                 {
                     bool ignore = false;
-                    foreach (string ignoredFile in ignoredFiles)
+                    foreach (string ignoredFile in ignoredFileNames)
                     {
-                        if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                        if (Path.GetFileName(fi.FullName).Equals(Path.GetFileName(ignoredFile)))
                         {
                             ignore = true;
                             break;

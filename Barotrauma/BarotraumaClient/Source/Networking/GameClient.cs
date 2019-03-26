@@ -141,8 +141,23 @@ namespace Barotrauma.Networking
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) return false;
-                    RequestRoundEnd();
+                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) { return false; }
+                    if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                    {
+                        var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        msgBox.Buttons[0].OnClicked = (_, __) =>
+                        {
+                            GameMain.Client.RequestRoundEnd();
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    }
+                    else
+                    {
+                        RequestRoundEnd();
+                    }
                     return true;
                 },
                 Visible = false
@@ -1269,6 +1284,75 @@ namespace Barotrauma.Networking
 
         private void ReadLobbyUpdate(NetIncomingMessage inc)
         {
+            UInt16 listId = inc.ReadUInt16();
+            List<TempClient> tempClients = new List<TempClient>();
+            int clientCount = inc.ReadByte();
+            for (int i = 0; i < clientCount; i++)
+            {
+                byte id             = inc.ReadByte();
+                string name         = inc.ReadString();
+                UInt16 characterID  = inc.ReadUInt16();
+                bool muted          = inc.ReadBoolean();
+                inc.ReadPadBits();
+
+                tempClients.Add(new TempClient
+                {
+                    ID = id,
+                    Name = name,
+                    CharacterID = characterID,
+                    Muted = muted
+                });
+            }
+
+            if (NetIdUtils.IdMoreRecent(listId, LastClientListUpdateID))
+            {
+                bool updateClientListId = true;
+                List<Client> currentClients = new List<Client>();
+                foreach (TempClient tc in tempClients)
+                {
+                    //see if the client already exists
+                    var existingClient = ConnectedClients.Find(c => c.ID == tc.ID && c.Name == tc.Name);
+                    if (existingClient == null) //if not, create it
+                    {
+                        existingClient = new Client(tc.Name, tc.ID)
+                        {
+                            Muted = tc.Muted
+                        };
+                        ConnectedClients.Add(existingClient);
+                        GameMain.NetLobbyScreen.AddPlayer(existingClient);
+                    }
+                    existingClient.Character = null;
+                    existingClient.Muted = tc.Muted;
+                    if (tc.CharacterID > 0)
+                    {
+                        existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
+                        if (existingClient.Character == null)
+                        {
+                            updateClientListId = false;
+                        }
+                    }
+                    if (existingClient.ID == myID)
+                    {
+                        existingClient.SetPermissions(permissions, permittedConsoleCommands);
+                    }
+                    currentClients.Add(existingClient);
+                }
+                //remove clients that aren't present anymore
+                for (int i = ConnectedClients.Count - 1; i >= 0; i--)
+                {
+                    if (!currentClients.Contains(ConnectedClients[i]))
+                    {
+                        GameMain.NetLobbyScreen.RemovePlayer(ConnectedClients[i]);
+                        ConnectedClients[i].Dispose();
+                        ConnectedClients.RemoveAt(i);
+                    }
+                }
+                if (updateClientListId) LastClientListUpdateID = listId;
+            }
+        }
+
+        private void ReadLobbyUpdate(NetIncomingMessage inc)
+        {
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
@@ -1429,7 +1513,11 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
-                        if (!entityEventManager.Read(objHeader, inc, sendingTime, entities)) { break; }
+                        if (!entityEventManager.Read(objHeader, inc, sendingTime, entities))
+                        {
+                            eventReadFailed = true;
+                            break;
+                        }
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
