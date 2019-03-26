@@ -1039,7 +1039,7 @@ namespace Barotrauma.Networking
             if (command == ClientPermissions.ManageRound && inc.PeekBoolean() && 
                 GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
             {
-                if (!mpCampaign.AllowedToEndRound(sender.Character))
+                if (!mpCampaign.AllowedToEndRound(sender.Character) && !sender.HasPermission(command))
                 {
                     return;
                 }

@@ -2688,6 +2688,8 @@
   <DialogNegative>No way!</DialogNegative>
   <DialogCannotReach>Can't reach the target.</DialogCannotReach>
 
+  <EndRoundSubNotAtLevelEnd>The submarine is not at either end of the level. Do you want to abort the mission and end the round now?</EndRoundSubNotAtLevelEnd>
+  
   <EndRoundVotes>Votes to end the round [votes]/[max]</EndRoundVotes>
   
   <CrewDeadNoRespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</CrewDeadNoRespawns>
