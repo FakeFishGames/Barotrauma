@@ -274,7 +274,7 @@ namespace Barotrauma.Tutorials
             base.AddToGUIUpdateList();
             if (videoPlayer != null)
             {
-                videoPlayer.AddToGUIUpdateList();
+                videoPlayer.AddToGUIUpdateList(order: 100);
             }
         }
 
@@ -404,14 +404,15 @@ namespace Barotrauma.Tutorials
             switch (index)
             {
                 case 0: // Welcome: Game Start [Text]
-                    if (tutorialTimer < 0.5f)
+                    if (tutorialTimer < 1.0f)
                     {
                         tutorialTimer += deltaTime;
                         return false;
                     }
                     break;
                 case 1: // Command Reactor: 2 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
-                    if (tutorialTimer < 2.5f)
+                    if (!segments[0].IsTriggered) return false;
+                    if (tutorialTimer < 3.0f)
                     {
                         tutorialTimer += deltaTime;
 
@@ -565,7 +566,10 @@ namespace Barotrauma.Tutorials
             switch(objective.Id)
             {
                 case "ReactorCommand": // Reactor commanded
-                    if (!HasOrder("operatereactor")) return;
+                    if (!IsReactorPoweredUp())
+                    {
+                        if (!HasOrder("operatereactor")) return;
+                    }
                     break;
                 case "NavConsole": // traveled 50 meters
                     if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 4000f)
@@ -724,6 +728,7 @@ namespace Barotrauma.Tutorials
 
         private void TriggerTutorialSegment(int index, params object[] args)
         {
+            Inventory.draggingItem = null;
             ContentRunning = true;
             activeSegment = segments[index];
 

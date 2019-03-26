@@ -124,10 +124,10 @@ namespace Barotrauma
             currentVideo = CreateVideo();
         }
 
-        public void AddToGUIUpdateList()
+        public void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             if (!IsPlaying()) return;
-            background.AddToGUIUpdateList();
+            background.AddToGUIUpdateList(ignoreChildren, order);
         }
 
         public void LoadContentWithObjective(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, string objective, Action callback = null)

@@ -121,7 +121,7 @@ namespace Barotrauma.Tutorials
 
         public virtual void AddToGUIUpdateList()
         {
-            if (infoBox != null) infoBox.AddToGUIUpdateList();
+            if (infoBox != null) infoBox.AddToGUIUpdateList(order: 100);
         }
 
         public virtual void Update(float deltaTime)
