@@ -323,7 +323,7 @@ namespace Barotrauma
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
                     doc = OpenFile(filePath);
-                    if (doc != null || i == maxLoadRetries) { break; }
+                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
                     DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
@@ -1192,7 +1192,7 @@ namespace Barotrauma
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
                     doc = OpenFile(filePath);
-                    if (doc != null || i == maxLoadRetries) { break; }
+                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
                     DebugConsole.NewMessage("Loading the submarine \"" + Name + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
