@@ -292,8 +292,7 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = Sections[i].damage > 0 ?
-                            MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / Prefab.Health) : 0.0f;
+                        float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / Prefab.Health);
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
