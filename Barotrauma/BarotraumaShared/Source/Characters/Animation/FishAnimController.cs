@@ -369,7 +369,16 @@ namespace Barotrauma
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
 
-            float mainLimbAngle = (MainLimb.type == LimbType.Torso ? TorsoAngle.Value : HeadAngle.Value) * Dir;
+            float mainLimbAngle = 0;
+            if (MainLimb.type == LimbType.Torso && TorsoAngle.HasValue)
+            {
+                mainLimbAngle = TorsoAngle.Value;
+            }
+            else if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
+            {
+                mainLimbAngle = HeadAngle.Value;
+            }
+            mainLimbAngle *= Dir;
             while (MainLimb.Rotation - (movementAngle + mainLimbAngle) > MathHelper.Pi)
             {
                 movementAngle += MathHelper.TwoPi;
