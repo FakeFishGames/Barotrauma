@@ -10,6 +10,7 @@ using System.Text;
 using System.IO.Compression;
 using System.IO;
 using Barotrauma.Steam;
+using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -1125,9 +1126,22 @@ namespace Barotrauma.Networking
                     UInt16 modeIndex = inc.ReadUInt16();
                     if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "multiplayercampaign")
                     {
+                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
+                        for (int i = 0; i < saveFiles.Length; i++)
+                        {
+                            XDocument doc = SaveUtil.LoadGameSessionDoc(saveFiles[i]);
+                            if (doc?.Root != null)
+                            {
+                                saveFiles[i] =
+                                    string.Join(";",
+                                        saveFiles[i].Replace(';', ' '),
+                                        doc.Root.GetAttributeString("submarine", ""),
+                                        doc.Root.GetAttributeString("savetime", ""));
+                            }
+                        }
+
                         NetOutgoingMessage msg = server.CreateMessage();
                         msg.Write((byte)ServerPacketHeader.CAMPAIGN_SETUP_INFO);
-                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
                         msg.Write((UInt16)saveFiles.Count());
                         foreach (string saveFile in saveFiles)
                         {
