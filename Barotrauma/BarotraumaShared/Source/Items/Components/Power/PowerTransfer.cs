@@ -164,7 +164,11 @@ namespace Barotrauma.Items.Components
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
 
                 float voltage = fullPower / Math.Max(fullLoad, 1.0f);
-                if (this is RelayComponent) voltage = Math.Min(voltage, 1.0f);
+                if (this is RelayComponent)
+                {
+                    pt.currPowerConsumption = Math.Max(-fullLoad, pt.currPowerConsumption);
+                    voltage = Math.Min(voltage, 1.0f);
+                }
 
                 pt.Item.SendSignal(0, "", "power", null, voltage);
                 pt.Item.SendSignal(0, "", "power_out", null, voltage);
@@ -305,7 +309,7 @@ namespace Barotrauma.Items.Components
 
         //a recursive function that goes through all the junctions and adds up
         //all the generated/consumed power of the constructions connected to the grid
-        private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, bool inputOnly = false)
+        private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, float clampPower = float.MaxValue, float clampLoad = float.MaxValue)
         {
             if (increaseUpdateCount)
             {
@@ -315,7 +319,13 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
+            //float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
+            RelayComponent thisRelayComponent = this as RelayComponent;
+            if (thisRelayComponent != null)
+            {
+                clampPower = Math.Min(Math.Min(clampPower, thisRelayComponent.MaxPower), powerLoad);
+                clampLoad = Math.Min(clampLoad, thisRelayComponent.MaxPower);
+            }
 
             foreach (Connection c in PowerConnections)
             {
@@ -334,29 +344,36 @@ namespace Barotrauma.Items.Components
 
                         if (powered is PowerTransfer powerTransfer)
                         {
-                            if (this is RelayComponent == powerTransfer is RelayComponent)
+                            RelayComponent otherRelayComponent = powerTransfer as RelayComponent;
+                            if ((thisRelayComponent == null) == (otherRelayComponent == null))
                             {
                                 if (!powerTransfer.CanTransfer) continue;
-                                powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, inputOnly);
+                                powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, clampPower, clampLoad);
                             }
                             else
                             {
                                 if (!powerTransfer.CanTransfer) continue;
-                                powerTransfer.CheckJunctions(deltaTime, false, !c.IsOutput || inputOnly);
+                                powerTransfer.CheckJunctions(
+                                    deltaTime, 
+                                    false, 
+                                    (thisRelayComponent != null && c.IsOutput) ? 0.0f : clampPower,
+                                    (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad);
                             }
 
                             continue;
                         }
 
+                        float addLoad = 0.0f;
+                        float addPower = 0.0f;
                         if (powered is PowerContainer powerContainer)
                         {
                             if (recipient.Name == "power_in")
                             {
-                                if (!inputOnly) fullLoad += powerContainer.CurrPowerConsumption;
+                                addLoad = powerContainer.CurrPowerConsumption;
                             }
                             else
                             {
-                                fullPower += Math.Min(powerContainer.CurrPowerOutput, maxPower);
+                                addPower = powerContainer.CurrPowerOutput;
                             }
                         }
                         else
@@ -365,16 +382,22 @@ namespace Barotrauma.Items.Components
                             //positive power consumption = the construction requires power -> increase load
                             if (powered.CurrPowerConsumption > 0.0f)
                             {
-                                if (!inputOnly) fullLoad += powered.CurrPowerConsumption;
+                                addLoad = powered.CurrPowerConsumption;
                             }
                             else if (powered.CurrPowerConsumption < 0.0f)
                             //negative power consumption = the construction is a 
                             //generator/battery or another junction box
                             {
-                                fullPower -= Math.Max(powered.CurrPowerConsumption, -maxPower);
+                                addPower -= powered.CurrPowerConsumption;
                             }
                         }
-                    }                    
+
+                        if (addPower + fullPower > clampPower) { addPower -= (addPower + fullPower) - clampPower; };
+                        if (addPower > 0) { fullPower += addPower; }
+
+                        if (addLoad + fullLoad > clampLoad) { addLoad -= (addLoad + fullLoad) - clampLoad; };
+                        if (addLoad > 0) { fullLoad += addLoad; }
+                    }
                 }
             }
         }
