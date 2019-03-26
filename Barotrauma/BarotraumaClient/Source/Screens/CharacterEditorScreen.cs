@@ -1226,7 +1226,7 @@ namespace Barotrauma
             Cam.Position = character.WorldPosition;
         }
 
-        private bool CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
+        private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, params object[] ragdollConfig)
         {
             var contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
             if (contentPackage == null)
@@ -1245,17 +1245,16 @@ namespace Barotrauma
 #endif
 
             string speciesName = name;
-            string mainFolder = $"Content/Characters/{speciesName}";
             // Config file
-            string configFilePath = $"{mainFolder}/{speciesName}.xml";
+            string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
             if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
             {
                 // Create the config file
                 XElement mainElement = new XElement("Character",
                     new XAttribute("name", speciesName),
                     new XAttribute("humanoid", isHumanoid),
-                    new XElement("ragdolls"),
-                    new XElement("animations"),
+                    new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
+                    new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
                     new XElement("health"),
                     new XElement("ai"));
                 XDocument doc = new XDocument(mainElement);
@@ -1270,13 +1269,13 @@ namespace Barotrauma
                 DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
             }
             // Ragdoll
-            string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
+            string ragdollFolder = RagdollParams.GetFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
                 : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig) as RagdollParams;
             // Animations
-            string animFolder = AnimationParams.GetDefaultFolder(speciesName);
+            string animFolder = AnimationParams.GetFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
                 if (animType != AnimationType.NotDefined)
@@ -4663,7 +4662,7 @@ namespace Barotrauma
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        if (CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams))
+                        if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ragdollParams))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }
