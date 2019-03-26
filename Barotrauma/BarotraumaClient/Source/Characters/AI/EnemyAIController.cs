@@ -16,13 +16,14 @@ namespace Barotrauma
 
             if (SelectedAiTarget?.Entity != null)
             {
-                GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red * 0.3f, 0, 5);
+                GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), Color.Red * 0.5f, 0, 4);
 
                 if (wallTarget != null)
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
+                    if (wallTarget.Structure.Submarine != null) { wallTargetPos += wallTarget.Structure.Submarine.Position; }
                     wallTargetPos.Y = -wallTargetPos.Y;
-                    GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Red, false);
+                    GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Orange, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
                 GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity.ToString()} ({targetValue.FormatZeroDecimal()})", Color.Red, Color.Black);
@@ -56,17 +57,15 @@ namespace Barotrauma
                 {
                     GUI.DrawLine(spriteBatch,
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorA.X, -attachJoint.WorldAnchorA.Y)),
-                        ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Orange * 0.6f, 0, 5);
+                        ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Green, 0, 4);
                 }
 
                 if (latchOntoAI.WallAttachPos.HasValue)
                 {
                     GUI.DrawLine(spriteBatch, pos,
-                        ConvertUnits.ToDisplayUnits(new Vector2(latchOntoAI.WallAttachPos.Value.X, -latchOntoAI.WallAttachPos.Value.Y)), Color.Orange * 0.6f, 0, 3);
+                        ConvertUnits.ToDisplayUnits(new Vector2(latchOntoAI.WallAttachPos.Value.X, -latchOntoAI.WallAttachPos.Value.Y)), Color.Green, 0, 3);
                 }
             }
-
-            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
 
             if (steeringManager is IndoorsSteeringManager pathSteering)
             {
