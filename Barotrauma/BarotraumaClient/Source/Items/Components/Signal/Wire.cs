@@ -178,9 +178,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (PlayerInput.LeftButtonClicked())
                         {
-                            float temp = 0.0f;
-                            int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out temp);
-
+                            int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out _);
                             if (closestSectionIndex > -1)
                             {
                                 selectedWire.nodes.Insert(closestSectionIndex + 1, mousePos);

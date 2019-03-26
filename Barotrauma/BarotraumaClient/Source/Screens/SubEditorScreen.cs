@@ -2040,6 +2040,10 @@ namespace Barotrauma
                         dummyCharacter.SelectedConstruction = null;
                     }
                 }
+                else if (MapEntity.SelectedList.Count == 1)
+                {
+                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);
             }
