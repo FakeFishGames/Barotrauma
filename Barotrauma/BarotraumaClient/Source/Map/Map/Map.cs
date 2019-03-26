@@ -364,15 +364,23 @@ namespace Barotrauma
                 }
             }
             
+            if (GUI.KeyboardDispatcher.Subscriber == null)
+            {
+                float moveSpeed = 1000.0f;
+                Vector2 moveAmount = Vector2.Zero;
+                if (PlayerInput.KeyDown(InputType.Left)) { moveAmount += Vector2.UnitX; }
+                if (PlayerInput.KeyDown(InputType.Right)) { moveAmount -= Vector2.UnitX; }
+                if (PlayerInput.KeyDown(InputType.Up)) { moveAmount += Vector2.UnitY; }
+                if (PlayerInput.KeyDown(InputType.Down)) { moveAmount -= Vector2.UnitY; }
+                drawOffset += moveAmount * moveSpeed / zoom * deltaTime;
+            }
+
             if (GUI.MouseOn == mapContainer)
             {
                 zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
                 zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
-                if (PlayerInput.MidButtonHeld())
-                {
-                    drawOffset += PlayerInput.MouseSpeed / zoom;
-                }
+                if (PlayerInput.MidButtonHeld()) { drawOffset += PlayerInput.MouseSpeed / zoom; }
 #if DEBUG
                 if (PlayerInput.DoubleClicked() && highlightedLocation != null)
                 {
