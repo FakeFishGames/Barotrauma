@@ -808,6 +808,7 @@ namespace Barotrauma
 
         public void LoadHeadAttachments()
         {
+            if (Info == null) { return; }
             if (AnimController == null) { return; }
             var head = AnimController.GetLimb(LimbType.Head);
             if (head == null) { return; }
