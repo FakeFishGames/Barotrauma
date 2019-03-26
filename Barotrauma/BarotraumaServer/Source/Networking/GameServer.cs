@@ -813,16 +813,7 @@ namespace Barotrauma.Networking
 
             Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
             GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:LevelsDontMatch" + error, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorStr);
-
-            if (c.Connection == OwnerConnection)
-            {
-                SendDirectChatMessage(errorStr, c, ChatMessageType.MessageBox);
-                EndGame();
-            }
-            else
-            {
-                KickClient(c, errorStr);
-            }
+            KickClient(c, errorStr);
         }
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
@@ -1039,7 +1030,7 @@ namespace Barotrauma.Networking
             if (command == ClientPermissions.ManageRound && inc.PeekBoolean() && 
                 GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
             {
-                if (!mpCampaign.AllowedToEndRound(sender.Character) && !sender.HasPermission(command))
+                if (!mpCampaign.AllowedToEndRound(sender.Character))
                 {
                     return;
                 }

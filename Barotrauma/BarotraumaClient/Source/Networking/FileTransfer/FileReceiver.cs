@@ -241,30 +241,20 @@ namespace Barotrauma.Networking
                             FileSize = fileSize
                         };
 
-                        int maxRetries = 4;
-                        for (int i = 0; i <= maxRetries; i++)
+                        try
                         {
-                            try
-                            {
-                                newTransfer.OpenStream();
-                            }
-                            catch (IOException e)
-                            {
-                                if (i < maxRetries)
-                                {
-                                    DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);
-                                    Thread.Sleep(250);
-                                }
-                                else
-                                {
-                                    DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}", Color.Red);
-                                    GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
-                                    newTransfer.Status = FileTransferStatus.Error;
-                                    OnTransferFailed(newTransfer);
-                                    return;
-                                }
-                            }
+                            newTransfer.OpenStream();
                         }
+                        catch (IOException e)
+                        {
+                            GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                            DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}", Color.Red);
+
+                            newTransfer.Status = FileTransferStatus.Error;
+                            OnTransferFailed(newTransfer);
+                            return;
+                        }
+
                         activeTransfers.Add(newTransfer);
                     }
                     break;
