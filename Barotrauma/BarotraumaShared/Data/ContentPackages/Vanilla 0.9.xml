@@ -46,7 +46,7 @@
   <Item file="Content/Items/Legacy/legacyrailgun.xml" />
   <Item file="Content/Items/Legacy/legacysearchlight.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
-  <Character file="Content/Characters/Charybdis/Charybdis.xml" />
+  <Character file="Content/Characters/Legacycharybdis/Legacycharybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
