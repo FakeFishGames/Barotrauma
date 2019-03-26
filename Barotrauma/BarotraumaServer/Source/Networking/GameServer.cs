@@ -1226,6 +1226,7 @@ namespace Barotrauma.Networking
                 ClientWriteLobby(c);
 
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
+                    GameMain.NetLobbyScreen.SelectedMode == campaign.Preset &&
                     NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
                     //already sent an up-to-date campaign save
@@ -1543,7 +1544,8 @@ namespace Barotrauma.Networking
             }
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
+            if (campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
+                NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();

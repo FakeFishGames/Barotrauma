@@ -1382,9 +1382,12 @@ namespace Barotrauma.Networking
                         {
                             MultiPlayerCampaign.ClientRead(inc);
                         }
+                        else if (GameMain.NetLobbyScreen.SelectedMode.Identifier != "multiplayercampaign")
+                        {
+                            GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+                        }
 
                         lastSentChatMsgID = inc.ReadUInt16();
-
                         break;
                     case ServerNetObject.CLIENT_LIST:
                         ReadClientList(inc);

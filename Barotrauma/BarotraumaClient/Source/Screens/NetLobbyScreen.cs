@@ -866,18 +866,21 @@ namespace Barotrauma
             spectateButton.Enabled = true;
         }
 
-        public void SetCampaignCharacterInfo(CharacterInfo characterInfo)
-        {
-            if (CampaignCharacterDiscarded) return;
-
-            campaignCharacterInfo = characterInfo;
-            if (campaignCharacterInfo != null)
+        public void SetCampaignCharacterInfo(CharacterInfo newCampaignCharacterInfo)
+        {            
+            if (newCampaignCharacterInfo != null)
             {
-                UpdatePlayerFrame(campaignCharacterInfo, false);
+                if (CampaignCharacterDiscarded) { return; }
+                if (campaignCharacterInfo != newCampaignCharacterInfo)
+                {
+                    campaignCharacterInfo = newCampaignCharacterInfo;
+                    UpdatePlayerFrame(campaignCharacterInfo, false);
+                }
             }
-            else
+            else if (campaignCharacterInfo != null)
             {
-                UpdatePlayerFrame(null, true);
+                campaignCharacterInfo = null;
+                UpdatePlayerFrame(campaignCharacterInfo, false);                
             }
         }
 
