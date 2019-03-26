@@ -141,8 +141,23 @@ namespace Barotrauma.Networking
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) return false;
-                    RequestRoundEnd();
+                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) { return false; }
+                    if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                    {
+                        var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        msgBox.Buttons[0].OnClicked = (_, __) =>
+                        {
+                            GameMain.Client.RequestRoundEnd();
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    }
+                    else
+                    {
+                        RequestRoundEnd();
+                    }
                     return true;
                 },
                 Visible = false
@@ -1400,6 +1415,7 @@ namespace Barotrauma.Networking
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
+                bool eventReadFailed = false;
                 switch (objHeader)
                 {
                     case ServerNetObject.SYNC_IDS:
@@ -1428,7 +1444,11 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
-                        if (!entityEventManager.Read(objHeader, inc, sendingTime, entities)) { break; }
+                        if (!entityEventManager.Read(objHeader, inc, sendingTime, entities))
+                        {
+                            eventReadFailed = true;
+                            break;
+                        }
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
@@ -1484,6 +1504,11 @@ namespace Barotrauma.Networking
                 prevObjHeader = objHeader;
                 prevBitPos = inc.Position;
                 prevBytePos = inc.PositionInBytes;
+
+                if (eventReadFailed)
+                {
+                    break;
+                }
             }
         }
 
