@@ -1738,7 +1738,7 @@
   <EntityName.nuclearshell>Nuclear Shell</EntityName.nuclearshell>
   <EntityDescription.nuclearshell>A nuclear shell for use with a railgun</EntityDescription.nuclearshell>
   <EntityName.alienshell>Alien Shell</EntityName.alienshell>
-  <EntityDescription.alienshell>For firing from a coilgun</EntityDescription.alienshell>
+  <EntityDescription.alienshell>For firing from a railgun</EntityDescription.alienshell>
 
   <!-- Alien -->
   <EntityName.RuinWallHorizontal>Ruin Wall Horizontal</EntityName.RuinWallHorizontal>
