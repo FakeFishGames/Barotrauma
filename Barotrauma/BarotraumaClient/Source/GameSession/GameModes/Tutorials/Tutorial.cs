@@ -121,7 +121,7 @@ namespace Barotrauma.Tutorials
 
         public virtual void AddToGUIUpdateList()
         {
-            if (infoBox != null) infoBox.AddToGUIUpdateList();
+            if (infoBox != null) infoBox.AddToGUIUpdateList(order: 100);
         }
 
         public virtual void Update(float deltaTime)
@@ -194,7 +194,7 @@ namespace Barotrauma.Tutorials
             if (title.Length > 0)
             {
                 var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1f, .35f), infoBlock.RectTransform, Anchor.TopCenter,
-                Pivot.TopCenter), title, font: GUI.LargeFont, textAlignment: Alignment.Center);
+                Pivot.TopCenter), title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
             }
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
