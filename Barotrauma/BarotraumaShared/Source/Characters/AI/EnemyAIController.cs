@@ -1151,11 +1151,6 @@ namespace Barotrauma
 
                 valueModifier *= targetingPriorities[targetingTag].Priority;
 
-                if (targetingTag == null) continue;
-                if (!targetingPriorities.ContainsKey(targetingTag)) continue;
-
-                valueModifier *= targetingPriorities[targetingTag].Priority;
-
                 if (valueModifier == 0.0f) continue;
 
                 Vector2 toTarget = target.WorldPosition - character.WorldPosition;
