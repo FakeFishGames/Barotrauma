@@ -456,6 +456,11 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 7: // Degrading1: Any equipment degrades to 50% health or less and player has not assigned any crew to perform maintenance [Text]
+                    if ((mechanic == null || mechanic.IsDead) && (engineer == null || engineer.IsDead)) // Both engineer and mechanic are dead or do not exist -> do not display
+                    {
+                        return false;
+                    }
+
                     bool degradedEquipmentFound = false;
 
                     foreach (Item item in Item.ItemList)
@@ -467,8 +472,7 @@ namespace Barotrauma.Tutorials
 
                     if (degradedEquipmentFound)
                     {
-                        degrading2ActivationCountdown = 5f;
-                        if (HasOrder("repairsystems"))
+                        if (HasOrder("repairsystems", "jobspecific"))
                         {
                             segments[index].IsTriggered = true;
                             return false;
@@ -479,27 +483,7 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 8: // Degrading2: 5 seconds after 'Degrading1' dismissed, and only if player has not assigned any crew to perform maintenance [Video]
-                    if ((mechanic == null || mechanic.IsDead) && (engineer == null || engineer.IsDead)) // Both engineer and mechanic are dead or do not exist -> do not display
-                    {
-                        return false;
-                    }
-                    if (degrading2ActivationCountdown == -1f)
-                    {
-                        return false;
-                    }
-                    else if (degrading2ActivationCountdown > 0.0f)
-                    {
-                        degrading2ActivationCountdown -= deltaTime;
-                        if (HasOrder("repairsystems", "jobspecific"))
-                        {
-                            segments[index].IsTriggered = true;
-                        }
-
-                        return false;
-                    }
-                    break;
-                case 9: // Medical: Crewmember is injured but not killed [Video]
+                case 8: // Medical: Crewmember is injured but not killed [Video]
                     for (int i = 0; i < crew.Count; i++)
                     {
                         Character member = crew[i];
@@ -515,7 +499,7 @@ namespace Barotrauma.Tutorials
 
                     if (injuredMember == null) return false;
                     break;
-                case 10: // Approach1: Destination is within ~100m [Video]
+                case 9: // Approach1: Destination is within ~100m [Video]
                     if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 8000f)
                     {
                         return false;
@@ -525,7 +509,7 @@ namespace Barotrauma.Tutorials
                         TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
                         return true;
                     }
-                case 11: // Approach2: Sub is docked [Text]
+                case 10: // Approach2: Sub is docked [Text]
                     if (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0)
                     {
                         return false;
@@ -576,7 +560,7 @@ namespace Barotrauma.Tutorials
                         return;
                     }
                     break;
-                case "Degrading2": // Fixed
+                case "Degrading": // Fixed
                     if (mechanic != null && !mechanic.IsDead)
                     {
                         HumanAIController humanAI = mechanic.AIController as HumanAIController;
