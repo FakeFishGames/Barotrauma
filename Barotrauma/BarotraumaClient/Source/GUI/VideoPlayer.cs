@@ -74,7 +74,7 @@ namespace Barotrauma
             videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
             //videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
 
-            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "SonarFrame");
+            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "TextFrame");
             textFrame.RectTransform.AbsoluteOffset = new Point(borderSize + videoFrame.Rect.Width, 0);
 
             videoView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
