@@ -80,7 +80,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\ParamsEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\RectTransform.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\ShapeExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\SpriteSheetPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\UISprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\VideoPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\Widget.cs" />
