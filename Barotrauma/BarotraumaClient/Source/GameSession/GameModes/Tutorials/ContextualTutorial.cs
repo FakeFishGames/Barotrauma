@@ -4,6 +4,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma.Tutorials
 {
@@ -284,6 +285,14 @@ namespace Barotrauma.Tutorials
                 videoPlayer.Update();
             }
 
+            if (infoBox != null)
+            {
+                if (PlayerInput.KeyHit(Keys.Enter) || PlayerInput.KeyHit(Keys.Escape))
+                {
+                    CloseInfoFrame(null, null);
+                }
+            }
+
             if (!started || ContentRunning) return;
 
             deltaTime *= 0.5f;
@@ -415,7 +424,7 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 2: // Nav Console: 2 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
-                    if (!segments[1].IsTriggered || !IsReactorPoweredUp()) return false; // Do not advance tutorial based on this segment if reactor has not been powered up
+                    if (!IsReactorPoweredUp()) return false; // Do not advance tutorial based on this segment if reactor has not been powered up
                     if (Character.Controlled?.SelectedConstruction != navConsole.Item)
                     {                       
                         if (tutorialTimer < 4.5f)

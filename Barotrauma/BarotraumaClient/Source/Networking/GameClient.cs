@@ -1455,6 +1455,9 @@ namespace Barotrauma.Networking
                     case ServerNetObject.CLIENT_LIST:
                         ReadClientList(inc);
                         break;
+                    case ServerNetObject.CLIENT_LIST:
+                        ReadClientList(inc);
+                        break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
