@@ -118,8 +118,13 @@ namespace Barotrauma
             {
                 allowedMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
             }
+
+            if (allowedMissions.Count == 0)
+            {
+                return null;
+            }
             
-            int probabilitySum = allowedMissions.Sum(m => m.Commonness);            
+            int probabilitySum = allowedMissions.Sum(m => m.Commonness);
             int randomNumber = rand.NextInt32() % probabilitySum;
             foreach (MissionPrefab missionPrefab in allowedMissions)
             {
