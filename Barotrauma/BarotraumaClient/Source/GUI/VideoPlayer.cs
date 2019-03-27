@@ -14,8 +14,7 @@ namespace Barotrauma
         private List<PreloadedContent> preloadedVideos;
 
         private GUIFrame background, videoFrame, textFrame;
-        private GUITextBlock title;
-        private GUITextBlock infoText;
+        private GUITextBlock title, textContent, objectiveTitle, objectiveText;
         private GUICustomComponent videoView;
 
         private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
@@ -26,12 +25,14 @@ namespace Barotrauma
         public bool IsPlaying()
         {
             return isPlaying;
-            /*if (currentVideo == null) return false;
-            return currentVideo.IsPlaying;*/
         }
 
         private readonly Point defaultResolution = new Point(520, 300);
         private readonly int borderSize = 20;
+        private readonly Point buttonSize = new Point(160, 50);
+        private readonly int titleHeight = 30;
+        private readonly int objectiveFrameHeight = 60;
+        private readonly int textHeight = 25;
 
         private class PreloadedContent
         {
@@ -87,8 +88,13 @@ namespace Barotrauma
 
             videoView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
-            title = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.LargeFont, textAlignment: Alignment.Center);
-            infoText = new GUITextBlock(new RectTransform(new Vector2(1f, .8f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.LargeFont, textAlignment: Alignment.Center);
+            title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopCenter, Pivot.TopLeft) { AbsoluteOffset = new Point(-225, 10) }, string.Empty, font: GUI.VideoTitleFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
+
+            textContent = new GUITextBlock(new RectTransform(new Vector2(1f, .8f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, borderSize / 2 + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
+
+            objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
+            objectiveTitle.Text = TextManager.Get("NewObjective");
+            objectiveText = new GUITextBlock(new RectTransform(new Point(textFrame.Rect.Width, textHeight), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveNameFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
 
             preloadedVideos = new List<PreloadedContent>();
         }
@@ -157,12 +163,7 @@ namespace Barotrauma
             background.AddToGUIUpdateList();
         }
 
-        public void LoadTutorialContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, bool hasButton, Action callback = null)
-        {
-            LoadContent(contentPath, videoSettings, textSettings, contentId, startPlayback, hasButton, callback);
-        }
-
-        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, bool hasButton, Action callback = null)
+        public void LoadContentWithObjective(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, string objective, Action callback = null)
         {
             callbackOnStop = callback;
 
@@ -172,6 +173,8 @@ namespace Barotrauma
                 DisposeVideo(null, null);
                 return;
             }
+
+            ResetFrameSizes();
 
             if (currentVideo != null)
             {
@@ -205,32 +208,118 @@ namespace Barotrauma
                 currentVideo = CreateVideo(contentPath, resolution);
             }
 
-            videoFrame.RectTransform.NonScaledSize = resolution + new Point(borderSize, borderSize);
-            videoView.RectTransform.NonScaledSize = resolution;
+            videoFrame.RectTransform.NonScaledSize += resolution + new Point(borderSize, borderSize);
+            videoView.RectTransform.NonScaledSize += resolution;
 
             title.Text = TextManager.Get(contentId);
-            title.RectTransform.NonScaledSize = new Point(resolution.X, 30);
+            title.RectTransform.NonScaledSize += new Point(textSettings.Width, titleHeight);
 
             if (textSettings.Text != string.Empty)
             {
-                textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.LargeFont);
-                int height = textSettings.Text.Split('\n').Length * 25;
-                textFrame.RectTransform.NonScaledSize = new Point(textSettings.Width + borderSize, height + borderSize);
-                infoText.RectTransform.NonScaledSize = new Point(textSettings.Width, height);
+                textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.Font);
+                int wrappedHeight = textSettings.Text.Split('\n').Length * textHeight;
+                textFrame.RectTransform.NonScaledSize += new Point(textSettings.Width + borderSize, wrappedHeight + borderSize + buttonSize.Y + titleHeight);
+                textContent.RectTransform.NonScaledSize = new Point(textSettings.Width, wrappedHeight);
             }
 
-            infoText.Text = textSettings.Text;
+            textContent.Text = textSettings.Text;
 
-            if (hasButton)
+            objectiveTitle.RectTransform.AbsoluteOffset = new Point(0, textContent.RectTransform.Rect.Height + (int)(textHeight * 1.5f));
+            objectiveText.RectTransform.AbsoluteOffset = new Point(0, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + textHeight * 2);
+
+            textFrame.RectTransform.NonScaledSize += new Point(0, objectiveFrameHeight);
+            objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, textHeight);
+            objectiveText.Text = objective;
+
+            var okButton = new GUIButton(new RectTransform(buttonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(20, 20) },
+                TextManager.Get("OK"))
             {
-                var okButton = new GUIButton(new RectTransform(new Point(160, 50), textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(20, 20) },
-                    TextManager.Get("OK"))
-                {
-                    OnClicked = DisposeVideo
-                };
-            }
+                OnClicked = DisposeVideo
+            };
 
             if (startPlayback) Play();
+        }
+
+        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, Action callback = null)
+        {
+            callbackOnStop = callback;
+
+            if (!File.Exists(contentPath))
+            {
+                DebugConsole.ThrowError("No video found at: " + contentPath);
+                DisposeVideo(null, null);
+                return;
+            }
+
+            ResetFrameSizes();
+
+            if (currentVideo != null)
+            {
+                currentVideo.Dispose();
+                currentVideo = null;
+            }
+
+            PreloadedContent preloaded = null;
+            Point resolution = new Point(0, 0);
+
+            if (preloadedVideos != null && preloadedVideos.Count > 0)
+            {
+                preloaded = preloadedVideos.Find(s => s.ContentName == contentId);
+
+                if (preloaded != null)
+                {
+                    currentVideo = preloaded.Video;
+                    resolution = preloaded.Resolution;
+                }
+            }
+
+            if (currentVideo == null) // No preloaded video found
+            {
+                resolution = new Point(videoSettings.Width, videoSettings.Height);
+
+                if (resolution.X == 0 || resolution.Y == 0)
+                {
+                    resolution = defaultResolution;
+                }
+
+                currentVideo = CreateVideo(contentPath, resolution);
+            }
+
+            videoFrame.RectTransform.NonScaledSize += resolution + new Point(borderSize, borderSize);
+            videoView.RectTransform.NonScaledSize += resolution;
+
+            title.Text = TextManager.Get(contentId);
+            title.RectTransform.NonScaledSize += new Point(textSettings.Width, titleHeight);
+
+            if (textSettings.Text != string.Empty)
+            {
+                textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.Font);
+                int wrappedHeight = textSettings.Text.Split('\n').Length * textHeight;
+                textFrame.RectTransform.NonScaledSize += new Point(textSettings.Width + borderSize, wrappedHeight + borderSize + buttonSize.Y + titleHeight);
+                textContent.RectTransform.NonScaledSize = new Point(textSettings.Width, wrappedHeight);
+            }
+
+            textContent.Text = textSettings.Text;
+
+            var okButton = new GUIButton(new RectTransform(buttonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(20, 20) },
+                TextManager.Get("OK"))
+            {
+                OnClicked = DisposeVideo
+            };
+
+            if (startPlayback) Play();
+        }
+
+        private void ResetFrameSizes()
+        {
+            videoFrame.RectTransform.NonScaledSize = Point.Zero;
+            videoView.RectTransform.NonScaledSize = Point.Zero;
+
+            title.RectTransform.NonScaledSize = Point.Zero;
+            textFrame.RectTransform.NonScaledSize = Point.Zero;
+            textContent.RectTransform.NonScaledSize = Point.Zero;
+            
+            objectiveText.RectTransform.NonScaledSize = Point.Zero;
         }
 
         private Video CreateVideo(string contentPath, Point resolution)

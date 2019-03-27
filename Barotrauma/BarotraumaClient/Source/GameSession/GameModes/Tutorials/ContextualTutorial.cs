@@ -49,7 +49,7 @@ namespace Barotrauma.Tutorials
             public TutorialSegment(XElement config)
             {
                 Id = config.GetAttributeString("id", "Missing ID");
-                Objective = config.GetAttributeString("objective", string.Empty);
+                Objective = TextManager.Get(config.GetAttributeString("objective", string.Empty), true);
                 Enum.TryParse(config.GetAttributeString("contenttype", "None"), true, out ContentType);
                 IsTriggered = config.GetAttributeBool("istriggered", false);
 
@@ -480,7 +480,7 @@ namespace Barotrauma.Tutorials
                     string fileName = activeSegment.VideoContent.GetAttributeString("file", "");
                     if (fileName != "")
                     {
-                        videoPlayer.LoadTutorialContent(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.TextContent, args), activeSegment.Id, true, true, CurrentSegmentStopCallback);
+                        videoPlayer.LoadContentWithObjective(playableContentPath + fileName, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.TextContent, args), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
                     }
                     else
                     {
