@@ -804,7 +804,8 @@ namespace Barotrauma
                 var newItem = Item.Load(itemElement, inventory.Owner.Submarine, createNetworkEvent: true);
                 if (newItem == null) { continue; }
 
-                if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition))
+                if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
+                    GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     GameMain.NetworkMember.CreateEntityEvent(newItem, new object[] { NetEntityEvent.Type.Status });
                 }
