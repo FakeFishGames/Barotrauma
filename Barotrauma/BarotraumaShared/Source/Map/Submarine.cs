@@ -666,7 +666,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -676,25 +676,26 @@ namespace Barotrauma
             float closestFraction = 1.0f;
             Vector2 closestNormal = Vector2.Zero;
             Body closestBody = null;
+            if (allowInsideFixture)
+            {
+                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.UnitY * 0.001f, rayStart + Vector2.UnitY * 0.001f);
+                GameMain.World.QueryAABB((fixture) =>
+                {
+                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return false; }
+                    closestFraction = 0.0f;
+                    closestNormal = Vector2.Normalize(rayEnd - rayStart);
+                    if (fixture.Body != null) closestBody = fixture.Body;                    
+                    return true;
+                }, ref aabb);
+                if (closestFraction <= 0.0f)
+                {
+                    return closestBody;
+                }
+            }
+            
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null ||
-                    (ignoreSensors && fixture.IsSensor) ||
-                    fixture.CollisionCategories == Category.None ||
-                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
-                
-                if (customPredicate != null && !customPredicate(fixture)) return -1;
-                
-                if (collisionCategory != null && 
-                    !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
-                    !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
-
-                if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
-
-                if (fixture.Body.UserData is Structure structure)
-                {
-                    if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
-                }
+                if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return -1; }
 
                 if (fraction < closestFraction)
                 {
@@ -713,7 +714,7 @@ namespace Barotrauma
             return closestBody;
         }
 
-        public static List<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        public static List<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -724,25 +725,9 @@ namespace Barotrauma
             List<Body> bodies = new List<Body>();
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null ||
-                    (ignoreSensors && fixture.IsSensor) ||
-                    fixture.CollisionCategories == Category.None ||
-                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
+                if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return -1; }
 
-                if (customPredicate != null && !customPredicate(fixture)) return -1;
-
-                if (collisionCategory != null &&
-                    !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
-                    !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
-
-                if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
-
-                if (fixture.Body.UserData is Structure structure)
-                {
-                    if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
-                }
-
-                bodies.Add(fixture.Body);
+                if (fixture.Body != null) { bodies.Add(fixture.Body); }
                 if (fraction < closestFraction)
                 {
                     lastPickedPosition = rayStart + (rayEnd - rayStart) * fraction;
@@ -752,8 +737,59 @@ namespace Barotrauma
 
                 return fraction;
             }, rayStart, rayEnd);
-            
+
+            if (allowInsideFixture)
+            {
+                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.UnitY * 0.001f, rayStart + Vector2.UnitY * 0.001f);
+                GameMain.World.QueryAABB((fixture) =>
+                {
+                    if (bodies.Contains(fixture.Body) || fixture.Body == null) { return false; }
+                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return false; }
+                    closestFraction = 0.0f;
+                    bodies.Add(fixture.Body);
+                    return true;
+                }, ref aabb);
+            }
+
             return bodies;
+        }
+
+        private static bool CheckFixtureCollision(Fixture fixture, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        {
+            if (fixture == null ||
+                (ignoreSensors && fixture.IsSensor) ||
+                fixture.CollisionCategories == Category.None ||
+                fixture.CollisionCategories == Physics.CollisionItem)
+            {
+                return false;
+            }
+
+            if (customPredicate != null && !customPredicate(fixture))
+            {
+                return false;
+            }
+
+            if (collisionCategory != null &&
+                !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
+                !((Category)collisionCategory).HasFlag(fixture.CollisionCategories))
+            {
+                return false;
+            }
+
+            if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body))
+            {
+                return false;
+            }
+
+            if (fixture.Body.UserData is Structure structure)
+            {
+                if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

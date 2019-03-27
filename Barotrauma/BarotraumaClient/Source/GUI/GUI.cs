@@ -69,6 +69,9 @@ namespace Barotrauma
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
+        public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
+        public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
+        public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
 
         public static UISprite UIGlow => Style.UIGlow;
 
@@ -530,14 +533,19 @@ namespace Barotrauma
             if (list.Count == 0) { return; }
             foreach (var item in list)
             {
-                int i = updateList.Count - 1;
-                while (updateList[i].UpdateOrder > item.UpdateOrder)
+                int index = 0;
+                if (updateList.Count > 0)
                 {
-                    i--;
+                    index = updateList.Count - 1;
+                    while (updateList[index].UpdateOrder > item.UpdateOrder)
+                    {
+                        index--;
+                        if (index == 0) { break; }
+                    }
                 }
                 if (!updateListSet.Contains(item))
                 {
-                    updateList.Insert(Math.Max(i, 0), item);
+                    updateList.Insert(index, item);
                     updateListSet.Add(item);
                 }
             }
