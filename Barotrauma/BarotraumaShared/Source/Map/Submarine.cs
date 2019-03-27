@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -322,7 +323,7 @@ namespace Barotrauma
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
                     doc = OpenFile(filePath);
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
+                    if (doc != null || i == maxLoadRetries) { break; }
                     DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
@@ -493,7 +494,7 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null)
+        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f)
         {
             Rectangle dockedBorders = GetDockedBorders();
             Vector2 diffFromDockedBorders = 
@@ -541,17 +542,17 @@ namespace Barotrauma
             else if (minX < 0)
             {
                 //no wall found at the left side, spawn to the left from the right-side wall
-                spawnPos.X = maxX - minWidth - 100.0f;
+                spawnPos.X = maxX - minWidth - 100.0f + subDockingPortOffset;
             }
             else if (maxX > Level.Loaded.Size.X)
             {
                 //no wall found at right side, spawn to the right from the left-side wall
-                spawnPos.X = minX + minWidth + 100.0f;
+                spawnPos.X = minX + minWidth + 100.0f + subDockingPortOffset;
             }
             else
             {
                 //walls found at both sides, use their midpoint
-                spawnPos.X = (minX + maxX) / 2;
+                spawnPos.X = (minX + maxX) / 2 + subDockingPortOffset;
             }
             
             spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
@@ -1191,7 +1192,7 @@ namespace Barotrauma
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
                     doc = OpenFile(filePath);
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
+                    if (doc != null || i == maxLoadRetries) { break; }
                     DebugConsole.NewMessage("Loading the submarine \"" + Name + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }

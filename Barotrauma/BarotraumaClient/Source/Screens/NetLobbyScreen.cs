@@ -632,6 +632,13 @@ namespace Barotrauma
                 Visible = false
             };
 
+            campaignViewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), rightInfoColumn.RectTransform),
+                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
+                Visible = false
+            };
+
             StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
             {
@@ -643,13 +650,6 @@ namespace Barotrauma
                 }
             };
             clientHiddenElements.Add(StartButton);
-
-            campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.06f) },
-                TextManager.Get("CampaignView"), style: "GUIButtonLarge")
-            {
-                OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; },
-                Visible = false
-            };
 
             spectateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.1f), infoFrameContent.RectTransform, Anchor.BottomRight),
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
@@ -726,6 +726,12 @@ namespace Barotrauma
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
+                if (campaignUI?.StartButton != null)
+                {
+                    campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
+                        (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
+                        GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                }
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
             else
@@ -844,6 +850,13 @@ namespace Barotrauma
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
 
             GameMain.Client.EndRoundButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
+
+            if (campaignUI?.StartButton != null)
+            {
+                campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
+                    (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || 
+                    GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+            }
         }
 
         public void ShowSpectateButton()
@@ -1191,7 +1204,7 @@ namespace Barotrauma
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.1f, 0.0f) },
                     TextManager.Get("Shuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,

@@ -95,7 +95,7 @@ namespace Barotrauma
                 getItemObjective = new AIObjectiveGetItem(character, itemIdentifiers)
                 {
                     GetItemPriority = GetItemPriority,
-                    IgnoreContainedItems = IgnoreAlreadyContainedItems
+                    ignoredContainerIdentifiers = ignoredContainerIdentifiers
                 };
                 AddSubObjective(getItemObjective);
                 return;

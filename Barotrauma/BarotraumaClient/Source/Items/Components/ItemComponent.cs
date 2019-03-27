@@ -313,7 +313,7 @@ namespace Barotrauma.Items.Components
             if (sound == null) { return 0.0f; }
             if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
 
-            if (properties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
+            if (SerializableProperties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
             {
                 float newVolume = 0.0f;
                 try

@@ -103,12 +103,6 @@ namespace Barotrauma
             if (missionType == MissionType.Random)
             {
                 allowedMissions.AddRange(MissionPrefab.List);
-#if SERVER
-                if (GameMain.Server != null)
-                {
-                    allowedMissions.RemoveAll(mission => !GameMain.Server.ServerSettings.AllowedRandomMissionTypes.Contains(mission.type));
-                }
-#endif
             }
             else if (missionType == MissionType.None)
             {
@@ -125,7 +119,7 @@ namespace Barotrauma
                 allowedMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
             }
             
-            int probabilitySum = allowedMissions.Sum(m => m.Commonness);
+            int probabilitySum = allowedMissions.Sum(m => m.Commonness);            
             int randomNumber = rand.NextInt32() % probabilitySum;
             foreach (MissionPrefab missionPrefab in allowedMissions)
             {

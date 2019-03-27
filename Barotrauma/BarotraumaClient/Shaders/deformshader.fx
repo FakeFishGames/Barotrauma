@@ -14,6 +14,7 @@ float2 uvTopLeft;
 float2 uvBottomRight;
 
 float4 tintColor;
+float4 solidColor;
 
 struct VertexShaderInput
 {
@@ -74,6 +75,11 @@ float4 mainPS(VertexShaderOutput input) : COLOR
 	return xTexture.Sample(TextureSampler, input.TexCoords) * input.Color;
 }
 
+float4 solidColorPS(VertexShaderOutput input) : COLOR
+{
+	return solidColor * xTexture.Sample(TextureSampler, input.TexCoords).a;
+}
+
 technique DeformShader
 {
 	pass Pass1
@@ -81,4 +87,13 @@ technique DeformShader
 		VertexShader = compile vs_4_0_level_9_1 mainVS();
 		PixelShader = compile ps_4_0_level_9_1 mainPS();
 	}
+}
+
+technique DeformShaderSolidColor
+{
+    pass Pass1
+    {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
+        PixelShader = compile ps_4_0_level_9_1 solidColorPS();
+    }
 }

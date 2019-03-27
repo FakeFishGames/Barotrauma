@@ -17,7 +17,7 @@ namespace Barotrauma
         private string[] itemIdentifiers;
         private Item targetItem, moveToTarget;
         private int currSearchIndex;
-        public bool IgnoreContainedItems;
+        public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
         private bool equip;
@@ -99,11 +99,12 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
-                SteeringManager.Reset();
+                SteeringManager.SteeringWander();
                 return;
             }
 
-            if (Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance * 2, 2))
+            if (moveToTarget.CurrentHull == character.CurrentHull && 
+                Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance * 2, 2))
             {
                 int targetSlot = -1;
                 if (equip)
@@ -196,8 +197,12 @@ namespace Barotrauma
                 else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
 
                 if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
-                if (IgnoreContainedItems && item.Container != null) { continue; }
-                if (!itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+
+                if (ignoredContainerIdentifiers != null && item.Container != null)
+                {
+                    if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
+                }
 
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)

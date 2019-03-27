@@ -358,8 +358,8 @@ namespace Barotrauma
                 }
                 catch (IOException e)
                 {
-                    if (i >= maxRetries || !File.Exists(sCompressedFile)) { throw; }
-                    DebugConsole.NewMessage("Failed decompress file \"" + sCompressedFile + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                    if (i >= maxRetries) { throw; }
+                    DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);
                     Thread.Sleep(250);
                 }
             }
@@ -403,18 +403,18 @@ namespace Barotrauma
             }
         }
 
-        public static void ClearFolder(string FolderName, string[] ignoredFiles = null)
+        public static void ClearFolder(string FolderName, string[] ignoredFileNames = null)
         {
             DirectoryInfo dir = new DirectoryInfo(FolderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {
-                if (ignoredFiles != null)
+                if (ignoredFileNames != null)
                 {
                     bool ignore = false;
-                    foreach (string ignoredFile in ignoredFiles)
+                    foreach (string ignoredFile in ignoredFileNames)
                     {
-                        if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                        if (Path.GetFileName(fi.FullName).Equals(Path.GetFileName(ignoredFile)))
                         {
                             ignore = true;
                             break;

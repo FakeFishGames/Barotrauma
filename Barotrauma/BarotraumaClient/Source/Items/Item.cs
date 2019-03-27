@@ -448,7 +448,7 @@ namespace Barotrauma
             }
         }
         
-        private GUIComponent CreateEditingHUD(bool inGame = false)
+        public GUIComponent CreateEditingHUD(bool inGame = false)
         {
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
@@ -457,40 +457,42 @@ namespace Barotrauma
             };
 
             var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
-
-            if (!inGame && Linkable)
-            {
-                var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
-                if (AllowedLinks.None())
-                {
-                    itemsText.Text += TextManager.Get("None");
-                }
-                else
-                {
-                    for (int i = 0; i < AllowedLinks.Count; i++)
-                    {
-                        itemsText.Text += AllowedLinks[i];
-                        if (i < AllowedLinks.Count - 1)
-                        {
-                            itemsText.Text += ", ";
-                        }
-                    }
-                }
-                itemEditor.AddCustomContent(linkText, 1);
-                itemEditor.AddCustomContent(itemsText, 2);
-                linkText.TextColor = Color.Yellow;
-                itemsText.TextColor = Color.Yellow;
-            }
-
             if (!inGame)
             {
+                if (Linkable)
+                {
+                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
+                    if (AllowedLinks.None())
+                    {
+                        itemsText.Text += TextManager.Get("None");
+                    }
+                };
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
+                {
+                    ToolTip = TextManager.Get("MirrorEntityYToolTip"),
+                    OnClicked = (button, data) =>
+                    {
+                        for (int i = 0; i < AllowedLinks.Count; i++)
+                        {
+                            itemsText.Text += AllowedLinks[i];
+                            if (i < AllowedLinks.Count - 1)
+                            {
+                                itemsText.Text += ", ";
+                            }
+                        }
+                    }
+                    itemEditor.AddCustomContent(linkText, 1);
+                    itemEditor.AddCustomContent(itemsText, 2);
+                    linkText.TextColor = Color.Yellow;
+                    itemsText.TextColor = Color.Yellow;
+                }
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.02f
                 };
-                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"))
+                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"))
                 {
                     ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                     OnClicked = (button, data) =>
@@ -499,7 +501,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
-                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
+                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
                 {
                     ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                     OnClicked = (button, data) =>
@@ -510,7 +512,7 @@ namespace Barotrauma
                 };
                 if (Sprite != null)
                 {
-                    var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"));
+                    var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"));
                     reloadTextureButton.OnClicked += (button, data) =>
                     {
                         Sprite.ReloadXML();
@@ -518,6 +520,15 @@ namespace Barotrauma
                         return true;
                     };
                 }
+                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ResetToPrefab"))
+                {
+                    OnClicked = (button, data) =>
+                    {
+                        Reset();
+                        CreateEditingHUD();
+                        return true;
+                    }
+                };
                 itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
             }
 

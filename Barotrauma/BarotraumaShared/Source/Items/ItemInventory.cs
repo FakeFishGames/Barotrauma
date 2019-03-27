@@ -91,14 +91,20 @@ namespace Barotrauma
 
         public override void CreateNetworkEvent()
         {
-            int componentIndex = container.Item.GetComponentIndex(container);
-            if (componentIndex == -1)
+            if (!Item.ItemList.Contains(container.Item))
             {
                 string errorMsg = "Attempted to create a network event for an item (" + container.Item.Name + ") that hasn't been fully initialized yet.";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID, 
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
+            int componentIndex = container.Item.GetComponentIndex(container);
+            if (componentIndex == -1)
+            {
+                DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
                 return;
             }
             

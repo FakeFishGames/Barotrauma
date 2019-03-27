@@ -59,8 +59,7 @@ namespace Barotrauma
         public PhysicsBody body;
 
         public readonly XElement StaticBodyConfig;
-        
-        private bool needsPositionUpdate;
+
         private float lastSentCondition;
         private float sendConditionUpdateTimer;
         private bool conditionUpdatePending;
@@ -89,7 +88,7 @@ namespace Barotrauma
                 if (hasInGameEditableProperties == null)
                 {
                     hasInGameEditableProperties = false;
-                    if (properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                    if (SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
                     {
                         hasInGameEditableProperties = true;
                     }
@@ -98,7 +97,7 @@ namespace Barotrauma
                         foreach (ItemComponent component in components)
                         {
                             if (!component.AllowInGameEditing) { continue; }
-                            if (component.properties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                            if (component.SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
                             {
                                 hasInGameEditableProperties = true;
                                 break;
@@ -212,14 +211,14 @@ namespace Barotrauma
             set { spriteColor = value; }
         }
 
-        [Serialize("1.0,1.0,1.0,1.0", false), Editable]
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable]
         public Color InventoryIconColor
         {
             get;
             protected set;
         }
         
-        [Serialize("1.0,1.0,1.0,1.0", false), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable(ToolTip = "Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.")]
         public Color ContainerColor
         {
             get;
@@ -275,12 +274,11 @@ namespace Barotrauma
                 
                 SetActiveSprite();
 
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && lastSentCondition != condition)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(lastSentCondition, condition))
                 {
                     if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == Prefab.Health)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                        lastSentCondition = condition;
+                        conditionUpdatePending = true;
                     }
                 }
             }
@@ -585,10 +583,10 @@ namespace Barotrauma
         public override MapEntity Clone()
         {
             Item clone = new Item(rect, Prefab, Submarine, callOnItemLoaded: false);
-            foreach (KeyValuePair<string, SerializableProperty> property in properties)
+            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                clone.properties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
+                clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
 
             if (components.Count != clone.components.Count)
@@ -605,7 +603,7 @@ namespace Barotrauma
                 foreach (KeyValuePair<string, SerializableProperty> property in components[i].SerializableProperties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
-                    clone.components[i].properties[property.Key].TrySetValue(clone.components[i], property.Value.GetValue(components[i]));
+                    clone.components[i].SerializableProperties[property.Key].TrySetValue(clone.components[i], property.Value.GetValue(components[i]));
                 }
 
                 //clone requireditem identifiers
@@ -997,6 +995,21 @@ namespace Barotrauma
                 aiTarget.SightRange -= deltaTime * 1000.0f;
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            {
+                sendConditionUpdateTimer -= deltaTime;
+                if (conditionUpdatePending)
+                {
+                    if (sendConditionUpdateTimer <= 0.0f)
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        lastSentCondition = condition;
+                        sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
+                        conditionUpdatePending = false;
+                    }
+                }
+            }
             
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
@@ -1273,7 +1286,11 @@ namespace Barotrauma
             LastSentSignalRecipients.Clear();
             if (connections == null) return;
 
-            stepsTaken++;
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
+        {
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             if (!connections.TryGetValue(connectionName, out Connection c)) return;
 
@@ -1561,12 +1578,15 @@ namespace Barotrauma
             return isCombined;
         }
 
-        public void Drop(Character dropper)
+        public void Drop(Character dropper, bool createNetworkEvent = true)
         {
-            if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
-                GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+            if (createNetworkEvent)
             {
-                parentInventory.CreateNetworkEvent();
+                if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
+                    GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
+                {
+                    parentInventory.CreateNetworkEvent();
+                }
             }
 
             foreach (ItemComponent ic in components) { ic.Drop(dropper); }
@@ -1809,8 +1829,20 @@ namespace Barotrauma
         }
 
         partial void UpdateNetPosition(float deltaTime);
-        
+
         public static Item Load(XElement element, Submarine submarine)
+        {
+            return Load(element, submarine, createNetworkEvent: false);
+        }
+
+        /// <summary>
+        /// Instantiate a new item and load its data from the XML element.
+        /// </summary>
+        /// <param name="element">The element containing the data of the item</param>
+        /// <param name="submarine">The submarine to spawn the item in (can be null)</param>
+        /// <param name="createNetworkEvent">Should an EntitySpawner event be created to notify clients about the item being created.</param>
+        /// <returns></returns>
+        public static Item Load(XElement element, Submarine submarine, bool createNetworkEvent)
         {
             string name = element.Attribute("name").Value;            
             string identifier = element.GetAttributeString("identifier", "");
@@ -1856,9 +1888,16 @@ namespace Barotrauma
                 linkedToID = new List<ushort>()
             };
 
+#if SERVER
+            if (createNetworkEvent)
+            {
+                Spawner.CreateNetworkEvent(item, remove: false);
+            }
+#endif
+
             foreach (XAttribute attribute in element.Attributes())
             {
-                if (!item.properties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
+                if (!item.SerializableProperties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
                 bool shouldBeLoaded = false;
                 foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                 {
@@ -1902,7 +1941,7 @@ namespace Barotrauma
             {
                 component.OnItemLoaded();
             }
-
+            
             return item;
         }
 

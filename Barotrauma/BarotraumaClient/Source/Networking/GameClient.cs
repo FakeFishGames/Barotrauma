@@ -132,6 +132,7 @@ namespace Barotrauma.Networking
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
+                AbsoluteSpacing = 5,
                 CanBeFocused = false
             };
 
@@ -147,9 +148,10 @@ namespace Barotrauma.Networking
                 Visible = false
             };
 
-            EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+            EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.4f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
                 TextManager.Get("EndRound"))
             {
+                UserData = TextManager.Get("EndRound"),
                 OnSelected = ToggleEndRoundVote,
                 Visible = false
             };
@@ -323,18 +325,17 @@ namespace Barotrauma.Networking
 
             // Loop until we are approved
             //TODO: show the name of the server instead of IP when connecting through the server list (more streamer-friendly)
-            string connectingText = TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP);
+            string connectingText = TextManager.Get("Connecting");
             while (!CanStart && !connectCancelled)
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox(TextManager.Get("Connecting"), connectingText, new string[] { TextManager.Get("Cancel") });
-
+                    reconnectBox = new GUIMessageBox(connectingText, TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += CancelConnect;
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
-                reconnectBox.Text.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
 
                 if (DateTime.Now > reqAuthTime)
                 {
@@ -621,7 +622,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted) SetRadioButtonColor();
 
-            if (ShowNetStats)
+            if (ShowNetStats && client?.ServerConnection != null)
             {
                 netStats.AddValue(NetStats.NetStatType.ReceivedBytes, client.ServerConnection.Statistics.ReceivedBytes);
                 netStats.AddValue(NetStats.NetStatType.SentBytes, client.ServerConnection.Statistics.SentBytes);
@@ -782,7 +783,7 @@ namespace Barotrauma.Networking
                                     saveFiles.Add(inc.ReadString());
                                 }
 
-                                GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(saveFiles);
+                                GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
                                 break;
                             case ServerPacketHeader.PERMISSIONS:
                                 ReadPermissions(inc);
@@ -835,6 +836,8 @@ namespace Barotrauma.Networking
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
             if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
 
+            DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
             if (disconnectReason == DisconnectReason.ServerFull)
             {
                 //already waiting for a slot to free up, do nothing
@@ -864,22 +867,19 @@ namespace Barotrauma.Networking
                 waitInServerQueueBox = null;
                 CoroutineManager.StopCoroutines("WaitInServerQueue");
             }
-            else
-            {
-                string msg = "";
-                if (disconnectReason == DisconnectReason.Unknown)
-                {
-                    msg = disconnectMsg;
-                }
-                else
-                {
-                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
             {
+                DebugConsole.NewMessage("Attempting to reconnect...");
+
+                string msg = TextManager.GetServerMessage(disconnectMsg);
+                msg = string.IsNullOrWhiteSpace(msg) ? 
+                    TextManager.Get("ConnectionLostReconnecting") : 
+                    msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
+
                 reconnectBox = new GUIMessageBox(
                     TextManager.Get("ConnectionLost"),
-                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
+                    msg, new string[0]);
                 connected = false;
                 ConnectToServer(serverIP);
             }
@@ -888,10 +888,12 @@ namespace Barotrauma.Networking
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)
                 {
+                    DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
                     msg = disconnectMsg;
                 }
                 else
                 {
+                    DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
                     for (int i = 1; i < splitMsg.Length; i++)
@@ -1031,9 +1033,10 @@ namespace Barotrauma.Networking
 
             EndVoteTickBox.Selected = false;
 
-            int seed                = inc.ReadInt32();
-            string levelSeed        = inc.ReadString();
-            float levelDifficulty   = inc.ReadFloat();
+            int seed                    = inc.ReadInt32();
+            string levelSeed            = inc.ReadString();
+            int levelEqualityCheckVal   = inc.ReadInt32();
+            float levelDifficulty       = inc.ReadFloat();
 
             byte losMode            = inc.ReadByte();
 
@@ -1100,6 +1103,15 @@ namespace Barotrauma.Networking
                     reloadSub: true,
                     loadSecondSub: false,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+            }
+
+            if (Level.Loaded.EqualityCheckVal != levelEqualityCheckVal)
+            {
+                string errorMsg = "Level equality check failed. The level generated at your end doesn't match the level generated by the server (seed " + Level.Loaded.Seed + ").";
+                DebugConsole.ThrowError(errorMsg, createMessageBox: true);
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + levelSeed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                CoroutineManager.StartCoroutine(EndGame(""));
+                yield return CoroutineStatus.Failure;
             }
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
@@ -1171,8 +1183,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
-            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, serverSubmarines);
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, serverSubmarines);
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
@@ -1361,6 +1373,9 @@ namespace Barotrauma.Networking
                         }
 
                         lastSentChatMsgID = inc.ReadUInt16();
+                        break;
+                    case ServerNetObject.CLIENT_LIST:
+                        ReadClientList(inc);
                         break;
                     case ServerNetObject.CLIENT_LIST:
                         ReadClientList(inc);
@@ -1781,6 +1796,8 @@ namespace Barotrauma.Networking
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
                     campaign.LastSaveID = campaign.PendingSaveID;
+
+                    DebugConsole.Log("Campaign save received, save ID " + campaign.LastSaveID);
                     //decrement campaign update ID so the server will send us the latest data
                     //(as there may have been campaign updates after the save file was created)
                     campaign.LastUpdateID--;
@@ -1798,7 +1815,7 @@ namespace Barotrauma.Networking
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData)
         {
-            if (!(entity is IClientSerializable)) throw new InvalidCastException("entity is not IClientSerializable");
+            if (!(entity is IClientSerializable)) throw new InvalidCastException("Entity is not IClientSerializable");
             entityEventManager.CreateEvent(entity as IClientSerializable, extraData);
         }
 
@@ -2067,7 +2084,8 @@ namespace Barotrauma.Networking
             msg.Write(true); msg.WritePadBits();
             msg.Write(savePath);
             msg.Write(mapSeed);
-            msg.Write(sub.FilePath);
+            msg.Write(sub.Name);
+            msg.Write(sub.MD5Hash.Hash);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
@@ -2305,13 +2323,25 @@ namespace Barotrauma.Networking
 
             if (EndVoteCount > 0)
             {
-                string endVoteText = TextManager.Get("EndRoundVotes")
-                    .Replace("[y]", EndVoteCount.ToString())
-                    .Replace("[n]", (EndVoteMax - EndVoteCount).ToString());
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 10.0f - GUI.SmallFont.MeasureString(endVoteText).X, 40),
-                    endVoteText,
-                    Color.White,
-                    font: GUI.SmallFont);
+                if (EndVoteTickBox.Visible)
+                {
+                    EndVoteTickBox.Text =
+                        (EndVoteTickBox.UserData as string) + " " + EndVoteCount + "/" + EndVoteMax;
+                }
+                else
+                {
+                    string endVoteText = TextManager.Get("EndRoundVotes")
+                        .Replace("[votes]", EndVoteCount.ToString())
+                        .Replace("[max]", EndVoteMax.ToString());
+                    GUI.DrawString(spriteBatch, EndVoteTickBox.Rect.Center.ToVector2() - GUI.SmallFont.MeasureString(endVoteText) / 2,
+                        endVoteText,
+                        Color.White,
+                        font: GUI.SmallFont);
+                }
+            }
+            else
+            {
+                EndVoteTickBox.Text = EndVoteTickBox.UserData as string;
             }
 
             if (respawnManager != null)
