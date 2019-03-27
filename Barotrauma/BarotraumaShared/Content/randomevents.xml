@@ -531,11 +531,10 @@
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
-    <!-- 1 charybdis after 20 minutes or passing 80%
+    <!-- 1 charybdis after 20 minutes or passing 80% -->
     <EventSet chooserandom="false" mindistancetraveled="0.8" minmissiontime="1200" minintensity="0.0" maxintensity="0.75">
-      <MonsterEvent characterfile="Content/Characters/Charybdis/Leharybdis.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Charybdis/Charybdis.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
-    -->
   </EventSet>
 
   <!--                               Set 9                                       -->
@@ -594,17 +593,16 @@
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
-    <!-- 1-3 baby molochs after 16 minutes or passing 55% --> -->
+    <!-- 1-3 baby molochs after 16 minutes or passing 55% -->
     <EventSet chooserandom="true" mindistancetraveled="0.55" minmissiontime="960" minintensity="0.0" maxintensity="0.65">
       <MonsterEvent characterfile="Content/Characters/Molochbaby/Molochbaby.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
-    <!-- 1 moloch and 10 crawlers after 20 minutes or passing 80%
+    <!-- 1 charybdis and 10 crawlers after 20 minutes or passing 80% -->
     <EventSet chooserandom="false" mindistancetraveled="0.8" minmissiontime="1200" minintensity="0.0" maxintensity="0.65">
       <MonsterEvent characterfile="Content/Characters/Charybdis/Charybdis.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="10" maxamount="10" spawntype="mainpath" musictype="monster" />
     </EventSet>
-    -->
   </EventSet>
   
 </Randomevents>
