@@ -1,10 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using System;
 using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
-using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma.Tutorials
 {
@@ -14,60 +13,38 @@ namespace Barotrauma.Tutorials
         public static bool ContentRunning = false;
         public static bool Initialized = false;
 
-        private enum ContentTypes { None = 0, Video = 1, TextOnly = 2 };
+        private enum ContentTypes { None = 0, Video = 1, Text = 2 };
 
         private TutorialSegment activeSegment;
         private List<TutorialSegment> segments;
-        
-        private VideoPlayer videoPlayer;
 
+        private SpriteSheetPlayer spriteSheetPlayer;
         private Steering navConsole;
         private Reactor reactor;
         private Sonar sonar;
         private Vector2 subStartingPosition;
         private List<Character> crew;
-        private Character mechanic;
-        private Character engineer;
-        private Character injuredMember = null;
-
         private List<Pair<Character, float>> characterTimeOnSonar;
         private float requiredTimeOnSonar = 5f;
 
         private bool started = false;
         private string playableContentPath;
-
+        
         private float tutorialTimer;
+        private float degrading2ActivationCountdown;
 
         private bool disableTutorialOnDeficiencyFound = true;
 
-        private GUIFrame holderFrame, objectiveFrame;
-        //private GUIButton toggleButton;
-        //private bool objectivesOpen = false;
-        //private float openState = 0f;
-        private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
-        private string objectiveTranslated;
-        //private Point objectiveBaseOffset = Point.Zero;
-
-        private float floodTutorialTimer = 0.0f;
-        private const float floodTutorialDelay = 2.0f;
-        private float medicalTutorialTimer = 0.0f;
-        private const float medicalTutorialDelay = 2.0f;
-
         private class TutorialSegment
         {
-            public string Id;
-            public string Objective;
+            public string Name;
             public ContentTypes ContentType;
-            public XElement TextContent;
-            public XElement VideoContent;
+            public XElement Content;
             public bool IsTriggered;
-            public GUIButton ReplayButton;
-            public GUITextBlock LinkedTitle, LinkedText;
 
             public TutorialSegment(XElement config)
             {
-                Id = config.GetAttributeString("id", "Missing ID");
-                Objective = TextManager.Get(config.GetAttributeString("objective", string.Empty), true);
+                Name = config.GetAttributeString("name", "Missing Name");
                 Enum.TryParse(config.GetAttributeString("contenttype", "None"), true, out ContentType);
                 IsTriggered = config.GetAttributeBool("istriggered", false);
 
@@ -76,11 +53,10 @@ namespace Barotrauma.Tutorials
                     case ContentTypes.None:
                         break;
                     case ContentTypes.Video:
-                        VideoContent = config.Element("Video");
-                        TextContent = config.Element("Text");
+                        Content = config.Element("Video");
                         break;
-                    case ContentTypes.TextOnly:
-                        TextContent = config.Element("Text");
+                    case ContentTypes.Text:
+                        Content = config.Element("Text");
                         break;
                 }
             }
@@ -101,18 +77,17 @@ namespace Barotrauma.Tutorials
 
         public override void Initialize()
         {
-            for (int i = 0; i < segments.Count; i++)
-            {
-                segments[i].IsTriggered = false;
-            }
-
             if (Initialized) return;
             Initialized = true;
 
             base.Initialize();
-            videoPlayer = new VideoPlayer();
+            spriteSheetPlayer = new SpriteSheetPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
-            //objectivesOpen = true;
+
+            for (int i = 0; i < segments.Count; i++)
+            {
+                segments[i].IsTriggered = false;
+            }
         }
 
         public void LoadPartiallyComplete(XElement element)
@@ -136,13 +111,13 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        private void PreloadVideoContent() // Have to see if needed with videos
+        private void PreloadVideoContent()
         {
-            /*for (int i = 0; i < segments.Count; i++)
+            for (int i = 0; i < segments.Count; i++)
             {
                 if (segments[i].ContentType != ContentTypes.Video || segments[i].IsTriggered) continue;
-                spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Id, segments[i].VideoContent);
-            }*/
+                spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Name, segments[i].Content);
+            }
         }
 
         public void SavePartiallyComplete(XElement element)
@@ -180,12 +155,9 @@ namespace Barotrauma.Tutorials
 
             base.Start();
 
-            injuredMember = null;
-            activeObjectives.Clear();
-            objectiveTranslated = TextManager.Get("Objective");
-            CreateObjectiveFrame();
             activeSegment = null;
-            tutorialTimer = floodTutorialTimer = medicalTutorialTimer = 0.0f;
+            tutorialTimer = 0.0f;
+            degrading2ActivationCountdown = -1;
             subStartingPosition = Vector2.Zero;
             characterTimeOnSonar.Clear();
 
@@ -221,9 +193,6 @@ namespace Barotrauma.Tutorials
             }
 
             crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
-            mechanic = CrewMemberWithJob("mechanic");
-            engineer = CrewMemberWithJob("engineer");
-
             Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
             started = true;
         }
@@ -239,164 +208,40 @@ namespace Barotrauma.Tutorials
         public void Stop()
         {
             started = ContentRunning = Initialized = false;
-            videoPlayer.Remove();
-            videoPlayer = null;
+            spriteSheetPlayer.Remove();
+            spriteSheetPlayer = null;
             characterTimeOnSonar = null;
-        }
-
-        private void CreateObjectiveFrame()
-        {
-            holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
-            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveAnchor, holderFrame.RectTransform), style: null);
-
-            /*int toggleButtonWidth = (int)(30 * GUI.Scale);
-            int toggleButtonHeight = (int)(40 * GUI.Scale);
-            toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, toggleButtonHeight), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, 20) }, style: "UIToggleButton");
-            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
-            {
-                objectivesOpen = !objectivesOpen;
-                foreach (GUIComponent child in btn.Children)
-                {
-                    child.SpriteEffects = objectivesOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                }
-                return true;
-            };
-
-            objectiveBaseOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0);*/
         }
 
         public override void AddToGUIUpdateList()
         {
-            if (objectiveFrame != null && activeObjectives.Count > 0)
-            {
-                objectiveFrame.AddToGUIUpdateList(order: -1);
-            }
             base.AddToGUIUpdateList();
-            if (videoPlayer != null)
+            if (spriteSheetPlayer != null)
             {
-                videoPlayer.AddToGUIUpdateList(order: 100);
+                spriteSheetPlayer.AddToGUIUpdateList();
             }
         }
 
         public override void Update(float deltaTime)
         {
-            if (videoPlayer != null)
-            {
-                videoPlayer.Update();
-            }
-
-            if (infoBox != null)
-            {
-                if (PlayerInput.KeyHit(Keys.Enter) || PlayerInput.KeyHit(Keys.Escape))
-                {
-                    CloseInfoFrame(null, null);
-                }
-            }
-
             if (!started || ContentRunning) return;
 
             deltaTime *= 0.5f;
-                       
+
             for (int i = 0; i < segments.Count; i++)
             {
-                if (segments[i].IsTriggered || activeObjectives.Contains(segments[i])) continue;
+                if (segments[i].IsTriggered) continue;
                 if (CheckContextualTutorials(i, deltaTime)) // Found a relevant tutorial, halt finding new ones
                 {
                     break;
                 }
             }
-
-            for (int i = 0; i < activeObjectives.Count; i++)
-            {
-                CheckActiveObjectives(activeObjectives[i], deltaTime);
-            }
-
-            /*if (activeObjectives.Count > 0)
-            {
-                if (objectivesOpen)
-                {
-                    openState -= deltaTime * 5.0f;
-                }
-                else
-                {
-                    openState += deltaTime * 5.0f;
-                }
-
-                openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
-
-                float widestObjective = 0f;
-                for (int i = 0; i < activeObjectives.Count; i++)
-                {
-                    if (activeObjectives[i].ReplayButton.Rect.Width > widestObjective)
-                    {
-                        widestObjective = activeObjectives[i].ReplayButton.Rect.Width;
-                    }
-                }
-
-                float objectivesHiddenOffset = widestObjective + toggleButton.Rect.Width + 100f;
-
-                for (int i = 0; i < activeObjectives.Count; i++)
-                {
-                    activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = objectiveBaseOffset + new Point((int)MathHelper.SmoothStep(0, objectivesHiddenOffset, openState), 0);
-                }
-            }*/
-        }
-
-        private void ClosePreTextAndTriggerVideoCallback()
-        {
-            if (!string.IsNullOrEmpty(activeSegment.Objective))
-            {
-                videoPlayer.LoadContentWithObjective(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
-            }
-            else
-            {
-                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, CurrentSegmentStopCallback);
-            }
         }
 
         private void CurrentSegmentStopCallback()
         {
-            if (!string.IsNullOrEmpty(activeSegment.Objective))
-            {
-                AddNewObjective(activeSegment);
-            }
-
             activeSegment = null;
             ContentRunning = false;
-        }
-
-        private void AddNewObjective(TutorialSegment segment)
-        {
-            activeObjectives.Add(segment);
-
-            Point replayButtonSize = new Point((int)GUI.ObjectiveNameFont.MeasureString(segment.Objective).X, (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
-
-            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(/*(int)(-2.5f * toggleButton.Rect.Width)*/0, (replayButtonSize.Y + 20) * (activeObjectives.Count - 1)) }, style: null);
-            segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
-            {
-                ReplaySegmentVideo(segment);
-                return true;
-            };
-
-            int yOffset = (int)(GUI.ObjectiveNameFont.MeasureString(objectiveTranslated).Y / 2f) + 5;
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, objectiveTranslated, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point(10, 0) }, segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
-
-            segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
-            segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
-            segment.ReplayButton.Color = segment.ReplayButton.HoverColor = segment.ReplayButton.PressedColor = segment.ReplayButton.SelectedColor = Color.Transparent;
-        }
-
-        private void RemoveCompletedObjective(TutorialSegment objective)
-        {
-            objectiveFrame.RemoveChild(objective.ReplayButton);
-            activeObjectives.Remove(objective);
-            objective.IsTriggered = true;
-
-            for (int i = 0; i < activeObjectives.Count; i++)
-            {
-                activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = new Point(0, (activeObjectives[i].ReplayButton.Rect.Height + 20) * i);
-            }
         }
 
         private bool CheckContextualTutorials(int index, float deltaTime)
@@ -404,31 +249,30 @@ namespace Barotrauma.Tutorials
             switch (index)
             {
                 case 0: // Welcome: Game Start [Text]
-                    if (tutorialTimer < 1.0f)
+                    if (tutorialTimer < 0.5f)
                     {
                         tutorialTimer += deltaTime;
                         return false;
                     }
                     break;
-                case 1: // Command Reactor: 2 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
-                    if (!segments[0].IsTriggered) return false;
-                    if (tutorialTimer < 3.0f)
+                case 1: // Command Reactor: 10 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
+                    if (tutorialTimer < 10.5f)
                     {
                         tutorialTimer += deltaTime;
 
                         if (HasOrder("operatereactor"))
                         {
                             segments[index].IsTriggered = true;
-                            tutorialTimer = 2.5f;
+                            tutorialTimer = 10.5f;
                         }
                         return false;
                     }
                     break;
-                case 2: // Nav Console: 2 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
-                    if (!IsReactorPoweredUp()) return false; // Do not advance tutorial based on this segment if reactor has not been powered up
+                case 2: // Nav Console: 20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
                     if (Character.Controlled?.SelectedConstruction != navConsole.Item)
-                    {                       
-                        if (tutorialTimer < 4.5f)
+                    {
+                        if (!segments[1].IsTriggered) return false; // Do not advance tutorial timer based on this segment if reactor has not been powered up
+                        if (tutorialTimer < 30.5f)
                         {
                             tutorialTimer += deltaTime;
                             return false;
@@ -436,13 +280,20 @@ namespace Barotrauma.Tutorials
                     }
                     else
                     {
-                        tutorialTimer = 4.5f;
-                    }
+                        if (!segments[1].IsTriggered || !HasOrder("operatereactor")) // If reactor has not been powered up or ordered to be, default to that one first
+                        {
+                            if (tutorialTimer < 10.5f)
+                            {
+                                tutorialTimer = 10.5f;
+                            }
+                            return false;
+                        }
 
-                    TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
-                    return true;
+                        tutorialTimer = 30.5f;
+                    }
+                    break;
                 case 3: // Objective: Travel ~150 meters and while sub is not flooding [Text]
-                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 8000f || IsFlooding())
+                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 12000f || IsFlooding())
                     {
                         return false;
                     }
@@ -454,11 +305,6 @@ namespace Barotrauma.Tutorials
                 case 4: // Flood: Hull is breached and sub is taking on water [Video]
                     if (!IsFlooding())
                     {
-                        return false;
-                    }
-                    else if (floodTutorialTimer < floodTutorialDelay)
-                    {
-                        floodTutorialTimer += deltaTime;
                         return false;
                     }
                     break;
@@ -475,23 +321,19 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 7: // Degrading1: Any equipment degrades to 50% health or less and player has not assigned any crew to perform maintenance [Text]
-                    if ((mechanic == null || mechanic.IsDead) && (engineer == null || engineer.IsDead)) // Both engineer and mechanic are dead or do not exist -> do not display
-                    {
-                        return false;
-                    }
-
                     bool degradedEquipmentFound = false;
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
+                        if (!item.Repairables.Any() || item.ConditionPercentage > 50) continue;
                         degradedEquipmentFound = true;
                         break;
                     }
 
                     if (degradedEquipmentFound)
                     {
-                        if (HasOrder("repairsystems", "jobspecific"))
+                        degrading2ActivationCountdown = 5f;
+                        if (HasOrder("repairsystems"))
                         {
                             segments[index].IsTriggered = true;
                             return false;
@@ -502,44 +344,43 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 8: // Medical: Crewmember is injured but not killed [Video]
-
-                    if (injuredMember == null)
+                case 8: // Degrading2: 5 seconds after 'Degrading1' dismissed, and only if player has not assigned any crew to perform maintenance [Video]
+                    if (degrading2ActivationCountdown == -1f)
                     {
-                        for (int i = 0; i < crew.Count; i++)
+                        return false;
+                    }
+                    else if (degrading2ActivationCountdown > 0.0f)
+                    {
+                        degrading2ActivationCountdown -= deltaTime;
+                        if (HasOrder("repairsystems"))
                         {
-                            Character member = crew[i];
-                            if (member.Vitality < member.MaxVitality && !member.IsDead)
-                            {
-                                injuredMember = member;
-                                break;
-                            }
+                            segments[index].IsTriggered = true;
                         }
 
                         return false;
                     }
-                    else if (medicalTutorialTimer < medicalTutorialDelay)
+                    break;
+                case 9: // Medical: Crewmember is injured but not killed [Video]
+                    bool injuredFound = false;
+                    for (int i = 0; i < crew.Count; i++)
                     {
-                        medicalTutorialTimer += deltaTime;
-                        return false;
+                        Character member = crew[i];
+                        if (member.Vitality < member.MaxVitality && !member.IsDead)
+                        {
+                            injuredFound = true;
+                            break;
+                        }
                     }
-                    else
-                    {
-                        TriggerTutorialSegment(index, new string[] { injuredMember.Info.DisplayName,
-                                (injuredMember.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
-                        return true;
-                    }
-                case 9: // Approach1: Destination is within ~100m [Video]
+
+                    if (!injuredFound) return false;
+                    break;
+                case 10: // Approach1: Destination is within ~100m [Video]
                     if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 8000f)
                     {
                         return false;
                     }
-                    else
-                    {
-                        TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
-                        return true;
-                    }
-                case 10: // Approach2: Sub is docked [Text]
+                    break;
+                case 11: // Approach2: Sub is docked [Text]
                     if (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0)
                     {
                         return false;
@@ -551,128 +392,11 @@ namespace Barotrauma.Tutorials
             return true;
         }
 
-        private bool HasObjective(string objectiveName)
-        {
-            for (int i = 0; i < activeObjectives.Count; i++)
-            {
-                if (activeObjectives[i].Id == objectiveName) return true;
-            }
-
-            return false;
-        }
-
-        private void CheckActiveObjectives(TutorialSegment objective, float deltaTime)
-        {
-            switch(objective.Id)
-            {
-                case "ReactorCommand": // Reactor commanded
-                    if (!IsReactorPoweredUp())
-                    {
-                        if (!HasOrder("operatereactor")) return;
-                    }
-                    break;
-                case "NavConsole": // traveled 50 meters
-                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 4000f)
-                    {
-                        return;
-                    }
-                    break;
-                case "Flood": // Hull breaches repaired
-                    if (IsFlooding()) return;
-                    break;
-                case "Medical":
-                    if (injuredMember != null && !injuredMember.IsDead)
-                    {
-                        if (injuredMember.CharacterHealth.DroppedItem == null) return;
-                    }
-                    break;
-                case "EnemyOnSonar": // Enemy dispatched
-                    if (HasEnemyOnSonarForDuration(deltaTime))
-                    {
-                        return;
-                    }
-                    break;
-                case "Degrading": // Fixed
-                    if (mechanic != null && !mechanic.IsDead)
-                    {
-                        HumanAIController humanAI = mechanic.AIController as HumanAIController;
-                        if (mechanic.CurrentOrder?.AITag != "repairsystems" || humanAI.CurrentOrderOption != "jobspecific")
-                        {
-                            return;
-                        }
-                    }
-
-                    if (engineer != null && !engineer.IsDead)
-                    {
-                        HumanAIController humanAI = engineer.AIController as HumanAIController;
-                        if (engineer.CurrentOrder?.AITag != "repairsystems" || humanAI.CurrentOrderOption != "jobspecific")
-                        {
-                            return;
-                        }
-                    }
-
-                    break;
-                case "Approach1": // Wait until docked
-                    if (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0)
-                    {
-                        return;
-                    }
-                    break;
-            }
-
-            RemoveCompletedObjective(objective);
-        }
-
-        private bool IsReactorPoweredUp()
-        {
-            float load = 0.0f;
-            List<Connection> connections = reactor.Item.Connections;
-            if (connections != null && connections.Count > 0)
-            {
-                foreach (Connection connection in connections)
-                {
-                    if (!connection.IsPower) continue;
-                    foreach (Connection recipient in connection.Recipients)
-                    {
-                        if (!(recipient.Item is Item it)) continue;
-
-                        PowerTransfer pt = it.GetComponent<PowerTransfer>();
-                        if (pt == null) continue;
-
-                        load = Math.Max(load, pt.PowerLoad);
-                    }
-                }
-            }
-
-            return Math.Abs(load + reactor.CurrPowerConsumption) < 10;
-        }
-
-        private Character CrewMemberWithJob(string job)
+        private bool HasOrder(string aiTag)
         {
             for (int i = 0; i < crew.Count; i++)
             {
-                if (crew[i].Info.Job.Name == job) return crew[i];
-            }
-
-            return null;
-        }
-
-        private bool HasOrder(string aiTag, string option = null)
-        {
-            for (int i = 0; i < crew.Count; i++)
-            {
-                if (crew[i].CurrentOrder?.AITag == aiTag)
-                {
-                    if (option == null)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        HumanAIController humanAI = crew[i].AIController as HumanAIController;
-                        return humanAI.CurrentOrderOption == option;
-                    }
-                }
+                if (crew[i].CurrentOrder?.AITag == aiTag) return true;
             }
 
             return false;
@@ -723,51 +447,27 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            return characterTimeOnSonar.Find(ct => ct.Second >= requiredTimeOnSonar && !ct.First.IsDead) != null;
+            return characterTimeOnSonar.Find(ct => ct.Second >= requiredTimeOnSonar) != null;
         }
 
         private void TriggerTutorialSegment(int index, params object[] args)
         {
-            Inventory.draggingItem = null;
             ContentRunning = true;
             activeSegment = segments[index];
-
-            string tutorialText = TextManager.GetFormatted(activeSegment.TextContent.GetAttributeString("tag", ""), true, args);
-            string objectiveText = string.Empty;
-
-            if (!string.IsNullOrEmpty(activeSegment.Objective))
-            {
-                if (args.Length == 0)
-                {
-                    objectiveText = activeSegment.Objective;
-                }
-                else
-                {
-                    objectiveText = string.Format(activeSegment.Objective, args);
-                }
-
-                activeSegment.Objective = objectiveText;
-            }
-            else
-            {
-                activeSegment.IsTriggered = true; // Complete at this stage only if no related objective
-            }
+            activeSegment.IsTriggered = true;
 
             switch (activeSegment.ContentType)
             {
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Id), tutorialText,
-                          activeSegment.TextContent.GetAttributeInt("width", 300),
-                          activeSegment.TextContent.GetAttributeInt("height", 80),
-                          activeSegment.TextContent.GetAttributeString("anchor", "Center"), true, ClosePreTextAndTriggerVideoCallback);                    
+                    spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
                     break;
-                case ContentTypes.TextOnly:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Id), tutorialText,
-                                              activeSegment.TextContent.GetAttributeInt("width", 300),
-                                              activeSegment.TextContent.GetAttributeInt("height", 80),
-                                              activeSegment.TextContent.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);
+                case ContentTypes.Text:
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.GetFormatted(activeSegment.Content.GetAttributeString("tag", ""), false, args),
+                                              activeSegment.Content.GetAttributeInt("width", 300),
+                                              activeSegment.Content.GetAttributeInt("height", 80),
+                                              activeSegment.Content.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);
                     break;
             }
 
@@ -777,13 +477,6 @@ namespace Barotrauma.Tutorials
             }
 
             CoroutineManager.StartCoroutine(WaitToStop()); // Completed
-        }
-
-        private void ReplaySegmentVideo(TutorialSegment segment)
-        {
-            if (ContentRunning) return;
-            ContentRunning = true;
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, () => ContentRunning = false);
         }
 
         private IEnumerable<object> WaitToStop()
