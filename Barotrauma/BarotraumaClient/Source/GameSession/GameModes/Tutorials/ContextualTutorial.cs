@@ -103,15 +103,15 @@ namespace Barotrauma.Tutorials
             videoPlayer = new VideoPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
             //objectivesOpen = true;
-
-            for (int i = 0; i < segments.Count; i++)
-            {
-                segments[i].IsTriggered = false;
-            }
         }
 
         public void LoadPartiallyComplete(XElement element)
         {
+            for (int i = 0; i < segments.Count; i++)
+            {
+                segments[i].IsTriggered = false;
+            }
+
             int[] completedSegments = element.GetAttributeIntArray("completedsegments", null);
 
             if (completedSegments == null || completedSegments.Length == 0)
