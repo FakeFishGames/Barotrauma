@@ -365,12 +365,6 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT);
                 Write(msg, eventsToSync, out sentEvents, client);
             }
-
-            foreach (NetEntityEvent entityEvent in sentEvents)
-            {
-                (entityEvent as ServerEntityEvent).Sent = true;
-                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
-            }
             sentEvents = eventsToSync;
         }
 

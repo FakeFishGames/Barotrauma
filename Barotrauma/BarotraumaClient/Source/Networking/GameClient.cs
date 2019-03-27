@@ -866,39 +866,13 @@ namespace Barotrauma.Networking
             }
             else
             {
-                //disconnected/denied for some other reason than the server being full
-                // -> stop queuing and show a message box
-                waitInServerQueueBox?.Close();
-                waitInServerQueueBox = null;
-                CoroutineManager.StopCoroutines("WaitInServerQueue");
-            }
-
-            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
-            {
-                DebugConsole.NewMessage("Attempting to reconnect...");
-
-                string msg = TextManager.GetServerMessage(disconnectMsg);
-                msg = string.IsNullOrWhiteSpace(msg) ? 
-                    TextManager.Get("ConnectionLostReconnecting") : 
-                    msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
-
-                reconnectBox = new GUIMessageBox(
-                    TextManager.Get("ConnectionLost"),
-                    msg, new string[0]);
-                connected = false;
-                ConnectToServer(serverIP);
-            }
-            else
-            {
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)
                 {
-                    DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
                     msg = disconnectMsg;
                 }
                 else
                 {
-                    DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
                     msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
 
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
@@ -1387,6 +1361,9 @@ namespace Barotrauma.Networking
                         }
 
                         lastSentChatMsgID = inc.ReadUInt16();
+                        break;
+                    case ServerNetObject.CLIENT_LIST:
+                        ReadClientList(inc);
                         break;
                     case ServerNetObject.CLIENT_LIST:
                         ReadClientList(inc);

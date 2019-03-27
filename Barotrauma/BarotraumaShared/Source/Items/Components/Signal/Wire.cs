@@ -182,6 +182,9 @@ namespace Barotrauma.Items.Components
                 if (nodes.Count > 0 && nodes[0] == nodePos) break;
                 if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) break;
 
+                if (nodes.Count > 0 && nodes[0] == nodePos) break;
+                if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) break;
+
                 //make sure we place the node at the correct end of the wire (the end that's closest to the new node pos)
                 int newNodeIndex = 0;
                 if (nodes.Count > 1)

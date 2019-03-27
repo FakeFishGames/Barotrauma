@@ -567,45 +567,6 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
-            {
-                if (Screen.Selected == GameMain.SubEditorScreen)
-                {
-                    if (!MapEntity.SelectedAny)
-                    {
-                        ThrowError("You have to select item(s)/structure(s) first!");
-                    }
-                    else
-                    {
-                        if (args.Length > 0)
-                        {
-                            if (!byte.TryParse(args[0], out byte a))
-                            {
-                                ThrowError($"Failed to parse value for ALPHA from {args[0]}");
-                            }
-                            else
-                            {
-                                foreach (var mapEntity in MapEntity.SelectedList)
-                                {
-                                    if (mapEntity is Structure s)
-                                    {
-                                        s.SpriteColor = new Color(s.SpriteColor.R, s.SpriteColor.G, s.SpriteColor.G, a);
-                                    }
-                                    else if (mapEntity is Item i)
-                                    {
-                                        i.SpriteColor = new Color(i.SpriteColor.R, i.SpriteColor.G, i.SpriteColor.G, a);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ThrowError("Not enough arguments provided! One required!");
-                        }
-                    }
-                }
-            }, isCheat: true));
-
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
                 TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
@@ -974,6 +935,30 @@ namespace Barotrauma
                             }
                         }
                     }
+                    XNode nextNode = destinationElement.NextNode;
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
+                    destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
                 }
             }, isCheat: false));
 #endif

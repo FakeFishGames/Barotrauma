@@ -408,7 +408,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
+            while (MainLimb.Rotation - (movementAngle + mainLimbAngle) < -MathHelper.Pi)
             {
                 movementAngle = Dir > 0 ? -MathHelper.PiOver2 : MathHelper.PiOver2;
                 if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)

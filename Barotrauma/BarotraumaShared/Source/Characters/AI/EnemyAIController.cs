@@ -475,18 +475,6 @@ namespace Barotrauma
                 }
                 attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
             }
-            else
-            {
-                // Take the sub position into account in the sim pos
-                if (Character.Submarine == null && SelectedAiTarget.Entity.Submarine != null)
-                {
-                    attackSimPos += SelectedAiTarget.Entity.Submarine.SimPosition;
-                }
-                else if (Character.Submarine != null && SelectedAiTarget.Entity.Submarine == null)
-                {
-                    attackSimPos -= Character.Submarine.SimPosition;
-                }
-            }
 
             if (raycastTimer > 0.0)
             {
@@ -546,9 +534,7 @@ namespace Barotrauma
                     }
                 }
             }
-
-            bool canAttack = true;
-            if (IsCoolDownRunning)
+            else
             {
                 UpdateWallTarget();
                 raycastTimer = RaycastInterval;
@@ -1032,46 +1018,15 @@ namespace Barotrauma
                     {
                         targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
                     }
-                    else if (targetCharacter.Submarine != null && Character.Submarine == null)
-                    {
-                        //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
-                        targetingTag = "room";
-                    }
                     else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
-                    {
-                        targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
-                    }
-                }
-                else if (target.Entity != null)
-                {
-                    //skip the target if it's a room and the character is already inside a sub
-                    if (character.CurrentHull != null && target.Entity is Hull) continue;
-                    
-                    Door door = null;
-                    if (target.Entity is Item item)
                     {
                         if (targetCharacter.AIController is EnemyAIController enemy)
                         {
-                            targetingTag = "room";
-                        }
-
-                        door = item.GetComponent<Door>();
-                        foreach (TargetingPriority prio in targetingPriorities.Values)
-                        {
-                            if (item.HasTag(prio.TargetTag))
+                            if (enemy.combatStrength > combatStrength)
                             {
                                 targetingTag = "stronger";
                             }
-                        }
-                    }
-                    else if (target.Entity is Structure s)
-                    {
-                        targetingTag = "wall";
-                        if (aggressiveBoarding)
-                        {
-                            // Ignore walls when inside.
-                            valueModifier = character.CurrentHull == null ? 2 : 0;
-                            if (valueModifier > 0)
+                            else if (enemy.combatStrength < combatStrength)
                             {
                                 targetingTag = "weaker";
                             }
@@ -1203,14 +1158,6 @@ namespace Barotrauma
 
         #endregion
 
-        protected override void OnStateChanged(AIState from, AIState to)
-        {
-            latchOntoAI?.DeattachFromBody();
-            Character.AnimController.ReleaseStuckLimbs();
-            escapePoint = Vector2.Zero;
-            wallTarget = null;
-        }
-
             if (toBeRemoved != null)
             {
                 foreach (AITarget target in toBeRemoved)
@@ -1218,6 +1165,19 @@ namespace Barotrauma
                     targetMemories.Remove(target);
                 }
             }
+
+        #endregion
+
+        protected override void OnStateChanged(AIState from, AIState to)
+        {
+            latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
+        }
+
+        private int GetMinimumPassableHoleCount()
+        {
+            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
+        }
 
         #endregion
 
