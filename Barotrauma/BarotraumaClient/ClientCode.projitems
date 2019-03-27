@@ -82,6 +82,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\ShapeExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\SpriteSheetPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\UISprite.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\VideoPlayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\Widget.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Door.cs" />
@@ -220,6 +221,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GUI\VideoPlayer.cs" />
   </ItemGroup>
 </Project>

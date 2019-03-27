@@ -939,27 +939,6 @@ namespace Barotrauma
                     while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
                     destinationElement = nextNode as XElement;
                 }
-                destinationDoc.Save(destinationPath);
-            },
-            () =>
-            {
-                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
-                return new string[][]
-                {
-                    files,
-                    files
-                };
-            }));
-
-            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
-            {
-                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
-                List<string> lines = new List<string>();
-                foreach (MapEntityPrefab me in MapEntityPrefab.List)
-                {
-                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
-                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
-                }
             }, isCheat: false));
 #endif
 
@@ -1085,6 +1064,17 @@ namespace Barotrauma
                 if (args.Length == 0) return;
                 LocalizationCSVtoXML.Convert(args[0]);
             }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
+                }
+            }, isCheat: false));
 #endif
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>

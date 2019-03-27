@@ -466,14 +466,9 @@ namespace Barotrauma
                 }
             }
 
-            if (wallTarget != null)
+            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
             {
-                attackWorldPos = wallTarget.Position;
-                if (wallTarget.Structure.Submarine != null)
-                {
-                    attackWorldPos += wallTarget.Structure.Submarine.Position;
-                }
-                attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
+                Character.AnimController.TargetDir = Character.SimPosition.X < attackSimPosition.X ? Direction.Right : Direction.Left;
             }
 
             if (raycastTimer > 0.0)
@@ -1020,6 +1015,10 @@ namespace Barotrauma
                     }
                     else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
                     {
+                        targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
+                    }
+                    else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
+                    {
                         if (targetCharacter.AIController is EnemyAIController enemy)
                         {
                             if (enemy.combatStrength > combatStrength)
@@ -1172,11 +1171,6 @@ namespace Barotrauma
         {
             latchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
-        }
-
-        private int GetMinimumPassableHoleCount()
-        {
-            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
         }
 
         #endregion
