@@ -11,7 +11,7 @@
   </Item>
   <Item name="Depth Charge Loader" identifier="depthchargeloader" tags="depthchargeammosource" category="Machine" linkable="true" allowedlinks="depthchargelauncher" scale="0.5">
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.8" sourcerect="354,2,125,188" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" autointeractwithcontained="true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <Containable identifiers="depthchargeammo" />
     </ItemContainer>
   </Item>
@@ -26,7 +26,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,130,89" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />
@@ -51,7 +51,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,1,129,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />
@@ -88,7 +88,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,128,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="5.0">
       <AiTarget soundrange="20000" />
       <Attack structuredamage="1" damagetype="Blunt">
@@ -114,7 +114,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,0,128,89" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" />
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="5.0">
       <AiTarget soundrange="20000" />
       <Attack structuredamage="1" damagetype="Blunt">

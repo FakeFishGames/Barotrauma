@@ -19,7 +19,7 @@
 
     <Body width="50" height="17" density="20"/>
 
-    <Wearable slots="Any,InnerClothes">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
       <sprite name="Engineer Torso" texture="engineer_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       
       <sprite name="Engineer Left Upper Arm" texture="engineer_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
@@ -63,7 +63,7 @@
 
     <Body width="50" height="17" density="20"/>
 
-    <Wearable slots="Any,InnerClothes">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
       <sprite name="Mechanic Torso" texture="mechanic_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
 
       <sprite name="Mechanic Left Upper Arm" texture="mechanic_torso_[GENDER].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
@@ -101,7 +101,7 @@
 
     <Body width="45" height="31" density="20"/>
 
-    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1" range="50">
+    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1" range="50" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="10" stun="0.6">
         <Affliction identifier="internaldamage" strength="8" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />

@@ -2738,5 +2738,11 @@
 
   <CharacterEditor.Limb>Limb</CharacterEditor.Limb>
   <CharacterEditor.Joint>Joint</CharacterEditor.Joint>
+
+
+  <ItemMsgInteractSelect>Interact [select]</ItemMsgInteractSelect>
+  <ItemMsgEquipSelect>Equip [select]</ItemMsgEquipSelect>
+  <ItemMsgPickUpSelect>Pick up [select]</ItemMsgPickUpSelect>
+  <ItemMsgClimbSelect>Climb [select]</ItemMsgClimbSelect>
   
 </infotexts>

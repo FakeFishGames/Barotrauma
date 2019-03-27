@@ -5,7 +5,7 @@
 
   <Sprite texture="ladder.png" depth="0.05" sourcerect="0,0,11,121"/>
 
-  <Ladder canbeselected="true"/>
+  <Ladder canbeselected="true" msg="ItemMsgClimbSelect"/>
 
   <trigger x="-40" y="20" width="90"/>
 </Item>

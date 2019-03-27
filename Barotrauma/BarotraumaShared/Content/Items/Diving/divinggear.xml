@@ -11,7 +11,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
     <Body width="38" height="109" density="5" />
-    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 25" />
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
@@ -34,7 +34,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="473,223,39,112" depth="0.55" />
     <Body width="39" height="112" density="9.9" />
-    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 20" />
         <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="5000" />
@@ -57,7 +57,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,322,57,62" />
     <Sprite name="Diving Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.55" sourcerect="96,0,96,96" origin="0.5,0.5" />
     <Body width="26" height="18" density="15" />
-    <Wearable limbtype="Head" slots="Any,Head">
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="1,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5" comparison="Or">
@@ -104,7 +104,7 @@
     <ContainedSprite name="Diving Suit Behind Window" allowedcontainertags="divingsuitcontainerwindow" texture="Content/Items/Containers/Lockers.png" sourcerect="771,860,83,126" depth="0.55" origin="0.5,0.5" />
     <ContainedSprite name="Diving Suit In Horizontal Locker" allowedcontainertags="divingsuitcontainerhorizontal" texture="Content/Items/Containers/DivingSuitLocker.png" sourcerect="236,340,228,66" depth="0.55" origin="0.6,0.5" />
     <Body radius="45" width="34" density="15" />
-    <Wearable slots="OuterClothes">
+    <Wearable slots="OuterClothes" msg="ItemMsgEquipSelect">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,0" sourcerect="0,0,288,288" origin="0.5,0.5">
         <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
@@ -119,7 +119,7 @@
           <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="1.0,1.0" />
         </LightComponent>
         <!-- Visor & Spotlight
-		<LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
+		    <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
             <Conditional IsDead="false" />
           </StatusEffect>
@@ -133,15 +133,15 @@
           </StatusEffect>
           <LightTexture texture="Content/Lights/divinghelmetvisorlight.png" origin="0.5, 0.5" size="0.2,0.2" />
         </LightComponent>
-    	-->
-    	<!-- Spotlight
-    	<LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
+    	  -->
+    	  <!-- Spotlight
+    	  <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
             <Conditional IsDead="false" />
           </StatusEffect>
           <LightTexture texture="Content/Lights/lightcone.png" origin="0.025, 0.5" size="1.0,1.0" />
         </LightComponent>
-    	-->
+    	  -->
       </sprite>
       <sprite texture="DivingSuit_Torso.png" limb="Torso" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       <sprite texture="DivingSuit_Legs.png" limb="Waist" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
@@ -204,7 +204,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,67,62" origin="0.5,0.5" />
     <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159" />
     <Body width="180" height="95" density="11" />
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" />
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" msg="ItemMsgPickUpSelect"/>
     <Propulsion force="150" usablein="water" particles="bubbles">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />

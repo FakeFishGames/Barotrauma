@@ -19,7 +19,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell" />
     </ItemContainer>
-    <Wearable limbtype="Head" slots="Any,Headset">
+    <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05" />
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,1" sourcerect="2,3,288,288" origin="0.5,0.5" />
     </Wearable>
@@ -30,7 +30,7 @@
     <Deconstruct time="10">
       <Item identifier="bikehorn" />
     </Deconstruct>
-    <Wearable limbtype="Head" slots="Any,Head">
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5" />
       <StatusEffect type="OnWearing" target="Character" HideFace="true" />
     </Wearable>
@@ -44,7 +44,7 @@
       <Item identifier="bikehorn" />
       <Item identifier="bikehorn" />
     </Deconstruct>
-    <Wearable slots="Any,InnerClothes">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
       <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,0,30,58" origin="0.5,0.48" depth="0.02" />
       <sprite texture="clownshirt.png" limb="RightHand" sourcerect="47,0,15,49" origin="0.45,0.6" hidelimb="true" />
       <sprite texture="clownshirt.png" limb="LeftHand" sourcerect="47,0,15,49" origin="0.45,0.6" depth="0.14" hidelimb="true" />

@@ -12,7 +12,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="Red Wire" identifier="redwire" category="Electrical" Tags="smallitem,wire" spritecolor="254,23,17,255" InventoryIconColor="254,23,17,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
@@ -27,7 +27,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="Blue Wire" identifier="bluewire" category="Electrical" Tags="smallitem,wire" spritecolor="51,121,173,255" InventoryIconColor="51,121,173,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
@@ -42,7 +42,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="Orange Wire" identifier="orangewire" category="Electrical" Tags="smallitem,wire" spritecolor="255,140,13,255" InventoryIconColor="255,140,13,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
@@ -57,7 +57,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="Green Wire" identifier="greenwire" category="Electrical" Tags="smallitem,wire" spritecolor="56,143,111,255" InventoryIconColor="56,143,111,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
@@ -72,7 +72,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="Black Wire" identifier="blackwire" category="Electrical" Tags="smallitem,wire" spritecolor="50,50,50,255" InventoryIconColor="50,50,50,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
@@ -87,7 +87,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="Brown Wire" identifier="brownwire" category="Electrical" Tags="smallitem,wire" spritecolor="123,77,62,255" InventoryIconColor="123,77,62,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
@@ -102,7 +102,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect"/>
     <Wire />
   </Item>
   <Item name="FPGA Circuit" identifier="fpgacircuit" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices." scale="0.5">
@@ -117,7 +117,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="122,68,36,36" origin="0.5,0.5" />
     <Body width="36" height="36" density="30" />
-    <Holdable slots="Any,RightHand,LeftHand" />
+    <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect"/>
   </Item>
   <Item name="And Component" identifier="andcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when both inputs receive a signal within a set period of each other." scale="0.5">
     <Price locationtype="Research" buyprice="75" />
