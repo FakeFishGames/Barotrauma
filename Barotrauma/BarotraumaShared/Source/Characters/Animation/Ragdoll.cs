@@ -1103,6 +1103,8 @@ namespace Barotrauma
 
             CheckValidity();
 
+            CheckValidity();
+
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
