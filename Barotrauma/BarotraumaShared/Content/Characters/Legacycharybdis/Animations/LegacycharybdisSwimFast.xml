@@ -1,0 +1,18 @@
+﻿<LegacycharybdisSwimFast
+  movementspeed="6"
+  waveamplitude="3"
+  wavelength="50"
+  steertorque="100"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True"
+  footangle="NaN"
+  headangle="NaN"
+  torsoangle="0"
+  animationtype="SwimFast"
+  torsotorque="150"
+  headtorque="25"
+  foottorque="25"
+  tailtorque="50"
+  footangles=""
+  cyclespeed="1" />

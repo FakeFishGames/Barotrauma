@@ -1765,15 +1765,15 @@
   <EntityDescription.RuinFractalBall>A decorative prop for alien ruins.</EntityDescription.RuinFractalBall>
   <EntityName.RuinClaw>Ruin Prop Claw</EntityName.RuinClaw>
   <EntityDescription.RuinClaw>A decorative prop for alien ruins.</EntityDescription.RuinClaw>
-  <EntityName.skyholderartifact>Sky Alien Artifact</EntityName.skyholderartifact>
+  <EntityName.skyholderartifact>Alien Artifact</EntityName.skyholderartifact>
   <EntityDescription.skyholderartifact>Artifact found in alien ruins.</EntityDescription.skyholderartifact>
-  <EntityName.thermalartifact>Thermal Alien Artifact</EntityName.thermalartifact>
+  <EntityName.thermalartifact>Alien Artifact</EntityName.thermalartifact>
   <EntityDescription.thermalartifact>Artifact found in alien ruins.</EntityDescription.thermalartifact>
-  <EntityName.faradayartifact>Faraday Alien Artifact</EntityName.faradayartifact>
+  <EntityName.faradayartifact>Alien Artifact</EntityName.faradayartifact>
   <EntityDescription.faradayartifact>Artifact found in alien ruins.</EntityDescription.faradayartifact>
-  <EntityName.nasonovartifact>Nasonov Alien Artifact</EntityName.nasonovartifact>
+  <EntityName.nasonovartifact>Alien Artifact</EntityName.nasonovartifact>
   <EntityDescription.nasonovartifact>Artifact found in alien ruins.</EntityDescription.nasonovartifact>
-  <EntityName.psychosisartifact>Psychosis Alien Artifact</EntityName.psychosisartifact>
+  <EntityName.psychosisartifact>Alien Artifact</EntityName.psychosisartifact>
   <EntityDescription.psychosisartifact>Artifact found in alien ruins.</EntityDescription.psychosisartifact>
   <EntityName.alientrinket1>Alien Trinket</EntityName.alientrinket1>
   <EntityDescription.alientrinket1>Minor artifact found in alien ruins.</EntityDescription.alientrinket1>
@@ -2735,7 +2735,15 @@
   <DialogNegative>No way!</DialogNegative>
   <DialogCannotReach>Can't reach the target.</DialogCannotReach>
 
+  <EndRoundSubNotAtLevelEnd>The submarine is not at either end of the level. Do you want to abort the mission and end the round now?</EndRoundSubNotAtLevelEnd>
+  
   <EndRoundVotes>Votes to end the round [votes]/[max]</EndRoundVotes>
   
   <CrewDeadNoRespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</CrewDeadNoRespawns>
+  
+  <Create>Create</Create>
+
+  <CharacterEditor.Limb>Limb</CharacterEditor.Limb>
+  <CharacterEditor.Joint>Joint</CharacterEditor.Joint>
+  
 </infotexts>

@@ -923,9 +923,9 @@
   </InventorySlotSmall>
 
   <ConnectionPanel
-    color="255,255,255,191"
-    hovercolor="255,255,255,191"
-    selectedcolor="255,255,255,191">
+    color="255,255,255,230"
+    hovercolor="255,255,255,230"
+    selectedcolor="255,255,255,230">
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,312,400,200" tile="false"/>
   </ConnectionPanel>

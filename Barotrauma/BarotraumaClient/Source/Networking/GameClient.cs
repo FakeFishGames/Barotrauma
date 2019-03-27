@@ -141,8 +141,23 @@ namespace Barotrauma.Networking
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) return false;
-                    RequestRoundEnd();
+                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) { return false; }
+                    if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                    {
+                        var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        msgBox.Buttons[0].OnClicked = (_, __) =>
+                        {
+                            GameMain.Client.RequestRoundEnd();
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    }
+                    else
+                    {
+                        RequestRoundEnd();
+                    }
                     return true;
                 },
                 Visible = false
@@ -1367,9 +1382,12 @@ namespace Barotrauma.Networking
                         {
                             MultiPlayerCampaign.ClientRead(inc);
                         }
+                        else if (GameMain.NetLobbyScreen.SelectedMode.Identifier != "multiplayercampaign")
+                        {
+                            GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+                        }
 
                         lastSentChatMsgID = inc.ReadUInt16();
-
                         break;
                     case ServerNetObject.CLIENT_LIST:
                         ReadClientList(inc);

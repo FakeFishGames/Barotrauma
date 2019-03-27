@@ -10,7 +10,12 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="772,771,52,59" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="223,149,118,136" depth="0.6" origin="0.5,0.5" />
     <Body width="110" height="120" density="20" />
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0" />
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
   </Elastin>
   <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
     <!-- TODO: adjust prices -->

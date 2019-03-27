@@ -10,6 +10,7 @@ using System.Text;
 using System.IO.Compression;
 using System.IO;
 using Barotrauma.Steam;
+using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -1039,7 +1040,7 @@ namespace Barotrauma.Networking
             if (command == ClientPermissions.ManageRound && inc.PeekBoolean() && 
                 GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
             {
-                if (!mpCampaign.AllowedToEndRound(sender.Character))
+                if (!mpCampaign.AllowedToEndRound(sender.Character) && !sender.HasPermission(command))
                 {
                     return;
                 }
@@ -1125,9 +1126,22 @@ namespace Barotrauma.Networking
                     UInt16 modeIndex = inc.ReadUInt16();
                     if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "multiplayercampaign")
                     {
+                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
+                        for (int i = 0; i < saveFiles.Length; i++)
+                        {
+                            XDocument doc = SaveUtil.LoadGameSessionDoc(saveFiles[i]);
+                            if (doc?.Root != null)
+                            {
+                                saveFiles[i] =
+                                    string.Join(";",
+                                        saveFiles[i].Replace(';', ' '),
+                                        doc.Root.GetAttributeString("submarine", ""),
+                                        doc.Root.GetAttributeString("savetime", ""));
+                            }
+                        }
+
                         NetOutgoingMessage msg = server.CreateMessage();
                         msg.Write((byte)ServerPacketHeader.CAMPAIGN_SETUP_INFO);
-                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
                         msg.Write((UInt16)saveFiles.Count());
                         foreach (string saveFile in saveFiles)
                         {
@@ -1212,6 +1226,7 @@ namespace Barotrauma.Networking
                 ClientWriteLobby(c);
 
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
+                    GameMain.NetLobbyScreen.SelectedMode == campaign.Preset &&
                     NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
                     //already sent an up-to-date campaign save
@@ -1529,7 +1544,8 @@ namespace Barotrauma.Networking
             }
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
+            if (campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
+                NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();

@@ -140,6 +140,8 @@ namespace Barotrauma.Items.Components
                 if (c.Name == "power_in") continue;
                 foreach (Connection c2 in c.Recipients)
                 {
+                    if (c2.Item.Condition <= 0.0f) { continue; }
+
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
                     if (pt == null)
                     {
@@ -151,7 +153,7 @@ namespace Barotrauma.Items.Components
                         }
                         continue;
                     }
-                    if (!pt.IsActive) { continue; }
+                    if (!pt.IsActive || !pt.CanTransfer) { continue; }
 
                     gridLoad += pt.PowerLoad;
                     gridPower -= pt.CurrPowerConsumption;
@@ -207,9 +209,9 @@ namespace Barotrauma.Items.Components
 
                 Charge -= CurrPowerOutput / 3600.0f;
             }
-            item.SendSignal(0, Charge.ToString(), "charge", null);
-            item.SendSignal(0, ((Charge / capacity) * 100).ToString(), "charge_%", null);
-            item.SendSignal(0, ((RechargeSpeed / maxRechargeSpeed) * 100).ToString(), "charge_rate", null);
+            item.SendSignal(0, ((int)Charge).ToString(), "charge", null);
+            item.SendSignal(0, ((int)((Charge / capacity) * 100)).ToString(), "charge_%", null);
+            item.SendSignal(0, ((int)((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
 
             foreach (Pair<Powered, Connection> connected in directlyConnected)
             {

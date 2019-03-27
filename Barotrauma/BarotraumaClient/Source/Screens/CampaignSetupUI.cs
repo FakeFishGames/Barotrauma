@@ -269,10 +269,12 @@ namespace Barotrauma
             {
                 OnSelected = SelectSaveFile
             };
-
+            
             foreach (string saveFile in saveFiles)
             {
-                XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
+                string fileName = saveFile;
+                string subName = "";
+                string saveTime = "";
                 var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = saveFile
@@ -280,25 +282,38 @@ namespace Barotrauma
 
                 var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform),
                     text: Path.GetFileNameWithoutExtension(saveFile));
-                if (doc?.Root == null)
-                {
-                    DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
-                    nameText.Color = Color.Red;
-                    continue;
-                }
 
-                string submarineName = doc.Root.GetAttributeString("submarine", "");
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: submarineName, font: GUI.SmallFont)
+                if (!isMultiplayer)
                 {
-                    UserData = saveFile
+                    XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
+                    if (doc?.Root == null)
+                    {
+                        DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
+                        nameText.Color = Color.Red;
+                        continue;
+                    }
+                    subName =  doc.Root.GetAttributeString("submarine", "");
+                    saveTime = doc.Root.GetAttributeString("savetime", "");
+                }
+                else
+                {
+                    string[] splitSaveFile = saveFile.Split(';');
+                    saveFrame.UserData = splitSaveFile[0];
+                    fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
+                    if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
+                    if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
+                }
+                
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
+                    text: subName, font: GUI.SmallFont)
+                {
+                    UserData = fileName
                 };
 
-                string saveTime = doc.Root.GetAttributeString("savetime", "");
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
                     text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
                 {
-                    UserData = saveFile
+                    UserData = fileName
                 };
             }
 
@@ -370,6 +385,12 @@ namespace Barotrauma
 
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
+            if (isMultiplayer)
+            {
+                loadGameButton.Enabled = true;
+                return true;
+            }
+
             string fileName = (string)obj;
 
             XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
