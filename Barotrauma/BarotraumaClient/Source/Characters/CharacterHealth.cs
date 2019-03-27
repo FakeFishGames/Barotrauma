@@ -68,6 +68,14 @@ namespace Barotrauma
 
         private float dropItemAnimDuration = 0.5f;
         private float dropItemAnimTimer;
+
+        public Item DroppedItem
+        {
+            get
+            {
+                return droppedItem;
+            }
+        }
         private Item droppedItem;
 
         private GUIComponent draggingMed;

@@ -68,11 +68,11 @@ namespace Barotrauma
             int height = defaultResolution.Y;
 
             background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
-            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.CenterRight), "SonarFrame");
-            videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
+            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point(-100, 0) }, "SonarFrame");
+            //videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
 
-            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), background.RectTransform, Anchor.Center, Pivot.CenterLeft), "SonarFrame");
-            textFrame.RectTransform.AbsoluteOffset = new Point(borderSize, 0);
+            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "SonarFrame");
+            textFrame.RectTransform.AbsoluteOffset = new Point(borderSize + videoFrame.Rect.Width, 0);
 
             videoView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
             (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
