@@ -7,7 +7,7 @@
 
     enum FileTransferMessageType
     {
-        Unknown, Initiate, Data, TransferOnSameMachine, Cancel
+        Unknown, Initiate, Data, Cancel
     }
 
     enum FileTransferType

@@ -801,37 +801,13 @@ namespace Barotrauma
         {
             foreach (XElement itemElement in element.Elements())
             {
-                var newItem = Item.Load(itemElement, inventory.Owner.Submarine, createNetworkEvent: true);
-                if (newItem == null) { continue; }
+                var newItem = Item.Load(itemElement, inventory.Owner.Submarine);
+                int slotIndex = itemElement.GetAttributeInt("i", 0);
+                if (newItem == null) continue;
 
-                if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition))
-                {
-                    GameMain.NetworkMember.CreateEntityEvent(newItem, new object[] { NetEntityEvent.Type.Status });
-                }
+                SpawnInventoryItemProjSpecific(newItem);
 
-                int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
-                if (!slotIndices.Any())
-                {
-                    DebugConsole.ThrowError("Invalid inventory data in character \"" + Name + "\" - no slot indices found");
-                    continue;
-                }
-                
-                inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
-
-                //force the item to the correct slots
-                //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
-                //  which may not be where it actually was
-                for (int i = 0; i < inventory.Capacity; i++)
-                {
-                    if (slotIndices.Contains(i))
-                    {
-                        inventory.Items[i] = newItem;
-                    }
-                    else if (inventory.Items[i] == newItem)
-                    {
-                        inventory.Items[i] = null;
-                    }
-                }
+                inventory.TryPutItem(newItem, slotIndex, false, false, null);
 
                 int itemContainerIndex = 0;
                 var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
@@ -845,6 +821,8 @@ namespace Barotrauma
             }
         }
         
+        partial void SpawnInventoryItemProjSpecific(Item item);
+
         public void ReloadHeadAttachments()
         {
             ResetLoadedAttachments();

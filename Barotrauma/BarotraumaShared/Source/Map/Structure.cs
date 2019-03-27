@@ -297,13 +297,7 @@ namespace Barotrauma
                     CreateStairBodies();
                 }
             }
-
-            // Only add ai targets automatically to walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall"))
-            {
-                aiTarget = new AITarget(this);
-            }
-
+            
             InsertToList();
         }
 

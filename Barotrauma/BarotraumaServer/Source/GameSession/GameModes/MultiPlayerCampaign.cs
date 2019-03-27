@@ -11,11 +11,11 @@ namespace Barotrauma
     {
         private List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
 
-        public static void StartNewCampaign(string savePath, string subPath, string seed)
+        public static void StartNewCampaign(string savePath, string subName, string seed)
         {
             if (string.IsNullOrWhiteSpace(savePath)) return;
 
-            GameMain.GameSession = new GameSession(new Submarine(subPath, ""), savePath, 
+            GameMain.GameSession = new GameSession(new Submarine(subName, ""), savePath, 
                 GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
             var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
             campaign.GenerateMap(seed);
@@ -72,27 +72,6 @@ namespace Barotrauma
             });
         }
 
-        public bool AllowedToEndRound(Character interactor)
-        {
-            if (interactor == null || Level.Loaded?.StartOutpost == null || Level.Loaded?.EndOutpost == null)
-            {
-                return false;
-            }
-
-            if (interactor.Submarine == Level.Loaded.StartOutpost && 
-                interactor.CanInteractWith(startWatchman))
-            {
-                return true;
-            }
-            if (interactor.Submarine == Level.Loaded.EndOutpost &&
-                interactor.CanInteractWith(endWatchman))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
             if ((watchman.Submarine == Level.Loaded.StartOutpost && !Submarine.MainSub.AtStartPosition) ||
@@ -106,7 +85,8 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Character == interactor);
-                hasPermissions = client != null;
+                hasPermissions = client != null &&
+                    (client.HasPermission(ClientPermissions.ManageRound) || client.HasPermission(ClientPermissions.ManageCampaign));
                 CreateDialog(new List<Character> { watchman }, hasPermissions ? "WatchmanInteract" : "WatchmanInteractNotAllowed", 1.0f);
             }
         }
@@ -251,7 +231,6 @@ namespace Barotrauma
             }
 
             lastSaveID++;
-            DebugConsole.Log("Campaign saved, save ID " + lastSaveID);
         }
     }
 }

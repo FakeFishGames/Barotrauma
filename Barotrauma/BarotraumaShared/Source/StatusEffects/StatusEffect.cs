@@ -107,7 +107,7 @@ namespace Barotrauma
         public string[] propertyNames;
         private object[] propertyEffects;
 
-        private PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.Or;
+        private PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.And;
         private List<PropertyConditional> propertyConditionals;
 
         private bool setValue;
@@ -465,13 +465,6 @@ namespace Barotrauma
                         if (target == null || target.SerializableProperties == null) { continue; }
                         foreach (PropertyConditional pc in propertyConditionals)
                         {
-                            if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
-                            {
-                                if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
-                                {
-                                    continue;
-                                }
-                            }
                             if (pc.Matches(target)) { return true; }
                         }
                     }
@@ -482,13 +475,6 @@ namespace Barotrauma
                         if (target == null || target.SerializableProperties == null) { continue; }
                         foreach (PropertyConditional pc in propertyConditionals)
                         {
-                            if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
-                            {
-                                if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
-                                {
-                                    continue;
-                                }
-                            }
                             if (!pc.Matches(target)) { return false; }
                         }
                     }
@@ -710,8 +696,6 @@ namespace Barotrauma
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
                             limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
-                            //only apply non-limb-specific afflictions to the first limb
-                            if (!affliction.Prefab.LimbSpecific) { break; }
                         }
                     }
                     else if (target is Limb limb)

@@ -208,9 +208,8 @@ namespace Barotrauma.Items.Components
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
-            originalElement = element;
             name = element.Name.ToString();
-            SerializableProperties = SerializableProperty.GetProperties(this);            
+            properties = SerializableProperty.GetProperties(this);            
             requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>();
             requiredSkills = new List<Skill>();
 
@@ -244,9 +243,18 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
             
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-            ParseMsg();
-
+            properties = SerializableProperty.DeserializeProperties(this, element);
+#if CLIENT
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                Msg = msg;
+            }
+#endif
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -534,6 +542,7 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
@@ -622,10 +631,52 @@ namespace Barotrauma.Items.Components
         public virtual void Load(XElement componentElement)
         {
             if (componentElement == null) return;
+
             foreach (XAttribute attribute in componentElement.Attributes())
             {
-                if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
+                if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                 property.TrySetValue(this, attribute.Value);
+            }
+#if CLIENT 
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                Msg = msg;
+            }
+#endif
+            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
+            bool overrideRequiredItems = false;
+
+            foreach (XElement subElement in componentElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
+
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);                        
+                        if (newRequiredItem == null) continue;
+
+                        var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?
+                            prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
+                        if (prevRequiredItem != null)
+                        {
+                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
+                            newRequiredItem.Msg = prevRequiredItem.Msg;
+                        }
+
+                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
+                        {
+                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
+                        }
+                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
+                        break;
+                }
             }
             ParseMsg();
             OverrideRequiredItems(componentElement);

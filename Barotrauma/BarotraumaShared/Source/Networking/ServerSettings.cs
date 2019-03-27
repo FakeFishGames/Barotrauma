@@ -513,29 +513,11 @@ namespace Barotrauma.Networking
             set;
         }
 
-        private SelectionMode subSelectionMode;
         [Serialize(SelectionMode.Manual, true)]
-        public SelectionMode SubSelectionMode
-        {
-            get { return subSelectionMode; }
-            set
-            {
-                subSelectionMode = value;
-                Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
-            }
-        }
+        public SelectionMode SubSelectionMode { get; private set; }
 
-        private SelectionMode modeSelectionMode;
         [Serialize(SelectionMode.Manual, true)]
-        public SelectionMode ModeSelectionMode
-        {
-            get { return modeSelectionMode; }
-            set
-            {
-                modeSelectionMode = value;
-                Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
-            }
-        }
+        public SelectionMode ModeSelectionMode { get; private set; }
 
         public BanList BanList { get; private set; }
         

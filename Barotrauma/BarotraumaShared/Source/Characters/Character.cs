@@ -808,7 +808,6 @@ namespace Barotrauma
 
         public void LoadHeadAttachments()
         {
-            if (Info == null) { return; }
             if (AnimController == null) { return; }
             var head = AnimController.GetLimb(LimbType.Head);
             if (head == null) { return; }
@@ -1111,15 +1110,13 @@ namespace Barotrauma
             ViewTarget = null;
             if (!AllowInput) return;
 
-            if (Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer))
+            Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
+            if (Controlled == this)
             {
                 SmoothedCursorPosition = cursorPosition;
             }
             else
             {
-                //apply some smoothing to the cursor positions of remote players when playing as a client
-                //to make aiming look a little less choppy
-                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
                 smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
@@ -1667,12 +1664,10 @@ namespace Barotrauma
                     focusedItem = null; 
                 }
                 findFocusedTimer -= deltaTime;
-            }
+            }            
 #endif
             //climb ladders automatically when pressing up/down inside their trigger area
-            Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
-            if ((SelectedConstruction == null || currentLadder != null) && 
-                !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
+            if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 bool isControlled = Controlled == this;
@@ -1683,19 +1678,6 @@ namespace Barotrauma
                     float minDist = float.PositiveInfinity;
                     foreach (Ladder ladder in Ladder.List)
                     {
-                        if (ladder == currentLadder)
-                        {
-                            continue;
-                        }
-                        else if (currentLadder != null)
-                        {
-                            //only switch from ladder to another if the ladders are above the current ladders and pressing up, or vice versa
-                            if (ladder.Item.WorldPosition.Y > currentLadder.Item.WorldPosition.Y != IsKeyDown(InputType.Up))
-                            {
-                                continue;
-                            }
-                        }
-
                         if (CanInteractWith(ladder.Item, out float dist, checkLinked: false) && dist < minDist)
                         {
                             minDist = dist;
@@ -1894,6 +1876,8 @@ namespace Barotrauma
             }
             speechImpedimentSet = false;
             
+
+
             if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;            
@@ -1950,23 +1934,9 @@ namespace Barotrauma
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
             if (IsForceRagdolled)
-            {
                 IsRagdolled = IsForceRagdolled;
-            }
-            //Keep us ragdolled if we were forced or we're too speedy to unragdoll
-            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
-            {
-                if (ragdollingLockTimer > 0.0f)
-                {
-                    ragdollingLockTimer -= deltaTime;
-                }
-                else
-                {
-                    bool wasRagdolled = IsRagdolled;
-                    IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
-                    if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.25f; }
-                }
-           }
+            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+                IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
             
             UpdateSightRange();
             UpdateSoundRange();
@@ -2548,14 +2518,7 @@ namespace Barotrauma
             {
                 item.Submarine = inventory.Owner.Submarine;
                 var itemElement = item.Save(parentElement);
-
-                List<int> slotIndices = new List<int>();
-                for (int i = 0; i < inventory.Capacity; i++)
-                {
-                    if (inventory.Items[i] == item) { slotIndices.Add(i); }
-                }
-
-                itemElement.Add(new XAttribute("i", string.Join(",", slotIndices)));
+                itemElement.Add(new XAttribute("i", Array.IndexOf(inventory.Items, item)));
 
                 foreach (ItemContainer container in item.GetComponents<ItemContainer>())
                 {

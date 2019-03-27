@@ -120,21 +120,8 @@ gitbranch() {
 
 original=$(gitbranch HEAD)
 branchsha=$(gitsha "$branch")
-branchshortsha="${branchsha:0:7}"
 
-#get the hash of the last merged remote commit from the latest commit msg in this repo
-#assumes that the commit message starts with hash1...hash2
-prevcommitmsg="$(git log -1 --pretty=%B)"
-prevcommitsha="${prevcommitmsg:10:7}"
-
-#create a commit message for out new "merge commit"
-#	hash1...hash2 + logs of the merged commits
-logmsg="$prevcommitsha" 
-logmsg+="..." 
-logmsg+="$branchshortsha"
-logmsg+="
-
-$(git log "$prevcommitsha"..."$branchsha")"
+logmsg="$(git log .."$branchsha")"
 
 trap 'git checkout --quiet "$original"' EXIT
 
@@ -143,10 +130,11 @@ git rm -rf -r "${files[@]}"   "${quiet[@]}" &&
 git commit -m "$msgcommit" "${quiet[@]}" &&
 newsha=$(gitsha HEAD)                    &&
 git checkout "$original"   "${quiet[@]}" &&
+#original
+#git merge -m "$msgmerge" "${mergeopts[@]}" "$newsha"
 
-git merge -m "$msgmerge" -X theirs "--squash" "$newsha"
-git checkout HEAD .gitignore
+#baro additions
+git merge -m "$msgmerge" "--squash" "$newsha"
 git commit -m "$logmsg"
 
-#example usage
-#./git-strip-merge barotrauma-development/dev -f Barotrauma/BarotraumaShared/Content/*
+#./git-strip-merge --no-commit --no-ff barotrauma-development/dev -f Barotrauma/BarotraumaShared/Content/*

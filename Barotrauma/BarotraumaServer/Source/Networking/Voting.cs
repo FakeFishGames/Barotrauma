@@ -116,8 +116,8 @@ namespace Barotrauma
             msg.Write(AllowEndVoting);
             if (AllowEndVoting)
             {
-                msg.Write((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound)));
-                msg.Write((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned));
+                msg.Write((byte)GameMain.Server.ConnectedClients.Count(v => v.GetVote<bool>(VoteType.EndRound)));
+                msg.Write((byte)GameMain.Server.ConnectedClients.Count);
             }
 
             msg.Write(AllowVoteKick);

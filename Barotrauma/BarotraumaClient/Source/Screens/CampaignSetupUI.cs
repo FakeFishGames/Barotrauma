@@ -33,12 +33,12 @@ namespace Barotrauma
 
         private readonly bool isMultiplayer;
 
-        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles = null)
+        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<string> saveFiles=null)
         {
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
             this.loadGameContainer = loadGameContainer;
-
+            
             var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -60,7 +60,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":", textAlignment: Alignment.BottomLeft);
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform));
 
-            UpdateSubList(submarines);
+            UpdateSubList();
 
             // New game right side
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
@@ -87,8 +87,9 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (!(subList.SelectedData is Submarine selectedSub)) { return false; }
-
+                    Submarine selectedSub = subList.SelectedData as Submarine;
+                    if (selectedSub == null) return false;
+                    
                     if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
                     {
                         ((GUITextBlock)subList.SelectedComponent).TextColor = Color.DarkRed * 0.8f;
@@ -195,9 +196,9 @@ namespace Barotrauma
         public void UpdateSubList(IEnumerable<Submarine> submarines)
         {
 #if DEBUG
-            var subsToShow = submarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
+            var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 #else
-            var subsToShow = submarines;
+            var subsToShow = Submarine.SavedSubmarines;
 #endif
 
             subList.ClearChildren();
@@ -266,12 +267,15 @@ namespace Barotrauma
             {
                 OnSelected = SelectSaveFile
             };
+
+            saveList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform, Anchor.CenterLeft))
+            {
+                OnSelected = SelectSaveFile
+            };
             
             foreach (string saveFile in saveFiles)
             {
-                string fileName = saveFile;
-                string subName = "";
-                string saveTime = "";
+                XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
                 var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = saveFile
@@ -279,38 +283,25 @@ namespace Barotrauma
 
                 var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform),
                     text: Path.GetFileNameWithoutExtension(saveFile));
+                if (doc?.Root == null)
+                {
+                    DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
+                    nameText.Color = Color.Red;
+                    continue;
+                }
 
-                if (!isMultiplayer)
-                {
-                    XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
-                    if (doc?.Root == null)
-                    {
-                        DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
-                        nameText.Color = Color.Red;
-                        continue;
-                    }
-                    subName =  doc.Root.GetAttributeString("submarine", "");
-                    saveTime = doc.Root.GetAttributeString("savetime", "");
-                }
-                else
-                {
-                    string[] splitSaveFile = saveFile.Split(';');
-                    saveFrame.UserData = splitSaveFile[0];
-                    fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
-                    if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
-                    if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
-                }
-                
+                string submarineName = doc.Root.GetAttributeString("submarine", "");
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUI.SmallFont)
+                    text: submarineName, font: GUI.SmallFont)
                 {
-                    UserData = fileName
+                    UserData = saveFile
                 };
 
+                string saveTime = doc.Root.GetAttributeString("savetime", "");
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
                     text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
                 {
-                    UserData = fileName
+                    UserData = saveFile
                 };
             }
 

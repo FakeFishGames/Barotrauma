@@ -51,11 +51,6 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody Body { get; private set; }
 
-        private float RepairThreshold
-        {
-            get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
-        }
-
         private float stuck;
         [Serialize(0.0f, false)]
         public float Stuck

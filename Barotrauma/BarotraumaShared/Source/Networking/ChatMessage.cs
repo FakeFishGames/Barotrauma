@@ -129,10 +129,10 @@ namespace Barotrauma.Networking
             if (listener.WorldPosition == sender.WorldPosition) { return 0.0f; }
 
             float dist = Vector2.Distance(listener.WorldPosition, sender.WorldPosition);
-            if (dist > range) { return 1.0f; }
+            if (dist > range) { return 0.0f; }
 
             if (Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
-            if (dist > range) { return 1.0f; }
+            if (dist > range) { return 0.0f; }
 
             return dist / range;
         }
@@ -152,7 +152,7 @@ namespace Barotrauma.Networking
         public static string ApplyDistanceEffect(string text, float garbleAmount)
         {
             if (garbleAmount < 0.3f) return text;
-            if (garbleAmount >= 1.0f) return "";
+            if (garbleAmount > 1.0f) return "";
 
             int startIndex = Math.Max(text.IndexOf(':') + 1, 1);
 

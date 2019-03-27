@@ -75,12 +75,11 @@ namespace Barotrauma
 
                         GUI.SmallFont.DrawString(spriteBatch,
                             currentNode.ID.ToString(),
-                            new Vector2(currentNode.DrawPosition.X + 20, -currentNode.DrawPosition.Y - 20),
-                            Color.SkyBlue);
+                            new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y - 10),
+                            Color.LightGreen);
                     }
                 }
             }
-            GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Character.AnimController.TargetMovement.X, -Character.AnimController.TargetMovement.Y)), Color.SteelBlue, width: 2);
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
 
             //if (Character.IsKeyDown(InputType.Aim))

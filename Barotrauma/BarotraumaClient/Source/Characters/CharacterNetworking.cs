@@ -214,8 +214,8 @@ namespace Barotrauma
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
 
                     bool fixedRotation = msg.ReadBoolean();
-                    float? rotation = null;
-                    float? angularVelocity = null;
+                    float rotation = AnimController.Collider.Rotation;
+                    float angularVelocity = AnimController.Collider.AngularVelocity;
                     if (!fixedRotation)
                     {
                         rotation = msg.ReadFloat();

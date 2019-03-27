@@ -35,8 +35,6 @@ The client project includes the code only required by the client executable: gra
 ### Building the game
 Before building, you should choose the build configuration. The available configurations are `DebugWindows`, `DebugMac`, `DebugLinux`, `ReleaseWindows`, `ReleaseMac` and `ReleaseLinux`. Additionally, unless you want to work on the dedicated server, you may want to make sure `WindowsClient`, `MacClient` or `LinuxClient` are selected as the startup project.
 
-The `BarotraumaShared\Content` folder, which contains Barotrauma's art, item XMLs, sounds, and other assets, is not included in the GitHub repository. If you have a legal copy of the game, you can copy the `Content` folder from the game's files to `BarotraumaShared\Content`.
-
 The debug build configurations include some features that make debugging and testing a little easier: things such as additional console commands, being able to move the submarine with the IJKL keys and allowing clients to use any console command in multiplayer. The debug builds don't create crash reports when an unhandled exception occurs - the intention behind this is to allow exceptions to be caught by the debugger instead of having the game close and write a report.
 
 To build through the command line (recommended if you're on Linux), use the following command:

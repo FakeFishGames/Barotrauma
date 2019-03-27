@@ -459,12 +459,6 @@ namespace Barotrauma
                     OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
                     Enabled = true
                 };
-                if (GameMain.Client != null)
-                {
-                    startButton.Visible = !GameMain.Client.GameStarted &&
-                        (GameMain.Client.HasPermission(Networking.ClientPermissions.ManageRound) ||
-                        GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
-                }
             }
 
             OnLocationSelected?.Invoke(location, connection);
@@ -508,13 +502,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            if (startButton != null)
-            {
-                startButton.Enabled = true;
-                startButton.Visible = GameMain.Client == null || 
-                    GameMain.Client.HasPermission(Networking.ClientPermissions.ManageRound) || 
-                    GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign);
-            }
+            if (startButton != null) { startButton.Enabled = true; }
         }
 
         private void CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)

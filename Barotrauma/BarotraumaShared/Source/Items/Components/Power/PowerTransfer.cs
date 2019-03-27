@@ -319,13 +319,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            //float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
-            RelayComponent thisRelayComponent = this as RelayComponent;
-            if (thisRelayComponent != null)
-            {
-                clampPower = Math.Min(Math.Min(clampPower, thisRelayComponent.MaxPower), powerLoad);
-                clampLoad = Math.Min(clampLoad, thisRelayComponent.MaxPower);
-            }
+            float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
 
             foreach (Connection c in PowerConnections)
             {
@@ -363,8 +357,6 @@ namespace Barotrauma.Items.Components
                             continue;
                         }
 
-                        float addLoad = 0.0f;
-                        float addPower = 0.0f;
                         if (powered is PowerContainer powerContainer)
                         {
                             if (recipient.Name == "power_in")
@@ -373,7 +365,7 @@ namespace Barotrauma.Items.Components
                             }
                             else
                             {
-                                addPower = powerContainer.CurrPowerOutput;
+                                fullPower += Math.Min(powerContainer.CurrPowerOutput, maxPower);
                             }
                         }
                         else
@@ -388,16 +380,10 @@ namespace Barotrauma.Items.Components
                             //negative power consumption = the construction is a 
                             //generator/battery or another junction box
                             {
-                                addPower -= powered.CurrPowerConsumption;
+                                fullPower -= Math.Max(powered.CurrPowerConsumption, -maxPower);
                             }
                         }
-
-                        if (addPower + fullPower > clampPower) { addPower -= (addPower + fullPower) - clampPower; };
-                        if (addPower > 0) { fullPower += addPower; }
-
-                        if (addLoad + fullLoad > clampLoad) { addLoad -= (addLoad + fullLoad) - clampLoad; };
-                        if (addLoad > 0) { fullLoad += addLoad; }
-                    }
+                    }                    
                 }
             }
         }

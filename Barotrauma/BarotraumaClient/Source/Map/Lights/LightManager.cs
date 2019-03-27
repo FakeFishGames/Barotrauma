@@ -404,15 +404,12 @@ namespace Barotrauma.Lights
                 }
             }
             if (highlightedEntities.Count == 0) { return false; }
-            
-            //draw characters in light blue first
+
+            //draw characters in solid white first
             graphics.SetRenderTarget(HighlightMap);
             SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
             SolidColorEffect.Parameters["color"].SetValue(Color.LightBlue.ToVector4());
             SolidColorEffect.CurrentTechnique.Passes[0].Apply();
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidColor"];
-            DeformableSprite.Effect.Parameters["solidColor"].SetValue(Color.LightBlue.ToVector4());
-            DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Entity highlighted in highlightedEntities)
             {
@@ -429,12 +426,9 @@ namespace Barotrauma.Lights
 
             //draw characters in black with a bit of blur, leaving the white edges visible
             float phase = (float)(Math.Sin(Timing.TotalTime * 3.0f) + 1.0f) / 2.0f; //phase oscillates between 0 and 1
-            Vector4 overlayColor = Color.Black.ToVector4() * MathHelper.Lerp(0.5f, 0.9f, phase);
-            SolidColorEffect.Parameters["color"].SetValue(overlayColor);
+            SolidColorEffect.Parameters["color"].SetValue(Color.Black.ToVector4() * MathHelper.Lerp(0.5f, 0.9f, phase));
             SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColorBlur"];
             SolidColorEffect.CurrentTechnique.Passes[0].Apply();
-            DeformableSprite.Effect.Parameters["solidColor"].SetValue(overlayColor);
-            DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Entity highlighted in highlightedEntities)
             {
@@ -455,8 +449,6 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap);
             spriteBatch.Draw(highlightRaster, new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), Color.White * 0.5f);
             spriteBatch.End();
-
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
 
             return true;
         }
@@ -479,10 +471,6 @@ namespace Barotrauma.Lights
 
             Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
 
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidColor"];
-            DeformableSprite.Effect.Parameters["solidColor"].SetValue(Color.Gray.ToVector4());
-            DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
-
             //obstruct specular maps behind the sub and characters by drawing them on the map in solid gray
             SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
             SolidColorEffect.Parameters["color"].SetValue(Color.Gray.ToVector4());
@@ -498,9 +486,6 @@ namespace Barotrauma.Lights
                 if (c.Enabled) { c.Draw(spriteBatch, cam); }
             }
             spriteBatch.End();
-
-
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
 
             graphics.SetRenderTarget(null);
             graphics.BlendState = BlendState.AlphaBlend;

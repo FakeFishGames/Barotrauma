@@ -47,7 +47,7 @@ namespace Barotrauma
             //if "%" is found
             if (index > 0)
             {
-                while (index > 0)
+                while (true)
                 {
                     //search for end of label
                     index -= 1;
@@ -439,6 +439,7 @@ namespace Barotrauma
                 }
             };
 #endif
+
             var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), voiceSettings.RectTransform))
             {
                 Stretch = true,
@@ -457,24 +458,6 @@ namespace Barotrauma
                 voiceMode.AddRadioButton((VoiceMode)i, tick);
             }
 
-            var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.18f), voiceSettings.RectTransform), TextManager.Get("MicrophoneVolume"));
-            var micVolumeSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.18f), voiceSettings.RectTransform),
-                barSize: 0.1f)
-            {
-                UserData = micVolumeText,
-                BarScroll = (float)Math.Sqrt(MathUtils.InverseLerp(0.2f, 5.0f, MicrophoneVolume)),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    MicrophoneVolume = MathHelper.Lerp(0.2f, 5.0f, scroll * scroll);
-                    MicrophoneVolume = (float)Math.Round(MicrophoneVolume, 1);
-                    ChangeSliderText(scrollBar, MicrophoneVolume);
-                    scrollBar.Step = 0.05f;
-                    return true;
-                },
-                Step = 0.05f
-            };
-            micVolumeSlider.OnMoved(micVolumeSlider, micVolumeSlider.BarScroll);
-
             var voiceInputContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.2f), voiceSettings.RectTransform, Anchor.BottomCenter));
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice") + ": ");
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight),
@@ -486,6 +469,7 @@ namespace Barotrauma
             voiceKeyBox.SelectedColor = Color.Gold * 0.3f;
 
             var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), voiceSettings.RectTransform));
+
             GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
             {
                 TextGetter = () =>
@@ -525,13 +509,13 @@ namespace Barotrauma
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
                             VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
-                            if (VoipCapture.Instance == null)
-                            {
-                                VoiceSetting = vMode = VoiceMode.Disabled;
-                                voiceInputContainer.Visible = false;
-                                voiceActivityGroup.Visible = false;
-                                return;
-                            }
+                        }
+                        if (VoipCapture.Instance == null)
+                        {
+                            VoiceSetting = vMode = VoiceMode.Disabled;
+                            voiceInputContainer.Visible = false;
+                            voiceActivityGroup.Visible = false;
+                            return;
                         }
                     }
                     else

@@ -544,10 +544,7 @@ namespace Barotrauma
             {
                 healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(Vitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
-                healthBar.BarSize = healthWindowHealthBar.BarSize = 
-                    (Vitality > 0.0f) ? 
-                    (MaxVitality > 0.0f ? Vitality / MaxVitality : 0.0f) : 
-                    (Math.Abs(MinVitality) > 0.0f ? 1.0f - Vitality / MinVitality : 0.0f);
+                healthBar.BarSize = healthWindowHealthBar.BarSize = (Vitality > 0.0f) ? Vitality / MaxVitality : 1.0f - Vitality / MinVitality;
 
                 if (healthBarPulsateTimer > 0.0f)
                 {

@@ -208,7 +208,7 @@ namespace Barotrauma
                     DockingPort myPort = null, outPostPort = null;
                     foreach (DockingPort port in DockingPort.List)
                     {
-                        if (port.IsHorizontal || port.Docked) { continue; }
+                        if (port.IsHorizontal) { continue; }
                         if (port.Item.Submarine == level.StartOutpost)
                         {
                             outPostPort = port;

@@ -753,15 +753,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Float comparison. Note that may still fail in some cases.
-        /// </summary>
-        public static bool NearlyEqual(Vector2 a, Vector2 b, float epsilon = 0.0001f)
-        {
-            return NearlyEqual(a.X, b.X, epsilon) && NearlyEqual(a.Y, b.Y, epsilon);
-        }
-
-        /// <summary>
         /// Returns a position in a curve.
         /// </summary>
         public static Vector2 Bezier(Vector2 start, Vector2 control, Vector2 end, float t)

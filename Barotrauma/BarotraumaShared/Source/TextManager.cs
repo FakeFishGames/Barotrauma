@@ -153,59 +153,49 @@ namespace Barotrauma
 
             string[] messages = serverMessage.Split('/');
 
-            try
+            for (int i = 0; i < messages.Length; i++)
             {
-                for (int i = 0; i < messages.Length; i++)
+                if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
                 {
-                    if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
+                    if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
+
+                    string msg = Get(messages[i], true);
+
+                    if (msg != null) // If a translation was found, otherwise use the original
                     {
-                        if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
-                        string msg = Get(messages[i], true);
-                        if (msg != null) // If a translation was found, otherwise use the original
-                        {
-                            messages[i] = msg;
-                        }
+                        messages[i] = msg;
+                    }
+                }
+                else
+                {
+                    string[] messageWithVariables = messages[i].Split('~');
+                    string msg = Get(messageWithVariables[0], true);
+
+                    if (msg != null) // If a translation was found, otherwise use the original
+                    {
+                        messages[i] = msg;
                     }
                     else
                     {
-                        string[] messageWithVariables = messages[i].Split('~');
-                        string msg = Get(messageWithVariables[0], true);
+                        continue; // No translation found, probably caused by player input -> skip variable handling
+                    }
 
-                        if (msg != null) // If a translation was found, otherwise use the original
-                        {
-                            messages[i] = msg;
-                        }
-                        else
-                        {
-                            continue; // No translation found, probably caused by player input -> skip variable handling
-                        }
-
-                        // First index is always the message identifier -> start at 1
-                        for (int j = 1; j < messageWithVariables.Length; j++)
-                        {
-                            string[] variableAndValue = messageWithVariables[j].Split('=');
-                            messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
-                        }
+                    // First index is always the message identifier -> start at 1
+                    for (int j = 1; j < messageWithVariables.Length; j++)
+                    {
+                        string[] variableAndValue = messageWithVariables[j].Split('=');
+                        messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
                     }
                 }
-
-                string translatedServerMessage = string.Empty;
-                for (int i = 0; i < messages.Length; i++)
-                {
-                    translatedServerMessage += messages[i];
-                }
-                return translatedServerMessage;
             }
 
-            catch (IndexOutOfRangeException exception)
+            string translatedServerMessage = string.Empty;
+            for (int i = 0; i < messages.Length; i++)
             {
-                string errorMsg = "Failed to translate server message \"" + serverMessage + "\".";
-#if DEBUG
-                DebugConsole.ThrowError(errorMsg, exception);
-#endif
-                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetServerMessage:" + serverMessage, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                return errorMsg;
+                translatedServerMessage += messages[i];
             }
+
+            return translatedServerMessage;
         }
 
         public static bool IsServerMessageWithVariables(string message)

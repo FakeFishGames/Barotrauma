@@ -1,49 +1,4 @@
 ---------------------------------------------------------------------------------------------------------
-v0.8.9.7
----------------------------------------------------------------------------------------------------------
-
-Additions and changes:
-- The fission rate gauge on the reactor now visualizes the amount of fuel available.
-- Doors and hatches can now also be repaired with wrenches.
-- Changed default StatusEffect conditional comparison type back to OR.
-- Clients communicate syncing errors to the server, and the server logs a more descriptive error about
-what went wrong. Should make it easier to diagnose disconnection issues from now on.
-- Ending a multiplayer campaign round by talking to watchman doesn't require any special permissions.
-- Server automatically ends rounds if there have been no players alive in 60 seconds and respawning 
-is not allowed during the round.
-- Added a button for resetting an entity's properties to the default values to the sub editor.
-- Updated handheld sonar UI graphics.
-
-Bugfixes:
-- Fixed non-radio chat/VOIP having an unlimited distance.
-- Fixed a networking bug that caused the server to send item state changes to the clients before sending
-a message about the item being spawned. For example, spawning any item with a LightComponent would always
-cause clients to get disconnected.
-- Changes to the way the clients are put in sync with the server when joining mid-round. Should make it 
-less likely for clients to get disconnected immediately after starting a round.
-- StatusEffects only apply non-limb-specific afflictions to one limb even if targeting the whole character. 
-Fixes drugs like fentanyl and morphine being way too harmful due to the oxygen loss affliction being 
-applied once per every limb. 
-- Fixed TargetItemComponentName not working in StatusEffect conditionals (making it impossible to create
-conditionals that target a specific component of an item).
-- Made all of the new medical items combinable and usable in a syringe gun (assuming the drug is in a syringe).
-- Fixed inability to throw anything in the multiplayer.
-- Fixed multiplayer campaign setup UI showing the client's subs instead of the server's.
-- Fixed campaign view button overlapping with the "ready to start" tickbox in the server lobby.
-- Fixed sub/mode voting not being enabled when changing the setting after the server has been started.
-- Fixed character inventories occasionally being saved incorrectly in the multiplayer campaign when an
-- Fixed flares not activating by left clicking.
-- Fixed affliction icons flickering rapidly in the health interface and above the health bar if their
-strength is fluctuating around the threshold where the icon becomes visible.
-- Fixed dedicated server crashing when typing in more text than can fit on one line. 
-- Fixed enemies "fleeing" after they have been shot. There was a steering issue when they targeted characters 
-inside the sub while being outside.
-- Fixed Hammerhead attack causing warping.
-- Fixed incorrect submarine and level seed in server logs when playing campaign mode.
-- Hide the start button from the campaign UI if the client doesn't have the permission to manage 
-the campaign or rounds.
-
----------------------------------------------------------------------------------------------------------
 v0.8.9.6
 ---------------------------------------------------------------------------------------------------------
 
@@ -58,7 +13,6 @@ themselves alive and less likely to get stuck.
 - New husk sprites.
 - Improved item/character highlight effect.
 - New signal items (divide, multiply, subtract, memory, equals, greater than, color, xor).
-- Option to adjust microphone volume in multiplayer.
 - Added a console commands for changing the gender and race of the character.
 - More intuitive BrokenSprite condition logic: a BrokenSprite with a MaxCondition of 50 will start 
 fading in at 50 (and be fully visible when the condition drops to 0 or down to the MaxCondition of 
@@ -89,8 +43,6 @@ suitable capture device.
 - Fixed crashing when starting a round if a submarine name contains underscores.
 - Fixed clients console errors when attempting to modify the properties of an ItemComponent in-game
 (for example, the color of a light component).
-- Added some more information to the console messages and error popups when a client gets disconnected.
-- Fixed enablecheats command crashing the server if it's used when there are no clients present.
 
 Misc bugfixes:
 - Audio fixes (less snap, crackle and pop).
@@ -103,18 +55,12 @@ identifiers.
 - Fixed item interfaces getting repositioned every frame when the editing HUD is open.
 - Fixed held items clipping with the sleeves of the character (e.g. when holding a revolver while an 
 uniform is equipped).
-- Fixed being able to levitate by spamming the ragdoll button.
 - Fixed dead characters draining oxygen tanks inside diving suits/masks.
-- Fixed reactor gauges getting messed up if the optimal fission rate is more than 100% (which may happen
-if the power consumption is larger than what the reactor can generate).
 - Fixed mud raptors not having an inventory (nor lootable items).
 - Fixed inability to interact with any items when aim assist is set to 0%. 
 - Fixed info panel flickering out and Tab getting "inverted" (= info panel shown when tab is not being held) 
 when selecting crew members in the panel.
 - Fixed characters arms occasionally getting stuck above their shoulders.
-- Fixed wire nodes occasionally being created at the wrong end of a wire (e.g. when moving a wire between 
-connections in a connection panel, the wire stretched from the device at the other end of the wire to 
-the device that's being rewired).
 
 Misc:
 - Changed the way arguments are given to the "setclientcharacter" command (no semicolon to separate the 

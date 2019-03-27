@@ -81,12 +81,11 @@ namespace Barotrauma
                     //dequeue messages
                     lock (queuedMessages)
                     {
-                        if (queuedMessages.Count > 0)
+                        if (queuedMessages.Count>0)
                         {
-                            int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)Console.WindowWidth), 1);
                             Console.CursorLeft = 0;
                             Console.Write(new string(' ', consoleWidth));
-                            Console.CursorTop -= inputLines; Console.CursorLeft = 0;
+                            Console.CursorTop--; Console.CursorLeft = 0;
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
@@ -178,11 +177,11 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
-            int consoleWidth = Math.Max(Console.WindowWidth, 5);
-            int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)consoleWidth), 1);
-            int cursorLine = Math.Max((int)Math.Ceiling((input.Length + 1) / (float)consoleWidth), 1);
-
-            Console.WriteLine(""); Console.CursorTop -= inputLines;
+            Console.WriteLine(""); Console.CursorTop--;
+            int consoleWidth = Console.WindowWidth;
+            if (consoleWidth < 5) consoleWidth = 5;
+            int consoleHeight = Console.WindowHeight;
+            if (consoleHeight < 5) consoleHeight = 5;
 
             string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
             ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
@@ -191,9 +190,9 @@ namespace Barotrauma
             Console.Write(ln);
             Console.ForegroundColor = ConsoleColor.White;
             Console.CursorLeft = 0;
-            Console.CursorTop -= cursorLine;
+            Console.CursorTop--;
             Console.Write(input);
-            Console.CursorLeft = input.Length % Console.WindowWidth;
+            Console.CursorLeft = input.Length;
         }
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
@@ -1555,9 +1554,9 @@ namespace Barotrauma
             }));
 
 #if DEBUG
-            commands.Add(new Command("spamevents", "A debug command that creates a ton of entity events.", (string[] args) =>
+            commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {
-                /*foreach (Item item in Item.ItemList)
+                foreach (Item item in Item.ItemList)
                 {
                     foreach (ItemComponent component in item.Components)
                     {
@@ -1574,18 +1573,16 @@ namespace Barotrauma
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
                     }
                 }
+
                 foreach (Character c in Character.CharacterList)
                 {
                     GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
-                }*/
-                foreach (Hull hull in Hull.hullList)
-                {
-                    GameMain.Server.CreateEntityEvent(hull);
                 }
+
                 foreach (Structure wall in Structure.WallList)
                 {
                     GameMain.Server.CreateEntityEvent(wall);
-                }                
+                }
             }));
 #endif
         }

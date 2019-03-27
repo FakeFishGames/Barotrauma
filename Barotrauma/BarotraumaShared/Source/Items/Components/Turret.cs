@@ -433,10 +433,9 @@ namespace Barotrauma.Items.Components
             if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
             {
                 ItemContainer container = null;
-                Item containerItem = null;
                 foreach (MapEntity e in item.linkedTo)
                 {
-                    containerItem = e as Item;
+                    var containerItem = e as Item;
                     if (containerItem == null) continue;
 
                     container = containerItem.GetComponent<ItemContainer>();
@@ -454,7 +453,7 @@ namespace Barotrauma.Items.Components
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
                 containShellObjective.MinContainedAmount = usableProjectileCount + 1;
-                containShellObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
+                containShellObjective.IgnoreAlreadyContainedItems = true;
                 objective.AddSubObjective(containShellObjective);                
                 return false;
             }

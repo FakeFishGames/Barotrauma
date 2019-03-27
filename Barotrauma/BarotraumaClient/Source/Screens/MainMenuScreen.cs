@@ -282,7 +282,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center), style: null);
             
-            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, Submarine.SavedSubmarines)
+            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame)
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame
@@ -336,7 +336,7 @@ namespace Barotrauma
 
             UpdateTutorialList();
 
-            campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
+            campaignSetupUI.UpdateSubList();
 
             ResetButtonStates(null);
 

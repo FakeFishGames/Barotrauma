@@ -331,18 +331,8 @@ namespace Barotrauma.Items.Components
             spriteBatch.GraphicsDevice.ScissorRectangle = container.Rect;
             spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
-            //make the pointer jitter a bit if it's at the upper limit of the fission rate
-            float jitter = 0.0f;
-            if (FissionRate > allowedFissionRate.Y - 5.0f)
-            {
-                float jitterAmount = Math.Min(targetFissionRate - allowedFissionRate.Y, 10.0f);
-                float t = graphTimer / updateGraphInterval;
-
-                jitter = (PerlinNoise.GetPerlin(t * 0.5f, t * 0.1f) - 0.5f) * jitterAmount;
-            }
-
             DrawMeter(spriteBatch, container.Rect,
-                fissionRateMeter, FissionRate + jitter, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
+                fissionRateMeter, FissionRate, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
 
             spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
@@ -402,12 +392,12 @@ namespace Barotrauma.Items.Components
             Vector2 pos = new Vector2(rect.Center.X, rect.Y + meterSprite.Origin.Y * scale);
 
             Vector2 optimalRangeNormalized = new Vector2(
-                MathHelper.Clamp((optimalRange.X - range.X) / (range.Y - range.X), 0.0f, 0.95f),
-                MathHelper.Clamp((optimalRange.Y - range.X) / (range.Y - range.X), 0.0f, 1.0f));
+                (optimalRange.X - range.X) / (range.Y - range.X),
+                (optimalRange.Y - range.X) / (range.Y - range.X));
 
             Vector2 allowedRangeNormalized = new Vector2(
-                MathHelper.Clamp((allowedRange.X - range.X) / (range.Y - range.X), 0.0f, 0.95f),
-                MathHelper.Clamp((allowedRange.Y - range.X) / (range.Y - range.X), 0.0f, 1.0f));
+                (allowedRange.X - range.X) / (range.Y - range.X),
+                (allowedRange.Y - range.X) / (range.Y - range.X));
 
             Vector2 sectorRad = new Vector2(-1.57f, 1.57f);
 
@@ -427,10 +417,10 @@ namespace Barotrauma.Items.Components
             {
                 spriteBatch.End();
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale) - 3);
+                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0,0,GameMain.GraphicsWidth, (int)(pos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale));
                 spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
-                sectorSprite.Draw(spriteBatch, pos, Color.LightGreen, MathHelper.PiOver2 + (allowedSectorRad.X + allowedSectorRad.Y) / 2.0f, scale);
+                sectorSprite.Draw(spriteBatch, pos, Color.LightGreen, MathHelper.PiOver2, scale);
 
                 sectorSprite.Draw(spriteBatch, pos, Color.Orange, optimalSectorRad.X, scale);
                 sectorSprite.Draw(spriteBatch, pos, Color.Red, allowedSectorRad.X, scale);

@@ -26,10 +26,6 @@ namespace Barotrauma
         private int subDivX, subDivY;
         
         private static Effect effect;
-        public static Effect Effect
-        {
-            get { return effect; }
-        }
 
         private Point spritePos;
         private Point spriteSize;

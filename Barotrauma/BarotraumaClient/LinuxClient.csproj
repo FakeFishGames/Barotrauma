@@ -31,7 +31,6 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <ApplicationIcon>..\BarotraumaShared\IconBmp.bmp</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
@@ -192,11 +191,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <EmbeddedResource Include="Icon.bmp">
-      <LogicalName>Icon.bmp</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
   <Import Project="ClientCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />

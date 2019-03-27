@@ -407,7 +407,7 @@ namespace Barotrauma
 
                 try
                 {
-                    MethodInfo loadMethod = t.GetMethod("Load", new [] { typeof(XElement), typeof(Submarine) });
+                    MethodInfo loadMethod = t.GetMethod("Load");
                     if (loadMethod == null)
                     {
                         DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");

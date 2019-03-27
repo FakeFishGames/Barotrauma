@@ -19,6 +19,8 @@ namespace Barotrauma.Tutorials
         private List<TutorialSegment> segments;
 
         private SpriteSheetPlayer spriteSheetPlayer;
+        private VideoPlayer videoPlayer;
+
         private Steering navConsole;
         private Reactor reactor;
         private Sonar sonar;
@@ -29,7 +31,7 @@ namespace Barotrauma.Tutorials
 
         private bool started = false;
         private string playableContentPath;
-        
+
         private float tutorialTimer;
         private float degrading2ActivationCountdown;
 
@@ -82,6 +84,7 @@ namespace Barotrauma.Tutorials
 
             base.Initialize();
             spriteSheetPlayer = new SpriteSheetPlayer();
+            videoPlayer = new VideoPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
 
             for (int i = 0; i < segments.Count; i++)
@@ -210,6 +213,8 @@ namespace Barotrauma.Tutorials
             started = ContentRunning = Initialized = false;
             spriteSheetPlayer.Remove();
             spriteSheetPlayer = null;
+            videoPlayer.Remove();
+            videoPlayer = null;
             characterTimeOnSonar = null;
         }
 
@@ -219,6 +224,10 @@ namespace Barotrauma.Tutorials
             if (spriteSheetPlayer != null)
             {
                 spriteSheetPlayer.AddToGUIUpdateList();
+            }
+            if (videoPlayer != null)
+            {
+                videoPlayer.AddToGUIUpdateList();
             }
         }
 
@@ -325,7 +334,7 @@ namespace Barotrauma.Tutorials
 
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Repairables.Any() || item.ConditionPercentage > 50) continue;
+                        if (!item.Repairables.Any() || item.Condition > 50.0f) continue;
                         degradedEquipmentFound = true;
                         break;
                     }
@@ -461,10 +470,18 @@ namespace Barotrauma.Tutorials
                 case ContentTypes.None:
                     break;
                 case ContentTypes.Video:
-                    spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
+                    string fileName = activeSegment.Content.GetAttributeString("file", "");
+                    if (fileName != "")
+                    {
+                        videoPlayer.LoadContent(playableContentPath + fileName, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
+                    }
+                    else
+                    {
+                        spriteSheetPlayer.LoadContent(playableContentPath, activeSegment.Content, activeSegment.Name, true, true, CurrentSegmentStopCallback);
+                    }
                     break;
                 case ContentTypes.Text:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.GetFormatted(activeSegment.Content.GetAttributeString("tag", ""), false, args),
+                    infoBox = CreateInfoFrame(TextManager.Get(activeSegment.Name), TextManager.Get(activeSegment.Content.GetAttributeString("tag", ""), false, args),
                                               activeSegment.Content.GetAttributeInt("width", 300),
                                               activeSegment.Content.GetAttributeInt("height", 80),
                                               activeSegment.Content.GetAttributeString("anchor", "Center"), true, CurrentSegmentStopCallback);

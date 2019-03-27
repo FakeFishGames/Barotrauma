@@ -237,13 +237,13 @@ namespace Barotrauma.Items.Components
 
             railSprite?.Draw(spriteBatch,
                 drawPos,
-                item.SpriteColor,
+                Color.White,
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (railSprite.Depth - item.Sprite.Depth));
 
             barrelSprite?.Draw(spriteBatch,
-                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset * item.Scale,
-                item.SpriteColor,
+                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset * item.Scale, 
+                Color.White,
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
             
@@ -288,10 +288,7 @@ namespace Barotrauma.Items.Components
                 availableAmmo.AddRange(itemContainer.Inventory.Items);                
             }            
                         
-            float chargeRate = 
-                powerConsumption <= 0.0f ? 
-                1.0f : 
-                batteryCapacity > 0.0f ? batteryCharge / batteryCapacity : 0.0f;
+            float chargeRate = powerConsumption <= 0.0f ? 1.0f : batteryCharge / batteryCapacity;
             bool charged = batteryCharge * 3600.0f > powerConsumption;
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
             if (ShowChargeIndicator && PowerConsumption > 0.0f)

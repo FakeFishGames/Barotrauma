@@ -15,6 +15,7 @@ namespace Barotrauma
         public Vector3 Position;
 
         public float NetworkUpdateTimer;
+        public const float NetworkUpdateInterval = 0.2f;
 
         public float Scale;
 

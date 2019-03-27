@@ -343,7 +343,7 @@ namespace Barotrauma
                     {
                         GameMain.NetworkMember.CreateEntityEvent(this, new object[] { obj });
                         obj.NeedsNetworkSyncing = false;
-                        obj.NetworkUpdateTimer = NetConfig.LevelObjectUpdateInterval;
+                        obj.NetworkUpdateTimer = LevelObject.NetworkUpdateInterval;
                     }
                 }
 

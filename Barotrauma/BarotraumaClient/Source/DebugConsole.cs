@@ -403,11 +403,6 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
-#if DEBUG
-            AssignRelayToServer("simulatedlatency", false);
-            AssignRelayToServer("simulatedloss", false);
-            AssignRelayToServer("simulatedduplicateschance", false);
-#endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
@@ -444,7 +439,7 @@ namespace Barotrauma
 
             AssignOnExecute("ambientlight", (string[] args) =>
             {
-                Color color = XMLExtensions.ParseColor(string.Join(",", args));
+                Color color = XMLExtensions.ParseColor(string.Join("", args));
                 if (Level.Loaded != null)
                 {
                     Level.Loaded.GenerationParams.AmbientLightColor = color;
@@ -533,27 +528,44 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("resetall", "Reset all items and structures to prefabs. Only applicable in the subeditor.", args =>
+            commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
-                    Item.ItemList.ForEach(i => i.Reset());
-                    Structure.WallList.ForEach(s => s.Reset());
-                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    if (!MapEntity.SelectedAny)
                     {
-                        if (entity is Item item)
+                        ThrowError("You have to select item(s)/structure(s) first!");
+                    }
+                    else
+                    {
+                        if (args.Length > 0)
                         {
-                            item.CreateEditingHUD();
-                            break;
+                            if (!byte.TryParse(args[0], out byte a))
+                            {
+                                ThrowError($"Failed to parse value for ALPHA from {args[0]}");
+                            }
+                            else
+                            {
+                                foreach (var mapEntity in MapEntity.SelectedList)
+                                {
+                                    if (mapEntity is Structure s)
+                                    {
+                                        s.SpriteColor = new Color(s.SpriteColor.R, s.SpriteColor.G, s.SpriteColor.G, a);
+                                    }
+                                    else if (mapEntity is Item i)
+                                    {
+                                        i.SpriteColor = new Color(i.SpriteColor.R, i.SpriteColor.G, i.SpriteColor.G, a);
+                                    }
+                                }
+                            }
                         }
-                        else if (entity is Structure structure)
+                        else
                         {
-                            structure.CreateEditingHUD();
-                            break;
+                            ThrowError("Not enough arguments provided! One required!");
                         }
                     }
                 }
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {

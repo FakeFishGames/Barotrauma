@@ -1035,6 +1035,8 @@ namespace Barotrauma
 
             CheckValidity();
 
+            CheckValidity();
+
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
@@ -1295,42 +1297,17 @@ namespace Barotrauma
             UpdateProjSpecific(deltaTime);
         }
 
-        public bool Invalid { get; private set; }
-        private int validityResets;
-        private bool CheckValidity()
+        private void CheckValidity()
         {
-            bool isColliderValid = CheckValidity(Collider);
-            bool limbsValid = true;
+            CheckValidity(Collider);
             foreach (Limb limb in limbs)
             {
                 if (limb.body == null || !limb.body.Enabled) { continue; }
-                if (!CheckValidity(limb.body))
-                {
-                    limbsValid = false;
-                    break;
-                }
+                CheckValidity(limb.body);
             }
-            bool isValid = isColliderValid && limbsValid;
-            if (!isValid)
-            {
-                validityResets++;
-                if (validityResets > 1)
-                {
-                    Invalid = true;
-                    DebugConsole.ThrowError("Invalid ragdoll physics. Ragdoll freezed to prevent crashes.");
-                    Collider.SetTransform(Vector2.Zero, 0.0f);
-                    foreach (Limb limb in Limbs)
-                    {
-                        limb.body.SetTransform(Collider.SimPosition, 0.0f);
-                        limb.body.ResetDynamics();
-                    }
-                    Frozen = true;
-                }
-            }
-            return isValid;
         }
 
-        private bool CheckValidity(PhysicsBody body)
+        private void CheckValidity(PhysicsBody body)
         {
             string errorMsg = null;
             string bodyName = body.UserData is Limb ? "Limb" : "Collider";
@@ -1352,19 +1329,6 @@ namespace Barotrauma
             }
             if (errorMsg != null)
             {
-                if (character.IsRemotePlayer)
-                {
-                    errorMsg += " Ragdoll controlled remotely.";
-                }
-                if (SimplePhysicsEnabled)
-                {
-                    errorMsg += " Simple physics enabled.";
-                }
-                if (GameMain.NetworkMember != null)
-                {
-                    errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
-                }
-
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
@@ -1382,7 +1346,7 @@ namespace Barotrauma
                     limb.body.ResetDynamics();
                 }
                 SetInitialLimbPositions();
-                return false;
+                return;
             }
             return true;
         }

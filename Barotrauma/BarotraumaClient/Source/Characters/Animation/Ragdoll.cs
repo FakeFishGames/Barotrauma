@@ -210,9 +210,7 @@ namespace Barotrauma
                     else
                     {
                         Vector2 positionError = serverPos.Position - localPos.Position;
-                        float rotationError = serverPos.Rotation.HasValue && localPos.Rotation.HasValue ?
-                            serverPos.Rotation.Value - localPos.Rotation.Value :
-                            0.0f;
+                        float rotationError = serverPos.Rotation - localPos.Rotation;
 
                         for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
                         {

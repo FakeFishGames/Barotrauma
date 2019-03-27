@@ -245,7 +245,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || (c.TeamID != Character.TeamID && Character.TeamID != Character.TeamType.FriendlyNPC && c.TeamID != Character.TeamType.FriendlyNPC)))
+                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -290,7 +290,7 @@ namespace Barotrauma
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             float damage = attackResult.Damage;
-            if (damage <= 0) { return; }
+            if (damage < 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
                 if (objectiveManager.CurrentOrder == null)
@@ -466,9 +466,7 @@ namespace Barotrauma
             // Even the smallest fire reduces the safety by 50%
             float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
             float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
-                int enemyCount = Character.CharacterList.Count(e => 
-                e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && 
-                (e.AIController is EnemyAIController || (e.TeamID != character.TeamID && character.TeamID != Character.TeamType.FriendlyNPC && e.TeamID != Character.TeamType.FriendlyNPC)));
+            int enemyCount = Character.CharacterList.Count(e => e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && (e.AIController is EnemyAIController || e.TeamID != character.TeamID));
             // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
             float enemyFactor = ignoreEnemies ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
