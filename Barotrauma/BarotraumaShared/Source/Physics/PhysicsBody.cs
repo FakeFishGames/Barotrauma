@@ -180,6 +180,18 @@ namespace Barotrauma
             private set;
         }
 
+        public Vector2 LinearVelocity
+        {
+            get;
+            private set;
+        }
+
+        public float AngularVelocity
+        {
+            get;
+            private set;
+        }
+
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
