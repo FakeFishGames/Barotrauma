@@ -564,9 +564,6 @@ namespace Barotrauma
 
             MapEntityPrefab.Selected = null;
 
-            saveFrame = null;
-            loadFrame = null;
-
             MapEntity.DeselectAll();
             MapEntity.SelectionGroups.Clear();
 
