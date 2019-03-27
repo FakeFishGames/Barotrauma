@@ -392,13 +392,10 @@ namespace Barotrauma.Items.Components
                 else
                     transferAmount = -Math.Min(this.item.Condition, item.MaxCondition - item.Condition);
 
-                if (transferAmount == 0.0f)
-                    return false;
-                this.Item.Condition += transferAmount;
-                item.Condition -= transferAmount;
+                if (transferAmount == 0.0f) { return false; }
                 if (removeOnCombined)
                 {
-                    if (item.Condition <= 0.0f)
+                    if (item.Condition - transferAmount <= 0.0f)
                     {
                         if (item.ParentInventory != null)
                         {
@@ -408,7 +405,11 @@ namespace Barotrauma.Items.Components
                         }
                         Entity.Spawner.AddToRemoveQueue(item);
                     }
-                    if (this.Item.Condition <= 0.0f)
+                    else
+                    {
+                        item.Condition -= transferAmount;
+                    }
+                    if (this.Item.Condition + transferAmount <= 0.0f)
                     {
                         if (this.Item.ParentInventory != null)
                         {
@@ -418,6 +419,15 @@ namespace Barotrauma.Items.Components
                         }
                         Entity.Spawner.AddToRemoveQueue(this.Item);
                     }
+                    else
+                    {
+                        this.Item.Condition += transferAmount;
+                    }
+                }
+                else
+                {
+                    this.Item.Condition += transferAmount;
+                    item.Condition -= transferAmount;
                 }
                 return true;
             }
