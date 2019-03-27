@@ -185,9 +185,6 @@ namespace Barotrauma
                 Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
                 bool underWater = hull == null || explosionPos.Y < hull.Surface;
 
-                Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
-                bool underWater = hull == null || explosionPos.Y < hull.Surface;
-
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);
 
                 Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
