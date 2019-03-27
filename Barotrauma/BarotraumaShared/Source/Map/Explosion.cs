@@ -28,8 +28,10 @@ namespace Barotrauma
 
         public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
         {
-            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, range);
-            attack.SeverLimbsProbability = 1.0f;
+            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, range)
+            {
+                SeverLimbsProbability = 1.0f
+            };
             this.force = force;
             this.empStrength = empStrength;
             sparks = true;
@@ -165,10 +167,23 @@ namespace Barotrauma
         {
             if (attack.Range <= 0.0f) return;
 
+            //long range for the broad distance check, because large characters may still be in range even if their collider isn't
+            float broadRange = Math.Max(attack.Range * 10.0f, 10000.0f);
+
             foreach (Character c in Character.CharacterList)
             {
+                if (!c.Enabled || 
+                    Math.Abs(c.WorldPosition.X - worldPosition.X) > broadRange ||
+                    Math.Abs(c.WorldPosition.Y - worldPosition.Y) > broadRange)
+                {
+                    continue;
+                }
+
                 Vector2 explosionPos = worldPosition;
-                if (c.Submarine != null) explosionPos -= c.Submarine.Position;
+                if (c.Submarine != null) { explosionPos -= c.Submarine.Position; }
+
+                Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
+                bool underWater = hull == null || explosionPos.Y < hull.Surface;
 
                 Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
                 bool underWater = hull == null || explosionPos.Y < hull.Surface;
@@ -184,8 +199,8 @@ namespace Barotrauma
                     //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
                     float limbRadius = Math.Max(Math.Max(limb.body.width * 0.5f, limb.body.height * 0.5f), limb.body.radius);
                     dist = Math.Max(0.0f, dist - FarseerPhysics.ConvertUnits.ToDisplayUnits(limbRadius));
-                    
-                    if (dist > attack.Range) continue;
+
+                    if (dist > attack.Range) { continue; }
 
                     float distFactor = 1.0f - dist / attack.Range;
 
@@ -259,8 +274,7 @@ namespace Barotrauma
             float dist = 600.0f;
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
-                Structure structure = entity as Structure;
-                if (structure == null) continue;
+                if (!(entity is Structure structure)) { continue; }
 
                 if (structure.HasBody &&
                     !structure.IsPlatform &&
