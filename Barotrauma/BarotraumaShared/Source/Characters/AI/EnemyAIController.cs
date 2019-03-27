@@ -288,7 +288,7 @@ namespace Barotrauma
             }
             else
             {
-                var targetingPriority = UpdateTargets(Character);
+                UpdateTargets(Character, out TargetingPriority targetingPriority);
                 updateTargetsTimer = UpdateTargetsInterval;
 
                 if (SelectedAiTarget == null)
@@ -472,7 +472,10 @@ namespace Barotrauma
             }
             else
             {
-                UpdateWallTarget();
+                if (!IsProperlyLatched)
+                {
+                    UpdateWallTarget();
+                }
                 raycastTimer = RaycastInterval;
             }
 
@@ -496,6 +499,10 @@ namespace Barotrauma
             if (wallTarget != null)
             {
                 attackWorldPos = wallTarget.Position;
+                if (wallTarget.Structure.Submarine != null)
+                {
+                    attackWorldPos += wallTarget.Structure.Submarine.Position;
+                }
                 attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
             }
             else
@@ -840,12 +847,7 @@ namespace Barotrauma
                     attachTargetNormal = new Vector2(Math.Sign(WorldPosition.X - wall.WorldPosition.X), 0.0f);
                     sectionPos.X += (wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2 * attachTargetNormal.X;
                 }
-
-                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, sectionPos, attachTargetNormal);
-                if (wall.Submarine != null)
-                {
-                    sectionPos += wall.Submarine.Position;
-                }
+                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
                 wallTarget = new WallTarget(sectionPos, wall, sectionIndex);
             }         
         }
@@ -978,10 +980,17 @@ namespace Barotrauma
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
-        public TargetingPriority UpdateTargets(Character character)
+        public AITarget UpdateTargets(Character character, out TargetingPriority priority)
         {
+            if (IsProperlyLatched)
+            {
+                // If attached to a valid target, just keep the target.
+                // Priority not used in this case.
+                priority = null;
+                return SelectedAiTarget;
+            }
             AITarget newTarget = null;
-            TargetingPriority targetingPriority = null;
+            priority = null;
             selectedTargetMemory = null;
             targetValue = 0.0f;
 
@@ -1180,7 +1189,7 @@ namespace Barotrauma
                 {
                     newTarget = target;
                     selectedTargetMemory = targetMemory;
-                    targetingPriority = targetingPriorities[targetingTag];
+                    priority = targetingPriorities[targetingTag];
                     targetValue = valueModifier;
                 }
             }
@@ -1190,7 +1199,7 @@ namespace Barotrauma
             {
                 wallTarget = null;
             }
-            return targetingPriority;
+            return SelectedAiTarget;
         }
 
         private AITargetMemory GetTargetMemory(AITarget target)

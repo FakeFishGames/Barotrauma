@@ -1035,78 +1035,6 @@ namespace Barotrauma
 
             CheckValidity();
 
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
-            CheckValidity();
-
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
@@ -1367,17 +1295,42 @@ namespace Barotrauma
             UpdateProjSpecific(deltaTime);
         }
 
-        private void CheckValidity()
+        public bool Invalid { get; private set; }
+        private int validityResets;
+        private bool CheckValidity()
         {
-            CheckValidity(Collider);
+            bool isColliderValid = CheckValidity(Collider);
+            bool limbsValid = true;
             foreach (Limb limb in limbs)
             {
                 if (limb.body == null || !limb.body.Enabled) { continue; }
-                CheckValidity(limb.body);
+                if (!CheckValidity(limb.body))
+                {
+                    limbsValid = false;
+                    break;
+                }
             }
+            bool isValid = isColliderValid && limbsValid;
+            if (!isValid)
+            {
+                validityResets++;
+                if (validityResets > 1)
+                {
+                    Invalid = true;
+                    DebugConsole.ThrowError("Invalid ragdoll physics. Ragdoll freezed to prevent crashes.");
+                    Collider.SetTransform(Vector2.Zero, 0.0f);
+                    foreach (Limb limb in Limbs)
+                    {
+                        limb.body.SetTransform(Collider.SimPosition, 0.0f);
+                        limb.body.ResetDynamics();
+                    }
+                    Frozen = true;
+                }
+            }
+            return isValid;
         }
 
-        private void CheckValidity(PhysicsBody body)
+        private bool CheckValidity(PhysicsBody body)
         {
             string errorMsg = null;
             string bodyName = body.UserData is Limb ? "Limb" : "Collider";
@@ -1429,9 +1382,9 @@ namespace Barotrauma
                     limb.body.ResetDynamics();
                 }
                 SetInitialLimbPositions();
-                return;
+                return false;
             }
-            UpdateProjSpecific(deltaTime);
+            return true;
         }
 
         partial void UpdateProjSpecific(float deltaTime);

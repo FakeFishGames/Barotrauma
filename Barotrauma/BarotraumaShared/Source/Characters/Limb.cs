@@ -528,7 +528,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                // If the attack is aimed to a character but hits a structure, the hit is blocked. 
+                                // If there is nothing between, the hit is successful
                                 wasHit = structureBody == null;
                             }
                         }

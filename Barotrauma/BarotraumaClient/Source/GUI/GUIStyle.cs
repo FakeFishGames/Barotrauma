@@ -12,9 +12,6 @@ namespace Barotrauma
         public ScalableFont Font { get; private set; }
         public ScalableFont SmallFont { get; private set; }
         public ScalableFont LargeFont { get; private set; }
-        public ScalableFont VideoTitleFont { get; private set; }
-        public ScalableFont ObjectiveTitleFont { get; private set; }
-        public ScalableFont ObjectiveNameFont { get; private set; }
 
         public Sprite CursorSprite { get; private set; }
 
@@ -50,15 +47,6 @@ namespace Barotrauma
                         break;
                     case "largefont":
                         LargeFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivetitle":
-                        ObjectiveTitleFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivename":
-                        ObjectiveNameFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "videotitle":
-                        VideoTitleFont = new ScalableFont(subElement, graphicsDevice);
                         break;
                     case "cursor":
                         CursorSprite = new Sprite(subElement);

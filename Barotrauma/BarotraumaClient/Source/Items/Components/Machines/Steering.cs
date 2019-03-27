@@ -127,6 +127,18 @@ namespace Barotrauma.Items.Components
                 Stretch = true,
                 RelativeSpacing = 0.03f
             };
+            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
+                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    AutoPilot = box.Selected;
+                    if (AutoPilot && MaintainPos)
+                    {
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
+                    }
+                    unsentChanges = true;
+                    user = Character.Controlled;
 
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
@@ -484,26 +496,14 @@ namespace Barotrauma.Items.Components
                     user = Character.Controlled;
                 }
             }
-            if (!AutoPilot && Character.DisableControls)
+            if (!AutoPilot && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
             {
                 steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                 Vector2 input = Vector2.Zero;
-                if (PlayerInput.KeyDown(InputType.Left))
-                {
-                    input -= Vector2.UnitX;
-                }
-                if (PlayerInput.KeyDown(InputType.Right))
-                {
-                    input += Vector2.UnitX;
-                }
-                if (PlayerInput.KeyDown(InputType.Up))
-                {
-                    input += Vector2.UnitY;
-                }
-                if (PlayerInput.KeyDown(InputType.Down))
-                {
-                    input -= Vector2.UnitY;
-                }
+                if (PlayerInput.KeyDown(InputType.Left)) { input -= Vector2.UnitX; }
+                if (PlayerInput.KeyDown(InputType.Right)) { input += Vector2.UnitX; }
+                if (PlayerInput.KeyDown(InputType.Up)) { input += Vector2.UnitY; }
+                if (PlayerInput.KeyDown(InputType.Down)) { input -= Vector2.UnitY; }
                 if (PlayerInput.KeyDown(Keys.LeftShift))
                 {
                     SteeringInput += input * deltaTime * 200;
