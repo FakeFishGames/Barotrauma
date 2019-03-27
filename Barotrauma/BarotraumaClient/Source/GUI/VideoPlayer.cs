@@ -29,7 +29,7 @@ namespace Barotrauma
             return isPlaying;
         }
 
-        private readonly Point defaultResolution = new Point(936, 540);
+        private Point defaultResolution = new Point(936, 540);
         private readonly int borderSize = 20;
         private readonly Point buttonSize = new Point(160, 50);
         private readonly int titleHeight = 30;
@@ -64,11 +64,14 @@ namespace Barotrauma
 
         public VideoPlayer()
         {
+            int screenWidth = (int)(GameMain.GraphicsWidth * 0.55f);
+            defaultResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
+
             int width = defaultResolution.X;
             int height = defaultResolution.Y;
 
             background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
-            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point(-100, 0) }, "SonarFrame");
+            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
             //videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
 
             textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "SonarFrame");
