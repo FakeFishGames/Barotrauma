@@ -1894,8 +1894,6 @@ namespace Barotrauma
             }
             speechImpedimentSet = false;
             
-
-
             if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;            

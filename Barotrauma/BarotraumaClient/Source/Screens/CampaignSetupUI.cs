@@ -38,12 +38,6 @@ namespace Barotrauma
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
             this.loadGameContainer = loadGameContainer;
-            
-            var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
 
             var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
             {

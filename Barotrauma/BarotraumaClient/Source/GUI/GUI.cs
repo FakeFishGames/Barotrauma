@@ -656,28 +656,6 @@ namespace Barotrauma
                 msg.Timer -= deltaTime;                
                 msg.Pos += msg.Velocity * deltaTime;                
             }
-            
-            foreach (GUIMessage msg in messages)
-            {
-                if (!msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;                
-                msg.Pos += msg.Velocity * deltaTime;                
-            }
-            
-            foreach (GUIMessage msg in messages)
-            {
-                if (!msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;                
-                msg.Pos += msg.Velocity * deltaTime;                
-            }
-            
-            foreach (GUIMessage msg in messages)
-            {
-                if (!msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;                
-                msg.Pos += msg.Velocity * deltaTime;                
-            }
-        }
 
             messages.RemoveAll(m => m.Timer <= 0.0f);
         }
@@ -751,10 +729,6 @@ namespace Barotrauma
                 Vector2 textSize = font.MeasureString(text);
                 DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
             }
-            else
-            {
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y + rect.Height - thickness, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
 
             font.DrawString(sb, text, pos, color);
         }

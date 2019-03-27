@@ -467,11 +467,7 @@ namespace Barotrauma
                     {
                         itemsText.Text += TextManager.Get("None");
                     }
-                };
-                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
-                {
-                    ToolTip = TextManager.Get("MirrorEntityYToolTip"),
-                    OnClicked = (button, data) =>
+                    else
                     {
                         for (int i = 0; i < AllowedLinks.Count; i++)
                         {

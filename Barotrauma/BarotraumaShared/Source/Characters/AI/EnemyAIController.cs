@@ -813,7 +813,6 @@ namespace Barotrauma
             if (closestBody.UserData is Structure wall && wall.Submarine != null)
             {
                 int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
-                int passableHoleCount = GetMinimumPassableHoleCount();
 
                 float sectionDamage = wall.SectionDamage(sectionIndex);
                 for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
@@ -1011,7 +1010,7 @@ namespace Barotrauma
                 string targetingTag = null;
                 if (targetCharacter != null)
                 {
-                    if (targetCharacter.Submarine != null && Character.Submarine == null)
+                    if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
                         if (targetCharacter.Submarine != Character.Submarine)

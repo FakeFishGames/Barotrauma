@@ -129,7 +129,7 @@ namespace Barotrauma
             availableMissions.RemoveAll(m => m.Completed);
         }
 
-        public void Remove()
+        private string RandomName(LocationType type)
         {
             baseName = type.GetRandomName();
             nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
