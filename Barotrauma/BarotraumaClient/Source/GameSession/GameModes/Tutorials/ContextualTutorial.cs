@@ -100,6 +100,11 @@ namespace Barotrauma.Tutorials
 
         public override void Initialize()
         {
+            for (int i = 0; i < segments.Count; i++)
+            {
+                segments[i].IsTriggered = false;
+            }
+
             if (Initialized) return;
             Initialized = true;
 
@@ -111,11 +116,6 @@ namespace Barotrauma.Tutorials
 
         public void LoadPartiallyComplete(XElement element)
         {
-            for (int i = 0; i < segments.Count; i++)
-            {
-                segments[i].IsTriggered = false;
-            }
-
             int[] completedSegments = element.GetAttributeIntArray("completedsegments", null);
 
             if (completedSegments == null || completedSegments.Length == 0)
