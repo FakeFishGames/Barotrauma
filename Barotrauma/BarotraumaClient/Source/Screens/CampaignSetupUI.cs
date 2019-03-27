@@ -57,6 +57,18 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
+            var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
             var rightColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
             {
                 RelativeSpacing = 0.02f
@@ -64,11 +76,14 @@ namespace Barotrauma
 
             // New game left side
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":", textAlignment: Alignment.BottomLeft);
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform));
+            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform))
+            {
+                OnSelected = CheckForPax
+            };
 
             UpdateSubList(submarines);
 
-            // New game right side
+            // New game right sideon
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), string.Empty);
 
@@ -365,7 +380,25 @@ namespace Barotrauma
         {
             if (isMultiplayer) return;
             Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
-            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
+
+            Submarine selectedSub = subList.SelectedData as Submarine;
+
+            if (selectedSub == null || selectedSub.Name != "PAX")
+            {
+                contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
+            }
+            else
+            {
+                contextualTutorialBox.Selected = true;
+            }
+        }
+
+        private bool CheckForPax(GUIComponent component, object obj)
+        {
+            if (!(obj is Submarine) || contextualTutorialBox == null) return false;
+            Submarine sub = obj as Submarine;
+            contextualTutorialBox.Selected = sub.Name == "PAX";
+            return true;
         }
 
         private bool SelectSaveFile(GUIComponent component, object obj)
