@@ -26,6 +26,10 @@ namespace Barotrauma.Tutorials
         private Sonar sonar;
         private Vector2 subStartingPosition;
         private List<Character> crew;
+        private Character mechanic;
+        private Character engineer;
+        private Character injuredMember = null;
+
         private List<Pair<Character, float>> characterTimeOnSonar;
         private float requiredTimeOnSonar = 5f;
 
@@ -39,7 +43,6 @@ namespace Barotrauma.Tutorials
 
         private GUIFrame holderFrame, objectiveFrame;
         private bool objectivesOpen = false;
-        private GUITextBlock objectiveTitle, objectiveText;
         private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
 
         private class TutorialSegment
@@ -50,6 +53,7 @@ namespace Barotrauma.Tutorials
             public XElement TextContent;
             public XElement VideoContent;
             public bool IsTriggered;
+            public GUITextBlock LinkedTitle, LinkedText;
 
             public TutorialSegment(XElement config)
             {
@@ -166,6 +170,7 @@ namespace Barotrauma.Tutorials
 
             base.Start();
 
+            CreateObjectiveFrame();
             activeSegment = null;
             tutorialTimer = 0.0f;
             degrading2ActivationCountdown = -1;
@@ -204,6 +209,9 @@ namespace Barotrauma.Tutorials
             }
 
             crew = GameMain.GameSession.CrewManager.GetCharacters().ToList();
+            mechanic = CrewMemberWithJob("mechanic");
+            engineer = CrewMemberWithJob("engineer");
+
             Completed = true; // Trigger completed at start to prevent the contextual tutorial from automatically activating on starting new campaigns after this one
             started = true;
         }
@@ -222,6 +230,24 @@ namespace Barotrauma.Tutorials
             videoPlayer.Remove();
             videoPlayer = null;
             characterTimeOnSonar = null;
+        }
+
+        private void CreateObjectiveFrame()
+        {
+            holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
+            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveArea, holderFrame.RectTransform), style: null);
+
+            int toggleButtonWidth = (int)(30 * GUI.Scale);
+            var toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ObjectiveArea.Height), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, 20) }, style: "UIToggleButton");
+            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                objectivesOpen = !objectivesOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = objectivesOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
+            };
         }
 
         public override void AddToGUIUpdateList()
@@ -254,7 +280,7 @@ namespace Barotrauma.Tutorials
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
-                CheckActiveObjectives(activeObjectives[i]);
+                CheckActiveObjectives(activeObjectives[i], deltaTime);
             }
         }
 
@@ -262,16 +288,39 @@ namespace Barotrauma.Tutorials
         {
             if (!string.IsNullOrEmpty(activeSegment.Objective))
             {
-                if (objectiveFrame == null)
-                {
-                    CreateObjectiveFrame();
-                }
-
-                objectiveText.Text = activeSegment.Objective;
+                AddNewObjective(activeSegment);
             }
 
             activeSegment = null;
             ContentRunning = false;
+        }
+
+        private void AddNewObjective(TutorialSegment segment)
+        {
+            activeObjectives.Add(segment);
+
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f + (2.5f * activeObjectives.Count - 1)), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), TextManager.Get("Objective"), textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f + (2.5f * activeObjectives.Count - 1)), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+        }
+
+        private void RemoveCompletedObjective(TutorialSegment objective)
+        {
+            objective.LinkedTitle.FadeOut(1f, true);
+            objective.LinkedText.FadeOut(1f, true);
+
+            CoroutineManager.StartCoroutine(WaitForObjectiveFade(objective));
+        }
+
+        private IEnumerable<object> WaitForObjectiveFade(TutorialSegment objective)
+        {
+            yield return new WaitForSeconds(1f);
+            activeObjectives.Remove(objective);
+
+            for (int i = 0; i < activeObjectives.Count; i++)
+            {
+                activeObjectives[i].LinkedTitle.RectTransform.RelativeSize = new Vector2(0.8f, 0.0f + (2.5f * activeObjectives.Count - 1f));
+                activeObjectives[i].LinkedText.RectTransform.RelativeSize = new Vector2(0.8f, 1f + (2.5f * activeObjectives.Count - 1f));
+            }
         }
 
         private bool CheckContextualTutorials(int index, float deltaTime)
@@ -285,24 +334,24 @@ namespace Barotrauma.Tutorials
                         return false;
                     }
                     break;
-                case 1: // Command Reactor: 10 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
-                    if (tutorialTimer < 10.5f)
+                case 1: // Command Reactor: 2 seconds after 'Welcome' dismissed and only if no command given to start reactor [Video]
+                    if (tutorialTimer < 2.5f)
                     {
                         tutorialTimer += deltaTime;
 
                         if (HasOrder("operatereactor"))
                         {
                             segments[index].IsTriggered = true;
-                            tutorialTimer = 10.5f;
+                            tutorialTimer = 2.5f;
                         }
                         return false;
                     }
                     break;
-                case 2: // Nav Console: 20 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
+                case 2: // Nav Console: 2 seconds after 'Command Reactor' dismissed or if nav console is activated [Video]
+                    if (!segments[1].IsTriggered || !IsReactorPoweredUp()) return false; // Do not advance tutorial based on this segment if reactor has not been powered up
                     if (Character.Controlled?.SelectedConstruction != navConsole.Item)
-                    {
-                        if (!segments[1].IsTriggered) return false; // Do not advance tutorial timer based on this segment if reactor has not been powered up
-                        if (tutorialTimer < 30.5f)
+                    {                       
+                        if (tutorialTimer < 4.5f)
                         {
                             tutorialTimer += deltaTime;
                             return false;
@@ -310,16 +359,7 @@ namespace Barotrauma.Tutorials
                     }
                     else
                     {
-                        if (!segments[1].IsTriggered || !HasOrder("operatereactor")) // If reactor has not been powered up or ordered to be, default to that one first
-                        {
-                            if (tutorialTimer < 10.5f)
-                            {
-                                tutorialTimer = 10.5f;
-                            }
-                            return false;
-                        }
-
-                        tutorialTimer = 30.5f;
+                        tutorialTimer = 4.5f;
                     }
 
                     TriggerTutorialSegment(index, GameMain.GameSession.EndLocation.Name);
@@ -377,6 +417,10 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 8: // Degrading2: 5 seconds after 'Degrading1' dismissed, and only if player has not assigned any crew to perform maintenance [Video]
+                    if ((mechanic == null || mechanic.IsDead) && (engineer == null || engineer.IsDead)) // Both engineer and mechanic are dead or do not exist -> do not display
+                    {
+                        return false;
+                    }
                     if (degrading2ActivationCountdown == -1f)
                     {
                         return false;
@@ -384,7 +428,7 @@ namespace Barotrauma.Tutorials
                     else if (degrading2ActivationCountdown > 0.0f)
                     {
                         degrading2ActivationCountdown -= deltaTime;
-                        if (HasOrder("repairsystems"))
+                        if (HasOrder("repairsystems", "jobspecific"))
                         {
                             segments[index].IsTriggered = true;
                         }
@@ -393,20 +437,19 @@ namespace Barotrauma.Tutorials
                     }
                     break;
                 case 9: // Medical: Crewmember is injured but not killed [Video]
-                    bool injuredFound = false;
                     for (int i = 0; i < crew.Count; i++)
                     {
                         Character member = crew[i];
                         if (member.Vitality < member.MaxVitality && !member.IsDead)
                         {
-                            injuredFound = true;
-                            TriggerTutorialSegment(index, new string[] { member.DisplayName,
+                            injuredMember = member;
+                            TriggerTutorialSegment(index, new string[] { member.Info.DisplayName,
                                 (member.Info.Gender == Gender.Male) ? TextManager.Get("PronounPossessiveMale").ToLower() : TextManager.Get("PronounPossessiveFemale").ToLower() });
                             return true;
                         }
                     }
 
-                    if (!injuredFound) return false;
+                    if (injuredMember == null) return false;
                     break;
                 case 10: // Approach1: Destination is within ~100m [Video]
                     if (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 8000f)
@@ -430,34 +473,125 @@ namespace Barotrauma.Tutorials
             return true;
         }
 
-        private void CheckActiveObjectives(TutorialSegment objective)
+        private bool HasObjective(string objectiveName)
+        {
+            for (int i = 0; i < activeObjectives.Count; i++)
+            {
+                if (activeObjectives[i].Id == objectiveName) return true;
+            }
+
+            return false;
+        }
+
+        private void CheckActiveObjectives(TutorialSegment objective, float deltaTime)
         {
             switch(objective.Id)
             {
                 case "ReactorCommand": // Reactor up and running
-
+                    if (!IsReactorPoweredUp()) return;
                     break;
-                case "NavConsole": // traveled 100 meters
-
+                case "NavConsole": // traveled 50 meters
+                    if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 4000f)
+                    {
+                        return;
+                    }
                     break;
                 case "Flood": // Hull breaches repaired
+                    if (IsFlooding()) return;
                     break;
-                case "EnemyOnSonar":
+                case "Medical":
+                    if (injuredMember.Vitality < injuredMember.MaxVitality && !injuredMember.IsDead)
+                    {
+                        return;
+                    }
                     break;
-                case "Degrading2":
+                case "EnemyOnSonar": // Enemy dispatched
+                    if (HasEnemyOnSonarForDuration(deltaTime))
+                    {
+                        return;
+                    }
                     break;
-                case "Approach1":
+                case "Degrading2": // Fixed
+                    if (mechanic != null && !mechanic.IsDead)
+                    {
+                        HumanAIController humanAI = mechanic.AIController as HumanAIController;
+                        if (mechanic.CurrentOrder?.AITag != "repairsystems" || humanAI.CurrentOrderOption != "jobspecific")
+                        {
+                            return;
+                        }
+                    }
+
+                    if (engineer != null && !engineer.IsDead)
+                    {
+                        HumanAIController humanAI = engineer.AIController as HumanAIController;
+                        if (engineer.CurrentOrder?.AITag != "repairsystems" || humanAI.CurrentOrderOption != "jobspecific")
+                        {
+                            return;
+                        }
+                    }
+
+                    break;
+                case "Approach1": // Wait until docked
+                    if (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0)
+                    {
+                        return;
+                    }
                     break;
             }
 
-            activeObjectives.Remove(objective);
+            RemoveCompletedObjective(objective);
         }
 
-        private bool HasOrder(string aiTag)
+        private bool IsReactorPoweredUp()
+        {
+            float load = 0.0f;
+            List<Connection> connections = reactor.Item.Connections;
+            if (connections != null && connections.Count > 0)
+            {
+                foreach (Connection connection in connections)
+                {
+                    if (!connection.IsPower) continue;
+                    foreach (Connection recipient in connection.Recipients)
+                    {
+                        if (!(recipient.Item is Item it)) continue;
+
+                        PowerTransfer pt = it.GetComponent<PowerTransfer>();
+                        if (pt == null) continue;
+
+                        load = Math.Max(load, pt.PowerLoad);
+                    }
+                }
+            }
+
+            return Math.Abs(load + reactor.CurrPowerConsumption) < 10;
+        }
+
+        private Character CrewMemberWithJob(string job)
         {
             for (int i = 0; i < crew.Count; i++)
             {
-                if (crew[i].CurrentOrder?.AITag == aiTag) return true;
+                if (crew[i].Info.Job.Name == job) return crew[i];
+            }
+
+            return null;
+        }
+
+        private bool HasOrder(string aiTag, string option = null)
+        {
+            for (int i = 0; i < crew.Count; i++)
+            {
+                if (crew[i].CurrentOrder?.AITag == aiTag)
+                {
+                    if (option == null)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        HumanAIController humanAI = crew[i].AIController as HumanAIController;
+                        return humanAI.CurrentOrderOption == option;
+                    }
+                }
             }
 
             return false;
@@ -531,7 +665,7 @@ namespace Barotrauma.Tutorials
                     objectiveText = string.Format(activeSegment.Objective, args);
                 }
 
-                activeObjectives.Add(activeSegment);
+                activeSegment.Objective = objectiveText;
             }
 
             switch (activeSegment.ContentType)
@@ -556,26 +690,6 @@ namespace Barotrauma.Tutorials
             }
 
             CoroutineManager.StartCoroutine(WaitToStop()); // Completed
-        }
-
-        private void CreateObjectiveFrame()
-        {
-            holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
-            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveArea, holderFrame.RectTransform), style: null);
-            objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.3f), objectiveFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), TextManager.Get("Objective"), textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.BottomRight);
-            objectiveText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.7f), objectiveFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter), "Repair Hull Breach", textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.TopRight);
-
-            int toggleButtonWidth = (int)(30 * GUI.Scale);
-            var toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ObjectiveArea.Height), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, -5) }, style: "UIToggleButton");
-            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
-            {
-                objectivesOpen = !objectivesOpen;
-                foreach (GUIComponent child in btn.Children)
-                {
-                    child.SpriteEffects = objectivesOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                }
-                return true;
-            };
         }
 
         private IEnumerable<object> WaitToStop()
