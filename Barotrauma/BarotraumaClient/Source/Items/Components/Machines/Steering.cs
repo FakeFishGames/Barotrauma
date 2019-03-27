@@ -127,18 +127,6 @@ namespace Barotrauma.Items.Components
                 Stretch = true,
                 RelativeSpacing = 0.03f
             };
-            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
-                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
-            {
-                OnSelected = (GUITickBox box) =>
-                {
-                    AutoPilot = box.Selected;
-                    if (AutoPilot && MaintainPos)
-                    {
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
-                    }
-                    unsentChanges = true;
-                    user = Character.Controlled;
 
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
