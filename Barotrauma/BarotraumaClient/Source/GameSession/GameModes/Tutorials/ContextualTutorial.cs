@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using System.Windows;
 
 namespace Barotrauma.Tutorials
 {
@@ -18,7 +19,7 @@ namespace Barotrauma.Tutorials
 
         private TutorialSegment activeSegment;
         private List<TutorialSegment> segments;
-        
+
         private VideoPlayer videoPlayer;
 
         private Steering navConsole;
@@ -389,9 +390,21 @@ namespace Barotrauma.Tutorials
 
         private void RemoveCompletedObjective(TutorialSegment objective)
         {
-            objectiveFrame.RemoveChild(objective.ReplayButton);
-            activeObjectives.Remove(objective);
             objective.IsTriggered = true;
+
+            RectTransform rectT = new RectTransform(new Point((int)GUI.CheckmarkIcon.size.X, (int)GUI.CheckmarkIcon.size.Y), objective.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
+            rectT.AbsoluteOffset = new Point(-rectT.Rect.Width - 5, 0);
+            GUIImage checkmark = new GUIImage(rectT, GUI.CheckmarkIcon);
+            checkmark.Color = Color.Green;
+
+            CoroutineManager.StartCoroutine(WaitForObjectiveEnd(objective));
+        }
+
+        private IEnumerable<object> WaitForObjectiveEnd(TutorialSegment objective)
+        {
+            yield return new WaitForSeconds(2.0f);
+            objectiveFrame.RemoveChild(objective.ReplayButton);
+            activeObjectives.Remove(objective);  
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
