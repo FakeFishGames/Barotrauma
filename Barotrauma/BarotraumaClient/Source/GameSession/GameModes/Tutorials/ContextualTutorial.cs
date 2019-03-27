@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Xml.Linq;
 using System;
 using Microsoft.Xna.Framework;
@@ -38,17 +38,16 @@ namespace Barotrauma.Tutorials
         private string playableContentPath;
 
         private float tutorialTimer;
-        private float degrading2ActivationCountdown;
 
         private bool disableTutorialOnDeficiencyFound = true;
 
         private GUIFrame holderFrame, objectiveFrame;
-        private GUIButton toggleButton;
-        private bool objectivesOpen = false;
-        private float openState = 0f;
+        //private GUIButton toggleButton;
+        //private bool objectivesOpen = false;
+        //private float openState = 0f;
         private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
         private string objectiveTranslated;
-        private Point objectiveBaseOffset = Point.Zero;
+        //private Point objectiveBaseOffset = Point.Zero;
 
         private class TutorialSegment
         {
@@ -104,7 +103,7 @@ namespace Barotrauma.Tutorials
             base.Initialize();
             videoPlayer = new VideoPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
-            objectivesOpen = true;
+            //objectivesOpen = true;
 
             for (int i = 0; i < segments.Count; i++)
             {
@@ -181,7 +180,6 @@ namespace Barotrauma.Tutorials
             CreateObjectiveFrame();
             activeSegment = null;
             tutorialTimer = 0.0f;
-            degrading2ActivationCountdown = -1;
             subStartingPosition = Vector2.Zero;
             characterTimeOnSonar.Clear();
 
@@ -245,7 +243,7 @@ namespace Barotrauma.Tutorials
             holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
             objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveAnchor, holderFrame.RectTransform), style: null);
 
-            int toggleButtonWidth = (int)(30 * GUI.Scale);
+            /*int toggleButtonWidth = (int)(30 * GUI.Scale);
             int toggleButtonHeight = (int)(40 * GUI.Scale);
             toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, toggleButtonHeight), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, 20) }, style: "UIToggleButton");
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -258,7 +256,7 @@ namespace Barotrauma.Tutorials
                 return true;
             };
 
-            objectiveBaseOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0);
+            objectiveBaseOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0);*/
         }
 
         public override void AddToGUIUpdateList()
@@ -299,7 +297,7 @@ namespace Barotrauma.Tutorials
                 CheckActiveObjectives(activeObjectives[i], deltaTime);
             }
 
-            if (activeObjectives.Count > 0)
+            /*if (activeObjectives.Count > 0)
             {
                 if (objectivesOpen)
                 {
@@ -327,7 +325,7 @@ namespace Barotrauma.Tutorials
                 {
                     activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = objectiveBaseOffset + new Point((int)MathHelper.SmoothStep(0, objectivesHiddenOffset, openState), 0);
                 }
-            }
+            }*/
         }
 
         private void ClosePreTextAndTriggerVideoCallback()
@@ -352,7 +350,7 @@ namespace Barotrauma.Tutorials
 
             Point replayButtonSize = new Point((int)GUI.ObjectiveNameFont.MeasureString(segment.Objective).X, (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
 
-            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0) }, style: null);
+            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(/*(int)(-2.5f * toggleButton.Rect.Width)*/0, (replayButtonSize.Y + 20) * (activeObjectives.Count - 1)) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 ReplaySegmentVideo(segment);
@@ -370,19 +368,12 @@ namespace Barotrauma.Tutorials
 
         private void RemoveCompletedObjective(TutorialSegment objective)
         {
-            objective.ReplayButton.FadeOut(1f, true);
-            CoroutineManager.StartCoroutine(WaitForObjectiveFade(objective));
-        }
-
-        private IEnumerable<object> WaitForObjectiveFade(TutorialSegment objective)
-        {
-            yield return new WaitForSeconds(1f);
+            objectiveFrame.RemoveChild(objective.ReplayButton);
             activeObjectives.Remove(objective);
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
-                activeObjectives[i].LinkedTitle.RectTransform.RelativeSize = new Vector2(0.8f, 0.0f + (2.5f * activeObjectives.Count - 1f));
-                activeObjectives[i].LinkedText.RectTransform.RelativeSize = new Vector2(0.8f, 1f + (2.5f * activeObjectives.Count - 1f));
+                activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = new Point(0, (activeObjectives[i].ReplayButton.Rect.Height + 20) * i);
             }
         }
 
@@ -535,8 +526,8 @@ namespace Barotrauma.Tutorials
         {
             switch(objective.Id)
             {
-                case "ReactorCommand": // Reactor up and running
-                    if (!IsReactorPoweredUp()) return;
+                case "ReactorCommand": // Reactor commanded
+                    if (!HasOrder("operatereactor")) return;
                     break;
                 case "NavConsole": // traveled 50 meters
                     if (Vector2.Distance(subStartingPosition, Submarine.MainSub.WorldPosition) < 4000f)
@@ -691,7 +682,7 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            return characterTimeOnSonar.Find(ct => ct.Second >= requiredTimeOnSonar) != null;
+            return characterTimeOnSonar.Find(ct => ct.Second >= requiredTimeOnSonar && !ct.First.IsDead) != null;
         }
 
         private void TriggerTutorialSegment(int index, params object[] args)
