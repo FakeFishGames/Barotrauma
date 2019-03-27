@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         private Video currentVideo;
         private Point resolution;
-        private string contentPath;
+        private string filePath;
 
         private GUIFrame background, videoFrame, textFrame;
         private GUITextBlock title, textContent, objectiveTitle, objectiveText;
@@ -50,11 +50,13 @@ namespace Barotrauma
 
         public struct VideoSettings
         {
+            public string File;
             public int Width;
             public int Height;
 
             public VideoSettings(XElement element)
             {
+                File = element.GetAttributeString("file", string.Empty);
                 Width = element.GetAttributeInt("width", 0);
                 Height = element.GetAttributeInt("height", 0);
             }
@@ -131,10 +133,11 @@ namespace Barotrauma
         public void LoadContentWithObjective(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, string objective, Action callback = null)
         {
             callbackOnStop = callback;
+            filePath = contentPath + videoSettings.File;
 
-            if (!File.Exists(contentPath))
+            if (!File.Exists(filePath))
             {
-                DebugConsole.ThrowError("No video found at: " + contentPath);
+                DebugConsole.ThrowError("No video found at: " + filePath);
                 DisposeVideo(null, null);
                 return;
             }
@@ -147,7 +150,6 @@ namespace Barotrauma
                 currentVideo = null;
             }
 
-            this.contentPath = contentPath;
             resolution = new Point(0, 0);
 
             if (currentVideo == null) // No preloaded video found
@@ -199,6 +201,7 @@ namespace Barotrauma
         public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, Action callback = null)
         {
             callbackOnStop = callback;
+            filePath = contentPath + videoSettings.File;
 
             if (!File.Exists(contentPath))
             {
@@ -215,7 +218,6 @@ namespace Barotrauma
                 currentVideo = null;
             }
 
-            this.contentPath = contentPath;
             resolution = new Point(0, 0);
 
             if (currentVideo == null) // No preloaded video found
@@ -276,11 +278,11 @@ namespace Barotrauma
             try
             {
                 //video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
-                video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, contentPath, (uint)resolution.X, (uint)resolution.Y);
+                video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, filePath, (uint)resolution.X, (uint)resolution.Y);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error loading video content " + contentPath + "!", e);
+                DebugConsole.ThrowError("Error loading video content " + filePath + "!", e);
             }
 
             return video;
