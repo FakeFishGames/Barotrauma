@@ -1155,8 +1155,6 @@ namespace Barotrauma
             removals.ForEach(r => targetMemories.Remove(r));
         }
 
-        #endregion
-
             if (toBeRemoved != null)
             {
                 foreach (AITarget target in toBeRemoved)
@@ -1171,6 +1169,19 @@ namespace Barotrauma
         {
             latchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
+        }
+
+        #endregion
+
+        protected override void OnStateChanged(AIState from, AIState to)
+        {
+            latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
+        }
+
+        private int GetMinimumPassableHoleCount()
+        {
+            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
         }
 
         #endregion
