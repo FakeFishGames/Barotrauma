@@ -1085,6 +1085,8 @@ namespace Barotrauma
 
             CheckValidity();
 
+            CheckValidity();
+
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
@@ -1397,6 +1399,16 @@ namespace Barotrauma
                 return;
             }
             UpdateProjSpecific(deltaTime);
+        }
+
+        private void CheckValidity()
+        {
+            CheckValidity(Collider);
+            foreach (Limb limb in limbs)
+            {
+                if (limb.body == null || !limb.body.Enabled) { continue; }
+                CheckValidity(limb.body);
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime);
