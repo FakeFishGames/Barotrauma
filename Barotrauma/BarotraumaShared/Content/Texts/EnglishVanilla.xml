@@ -2677,7 +2677,7 @@
 
   <ReactorCommand>Giving commands</ReactorCommand>
   <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
-  <ReactorCommandInstructions>-Find a mechanic in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on objective list on the right)</ReactorCommandInstructions>
+  <ReactorCommandInstructions>-Find a mechanic in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on the objective list on the right)</ReactorCommandInstructions>
   <ReactorCommandObjective>Give the order to power up the reactor</ReactorCommandObjective>
 
   <NavConsole>Plotting the course</NavConsole>
