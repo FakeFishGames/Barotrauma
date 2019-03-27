@@ -12,7 +12,8 @@ namespace Barotrauma
     class VideoPlayer
     {
         private Video currentVideo;
-        private List<PreloadedContent> preloadedVideos;
+        private Point resolution;
+        private string contentPath;
 
         private GUIFrame background, videoFrame, textFrame;
         private GUITextBlock title, textContent, objectiveTitle, objectiveText;
@@ -35,30 +36,14 @@ namespace Barotrauma
         private readonly int objectiveFrameHeight = 60;
         private readonly int textHeight = 25;
 
-        private class PreloadedContent
-        {
-            public string ContentName;
-            public string ContentTag;
-            public Video Video;
-            public Point Resolution;
-
-            public PreloadedContent(string name, string tag, Video video, Point resolution)
-            {
-                ContentName = name;
-                ContentTag = tag;
-                Video = video;
-                Resolution = resolution;
-            }
-        }
-        
         public struct TextSettings
         {
             public string Text;
             public int Width;
 
-            public TextSettings(XElement element, params object[] args)
+            public TextSettings(XElement element)
             {
-                Text = TextManager.GetFormatted(element.GetAttributeString("tag", string.Empty), true, args);
+                Text = TextManager.GetFormatted(element.GetAttributeString("text", string.Empty), true);
                 Width = element.GetAttributeInt("width", 300);
             }
         }
@@ -97,45 +82,7 @@ namespace Barotrauma
             objectiveTitle.Text = TextManager.Get("NewObjective");
             objectiveText = new GUITextBlock(new RectTransform(new Point(textFrame.Rect.Width, textHeight), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveNameFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
 
-            preloadedVideos = new List<PreloadedContent>();
-        }
-
-        public void PreloadContent(string contentPath, string contentTag, string contentId, VideoSettings videoSettings)
-        {
-            if (preloadedVideos.Find(s => s.ContentName == contentId) != null) return; // Already loaded
-            Point resolution = new Point(videoSettings.Width, videoSettings.Height);
-
-            if (resolution.X == 0 || resolution.Y == 0)
-            {
-                resolution = defaultResolution;
-            }
-
-            preloadedVideos.Add(new PreloadedContent(contentId, contentTag, CreateVideo(contentPath, resolution), resolution));
-        }
-
-        public void RemoveAllPreloaded()
-        {
-            if (preloadedVideos == null || preloadedVideos.Count == 0) return;
-
-            for (int i = 0; i < preloadedVideos.Count; i++)
-            {
-                preloadedVideos[i] = null;
-            }
-
-            preloadedVideos.Clear();
-        }
-
-        public void RemovePreloadedByTag(string tag)
-        {
-            if (preloadedVideos == null || preloadedVideos.Count == 0) return;
-
-            for (int i = 0; i < preloadedVideos.Count; i++)
-            {
-                if (preloadedVideos[i].ContentTag != tag) continue;
-                preloadedVideos[i] = null;
-                preloadedVideos.RemoveAt(i);
-                i--;
-            }
+            objectiveTitle.Visible = objectiveText.Visible = false;
         }
 
         public void Play()
@@ -160,10 +107,19 @@ namespace Barotrauma
 
         public void Update()
         {
+            if (currentVideo == null) return;
+
             if (PlayerInput.KeyHit(Keys.Enter))
             {
                 DisposeVideo(null, null);
+                return;
             }
+
+            if (currentVideo.IsPlaying) return;
+
+            currentVideo.Dispose();
+            currentVideo = null;
+            currentVideo = CreateVideo();
         }
 
         public void AddToGUIUpdateList()
@@ -191,19 +147,8 @@ namespace Barotrauma
                 currentVideo = null;
             }
 
-            PreloadedContent preloaded = null;
-            Point resolution = new Point(0, 0);
-
-            if (preloadedVideos != null && preloadedVideos.Count > 0)
-            {
-                preloaded = preloadedVideos.Find(s => s.ContentName == contentId);
-
-                if (preloaded != null)
-                {
-                    currentVideo = preloaded.Video;
-                    resolution = preloaded.Resolution;
-                }
-            }
+            this.contentPath = contentPath;
+            resolution = new Point(0, 0);
 
             if (currentVideo == null) // No preloaded video found
             {
@@ -214,8 +159,10 @@ namespace Barotrauma
                     resolution = defaultResolution;
                 }
 
-                currentVideo = CreateVideo(contentPath, resolution);
+                currentVideo = CreateVideo();
             }
+
+            objectiveTitle.Visible = objectiveText.Visible = true;
 
             videoFrame.RectTransform.NonScaledSize += resolution + new Point(borderSize, borderSize);
             videoView.RectTransform.NonScaledSize += resolution;
@@ -268,19 +215,8 @@ namespace Barotrauma
                 currentVideo = null;
             }
 
-            PreloadedContent preloaded = null;
-            Point resolution = new Point(0, 0);
-
-            if (preloadedVideos != null && preloadedVideos.Count > 0)
-            {
-                preloaded = preloadedVideos.Find(s => s.ContentName == contentId);
-
-                if (preloaded != null)
-                {
-                    currentVideo = preloaded.Video;
-                    resolution = preloaded.Resolution;
-                }
-            }
+            this.contentPath = contentPath;
+            resolution = new Point(0, 0);
 
             if (currentVideo == null) // No preloaded video found
             {
@@ -291,8 +227,10 @@ namespace Barotrauma
                     resolution = defaultResolution;
                 }
 
-                currentVideo = CreateVideo(contentPath, resolution);
+                currentVideo = CreateVideo();
             }
+
+            objectiveTitle.Visible = objectiveText.Visible = false;
 
             videoFrame.RectTransform.NonScaledSize += resolution + new Point(borderSize, borderSize);
             videoView.RectTransform.NonScaledSize += resolution;
@@ -331,7 +269,7 @@ namespace Barotrauma
             objectiveText.RectTransform.NonScaledSize = Point.Zero;
         }
 
-        private Video CreateVideo(string contentPath, Point resolution)
+        private Video CreateVideo()
         {
             Video video = null;
 
@@ -361,8 +299,6 @@ namespace Barotrauma
                 currentVideo.Dispose();
                 currentVideo = null;
             }
-
-            RemoveAllPreloaded();
         }
     }
 }
