@@ -4,6 +4,7 @@ using System;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using Barotrauma.Media;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -112,7 +113,7 @@ namespace Barotrauma
             currentVideo = null;
         }
 
-        private bool OKButtonClicked(GUIButton button, object userData)
+        private bool DisposeVideo(GUIButton button, object userData)
         {
             Stop();
             callbackOnStop?.Invoke();
@@ -127,6 +128,15 @@ namespace Barotrauma
 
         public void LoadContent(string contentPath, XElement videoElement, string contentId, bool startPlayback, bool hasButton, Action callback = null)
         {
+            callbackOnStop = callback;
+
+            if (!File.Exists(contentPath))
+            {
+                DebugConsole.ThrowError("No video found at: " + contentPath);
+                DisposeVideo(null, null);
+                return;
+            }
+
             if (currentVideo != null)
             {
                 currentVideo.Dispose();
@@ -165,14 +175,12 @@ namespace Barotrauma
             title.Text = TextManager.Get(contentId);
             title.RectTransform.NonScaledSize = new Point(resolution.X, 30);
 
-            callbackOnStop = callback;
-
             if (hasButton)
             {
                 var okButton = new GUIButton(new RectTransform(new Point(160, 50), videoFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
                     TextManager.Get("OK"))
                 {
-                    OnClicked = OKButtonClicked
+                    OnClicked = DisposeVideo
                 };
             }
 
@@ -185,6 +193,7 @@ namespace Barotrauma
 
             try
             {
+                //video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
                 video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, contentPath, (uint)resolution.X, (uint)resolution.Y);
             }
             catch (Exception e)

@@ -935,9 +935,62 @@ namespace Barotrauma
                             }
                         }
                     }
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
+                    files.Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("updatetextfile", "updatetextfile [sourcefile] [destinationfile]: Inserts all the xml elements that are only present in the source file into the destination file. Can be used to update outdated translation files more easily.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                string sourcePath = args[0];
+                string destinationPath = args[1];
+
+                var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
+                var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                XElement destinationElement = destinationDoc.Root.Elements().First();
+                foreach (XElement element in sourceDoc.Root.Elements())
+                {
+                    if (destinationDoc.Root.Element(element.Name) == null)
+                    {
+                        element.Value = "!!!!!!!!!!!!!" + element.Value;
+                        destinationElement.AddAfterSelf(element);
+                    }
                     XNode nextNode = destinationElement.NextNode;
                     while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
                     destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
                 }
             }, isCheat: false));
 #endif
@@ -1045,6 +1098,24 @@ namespace Barotrauma
                     lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
                 }
                 File.WriteAllLines(filePath, lines);
+            }));
+#if DEBUG
+            commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
+            {
+                if (args.Length != 1) return;
+                TextManager.CheckForDuplicates(args[0]);
+            }));
+
+            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            {
+                TextManager.WriteToCSV();
+                NPCConversation.WriteToCSV();
+            }));
+
+            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                LocalizationCSVtoXML.Convert(args[0]);
             }));
 #if DEBUG
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>

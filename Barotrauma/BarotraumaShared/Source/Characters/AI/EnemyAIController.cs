@@ -1186,6 +1186,19 @@ namespace Barotrauma
             return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
         }
 
+        #endregion
+
+        protected override void OnStateChanged(AIState from, AIState to)
+        {
+            latchOntoAI?.DeattachFromBody();
+            Character.AnimController.ReleaseStuckLimbs();
+        }
+
+        private int GetMinimumPassableHoleCount()
+        {
+            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
+        }
+
         private bool CanPassThroughHole(Structure wall, int sectionIndex)
         {
             int requiredHoleCount = GetMinimumPassableHoleCount();
