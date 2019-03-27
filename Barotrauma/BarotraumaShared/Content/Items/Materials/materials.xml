@@ -10,7 +10,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="9,105,96,83" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -26,7 +26,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="9,186,96,76" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -42,7 +42,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="298,182,98,80" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -58,7 +58,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="203,185,97,78" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -74,7 +74,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="307,10,50,95" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -90,7 +90,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="103,183,99,78" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -106,7 +106,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="203,105,96,81" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -122,7 +122,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="58,11,50,94" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="59" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -138,7 +138,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="392,106,93,81" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -154,7 +154,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="257,11,48,94" depth="0.55" origin="0.5,0.5" />
     <Body width="28" height="58" density="15" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -170,7 +170,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="106,106,96,80" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -186,7 +186,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="8,260,99,83" depth="0.55" origin="0.5,0.5" />
     <Body width="58" height="24" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -203,7 +203,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="154,10,49,94" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000" />
@@ -227,7 +227,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="301,107,92,77" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -243,7 +243,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="204,9,51,95" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="15" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" selectionmode="All" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" selectionmode="All" range="5000" />
@@ -267,7 +267,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="6,11,51,91" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="59" density="15" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -298,7 +298,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="107,259,95,84" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -319,7 +319,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="6,343,115,58" depth="0.55" origin="0.5,0.5" />
     <Body width="56" height="28" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -339,7 +339,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="125,407,114,57" depth="0.55" origin="0.5,0.5" />
     <Body width="114" height="57" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -355,7 +355,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" />
     <Body width="85" height="60" density="20" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -371,7 +371,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="706,770,62,61" origin="0.5,0.5" />
     <Sprite texture="CraftingElements2.png" sourcerect="0,140,89,134" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="20" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -398,7 +398,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="265,441,74,71" depth="0.55" origin="1,1" />
     <Body width="24" height="12" density="8" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -415,7 +415,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,87" />
     <Body width="45" height="87" density="20" />
-    <Throwable characterusable="false" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
       <StatusEffect type="OnFire" target="this" condition="-50" />
       <StatusEffect type="OnUse" target="This" Condition="-100.0" />
@@ -437,7 +437,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="105,439,52,61" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="60" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false">
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" range="5000" />
@@ -456,7 +456,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" >
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -469,7 +469,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" >
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -482,7 +482,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="15,356,60,54" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
-    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" >
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />

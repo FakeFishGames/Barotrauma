@@ -40,7 +40,7 @@
       <IsActiveConditional Condition="gt 0.0" />
     </DecorativeSprite>
   
-    <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
+    <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected="true" msg="ItemMsgInteractSelect">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
@@ -88,7 +88,7 @@
     <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,125,186,125" depth="0.8" maxcondition="40" fadein="true" />
     <BrokenSprite texture="ShuttleOxygenerator.png" sourcerect="0,250,186,125" depth="0.8" maxcondition="0" />
 
-    <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
+    <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true" msg="ItemMsgInteractSelect">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>

@@ -1,9 +1,14 @@
-﻿<Ragdoll type="Charybdis" canentersubmarine="False" spritesheetorientation="270" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="False">
-  <collider radius="220" width="0" name="Main Collider" height="250" />
+﻿<Ragdoll type="Charybdis" canentersubmarine="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="False">
+  <collider radius="220" width="0" name="Main Collider" height="500" />
   <limb id="0" name="Jaw" type="None" radius="60" width="152" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="936,51,305,153" origin="0.5,0.5" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" />
     </deformablesprite>
+    <attack range="230" damagerange="200" duration="0.25" structuredamage="20" structuresoundtype="StructureSlash" torque="100" force="20" targetforce="-50" severlimbsprobability="1" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="Pursue" cooldown="1" secondarycooldown="0" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="0, 1" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0">
+      <Affliction identifier="internaldamage" strength="30" />
+      <Affliction identifier="bleeding" strength="100" />
+      <Affliction identifier="stun" strength="0.2" />
+    </attack>
   </limb>
   <limb id="1" name="Head" type="Head" radius="63" width="177" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="285,54,303,126" origin="0.5,0.5" depth="0" subdivisions="5,5">
@@ -12,27 +17,27 @@
   </limb>
   <limb id="2" name="Neck" type="None" radius="90" width="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="285,243,252,214" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
+      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" />
     </deformablesprite>
   </limb>
   <limb id="3" name="Cocktail4" type="Tail" radius="80" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="60" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="795,270,177,262" origin="0.5732965,0.3092121" depth="0" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="10" />
+      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" />
     </deformablesprite>
   </limb>
   <limb id="4" name="Cocktail3" type="Tail" radius="0" height="150" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="140" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="972,270,171,262" origin="0.5034575,0.2802967" depth="0" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
+      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" />
     </deformablesprite>
   </limb>
   <limb id="5" name="Cocktail2" type="Tail" radius="0" height="180" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="100" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="1142,270,113,262" origin="0.5089095,0.4441506" depth="0" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
+    <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="1142,270,118,265" origin="0.5365707,0.4538102" depth="0" subdivisions="5,5">
+      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" />
     </deformablesprite>
   </limb>
   <limb id="6" name="Cocktail1" type="Tail" radius="0" height="196.5" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="122.25" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="1256,270,163,262" origin="0.4435333,0.6272814" depth="0" subdivisions="5,5">
-      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
+      <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" />
     </deformablesprite>
   </limb>
   <limb id="7" name="Fin" type="RightFoot" radius="80" width="312" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
@@ -143,9 +148,9 @@
   <joint name="Joint Neck - Jaw" limb1="2" limb2="0" limb1anchor="108.5943,-19.28831" limb2anchor="-97.07471,23.56939" canbesevered="True" limitenabled="True" upperlimit="39.80279" lowerlimit="23.22472" stiffness="0.25" />
   <joint name="Joint Neck - Head" limb1="2" limb2="1" limb1anchor="89.72055,64.94095" limb2anchor="-91.17178,-21.96455" canbesevered="True" limitenabled="True" upperlimit="52.20382" lowerlimit="36.83701" stiffness="0.25" />
   <joint name="Joint Torso - Neck" limb1="8" limb2="2" limb1anchor="286.3722,39.22549" limb2anchor="-49.80461,25.43573" canbesevered="True" limitenabled="True" upperlimit="14.17262" lowerlimit="-53.38123" stiffness="0.25" />
-  <joint name="Joint Cocktail3 - Cocktail4" limb1="4" limb2="3" limb1anchor="-72.1144,-5.561166" limb2anchor="69.71873,-0.5778356" canbesevered="True" limitenabled="True" upperlimit="9.863469" lowerlimit="-10.22378" stiffness="0.25" />
-  <joint name="Joint Cocktail2 - Cocktail3" limb1="5" limb2="4" limb1anchor="-53.33477,22.2507" limb2anchor="77.69699,-16.83785" canbesevered="True" limitenabled="True" upperlimit="10.38699" lowerlimit="-9.97541" stiffness="0.25" />
-  <joint name="Joint Cocktail1 - Cocktail2" limb1="6" limb2="5" limb1anchor="-69.49178,22.19255" limb2anchor="46.31014,-25.15061" canbesevered="True" limitenabled="True" upperlimit="9.993643" lowerlimit="-10.29706" stiffness="0.25" />
+  <joint name="Joint Cocktail3 - Cocktail4" limb1="4" limb2="3" limb1anchor="-74.80075,-9.266131" limb2anchor="69.71873,-0.5778356" canbesevered="True" limitenabled="True" upperlimit="9.863469" lowerlimit="-10.22378" stiffness="0.25" />
+  <joint name="Joint Cocktail2 - Cocktail3" limb1="5" limb2="4" limb1anchor="-51.52195,12.13826" limb2anchor="79.84846,-34.03413" canbesevered="True" limitenabled="True" upperlimit="10.38699" lowerlimit="-9.97541" stiffness="0.25" />
+  <joint name="Joint Cocktail1 - Cocktail2" limb1="6" limb2="5" limb1anchor="-55.8727,22.58804" limb2anchor="47.76379,-17.79555" canbesevered="True" limitenabled="True" upperlimit="9.993643" lowerlimit="-10.29706" stiffness="0.25" />
   <joint name="Joint Torso - Cocktail1" limb1="8" limb2="6" limb1anchor="-87.1976,39.45522" limb2anchor="33.20958,-31.62627" canbesevered="True" limitenabled="True" upperlimit="45.99631" lowerlimit="-26.60031" stiffness="0.25" />
   <joint name="Joint Torso - Fin" limb1="8" limb2="7" limb1anchor="82.85587,-71.69215" limb2anchor="211.1391,38.80014" canbesevered="True" limitenabled="True" upperlimit="65.1684" lowerlimit="-16.99253" stiffness="0.25" />
   <joint name="Joint Tentacle22 - Tentacle23" limb1="10" limb2="9" limb1anchor="-74.52736,19.00332" limb2anchor="64.80442,-16.63015" canbesevered="True" limitenabled="True" upperlimit="45" lowerlimit="-45" stiffness="0.25" />

@@ -11,5 +11,5 @@
 
 	<Body width="16" height="16" density="20"/>
 
-	<Pickable slots="Card,Any"/>
+	<Pickable slots="Card,Any" msg="ItemMsgPickUpSelect"/>
 </Item>
