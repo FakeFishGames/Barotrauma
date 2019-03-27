@@ -357,33 +357,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Effects\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\BaroTutorial_CommandReactor.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\BaroTutorial_NavConsole.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\BaroTutorial_Flood.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\BaroTutorial_Reactor.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\5_EnemyOnSonar\BaroTutorial_EnemyOnSonar.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\6_Degrading2\BaroTutorial_Degrading.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\7_Medical\BaroTutorial_Medical.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\8_Approach1\BaroTutorial_Approach.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="$(MSBuildThisFileDirectory)Content\Fonts\BebasNeue-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Content Include="$(MSBuildThisFileDirectory)Content\Fonts\NotoSans\LICENSE_OFL.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

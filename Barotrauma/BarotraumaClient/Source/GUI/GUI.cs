@@ -69,9 +69,6 @@ namespace Barotrauma
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
-        public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
-        public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
-        public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
 
         public static UISprite UIGlow => Style.UIGlow;
 
@@ -533,19 +530,14 @@ namespace Barotrauma
             if (list.Count == 0) { return; }
             foreach (var item in list)
             {
-                int index = 0;
-                if (updateList.Count > 0)
+                int i = updateList.Count - 1;
+                while (updateList[i].UpdateOrder > item.UpdateOrder)
                 {
-                    index = updateList.Count - 1;
-                    while (updateList[index].UpdateOrder > item.UpdateOrder)
-                    {
-                        index--;
-                        if (index == 0) { break; }
-                    }
+                    i--;
                 }
                 if (!updateListSet.Contains(item))
                 {
-                    updateList.Insert(index, item);
+                    updateList.Insert(Math.Max(i, 0), item);
                     updateListSet.Add(item);
                 }
             }
@@ -656,14 +648,6 @@ namespace Barotrauma
                 msg.Timer -= deltaTime;                
                 msg.Pos += msg.Velocity * deltaTime;                
             }
-            
-            foreach (GUIMessage msg in messages)
-            {
-                if (!msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;                
-                msg.Pos += msg.Velocity * deltaTime;                
-            }
-        }
 
             messages.RemoveAll(m => m.Timer <= 0.0f);
         }
@@ -737,10 +721,6 @@ namespace Barotrauma
                 Vector2 textSize = font.MeasureString(text);
                 DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
             }
-            else
-            {
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y + rect.Height - thickness, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
 
             font.DrawString(sb, text, pos, color);
         }
